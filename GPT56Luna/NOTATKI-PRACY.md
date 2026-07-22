@@ -15,6 +15,8 @@ Sprawdzić, czy dokumentacja oddaje rzeczywistą logikę repozytorium, ocenić z
 7. Zaktualizowano główny `CONTRIBUTING.md`, aby nie konkurował z instrukcją w `GPT56Luna`.
 8. Poprawiono nagłówek `README.md`, aby odpowiadał jego roli ogólnego standardu.
 9. Sprawdzono diff, status Git, odwołania do dokumentacji i białe znaki.
+10. Przekształcono `GPT56Luna/CONTRIBUTING.md` i `GPT56Luna/POLICY.md` do proceduralnego DSL.
+11. Zweryfikowano reguły `WHEN/DO/ASSERT/NEXT`, unikalność identyfikatorów i zakres odmowy dostępu do `C:\\Users\\Praca\\fork\\MatthiasLew`.
 
 ## Zasady decyzji
 
@@ -24,11 +26,13 @@ Sprawdzić, czy dokumentacja oddaje rzeczywistą logikę repozytorium, ocenić z
 - **Minimalna ingerencja:** nie tworzono aplikacji, testów, CI, Dockera ani zależności, ponieważ zadanie dotyczyło dokumentacji.
 - **Bezpieczna dokumentacja:** opisano ryzyko `--force`, nieprzypiętych wersji i użycia `pip` poza ścieżką wirtualnego środowiska.
 - **Jawne ograniczenia:** nie opisano zewnętrznych agentów jako dostępnych bez potwierdzenia w repozytorium.
-- **Ślad decyzji:** ustalenia, luki i zalecenia zapisano w `ANALIZA-DOKUMENTACJI.md`, a instrukcję operacyjną w `CONTRIBUTING.md`.
+- **Ślad decyzji:** ustalenia, luki i zalecenia zapisano w `ANALIZA-DOKUMENTACJI.md`, a instrukcję operacyjną i politykę w proceduralnych plikach DSL.
+- **Reguła wyprowadzania:** każda reguła musi zawierać warunek, działanie, asercję i przejście albo zatrzymanie.
+- **Zakres odmowy:** ścieżka `C:\\Users\\Praca\\fork\\MatthiasLew` nie była odczytywana, wyszukiwana ani modyfikowana.
 
 ## Wynik
 
-Przed zmianą `CONTRIBUTING.md` był częściowo zrozumiały, ale niejednoznaczny z powodu rozbieżności z `README.md`, pustego `docs/` i braku opisu rzeczywistego przepływu `project.sh`. Po zmianie agent ma wyraźną kolejność czytania, źródła prawdy, aktywną logikę skryptu, ograniczenia i Definition of Done dla zmian dokumentacyjnych.
+Przed zmianą `CONTRIBUTING.md` był częściowo zrozumiały, ale niejednoznaczny z powodu rozbieżności z `README.md`, pustego `docs/` i braku opisu rzeczywistego przepływu `project.sh`. Po zmianie agent ma proceduralny model stanów, warunków, akcji, asercji, przejść, dowodów i blokad.
 
 ## Kontrole
 

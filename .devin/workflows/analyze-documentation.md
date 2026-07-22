@@ -19,6 +19,7 @@ Use this workflow when:
 1. **Read the root entrypoint and operational instructions**
    - Read `CONTRIBUTING.md` as the entrypoint
    - Read `GPT56Luna/CONTRIBUTING.md` as the repository-specific operational guide
+   - Read `GPT56Luna/POLICY.md` as the repository-specific procedural policy
    - Confirm that the entrypoint points to the operational guide
 
 2. **Read the documentation index**
@@ -38,6 +39,7 @@ Use this workflow when:
 
 5. **Compare documentation with actual implementation**
    - Check whether `GPT56Luna/CONTRIBUTING.md` reflects the current workflow
+   - Check whether `GPT56Luna/POLICY.md` contains executable condition-action-result rules
    - Check whether `docs/README.md` links are valid
    - Identify unsupported claims about tools, agents, tests, CI, Docker or applications
    - Use Git history to explain moves or removals, but treat current files as authoritative
@@ -68,6 +70,7 @@ Use this workflow when:
 After completing this workflow:
 - Root `CONTRIBUTING.md` clearly references the operational guide
 - `GPT56Luna/CONTRIBUTING.md` reflects the current repository workflow
+- `GPT56Luna/POLICY.md` contains procedural policy rules
 - `docs/README.md` provides a valid documentation index
 - `GPT56Luna/ANALIZA-DOKUMENTACJI.md` records gaps, decisions and history
 - AI agents can understand the project workflow without relying on prior conversation
