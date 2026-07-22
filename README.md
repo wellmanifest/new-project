@@ -184,6 +184,224 @@ Opis spodziewanego rezultatu.
 - ograniczenie 2.
 ```
 
+### Narzędzia używane w project.sh
+
+#### code2llm
+
+**Przeznaczenie:**
+
+Konwertuje kod projektu do formatu odpowiedniego dla przetwarzania przez modele językowe.
+
+**Użyj do:**
+
+- analizy kodu przez LLM,
+- tworzenia reprezentacji semantycznej projektu,
+- przygotowania danych dla agentów AI.
+
+**Sposób uruchomienia:**
+
+```bash
+$VENV/bin/code2llm ./ -f all -o ./project --no-chunk --exclude '*.md'
+```
+
+**Wynik działania:**
+
+Generuje pliki w katalogu `./project` zawierające reprezentację kodu w formacie toon.
+
+**Ograniczenia:**
+
+- Wymaga wirtualnego środowiska Python,
+- Może pomijać pliki .md zgodnie z konfiguracją.
+
+#### redup
+
+**Przeznaczenie:**
+
+Skanuje projekt w poszukiwaniu duplikatów kodu.
+
+**Użyj do:**
+
+- wykrywania powtarzającego się kodu,
+- analizy jakości kodu,
+- identyfikacji możliwości refaktoryzacji.
+
+**Sposób uruchomienia:**
+
+```bash
+$VENV/bin/redup scan . --format toon --output ./project --ext .mjs,.js,.php,.sh
+```
+
+**Wynik działania:**
+
+Generuje raport duplikatów w formacie toon w katalogu `./project`.
+
+**Ograniczenia:**
+
+- Obsługuje określone rozszerzenia plików,
+- Wymaga odpowiedniego formatu wyjściowego.
+
+#### prefact
+
+**Przeznaczenie:**
+
+Narzędzie do pre-faktoryzacji kodu.
+
+**Użyj do:**
+
+- wstępnej analizy struktury kodu,
+- przygotowania do refaktoryzacji,
+- identyfikacji wzorców kodu.
+
+**Sposób uruchomienia:**
+
+```bash
+$VENV/bin/prefact -a -e "examples/**"
+```
+
+**Wynik działania:**
+
+Analizuje strukturę projektu z wyłączeniem katalogu examples.
+
+**Ograniczenia:**
+
+- Może wymagać konfiguracji wykluczeń,
+- Zależy od struktury projektu.
+
+#### vallm
+
+**Przeznaczenie:**
+
+Przetwarzanie wsadowe z wykorzystaniem modeli językowych.
+
+**Użyj do:**
+
+- masowej analizy kodu przez LLM,
+- semantycznego przetwarzania plików,
+- automatycznego generowania opisów.
+
+**Sposób uruchomienia:**
+
+```bash
+$VENV/bin/vallm batch . --recursive --format toon --output ./project
+```
+
+**Wynik działania:**
+
+Generuje przetworzone pliki w formacie toon z wykorzystaniem LLM.
+
+**Ograniczenia:**
+
+- Wymaga zainstalowanego modelu LLM (np. qwen2.5-coder:7b),
+- Może być czasochłonne dla dużych projektów.
+
+#### doql
+
+**Przeznaczenie:**
+
+Adaptacja projektu do formatu doql.
+
+**Użyj do:**
+
+- konwersji stylów i formatowania,
+- generowania plików konfiguracyjnych,
+- standaryzacji projektu.
+
+**Sposób uruchomienia:**
+
+```bash
+$VENV/bin/doql adopt . --format less --output app.doql.less --force
+```
+
+**Wynik działania:**
+
+Generuje plik `app.doql.less` z konfiguracją stylów.
+
+**Ograniczenia:**
+
+- Wymaga odpowiedniej struktury projektu,
+- Nadpisuje istniejące pliki przy użyciu --force.
+
+#### sumd
+
+**Przeznaczenie:**
+
+Sumaryzacja plików markdown w projekcie.
+
+**Użyj do:**
+
+- tworzenia podsumowań dokumentacji,
+- analizy zawartości plików .md,
+- szybkiego przeglądu dokumentacji.
+
+**Sposób uruchomienia:**
+
+```bash
+$VENV/bin/sumd .
+```
+
+**Wynik działania:**
+
+Generuje podsumowanie wszystkich plików markdown w projekcie.
+
+**Ograniczenia:**
+
+- Działa tylko na plikach markdown,
+- Zależy od jakości dokumentacji.
+
+#### sumr
+
+**Przeznaczenie:**
+
+Sumaryzacja raportów i wyników analizy.
+
+**Użyj do:**
+
+- agregacji wyników z innych narzędzi,
+- tworzenia podsumowań raportów,
+- szybkiego przeglądu wyników.
+
+**Sposób uruchomienia:**
+
+```bash
+$VENV/bin/sumr .
+```
+
+**Wynik działania:**
+
+Generuje podsumowanie raportów z analizy projektu.
+
+**Ograniczenia:**
+
+- Wymaga istnienia innych raportów,
+- Zależy od formatu danych wejściowych.
+
+#### goal
+
+**Przeznaczenie:**
+
+Narzędzie do zarządzania celami projektu i automatyzacji.
+
+**Użyj do:**
+
+- zarządzania zadaniami,
+- automatyzacji workflow,
+- koordynacji pracy agentów.
+
+**Sposób uruchomienia:**
+
+```bash
+$VENV/bin/goal -a
+```
+
+**Wynik działania:**
+
+Analizuje i zarządza celami projektu w sposób automatyczny.
+
+**Ograniczenia:**
+
+- Może wymagać konfiguracji celów,
+- Zależy od struktury projektu.
+
 ---
 
 ## 6. Dostępni agenci
@@ -230,6 +448,153 @@ Opis generowanego rezultatu.
 - ograniczenie 1,
 - ograniczenie 2.
 ```
+
+### Agenci w ekosystemie
+
+#### test-agent (Subactor)
+
+**Repozytorium:**
+
+github.com/subactor/subactor/agents/test-agent
+
+**Odpowiedzialność:**
+
+Automatyczne testowanie kodu i generowanie raportów testowych.
+
+**Użyj, gdy:**
+
+- Należy uruchomić testy jednostkowe i integracyjne
+- Wymagane jest sprawdzenie pokrycia kodu testami
+- Potrzebny jest raport z wyników testów
+
+**Dane wejściowe:**
+
+Kod do przetestowania, konfiguracja testów, scenariusze testowe.
+
+**Wynik:**
+
+Raporty testowe, wyniki pokrycia, lista wykrytych błędów.
+
+**Ograniczenia:**
+
+- Wymaga poprawnie skonfigurowanego środowiska testowego
+- Może wymagać dodatkowych zależności dla konkretnych typów testów
+
+#### repair-agent (Subactor)
+
+**Repozytorium:**
+
+github.com/subactor/subactor/agents/repair-agent
+
+**Odpowiedzialność:**
+
+Automatyczna naprawa wykrytych błędów i problemów w kodzie.
+
+**Użyj, gdy:**
+
+- Test-agent wykrył błędy wymagające naprawy
+- Prefact zidentyfikował problemy z importami lub strukturą kodu
+- Wymagana jest automatyczna refaktoryzacja
+
+**Dane wejściowe:**
+
+Raporty z błędami, kod źródłowy, preferencje naprawy.
+
+**Wynik:**
+
+Naprawiony kod, raport z wprowadzonymi zmianami, sugestie dalszych działań.
+
+**Ograniczenia:**
+
+- Może nie naprawić wszystkich typów błędów
+- Wymaga zatwierdzenia zmian przed wdrożeniem
+
+#### validator-agent (Subactor)
+
+**Repozytorium:**
+
+github.com/subactor/subactor/agents/validator-agent
+
+**Odpowiedzialność:**
+
+Walidacja kodu pod kątem zgodności ze standardami i wymaganiami.
+
+**Użyj, gdy:**
+
+- Należy sprawdzić zgodność z politykami projektu
+- Wymagana jest walidacja przed wdrożeniem
+- Potrzebne jest sprawdzenie jakości kodu
+
+**Dane wejściowe:**
+
+Kod do walidacji, reguły walidacji, standardy projektu.
+
+**Wynik:**
+
+Raport walidacji, lista niezgodności, sugestie poprawek.
+
+**Ograniczenia:**
+
+- Wymaga zdefiniowanych reguł walidacji
+- Może generować fałszywe alarmy
+
+#### todo-agent (Subactor)
+
+**Repozytorium:**
+
+github.com/subactor/subactor/agents/todo-agent
+
+**Odpowiedzialność:**
+
+Zarządzanie listami zadań i planowaniem pracy.
+
+**Użyj, gdy:**
+
+- Należy utworzyć lub zaktualizować TODO.md
+- Wymagane jest planowanie kolejnych kroków
+- Potrzebne jest śledzenie postępu prac
+
+**Dane wejściowe:**
+
+Kontekst projektu, wykryte problemy, priorytety zadań.
+
+**Wynik:**
+
+Zaktualizowany TODO.md, plan pracy, priorytetyzowane zadania.
+
+**Ograniczenia:**
+
+- Wymaga zrozumienia kontekstu projektu
+- Może wymagać ręcznej weryfikacji priorytetów
+
+#### doctor-agent (Subactor)
+
+**Repozytorium:**
+
+github.com/subactor/subactor/agents/doctor-agent
+
+**Odpowiedzialność:**
+
+Diagnostyka projektu i wykrywanie problemów konfiguracyjnych.
+
+**Użyj, gdy:**
+
+- Projekt nie działa poprawnie
+- Wymagana jest diagnostyka środowiska
+- Potrzebne jest sprawdzenie zależności
+
+**Dane wejściowe:**
+
+Konfiguracja projektu, środowisko, logi błędów.
+
+**Wynik:**
+
+Raport diagnostyczny, lista problemów, sugestie napraw.
+
+**Ograniczenia:**
+
+- Może nie wykryć wszystkich typów problemów
+- Wymaga dostępu do środowiska projektu
 
 ---
 
