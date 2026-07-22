@@ -16,54 +16,58 @@ Use this workflow when:
 
 ## Steps
 
-1. **Read root CONTRIBUTING.md**
-   - Check if it contains actual guidelines or legacy pseudo-code
-   - Verify if it references the comprehensive documentation in docs/
+1. **Read the root entrypoint and operational instructions**
+   - Read `CONTRIBUTING.md` as the entrypoint
+   - Read `GPT56Luna/CONTRIBUTING.md` as the repository-specific operational guide
+   - Confirm that the entrypoint points to the operational guide
 
-2. **Read docs/README.md**
-   - Check if it contains comprehensive contributing guidelines
-   - Verify sections 5 (tools) and 6 (agents) are filled with actual content
-   - Ensure it follows the structure defined in the template
+2. **Read the documentation index**
+   - Read `docs/README.md`
+   - Verify that it lists the sources of truth and their roles
+   - Verify that it points to the operational guide and analysis report
 
-3. **Analyze project.sh (or equivalent setup script)**
-   - Identify all tools used in the script
-   - Note the specific commands and their purposes
-   - Check if these tools are documented in docs/README.md section 5
+3. **Read the general standards and policy**
+   - Read `README.md` for the general agent-work standard
+   - Read `POLICY.md` for project policies
 
-4. **Compare documentation with actual implementation**
-   - Check if docs/README.md reflects the actual workflow in project.sh
-   - Identify missing tool descriptions
-   - Identify gaps in the documented process
+4. **Analyze project.sh (or equivalent setup script)**
+   - Identify installed tools and active commands
+   - Distinguish active commands from commented commands
+   - Note inputs, outputs, side effects, overwrite flags and limitations
+   - Check that the operational guide reflects the actual script
 
-5. **Update root CONTRIBUTING.md if needed**
-   - If it contains outdated pseudo-code, replace with clear reference to docs/README.md
-   - Add quick start instructions
-   - Include project initialization steps
+5. **Compare documentation with actual implementation**
+   - Check whether `GPT56Luna/CONTRIBUTING.md` reflects the current workflow
+   - Check whether `docs/README.md` links are valid
+   - Identify unsupported claims about tools, agents, tests, CI, Docker or applications
+   - Use Git history to explain moves or removals, but treat current files as authoritative
 
-6. **Add missing tool documentation to docs/README.md**
-   - For each tool in project.sh, add a description following the format:
-     - Przeznaczenie (Purpose)
-     - Użyj do (Use for)
-     - Sposób uruchomienia (How to run)
-     - Wynik działania (Result)
-     - Ograniczenia (Limitations)
+6. **Update the documentation when needed**
+   - Put repository-specific operating rules in `GPT56Luna/CONTRIBUTING.md`
+   - Put findings, gaps, decisions and history in `GPT56Luna/ANALIZA-DOKUMENTACJI.md`
+   - Keep `docs/README.md` as the documentation index
+   - Keep root `CONTRIBUTING.md` as a concise entrypoint
+   - Document each confirmed tool with purpose, invocation, result and limitations
 
-7. **Create this workflow documentation**
-   - Document the analysis process for future reference
-   - Save in .devin/workflows/ for Devin to use in future sessions
+7. **Record the work**
+   - Record the analysis method, decisions and checks in `GPT56Luna/NOTATKI-PRACY.md`
+   - Do not claim that a command ran if it was only inspected
+   - Do not run installation or overwrite operations without checking their effects
 
 ## Principles Applied
 
-- **Single source of truth**: Comprehensive documentation should be in docs/, root files should reference it
-- **Tool-specific documentation**: Every tool used in automation scripts should be documented
-- **AI agent clarity**: Documentation should be actionable and clear for AI agents
-- **Consistency**: Follow the established format in docs/README.md for tool descriptions
+- **Single source of truth**: Repository-specific operating rules live in `GPT56Luna/CONTRIBUTING.md`; root files point to it
+- **Documentation index**: `docs/README.md` lists the roles and sources of truth
+- **Tool-specific documentation**: Every tool used in automation scripts is documented according to its confirmed use
+- **AI agent clarity**: Documentation is actionable and does not claim unsupported capabilities
+- **Current-state priority**: Active files and commands take precedence over historical or aspirational descriptions
 - **Minimal changes**: Make focused edits rather than large rewrites
 
 ## Expected Outcome
 
 After completing this workflow:
-- Root CONTRIBUTING.md clearly references comprehensive documentation
-- docs/README.md contains complete tool documentation
-- AI agents can understand the project workflow from documentation
-- Future analysis sessions can follow this documented process
+- Root `CONTRIBUTING.md` clearly references the operational guide
+- `GPT56Luna/CONTRIBUTING.md` reflects the current repository workflow
+- `docs/README.md` provides a valid documentation index
+- `GPT56Luna/ANALIZA-DOKUMENTACJI.md` records gaps, decisions and history
+- AI agents can understand the project workflow without relying on prior conversation

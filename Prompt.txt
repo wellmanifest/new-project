@@ -1,0 +1,12 @@
+"co do devina, to powinien sprawdzić aktualny plik w docs, czy on oddaje te logike dzialania, czy coś  brakujei czy ewentualnie my o czyms zapomnielismy i powinnismy dopisac logike
+
+dodatkowo warto byc jutro jak zaczniesz tez przemyslal co robiles i na jakich zasadach i zapisal to w takiej formie, mozesz to od razu za pomoca devina zapisac, byc moze devin na bazie analziy git commits bedzie w stanie rozeznac co powiwnien robic"
+
+
+to są polecnia od szefa 
+
+masz zobaczyc plik contributing i zdecydowac czy jest od zrozumiany dla ia agentow 
+
+zrob to w folderze Opus48Medium
+
+

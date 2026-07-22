@@ -1,129 +1,38 @@
-# AI Agent Rules for Development
+# Instrukcje dla agentów AI
 
-## Core Principles
+Ten plik jest punktem wejścia. Szczegółowa, repozytoryjna instrukcja operacyjna znajduje się w `GPT56Luna/CONTRIBUTING.md`.
 
-1. **Check existing solutions first** - Before creating new functionality, check if it already exists in:
-   - Available tools (code2llm, redup, prefact, vallm, doql, sumd, sumr, goal)
-   - Available agents (test-agent, repair-agent, validator-agent, todo-agent, doctor-agent)
-   - Existing scripts and workflows
-   - Organization components
+## Kolejność czytania
 
-2. **Delegate to specialists** - Use appropriate tools and agents instead of doing everything manually:
-   - Testing → test-agent
-   - Code repair → repair-agent or prefact
-   - Validation → validator-agent or vallm
-   - Task management → todo-agent
-   - Diagnostics → doctor-agent
+Przed zmianą agent MUSI przeczytać:
 
-3. **Follow documentation** - Always read and follow:
-   - README.md for project overview
-   - POLICY.md for naming conventions, modularity, dependencies
-   - TODO.md for current tasks
+1. `GPT56Luna/CONTRIBUTING.md` — aktualny przepływ pracy i potwierdzone możliwości repozytorium,
+2. `README.md` — ogólny standard pracy,
+3. `POLICY.md` — polityki projektu,
+4. `docs/README.md` — indeks dokumentacji,
+5. `project.sh` — jeżeli zadanie dotyczy skryptu, instalacji lub narzędzi,
+6. `TODO.md` — jeżeli plik istnieje.
 
-## Workflow Rules
+## Najważniejsze zasady
 
-### Before Starting Work
-1. Read README.md
-2. Read POLICY.md
-3. Check existing TODO.md
-4. Identify available tools and agents
-5. Plan approach using TODO.md
+- Najpierw sprawdź aktualne pliki, skrypty, workflow i historię Git; nie zakładaj istnienia funkcji na podstawie samej nazwy.
+- Rozróżniaj komendy aktywne i zakomentowane w `project.sh`.
+- Nie opisuj jako dostępnych testów, agentów, CI, Dockera ani aplikacji elementów, których nie potwierdzono w repozytorium.
+- Dla większych zadań zapisz plan, ryzyka i kryteria akceptacji w `TODO.md`.
+- Po zmianie sprawdź odwołania, diff i sekrety oraz opisz wykonane kontrole.
+- Nie uruchamiaj destrukcyjnych ani nadpisujących operacji bez sprawdzenia skutków.
 
-### During Work
-1. Update TODO.md with progress
-2. Use appropriate tools for each task
-3. Delegate to specialized agents when available
-4. Test using test-agent
-5. Validate using validator-agent or vallm
+## Aktualny zakres repozytorium
 
-### After Work
-1. Update TODO.md with completion status
-2. Update documentation if needed
-3. Create logical commits
-4. Update CHANGELOG.md if applicable
+Repozytorium zawiera standardy dokumentacyjne, polityki i skrypt analityczny. Aktualnie nie znaleziono aplikacji, `src/`, `tests/`, CI ani Dockera. Nie wolno przedstawiać ich jako gotowych elementów projektu.
 
-## Tool Usage Rules
+## Źródła prawdy
 
-### Code Analysis
-- Use **code2llm** for project architecture analysis
-- Use **redup** for duplicate detection
-- Use **prefact** for code quality issues
-- Use **vallm** for code validation
+- `GPT56Luna/CONTRIBUTING.md` — instrukcja operacyjna,
+- `GPT56Luna/ANALIZA-DOKUMENTACJI.md` — analiza luk, decyzji i historii,
+- `README.md` — ogólny standard,
+- `POLICY.md` — polityki,
+- `docs/README.md` — indeks,
+- `project.sh` — rzeczywisty skrypt.
 
-### Documentation
-- Use **sumd** for markdown summarization
-- Use **sumr** for report summarization
-- Use **doql** for declarative project generation
-
-### Workflow
-- Use **goal** for task automation
-- Use **project.sh** for project initialization
-
-## Agent Coordination Rules
-
-### Test Agent
-- Use for: running tests, coverage reports
-- Input: code, test configuration
-- Output: test results, coverage data
-
-### Repair Agent
-- Use for: fixing detected issues
-- Input: error reports, code
-- Output: fixed code, change summary
-
-### Validator Agent
-- Use for: policy compliance, quality checks
-- Input: code, validation rules
-- Output: validation report, issues list
-
-### Todo Agent
-- Use for: task management, planning
-- Input: project context, issues
-- Output: updated TODO.md, task priorities
-
-### Doctor Agent
-- Use for: diagnostics, environment checks
-- Input: project configuration, logs
-- Output: diagnostic report, fix suggestions
-
-## Policy Compliance
-
-### Naming Conventions
-- Repositories: lowercase, hyphen-separated
-- Packages: match repository names
-- Files/directories: lowercase, hyphen-separated
-
-### Modularity
-- Single responsibility per module
-- Loose coupling, high cohesion
-- Clear interfaces and encapsulation
-
-### Dependencies
-- Minimal dependencies principle
-- Pinned versions for reproducibility
-- Regular security audits
-
-## Quality Standards
-
-1. **Code Quality**: Use prefact and vallm before committing
-2. **Testing**: Use test-agent for all changes
-3. **Documentation**: Update README.md and TODO.md
-4. **Validation**: Use validator-agent for policy compliance
-5. **Security**: Follow POLICY.md security guidelines
-
-## Communication
-
-1. **Clear commit messages**: Use conventional commit format
-2. **Update TODO.md**: Track progress and blockers
-3. **Document decisions**: Explain why, not just what
-4. **Report issues**: Use todo-agent for task tracking
-
-## Prohibited Actions
-
-- Do NOT duplicate existing functionality
-- Do NOT skip testing
-- Do NOT ignore security issues
-- Do NOT commit secrets
-- Do NOT bypass validation
-- Do NOT ignore POLICY.md guidelines
-- Do NOT create unnecessary dependencies
+Jeżeli dokumentacja i aktualny plik są sprzeczne, agent zgłasza rozbieżność i opiera działanie na aktualnym, potwierdzonym stanie repozytorium.

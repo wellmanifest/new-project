@@ -1,4 +1,4 @@
-# CONTRIBUTING.md
+# Ogólny standard pracy agentów AI
 
 ## 1. Cel dokumentu
 
