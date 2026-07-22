@@ -17,3 +17,4 @@ CHodiz o stworzenie reguł, według ktorych coś ma wynikać z czegoś a nie maj
 PRZEANALIZUJ wszystkie pliki jakie sa w tym folderze i stworz porzednie plik contribution i policy.md ktora maja byc napisane jezykiem proceduralnym te pliki stworz w folderze  GPT56Luna
 
 jesli bys potrzebował dostepu do narzedzi i innych organizacji to pacz tu C:\Users\Praca\fork ale nie zagladaj do C:\Users\Praca\fork\MatthiasLew zrozumiano? 
+ 
