@@ -2,15 +2,23 @@
 
 ## Wniosek
 
-Obecny `CONTRIBUTING.md` nie jest wystarczająco zrozumiały jako samodzielna instrukcja dla agenta AI. Zawiera podstawowe zasady, ale nie wskazuje jednoznacznie źródła prawdy, nie rozróżnia funkcji potwierdzonych od deklarowanych i nie opisuje dokładnie aktualnego przepływu `project.sh`.
+Przed wdrożeniem DSL `CONTRIBUTING.md` nie był wystarczająco zrozumiały jako samodzielna instrukcja dla agenta AI. Zawierał podstawowe zasady, ale nie wskazywał jednoznacznie źródła prawdy, nie rozróżniał funkcji potwierdzonych od deklarowanych i nie opisywał dokładnie aktualnego przepływu `project.sh`.
 
 Najważniejsza poprawa polega na rozdzieleniu:
 
 - ogólnego standardu pracy w głównym `README.md`,
-- polityk w `POLICY.md`,
-- rzeczywistej instrukcji operacyjnej w `GPT56Luna/CONTRIBUTING.md`,
+- polityk repozytorium w `POLICY.md`,
+- proceduralnej polityki lokalnej w `GPT56Luna/POLICY.md`,
+- proceduralnej instrukcji operacyjnej w `GPT56Luna/CONTRIBUTING.md`,
 - ustaleń z analizy w tym pliku,
 - indeksu dokumentacji w `docs/README.md`.
+
+## Wdrożenie proceduralne
+
+- `GPT56Luna/CONTRIBUTING.md` używa stanów, przejść, reguł `WHEN/DO/ASSERT/NEXT` i jawnych wyników.
+- `GPT56Luna/POLICY.md` wymusza dowody dla deklaracji, rozdziela instalację od wykonania i blokuje operacje bez decyzji lub kontroli.
+- Reguła bez warunku, działania, asercji albo przejścia jest odrzucana.
+- Reguła naturalnojęzyczna musi zostać przekształcona do postaci proceduralnej.
 
 ## Stan repozytorium
 
@@ -19,9 +27,10 @@ Na moment analizy repozytorium zawiera:
 - `CONTRIBUTING.md`,
 - `README.md`, który zawiera rozbudowany ogólny standard pracy; przed tą analizą miał mylący nagłówek `CONTRIBUTING.md`,
 - `POLICY.md`,
+- `GPT56Luna/POLICY.md` — proceduralny DSL polityk lokalnych,
 - `project.sh`,
 - workflow `.devin/workflows/analyze-documentation.md`,
-- pusty katalog `docs/`.
+- `docs/README.md` — indeks dokumentacji.
 
 Nie znaleziono:
 
@@ -45,7 +54,7 @@ Brak tych elementów oznacza, że dokumentacja nie może przedstawiać tego repo
 
 ### Braki i rozbieżności
 
-1. `docs/` jest pusty, mimo że starsza wersja dokumentacji i workflow wskazują `docs/README.md` jako główne miejsce dokumentacji.
+1. Przed zmianą `docs/` był pusty, mimo że starsza wersja dokumentacji i workflow wskazywały `docs/README.md` jako główne miejsce dokumentacji; obecnie `docs/README.md` jest indeksem.
 2. Przed tą zmianą `CONTRIBUTING.md` był po angielsku i miał formę listy ogólnych reguł, bez instrukcji wykonania zadania krok po kroku.
 3. `project.sh` instaluje `regix`, `glon` i `code2logic`, ale dokumentacja nie opisuje ich nawet jako elementów przepływu.
 4. `project.sh` nie uruchamia `regix`, `glon`, `code2logic`, a polecenia `vallm` i `goal` są zakomentowane. Sama obecność instalacji nie potwierdza funkcjonalności.
@@ -72,7 +81,7 @@ Historia pokazuje, że:
 2. następnie przeniesiono go do `docs/README.md` i dodano `project.sh`,
 3. później `docs/README.md` został przeniesiony do głównego `README.md`,
 4. wprowadzono `POLICY.md` i workflow analizy dokumentacji,
-5. katalog `docs/` pozostał pusty, choć workflow nadal zakłada istnienie `docs/README.md`.
+5. W momencie analizowanego commita katalog `docs/` pozostał pusty, choć workflow zakładał istnienie `docs/README.md`; obecny workflow i indeks zostały uzupełnione.
 
 Wniosek z historii: obecny układ jest wynikiem przeniesienia dokumentacji, ale nie został domknięty aktualizacją odwołań. Agent powinien używać historii do zrozumienia intencji, lecz aktualny stan plików ma pierwszeństwo przed dawną wersją.
 
@@ -92,5 +101,6 @@ W ramach tej analizy:
 - porównano `CONTRIBUTING.md`, `README.md`, `POLICY.md`, workflow i `project.sh`,
 - przeanalizowano historię commitów i przenoszenie dokumentacji,
 - potwierdzono pusty stan `docs/`,
-- przygotowano instrukcję operacyjną dla agentów w `GPT56Luna/CONTRIBUTING.md`,
-- przygotowano indeks dokumentacji w `docs/README.md`.
+- przygotowano proceduralną instrukcję operacyjną w `GPT56Luna/CONTRIBUTING.md`,
+- przygotowano proceduralną politykę w `GPT56Luna/POLICY.md`,
+- zaktualizowano indeks dokumentacji w `docs/README.md` i workflow analizy.

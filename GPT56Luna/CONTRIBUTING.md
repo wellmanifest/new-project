@@ -1,138 +1,397 @@
-# Instrukcje pracy dla agentów AI
+# GPT56LUNA.CONTRIBUTING
 
-## 1. Zakres tego dokumentu
+```dsl
+DOCUMENT GPT56LUNA.CONTRIBUTING
+VERSION 1
+LANGUAGE PROCEDURAL
+MODE DETERMINISTIC
 
-Ten plik opisuje rzeczywisty sposób pracy w tym repozytorium. Jest instrukcją operacyjną dla agenta AI, a nie ogólnym szablonem dla wszystkich projektów.
+SCOPE ROOT = "C:/Users/Praca/fork/wellmanifest/new-project"
+SCOPE ALLOW = ROOT + "/**"
+SCOPE DENY = "C:/Users/Praca/fork/MatthiasLew/**"
 
-Jeżeli instrukcja tutaj różni się od ogólnego standardu w głównym `README.md`, pierwszeństwo ma:
+STATE INIT
+STATE READ_LOCAL
+STATE READ_LOCAL_FILES
+STATE READ_NEXT_LOCAL_FILE
+STATE READ_ROOT
+STATE INVENTORY
+STATE PLAN
+STATE MODIFY
+STATE CHECK
+STATE REPORT
+STATE CONTINUE
+STATE CONTINUE_WITH_ALLOWED_SCOPE
+STATE PASS
+STATE BLOCKED
+STATE HUMAN_DECISION
+STATE FAIL
+STATE STOP
 
-1. polecenie użytkownika,
-2. rzeczywisty stan repozytorium i kodu,
-3. ten dokument,
-4. ogólny standard w `README.md`,
-5. `POLICY.md`.
+RESULT PASS = "verified"
+RESULT BLOCKED = "missing_dependency_or_evidence"
+RESULT HUMAN_DECISION = "user_input_required"
+RESULT FAIL = "rule_violation_or_check_failure"
 
-Nie wolno zakładać istnienia narzędzia, agenta, testu ani pliku tylko dlatego, że jego nazwa występuje w dokumentacji.
+PRECEDENCE P1 = USER_REQUEST
+PRECEDENCE P2 = CURRENT_FILE_SYSTEM
+PRECEDENCE P3 = CURRENT_COMMAND_OUTPUT
+PRECEDENCE P4 = GPT56LUNA.POLICY
+PRECEDENCE P5 = GPT56LUNA.CONTRIBUTING
+PRECEDENCE P6 = ROOT.README
+PRECEDENCE P7 = ROOT.POLICY
+PRECEDENCE P8 = GIT_HISTORY
 
-## 2. Obowiązkowa analiza przed zmianą
+TRANSITION INIT -> READ_LOCAL WHEN TRUE
+TRANSITION READ_LOCAL -> READ_ROOT WHEN LOCAL_FILES_READ
+TRANSITION READ_ROOT -> INVENTORY WHEN ROOT_SOURCES_READ
+TRANSITION INVENTORY -> PLAN WHEN INVENTORY_COMPLETE
+TRANSITION PLAN -> MODIFY WHEN PLAN_VALID
+TRANSITION MODIFY -> CHECK WHEN CHANGE_COMPLETE
+TRANSITION CHECK -> REPORT WHEN CHECKS_COMPLETE
+TRANSITION REPORT -> PASS WHEN REPORT_COMPLETE
+TRANSITION REPORT -> BLOCKED WHEN UNRESOLVED_BLOCKER
+TRANSITION ANY -> HUMAN_DECISION WHEN USER_DECISION_REQUIRED
+TRANSITION ANY -> FAIL WHEN SAFETY_VIOLATION
+```
 
-Przed rozpoczęciem pracy agent MUSI:
+## MODULE M01 SCOPE
 
-1. przeczytać ten dokument,
-2. przeczytać główny `README.md` i `POLICY.md`,
-3. sprawdzić `git status` oraz ostatnie commity,
-4. sprawdzić strukturę repozytorium,
-5. przeczytać `project.sh`, jeżeli zadanie dotyczy automatyzacji lub narzędzi,
-6. wyszukać istniejącą implementację, dokumentację i workflow,
-7. utworzyć albo zaktualizować `TODO.md` dla większego zadania,
-8. zapisać założenia, ryzyka i kryteria akceptacji,
-9. dopiero potem rozpocząć edycję.
+```dsl
+INPUT USER_REQUEST REQUIRED
+INPUT REPOSITORY_ROOT REQUIRED
+INPUT FILE_SYSTEM REQUIRED
+INPUT GIT_STATE REQUIRED
+INPUT COMMAND_OUTPUT OPTIONAL
 
-Jeżeli dokumentacja mówi o elemencie, którego nie ma w repozytorium, agent musi oznaczyć go jako niepotwierdzony, a nie traktować go jako dostępny.
+RULE R001
+WHEN PATH_OUTSIDE(SCOPE.ALLOW)
+DO STOP
+ASSERT RESULT = BLOCKED
+NEXT HUMAN_DECISION
 
-## 3. Rzeczywisty przepływ `project.sh`
+RULE R002
+WHEN PATH_MATCHES(SCOPE.DENY)
+DO DO_NOT_READ
+DO DO_NOT_SEARCH
+DO DO_NOT_WRITE
+ASSERT ACCESS = DENIED
+NEXT CONTINUE_WITH_ALLOWED_SCOPE
 
-`project.sh` jest skryptem przygotowania środowiska i analizy projektu. Nie uruchamia aplikacji biznesowej ani testów aplikacji.
+RULE R003
+WHEN USER_REQUEST_TARGET = "GPT56Luna"
+DO SET WORK_ROOT = ROOT + "/GPT56Luna"
+ASSERT EXISTS(WORK_ROOT)
+NEXT READ_LOCAL
+```
 
-Aktywna logika skryptu:
+## MODULE M02 LOCAL_READ
 
-1. zatrzymuje się przy błędzie dzięki `set -e`,
-2. tworzy `venv`, jeżeli nie istnieje `venv/bin/pip`,
-3. aktualizuje `pip`, ignorując błąd tej aktualizacji,
-4. instaluje lub aktualizuje narzędzia analityczne,
-5. uruchamia `code2llm`, `redup` i `prefact`,
-6. uruchamia `doql`, `sumd` i `sumr`,
-7. instaluje `goal` lokalnie z `../goal`, jeżeli lokalne repozytorium istnieje, albo z PyPI,
-8. nie uruchamia `goal`, ponieważ jego polecenie jest zakomentowane,
-9. wykonuje snapshot drzewa przez `tree.sh` albo systemowe `tree`, jeżeli jest dostępne.
+```dsl
+RULE R010
+WHEN STATE = READ_LOCAL
+DO LIST_FILES(WORK_ROOT, RECURSIVE = TRUE, INCLUDE_IGNORED = FALSE)
+ASSERT FILE_LIST_CAPTURED
+NEXT READ_LOCAL_FILES
 
-Zakomentowane polecenia w `project.sh` nie są częścią aktualnego przepływu. Agent może je uruchomić tylko po osobnej decyzji i po opisaniu skutków.
+RULE R011
+WHEN FILE_EXISTS(WORK_ROOT + "/CONTRIBUTING.md")
+DO READ(WORK_ROOT + "/CONTRIBUTING.md")
+ASSERT CONTENT_CAPTURED
+NEXT READ_NEXT_LOCAL_FILE
 
-## 4. Narzędzia potwierdzone przez skrypt
+RULE R012
+WHEN FILE_EXISTS(WORK_ROOT + "/POLICY.md")
+DO READ(WORK_ROOT + "/POLICY.md")
+ASSERT CONTENT_CAPTURED
+NEXT READ_NEXT_LOCAL_FILE
 
-Poniższa lista wynika z aktywnych poleceń w `project.sh`. Dokładne opcje należy każdorazowo sprawdzić przez dokumentację narzędzia lub jego pomoc CLI.
+RULE R013
+WHEN FILE_EXISTS(WORK_ROOT + "/ANALIZA-DOKUMENTACJI.md")
+DO READ(WORK_ROOT + "/ANALIZA-DOKUMENTACJI.md")
+ASSERT CONTENT_CAPTURED
+NEXT READ_NEXT_LOCAL_FILE
 
-| Narzędzie | Rzeczywiste użycie w skrypcie | Wynik lub efekt |
-| --- | --- | --- |
-| `regix` | instalacja/aktualizacja | Sam skrypt nie uruchamia polecenia `regix`; działanie nie jest potwierdzone |
-| `prefact` | analiza projektu z wykluczeniem `examples/**` | wynik analizy narzędzia |
-| `vallm` | instalacja/aktualizacja | Aktywne polecenia uruchamiające `vallm` są zakomentowane |
-| `redup` | skan plików `.mjs`, `.js`, `.php`, `.sh` | raport w `./project` w formacie `toon` |
-| `glon` | instalacja/aktualizacja | Sam skrypt nie uruchamia polecenia `glon`; działanie nie jest potwierdzone |
-| `code2logic` | instalacja/aktualizacja | Sam skrypt nie uruchamia polecenia `code2logic`; działanie nie jest potwierdzone |
-| `code2llm` | analiza projektu do `./project`, z wykluczeniem plików `.md` | wygenerowane reprezentacje projektu |
-| `doql` | `adopt` do `app.doql.less` z `--force` | tworzy lub nadpisuje `app.doql.less` |
-| `sumd` | sumaryzacja bieżącego projektu | wynik sumaryzacji dokumentacji |
-| `sumr` | sumaryzacja raportów | wynik sumaryzacji dostępnych raportów |
-| `goal` | instalacja/aktualizacja | komenda wykonawcza jest zakomentowana; nie należy zakładać automatycznego zarządzania zadaniami |
+RULE R014
+WHEN FILE_EXISTS(WORK_ROOT + "/NOTATKI-PRACY.md")
+DO READ(WORK_ROOT + "/NOTATKI-PRACY.md")
+ASSERT CONTENT_CAPTURED
+NEXT READ_NEXT_LOCAL_FILE
 
-## 5. Zasady bezpieczeństwa i powtarzalności
+RULE R015
+WHEN FILE_EXISTS(WORK_ROOT + "/Prompt.txt")
+DO READ(WORK_ROOT + "/Prompt.txt")
+ASSERT CONTENT_CAPTURED
+NEXT READ_NEXT_LOCAL_FILE
 
-Agent MUSI:
+RULE R016
+WHEN LOCAL_FILE_LIST_REMAINING = FALSE
+DO SET LOCAL_FILES_READ = TRUE
+ASSERT LOCAL_FILES_READ = TRUE
+NEXT READ_ROOT
+```
 
-- nie commitować sekretów, danych dostępowych ani plików środowiskowych,
-- sprawdzić, czy narzędzie nie nadpisze pliku przed użyciem `--force`,
-- nie uruchamiać zakomentowanych komend bez uzasadnienia,
-- nie instalować zależności globalnie bez wyraźnej zgody,
-- sprawdzić diff po każdym logicznym etapie,
-- opisać w raporcie komendy, które zostały uruchomione, oraz te, których nie uruchomiono,
-- nie deklarować sukcesu narzędzia na podstawie samej instalacji pakietu,
-- nie twierdzić, że repozytorium ma testy, CI, Docker lub aplikację, jeżeli nie zostały znalezione.
+## MODULE M03 ROOT_READ
 
-W skrypcie występują nieprzypięte wersje pakietów oraz wywołania `pip` bez ścieżki do `venv` w gałęzi dotyczącej lokalnego `goal`. Są to ryzyka powtarzalności i izolacji środowiska. Agent nie powinien ich poprawiać przy zadaniu czysto dokumentacyjnym, ale musi je zgłosić przy zadaniu dotyczącym skryptu.
+```dsl
+REQUIRED_SOURCE ROOT_CONTRIBUTING = ROOT + "/CONTRIBUTING.md"
+REQUIRED_SOURCE ROOT_README = ROOT + "/README.md"
+REQUIRED_SOURCE ROOT_POLICY = ROOT + "/POLICY.md"
+REQUIRED_SOURCE LOCAL_POLICY = WORK_ROOT + "/POLICY.md"
+REQUIRED_SOURCE DOC_INDEX = ROOT + "/docs/README.md"
+REQUIRED_SOURCE WORKFLOW = ROOT + "/.devin/workflows/analyze-documentation.md"
+REQUIRED_SOURCE SETUP = ROOT + "/project.sh"
 
-## 6. Zasady pracy z dokumentacją
+RULE R020
+WHEN STATE = READ_ROOT
+DO READ(ROOT_CONTRIBUTING)
+DO READ(ROOT_README)
+DO READ(ROOT_POLICY)
+DO READ(LOCAL_POLICY)
+DO READ(DOC_INDEX)
+DO READ(WORKFLOW)
+DO READ(SETUP)
+ASSERT ROOT_SOURCES_READ
+ASSERT LOCAL_POLICY_READ
+NEXT INVENTORY
 
-Po każdej zmianie agent sprawdza:
+RULE R021
+WHEN REQUIRED_SOURCE_MISSING = TRUE
+DO RECORD("missing_source", PATH)
+ASSERT RESULT = BLOCKED
+NEXT HUMAN_DECISION
+```
 
-1. czy dokument opisuje aktualny przepływ, a nie planowaną funkcję,
-2. czy polecenia są zgodne z `project.sh`,
-3. czy oznaczono polecenia zakomentowane i funkcje niepotwierdzone,
-4. czy ścieżki i nazwy plików istnieją,
-5. czy dokumentacja nie obiecuje testów, CI ani Dockera, których repozytorium nie zawiera,
-6. czy opis jest zrozumiały bez kontekstu poprzedniej rozmowy.
+## MODULE M04 EVIDENCE
 
-Główne źródła prawdy:
+```dsl
+EVIDENCE FILE = CURRENT_PATH_EXISTS AND CONTENT_READ
+EVIDENCE COMMAND = COMMAND_EXISTS AND COMMAND_EXECUTED_SUCCESSFULLY
+EVIDENCE TOOL = INSTALL_RECORD AND INVOCATION_RECORD
+EVIDENCE AGENT = DEFINITION_EXISTS AND INVOCATION_EXISTS
+EVIDENCE TEST = TEST_DEFINITION_EXISTS AND TEST_EXECUTED
+EVIDENCE FEATURE = FILE_EVIDENCE OR COMMAND_EVIDENCE OR TEST_EVIDENCE
 
-- `GPT56Luna/CONTRIBUTING.md` — instrukcja operacyjna dla agenta,
-- `GPT56Luna/ANALIZA-DOKUMENTACJI.md` — ustalenia, luki i decyzje,
-- `README.md` — ogólny standard pracy,
-- `POLICY.md` — polityki projektu,
-- `project.sh` — rzeczywista automatyzacja,
-- `docs/README.md` — indeks dokumentacji.
+RULE R030
+WHEN CLAIM_WITHOUT(EVIDENCE)
+DO LABEL(CLAIM, "UNVERIFIED")
+DO DO_NOT_PRESENT_AS_AVAILABLE
+ASSERT CLAIM.STATUS = UNVERIFIED
+NEXT CONTINUE
 
-## 7. Git i analiza historii
+RULE R031
+WHEN PACKAGE_INSTALLED = TRUE AND COMMAND_EXECUTED = FALSE
+DO LABEL(TOOL, "INSTALL_ONLY")
+ASSERT TOOL_STATUS != AVAILABLE
+NEXT CONTINUE
 
-Przed większą zmianą agent analizuje historię Git, aby odróżnić intencję od aktualnego stanu. W szczególności należy sprawdzić:
+RULE R032
+WHEN COMMAND_IS_COMMENTED = TRUE
+DO LABEL(COMMAND, "COMMENTED")
+DO DO_NOT_EXECUTE
+ASSERT COMMAND.STATUS = COMMENTED
+NEXT CONTINUE
 
-- kiedy dodano pierwotny standard `CONTRIBUTING.md`,
-- czy dokument został przeniesiony lub skrócony,
-- które pliki zostały usunięte albo przemianowane,
-- czy aktualny skrypt odpowiada dokumentacji.
+RULE R033
+WHEN AGENT_NAME_EXISTS = TRUE AND EVIDENCE(AGENT) = FALSE
+DO LABEL(AGENT, "UNVERIFIED")
+DO USE_FALLBACK_OR_STOP
+ASSERT AGENT.STATUS = UNVERIFIED
+NEXT HUMAN_DECISION
+```
 
-Commit nie jest sam w sobie dowodem, że funkcja nadal istnieje. Dowodem jest aktualny plik, działająca komenda albo potwierdzona dokumentacja narzędzia.
+## MODULE M05 TASK
 
-## 8. Kolejność realizacji zadania
+```dsl
+RULE R040
+WHEN TASK_SCOPE_UNKNOWN = TRUE
+DO SEARCH_EXISTING_FILES
+DO SEARCH_EXISTING_COMMANDS
+DO SEARCH_EXISTING_WORKFLOWS
+ASSERT TASK_SCOPE_KNOWN
+NEXT PLAN
 
-1. Analiza wymagania i istniejącej dokumentacji.
-2. Weryfikacja plików, narzędzi i historii Git.
-3. Plan oraz kryteria akceptacji w `TODO.md`.
-4. Minimalna zmiana w odpowiednim miejscu.
-5. Sprawdzenie formatowania i spójności odwołań.
-6. Uruchomienie tylko adekwatnych, bezpiecznych kontroli.
-7. Przegląd diffu i kontrola sekretów.
-8. Aktualizacja raportu decyzji i ograniczeń.
-9. Logiczny commit, jeżeli użytkownik zleci wykonanie commita.
+RULE R041
+WHEN TASK_HAS_MORE_THAN_ONE_STEP = TRUE
+DO CREATE_OR_UPDATE(ROOT + "/TODO.md")
+DO WRITE(PLAN, RISKS, ACCEPTANCE_CRITERIA)
+ASSERT PLAN_RECORDED
+NEXT MODIFY
 
-## 9. Definition of Done dla zmian dokumentacyjnych
+RULE R042
+WHEN TARGET_FILE_EXISTS = TRUE
+DO READ(TARGET_FILE)
+DO MODIFY_WITH_PRECISE_REPLACEMENT
+ASSERT TARGET_FILE_VALID
+NEXT CHECK
 
-Zmiana dokumentacyjna jest zakończona, gdy:
+RULE R043
+WHEN TARGET_FILE_EXISTS = FALSE
+DO VERIFY_PARENT_EXISTS
+DO CREATE_FILE_ONLY_AFTER_EXISTENCE_CHECK
+ASSERT TARGET_FILE_CREATED
+NEXT CHECK
 
-- [ ] opis wskazuje źródła prawdy,
-- [ ] opisany przepływ odpowiada aktualnym plikom,
-- [ ] funkcje niepotwierdzone są wyraźnie oznaczone,
-- [ ] komendy aktywne i zakomentowane nie są pomieszane,
-- [ ] znane luki i ryzyka są zapisane,
-- [ ] odwołania do plików są poprawne,
-- [ ] diff nie zawiera przypadkowych zmian,
-- [ ] raport zawiera zakres wykonanej weryfikacji.
+RULE R044
+WHEN CHANGE_REQUIRES_NEW_DEPENDENCY = TRUE
+DO CHECK_EXISTING_DEPENDENCY_FILES
+DO RECORD(JUSTIFICATION, VERSION, SECURITY_IMPACT)
+ASSERT DEPENDENCY_REVIEWED
+NEXT CONTINUE
+
+RULE R045
+WHEN DEPENDENCY_UNJUSTIFIED = TRUE
+DO STOP
+ASSERT RESULT = HUMAN_DECISION
+NEXT HUMAN_DECISION
+```
+
+## MODULE M06 SETUP_SCRIPT
+
+```dsl
+SCRIPT SETUP = ROOT + "/project.sh"
+SCRIPT SHELL = BASH
+SCRIPT FAIL_FAST = TRUE
+SCRIPT VENV = ROOT + "/venv"
+SCRIPT PIP = VENV + "/bin/pip"
+SCRIPT OUTPUT = ROOT + "/project"
+
+ACTIVE_INSTALL regix
+ACTIVE_INSTALL prefact
+ACTIVE_INSTALL vallm
+ACTIVE_INSTALL redup
+ACTIVE_INSTALL glon
+ACTIVE_INSTALL code2logic
+ACTIVE_INSTALL code2llm
+ACTIVE_INSTALL doql
+ACTIVE_INSTALL sumd
+ACTIVE_INSTALL goal
+
+ACTIVE_RUN code2llm -> OUTPUT
+ACTIVE_RUN redup -> OUTPUT
+ACTIVE_RUN prefact -> PROJECT_TREE
+ACTIVE_RUN doql -> ROOT + "/app.doql.less"
+ACTIVE_RUN sumd -> DOCUMENTATION_SUMMARY
+ACTIVE_RUN sumr -> REPORT_SUMMARY
+
+COMMENTED_RUN vallm
+COMMENTED_RUN goal
+COMMENTED_RUN code2docs
+COMMENTED_RUN code2llm_ALTERNATIVE
+
+RULE R050
+WHEN COMMAND_STATUS = COMMENTED_RUN
+DO DO_NOT_EXECUTE
+ASSERT COMMAND_STATUS_RECORDED
+NEXT CONTINUE
+
+RULE R051
+WHEN COMMAND = doql AND FLAG = "--force"
+DO CHECK_TARGET_DIFF
+DO RECORD(POSSIBLE_OVERWRITE)
+ASSERT OVERWRITE_REVIEWED
+NEXT CONTINUE
+
+RULE R052
+WHEN TASK_IS_DOCUMENTATION_ONLY = TRUE
+DO DO_NOT_RUN(SETUP)
+DO RECORD("setup_not_run", "external_installation_not_required")
+ASSERT SETUP.STATUS = SKIPPED
+NEXT CHECK
+```
+
+## MODULE M07 TOOLS_FALLBACK
+
+```dsl
+TOOL_STATUS ACTIVE_RUN = "invoked_by_setup_script"
+TOOL_STATUS INSTALL_ONLY = "installed_without_invocation"
+TOOL_STATUS COMMENTED = "disabled_in_setup_script"
+TOOL_STATUS UNVERIFIED = "no_current_evidence"
+
+SPECIALIST test-agent = UNVERIFIED
+SPECIALIST repair-agent = UNVERIFIED
+SPECIALIST validator-agent = UNVERIFIED
+SPECIALIST todo-agent = UNVERIFIED
+SPECIALIST doctor-agent = UNVERIFIED
+
+RULE R060
+WHEN SPECIALIST_REQUIRED = TRUE AND SPECIALIST_STATUS = UNVERIFIED
+DO SEARCH_LOCAL_RUNNER
+ASSERT LOCAL_RUNNER_SEARCHED
+NEXT CONTINUE
+
+RULE R061
+WHEN LOCAL_RUNNER_FOUND = TRUE
+DO RUN(LOCAL_RUNNER)
+ASSERT RESULT = PASS OR RESULT = FAIL
+NEXT CONTINUE
+
+RULE R062
+WHEN LOCAL_RUNNER_FOUND = FALSE
+DO RECORD("runner_missing")
+ASSERT RESULT = BLOCKED
+NEXT HUMAN_DECISION
+
+RULE R063
+WHEN TESTS_EXIST = FALSE
+DO DO_NOT_REPORT_TEST_PASS
+DO REPORT("tests_not_present")
+ASSERT TEST_ABSENCE_REPORTED
+NEXT CONTINUE
+```
+
+## MODULE M08 CHECKS
+
+```dsl
+CHECK C001 = PATHS_VALID
+CHECK C002 = ACTIVE_AND_COMMENTED_COMMANDS_DISTINCT
+CHECK C003 = CLAIMS_HAVE_EVIDENCE_OR_UNVERIFIED_LABEL
+CHECK C004 = NO_SECRET_DETECTED
+CHECK C005 = GIT_DIFF_REVIEWED
+CHECK C006 = GIT_DIFF_CHECK_PASS
+CHECK C007 = REPORT_UPDATED
+
+RULE R070
+WHEN ANY(C001..C007) = FALSE
+DO STOP
+ASSERT RESULT = FAIL
+NEXT REPORT
+
+RULE R071
+WHEN USER_REQUESTS_COMMIT = FALSE
+DO DO_NOT_COMMIT
+DO DO_NOT_PUSH
+ASSERT COMMIT_STATUS = SKIPPED
+ASSERT PUSH_STATUS = SKIPPED
+NEXT PASS
+
+RULE R072
+WHEN ALL(C001..C007) = TRUE
+DO WRITE_REPORT(COMMANDS_RUN, COMMANDS_SKIPPED, RESULTS, BLOCKERS)
+ASSERT REPORT_COMPLETE
+NEXT PASS
+```
+
+## MODULE M09 TERMINATION
+
+```dsl
+DONE WHEN
+  WORK_ROOT_READ
+  AND ROOT_SOURCES_READ
+  AND INVENTORY_COMPLETE
+  AND PLAN_VALID
+  AND CHANGE_COMPLETE
+  AND C001
+  AND C002
+  AND C003
+  AND C004
+  AND C005
+  AND C006
+  AND C007
+
+NOT_DONE WHEN
+  MISSING_EVIDENCE
+  OR UNRESOLVED_CONFLICT
+  OR SAFETY_VIOLATION
+  OR REQUIRED_DECISION_MISSING
+```

@@ -1,183 +1,245 @@
-# Instrukcja pracy dla agentów AI (Opus48Medium)
+# CONTRIBUTING (RULE-DSL)
 
-## 1. Po co ten plik
+Ten plik NIE jest instrukcją w języku naturalnym. Definiuje **proceduralny przepływ pracy**
+jako reguły `WHEN → THEN`. Współpracuje z `POLICY.md` (RULE-DSL): CONTRIBUTING steruje
+*procesem*, POLICY egzekwuje *zasady*. Gramatyka i operatory jak w `POLICY.md`.
 
-Ten dokument jest **punktem wejścia** dla agenta AI pracującego w tym repozytorium. Jest krótszą, repozytoryjną instrukcją operacyjną, która prowadzi do szczegółowych źródeł prawdy.
+## Model wykonania
 
-Repozytorium `new-project` to obecnie **zestaw standardów dokumentacyjnych, polityk i skryptu analitycznego** (`project.sh`). Nie jest to gotowa aplikacja — nie ma tu `src/`, `tests/`, CI, Dockera ani wdrożenia.
+```dsl
+STATE = { phase: START|PLAN|WORK|VERIFY|PUBLISH|STOP }
+LOOP: on każdym kroku ewaluuj reguły, których WHEN==TRUE, w kolejności PRIORITY (P0→P2).
+PRIORITY: P0 = twardy warunek (przerywa), P1 = wymagane, P2 = zalecane.
+CONFLICT: user_command > repo_state > POLICY.P0 > CONTRIBUTING.P0 > README > P1 > P2.
+```
 
----
+## Fakty bazowe
 
-## 2. Kolejność czytania
-
-Przed każdą zmianą przeczytaj w tej kolejności:
-
-1. **`Opus48Medium/CONTRIBUTING.md`** — ten plik.
-2. **`CONTRIBUTING.md`** (root) — aktualny skrót punktu wejścia dla agentów.
-3. **`docs/README.md`** — indeks dokumentacji i źródeł prawdy.
-4. **`GPT56Luna/CONTRIBUTING.md`** — szczegółowa instrukcja operacyjna dla tego repozytorium.
-5. **`GPT56Luna/ANALIZA-DOKUMENTACJI.md`** — ustalenia, znane luki i historia decyzji.
-6. **`README.md`** — ogólny standard pracy (po polsku).
-7. **`POLICY.md`** — polityki nazewnictwa, modułowości, zależności i bezpieczeństwa.
-8. **`project.sh`** — jeśli zadanie dotyczy narzędzi lub środowiska.
-9. **`TODO.md`** — jeśli istnieje; utwórz lub zaktualizuj dla większych zadań.
-
-**Hierarchia ważności, gdy dokumenty są sprzeczne:**
-
-1. Bezpośrednie polecenie użytkownika.
-2. Rzeczywisty stan repozytorium i kodu.
-3. `GPT56Luna/CONTRIBUTING.md`.
-4. `Opus48Medium/CONTRIBUTING.md`.
-5. Root `CONTRIBUTING.md`.
-6. `README.md`.
-7. `POLICY.md`.
+```dsl
+FACT repo.kind = "documentation-standard"       # nie aplikacja
+FACT sot.process = "Opus48Medium/CONTRIBUTING.md"   # ten plik = proces
+FACT sot.rules   = "Opus48Medium/POLICY.md"         # zasady
+FACT sot.full    = "README.md"                      # pełny standard (PL)
+FACT env.venv    = "venv/bin"
+FACT tools.registry = "C:/Users/Praca/fork/semcod, C:/Users/Praca/fork/oqlos"
+FACT tools.forbidden_path = "C:/Users/Praca/fork/MatthiasLew"   # NIE czytać
+FACT agents.subactor.available = FALSE           # brak kodu/wywołania w repo
+```
 
 ---
 
-## 3. Co jest potwierdzone, a czego nie zakładać
+## 1. Start sesji (P0)
 
-### Potwierdzone pliki i katalogi
+```dsl
+RULE R-START-001:
+  WHEN phase == START
+  THEN READ [sot.process, sot.rules, sot.full]
+  AND RUN "git status" AND RUN "git log --oneline -10"
+  AND SET phase = PLAN
+  PRIORITY P0
 
-- `README.md`, `CONTRIBUTING.md` (root), `POLICY.md`, `LICENSE`.
-- `docs/README.md` — indeks dokumentacji.
-- `project.sh` — skrypt przygotowania środowiska i analizy.
-- `GPT56Luna/CONTRIBUTING.md` — szczegółowa instrukcja operacyjna.
-- `GPT56Luna/ANALIZA-DOKUMENTACJI.md` — analiza luk i decyzji.
-- `.devin/workflows/analyze-documentation.md` — workflow weryfikacji dokumentacji.
-- Foldery innych agentów (`Kimik27/`, `Opus48Medium/`, `SWE17/`) zawierają ich analizy i notatki.
+RULE R-START-002:
+  WHEN task.touches_tools == TRUE
+  THEN READ "project.sh"
+  PRIORITY P0
 
-### Elementy NIEpotwierdzone
+RULE R-START-003:
+  WHEN reference.target MISSING
+  THEN FORBID use(reference.target)
+  AND FLAG "referenced artifact does not exist"
+  PRIORITY P0
+```
 
-Nie zakładaj istnienia poniższych elementów bez fizycznej weryfikacji:
+## 2. Planowanie (P1)
 
-- kod aplikacji (`src/`),
-- testy (`tests/`),
-- konfiguracja CI,
-- pliki Docker,
-- `TODO.md`, `CHANGELOG.md` (mogą istnieć tylko podczas trwającej pracy),
-- agenci `test-agent`, `repair-agent`, `validator-agent`, `todo-agent`, `doctor-agent` — są opisani w `README.md`, ale nie ma tu ich kodu ani sposobu wywołania.
+```dsl
+RULE R-PLAN-001:
+  WHEN phase == PLAN AND task.steps > 1
+  THEN CREATE_OR_UPDATE "TODO.md" WITH [stages, acceptance_criteria, risks]
+  AND SET phase = WORK
+  PRIORITY P1
 
----
+RULE R-PLAN-002:
+  WHEN phase == PLAN AND task.steps <= 1
+  THEN SET phase = WORK
+  PRIORITY P1
 
-## 4. Przepływ pracy
+RULE R-PLAN-003:
+  WHEN capability.needed == TRUE AND EXISTS(tool_for(capability))
+  THEN FORBID reimplement(capability)
+  AND DELEGATE capability TO tool_for(capability)
+  PRIORITY P1
+  SOURCE README§2
+```
 
-### 4.1. Przed zmianą
+## 3. Wybór i uruchamianie narzędzi (P1)
 
-1. Przeczytaj dokumentację w kolejności z sekcji 2.
-2. Sprawdź `git status` i ostatnie commity (`git log --oneline -10`).
-3. Sprawdź strukturę katalogów (`tree -L 2` lub `ls -R`).
-4. Przeczytaj `project.sh`, jeśli zadanie dotyczy narzędzi.
-5. Utwórz lub zaktualizuj `TODO.md` dla zadania obejmującego więcej niż jeden mały krok.
-6. Zapisz założenia, ryzyka i kryteria akceptacji.
+Klasyfikacja z `project.sh` (stan potwierdzony):
 
-### 4.2. Podczas pracy
+```dsl
+FACT tool.active   = ["code2llm","redup","prefact","doql","sumd","sumr"]
+FACT tool.installed_only = ["regix","glon","code2logic"]   # zainstalowane, nie wywoływane
+FACT tool.commented = ["vallm","goal"]                     # poza bieżącym przepływem
 
-1. Wprowadzaj minimalne, logiczne zmiany.
-2. Po każdym etapie sprawdź `git diff`.
-3. Nie uruchamiaj zakomentowanych poleceń z `project.sh` bez uzasadnienia.
-4. Nie opisuj jako dostępnych elementów, których nie potwierdziłeś.
-5. Jeśli napotkasz sprzeczność między dokumentacją a rzeczywistością, zapisz ją w `TODO.md` lub raporcie.
+RULE R-TOOL-001:
+  WHEN need == "env_setup"
+  THEN RUN "bash ./project.sh"
+  PRIORITY P1
 
-### 4.3. Po zmianie
+RULE R-TOOL-002:
+  WHEN tool IN tool.active
+  THEN RUN env.venv + "/" + tool WITH documented_args
+  PRIORITY P1
 
-1. Sprawdź `git diff` — upewnij się, że nie ma przypadkowych zmian.
-2. Sprawdź, czy nie wyciekły sekrety lub dane środowiskowe.
-3. Sprawdź, czy odwołania do plików i sekcji są nadal poprawne.
-4. Zaktualizuj `TODO.md` i ewentualnie `CHANGELOG.md`.
-5. Wykonaj commit tylko po zatwierdzeniu przez użytkownika lub gdy jest to wyraźnie zlecone.
+RULE R-TOOL-003:
+  WHEN tool IN tool.installed_only
+  THEN REQUIRE read_docs(tool) BEFORE run(tool)
+  AND FORBID assume(tool.behavior)
+  PRIORITY P1
 
----
+RULE R-TOOL-004:
+  WHEN tool IN tool.commented
+  THEN FORBID run(tool) UNLESS justification_recorded
+  PRIORITY P0
 
-## 5. Narzędzia w `project.sh`
+RULE R-TOOL-005:
+  WHEN tool.command CONTAINS "--force"
+  THEN REQUIRE diff_review BEFORE and AFTER run
+  PRIORITY P0
+```
 
-Skrypt `project.sh` przygotowuje środowisko i uruchamia narzędzia analityczne. Niektóre polecenia są aktywne, inne zakomentowane, a inne tylko instalują pakiet.
+Referencja poleceń aktywnych:
 
-### Aktywne polecenia
+```dsl
+CMD code2llm = "venv/bin/code2llm ./ -f all -o ./project --no-chunk --exclude '*.md'"
+CMD redup    = "venv/bin/redup scan . --format toon --output ./project --ext .mjs,.js,.php,.sh"
+CMD prefact  = "venv/bin/prefact -a -e 'examples/**'"
+CMD doql     = "venv/bin/doql adopt . --format less --output app.doql.less --force"
+CMD sumd     = "venv/bin/sumd ."
+CMD sumr     = "venv/bin/sumr ."
+```
 
-| Narzędzie | Komenda | Efekt |
-|---|---|---|
-| `code2llm` | `$VENV/bin/code2llm ./ -f all -o ./project --no-chunk --exclude '*.md'` | reprezentacja projektu w `./project` |
-| `redup` | `$VENV/bin/redup scan . --format toon --output ./project --ext .mjs,.js,.php,.sh` | raport duplikatów w `./project` |
-| `prefact` | `$VENV/bin/prefact -a -e "examples/**"` | analiza struktury projektu |
-| `doql` | `$VENV/bin/doql adopt . --format less --output app.doql.less --force` | tworzy lub nadpisuje `app.doql.less` |
-| `sumd` | `$VENV/bin/sumd .` | podsumowanie plików `.md` |
-| `sumr` | `$VENV/bin/sumr .` | podsumowanie raportów |
+## 4. Delegacja i agenci (P0)
 
-### Pakiety instalowane, ale nie uruchamiane
+```dsl
+RULE R-AGENT-001:
+  WHEN task.requires_agent == TRUE AND agents.subactor.available == FALSE
+  THEN FORBID call_agent_by_name
+  AND GOTO R-AGENT-002
+  PRIORITY P0
 
-- `regix`
-- `glon`
-- `code2logic`
+RULE R-AGENT-002:
+  WHEN fallback_needed == TRUE AND task.kind == "documentation"
+  THEN RUN "git diff --check" AND RUN "git diff"
+  AND REQUIRE reference_consistency_check
+  PRIORITY P1
 
-Nie zakładaj ich działania bez sprawdzenia dokumentacji.
+RULE R-AGENT-003:
+  WHEN fallback_needed == TRUE AND task.kind == "code" AND MISSING(test_runner)
+  THEN EMIT limitation("no test runner found")
+  AND FORBID claim("tests passed")
+  PRIORITY P0
+```
 
-### Zakomentowane polecenia
+## 5. Dyscyplina edycji (P0/P1)
 
-Nie uruchamiaj bez uzasadnienia:
+```dsl
+RULE R-EDIT-001:
+  WHEN phase == WORK
+  THEN REQUIRE change.minimal == TRUE
+  AND RUN "git diff" AFTER each stage
+  PRIORITY P1
 
-- `$VENV/bin/vallm batch ...` — wymaga modelu LLM i może być czasochłonne.
-- `$VENV/bin/goal -a` — wymaga konfiguracji celów.
+RULE R-EDIT-002:
+  WHEN statement.claims_available(x) AND EXISTS(x) == FALSE
+  THEN FAIL "do not describe unverified artifacts as available"
+  PRIORITY P0
 
----
+RULE R-EDIT-003:
+  WHEN doc.contradicts(repo_state)
+  THEN CREATE todo.item("resolve doc/reality mismatch") 
+  AND EMIT flag
+  PRIORITY P1
+```
 
-## 6. Zasady bezpieczeństwa i ograniczenia
+## 6. Publikacja: commit i push (P0)
 
-- Nie commituj sekretów, haseł, tokenów ani kluczy API.
-- Nie uruchamiaj `--force` bez sprawdzenia, czy nie nadpisze ważnych plików.
-- Nie instaluj zależności globalnie (poza `venv`) bez wyraźnej zgody.
-- Nie usuwaj testów ani nie wyłączaj ich bez udokumentowanej przyczyny.
-- Nie twierdź, że coś działa, jeśli tylko zainstalowałeś pakiet.
-- Zakomentowane komendy w `project.sh` nie są częścią aktualnego przepływu.
+```dsl
+RULE R-PUB-001:
+  WHEN phase == PUBLISH
+  THEN RUN "git diff"
+  AND REQUIRE PASS(POLICY.GATE pre_commit)
+  PRIORITY P0
 
-### Gdy agent specjalistyczny nie jest dostępny
+RULE R-PUB-002:
+  WHEN commit.pending == TRUE
+  THEN REQUIRE MATCHES(commit.message, "^(feat|fix|test|docs|refactor|build|ci|chore|security)(\\(.+\\))?: .+")
+  PRIORITY P1
+  SOURCE README§12
 
-Nazwy agentów `test-agent`, `repair-agent`, `validator-agent`, `todo-agent` i `doctor-agent` nie są potwierdzone w repozytorium. Nie wywołuj ich z samej nazwy.
+RULE R-PUB-003:
+  WHEN scope.publishable == TRUE
+  THEN REQUIRE PASS(POLICY.GATE pre_release)   # wersja + changelog + testy
+  PRIORITY P1
 
-Zamiast tego:
+RULE R-PUB-004:
+  WHEN action IN ["commit","push"] AND user_approval == FALSE AND explicit_task == FALSE
+  THEN STOP AND ASK "confirm commit/push"
+  PRIORITY P0
 
-- wykonaj lokalną kontrolę adekwatną do zadania, jeśli istnieje potwierdzona komenda,
-- dla dokumentacji sprawdź odwołania, spójność z `project.sh`, `git diff --check` i `git diff`,
-- dla kodu najpierw znajdź rzeczywisty runner testów lub linter,
-- jeśli nie ma testów ani runnera, zgłoś to jako ograniczenie,
-- poproś użytkownika o decyzję, gdy wymagane narzędzie nie istnieje.
+RULE R-PUB-005:
+  WHEN action == "git push --force" OR action == "history_rewrite"
+  THEN BLOCK "requires explicit human consent"
+  PRIORITY P0
+```
 
----
+## 7. Warunki zatrzymania (P0)
 
-## 7. Kiedy zatrzymać się i zapytać człowieka
+```dsl
+RULE R-STOP-001:
+  WHEN requirements.contradictory == TRUE OR requirements.incomplete == TRUE
+  THEN STOP AND ASK
+  PRIORITY P0
 
-Zatrzymaj pracę i poproś o decyzję, gdy:
+RULE R-STOP-002:
+  WHEN action.destructive == TRUE          # rm -rf, force push, overwrite
+  THEN STOP AND ASK
+  PRIORITY P0
 
-- wymagania są sprzeczne lub niepełne,
-- operacja może być destrukcyjna (np. `rm -rf`, `git push --force`, nadpisanie plików),
-- brakuje danych dostępowych,
-- dokumentacja i kod wykluczają się w sposób wymagający wyboru architektonicznego,
-- nie potwierdziłeś istnienia narzędzia/agenta, którego użycie jest wymagane.
+RULE R-STOP-003:
+  WHEN credentials.missing == TRUE
+  THEN STOP AND ASK
+  PRIORITY P0
 
----
+RULE R-STOP-004:
+  WHEN path_access(tools.forbidden_path) requested
+  THEN BLOCK "MatthiasLew is off-limits"
+  PRIORITY P0
 
-## 8. Definition of Done
+RULE R-STOP-005:
+  WHEN backlog.empty == TRUE OR all_tasks.blocked == TRUE
+  THEN SET phase = STOP
+  PRIORITY P1
+```
 
-Zadanie jest ukończone, gdy:
+## 8. Definition of Done (asercje przejścia PUBLISH→STOP)
 
-- [ ] opis wskazuje aktualne źródła prawdy,
-- [ ] opisany przepływ odpowiada rzeczywistym plikom,
-- [ ] funkcje niepotwierdzone są wyraźnie oznaczone,
-- [ ] komendy aktywne i zakomentowane nie są pomieszane,
-- [ ] odwołania do plików i sekcji są poprawne,
-- [ ] `git diff` nie zawiera przypadkowych zmian,
-- [ ] znane luki i ryzyka są zapisane,
-- [ ] raport zawiera zakres wykonanej weryfikacji.
+```dsl
+ASSERT DoD:
+  REQUIRE sot_references.valid == TRUE
+  REQUIRE described_flow == actual_files
+  REQUIRE unverified_items.flagged == TRUE
+  REQUIRE tool.active SEPARATED_FROM tool.commented
+  REQUIRE PASS(POLICY.GATE pre_commit)
+  REQUIRE git_diff.no_accidental_changes == TRUE
+  REQUIRE git_diff.no_secrets == TRUE
+  REQUIRE todo.gaps_and_risks_recorded == TRUE
+  ON_FAIL: STOP AND report(unsatisfied_assertions)
+```
 
----
+## 9. Ściągawka (kolejność ewaluacji)
 
-## 9. Szybka ściągawka
-
-```text
-1. Czytaj: Opus48Medium/CONTRIBUTING.md → CONTRIBUTING.md (root) → docs/README.md → GPT56Luna/CONTRIBUTING.md
-2. Sprawdź: git status, git log, struktura katalogów
-3. Jeśli zadanie dotyczy narzędzi: przeczytaj project.sh i rozróżnij aktywne/zakomentowane
-4. Nie zakładaj istnienia: src/, tests/, CI, Docker, agentów Subactor
-5. Zapisz plan w TODO.md dla większych zadań
-6. Wprowadź minimalne zmiany, sprawdź diff, nie commituj sekretów
-7. Zatrzymaj się przy destrukcyjnych lub niejasnych operacjach
+```dsl
+START → R-START-* → PLAN → R-PLAN-* → WORK → (R-TOOL-*, R-AGENT-*, R-EDIT-*)
+      → VERIFY(POLICY gates) → PUBLISH → R-PUB-* → ASSERT DoD → STOP
 ```

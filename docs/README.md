@@ -2,7 +2,8 @@
 
 ## Źródła prawdy
 
-- `GPT56Luna/CONTRIBUTING.md` — rzeczywista instrukcja operacyjna dla agentów AI w tym repozytorium.
+- `GPT56Luna/CONTRIBUTING.md` — proceduralna instrukcja operacyjna dla agentów AI w tym repozytorium.
+- `GPT56Luna/POLICY.md` — proceduralne reguły zgodności, dowodów, bezpieczeństwa i walidacji.
 - `GPT56Luna/ANALIZA-DOKUMENTACJI.md` — analiza zgodności dokumentacji z `project.sh`, historia decyzji i znane luki.
 - `README.md` — ogólny, repozytoryjny standard pracy ludzi i agentów AI.
 - `POLICY.md` — zasady nazewnictwa, modularności, zależności, bezpieczeństwa i współpracy.
@@ -12,11 +13,12 @@
 ## Kolejność czytania przez agenta
 
 1. `GPT56Luna/CONTRIBUTING.md`
-2. `README.md`
-3. `POLICY.md`
-4. `project.sh`, jeżeli zadanie dotyczy skryptu lub narzędzi
-5. `GPT56Luna/ANALIZA-DOKUMENTACJI.md`
-6. `TODO.md`, jeżeli istnieje
+2. `GPT56Luna/POLICY.md`
+3. `README.md`
+4. `POLICY.md`
+5. `project.sh`, jeżeli zadanie dotyczy skryptu lub narzędzi
+6. `GPT56Luna/ANALIZA-DOKUMENTACJI.md`
+7. `TODO.md`, jeżeli istnieje
 
 ## Ważne ograniczenie
 
