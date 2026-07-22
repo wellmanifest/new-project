@@ -924,3 +924,33 @@ Po zakończeniu większego zakresu agent powinien sprawdzić:
 Propozycje poprawy powinny zostać dopisane do `TODO.md`.
 
 Zmiany standardu powinny być wprowadzane jako osobne, udokumentowane zadania.
+
+## 18. Podsumowanie moich prac 21.07-22.07
+21.07
+Utworzenie repo
+Utworzenie Pliku README
+Utworzenie pierwszego pliku CONTRIBUTING
+
+22.07
+Uruchomienie 4 rodzajów LLM by sprawdziły istniejacy plik i napisały czy jest przez nich dobrze rozumiany i zaproponowały zmiany
+Sprawdzenie tych informacji i usuniecie Kimi K z dalszej pracy z powodu nie zadowalajacych wynikow
+Kazanie LLM wykonac przykladowy plik CONTRIBUTING u siebie w folderze
+Podsumowanie dlugosci czasu działania i ilosci wykorzystanych tokenow
+Kazanie LLM wykonac koncowy plik CONTRIBUTING używając DSL
+
+## 19. Co dalej
+
+  Bazując na informacjach od perplexity trzeba wybrac ktory sposob zapisu dsl jest tak samo czytelny dla LLM oraz człowieka 
+  Na bazie tych informacji stworzyc runtime 
+
+## 20. TODO
+ - Przeanalizować pliki które stworzyły LLM za pomoca perplexity
+ - jak napisze to wszystko co mowilem i podsumuje to co wczoraj w readme
+ - plan dzialania co dalej
+ - zapytaj go ktory z formatow proponuje i co zrobic dalej jesli by miec latwo do pisania dla czlowieka i maszyny i latwe do edycji dla czlowieka on powinnien zaproponowac wersje lepsza spelniajaca, lepsza wersje niz widzi, dam mu readme zeby on wiedzial do czego jest ten projekt itd 
+ - stowrz folder perplexity wklei prompt pobierz oraz to co on napisal 
+ - wymagania ten jezyk ma byc taki że jeśli człowiek da komende to tą komende bedzie procesować LMM i on bedzie mial dostep roznych danych/logow i bazie danych i bedzie musial wygenerować poprawny plik odnośnie co powinno sie zadziać bazujac na wszystkich informacjach ktore dostal powinnien wygenerować takie typu rzadanie dsl i dopiero ten dsl bedzie szedl dalej w system 
+ - Potrzebuje runtime dsl w jezyku typescript z przykładami (w folderze example), testami i wzdrozeniem na przykładowej stronie www oraz na backend.   
+Procedura: NL -> [LLM ts] -> DSL [ts-runtime] -> js/nodejs code [frontend/backend]
+Dodać skrypt w python z użyciem openrouter + litellm, który sprawdzi, czy to co zostało wygenerowane na bazie NL oddaje logike w js/nodejs code
+Projekt DSL Typescritp runtime jako cli shell dla linux i windows ma byc wykrozystywany do codziennej pracy pracownika biurowego, ktory bedzie wykonywal polecenia do masyzny i zwrotnie otrzyma zapytanie precyzujace lub potwierdzenie na bazie istniejacych, podlaczonych danych do systemu, wszytsko to ma byc zdefiniwoane rowniez przez ten jezyk DSL
