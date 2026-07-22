@@ -1,402 +1,415 @@
-# Project Policy
+# POLICY — DSL regułowy projektu
 
-## Purpose
+## 1. System
 
-This document defines the policies and principles that guide project development, including naming conventions, modularity, dependency management, and scope boundaries.
-
-## 1. Repository Naming Conventions
-
-### 1.1. Repository Names
-
-Repository names should be:
-- **Lowercase**: Use only lowercase letters
-- **Hyphen-separated**: Use hyphens to separate words (e.g., `new-project`, `code2llm`)
-- **Descriptive**: Names should clearly indicate the repository's purpose
-- **Short**: Keep names concise but meaningful
-- **No underscores**: Avoid underscores in repository names
-
-### 1.2. Package Names
-
-Package names should follow the repository name convention:
-- Match the repository name when possible
-- Use the same hyphen-separated format
-- Be consistent across package managers (npm, pip, etc.)
-
-### 1.3. File and Directory Names
-
-- **Lowercase**: Use lowercase for files and directories
-- **Hyphen-separated**: Use hyphens for multi-word names
-- **Descriptive**: Names should indicate content/purpose
-- **No spaces**: Never use spaces in file/directory names
-
-### 1.4. Examples
-
-✅ **Good:**
-- Repository: `new-project`
-- Package: `new-project`
-- Directory: `src/`, `docs/`, `tests/`
-- File: `main.py`, `utils.sh`, `README.md`
-
-❌ **Bad:**
-- Repository: `New_Project`, `newProject`
-- Package: `new_project`, `NewProject`
-- Directory: `Src/`, `Docs/`, `my folder/`
-- File: `Main.py`, `utils.SH`, `readme.md`
-
-## 2. Modularity Principles
-
-### 2.1. Single Responsibility
-
-Each module, package, or component should have:
-- **One clear purpose**: Do one thing well
-- **Well-defined interface**: Clear inputs and outputs
-- **Minimal dependencies**: Depend only on what's necessary
-- **Independent testability**: Can be tested in isolation
-
-### 2.2. Module Boundaries
-
-Modules should be:
-- **Loosely coupled**: Minimize dependencies between modules
-- **Highly cohesive**: Related functionality should be grouped together
-- **Encapsulated**: Internal details should be hidden
-- **Documented**: Clear documentation of module purpose and usage
-
-### 2.3. Directory Structure
-
-Standard project structure:
-```
-project-name/
-├── src/              # Source code
-├── tests/            # Test files
-├── docs/             # Documentation
-├── examples/         # Usage examples
-├── scripts/          # Utility scripts
-├── config/           # Configuration files
-├── CONTRIBUTING.md   # Contributing guidelines
-├── POLICY.md         # This file
-├── README.md         # Project overview
-├── LICENSE           # License file
-└── TODO.md           # Task tracking (during development)
+```dsl
+SYSTEM polityka_projektu
+  DOMENA:    nazewnictwo, modularnosc, zarzadzanie_zaleznosciami, technologie, jakosc_kodu, bezpieczenstwo, zasieg, zgodnosc
+  ZASADA:    kazda_regula_ma_warunek_i_konsekwencje
 ```
 
-### 2.4. Component Design
-
-When creating components:
-- **Keep it small**: Components should be focused and manageable
-- **Reusable**: Design for reuse across projects
-- **Configurable**: Use configuration instead of hardcoding
-- **Versioned**: Clear versioning for compatibility
-
-## 3. Dependency Management
-
-### 3.1. Dependency Principles
-
-- **Minimal dependencies**: Only add dependencies that are absolutely necessary
-- **Explicit dependencies**: All dependencies should be declared in package files
-- **Pinned versions**: Use specific version numbers for reproducibility
-- **Regular updates**: Keep dependencies updated but test thoroughly
-- **Security first**: Regularly audit for security vulnerabilities
-
-### 3.2. Dependency Selection
-
-Before adding a dependency, consider:
-- **Is it necessary?** Can the functionality be built in-house?
-- **Is it mature?** Is the library stable and well-maintained?
-- **Is it secure?** Does it have a good security track record?
-- **Is it compatible?** Does it work with our tech stack?
-- **Is it licensed?** Is the license compatible with our project?
-
-### 3.3. Dependency Files
-
-Use appropriate dependency files for your technology:
-- **Python**: `requirements.txt`, `pyproject.toml`, or `setup.py`
-- **Node.js**: `package.json`, `package-lock.json`
-- **Other**: Use the standard for your ecosystem
-
-### 3.4. Development vs Production
-
-Separate development and production dependencies:
-- **Production**: Only what's needed to run the application
-- **Development**: Testing tools, linters, documentation generators
-- **Optional**: Mark optional dependencies clearly
-
-### 3.5. Dependency Updates
-
-- **Review before updating**: Check changelogs for breaking changes
-- **Test thoroughly**: Run all tests after dependency updates
-- **Update incrementally**: Update one dependency at a time
-- **Document breaking changes**: Note any required code changes
-
-## 4. What We Do
-
-### 4.1. Development Practices
-
-✅ **We DO:**
-- Write clear, documented code
-- Use version control (Git)
-- Create comprehensive tests
-- Follow semantic versioning
-- Maintain changelogs
-- Use CI/CD automation
-- Write documentation alongside code
-- Follow security best practices
-- Use code review processes
-- Plan before implementing
-
-### 4.2. Architecture Decisions
-
-✅ **We DO:**
-- Design for modularity and reusability
-- Use established design patterns
-- Plan for scalability
-- Consider maintainability
-- Choose appropriate technologies
-- Design for testability
-- Plan for error handling
-- Consider performance implications
-- Document architectural decisions
-
-### 4.3. Tool Usage
-
-✅ **We DO:**
-- Use existing tools when available
-- Leverage automation tools
-- Use appropriate tools for the job
-- Keep tools updated
-- Document tool usage
-- Share tool configurations
-- Use tools consistently
-
-## 5. What We Don't Do
-
-### 5.1. Development Anti-Patterns
-
-❌ **We DON'T:**
-- Duplicate existing functionality
-- Reinvent the wheel unnecessarily
-- Skip testing
-- Commit secrets or sensitive data
-- Ignore security vulnerabilities
-- Write undocumented code
-- Make breaking changes without version bumps
-- Skip code reviews
-- Ignore technical debt
-- Rush without planning
-
-### 5.2. Architecture Anti-Patterns
-
-❌ **We DON'T:**
-- Create monolithic structures without reason
-- Over-engineer simple problems
-- Use inappropriate technologies
-- Ignore scalability concerns
-- Create tight coupling between modules
-- Skip error handling
-- Ignore performance issues
-- Make architectural decisions without documentation
-
-### 5.3. Dependency Anti-Patterns
-
-❌ **We DON'T:**
-- Add unnecessary dependencies
-- Use unpinned versions in production
-- Ignore security advisories
-- Mix development and production dependencies
-- Use deprecated libraries without justification
-- Ignore license compatibility
-- Copy-paste code instead of using libraries
-
-## 6. Technology Choices
-
-### 6.1. Language Selection
-
-Choose languages based on:
-- Project requirements
-- Team expertise
-- Ecosystem maturity
-- Performance needs
-- Available libraries
-- Long-term maintenance considerations
-
-### 6.2. Framework Selection
-
-Choose frameworks based on:
-- Project scope and complexity
-- Community support
-- Documentation quality
-- Learning curve
-- Performance characteristics
-- Integration capabilities
-
-### 6.3. Tool Selection
-
-Choose tools based on:
-- Specific problem being solved
-- Tool maturity and stability
-- Community adoption
-- Documentation quality
-- Maintenance status
-- License compatibility
-
-## 7. Code Quality Standards
-
-### 7.1. Code Style
-
-- Follow language-specific style guides
-- Use consistent formatting
-- Write self-documenting code
-- Add comments for complex logic
-- Keep functions focused and small
-- Use meaningful names
-
-### 7.2. Testing Standards
-
-- Write unit tests for critical logic
-- Write integration tests for components
-- Maintain test coverage above 80%
-- Test edge cases and error conditions
-- Keep tests fast and reliable
-- Use descriptive test names
-
-### 7.3. Documentation Standards
-
-- Document public APIs
-- Document complex algorithms
-- Provide usage examples
-- Keep documentation up to date
-- Use clear and concise language
-- Include diagrams for complex systems
-
-## 8. Security Policies
-
-### 8.1. Secret Management
-
-- Never commit secrets to version control
-- Use environment variables for configuration
-- Use secret management tools
-- Rotate secrets regularly
-- Audit secret access
-
-### 8.2. Input Validation
-
-- Validate all user inputs
-- Sanitize data from external sources
-- Use parameterized queries
-- Implement rate limiting
-- Handle errors gracefully
-
-### 8.3. Dependency Security
-
-- Regularly audit dependencies
-- Update vulnerable dependencies promptly
-- Use tools like `npm audit`, `pip-audit`
-- Review security advisories
-- Report security issues responsibly
-
-## 9. Communication and Collaboration
-
-### 9.1. Commit Messages
-
-- Use conventional commit format
-- Be descriptive but concise
-- Reference related issues
-- Explain why, not just what
-- Keep commits atomic
-
-### 9.2. Code Reviews
-
-- Review all code before merging
-- Provide constructive feedback
-- Check for security issues
-- Verify test coverage
-- Ensure documentation is updated
-
-### 9.3. Issue Tracking
-
-- Use descriptive titles
-- Provide clear reproduction steps
-- Categorize issues appropriately
-- Link related issues
-- Update issue status regularly
-
-## 10. Scope and Boundaries
-
-### 10.1. Project Scope
-
-Projects should:
-- Have clear, defined goals
-- Stay focused on core functionality
-- Avoid scope creep
-- Plan for future extensibility
-- Document what's out of scope
-
-### 10.2. Feature Decisions
-
-When considering new features:
-- Does it align with project goals?
-- Is it necessary for core functionality?
-- Can it be added as a plugin/extension?
-- What is the maintenance cost?
-- Are there alternatives?
-
-### 10.3. Deprecation Policy
-
-- Deprecate features before removing
-- Provide migration guides
-- Maintain deprecated features for at least one major version
-- Communicate deprecation clearly
-- Remove deprecated features in major releases
-
-## 11. Compliance and Licensing
-
-### 11.1. License Compliance
-
-- Choose appropriate open-source licenses
-- Respect license terms of dependencies
-- Include license files in repositories
-- Document license compatibility
-- Attribute third-party code appropriately
-
-### 11.2. Legal Considerations
-
-- Comply with data protection regulations
-- Respect intellectual property
-- Follow export control regulations
-- Consider accessibility requirements
-- Document compliance measures
-
-## 12. Continuous Improvement
-
-### 12.1. Review Process
-
-- Regularly review these policies
-- Update based on lessons learned
-- Solicit team feedback
-- Adapt to new technologies
-- Document policy changes
-
-### 12.2. Metrics and Measurement
-
-- Track code quality metrics
-- Monitor test coverage
-- Measure performance
-- Track security incidents
-- Review process effectiveness
-
----
-
-## Policy Updates
-
-This document should be reviewed and updated regularly. Changes should be:
-- Proposed and discussed
-- Documented with rationale
-- Communicated to the team
-- Implemented consistently
-- Tracked in changelog
-
-## Questions?
-
-For questions about these policies, refer to:
-- `CONTRIBUTING.md` for implementation guidelines
-- `docs/README.md` for detailed workflow information
-- Project maintainers for clarification
+## 2. Reguły nazewnictwa
+
+```dsl
+REGULA R001: nazwa_repozytorium
+  DANE: repo_name
+  JESLI repo_name PASUJE_DO /^[a-z0-9](-?[a-z0-9]+)*$/ TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE
+    ZWROC_BLAD("R001: nazwa repozytorium musi byc lowercase i hyphen-separated; zakaz wielkich liter i podkreslnikow")
+  KONIEC
+KONIEC
+
+REGULA R002: nazwa_pakietu
+  DANE: package_name, repo_name
+  JESLI package_name = repo_name TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE JESLI package_name PASUJE_DO /^[a-z0-9-]+$/ TO
+    ZWROC_OSTRZEZENIE("R002: package_name powinien zgadzac sie z repo_name")
+  W_PRZECIWNYM_RAZIE
+    ZWROC_BLAD("R002: package_name musi byc lowercase i hyphen-separated")
+  KONIEC
+KONIEC
+
+REGULA R003: nazwa_pliku_lub_katalogu
+  DANE: path
+  JESLI path ZAWIERA(spacja) LUB ZAWIERA(wielka_litera) LUB ZAWIERA(podkreslenie) TO
+    ZWROC_BLAD("R003: nazwy plikow i katalogow musza byc lowercase, hyphen-separated, bez spacji")
+  KONIEC
+KONIEC
+```
+
+## 3. Reguły modularności
+
+```dsl
+REGULA R101: pojedyncza_odpowiedzialnosc
+  DANE: module
+  JESLI module.jednoznaczny_cel = PRAWDA
+     I module.wejscie_jasne = PRAWDA
+     I module.wyjscie_jasne = PRAWDA
+     I module.zaleznosci = minimalne
+     I module.testowalny = PRAWDA TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE
+    ZWROC_BLAD("R101: modul musi miec jeden cel, jasne wejscie/wyjscie, minimalne zaleznosci i byc testowalny")
+  KONIEC
+KONIEC
+
+REGULA R102: granice_modulow
+  DANE: module_a, module_b
+  JESLI sprzezenie(module_a, module_b) = niskie
+     I kohezja(module_a) = wysoka
+     I szczegoly_wewnetrzne(module_a) = ukryte
+     I dokumentacja(module_a) = istnieje TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE
+    ZWROC_BLAD("R102: moduly musza byc slabo sprzezone, spojne, hermetyzowane i udokumentowane")
+  KONIEC
+KONIEC
+
+REGULA R103: struktura_katalogow
+  DANE: tree
+  JESLI istnieje(src) I istnieje(tests) I istnieje(docs) TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE
+    ZWROC_OSTRZEZENIE("R103: zalecana struktura: src/, tests/, docs/, examples/, scripts/, config/")
+  KONIEC
+KONIEC
+
+REGULA R104: projektowanie_komponentow
+  DANE: component
+  JESLI component.zakres = skupiony
+     I (component.reusable = PRAWDA LUB uzasadniony_wyjatek)
+     I component.konfigurowalny = PRAWDA
+     I component.versioned = PRAWDA TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE
+    ZWROC_BLAD("R104: komponent musi byc skupiony, konfigurowalny i wersjonowany; wielokrotne uzycie wymaga uzasadnienia")
+  KONIEC
+KONIEC
+```
+
+## 4. Reguły zarządzania zależnościami
+
+```dsl
+REGULA R201: dodaj_zaleznosc
+  DANE: dependency
+  JESLI dependency.necessary = FALSZ TO ZWROC_BLAD("R201: zaleznosc nie jest konieczna")
+  JESLI dependency.mature = FALSZ TO ZWROC_BLAD("R201: zaleznosc nie jest dojrzala i stabilna")
+  JESLI dependency.secure = FALSZ TO ZWROC_BLAD("R201: zaleznosc ma problemy bezpieczenstwa")
+  JESLI dependency.compatible = FALSZ TO ZWROC_BLAD("R201: zaleznosc niekompatybilna ze stosem")
+  JESLI dependency.license_ok = FALSZ TO ZWROC_BLAD("R201: licencja niekompatybilna")
+  JESLI wszystkie_powyzsze = PRAWDA TO
+    DODAJ_DO(plik_zaleznosci, dependency)
+    ZWROC_OK
+  KONIEC
+KONIEC
+
+REGULA R202: wersja_zaleznosci
+  DANE: dependency
+  JESLI dependency.version = pinned_lub_dokladna TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE
+    ZWROC_OSTRZEZENIE("R202: wersja zaleznosci powinna byc przypieta dla reprodukowalnosci")
+  KONIEC
+KONIEC
+
+REGULA R203: rozdziel_zaleznosci
+  DANE: dependency
+  JESLI dependency.uzywana_w_produkcji = PRAWDA TO
+    DODAJ_DO(zaleznosci_produkcyjne)
+  JESLI dependency.uzywana_w_rozwoju = PRAWDA TO
+    DODAJ_DO(zaleznosci_rozwojowe)
+  JESLI dependency.opcjonalna = PRAWDA TO
+    OZNACZ_JAKO(opcjonalna)
+  KONIEC
+KONIEC
+
+REGULA R204: aktualizuj_zaleznosc
+  DANE: dependency, nowa_wersja
+  1. PRZECZYTAJ(changelog)
+  2. JESLI changelog ZAWIERA "breaking change" TO
+       WYKONAJ(testy_przed_i_po)
+       ZAPISZ(wymagane_zmiany_kodu)
+     KONIEC
+  3. AKTUALIZUJ_PO_JEDNEJ_NA_RAZ(dependency)
+  4. WYKONAJ(testy_calego_projektu)
+  5. JESLI testy = OK TO ZWROC_OK
+  6. W_PRZECIWNYM_RAZIE COFNIJ_WERSJE_LUB_NAPRAW
+KONIEC
+```
+
+## 5. Reguły praktyk — dozwolone i zabronione
+
+```dsl
+REGULA R301: dozwolone_praktyki
+  DLA akcji W {pisz_kod, uzywaj_vcs, tworz_testy, semwer, changelog, ci_cd, dokumentacja, security, code_review, planowanie}:
+    JESLI akcja.wykonana = PRAWDA I akcja.zgodna_z_policy = PRAWDA TO
+      ZWROC_OK
+    W_PRZECIWNYM_RAZIE
+      ZWROC_OSTRZEZENIE("R301: oczekiwano praktyki " + akcji)
+    KONIEC
+  KONIEC
+KONIEC
+
+REGULA R302: zabronione_antywzorce
+  DLA akcji W {duplikacja_funkcjonalnosci, pomijanie_testow, commit_sekretow, ignorowanie_podatnosci, kod_bez_dokumentacji, breaking_bez_wersji, pominiecie_review, ignorowanie_dlugu, dzialanie_bez_planu}:
+    JESLI akcja.wykryta = PRAWDA TO
+      ZWROC_BLAD("R302: zabronione dzialanie: " + akcji)
+    KONIEC
+  KONIEC
+KONIEC
+```
+
+## 6. Reguły wyboru technologii
+
+```dsl
+REGULA R401: wybor_jezyka
+  DANE: project_requirements, team_expertise, ecosystem, performance, maintenance
+  JESLI project_requirements.spehnione_przez(team_expertise, ecosystem, performance, maintenance) = PRAWDA TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE
+    ZWROC_BLAD("R401: jezyk nie spelnia wymagan projektu, ekipy, ekosystemu, wydajnosci lub utrzymania")
+  KONIEC
+KONIEC
+
+REGULA R402: wybor_frameworka
+  DANE: scope, complexity, support, docs, learning_curve, performance, integration
+  JESLI ocena(scope, complexity, support, docs, learning_curve, performance, integration) >= akceptowalna TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE
+    ZWROC_BLAD("R402: framework nie spelnia kryteriow wyboru")
+  KONIEC
+KONIEC
+
+REGULA R403: wybor_narzedzia
+  DANE: problem, tool
+  JESLI tool.rozwiazuje(problem) = PRAWDA
+     I tool.dojrzaly = PRAWDA
+     I tool.dokumentacja = dobra
+     I tool.license_ok = PRAWDA TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE
+    ZWROC_BLAD("R403: narzedzie nie rozwiazuje problemu, nie jest dojrzale, slabo udokumentowane lub ma niekompatybilna licencje")
+  KONIEC
+KONIEC
+```
+
+## 7. Reguły jakości kodu
+
+```dsl
+REGULA R501: styl_kodu
+  DLA pliku W kod:
+    JESLI plik.zgodny_ze_stylem = PRAWDA
+       I plik.formatowanie_spojne = PRAWDA
+       I plik.nazwy_znaczace = PRAWDA
+       I plik.funkcje_skupione = PRAWDA TO
+      ZWROC_OK
+    W_PRZECIWNYM_RAZIE
+      ZWROC_OSTRZEZENIE("R501: styl kodu wymaga poprawy")
+    KONIEC
+  KONIEC
+KONIEC
+
+REGULA R502: testy_dla_krytycznej_logiki
+  DLA logiki_krytycznej W kod:
+    JESLI istnieje(test_jednostkowy) LUB istnieje(test_integracyjny) TO
+      ZWROC_OK
+    W_PRZECIWNYM_RAZIE
+      ZWROC_BLAD("R502: krytyczna logika wymaga testow")
+    KONIEC
+  KONIEC
+KONIEC
+
+REGULA R503: pokrycie_testami
+  DANE: coverage
+  JESLI coverage >= 0.80 TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE
+    ZWROC_OSTRZEZENIE("R503: pokrycie testami ponizej 80%")
+  KONIEC
+KONIEC
+
+REGULA R504: dokumentacja
+  DLA publicznego_api W kod:
+    JESLI publiczne_api.opisane = PRAWDA
+       I publiczne_api.przyklady_dzialaja = PRAWDA
+       I publiczne_api.aktualne = PRAWDA TO
+      ZWROC_OK
+    W_PRZECIWNYM_RAZIE
+      ZWROC_BLAD("R504: publiczne API i zlozone algorytmy wymagaja aktualnej dokumentacji z przykladami")
+    KONIEC
+  KONIEC
+KONIEC
+```
+
+## 8. Reguły bezpieczeństwa
+
+```dsl
+REGULA R601: sekrety
+  DLA sekretu W {haslo, token, klucz_api, certyfikat_prywatny}:
+    JESLI sekret.wystepuje_w_diff = PRAWDA TO
+      USUN_LUB_ZAMASKUJ(sekret)
+      ZWROC_BLAD("R601: wykryto sekret w diff")
+    KONIEC
+  KONIEC
+KONIEC
+
+REGULA R602: walidacja_wejscia
+  DLA dane_wejsciowe:
+    JESLI dane_wejsciowe.zwalidowane = PRAWDA
+       I dane_wejsciowe.oczyszczone = PRAWDA
+       I dane_wejsciowe.queries_parametryzowane = PRAWDA
+       I dane_wejsciowe.rate_limit = PRAWDA TO
+      ZWROC_OK
+    W_PRZECIWNYM_RAZIE
+      ZWROC_BLAD("R602: dane wejsciowe musza byc zwalidowane, oczyszczone, queries parametryzowane i rate-limited")
+    KONIEC
+  KONIEC
+KONIEC
+
+REGULA R603: audyt_zaleznosci
+  CO okres:
+    WYKONAJ(npm_audit) LUB WYKONAJ(pip-audit)
+    JESLI podatna_zaleznosc = wykryta TO
+      ZAKTUALIZUJ_LUB_ZASTAP(podatna_zaleznosc)
+    KONIEC
+  KONIEC
+KONIEC
+```
+
+## 9. Reguły komunikacji i współpracy
+
+```dsl
+REGULA R701: commit_message
+  DANE: message
+  JESLI message PASUJE_DO /^(feat|fix|test|docs|refactor|build|ci|chore|security)(\(.+\))?: .+/ TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE
+    ZWROC_BLAD("R701: commit message musi byc w formacie conventional commits")
+  KONIEC
+KONIEC
+
+REGULA R702: code_review
+  PRZED merge:
+    WYKONAJ(review)
+    JESLI review.znajduje_podatnosci = PRAWDA TO NAPRAW
+    JESLI review.pokrycie_testami = niewystarczajace TO UZUPELNIJ_TESTY
+    JESLI review.dokumentacja_nieaktualna = PRAWDA TO ZAKTUALIZUJ_DOKUMENTACJE
+    JESLI wszystkie_kryteria = OK TO ZWROC_OK
+  KONIEC
+KONIEC
+
+REGULA R703: issue_tracking
+  DLA issue:
+    JESLI issue.tytul_opisowy = PRAWDA
+       I issue.kroki_reprodukcji = PRAWDA
+       I issue.kategoria = przypisana
+       I issue.status = aktualny TO
+      ZWROC_OK
+    W_PRZECIWNYM_RAZIE
+      ZWROC_OSTRZEZENIE("R703: issue wymaga opisowego tytulu, krokow reprodukcji, kategorii i aktualnego statusu")
+    KONIEC
+  KONIEC
+KONIEC
+```
+
+## 10. Reguły zakresu i granic
+
+```dsl
+REGULA R801: zakres_projektu
+  DANE: feature
+  JESLI feature.zgodna_z_celami = PRAWDA
+     I (feature.konieczna = PRAWDA LUB feature.plugin = PRAWDA)
+     I feature.koszt_utrzymania <= akceptowalny
+     I feature.alternatywy_rozwazone = PRAWDA TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE
+    ZWROC_BLAD("R801: feature poza zakresem lub nieuzasadniona")
+  KONIEC
+KONIEC
+
+REGULA R802: deprecjonowanie
+  DANE: feature
+  JESLI feature.usuwana = PRAWDA TO
+    OZNACZ_JAKO(deprecated)
+    WYDEDYKUJ_GUIDE(migracji)
+    UTRZYMUJ_PRZEZ(major_version = obecna)
+    USUN_W(major_version = nastepna)
+  KONIEC
+KONIEC
+```
+
+## 11. Reguły zgodności i licencji
+
+```dsl
+REGULA R901: licencje
+  DANE: component
+  JESLI component.licencja = wybrana
+     I component.licencja_zaleznosci_kompatybilna = PRAWDA
+     I component.atrybucje = kompletne TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE
+    ZWROC_BLAD("R901: brak licencji, niekompatybilna licencja zaleznosci lub brak atrybucji")
+  KONIEC
+KONIEC
+
+REGULA R902: zgodnosc_prawna
+  DANE: project
+  JESLI project.rodo = spelnione
+     I project.ip = respektowane
+     I project.dostepnosc = uwzgledniona
+     I project.dokumentacja_zgodnosci = istnieje TO
+    ZWROC_OK
+  W_PRZECIWNYM_RAZIE
+    ZWROC_OSTRZEZENIE("R902: braki w zgodnosci prawnej lub dostepnosci")
+  KONIEC
+KONIEC
+```
+
+## 12. Reguły ciągłego doskonalenia
+
+```dsl
+REGULA R1001: przeglad_polityki
+  CO okres:
+    WYKONAJ(review POLICY.md)
+    JESLI zmiana_wymagana = PRAWDA TO
+      ZAPROPONUJ_ZMIANE
+      UZASADNIJ
+      POINFORMUJ_ZESPOL
+      WPROWADZ
+      ZAKTUALIZUJ(CHANGELOG)
+    KONIEC
+  KONIEC
+KONIEC
+
+REGULA R1002: metryki
+  CO okres:
+    ZMIERZ(jakosc_kodu)
+    ZMIERZ(pokrycie_testami)
+    ZMIERZ(wydajnosc)
+    ZMIERZ(incydenty_bezpieczenstwa)
+    ZMIERZ(skutecznosc_procesu)
+    ZAPISZ(metryki)
+  KONIEC
+KONIEC
+```
+
+## 13. Procedura rozstrzygania naruszeń
+
+```dsl
+PROCEDURA obsluz_naruszenie(regula, wykryty_stan):
+  1. ZIDENTYFIKUJ(regula, wykryty_stan)
+  2. JESLI wykryty_stan.poziom = BLAD TO
+       ZATRZYMAJ(dalsza_praca)
+       ZGLOS(wymagana_naprawa)
+     KONIEC
+  3. JESLI wykryty_stan.poziom = OSTRZEZENIE TO
+       ZAPISZ_DO_RAPORTU(wykryty_stan)
+       ROZWAZ(korekte)
+     KONIEC
+  4. JESLI wykryty_stan.poziom = OK TO
+       KONTYNUUJ
+     KONIEC
+KONIEC
+```
