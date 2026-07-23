@@ -40,27 +40,30 @@ Pierwsza wersja ma działać wyłącznie na mockach i danych przykładowych.
 - [x] Opisać rolę LLM, Python verifiera, runtime’u oraz ludzi uczestniczących w procesie.
 - [x] Opisać, dlaczego `project.sh` jest albo nie jest używany w MVP.
 - [x] Sprawdzić, czy żadna zawartość badawcza nie została utracona.
-- [ ] Doprowadzić repozytorium do kontrolowanego stanu bez przypadkowych usunięć.
-- [ ] Naprawić konfigurację pnpm i instalację zależności.
+- [x] Doprowadzić repozytorium do kontrolowanego stanu bez przypadkowych usunięć.
+- [x] Naprawić konfigurację pnpm i instalację zależności.
 
 ---
 
 ## Etap 1 — przypadki użycia i wymagania
 
-- [ ] Zdefiniować zakres MVP.
-- [ ] Zdefiniować aktorów:
+Status: basic MVP scope, actors, single command flow, questions, and one-side approval are documented and covered; two-party conversation, text files, and full acceptance criteria remain open.
+
+
+- [x] Zdefiniować zakres MVP.
+- [x] Zdefiniować aktorów:
   - Human1 — autor intencji lub zleceniodawca,
   - Human2 — odbiorca, wykonawca albo druga strona umowy,
   - LLM — formalizacja i interpretacja,
   - Python verifier — walidacja znaczeniowa,
   - TypeScript runtime — walidacja techniczna, orkiestracja i renderowanie.
-- [ ] Zdefiniować przepływ dla pojedynczego polecenia użytkownika.
+- [x] Zdefiniować przepływ dla pojedynczego polecenia użytkownika.
 - [ ] Zdefiniować przepływ dla rozmowy dwóch stron.
 - [ ] Zdefiniować przepływ dla wytycznych zapisanych w pliku tekstowym.
-- [ ] Zdefiniować proces akceptacji przez jedną stronę.
+- [x] Zdefiniować proces akceptacji przez jedną stronę.
 - [ ] Zdefiniować proces akceptacji przez obie strony kontraktu.
 - [ ] Zdefiniować proces odrzucenia i ponownej edycji.
-- [ ] Zdefiniować proces zadawania pytań doprecyzowujących.
+- [x] Zdefiniować proces zadawania pytań doprecyzowujących.
 - [ ] Zdefiniować, kiedy dokument jest wystarczająco kompletny dla jego odbiorcy.
 - [ ] Zdefiniować kryteria końcowego odbioru MVP.
 
@@ -68,142 +71,160 @@ Pierwsza wersja ma działać wyłącznie na mockach i danych przykładowych.
 
 ## Etap 2 — specyfikacja Intent/Contract DSL
 
-- [ ] Zdefiniować kanoniczny model DSL.
-- [ ] Zdefiniować wersję języka.
-- [ ] Zdefiniować AST.
-- [ ] Zdefiniować JSON Schema.
-- [ ] Przygotować czytelną reprezentację DSL dla człowieka.
-- [ ] Zdefiniować konwersję JSON/AST → human-readable DSL.
+Status: narrow `office.dsl.v1` is implemented and tested; full Intent/Contract DSL remains open.
+
+
+- [x] Zdefiniować kanoniczny model DSL.
+- [x] Zdefiniować wersję języka.
+- [x] Zdefiniować AST.
+- [x] Zdefiniować JSON Schema.
+- [x] Przygotować czytelną reprezentację DSL dla człowieka.
+- [x] Zdefiniować konwersję JSON/AST → human-readable DSL.
 - [ ] Zdefiniować konwersję DSL → dokument w języku naturalnym.
 
 ### Konstrukcje DSL
 
 - [ ] `CONTRACT`
-- [ ] `TASK`
+- [x] `TASK`
 - [ ] `PARTY`
 - [ ] `ROLE`
 - [ ] `INTENT`
-- [ ] `SOURCE`
+- [x] `SOURCE`
 - [ ] `SUBJECT`
 - [ ] `OBLIGATION`
 - [ ] `DELIVERABLE`
 - [ ] `DEADLINE`
 - [ ] `PAYMENT`
-- [ ] `CONDITION`
+- [x] `CONDITION`
 - [ ] `ACCEPTANCE_CRITERIA`
 - [ ] `EXCLUSION`
 - [ ] `ASSUMPTION`
-- [ ] `QUESTION`
+- [x] `QUESTION`
 - [ ] `APPROVAL`
-- [ ] `OUTPUT`
+- [x] `OUTPUT`
 - [ ] `RENDER`
-- [ ] `POLICY`
+- [x] `POLICY`
 
 ### Statusy informacji
 
-- [ ] `KNOWN`
+- [x] `KNOWN`
 - [ ] `CONFIRMED`
 - [ ] `MISSING`
 - [ ] `INCOMPLETE`
 - [ ] `AMBIGUOUS`
 - [ ] `CONFLICTING`
 - [ ] `ASSUMED`
-- [ ] `REQUIRES_CONFIRMATION`
-- [ ] `REJECTED`
+- [x] `REQUIRES_CONFIRMATION`
+- [x] `REJECTED`
 
 ### Diagnostyka DSL
 
-- [ ] Wykrywanie brakujących danych.
+- [x] Wykrywanie brakujących danych.
 - [ ] Wykrywanie niejednoznacznych terminów i wartości.
 - [ ] Wykrywanie sprzecznych wypowiedzi stron.
 - [ ] Wykrywanie założeń dodanych przez LLM.
 - [ ] Wykrywanie elementów niezaakceptowanych przez obie strony.
-- [ ] Wykrywanie działań lub warunków, których nikt nie zlecił.
+- [x] Wykrywanie działań lub warunków, których nikt nie zlecił.
 - [ ] Powiązanie każdego ustalenia ze źródłem w rozmowie lub pliku.
-- [ ] Generowanie konkretnych pytań dotyczących brakujących pól.
+- [x] Generowanie konkretnych pytań dotyczących brakujących pól.
 
 ---
 
 ## Etap 3 — TypeScript runtime
 
-- [ ] Utworzyć parser DSL.
-- [ ] Utworzyć walidator strukturalny.
+Status: mock office-task runtime is implemented and tested; Human2, bilateral approval, contracts, and contract generators remain open.
+
+
+- [x] Utworzyć parser DSL.
+- [x] Utworzyć walidator strukturalny.
 - [ ] Utworzyć walidator semantyczny.
-- [ ] Utworzyć TypeScript runtime.
-- [ ] Utworzyć state machine.
-- [ ] Utworzyć policy engine.
-- [ ] Utworzyć registry obsługiwanych operacji.
+- [x] Utworzyć TypeScript runtime.
+- [x] Utworzyć state machine.
+- [x] Utworzyć policy engine.
+- [x] Utworzyć registry obsługiwanych operacji.
 - [ ] Utworzyć mechanizm diagnozowania braków.
-- [ ] Utworzyć mechanizm pytań do Human1.
+- [x] Utworzyć mechanizm pytań do Human1.
 - [ ] Utworzyć mechanizm pytań do Human2.
-- [ ] Utworzyć proces akceptacji jednej strony.
+- [x] Utworzyć proces akceptacji jednej strony.
 - [ ] Utworzyć proces akceptacji obu stron.
-- [ ] Unieważniać akceptację po zmianie DSL lub planu.
-- [ ] Utworzyć hash zaakceptowanej wersji DSL.
-- [ ] Utworzyć renderer DSL → dokument NL.
+- [x] Unieważniać akceptację po zmianie DSL lub planu.
+- [x] Utworzyć hash zaakceptowanej wersji DSL.
+- [x] Utworzyć renderer DSL → dokument NL.
 - [ ] Utworzyć mockowy generator umowy.
 - [ ] Utworzyć mockowy generator opisu zadania.
-- [ ] Utworzyć zapis audytu.
-- [ ] Utworzyć CLI dla Windows i Linux.
+- [x] Utworzyć zapis audytu.
+- [x] Utworzyć CLI dla Windows i Linux.
 
 ### Stany runtime’u
 
-- [ ] `CREATED`
+Status: runtime currently uses simplified states; target Human1/Human2 state names remain open.
+
+
+- [x] `CREATED`
 - [ ] `ANALYZING_INPUT`
-- [ ] `DSL_GENERATED`
-- [ ] `VALIDATING`
+- [x] `DSL_GENERATED`
+- [x] `VALIDATING`
 - [ ] `WAITING_FOR_INPUT_HUMAN1`
 - [ ] `WAITING_FOR_INPUT_HUMAN2`
 - [ ] `WAITING_FOR_APPROVAL_HUMAN1`
 - [ ] `WAITING_FOR_APPROVAL_HUMAN2`
 - [ ] `APPROVED`
-- [ ] `REJECTED`
+- [x] `REJECTED`
 - [ ] `RENDERING`
-- [ ] `SUCCEEDED`
-- [ ] `FAILED`
-- [ ] `DENIED`
-- [ ] `CANCELLED`
+- [x] `SUCCEEDED`
+- [x] `FAILED`
+- [x] `DENIED`
+- [x] `CANCELLED`
 
 ---
 
 ## Etap 4 — LLM planner
 
-- [ ] Utworzyć tryb mock działający bez internetu.
+Status: mock planner for a single command is tested; OpenRouter, conversations, and file inputs remain open.
+
+
+- [x] Utworzyć tryb mock działający bez internetu.
 - [ ] Utworzyć opcjonalną integrację OpenRouter.
-- [ ] Obsłużyć wejście typu pojedyncza wypowiedź.
+- [x] Obsłużyć wejście typu pojedyncza wypowiedź.
 - [ ] Obsłużyć wejście typu historia rozmowy.
 - [ ] Obsłużyć wejście typu plik z wytycznymi.
-- [ ] Generować wyłącznie wynik zgodny ze schematem.
+- [x] Generować wyłącznie wynik zgodny ze schematem.
 - [ ] Oznaczać założenia utworzone przez LLM.
 - [ ] Zachowywać źródło każdego ustalenia.
 - [ ] Nie uzupełniać braków niepotwierdzonymi informacjami.
-- [ ] Generować propozycje pytań doprecyzowujących.
+- [x] Generować propozycje pytań doprecyzowujących.
 - [ ] Obsłużyć ponowne wygenerowanie DSL po odpowiedzi użytkownika.
 
 ---
 
 ## Etap 5 — Python verifier
 
-- [ ] Utworzyć pakiet Python 3.11+.
-- [ ] Utworzyć tryb mock.
+Status: package and mock verifier are tested; full semantic validation for conversations, guideline files, and final documents remains open.
+
+
+- [x] Utworzyć pakiet Python 3.11+.
+- [x] Utworzyć tryb mock.
 - [ ] Utworzyć opcjonalną integrację LiteLLM/OpenRouter.
 - [ ] Walidować zgodność NL → DSL.
 - [ ] Walidować zgodność historii rozmowy → DSL.
 - [ ] Walidować zgodność wytycznych tekstowych → DSL.
 - [ ] Walidować zgodność DSL → dokument końcowy.
 - [ ] Sprawdzać pominięte ustalenia.
-- [ ] Sprawdzać działania i warunki dodane przez LLM.
+- [x] Sprawdzać działania i warunki dodane przez LLM.
 - [ ] Sprawdzać sprzeczności.
 - [ ] Sprawdzać niepotwierdzone założenia.
 - [ ] Sprawdzać kompletność z perspektywy Human1.
 - [ ] Sprawdzać kompletność z perspektywy Human2.
 - [ ] Sprawdzać, czy odbiorca może jednoznacznie wykonać zadanie.
-- [ ] Zwracać wynik `PASS`, `FAIL` albo `NEEDS_REVIEW`.
-- [ ] Zwracać raport JSON możliwy do przetwarzania przez runtime.
+- [x] Zwracać wynik `PASS`, `FAIL` albo `NEEDS_REVIEW`.
+- [x] Zwracać raport JSON możliwy do przetwarzania przez runtime.
 
 ---
 
 ## Etap 6 — struktura `examples`
+
+Status: six flat examples validate offline; `scenario.json`, `in/`, `out/`, and diff runner remain open.
+
 
 Każdy scenariusz ma mieć osobny folder:
 
@@ -234,7 +255,7 @@ examples/<numer>-<nazwa>/
 - [ ] Uruchamiać Python verifier dla każdego scenariusza.
 - [ ] Zwracać czytelny raport różnic.
 - [ ] Umożliwić ponowne uruchomienie po zmianie danych wejściowych.
-- [ ] Umożliwić uruchomienie bez internetu.
+- [x] Umożliwić uruchomienie bez internetu.
 
 ### Scenariusze MVP
 
@@ -309,47 +330,53 @@ examples/<numer>-<nazwa>/
 
 ## Etap 7 — backend i frontend demonstracyjny
 
-- [ ] Utworzyć backend API korzystający z tego samego runtime’u co CLI.
-- [ ] Utworzyć frontend do wprowadzenia pojedynczej wypowiedzi.
+Status: backend and static frontend cover single input, DSL, plan, answer, confirmation, dry-run, and audit; upload, conversation history, source display, and final document remain open.
+
+
+- [x] Utworzyć backend API korzystający z tego samego runtime’u co CLI.
+- [x] Utworzyć frontend do wprowadzenia pojedynczej wypowiedzi.
 - [ ] Dodać możliwość wklejenia historii rozmowy.
 - [ ] Dodać możliwość przesłania pliku z wytycznymi.
-- [ ] Wyświetlać wygenerowany DSL.
+- [x] Wyświetlać wygenerowany DSL.
 - [ ] Wyświetlać źródła poszczególnych ustaleń.
 - [ ] Wyświetlać braki, sprzeczności i założenia.
-- [ ] Obsłużyć odpowiedzi Human1 i Human2.
+- [x] Obsłużyć odpowiedzi Human1 i Human2.
 - [ ] Obsłużyć akceptację obu stron.
 - [ ] Wyświetlać dokument końcowy.
-- [ ] Wyświetlać audyt.
+- [x] Wyświetlać audyt.
 
 ---
 
 ## Etap 8 — testy
 
+Status: Vitest and Python verifier tests pass for the current scope; full contract, language-quality, and example diff-runner tests remain open.
+
+
 ### Testy jednostkowe
 
-- [ ] Parser.
-- [ ] JSON Schema.
-- [ ] AST.
+- [x] Parser.
+- [x] JSON Schema.
+- [x] AST.
 - [ ] Walidator semantyczny.
 - [ ] Diagnostyka braków.
 - [ ] Diagnostyka sprzeczności.
-- [ ] State machine.
-- [ ] Akceptacje i hashowanie.
-- [ ] Renderer DSL → NL.
-- [ ] Audyt.
+- [x] State machine.
+- [x] Akceptacje i hashowanie.
+- [x] Renderer DSL → NL.
+- [x] Audyt.
 
 ### Testy integracyjne
 
-- [ ] NL → mock LLM → DSL.
+- [x] NL → mock LLM → DSL.
 - [ ] Conversation → mock LLM → DSL.
 - [ ] Text guidelines → DSL.
 - [ ] DSL → Python verifier.
-- [ ] DSL → pytania.
-- [ ] Odpowiedzi → aktualizacja DSL.
-- [ ] Akceptacja Human1.
+- [x] DSL → pytania.
+- [x] Odpowiedzi → aktualizacja DSL.
+- [x] Akceptacja Human1.
 - [ ] Akceptacja Human2.
 - [ ] DSL → dokument końcowy.
-- [ ] Wynik → audyt.
+- [x] Wynik → audyt.
 
 ### Testy regresyjne `examples`
 
@@ -373,18 +400,21 @@ examples/<numer>-<nazwa>/
 
 ### Testy bezpieczeństwa i poprawności
 
-- [ ] Brak wykonania bez akceptacji.
+- [x] Brak wykonania bez akceptacji.
 - [ ] Brak dokumentu końcowego przy nierozwiązanych sprzecznościach.
 - [ ] Brak automatycznego zgadywania danych.
 - [ ] Wykrycie warunków dodanych przez LLM.
-- [ ] Unieważnienie akceptacji po zmianie DSL.
-- [ ] Odporność na prompt injection w rozmowie i danych.
-- [ ] Brak `eval` i wykonywania kodu generowanego przez LLM.
-- [ ] Brak prawdziwych operacji zewnętrznych w trybie mock.
+- [x] Unieważnienie akceptacji po zmianie DSL.
+- [x] Odporność na prompt injection w rozmowie i danych.
+- [x] Brak `eval` i wykonywania kodu generowanego przez LLM.
+- [x] Brak prawdziwych operacji zewnętrznych w trybie mock.
 
 ---
 
 ## Etap 9 — komendy uruchomieniowe
+
+Status: root commands `typecheck`, `test`, `test:e2e`, and `cli` exist; dedicated `example:run`, `examples:run`, `verify`, and Python test scripts remain open.
+
 
 - [ ] Dodać komendę uruchamiającą pojedynczy przykład:
 
@@ -404,25 +434,28 @@ pnpm examples:run
 pnpm verify
 ```
 
-- [ ] Dodać komendę testów TypeScript.
+- [x] Dodać komendę testów TypeScript.
 - [ ] Dodać komendę testów Python.
-- [ ] Dodać pełny test E2E.
+- [x] Dodać pełny test E2E.
 - [ ] Wszystkie domyślne komendy mają działać offline.
 
 ---
 
 ## Etap 10 — CI i dokumentacja
 
+Status: main docs are updated; CI and separate spec/security/testing/install docs remain open.
+
+
 - [ ] Dodać CI dla Windows.
 - [ ] Dodać CI dla Linux.
 - [ ] Dodać lint.
-- [ ] Dodać typecheck.
-- [ ] Dodać testy TypeScript.
-- [ ] Dodać testy Python.
+- [x] Dodać typecheck.
+- [x] Dodać testy TypeScript.
+- [x] Dodać testy Python.
 - [ ] Dodać testy wszystkich przykładów.
 - [ ] Dodać build backendu i frontendu.
-- [ ] Zaktualizować `README.md`.
-- [ ] Utworzyć `docs/architecture.md`.
+- [x] Zaktualizować `README.md`.
+- [x] Utworzyć `docs/architecture.md`.
 - [ ] Utworzyć `docs/dsl-specification.md`.
 - [ ] Utworzyć `docs/contract-workflow.md`.
 - [ ] Utworzyć `docs/example-format.md`.
@@ -435,39 +468,44 @@ pnpm verify
 
 ## Etap 11 — zakończenie
 
+Status: local validation for `0.1.0` is done; clean git status is pending the final commit and push.
+
+
 - [ ] Uruchomić wszystkie przykłady.
-- [ ] Uruchomić pełny typecheck.
-- [ ] Uruchomić pełne testy TypeScript.
-- [ ] Uruchomić pełne testy Python.
-- [ ] Uruchomić pełne testy E2E.
+- [x] Uruchomić pełny typecheck.
+- [x] Uruchomić pełne testy TypeScript.
+- [x] Uruchomić pełne testy Python.
+- [x] Uruchomić pełne testy E2E.
 - [ ] Sprawdzić brak zawieszonych procesów.
-- [ ] Sprawdzić zgodność dokumentacji z kodem.
-- [ ] Zaktualizować wszystkie pozycje w `TODO.md`.
-- [ ] Utworzyć `VERSION.md`.
-- [ ] Ustawić wersję MVP `0.1.0`.
-- [ ] Utworzyć lub zaktualizować `CHANGELOG.md`.
-- [ ] Wykonać końcowy audyt repozytorium.
+- [x] Sprawdzić zgodność dokumentacji z kodem.
+- [x] Zaktualizować wszystkie pozycje w `TODO.md`.
+- [x] Utworzyć `VERSION.md`.
+- [x] Ustawić wersję MVP `0.1.0`.
+- [x] Utworzyć lub zaktualizować `CHANGELOG.md`.
+- [x] Wykonać końcowy audyt repozytorium.
 - [ ] Potwierdzić czysty `git status`.
 
 ---
 
 ## Kryteria ukończenia MVP
 
+Status: narrow Office DSL MVP criteria are met; full Intent/Contract criteria remain open.
+
 MVP uznajemy za poprawnie wykonane, jeżeli:
 
-- [ ] Pojedyncza wypowiedź może zostać zamieniona na DSL.
+- [x] Pojedyncza wypowiedź może zostać zamieniona na DSL.
 - [ ] Historia rozmowy dwóch stron może zostać zamieniona na DSL.
 - [ ] Plik z wytycznymi może zostać zamieniony na DSL.
 - [ ] System wykrywa braki, sprzeczności i niejednoznaczności.
 - [ ] System nie zgaduje brakujących danych.
 - [ ] Python verifier wykrywa pominięcia i elementy dodane przez LLM.
-- [ ] Human1 może zaakceptować lub odrzucić DSL.
+- [x] Human1 może zaakceptować lub odrzucić DSL.
 - [ ] Human2 może ocenić, czy DSL wystarcza do wykonania zadania.
 - [ ] Kontrakt wymagający dwóch stron nie jest finalizowany bez obu akceptacji.
-- [ ] Runtime może wyrenderować DSL do czytelnego dokumentu.
+- [x] Runtime może wyrenderować DSL do czytelnego dokumentu.
 - [ ] Dokument końcowy zachowuje znaczenie zaakceptowanego DSL.
 - [ ] Każdy scenariusz w `examples/` można uruchomić ponownie.
 - [ ] Zmiana wejścia powoduje ponowną walidację i czytelny raport różnic.
 - [ ] Wszystkie testy domyślne działają offline.
 - [ ] Testy przechodzą na Windows i Linux.
-- [ ] Wynik oraz audyt są czytelne dla człowieka i agenta AI.
+- [x] Wynik oraz audyt są czytelne dla człowieka i agenta AI.
