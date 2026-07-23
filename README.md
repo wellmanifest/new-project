@@ -944,9 +944,6 @@ Kazanie LLM wykonac koncowy plik CONTRIBUTING używając DSL
   Na bazie tych informacji stworzyc runtime 
 
 ## 20. TODO
- - Przeanalizować pliki które stworzyły LLM za pomoca perplexity
- - jak napisze to wszystko co mowilem i podsumuje to co wczoraj w readme
- - plan dzialania co dalej
  - zapytaj go ktory z formatow proponuje i co zrobic dalej jesli by miec latwo do pisania dla czlowieka i maszyny i latwe do edycji dla czlowieka on powinnien zaproponowac wersje lepsza spelniajaca, lepsza wersje niz widzi, dam mu readme zeby on wiedzial do czego jest ten projekt itd 
  - stowrz folder perplexity wklei prompt pobierz oraz to co on napisal 
  - wymagania ten jezyk ma byc taki że jeśli człowiek da komende to tą komende bedzie procesować LMM i on bedzie mial dostep roznych danych/logow i bazie danych i bedzie musial wygenerować poprawny plik odnośnie co powinno sie zadziać bazujac na wszystkich informacjach ktore dostal powinnien wygenerować takie typu rzadanie dsl i dopiero ten dsl bedzie szedl dalej w system 
