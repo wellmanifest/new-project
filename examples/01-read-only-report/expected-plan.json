@@ -1,0 +1,5 @@
+{
+  "actions": ["database.query", "report.generate"],
+  "requiresConfirmation": false,
+  "dryRun": true
+}

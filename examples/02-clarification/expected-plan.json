@@ -1,0 +1,1 @@
+{ "actions": ["user.ask", "database.query", "report.generate"], "requiresInput": true, "dryRun": true }

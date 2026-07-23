@@ -1,0 +1,6 @@
+[
+  { "id": "inv-101", "invoiceId": "FV-101", "customerId": "cust-1", "email": "ap@test.invalid", "amount": 1200, "status": "unpaid", "daysOverdue": 45 },
+  { "id": "inv-102", "invoiceId": "FV-102", "customerId": "cust-2", "email": "finance@northwind.invalid", "amount": 850, "status": "paid", "daysOverdue": 0 },
+  { "id": "inv-103", "invoiceId": "FV-103", "customerId": "cust-3", "email": "billing@contoso.invalid", "amount": 430, "status": "unpaid", "daysOverdue": 12 },
+  { "id": "inv-104", "invoiceId": "FV-104", "customerId": "cust-2", "email": "finance@northwind.invalid", "amount": 2310, "status": "unpaid", "daysOverdue": 61 }
+]

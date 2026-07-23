@@ -1,0 +1,1 @@
+{ "actions": ["database.query", "email.prepare"], "forbiddenActions": ["email.send"], "dryRun": true }

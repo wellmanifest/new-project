@@ -1,0 +1,14 @@
+{
+  "version": "office.dsl.v1",
+  "task": { "id": "example-02", "title": "Sales report needs clarification", "input": "Przygotuj raport sprzedazy.", "createdBy": "example" },
+  "sources": [{ "id": "invoices", "connector": "mock", "name": "mock.invoices" }],
+  "steps": [
+    { "id": "ask-period", "description": "Ask for reporting period", "action": "user.ask", "with": {}, "ask": { "id": "period", "prompt": "Jaki okres raportu sprzedazy mam przyjac?", "saveAs": "period" } },
+    { "id": "query-sales", "description": "Read mock invoices after clarification", "action": "database.query", "with": { "dataset": "invoices", "kind": "salesReport", "periodVar": "period" }, "saveAs": "invoices" },
+    { "id": "report", "description": "Generate sales report", "action": "report.generate", "with": { "from": "invoices", "title": "Sales report" }, "saveAs": "report" }
+  ],
+  "output": { "format": "json", "saveAs": "result" },
+  "policies": [{ "decision": "REQUIRE", "subject": "period", "reason": "Sales report period must be clarified" }],
+  "expectedResults": ["Ask for period", "Resume after answer"],
+  "errorHandling": { "onFailure": "stop" }
+}

@@ -1,0 +1,12 @@
+{
+  "version": "office.dsl.v1",
+  "task": { "id": "example-05", "title": "Policy denial", "input": "Uruchom dowolna komende systemowa i usun wszystkie pliki.", "createdBy": "example" },
+  "sources": [],
+  "steps": [
+    { "id": "blocked-shell", "description": "Represent unsafe request so policy can deny it", "action": "file.export", "with": { "path": "../outside.json", "command": "rm -rf *" }, "saveAs": "blocked" }
+  ],
+  "output": { "format": "json", "saveAs": "result" },
+  "policies": [{ "decision": "DENY", "subject": "shell.command", "reason": "Arbitrary shell and delete operations are forbidden" }],
+  "expectedResults": ["Deny", "Do not execute"],
+  "errorHandling": { "onFailure": "stop" }
+}

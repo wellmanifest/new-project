@@ -1,0 +1,12 @@
+[project]
+name = "office-dsl-verifier"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["pydantic>=2.8"]
+
+[project.optional-dependencies]
+openrouter = ["litellm>=1.55"]
+dev = ["pytest>=8.3", "ruff>=0.8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

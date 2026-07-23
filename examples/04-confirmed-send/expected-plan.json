@@ -1,0 +1,1 @@
+{ "actions": ["database.query", "email.prepare", "email.send"], "requiresConfirmation": true, "dryRun": true }

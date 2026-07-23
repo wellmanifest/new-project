@@ -1,0 +1,8 @@
+{
+  "name": "office-dsl",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "office-dsl": "./src/index.ts"
+  }
+}
