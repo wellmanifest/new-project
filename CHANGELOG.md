@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.4.0] - 2026-07-24
+
+### Added
+
+- Added `officeDslToIntentContractDsl` to convert validated `office.dsl.v1` tasks into canonical `intent-contract.dsl.v1` snapshots.
+- Added migration notes for adapter outputs with source path, target path, mapping decision, field status, and reason.
+- Added `docs/office-to-intent-contract-migration.md` documenting the compatibility path and deliberate omissions.
+
+### Changed
+
+- Marked the Phase 2 Office DSL to Intent/Contract migration path as implemented.
+- Updated package, app, verifier, and OpenAPI version metadata to `0.4.0`.
+
+### Fixed
+
+- Allowed ready runtime sessions to transition to `DENIED` when explicitly rejected, matching the public reject workflow.
+
+### Tests
+
+- Added Vitest coverage for Office DSL migration validity, clarification steps becoming canonical missing questions, and deterministic hashing of migrated snapshots.
+- Expanded Office DSL/runtime regression coverage for unsupported actions, structural validation, dry-run file export, rejection/cancellation, security denials, CLI workflows, backend API workflows, and file-backed task storage.
+
+### Known limitations
+
+- Runtime approval checks still use Office DSL execution plan hashes, not canonical Intent/Contract snapshot hashes.
+- The adapter does not infer legal contract terms, payments, deadlines, conflicts, bilateral approvals, or named real parties from Office DSL inputs.
+
 ## [0.3.0] - 2026-07-24
 
 ### Added

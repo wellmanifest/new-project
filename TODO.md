@@ -16,7 +16,7 @@ PARTIAL:
 - OpenRouter and LiteLLM paths exist but are not the validated default path.
 - Clarification exists as workflow steps, not as a general missing/ambiguous/conflicting field model.
 - Rendering exists as readable Office DSL text, not formal documents.
-- Office runtime hashing is based on execution plan content; the new Intent/Contract model has canonical snapshot hashing but is not integrated into runtime approvals yet.
+- Office runtime hashing is based on execution plan content; the Intent/Contract model has canonical snapshot hashing and an Office DSL adapter, but runtime approvals still do not use canonical snapshots yet.
 
 MOCK:
 
@@ -27,7 +27,7 @@ MOCK:
 
 NOT IMPLEMENTED:
 
-- Human2 approval, runtime field traceability population, legal renderers, code generation, DSL-based test generation, and runtime-to-Python verifier integration.
+- Human2 approval, runtime field traceability population, legal renderers, code generation, DSL-based test generation, canonical DSL approval integration, and runtime-to-Python verifier integration.
 
 ---
 
@@ -75,8 +75,8 @@ NOT IMPLEMENTED:
   - Done when fields can carry status, source, required-for-completion flag, and approvals.
 - [x] Define canonical JSON serialization and stable hashing rules.
   - Done when equivalent DSL snapshots hash identically across Windows and Linux.
-- [ ] Add migration or adapter notes from `office.dsl.v1` to the canonical model.
-  - Done when current examples still validate or have a documented compatibility path.
+- [x] Add migration or adapter notes from `office.dsl.v1` to the canonical model.
+  - Done when current examples still validate and have a documented compatibility path through `officeDslToIntentContractDsl`.
 
 ---
 
@@ -281,11 +281,11 @@ Target scenario set:
 
 1. Add CI wiring for `corepack pnpm run verify` on Windows and Linux.
 2. Decide whether default Vitest sandbox `spawn EPERM` should be solved by config or documented as an environment limitation.
-3. Add migration or adapter notes from `office.dsl.v1` to `intent-contract.dsl.v1`.
-4. Add a minimal Human1/Human2 approval record model to runtime workflows.
-5. Integrate canonical DSL snapshot hashing into approval checks.
-6. Add runtime-to-Python verifier invocation behind a mock-safe interface.
-7. Add the first target fixture: `01-chat-to-dsl` with `in/` and `out/` artifacts.
-8. Add planner-backed scenario mode coverage for mock planner output normalization.
-9. Add Markdown diff output for future rendered document artifacts.
-10. Add runtime population of source references from planner or scenario inputs.
+3. Add a minimal Human1/Human2 approval record model to runtime workflows.
+4. Integrate canonical DSL snapshot hashing into approval checks.
+5. Add runtime-to-Python verifier invocation behind a mock-safe interface.
+6. Add the first target fixture: `01-chat-to-dsl` with `in/` and `out/` artifacts.
+7. Add planner-backed scenario mode coverage for mock planner output normalization.
+8. Add Markdown diff output for future rendered document artifacts.
+9. Add runtime population of source references from planner or scenario inputs.
+10. Add adapter output artifacts for current Office DSL examples.

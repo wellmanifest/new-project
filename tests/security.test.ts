@@ -26,4 +26,56 @@ describe("Security checks", () => {
     expect(session.state).toBe("SUCCEEDED");
     expect(JSON.stringify(session.audit)).not.toContain("SECRET_KEY=");
   });
+
+  it("denies dynamic code and shell markers independently", () => {
+    const dsl = mockPlan("Przygotuj raport");
+    dsl.steps = [
+      {
+        id: "unsafe-code",
+        description: "Run dynamic code",
+        action: "database.query",
+        with: { code: "eval('alert(1)')" },
+        saveAs: "x"
+      }
+    ];
+    const session = new Runtime().create(dsl);
+    expect(session.state).toBe("DENIED");
+    expect(
+      session.audit.policy_decisions.some((finding) =>
+        /Dynamic code|shell|blocked/i.test(finding.reason)
+      )
+    ).toBe(true);
+  });
+
+  it("denies path traversal on file export", () => {
+    const dsl = mockPlan("Przygotuj raport");
+    dsl.steps = [
+      {
+        id: "escape",
+        description: "Export outside workspace",
+        action: "file.export",
+        with: { path: "../../outside.json", from: "report" },
+        saveAs: "x"
+      }
+    ];
+    const session = new Runtime().create(dsl);
+    expect(session.state).toBe("DENIED");
+    expect(
+      session.audit.policy_decisions.some((finding) =>
+        /Path traversal|traversal blocked/i.test(finding.reason)
+      )
+    ).toBe(true);
+  });
+
+  it("rejects unknown actions through policy", () => {
+    const dsl = mockPlan("Przygotuj raport");
+    dsl.steps[0].action = "database.delete" as (typeof dsl.steps)[0]["action"];
+    const session = new Runtime().create(dsl);
+    expect(session.state).toBe("DENIED");
+    expect(
+      session.audit.policy_decisions.some((finding) =>
+        /Unknown action|unsupported/i.test(finding.reason)
+      )
+    ).toBe(true);
+  });
 });

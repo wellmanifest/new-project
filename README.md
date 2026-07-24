@@ -41,7 +41,7 @@ See [docs/system-purpose-and-runtime-flow.md](docs/system-purpose-and-runtime-fl
 DONE:
 
 - `packages/dsl-model` defines `office.dsl.v1`, structural validation, parsing, and a readable token renderer.
-- `packages/intent-contract-model` defines the standalone `intent-contract.dsl.v1` model boundary with formal fields, statuses, source references, canonical serialization, and stable hashing.
+- `packages/intent-contract-model` defines the standalone `intent-contract.dsl.v1` model boundary with formal fields, statuses, source references, canonical serialization, stable hashing, and a deterministic Office DSL adapter.
 - `packages/llm-planner` provides a deterministic mock planner for a few single-command office scenarios.
 - `packages/dsl-runtime` creates sessions, evaluates policies, asks simple clarification questions, handles one-side confirmation, computes a plan hash, executes mock actions, and records audit data.
 - `packages/cli` exposes plan, validate, inspect, answer, confirm, reject, execute, and history commands.
@@ -56,7 +56,7 @@ PARTIAL:
 - OpenRouter and LiteLLM code paths exist, but the validated flow is mock/offline mode.
 - Clarifying questions exist only as `user.ask` workflow steps, not as a general field-status model.
 - DSL rendering exists as a readable office DSL listing, not as legal or contract document generation.
-- The plan hash protects current confirmations, but it is not yet a canonical hash of an immutable Intent/Contract DSL snapshot.
+- The plan hash protects current confirmations, but runtime approvals are not yet based on canonical Intent/Contract DSL snapshots.
 
 MOCK:
 
@@ -74,7 +74,6 @@ NOT IMPLEMENTED:
 - JS/Node.js code generation.
 - Test generation from DSL requirements and acceptance criteria.
 - Runtime integration that calls the Python verifier as part of the normal TypeScript flow.
-- Office DSL to Intent/Contract DSL adapter or migration path.
 
 ## Example Uses
 
@@ -278,6 +277,7 @@ OpenRouter planner mode requires `OPENROUTER_API_KEY`. Python LiteLLM/OpenRouter
 - [docs/system-purpose-and-runtime-flow.md](docs/system-purpose-and-runtime-flow.md) - target purpose, runtime flow, diagrams, current-vs-target state.
 - [docs/architecture.md](docs/architecture.md) - earlier MVP architecture notes.
 - [docs/research-migration-audit.md](docs/research-migration-audit.md) - research migration audit.
+- [docs/office-to-intent-contract-migration.md](docs/office-to-intent-contract-migration.md) - Office DSL to Intent/Contract compatibility path.
 - [TODO.md](TODO.md) - staged implementation roadmap.
 - [HANDOFF.md](HANDOFF.md) - next-agent handoff notes.
 - [VERSION.md](VERSION.md) - version scope and validation notes.

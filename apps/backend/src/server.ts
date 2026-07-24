@@ -109,7 +109,7 @@ function send(res: http.ServerResponse, body: string, type: string, status = 200
 function openApi(): unknown {
   return {
     openapi: "3.1.0",
-    info: { title: "Office DSL MVP API", version: "0.3.0" },
+    info: { title: "Office DSL MVP API", version: "0.4.0" },
     paths: {
       "/api/tasks": { post: { summary: "Create task from natural language command" } },
       "/api/tasks/{id}": { get: { summary: "Inspect task" } },
