@@ -1,19 +1,22 @@
-# Indeks dokumentacji
+# Documentation Index
 
-## Zrodla prawdy
+## Sources Of Truth
 
-- `README.md` - ogolny standard pracy ludzi i agentow AI w repozytorium.
-- `POLICY.md` - zasady zgodnosci, bezpieczenstwa, dowodow i ograniczen pracy.
-- `CONTRIBUTING.md` - proceduralny proces pracy nad repozytorium.
-- `TODO.md` - glowna kolejka pracy i kolejnosc etapow projektu.
-- `docs/architecture.md` - architektura MVP, role uczestnikow, przeplywy NL/DSL, akceptacje, mocki i decyzja dotyczaca `project.sh`.
-- `docs/research-migration-audit.md` - audyt przeniesienia historycznych materialow badawczych do `research/`.
-- `project.sh` - historyczny skrypt analityczno-narzedziowy; nie jest aktywnym bootstrapem MVP.
-- `.devin/workflows/analyze-documentation.md` - procedura weryfikacji dokumentacji dla agentow, jezeli jest potrzebna w dalszej pracy.
+- `README.md` - project purpose, current implementation status, target architecture, commands, and limitations.
+- `TODO.md` - staged implementation roadmap with completion criteria.
+- `docs/system-purpose-and-runtime-flow.md` - primary architecture document for intent formalization, H2M/H2H, runtime flow, approvals, traceability, documents, code, tests, verifier, examples, and current-vs-target state.
+- `docs/architecture.md` - earlier MVP architecture notes for the offline Office DSL implementation.
+- `POLICY.md` - repository safety and evidence rules.
+- `CONTRIBUTING.md` - procedural workflow for repository changes.
+- `HANDOFF.md` - next-agent handoff and immediate priorities.
+- `VERSION.md` - current version and validation notes.
+- `CHANGELOG.md` - release history.
+- `docs/research-migration-audit.md` - audit of historical research migration.
+- `project.sh` - historical script; not the active MVP bootstrap.
 
-## Materialy badawcze
+## Research Materials
 
-Historyczne foldery badawcze zostaly przeniesione do `research/` i nie powinny byc przywracane do starych lokalizacji:
+Historical research folders live under `research/` and should not be moved back to their old root locations:
 
 - `research/GPT56Luna/`
 - `research/Opus48Medium/`
@@ -21,29 +24,31 @@ Historyczne foldery badawcze zostaly przeniesione do `research/` i nie powinny b
 - `research/perplexity/22.07/`
 - `research/perplexity/23.07/`
 
-## Aktualna struktura robocza
+## Current Working Structure
 
-Repozytorium zawiera obecnie implementacje MVP i artefakty testowe:
+- `packages/dsl-model/` - current `office.dsl.v1` model, parser, validator, and renderer.
+- `packages/dsl-runtime/` - current TypeScript runtime, state machine, policies, actions, hashing, audit, and file store.
+- `packages/llm-planner/` - mock planner and optional OpenRouter path.
+- `packages/cli/` - CLI entrypoint.
+- `apps/backend/` - demo HTTP API.
+- `apps/web/` - static demo UI.
+- `verifier/` - Python verifier package.
+- `examples/` - current static office fixtures.
+- `tests/` - TypeScript tests.
+- `mock-data/` - local offline data.
 
-- `packages/` - pakiety TypeScript: model DSL, runtime, planner LLM/mock i CLI.
-- `apps/` - backend demonstracyjny i statyczny frontend.
-- `verifier/` - Python verifier.
-- `examples/` - scenariusze regresyjne MVP.
-- `tests/` - testy TypeScript.
-- `mock-data/` - dane przykladowe dla trybu offline.
+## Recommended Reading Order For Agents
 
-## Kolejnosc czytania przez agenta
+1. `README.md`
+2. `docs/system-purpose-and-runtime-flow.md`
+3. `TODO.md`
+4. `HANDOFF.md`
+5. `POLICY.md`
+6. `CONTRIBUTING.md`
+7. Current code in `packages/`, `apps/`, `verifier/`, `examples/`, `tests/`, and `mock-data/`
+8. `docs/architecture.md` for earlier MVP context
+9. `research/` only when historical project intent or prior analysis matters
 
-1. `TODO.md`
-2. `README.md`
-3. `POLICY.md`
-4. `CONTRIBUTING.md`
-5. `docs/README.md`
-6. `docs/architecture.md`, jezeli zadanie dotyczy celu, przeplywow, rol albo granic MVP
-7. `docs/research-migration-audit.md`, jezeli zadanie dotyczy migracji materialow badawczych
-8. `project.sh`, jezeli zadanie dotyczy historycznych narzedzi lub decyzji o ich niewykorzystywaniu
-9. Odpowiednie katalogi `packages/`, `apps/`, `verifier/`, `examples/` i `tests/`
+## Current Boundary
 
-## Ograniczenie MVP
-
-Domyslny tryb pracy MVP ma dzialac offline, na mockach i bez klucza OpenRouter. Komendy instalujace zaleznosci albo pobierajace narzedzia z sieci wymagaja osobnej diagnozy i nie sa czescia tego etapu dokumentacyjnego.
+The validated repository is an offline Office DSL MVP. The target Intent/Contract DSL, Human1/Human2 approvals, field traceability, legal renderers, code generation, test generation, and semantic verifier orchestration are roadmap items, not completed features.

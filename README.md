@@ -1,60 +1,117 @@
-# Office DSL MVP
+# DSL Runtime
 
-Office DSL MVP formalizes simple office work requests into a deterministic JSON DSL, validates the DSL, routes it through a TypeScript runtime, and records an audit trail. The current version is an offline MVP: it uses mock data and mock planning by default, and it does not require OpenRouter, LiteLLM, external APIs, email delivery, or internet access at runtime.
+DSL Runtime is a project for formalizing human intent before a system executes a task, generates a document, creates code, or asks people to approve an agreement.
 
-## What Works
+The current repository is an offline Office DSL MVP. It proves a narrow path:
 
-- Single natural-language office requests can be converted into `office.dsl.v1` JSON by the mock planner.
-- The DSL model validates structure, supported mock sources, supported actions, confirmations, and output metadata.
-- The runtime builds an execution plan, applies deterministic policy checks, handles clarification questions, handles one-side confirmation, executes mock actions in dry-run mode by default, and records audit JSON.
-- The CLI can plan, validate, inspect, answer, confirm, reject, execute, and show task history.
-- The backend exposes the same runtime through HTTP endpoints and serves the static demo UI.
-- The Python verifier runs in mock mode and returns machine-readable verification reports.
-- Six example scenarios are present and their expected DSL artifacts validate offline.
+```text
+single natural-language office request
+-> mock planner
+-> office.dsl.v1 JSON
+-> TypeScript runtime
+-> validation, policy checks, questions or confirmation
+-> dry-run mock execution
+-> audit
+```
 
-## What Remains Open
+This MVP is useful, but it is not the full target system. The target system is an Intent/Contract DSL runtime for Human-to-Machine and Human-to-Human workflows.
 
-- Full Intent/Contract DSL with `CONTRACT`, `PARTY`, `OBLIGATION`, `PAYMENT`, bilateral approval, and contract rendering is not complete.
-- Conversation-to-DSL and file-guidelines-to-DSL flows are not implemented beyond documentation and planned scope.
-- The examples do not yet have a dedicated runner that regenerates output and diffs `in/` vs `out/` folders.
-- OpenRouter and LiteLLM integrations exist as optional code paths, but were not tested because mock/offline mode is the validated MVP path.
-- Linux compatibility is expected from the stack but was not verified in this run.
+## Target Architecture
+
+The intended architecture is:
+
+```text
+NL / conversation / guideline files
+-> LLM through OpenRouter
+-> canonical Intent/Contract DSL
+-> runtime validation and gap/conflict diagnosis
+-> clarifying questions to Human1 or Human2
+-> hash-based approvals by all required parties
+-> DSL to NL/document rendering
+-> optional JS/Node.js code generation
+-> optional DSL-based test generation
+-> Python semantic verifier
+-> audit
+```
+
+See [docs/system-purpose-and-runtime-flow.md](docs/system-purpose-and-runtime-flow.md) for the full architecture, flow diagrams, component boundaries, and current-vs-target state.
+
+## Current Implementation Status
+
+DONE:
+
+- `packages/dsl-model` defines `office.dsl.v1`, structural validation, parsing, and a readable token renderer.
+- `packages/llm-planner` provides a deterministic mock planner for a few single-command office scenarios.
+- `packages/dsl-runtime` creates sessions, evaluates policies, asks simple clarification questions, handles one-side confirmation, computes a plan hash, executes mock actions, and records audit data.
+- `packages/cli` exposes plan, validate, inspect, answer, confirm, reject, execute, and history commands.
+- `apps/backend` exposes the same runtime through HTTP endpoints.
+- `apps/web` provides a static demo UI.
+- `verifier` contains a Python package with mock verification and an optional LiteLLM/OpenRouter path.
+- `examples` contains six static office examples.
+- `tests` cover the current TypeScript runtime, DSL model, security checks, E2E mock flow, and Python verifier behavior.
+
+PARTIAL:
+
+- OpenRouter and LiteLLM code paths exist, but the validated flow is mock/offline mode.
+- Clarifying questions exist only as `user.ask` workflow steps, not as a general field-status model.
+- DSL rendering exists as a readable office DSL listing, not as legal or contract document generation.
+- The plan hash protects current confirmations, but it is not yet a canonical hash of an immutable Intent/Contract DSL snapshot.
+
+MOCK:
+
+- The planner is pattern-based in mock mode.
+- The verifier uses heuristics in mock mode.
+- Data sources and email operations use local mock data and dry-run behavior.
+- The frontend is a demo surface.
+
+NOT IMPLEMENTED:
+
+- Full Intent/Contract DSL with parties, obligations, deliverables, payment, acceptance criteria, exclusions, assumptions, conflicts, and source references.
+- Human1/Human2 bilateral approval.
+- Conversation-history and guideline-file planner modes.
+- Field-level statuses such as `CONFIRMED`, `MISSING`, `AMBIGUOUS`, `CONFLICTING`, and `ASSUMED`.
+- Contract/legal document renderers.
+- Example runner that regenerates outputs and diffs against expected artifacts.
+- JS/Node.js code generation.
+- Test generation from DSL requirements and acceptance criteria.
+- Runtime integration that calls the Python verifier as part of the normal TypeScript flow.
+
+## Example Uses
+
+Current MVP examples:
+
+- read-only unpaid invoice report,
+- ambiguous sales report that requires a period question,
+- reminder drafts without sending,
+- confirmed mock send,
+- policy denial for unsafe delete/shell-like requests,
+- log analysis over mock activity data.
+
+Target examples:
+
+- single chat to DSL,
+- two-party conversation to service agreement,
+- guideline file to employment agreement,
+- task delegation with recipient review,
+- bilateral approval of the same DSL hash,
+- DSL to document/code/tests with semantic verification.
 
 ## Requirements
 
-Validated in this workspace:
+Validated or declared by the repository:
 
-- Node.js: `24.18.0` during Vitest runs
-- pnpm: project pins `pnpm@9.12.0` via `packageManager`
-- TypeScript: `5.7.3`
-- Vitest: `3.0.4`
-- Python: tests ran with Python `3.14`; verifier declares `>=3.11`
-- OS: Windows workspace
+- Node.js compatible with the pinned workspace dependencies.
+- pnpm `9.12.0` through Corepack.
+- TypeScript `5.7.3`.
+- Vitest `3.0.4`.
+- Python `>=3.11` for the verifier package.
+- Windows is the currently validated workspace. Linux compatibility is expected but not verified in the current release notes.
 
-## Installation
-
-Use Corepack and the pinned pnpm version:
+## Install
 
 ```powershell
 corepack pnpm install --frozen-lockfile
 ```
-
-Do not run install repeatedly when diagnosing pnpm. First inspect `node_modules`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.npmrc`, and `pnpm store path`.
-
-## Mock Mode
-
-Mock mode is the default. `.env.example` documents the available variables:
-
-```text
-OFFICE_DSL_LLM_MODE=mock
-OPENROUTER_API_KEY=
-OPENROUTER_MODEL=openai/gpt-4.1-mini
-OFFICE_DSL_DATA_DIR=mock-data
-OFFICE_DSL_AUDIT_DIR=.office-dsl/audit
-OFFICE_DSL_EXPORT_DIR=.office-dsl/exports
-```
-
-The runtime reads mock data from `mock-data/`. Email sending is represented by a mock outbox and is dry-run by default unless execution is explicitly requested.
 
 ## CLI
 
@@ -81,9 +138,9 @@ corepack pnpm cli -- execute TASK_ID --json
 corepack pnpm cli -- history --json
 ```
 
-## Backend And Web Demo
+Execution is dry-run by default. Use `--execute` only when intentionally writing mock output files such as the local outbox or exports.
 
-Run the backend and static UI:
+## Backend And Web Demo
 
 ```powershell
 corepack pnpm run dev:backend
@@ -95,7 +152,7 @@ Open:
 http://127.0.0.1:3000
 ```
 
-Useful API endpoints:
+Useful endpoints:
 
 - `GET /openapi.json`
 - `GET /api/actions`
@@ -108,73 +165,72 @@ Useful API endpoints:
 - `POST /api/tasks/{id}/execute`
 - `GET /api/tasks/{id}/audit`
 
-## Tests
+## Tests And Checks
+
+Install:
+
+```powershell
+corepack pnpm install --frozen-lockfile
+```
 
 Typecheck:
 
 ```powershell
-corepack pnpm exec tsc -b --pretty false
+corepack pnpm run typecheck
 ```
 
-Full TypeScript tests:
+Lint:
 
 ```powershell
-corepack pnpm exec vitest run --reporter=verbose --no-file-parallelism --testTimeout=10000 --hookTimeout=10000
+corepack pnpm run lint
 ```
 
-Single test files:
+Format check:
 
 ```powershell
-corepack pnpm exec vitest run tests/dsl.test.ts --reporter=verbose --testTimeout=10000 --hookTimeout=10000
-corepack pnpm exec vitest run tests/runtime.test.ts --reporter=verbose --testTimeout=10000 --hookTimeout=10000
-corepack pnpm exec vitest run tests/security.test.ts --reporter=verbose --testTimeout=10000 --hookTimeout=10000
-corepack pnpm exec vitest run tests/e2e.test.ts --reporter=verbose --testTimeout=10000 --hookTimeout=10000
+corepack pnpm run format
+```
+
+TypeScript tests:
+
+```powershell
+corepack pnpm test
 ```
 
 Python verifier tests:
 
 ```powershell
 $env:PYTHONPATH='verifier'
-python -m pytest verifier	ests -q
+python -m pytest verifier/tests -q
 ```
 
-In the Codex sandbox, Vitest worker startup returned `spawn EPERM`; the tests passed when run outside the sandbox with the local `node_modules/.bin` command.
-
-## Examples
-
-Current examples live in `examples/01-read-only-report` through `examples/06-log-analysis`.
-
-Validate all current examples manually:
+Whitespace check:
 
 ```powershell
-Get-ChildItem examples -Directory | Sort-Object Name | ForEach-Object {
-  corepack pnpm cli -- validate "$($_.FullName)\expected.json" --json | Out-Null
-  python -c "import json, pathlib; p=pathlib.Path(r'$($_.FullName)'); [json.load(open(p/name, encoding='utf-8')) for name in ['expected.json','expected-plan.json','expected-verification.json']]; print('JSON OK ' + p.name)"
-}
+git diff --check
 ```
 
-A dedicated example runner that regenerates output and displays diffs is still open.
+## Mock Mode
 
-## OpenRouter And LiteLLM
-
-OpenRouter/LiteLLM are optional and not required for MVP validation.
-
-TypeScript planner OpenRouter mode requires:
+Mock mode is the validated default:
 
 ```text
-OFFICE_DSL_LLM_MODE=openrouter
-OPENROUTER_API_KEY=<secret>
-OPENROUTER_MODEL=<model>
+OFFICE_DSL_LLM_MODE=mock
+OFFICE_DSL_VERIFIER_MODE=mock
+OFFICE_DSL_DATA_DIR=mock-data
+OFFICE_DSL_TASK_DIR=.office-dsl/tasks
+OFFICE_DSL_AUDIT_DIR=.office-dsl/audit
+OFFICE_DSL_EXPORT_DIR=.office-dsl/exports
 ```
 
-Python verifier OpenRouter mode requires installing the verifier with the optional `openrouter` extra and setting `OPENROUTER_API_KEY`. This path was not tested in the offline MVP run.
+OpenRouter planner mode requires `OPENROUTER_API_KEY`. Python LiteLLM/OpenRouter verifier mode requires installing the verifier with the optional `openrouter` extra. These online paths are not the validated MVP path.
 
 ## Documentation
 
-- `docs/architecture.md` describes the MVP architecture, flows, roles, approvals, examples, and the decision not to use `project.sh` as an active bootstrap.
-- `docs/research-migration-audit.md` verifies migration of historical research files to `research/`.
-- `HANDOFF.md`, `VERSION.md`, and `CHANGELOG.md` describe the current release state and next steps.
-
-## Final Validation Note
-
-Final validation note: an earlier full Vitest run passed 15/15, but a later final rerun in this Codex session failed before test collection because local pnpm links in `node_modules` could not resolve `@vitest/utils`. No install was run after the user requested not to rerun install. Manual relink attempts were not committed because `node_modules` is ignored. The next operator should refresh dependencies with `corepack pnpm install --frozen-lockfile` and rerun the final validation.
+- [docs/system-purpose-and-runtime-flow.md](docs/system-purpose-and-runtime-flow.md) - target purpose, runtime flow, diagrams, current-vs-target state.
+- [docs/architecture.md](docs/architecture.md) - earlier MVP architecture notes.
+- [docs/research-migration-audit.md](docs/research-migration-audit.md) - research migration audit.
+- [TODO.md](TODO.md) - staged implementation roadmap.
+- [HANDOFF.md](HANDOFF.md) - next-agent handoff notes.
+- [VERSION.md](VERSION.md) - version scope and validation notes.
+- [CHANGELOG.md](CHANGELOG.md) - release history.
