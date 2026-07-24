@@ -2,17 +2,17 @@
 
 ## Current Version
 
-`0.2.0`
+`0.3.0`
 
 ## Version Type
 
-Minor feature release over `0.1.1`.
+Minor feature release over `0.2.0`.
 
-This version adds the first repeatable example-regression workflow and a repository verification command. It does not add the canonical Intent/Contract DSL or Human1/Human2 approval model.
+This version adds the first canonical Intent/Contract DSL model package. It does not integrate that model into the Office DSL runtime, planner, renderer, or Human1/Human2 approval flow yet.
 
 ## Project Status
 
-The repository contains a working offline Office DSL MVP plus a repeatable scenario runner for the current example fixtures.
+The repository contains a working offline Office DSL MVP, a repeatable scenario runner for the current example fixtures, and a standalone canonical Intent/Contract DSL model package.
 
 Current validated implementation scope:
 
@@ -29,39 +29,39 @@ Current validated implementation scope:
 - canonical example manifests with `in/` and `out/` folders,
 - deterministic single-example and all-example runner,
 - root verification command,
+- `intent-contract.dsl.v1` model package with formal fields, statuses, source references, canonical serialization, and stable hashing,
 - TypeScript and Python tests for the current scope.
 
 Target scope documented but not implemented:
 
-- canonical Intent/Contract DSL,
+- runtime use of the canonical Intent/Contract DSL,
 - Human1/Human2 bilateral approval,
-- field-level missing/ambiguous/conflicting/assumed statuses,
-- source traceability for every material field,
+- planner population of field-level source traceability,
 - contract and legal document renderers,
 - JS/Node.js code generation,
 - DSL-based test generation,
 - TypeScript runtime integration with the Python verifier as a normal gating step.
 
-## Included In 0.2.0
+## Included In 0.3.0
 
-- Added `scenario.json` manifests for all six current examples.
-- Added mirrored `in/message.txt` and `out/expected.*.json` fixture structure for all current examples.
-- Added `@office-dsl/example-runner`.
-- Added `corepack pnpm run example:run -- <scenario>`.
-- Added `corepack pnpm run examples:run`.
-- Added `corepack pnpm run verify`.
-- Added `corepack pnpm run python:test`.
-- Added safe command dispatch in `project.sh`.
-- Fixed mock verifier action detection so policy subjects are not treated as executed actions.
+- Added `@office-dsl/intent-contract-model`.
+- Added `intent-contract.dsl.v1` versioned model boundary.
+- Added TypeScript types for core Intent/Contract constructs.
+- Added `FormalField<T>` with status, required-for-completion, source, and approvals.
+- Added `SourceReference` for message, conversation, file, human, system, and derived sources.
+- Added structural validation for field statuses and unresolved required fields.
+- Added canonical JSON serialization and stable SHA-256 hashing helpers.
+- Added a service-agreement fixture covering the current canonical constructs.
+- Added Vitest tests for parsing, validation, status rules, canonicalization, and hashing.
 
-## Not Included In 0.2.0
+## Not Included In 0.3.0
 
-- No canonical Intent/Contract DSL implementation.
-- No Human2 approval implementation.
+- No Office DSL to Intent/Contract DSL adapter.
+- No runtime approval migration from plan hash to canonical DSL hash.
+- No Human2 approval runtime flow.
 - No legal document renderer.
 - No JS/Node.js code generator.
 - No DSL-based test generator.
-- No planner-backed regeneration of current stable expected DSL fixtures.
 
 ## Runtime Compatibility Notes
 
@@ -75,6 +75,7 @@ Declared by the repository:
 Validated in this pass:
 
 - Windows workspace checks listed in the final task report.
+- Intent/Contract model package tests.
 - Example runner with Python verifier in mock mode.
 
 Expected but not yet fully validated as release criteria:
@@ -85,6 +86,6 @@ Expected but not yet fully validated as release criteria:
 
 ## Versioning Policy Note
 
-This pass uses a minor bump from `0.1.1` to `0.2.0` because it adds a new backward-compatible example-runner feature and repository verification command.
+This pass uses a minor bump from `0.2.0` to `0.3.0` because it adds a new backward-compatible model package and fixtures.
 
 A future production hardening task should define how root package metadata, package versions, OpenAPI metadata, `VERSION.md`, and `CHANGELOG.md` are kept in sync.

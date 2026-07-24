@@ -41,6 +41,7 @@ See [docs/system-purpose-and-runtime-flow.md](docs/system-purpose-and-runtime-fl
 DONE:
 
 - `packages/dsl-model` defines `office.dsl.v1`, structural validation, parsing, and a readable token renderer.
+- `packages/intent-contract-model` defines the standalone `intent-contract.dsl.v1` model boundary with formal fields, statuses, source references, canonical serialization, and stable hashing.
 - `packages/llm-planner` provides a deterministic mock planner for a few single-command office scenarios.
 - `packages/dsl-runtime` creates sessions, evaluates policies, asks simple clarification questions, handles one-side confirmation, computes a plan hash, executes mock actions, and records audit data.
 - `packages/cli` exposes plan, validate, inspect, answer, confirm, reject, execute, and history commands.
@@ -66,14 +67,14 @@ MOCK:
 
 NOT IMPLEMENTED:
 
-- Full Intent/Contract DSL with parties, obligations, deliverables, payment, acceptance criteria, exclusions, assumptions, conflicts, and source references.
+- Runtime integration of the canonical Intent/Contract DSL.
 - Human1/Human2 bilateral approval.
 - Conversation-history and guideline-file planner modes.
-- Field-level statuses such as `CONFIRMED`, `MISSING`, `AMBIGUOUS`, `CONFLICTING`, and `ASSUMED`.
 - Contract/legal document renderers.
 - JS/Node.js code generation.
 - Test generation from DSL requirements and acceptance criteria.
 - Runtime integration that calls the Python verifier as part of the normal TypeScript flow.
+- Office DSL to Intent/Contract DSL adapter or migration path.
 
 ## Example Uses
 
@@ -163,6 +164,22 @@ Useful endpoints:
 - `POST /api/tasks/{id}/reject`
 - `POST /api/tasks/{id}/execute`
 - `GET /api/tasks/{id}/audit`
+
+## Intent/Contract Model
+
+The canonical model currently lives in `packages/intent-contract-model` and is intentionally separate from the working Office DSL runtime. It provides:
+
+- `intent-contract.dsl.v1`,
+- core constructs for documents, contracts, parties, obligations, deliverables, deadlines, payments, conflicts, questions, approvals, render directives, and execution directives,
+- field statuses such as `CONFIRMED`, `MISSING`, `AMBIGUOUS`, `CONFLICTING`, and `ASSUMED`,
+- source references for message, conversation, file, human, system, and derived inputs,
+- canonical JSON serialization and stable SHA-256 hashing.
+
+Validate the model through the regular TypeScript test suite:
+
+```powershell
+corepack pnpm test
+```
 
 ## Example Runner
 

@@ -29,7 +29,7 @@ The DSL is the source of truth. It should capture:
 - approvals tied to a specific DSL version,
 - source references for each material field.
 
-Current implementation status: the repository currently implements a narrow `office.dsl.v1` for office tasks. It does not yet implement the full intent/contract DSL described above.
+Current implementation status: the repository implements a narrow executable `office.dsl.v1` for office tasks and a standalone `intent-contract.dsl.v1` model package. The canonical model is not yet integrated into the planner, runtime, renderer, or approvals.
 
 ## 3. H2M And H2H
 
@@ -109,7 +109,7 @@ REJECTED
 NOT_APPLICABLE
 ```
 
-Current implementation status: `packages/dsl-model` defines `office.dsl.v1` with `task`, `sources`, `steps`, `output`, `policies`, `expectedResults`, and `errorHandling`. Supported actions are `database.query`, `report.generate`, `file.export`, `email.prepare`, `email.send`, `user.ask`, `user.confirm`, and `log.search`.
+Current implementation status: `packages/dsl-model` defines executable `office.dsl.v1` with `task`, `sources`, `steps`, `output`, `policies`, `expectedResults`, and `errorHandling`. `packages/intent-contract-model` defines standalone `intent-contract.dsl.v1` with core Intent/Contract constructs, field statuses, source references, canonical serialization, and stable hashing. The two models do not yet have an adapter.
 
 ## 6. Role Of The LLM
 
@@ -334,6 +334,7 @@ DONE:
 
 - offline workspace and pnpm scripts,
 - `office.dsl.v1` model and structural validation,
+- standalone `intent-contract.dsl.v1` model with statuses, source references, and stable hashing,
 - mock planner for single office commands,
 - TypeScript runtime with simple state machine,
 - deterministic policy checks,
@@ -362,8 +363,8 @@ NOT IMPLEMENTED:
 
 - canonical Intent/Contract DSL,
 - Human1/Human2 bilateral approval,
-- field-level source traceability,
-- conflict and assumption model,
+- runtime population of field-level source traceability,
+- runtime conflict and assumption diagnosis,
 - contract/legal renderers,
 - planner-backed example regeneration for current stable fixtures,
 - JS/Node.js code generation,

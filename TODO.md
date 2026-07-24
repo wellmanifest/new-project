@@ -15,8 +15,8 @@ PARTIAL:
 
 - OpenRouter and LiteLLM paths exist but are not the validated default path.
 - Clarification exists as workflow steps, not as a general missing/ambiguous/conflicting field model.
-- Rendering exists as readable DSL text, not formal documents.
-- Hashing is based on execution plan content, not canonical Intent/Contract DSL snapshots.
+- Rendering exists as readable Office DSL text, not formal documents.
+- Office runtime hashing is based on execution plan content; the new Intent/Contract model has canonical snapshot hashing but is not integrated into runtime approvals yet.
 
 MOCK:
 
@@ -27,7 +27,7 @@ MOCK:
 
 NOT IMPLEMENTED:
 
-- Canonical Intent/Contract DSL, Human2 approval, field traceability, legal renderers, code generation, DSL-based test generation, and runtime-to-Python verifier integration.
+- Human2 approval, runtime field traceability population, legal renderers, code generation, DSL-based test generation, and runtime-to-Python verifier integration.
 
 ---
 
@@ -67,13 +67,13 @@ NOT IMPLEMENTED:
 
 ## Phase 2 - Canonical Intent/Contract DSL
 
-- [ ] Define the canonical DSL package boundary separate from `office.dsl.v1`.
+- [x] Define the canonical DSL package boundary separate from `office.dsl.v1`.
   - Done when the repo has a documented versioned model such as `intent.dsl.v1` or `contract.dsl.v1` and existing Office DSL compatibility is preserved.
-- [ ] Add core constructs: `DOCUMENT`, `CONTRACT`, `PARTY`, `ROLE`, `INTENT`, `SUBJECT`, `OBLIGATION`, `DELIVERABLE`, `DEADLINE`, `PAYMENT`, `CONDITION`, `DEPENDENCY`, `ACCEPTANCE_CRITERIA`, `EXCLUSION`, `ASSUMPTION`, `RISK`, `CONFLICT`, `QUESTION`, `APPROVAL`, `SOURCE_REFERENCE`, `RENDER`, and `EXECUTION`.
+- [x] Add core constructs: `DOCUMENT`, `CONTRACT`, `PARTY`, `ROLE`, `INTENT`, `SUBJECT`, `OBLIGATION`, `DELIVERABLE`, `DEADLINE`, `PAYMENT`, `CONDITION`, `DEPENDENCY`, `ACCEPTANCE_CRITERIA`, `EXCLUSION`, `ASSUMPTION`, `RISK`, `CONFLICT`, `QUESTION`, `APPROVAL`, `SOURCE_REFERENCE`, `RENDER`, and `EXECUTION`.
   - Done when each construct has TypeScript types, validation rules, and at least one fixture.
-- [ ] Add field status semantics: `CONFIRMED`, `MISSING`, `INCOMPLETE`, `AMBIGUOUS`, `CONFLICTING`, `ASSUMED`, `REJECTED`, and `NOT_APPLICABLE`.
+- [x] Add field status semantics: `CONFIRMED`, `MISSING`, `INCOMPLETE`, `AMBIGUOUS`, `CONFLICTING`, `ASSUMED`, `REJECTED`, and `NOT_APPLICABLE`.
   - Done when fields can carry status, source, required-for-completion flag, and approvals.
-- [ ] Define canonical JSON serialization and stable hashing rules.
+- [x] Define canonical JSON serialization and stable hashing rules.
   - Done when equivalent DSL snapshots hash identically across Windows and Linux.
 - [ ] Add migration or adapter notes from `office.dsl.v1` to the canonical model.
   - Done when current examples still validate or have a documented compatibility path.
@@ -281,11 +281,11 @@ Target scenario set:
 
 1. Add CI wiring for `corepack pnpm run verify` on Windows and Linux.
 2. Decide whether default Vitest sandbox `spawn EPERM` should be solved by config or documented as an environment limitation.
-3. Add a canonical field-status model draft in TypeScript types.
-4. Add source-reference types for DSL fields.
-5. Add a minimal Human1/Human2 approval record model.
-6. Change hashing design from plan hash only to canonical DSL snapshot hash.
-7. Add runtime-to-Python verifier invocation behind a mock-safe interface.
-8. Add the first target fixture: `01-chat-to-dsl` with `in/` and `out/` artifacts.
-9. Add planner-backed scenario mode coverage for mock planner output normalization.
-10. Add Markdown diff output for future rendered document artifacts.
+3. Add migration or adapter notes from `office.dsl.v1` to `intent-contract.dsl.v1`.
+4. Add a minimal Human1/Human2 approval record model to runtime workflows.
+5. Integrate canonical DSL snapshot hashing into approval checks.
+6. Add runtime-to-Python verifier invocation behind a mock-safe interface.
+7. Add the first target fixture: `01-chat-to-dsl` with `in/` and `out/` artifacts.
+8. Add planner-backed scenario mode coverage for mock planner output normalization.
+9. Add Markdown diff output for future rendered document artifacts.
+10. Add runtime population of source references from planner or scenario inputs.

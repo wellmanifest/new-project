@@ -42,6 +42,8 @@ importers:
 
   packages/example-runner: {}
 
+  packages/intent-contract-model: {}
+
   packages/llm-planner: {}
 
 packages:

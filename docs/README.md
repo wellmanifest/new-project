@@ -26,7 +26,8 @@ Historical research folders live under `research/` and should not be moved back 
 
 ## Current Working Structure
 
-- `packages/dsl-model/` - current `office.dsl.v1` model, parser, validator, and renderer.
+- `packages/dsl-model/` - current executable `office.dsl.v1` model, parser, validator, and renderer.
+- `packages/intent-contract-model/` - standalone canonical `intent-contract.dsl.v1` model, status semantics, source references, and stable hashing.
 - `packages/dsl-runtime/` - current TypeScript runtime, state machine, policies, actions, hashing, audit, and file store.
 - `packages/llm-planner/` - mock planner and optional OpenRouter path.
 - `packages/cli/` - CLI entrypoint.
@@ -51,4 +52,4 @@ Historical research folders live under `research/` and should not be moved back 
 
 ## Current Boundary
 
-The validated repository is an offline Office DSL MVP with a repeatable example runner. The target Intent/Contract DSL, Human1/Human2 approvals, field traceability, legal renderers, code generation, test generation, and semantic verifier orchestration are roadmap items, not completed features.
+The validated repository is an offline Office DSL MVP with a repeatable example runner and a standalone Intent/Contract model package. The target Intent/Contract DSL, Human1/Human2 approvals, field traceability, legal renderers, code generation, test generation, and semantic verifier orchestration are roadmap items, not completed features.

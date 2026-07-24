@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.3.0] - 2026-07-24
+
+### Added
+
+- Added `@office-dsl/intent-contract-model` as the canonical Intent/Contract DSL package boundary separate from `office.dsl.v1`.
+- Added `intent-contract.dsl.v1` TypeScript types for document, contract, party, role, intent, subject, obligation, deliverable, deadline, payment, condition, dependency, acceptance criteria, exclusion, assumption, risk, conflict, question, approval, source reference, render, and execution constructs.
+- Added field status semantics for `CONFIRMED`, `MISSING`, `INCOMPLETE`, `AMBIGUOUS`, `CONFLICTING`, `ASSUMED`, `REJECTED`, and `NOT_APPLICABLE`.
+- Added canonical serialization and SHA-256 hashing helpers for Intent/Contract DSL snapshots.
+- Added a service-agreement fixture covering all canonical constructs.
+
+### Changed
+
+- Updated roadmap and docs to classify the canonical Intent/Contract model as implemented at the model layer while leaving runtime integration open.
+- Updated package, app, verifier, and OpenAPI version metadata to `0.3.0`.
+
+### Fixed
+
+- No runtime fixes in this release.
+
+### Tests
+
+- Added Vitest coverage for Intent/Contract fixture parsing, field-status validation, required unresolved field validation, canonicalization, and stable hashing.
+
+### Known limitations
+
+- The canonical Intent/Contract model is not yet integrated into the TypeScript runtime, planner, renderer, or approval workflow.
+- Office DSL execution still uses `office.dsl.v1` and plan-hash confirmation.
+- Migration notes or adapters from `office.dsl.v1` to `intent-contract.dsl.v1` remain open.
+
 ## [0.2.0] - 2026-07-24
 
 ### Added

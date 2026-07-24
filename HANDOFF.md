@@ -12,6 +12,7 @@ DONE:
 
 - pnpm workspace, TypeScript config, Vitest, ESLint, Prettier, Python verifier package config.
 - `packages/dsl-model`: `office.dsl.v1`, parser, structural validator, JSON schema object, and human-readable token renderer.
+- `packages/intent-contract-model`: standalone `intent-contract.dsl.v1` model, formal fields, statuses, source references, canonical serialization, and stable hashing.
 - `packages/llm-planner`: deterministic mock planner for selected single-message office commands plus optional OpenRouter path.
 - `packages/dsl-runtime`: simple state machine, deterministic policy engine, action registry, mock data operations, dry-run execution, `user.ask`, one-side confirmation, plan hash, audit persistence, and file task store.
 - `packages/cli`: plan/run, validate, inspect, answer, confirm, reject, execute, and history.
@@ -19,7 +20,7 @@ DONE:
 - `apps/web`: static demo UI.
 - `verifier`: Python mock verifier with Pydantic report model and optional LiteLLM/OpenRouter path.
 - `examples`: six office examples with legacy flat fixtures plus canonical `scenario.json`, `in/`, and `out/` structure.
-- `tests`: TypeScript and Python tests for current scope.
+- `tests`: TypeScript and Python tests for current scope, including example runner and Intent/Contract model coverage.
 - Documentation alignment pass: README, TODO, VERSION, CHANGELOG, this handoff, and `docs/system-purpose-and-runtime-flow.md`.
 - Example runner pass: `@office-dsl/example-runner`, `example:run`, `examples:run`, root `verify`, and safe `project.sh` command dispatch.
 
@@ -37,17 +38,17 @@ PARTIAL:
 - OpenRouter/LiteLLM code paths exist but are not validated as the default flow.
 - Clarification exists only as workflow `user.ask`, not field-level missing/ambiguous/conflicting statuses.
 - Rendering is a readable office DSL listing, not formal contract/legal documents.
-- Hashing is plan-based, not a canonical immutable DSL snapshot hash.
+- Office runtime hashing is plan-based; the standalone Intent/Contract model has canonical DSL snapshot hashing but it is not wired into approvals yet.
 - Audit exists for office-task sessions, not the full target lifecycle.
 
 NOT IMPLEMENTED:
 
-- Canonical Intent/Contract DSL.
+- Runtime integration of the canonical Intent/Contract DSL.
 - Human1/Human2 bilateral approval.
 - Conversation-history ingestion.
 - Guideline-file ingestion.
-- Field-level source traceability.
-- Conflict and assumption model.
+- Runtime/planner population of field-level source traceability.
+- Runtime conflict and assumption diagnosis.
 - Contract/legal renderers.
 - JS/Node.js code generation.
 - Test generation from DSL.
@@ -59,9 +60,10 @@ Start with repeatability before expanding semantics:
 
 1. Wire `corepack pnpm run verify` into CI for Windows and Linux.
 2. Decide how to handle the Codex sandbox `spawn EPERM` limitation for `tsx` and Vitest.
-3. Add canonical field statuses and source-reference types.
+3. Add Office DSL to Intent/Contract DSL migration or adapter notes.
 4. Add a minimal Human1/Human2 approval record model.
-5. Add the first target Intent/Contract scenario fixture after the current runner stays stable.
+5. Wire canonical DSL snapshot hashing into approvals.
+6. Add the first target Intent/Contract scenario fixture after the current runner stays stable.
 
 Reason: without an example runner, the richer Intent/Contract DSL can drift without clear regression feedback.
 
