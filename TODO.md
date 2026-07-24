@@ -60,8 +60,8 @@ NOT IMPLEMENTED:
   - Done when tests show mock sending does not perform real external delivery.
 - [x] Add a root `verify` script that runs typecheck, lint, format check, TypeScript tests, Python tests, and `git diff --check`.
   - Done when `corepack pnpm run verify` works on Windows and Linux.
-- [ ] Fix or document any dependency/link issue that prevents default Vitest startup in the Codex sandbox.
-  - Done when the exact environment failure is reproducible or removed.
+- [x] Fix or document any dependency/link issue that prevents default Vitest startup in the Codex sandbox.
+  - Done when the exact environment failure is reproducible or removed. Documented in `docs/codex-sandbox-vitest.md`; root test scripts avoid `.pytest_cache` scanning, but this Codex Windows sandbox still blocks Vite/Vitest process creation with `spawn EPERM`.
 
 ---
 
@@ -264,8 +264,8 @@ Target scenario set:
 
 ## Phase 14 - Production Hardening
 
-- [ ] Add CI for Windows and Linux.
-  - Done when default checks pass on both systems.
+- [x] Add CI for Windows and Linux.
+  - Done when default checks pass on both systems. CI wiring is in `.github/workflows/verify.yml` and runs `bash project.sh install` plus `bash project.sh verify` on `ubuntu-latest` and `windows-latest`.
 - [ ] Add packaging/release policy.
   - Done when version updates are unambiguous across package metadata, changelog, and docs.
 - [ ] Add persistence strategy beyond local JSON files.
@@ -279,13 +279,13 @@ Target scenario set:
 
 ## Next 10 Implementation Tasks
 
-1. Add CI wiring for `corepack pnpm run verify` on Windows and Linux.
-2. Decide whether default Vitest sandbox `spawn EPERM` should be solved by config or documented as an environment limitation.
-3. Add a minimal Human1/Human2 approval record model to runtime workflows.
-4. Integrate canonical DSL snapshot hashing into approval checks.
-5. Add runtime-to-Python verifier invocation behind a mock-safe interface.
-6. Add the first target fixture: `01-chat-to-dsl` with `in/` and `out/` artifacts.
-7. Add planner-backed scenario mode coverage for mock planner output normalization.
-8. Add Markdown diff output for future rendered document artifacts.
-9. Add runtime population of source references from planner or scenario inputs.
-10. Add adapter output artifacts for current Office DSL examples.
+1. Add a minimal Human1/Human2 approval record model to runtime workflows.
+2. Integrate canonical DSL snapshot hashing into approval checks.
+3. Add runtime-to-Python verifier invocation behind a mock-safe interface.
+4. Add the first target fixture: `01-chat-to-dsl` with `in/` and `out/` artifacts.
+5. Add planner-backed scenario mode coverage for mock planner output normalization.
+6. Add Markdown diff output for future rendered document artifacts.
+7. Add runtime population of source references from planner or scenario inputs.
+8. Add adapter output artifacts for current Office DSL examples.
+9. Add canonical Intent/Contract CLI commands.
+10. Define canonical security policy for LLM, runtime, renderer, codegen, and verifier.

@@ -20,9 +20,10 @@ DONE:
 - `apps/web`: static demo UI.
 - `verifier`: Python mock verifier with Pydantic report model and optional LiteLLM/OpenRouter path.
 - `examples`: six office examples with legacy flat fixtures plus canonical `scenario.json`, `in/`, and `out/` structure.
-- `tests`: TypeScript and Python tests for current scope, including example runner and Intent/Contract model coverage.
+- `tests`: TypeScript and Python tests for current scope, including example runner, CLI, backend, store, security, runtime, and Intent/Contract model coverage.
 - Documentation alignment pass: README, TODO, VERSION, CHANGELOG, this handoff, and `docs/system-purpose-and-runtime-flow.md`.
 - Example runner pass: `@office-dsl/example-runner`, `example:run`, `examples:run`, root `verify`, and safe `project.sh` command dispatch.
+- GitHub Actions workflow: `.github/workflows/verify.yml` runs `bash project.sh install` and `bash project.sh verify` on Ubuntu and Windows.
 
 ## Mock Or Partial Areas
 
@@ -39,6 +40,7 @@ PARTIAL:
 - Clarification exists only as workflow `user.ask`, not field-level missing/ambiguous/conflicting statuses.
 - Rendering is a readable office DSL listing, not formal contract/legal documents.
 - Office runtime hashing is plan-based; the standalone Intent/Contract model has canonical DSL snapshot hashing and an Office DSL adapter, but it is not wired into runtime approvals yet.
+- Codex Windows sandbox blocks Vitest/Vite process creation with `spawn EPERM`; see `docs/codex-sandbox-vitest.md`.
 - Audit exists for office-task sessions, not the full target lifecycle.
 
 NOT IMPLEMENTED:
@@ -56,14 +58,14 @@ NOT IMPLEMENTED:
 
 ## Priority For The Next Agent
 
-Start with repeatability before expanding semantics:
+Start with approval semantics before expanding rendering or code generation:
 
-1. Wire `corepack pnpm run verify` into CI for Windows and Linux.
-2. Decide how to handle the Codex sandbox `spawn EPERM` limitation for `tsx` and Vitest.
-3. Add a minimal Human1/Human2 approval record model.
-4. Wire canonical DSL snapshot hashing into approvals.
-5. Add the first target Intent/Contract scenario fixture after the current runner stays stable.
-   Reason: without an example runner, the richer Intent/Contract DSL can drift without clear regression feedback.
+1. Add a minimal Human1/Human2 approval record model.
+2. Wire canonical DSL snapshot hashing into approvals.
+3. Add the first target Intent/Contract scenario fixture after the current runner stays stable.
+4. Add runtime-to-Python verifier invocation behind a mock-safe interface.
+
+Reason: without explicit approval semantics, the richer Intent/Contract DSL can be generated but cannot yet become a shared approved artifact.
 
 ## What Not To Misread As Done
 
@@ -107,60 +109,44 @@ TypeScript tests:
 corepack pnpm test
 ```
 
-Python tests:
+Python verifier tests:
 
 ```powershell
-$env:PYTHONPATH='verifier'
-python -m pytest verifier/tests -q
+corepack pnpm run python:test
 ```
 
-Backend and UI:
-
-```powershell
-corepack pnpm run dev:backend
-```
-
-Open `http://127.0.0.1:3000`.
-
-Validate one example DSL:
-
-```powershell
-corepack pnpm cli -- validate examples/01-read-only-report/expected.json --json
-```
-
-Run one example:
-
-```powershell
-corepack pnpm run example:run -- 01-read-only-report
-```
-
-Run all examples:
+All examples:
 
 ```powershell
 corepack pnpm run examples:run
 ```
 
-Run all repository checks:
+Full verification:
 
 ```powershell
 corepack pnpm run verify
 ```
 
-The same operations are available through `project.sh`, for example `bash project.sh verify`.
+`project.sh` exposes the same commands for Bash-capable environments. In the local Codex Windows sandbox, Bash/WSL can fail with `E_ACCESS_DENIED`; use the equivalent `corepack pnpm ...` commands there.
 
-## Important Files
+## Recent Stable Milestones
 
-- `docs/system-purpose-and-runtime-flow.md` - main purpose and runtime-flow architecture.
+- `0.5.0`: GitHub Actions verify workflow plus Codex sandbox Vitest limitation documentation.
+- `0.4.0`: Office DSL to Intent/Contract adapter and expanded regression coverage.
+- `0.3.0`: canonical Intent/Contract model boundary.
+- `0.2.0`: deterministic example runner and root verification command.
+- `0.1.1`: documentation alignment with current-versus-target status.
+- `0.1.0`: offline Office DSL MVP.
+
+## Key Files To Read First
+
 - `TODO.md` - staged roadmap and implementation priorities.
 - `README.md` - current status, target architecture, commands, and limitations.
 - `CHANGELOG.md` - release history.
-- `VERSION.md` - current version metadata.
-- `packages/dsl-model/src/index.ts` - current DSL model.
-- `packages/dsl-runtime/src/index.ts` - current runtime/state/policy/action implementation.
-- `packages/llm-planner/src/index.ts` - current mock/OpenRouter planner.
-- `verifier/office_dsl_verifier/core.py` - current Python verifier.
-- `examples/` - runner-driven office fixtures with legacy flat files plus `scenario.json`, `in/`, and `out/`.
-
-## Validation Notes
-
-Run validation again after any change. If a command fails because of environment state, report the exact command, error, and whether it appears to be project code or environment/dependency setup.
+- `VERSION.md` - current version scope and validation notes.
+- `docs/system-purpose-and-runtime-flow.md` - target system architecture and runtime flow.
+- `docs/office-to-intent-contract-migration.md` - Office DSL compatibility adapter notes.
+- `docs/codex-sandbox-vitest.md` - local sandbox Vitest/Vite limitation.
+- `packages/intent-contract-model/src/index.ts` - canonical model and adapter.
+- `packages/dsl-runtime/src/index.ts` - current runtime and approval limitations.
+- `.github/workflows/verify.yml` - CI verification workflow.

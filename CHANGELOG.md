@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.5.0] - 2026-07-24
+
+### Added
+
+- Added `.github/workflows/verify.yml` to run the repository verification workflow on `ubuntu-latest` and `windows-latest`.
+- Added `docs/codex-sandbox-vitest.md` documenting the Codex Windows sandbox `spawn EPERM` failure mode for Vitest/Vite startup and the required escalated verification path in this environment.
+
+### Changed
+
+- Updated root Vitest scripts to run against `tests` and exclude generated/cache paths such as `.pytest_cache` and `verifier/`.
+- Updated package, app, verifier, and OpenAPI version metadata to `0.5.0`.
+
+### Known limitations
+
+- The current Codex Windows sandbox still blocks Node/Vite process creation used by Vitest internals, so full verification in this environment requires escalated execution.
+
 ## [0.4.0] - 2026-07-24
 
 ### Added

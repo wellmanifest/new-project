@@ -277,7 +277,8 @@ OpenRouter planner mode requires `OPENROUTER_API_KEY`. Python LiteLLM/OpenRouter
 - [docs/system-purpose-and-runtime-flow.md](docs/system-purpose-and-runtime-flow.md) - target purpose, runtime flow, diagrams, current-vs-target state.
 - [docs/architecture.md](docs/architecture.md) - earlier MVP architecture notes.
 - [docs/research-migration-audit.md](docs/research-migration-audit.md) - research migration audit.
-- [docs/office-to-intent-contract-migration.md](docs/office-to-intent-contract-migration.md) - Office DSL to Intent/Contract compatibility path.
+- [docs/office-to-i
+  te
 - [TODO.md](TODO.md) - staged implementation roadmap.
 - [HANDOFF.md](HANDOFF.md) - next-agent handoff notes.
 - [VERSION.md](VERSION.md) - version scope and validation notes.

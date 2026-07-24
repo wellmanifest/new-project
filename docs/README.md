@@ -12,7 +12,7 @@
 - `VERSION.md` - current version and validation notes.
 - `CHANGELOG.md` - release history.
 - `docs/research-migration-audit.md` - audit of historical research migration.
-- `docs/office-to-intent-contract-migration.md` - Office DSL to Intent/Contract compatibility mapping.
+- docs/office-to-i
 - `project.sh` - historical script; not the active MVP bootstrap.
 
 ## Research Materials

@@ -2,17 +2,17 @@
 
 ## Current Version
 
-`0.4.0`
+`0.5.0`
 
 ## Version Type
 
-Minor feature release over `0.3.0`.
+Minor infrastructure release over `0.4.0`.
 
-This version adds a deterministic compatibility adapter from the current executable `office.dsl.v1` model into the standalone canonical `intent-contract.dsl.v1` model. It does not integrate canonical snapshots into runtime approvals yet.
+This version adds GitHub Actions verification wiring for Windows and Linux and documents the local Codex Windows sandbox limitation for Vitest/Vite process creation. It does not change Intent/Contract runtime approval semantics.
 
 ## Project Status
 
-The repository contains a working offline Office DSL MVP, a repeatable scenario runner for the current example fixtures, a standalone canonical Intent/Contract DSL model package, and an Office DSL to Intent/Contract migration path.
+The repository contains a working offline Office DSL MVP, a repeatable scenario runner for the current example fixtures, a standalone canonical Intent/Contract DSL model package, an Office DSL to Intent/Contract migration path, and CI wiring for the default verification workflow.
 
 Current validated implementation scope:
 
@@ -29,9 +29,11 @@ Current validated implementation scope:
 - canonical example manifests with `in/` and `out/` folders,
 - deterministic single-example and all-example runner,
 - root verification command,
+- GitHub Actions workflow for `project.sh install` and `project.sh verify` on Windows and Linux,
 - `intent-contract.dsl.v1` model package with formal fields, statuses, source references, canonical serialization, and stable hashing,
 - deterministic `officeDslToIntentContractDsl` compatibility adapter with migration notes,
 - expanded regression coverage for DSL validation, runtime controls, security policy, CLI workflows, backend API workflows, and file-backed store behavior,
+- documented Codex Windows sandbox `spawn EPERM` limitation for Vitest/Vite startup,
 - TypeScript and Python tests for the current scope.
 
 Target scope documented but not implemented:
@@ -44,17 +46,15 @@ Target scope documented but not implemented:
 - DSL-based test generation,
 - TypeScript runtime integration with the Python verifier as a normal gating step.
 
-## Included In 0.4.0
+## Included In 0.5.0
 
-- Added `officeDslToIntentContractDsl` for deterministic Office DSL compatibility snapshots.
-- Added migration notes that record `fromPath`, `toPath`, mapping decision, status, and reason.
-- Added explicit mapping documentation in `docs/office-to-intent-contract-migration.md`.
-- Added tests for Office DSL migration validity, clarification-to-question mapping, and deterministic migrated snapshot hashing.
-- Expanded current Office DSL/runtime regression tests around unsupported actions, structural validation, dry-run export, reject/cancel transitions, security denials, CLI workflows, backend API workflows, and `FileTaskStore`.
-- Updated package, app, verifier, and OpenAPI version metadata to `0.4.0`.
-- Fixed ready-session rejection so explicit rejection can move `READY` sessions to `DENIED`.
+- Added `.github/workflows/verify.yml` with an Ubuntu and Windows matrix.
+- Added CI steps for checkout, Node.js 22, Python 3.11, Corepack, `bash project.sh install`, and `bash project.sh verify`.
+- Added `docs/codex-sandbox-vitest.md` with the exact local sandbox failure mode and reproduction notes.
+- Updated root Vitest scripts to run against `tests` and avoid generated/cache paths such as `.pytest_cache` and `verifier/`.
+- Updated package, app, verifier, and OpenAPI version metadata to `0.5.0`.
 
-## Not Included In 0.4.0
+## Not Included In 0.5.0
 
 - No runtime approval migration from plan hash to canonical DSL hash.
 - No Human2 approval runtime flow.
@@ -71,21 +71,23 @@ Declared by the repository:
 - TypeScript: `5.7.3`.
 - Vitest: `3.0.4`.
 - Python verifier: `>=3.11`.
+- CI Node.js: `22`.
+- CI Python: `3.11`.
 
 Validated in this pass:
 
 - Windows workspace checks listed in the final task report.
 - Intent/Contract model and adapter tests.
 - Example runner with Python verifier in mock mode.
+- Reproduced the Codex Windows sandbox `spawn EPERM` limitation and documented the escalation requirement for full verification in this environment.
 
 Expected but not yet fully validated as release criteria:
 
-- Linux behavior.
 - Online OpenRouter planner mode.
 - Online LiteLLM/OpenRouter verifier mode.
 
 ## Versioning Policy Note
 
-This pass uses a minor bump from `0.3.0` to `0.4.0` because it adds a new backward-compatible adapter and migration documentation.
+This pass uses a minor bump from `0.4.0` to `0.5.0` because it adds CI workflow infrastructure for the default project verification command.
 
 A future production hardening task should define how root package metadata, package versions, OpenAPI metadata, `VERSION.md`, and `CHANGELOG.md` are kept in sync.
