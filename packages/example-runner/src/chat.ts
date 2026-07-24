@@ -158,9 +158,7 @@ export async function runChatScenario(options: {
   generatedRoot?: string;
 }): Promise<ChatRunResult> {
   const manifest = await loadChatScenarioManifest(options.scenarioDir);
-  const generatedDir =
-    options.generatedRoot ??
-    path.join(options.repoRoot, ".office-dsl", "generated", "examples-chat", manifest.id);
+  const generatedDir = options.generatedRoot ?? path.join(options.scenarioDir, "generated");
   await rm(generatedDir, { recursive: true, force: true });
   await mkdir(generatedDir, { recursive: true });
 
@@ -316,6 +314,7 @@ function normalizeForMatch(value: string): string {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/ł/g, "l");
 }
+
 function capture(updates: IntentUpdate[], field: string, value: string | undefined): void {
   if (value?.trim()) updates.push({ field, value: normalizeValue(value) });
 }
@@ -455,18 +454,35 @@ async function writeEventArtifacts(
   diffLines: string[],
   status: Record<string, unknown>
 ): Promise<void> {
-  const eventDir = path.join(generatedDir, event.author, String(event.event).padStart(3, "0"));
+  const eventDir = generatedDir;
   await mkdir(eventDir, { recursive: true });
-  await writeFile(path.join(eventDir, "prompt.txt"), `${event.raw}\n`, "utf8");
-  await writeDsl(path.join(eventDir, "intent-contract.dsl"), renderIntentDsl(intent));
-  await writeDsl(path.join(eventDir, "party-contract.dsl"), renderPartyContractDsl(partyContract));
-  await writeDsl(path.join(eventDir, "merged-contract.dsl"), renderMergedContractDsl(merged));
   await writeFile(
-    path.join(eventDir, "diff.md"),
+    path.join(eventDir, `${eventPrefix(event)}.prompt.txt`),
+    `${event.raw}\n`,
+    "utf8"
+  );
+  await writeDsl(
+    path.join(eventDir, `${eventPrefix(event)}.intent-contract.dsl.hcl`),
+    renderIntentDsl(intent)
+  );
+  await writeDsl(
+    path.join(eventDir, `${eventPrefix(event)}.party-contract.dsl.hcl`),
+    renderPartyContractDsl(partyContract)
+  );
+  await writeDsl(
+    path.join(eventDir, `${eventPrefix(event)}.merged-contract.dsl.hcl`),
+    renderMergedContractDsl(merged)
+  );
+  await writeFile(
+    path.join(eventDir, `${eventPrefix(event)}.diff.md`),
     `${diffLines.join("\n") || "No contract change."}\n`,
     "utf8"
   );
-  await writeJson(path.join(eventDir, "status.json"), status);
+  await writeJson(path.join(eventDir, `${eventPrefix(event)}.status.json`), status);
+}
+
+function eventPrefix(event: ChatLine): string {
+  return `${String(event.event).padStart(3, "0")}-${event.author}`;
 }
 
 async function writeFinalArtifacts(
@@ -483,7 +499,10 @@ async function writeFinalArtifacts(
     hash: merged.hash,
     merged
   };
-  await writeDsl(path.join(finalDir, "final-contract.dsl"), renderFinalContractDsl(finalContract));
+  await writeDsl(
+    path.join(finalDir, "final-contract.dsl.hcl"),
+    renderFinalContractDsl(finalContract)
+  );
   const markdown = renderContractMarkdown(finalContract);
   await writeFile(path.join(finalDir, "contract.md"), markdown, "utf8");
   await writeFile(path.join(finalDir, "contract.pdf"), renderMinimalPdf(markdown), "binary");
@@ -493,7 +512,7 @@ async function writeFinalArtifacts(
     approvals: approvals.filter((approval) => approval.status === "ACTIVE")
   });
   await writeFile(path.join(finalDir, "diff-summary.md"), `${diffSummary.join("\n\n")}\n`, "utf8");
-  await writeDsl(path.join(finalDir, "annex.dsl"), renderAnnexDsl(finalContract));
+  await writeDsl(path.join(finalDir, "annex.dsl.hcl"), renderAnnexDsl(finalContract));
 }
 
 function renderContractMarkdown(finalContract: {
@@ -512,7 +531,7 @@ function renderContractMarkdown(finalContract: {
   for (const field of requiredFields) {
     lines.push(`- ${field}: ${finalContract.merged.fields[field]?.value ?? "MISSING"}`);
   }
-  lines.push("", "## Annex", "See annex.dsl for the canonical DSL representation.", "");
+  lines.push("", "## Annex", "See annex.dsl.hcl for the canonical DSL representation.", "");
   return lines.join("\n");
 }
 
@@ -544,82 +563,80 @@ function renderMinimalPdf(markdown: string): string {
 }
 
 export function validateChatDslText(text: string): void {
-  const lines = text.split(/\r?\n/).filter((line) => line.trim() && !line.trim().startsWith("#"));
-  if (!lines[0]?.startsWith("DOCUMENT ")) throw new Error("DSL must start with DOCUMENT");
-  if (/^\s*[\[{]/.test(text)) throw new Error("DSL text must not use JSON object or array syntax");
+  const trimmed = text.trimStart();
+  if (!trimmed.startsWith("document ")) throw new Error("DSL/HCL must start with a document block");
+  if (/^\s*[\[{]/.test(text))
+    throw new Error("DSL/HCL text must not use JSON object or array syntax as the document");
+  if (!hasBalancedBraces(text)) throw new Error("DSL/HCL braces are not balanced");
+  if ((text.match(/"/g)?.length ?? 0) % 2 !== 0) throw new Error("DSL/HCL quotes are not balanced");
   const allowed =
-    /^(DOCUMENT|VERSION|TYPE|EVENT|LINE|AUTHOR|TEXT|UPDATE|APPROVAL|CANCELLATION|PARTY|FIELD|VALUE|SOURCE|ACCEPTED_BY|REJECTED_BY|END_FIELD|CHANGE|HASH|STATUS|MISSING|CONFLICT|END_CONFLICT|INCLUDE|ASSERT|ANNEX|END_DOCUMENT)(\b|\s|$)/;
-  for (const line of lines) {
-    if (!allowed.test(line.trim())) throw new Error(`Unsupported DSL line: ${line}`);
-    if ((line.match(/"/g)?.length ?? 0) % 2 !== 0)
-      throw new Error(`Unbalanced quotes in DSL line: ${line}`);
+    /^(document|field|conflict|change)\s+|^(version|type|event|line|author|text|updates|approval|cancellation|party|value|source_party|source_line|accepted_by|rejected_by|hash|status|missing|include|assert|annex|from|to)\s*=/;
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line === "}" || line.startsWith("#")) continue;
+    if (!allowed.test(line)) throw new Error(`Unsupported DSL/HCL line: ${rawLine}`);
   }
 }
 
 function renderIntentDsl(intent: IntentArtifact): string {
-  const lines = [
-    "DOCUMENT CHAT_INTENT",
-    "VERSION 1",
-    `TYPE ${intent.version}`,
-    `EVENT ${intent.event}`,
-    `LINE ${intent.line}`,
-    `AUTHOR ${partyToken(intent.author)}`,
-    `TEXT ${quoteDsl(intent.text)}`
-  ];
-  for (const update of intent.updates)
-    lines.push(`UPDATE ${fieldToken(update.field)} ${quoteDsl(update.value)}`);
-  lines.push(`APPROVAL ${boolToken(intent.approval)}`);
-  lines.push(`CANCELLATION ${boolToken(intent.cancellation)}`);
-  lines.push("END_DOCUMENT");
-  return `${lines.join("\n")}\n`;
+  return block("document", "CHAT_INTENT", [
+    assign("version", 1),
+    assign("type", intent.version),
+    assign("event", intent.event),
+    assign("line", intent.line),
+    assign("author", partyToken(intent.author)),
+    assign("text", intent.text),
+    assign(
+      "updates",
+      intent.updates.map((update) => `${fieldToken(update.field)}=${update.value}`)
+    ),
+    assign("approval", intent.approval),
+    assign("cancellation", intent.cancellation)
+  ]);
 }
 
 function renderPartyContractDsl(contract: PartyContract): string {
-  const lines = ["DOCUMENT PARTY_CONTRACT", "VERSION 1", `PARTY ${partyToken(contract.party)}`];
+  const body = [assign("version", 1), assign("party", partyToken(contract.party))];
   for (const [field, value] of Object.entries(contract.fields).sort(([a], [b]) =>
     a.localeCompare(b)
   )) {
-    lines.push(`FIELD ${fieldToken(field)}`);
-    lines.push(`VALUE ${quoteDsl(value.value)}`);
-    lines.push(`SOURCE ${partyToken(value.source.party)} LINE ${value.source.line}`);
-    lines.push(`TEXT ${quoteDsl(value.source.text)}`);
-    lines.push(`ACCEPTED_BY ${listToken(value.acceptedBy.map(partyToken))}`);
-    lines.push(`REJECTED_BY ${listToken(value.rejectedBy.map(partyToken))}`);
-    lines.push("END_FIELD");
+    body.push(renderContractValue(field, value));
   }
   for (const change of contract.changes) {
-    lines.push(
-      `CHANGE ${fieldToken(change.field)} LINE ${change.line} FROM ${quoteDsl(change.previous)} TO ${quoteDsl(change.next)}`
+    body.push(
+      block("change", fieldToken(change.field), [
+        assign("line", change.line),
+        assign("from", change.previous),
+        assign("to", change.next)
+      ])
     );
   }
-  lines.push("END_DOCUMENT");
-  return `${lines.join("\n")}\n`;
+  return block("document", "PARTY_CONTRACT", body);
 }
 
 function renderMergedContractDsl(merged: MergedContract): string {
-  const lines = [
-    "DOCUMENT MERGED_CONTRACT",
-    "VERSION 1",
-    `TYPE ${merged.version}`,
-    `HASH ${quoteDsl(merged.hash)}`
-  ];
+  const body = [assign("version", 1), assign("type", merged.version), assign("hash", merged.hash)];
   for (const field of requiredFields) {
     const value = merged.fields[field];
-    if (!value) continue;
-    lines.push(...renderContractValue(field, value));
+    if (value) body.push(renderContractValue(field, value));
   }
-  lines.push(`MISSING ${listToken(merged.missing.map(fieldToken))}`);
+  body.push(assign("missing", merged.missing.map(fieldToken)));
   for (const conflict of merged.conflicts) {
-    lines.push(`CONFLICT ${fieldToken(conflict.field)}`);
-    for (const value of conflict.values) {
-      lines.push(
-        `VALUE ${quoteDsl(value.value)} SOURCE ${partyToken(value.source.party)} LINE ${value.source.line}`
-      );
-    }
-    lines.push("END_CONFLICT");
+    body.push(
+      block(
+        "conflict",
+        fieldToken(conflict.field),
+        conflict.values.map((value) =>
+          block("field", fieldToken(conflict.field), [
+            assign("value", value.value),
+            assign("source_party", partyToken(value.source.party)),
+            assign("source_line", value.source.line)
+          ])
+        )
+      )
+    );
   }
-  lines.push("END_DOCUMENT");
-  return `${lines.join("\n")}\n`;
+  return block("document", "MERGED_CONTRACT", body);
 }
 
 function renderFinalContractDsl(finalContract: {
@@ -627,21 +644,18 @@ function renderFinalContractDsl(finalContract: {
   hash: string;
   merged: MergedContract;
 }): string {
-  const lines = [
-    "DOCUMENT FINAL_CONTRACT",
-    "VERSION 1",
-    `STATUS ${finalContract.status}`,
-    `HASH ${quoteDsl(finalContract.hash)}`,
-    "INCLUDE MERGED_CONTRACT"
+  const body = [
+    assign("version", 1),
+    assign("status", finalContract.status),
+    assign("hash", finalContract.hash),
+    assign("include", "MERGED_CONTRACT")
   ];
   for (const field of requiredFields) {
     const value = finalContract.merged.fields[field];
-    if (value) lines.push(...renderContractValue(field, value));
+    if (value) body.push(renderContractValue(field, value));
   }
-  lines.push("ASSERT APPROVALS = [USER1, USER2]");
-  lines.push("ASSERT FINAL_ARTIFACTS_ALLOWED");
-  lines.push("END_DOCUMENT");
-  return `${lines.join("\n")}\n`;
+  body.push(assign("assert", ["APPROVALS = [USER1, USER2]", "FINAL_ARTIFACTS_ALLOWED"]));
+  return block("document", "FINAL_CONTRACT", body);
 }
 
 function renderAnnexDsl(finalContract: {
@@ -649,37 +663,66 @@ function renderAnnexDsl(finalContract: {
   hash: string;
   merged: MergedContract;
 }): string {
-  const lines = [
-    "DOCUMENT CONTRACT_ANNEX",
-    "VERSION 1",
-    `ANNEX FINAL_CONTRACT HASH ${quoteDsl(finalContract.hash)}`,
-    `STATUS ${finalContract.status}`,
-    `HASH ${quoteDsl(finalContract.merged.hash)}`,
-    "INCLUDE MERGED_CONTRACT"
+  const body = [
+    assign("version", 1),
+    assign("annex", "FINAL_CONTRACT"),
+    assign("hash", finalContract.hash),
+    assign("status", finalContract.status),
+    assign("include", "MERGED_CONTRACT")
   ];
   for (const field of requiredFields) {
     const value = finalContract.merged.fields[field];
-    if (value) lines.push(...renderContractValue(field, value));
+    if (value) body.push(renderContractValue(field, value));
   }
-  lines.push("END_DOCUMENT");
-  return `${lines.join("\n")}\n`;
+  return block("document", "CONTRACT_ANNEX", body);
 }
 
-function renderContractValue(field: string, value: ContractValue): string[] {
-  return [
-    `FIELD ${fieldToken(field)}`,
-    `VALUE ${quoteDsl(value.value)}`,
-    `SOURCE ${partyToken(value.source.party)} LINE ${value.source.line}`,
-    `TEXT ${quoteDsl(value.source.text)}`,
-    `ACCEPTED_BY ${listToken(value.acceptedBy.map(partyToken))}`,
-    `REJECTED_BY ${listToken(value.rejectedBy.map(partyToken))}`,
-    "END_FIELD"
-  ];
+function renderContractValue(field: string, value: ContractValue): string {
+  return block("field", fieldToken(field), [
+    assign("value", value.value),
+    assign("source_party", partyToken(value.source.party)),
+    assign("source_line", value.source.line),
+    assign("text", value.source.text),
+    assign("accepted_by", value.acceptedBy.map(partyToken)),
+    assign("rejected_by", value.rejectedBy.map(partyToken))
+  ]);
 }
 
 async function writeDsl(file: string, text: string): Promise<void> {
   validateChatDslText(text);
   await writeFile(file, text, "utf8");
+}
+
+function block(kind: string, label: string, body: string[]): string {
+  const lines = [`${kind} ${quoteDsl(label)} {`];
+  for (const item of body) lines.push(indentDsl(item));
+  lines.push("}");
+  return `${lines.join("\n")}\n`;
+}
+
+function assign(key: string, value: string | number | boolean | string[]): string {
+  if (Array.isArray(value)) return `${key} = [${value.map(quoteDsl).join(", ")}]`;
+  if (typeof value === "number") return `${key} = ${value}`;
+  if (typeof value === "boolean") return `${key} = ${value ? "true" : "false"}`;
+  return `${key} = ${quoteDsl(value)}`;
+}
+
+function indentDsl(value: string): string {
+  return value
+    .trimEnd()
+    .split(/\r?\n/)
+    .map((line) => `  ${line}`)
+    .join("\n");
+}
+
+function hasBalancedBraces(text: string): boolean {
+  let depth = 0;
+  for (const char of text) {
+    if (char === "{") depth += 1;
+    if (char === "}") depth -= 1;
+    if (depth < 0) return false;
+  }
+  return depth === 0;
 }
 
 function quoteDsl(value: string): string {
@@ -692,14 +735,6 @@ function partyToken(party: ChatParty): string {
 
 function fieldToken(field: string): string {
   return field.replace(/[A-Z]/g, (letter) => `_${letter}`).toUpperCase();
-}
-
-function boolToken(value: boolean): string {
-  return value ? "TRUE" : "FALSE";
-}
-
-function listToken(values: string[]): string {
-  return `[${values.join(", ")}]`;
 }
 function createSummary(
   id: string,

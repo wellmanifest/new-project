@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.7.2] - 2026-07-24
+
+### Changed
+
+- Changed generated chat DSL artifacts to `*.dsl.hcl` so editors can apply HCL/Terraform-style syntax highlighting automatically by file extension.
+- Changed the generated chat DSL syntax to HCL-like project DSL blocks such as `document`, `field`, `conflict`, and `change`.
+- Moved default generated chat outputs next to each scenario under `examples-chat/<scenario>/generated/` instead of `.office-dsl/generated/examples-chat/<scenario>/`.
+- Flattened per-event chat artifacts into prefixed files such as `001-user1.intent-contract.dsl.hcl`, `001-user1.status.json`, and `001-user1.diff.md`.
+- Added `examples-chat/*/generated/` to `.gitignore`.
+- Updated package, app, verifier, and OpenAPI version metadata to `0.7.2`.
+
+### Tests
+
+- Updated chat runner tests to validate `*.dsl.hcl` artifacts, default generated output placement, and non-JSON DSL/HCL structure.
+
 ## [0.7.1] - 2026-07-24
 
 ### Changed

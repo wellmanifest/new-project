@@ -2,13 +2,13 @@
 
 ## Current Version
 
-`0.7.1`
+`0.7.2`
 
 ## Version Type
 
-Patch artifact-format release over `0.7.0`.
+Patch generated-layout and highlighting release over `0.7.1`.
 
-This version changes generated `examples-chat` `.dsl` artifacts from JSON serialization to the project DSL text style used in `POLICY.md` and `CONTRIBUTING.md`. Runtime canonical approval APIs from `0.7.0` remain in place.
+This version changes generated `examples-chat` DSL artifacts to `*.dsl.hcl`, using HCL-like syntax for automatic editor highlighting while keeping project-specific DSL semantics. It also writes generated chat outputs next to each scenario under an ignored `generated/` folder.
 
 ## Project Status
 
@@ -34,7 +34,8 @@ Current validated implementation scope:
 - deterministic single-example and all-example runner,
 - executable `examples-chat` scenarios for Human1/Human2 negotiation regression,
 - line-by-line chat artifacts with party contract state, merged contract state, diffs, status, approvals, conflicts, and cancellation summaries,
-- generated `.dsl` chat artifacts rendered as line-oriented editable DSL text, not JSON,
+- generated chat DSL artifacts rendered as `*.dsl.hcl` HCL-like editable project DSL, not JSON,
+- generated chat outputs colocated with each scenario under `examples-chat/<scenario>/generated/`,
 - final chat DSL/PDF/approval artifacts only after both parties approve the same current merged contract hash,
 - root verification command,
 - GitHub Actions workflow for `project.sh install` and `project.sh verify` on Windows and Linux,
@@ -54,15 +55,17 @@ Target scope documented but not implemented:
 - DSL-based test generation,
 - TypeScript runtime integration with the Python verifier as a normal gating step.
 
-## Included In 0.7.1
+## Included In 0.7.2
 
-- Changed `intent-contract.dsl`, `party-contract.dsl`, `merged-contract.dsl`, `final-contract.dsl`, and `annex.dsl` outputs to line-oriented DSL text.
-- Added `validateChatDslText` to reject JSON object/array syntax and unsupported DSL commands before `.dsl` artifacts are written.
-- Documented the highlighting recommendation: keep `.dsl` as the project format and map it in editors to HCL/Terraform or generic config highlighting when useful.
+- Changed generated chat DSL files to `*.dsl.hcl` for automatic HCL/Terraform-style syntax highlighting by extension.
+- Changed generated DSL contents to HCL-like project blocks such as `document`, `field`, `conflict`, and `change`.
+- Moved default generated chat outputs into `examples-chat/<scenario>/generated/`, beside `scenario.json` and `chat.txt`.
+- Flattened generated per-event files into one scenario-local generated folder using names such as `001-user1.intent-contract.dsl.hcl`.
+- Added `examples-chat/*/generated/` to `.gitignore`.
 - Kept machine comparison files as JSON: `scenario.json`, `summary.json`, `status.json`, expected summaries, and `approvals.json`.
-- Updated package, app, verifier, and OpenAPI version metadata to `0.7.1`.
+- Updated package, app, verifier, and OpenAPI version metadata to `0.7.2`.
 
-## Not Included In 0.7.1
+## Not Included In 0.7.2
 
 - No CLI commands for canonical approvals.
 - No backend/web Human1/Human2 approval UI.
@@ -97,6 +100,6 @@ Expected but not yet fully validated as release criteria:
 
 ## Versioning Policy Note
 
-This pass uses a minor bump from `0.6.0` to `0.7.1` because it adds runtime-level canonical approval records and current-hash approval invalidation semantics.
+This pass uses a patch bump from `0.7.1` to `0.7.2` because it changes generated chat artifact layout and the editor-friendly generated DSL file format without adding a new production runtime surface.
 
 A future production hardening task should define how root package metadata, package versions, OpenAPI metadata, `VERSION.md`, and `CHANGELOG.md` are kept in sync.

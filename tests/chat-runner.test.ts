@@ -47,22 +47,22 @@ describe("examples-chat runner", () => {
     const { generatedRoot, result } = await runChat("01-short-agreement");
     expect(result.ok).toBe(true);
     const partyContract = await readFile(
-      path.join(generatedRoot, "user1", "001", "party-contract.dsl"),
+      path.join(generatedRoot, "001-user1.party-contract.dsl.hcl"),
       "utf8"
     );
     validateChatDslText(partyContract);
-    expect(partyContract).toContain("DOCUMENT PARTY_CONTRACT");
-    expect(partyContract).toContain("FIELD PRICE");
-    expect(partyContract).toContain('VALUE "5000 PLN"');
+    expect(partyContract).toContain('document "PARTY_CONTRACT" {');
+    expect(partyContract).toContain('field "PRICE" {');
+    expect(partyContract).toContain('value = "5000 PLN"');
 
     const merged = await readFile(
-      path.join(generatedRoot, "user1", "007", "merged-contract.dsl"),
+      path.join(generatedRoot, "007-user1.merged-contract.dsl.hcl"),
       "utf8"
     );
     validateChatDslText(merged);
-    expect(merged).toContain("DOCUMENT MERGED_CONTRACT");
-    expect(merged).toContain("ACCEPTED_BY [USER1, USER2]");
-    expect(merged).not.toContain("CONFLICT PRICE");
+    expect(merged).toContain('document "MERGED_CONTRACT" {');
+    expect(merged).toContain('accepted_by = ["USER1", "USER2"]');
+    expect(merged).not.toContain('conflict "PRICE"');
     await rm(generatedRoot, { recursive: true, force: true });
   });
 
@@ -70,7 +70,7 @@ describe("examples-chat runner", () => {
     const { generatedRoot, result } = await runChat("02-long-negotiation-agreement");
     expect(result.ok).toBe(true);
     const status = JSON.parse(
-      await readFile(path.join(generatedRoot, "user2", "002", "status.json"), "utf8")
+      await readFile(path.join(generatedRoot, "002-user2.status.json"), "utf8")
     ) as { conflicts: Array<{ field: string; values: string[] }> };
     expect(status.conflicts.some((conflict) => conflict.field === "price")).toBe(true);
     await rm(generatedRoot, { recursive: true, force: true });
@@ -79,7 +79,7 @@ describe("examples-chat runner", () => {
   it("writes a readable diff when a party changes position", async () => {
     const { generatedRoot, result } = await runChat("02-long-negotiation-agreement");
     expect(result.ok).toBe(true);
-    const diff = await readFile(path.join(generatedRoot, "user1", "003", "diff.md"), "utf8");
+    const diff = await readFile(path.join(generatedRoot, "003-user1.diff.md"), "utf8");
     expect(diff).toContain("Changed price: 4000 PLN -> 5000 PLN");
     await rm(generatedRoot, { recursive: true, force: true });
   });
@@ -126,7 +126,7 @@ describe("examples-chat runner", () => {
       generatedRoot: path.join(tmp, "generated")
     });
     expect(result.ok).toBe(true);
-    expect(existsSync(path.join(tmp, "generated", "final", "final-contract.dsl"))).toBe(false);
+    expect(existsSync(path.join(tmp, "generated", "final", "final-contract.dsl.hcl"))).toBe(false);
     expect(existsSync(path.join(tmp, "generated", "final", "contract.pdf"))).toBe(false);
     await rm(tmp, { recursive: true, force: true });
   });
@@ -138,7 +138,7 @@ describe("examples-chat runner", () => {
       true
     );
     const status = JSON.parse(
-      await readFile(path.join(generatedRoot, "user2", "013", "status.json"), "utf8")
+      await readFile(path.join(generatedRoot, "013-user2.status.json"), "utf8")
     ) as { approvals: Array<{ status: string; invalidatedByLine?: number }> };
     expect(
       status.approvals.some(
@@ -162,11 +162,11 @@ describe("examples-chat runner", () => {
       true
     );
     const finalDsl = await readFile(
-      path.join(generatedRoot, "final", "final-contract.dsl"),
+      path.join(generatedRoot, "final", "final-contract.dsl.hcl"),
       "utf8"
     );
     validateChatDslText(finalDsl);
-    expect(finalDsl).toContain("DOCUMENT FINAL_CONTRACT");
+    expect(finalDsl).toContain('document "FINAL_CONTRACT" {');
     expect(finalDsl.trim().startsWith("{")).toBe(false);
     expect(existsSync(path.join(generatedRoot, "final", "contract.pdf"))).toBe(true);
     await rm(generatedRoot, { recursive: true, force: true });
@@ -177,27 +177,40 @@ describe("examples-chat runner", () => {
       const { generatedRoot, result } = await runChat(id);
       expect(result.summary.outcome).toBe("CANCELLED");
       expect(result.summary.finalCreated).toBe(false);
-      expect(existsSync(path.join(generatedRoot, "final", "final-contract.dsl"))).toBe(false);
+      expect(existsSync(path.join(generatedRoot, "final", "final-contract.dsl.hcl"))).toBe(false);
       expect(existsSync(path.join(generatedRoot, "final", "contract.pdf"))).toBe(false);
       await rm(generatedRoot, { recursive: true, force: true });
     }
   });
 
-  it("validates generated .dsl artifacts as line-oriented text, not JSON", async () => {
+  it("validates generated .dsl.hcl artifacts as HCL-highlighted DSL, not JSON", async () => {
     const { generatedRoot, result } = await runChat("01-short-agreement");
     expect(result.ok).toBe(true);
     for (const file of [
-      path.join(generatedRoot, "user1", "001", "intent-contract.dsl"),
-      path.join(generatedRoot, "user1", "001", "party-contract.dsl"),
-      path.join(generatedRoot, "user1", "007", "merged-contract.dsl"),
-      path.join(generatedRoot, "final", "final-contract.dsl"),
-      path.join(generatedRoot, "final", "annex.dsl")
+      path.join(generatedRoot, "001-user1.intent-contract.dsl.hcl"),
+      path.join(generatedRoot, "001-user1.party-contract.dsl.hcl"),
+      path.join(generatedRoot, "007-user1.merged-contract.dsl.hcl"),
+      path.join(generatedRoot, "final", "final-contract.dsl.hcl"),
+      path.join(generatedRoot, "final", "annex.dsl.hcl")
     ]) {
       const dsl = await readFile(file, "utf8");
       expect(() => JSON.parse(dsl)).toThrow();
-      expect(dsl).toMatch(/^DOCUMENT /);
+      expect(dsl).toMatch(/^document /);
       validateChatDslText(dsl);
     }
+    await rm(generatedRoot, { recursive: true, force: true });
+  });
+  it("writes default generated outputs beside the chat scenario", async () => {
+    const scenarioDir = path.join(repoRoot, "examples-chat", "01-short-agreement");
+    const generatedRoot = path.join(scenarioDir, "generated");
+    await rm(generatedRoot, { recursive: true, force: true });
+
+    const result = await runChatScenario({ repoRoot, scenarioDir });
+
+    expect(result.generatedDir).toBe(generatedRoot);
+    expect(existsSync(path.join(generatedRoot, "001-user1.intent-contract.dsl.hcl"))).toBe(true);
+    expect(existsSync(path.join(generatedRoot, "001-user1.party-contract.dsl.hcl"))).toBe(true);
+    expect(existsSync(path.join(generatedRoot, "final", "final-contract.dsl.hcl"))).toBe(true);
     await rm(generatedRoot, { recursive: true, force: true });
   });
   it("executes all four scenarios with expected outcomes", async () => {
