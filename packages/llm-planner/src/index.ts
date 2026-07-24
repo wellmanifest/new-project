@@ -11,8 +11,12 @@ export interface PlannerOptions {
 
 export class PlannerError extends Error {}
 
-export async function planFromNaturalLanguage(input: string, options: PlannerOptions = {}): Promise<TaskDsl> {
-  const mode = options.mode ?? (process.env.OFFICE_DSL_LLM_MODE as PlannerMode | undefined) ?? "mock";
+export async function planFromNaturalLanguage(
+  input: string,
+  options: PlannerOptions = {}
+): Promise<TaskDsl> {
+  const mode =
+    options.mode ?? (process.env.OFFICE_DSL_LLM_MODE as PlannerMode | undefined) ?? "mock";
   if (mode === "mock") return mockPlan(input);
   return openRouterPlan(input, options);
 }
@@ -20,101 +24,139 @@ export async function planFromNaturalLanguage(input: string, options: PlannerOpt
 export function mockPlan(input: string): TaskDsl {
   const text = input.toLowerCase();
   if (text.includes("komend") || text.includes("usun")) {
-    return base(input, "Policy denial", [
-      {
-        id: "blocked-shell",
-        description: "Represent unsafe request so policy can deny it",
-        action: "file.export",
-        with: { path: "../outside.json", command: "rm -rf *" },
-        saveAs: "blocked"
-      }
-    ], ["Deny unsafe shell and delete request"]);
+    return base(
+      input,
+      "Policy denial",
+      [
+        {
+          id: "blocked-shell",
+          description: "Represent unsafe request so policy can deny it",
+          action: "file.export",
+          with: { path: "../outside.json", command: "rm -rf *" },
+          saveAs: "blocked"
+        }
+      ],
+      ["Deny unsafe shell and delete request"]
+    );
   }
   if (text.includes("sprzeda")) {
-    return base(input, "Sales report needs clarification", [
-      {
-        id: "ask-period",
-        description: "Ask for reporting period",
-        action: "user.ask",
-        with: {},
-        ask: { id: "period", prompt: "Jaki okres raportu sprzedazy mam przyjac?", saveAs: "period" }
-      },
-      {
-        id: "query-sales",
-        description: "Read mock invoices after clarification",
-        action: "database.query",
-        with: { dataset: "invoices", kind: "salesReport", periodVar: "period" },
-        saveAs: "invoices"
-      },
-      {
-        id: "report",
-        description: "Generate sales report",
-        action: "report.generate",
-        with: { from: "invoices", title: "Sales report" },
-        saveAs: "report"
-      }
-    ], ["Ask for period before reporting"]);
+    return base(
+      input,
+      "Sales report needs clarification",
+      [
+        {
+          id: "ask-period",
+          description: "Ask for reporting period",
+          action: "user.ask",
+          with: {},
+          ask: {
+            id: "period",
+            prompt: "Jaki okres raportu sprzedazy mam przyjac?",
+            saveAs: "period"
+          }
+        },
+        {
+          id: "query-sales",
+          description: "Read mock invoices after clarification",
+          action: "database.query",
+          with: { dataset: "invoices", kind: "salesReport", periodVar: "period" },
+          saveAs: "invoices"
+        },
+        {
+          id: "report",
+          description: "Generate sales report",
+          action: "report.generate",
+          with: { from: "invoices", title: "Sales report" },
+          saveAs: "report"
+        }
+      ],
+      ["Ask for period before reporting"]
+    );
   }
   if (text.includes("wyslij") || text.includes("wyślij")) {
-    return base(input, "Send prepared reminders", [
-      overdueStep(),
-      {
-        id: "prepare",
-        description: "Prepare reminder messages",
-        action: "email.prepare",
-        with: { from: "overdue" },
-        saveAs: "messages"
-      },
-      {
-        id: "send",
-        description: "Write sent messages to mock outbox",
-        action: "email.send",
-        with: { from: "messages" },
-        saveAs: "sendResult",
-        confirm: { id: "send-reminders", prompt: "Confirm sending reminders to mock outbox", required: true }
-      }
-    ], ["Require confirmation before mock send"]);
+    return base(
+      input,
+      "Send prepared reminders",
+      [
+        overdueStep(),
+        {
+          id: "prepare",
+          description: "Prepare reminder messages",
+          action: "email.prepare",
+          with: { from: "overdue" },
+          saveAs: "messages"
+        },
+        {
+          id: "send",
+          description: "Write sent messages to mock outbox",
+          action: "email.send",
+          with: { from: "messages" },
+          saveAs: "sendResult",
+          confirm: {
+            id: "send-reminders",
+            prompt: "Confirm sending reminders to mock outbox",
+            required: true
+          }
+        }
+      ],
+      ["Require confirmation before mock send"]
+    );
   }
   if (text.includes("wiadom") || text.includes("przypominaj")) {
-    return base(input, "Prepare reminder drafts", [
-      overdueStep(),
-      {
-        id: "drafts",
-        description: "Prepare reminder drafts without sending",
-        action: "email.prepare",
-        with: { from: "overdue" },
-        saveAs: "drafts"
-      }
-    ], ["Create drafts only", "Do not send messages"]);
+    return base(
+      input,
+      "Prepare reminder drafts",
+      [
+        overdueStep(),
+        {
+          id: "drafts",
+          description: "Prepare reminder drafts without sending",
+          action: "email.prepare",
+          with: { from: "overdue" },
+          saveAs: "drafts"
+        }
+      ],
+      ["Create drafts only", "Do not send messages"]
+    );
   }
   if (text.includes("log")) {
-    return base(input, "Invoice log analysis", [
-      {
-        id: "search-logs",
-        description: "Search failed invoice logs",
-        action: "log.search",
-        with: { contains: "invoice failed" },
-        saveAs: "logs"
-      },
+    return base(
+      input,
+      "Invoice log analysis",
+      [
+        {
+          id: "search-logs",
+          description: "Search failed invoice logs",
+          action: "log.search",
+          with: { contains: "invoice failed" },
+          saveAs: "logs"
+        },
+        {
+          id: "report",
+          description: "Generate log summary",
+          action: "report.generate",
+          with: { from: "logs", title: "Failed invoice processing attempts" },
+          saveAs: "report"
+        }
+      ],
+      ["Read mock logs", "Prepare summary"]
+    );
+  }
+  return base(
+    input,
+    "Unpaid invoices report",
+    [
+      overdueStep(),
       {
         id: "report",
-        description: "Generate log summary",
+        description: "Generate read-only report",
         action: "report.generate",
-        with: { from: "logs", title: "Failed invoice processing attempts" },
+        with: { from: "overdue", title: "Unpaid invoices older than 30 days" },
         saveAs: "report"
       }
-    ], ["Read mock logs", "Prepare summary"]);
-  }
-  return base(input, "Unpaid invoices report", [
-    overdueStep(),
-    {
-      id: "report",
-      description: "Generate read-only report",
-      action: "report.generate",
-      with: { from: "overdue", title: "Unpaid invoices older than 30 days" },
-      saveAs: "report"
-    }
-  ], ["Read-only report", "No data modification"]);
+    ],
+    ["Read-only report", "No data modification"]
+  );
 }
 
 async function openRouterPlan(input: string, options: PlannerOptions): Promise<TaskDsl> {
@@ -131,7 +173,10 @@ async function openRouterPlan(input: string, options: PlannerOptions): Promise<T
         model: options.model ?? process.env.OPENROUTER_MODEL ?? "openai/gpt-4.1-mini",
         response_format: { type: "json_object" },
         messages: [
-          { role: "system", content: "Return only valid Office DSL v1 JSON. Do not add actions not requested." },
+          {
+            role: "system",
+            content: "Return only valid Office DSL v1 JSON. Do not add actions not requested."
+          },
           { role: "user", content: input }
         ]
       })
@@ -156,7 +201,12 @@ function overdueStep(): TaskDsl["steps"][number] {
   };
 }
 
-function base(input: string, title: string, steps: TaskDsl["steps"], expectedResults: string[]): TaskDsl {
+function base(
+  input: string,
+  title: string,
+  steps: TaskDsl["steps"],
+  expectedResults: string[]
+): TaskDsl {
   return {
     version: DSL_VERSION,
     task: { id: `task-${randomUUID()}`, title, input, createdBy: "mock-llm" },
@@ -169,8 +219,16 @@ function base(input: string, title: string, steps: TaskDsl["steps"], expectedRes
     steps,
     output: { format: "json", saveAs: "result" },
     policies: [
-      { decision: "DENY", subject: "shell.command", reason: "Arbitrary shell commands are forbidden" },
-      { decision: "REQUIRE", subject: "email.send", reason: "Sending requires confirmation and mock outbox only" }
+      {
+        decision: "DENY",
+        subject: "shell.command",
+        reason: "Arbitrary shell commands are forbidden"
+      },
+      {
+        decision: "REQUIRE",
+        subject: "email.send",
+        reason: "Sending requires confirmation and mock outbox only"
+      }
     ],
     expectedResults,
     errorHandling: { onFailure: "stop" }

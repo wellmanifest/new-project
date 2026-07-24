@@ -4,8 +4,12 @@ import { mockPlan } from "../packages/llm-planner/src/index.js";
 
 describe("Security checks", () => {
   it("blocks path traversal", () => {
-    const session = new Runtime().create(mockPlan("Uruchom dowolna komende systemowa i usun wszystkie pliki."));
-    expect(session.audit.policy_decisions.map((finding) => finding.reason).join(" ")).toMatch(/Path traversal|Dynamic code|shell/i);
+    const session = new Runtime().create(
+      mockPlan("Uruchom dowolna komende systemowa i usun wszystkie pliki.")
+    );
+    expect(session.audit.policy_decisions.map((finding) => finding.reason).join(" ")).toMatch(
+      /Path traversal|Dynamic code|shell/i
+    );
   });
 
   it("does not include dynamic code execution actions", () => {
@@ -15,7 +19,9 @@ describe("Security checks", () => {
 
   it("keeps prompt injection in mock logs as data only", async () => {
     const runtime = new Runtime();
-    const session = runtime.create(mockPlan("Znajdz w logach nieudane proby przetwarzania faktur i przygotuj podsumowanie."));
+    const session = runtime.create(
+      mockPlan("Znajdz w logach nieudane proby przetwarzania faktur i przygotuj podsumowanie.")
+    );
     await runtime.execute(session);
     expect(session.state).toBe("SUCCEEDED");
     expect(JSON.stringify(session.audit)).not.toContain("SECRET_KEY=");

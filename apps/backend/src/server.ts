@@ -11,18 +11,44 @@ const port = Number(process.env.PORT ?? 3000);
 export const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url ?? "/", `http://${req.headers.host}`);
-    if (req.method === "GET" && url.pathname === "/") return send(res, await readFile("apps/web/public/index.html", "utf8"), "text/html");
+    if (req.method === "GET" && url.pathname === "/")
+      return send(res, await readFile("apps/web/public/index.html", "utf8"), "text/html");
     if (req.method === "GET" && url.pathname === "/openapi.json") return sendJson(res, openApi());
     if (req.method === "GET" && url.pathname === "/api/actions") {
-      return sendJson(res, createDefaultRegistry().list().map(({ name, risk, capability, requiresConfirmation }) => ({ name, risk, capability, requiresConfirmation })));
+      return sendJson(
+        res,
+        createDefaultRegistry()
+          .list()
+          .map(({ name, risk, capability, requiresConfirmation }) => ({
+            name,
+            risk,
+            capability,
+            requiresConfirmation
+          }))
+      );
     }
     if (req.method === "GET" && url.pathname === "/api/connectors") {
-      return sendJson(res, [{ id: "mock", sources: ["mock.customers", "mock.invoices", "mock.employees", "mock.activity_logs", "mock.outbox"] }]);
+      return sendJson(res, [
+        {
+          id: "mock",
+          sources: [
+            "mock.customers",
+            "mock.invoices",
+            "mock.employees",
+            "mock.activity_logs",
+            "mock.outbox"
+          ]
+        }
+      ]);
     }
     if (req.method === "POST" && url.pathname === "/api/tasks") {
       const body = await readJson(req);
       const dsl = await planFromNaturalLanguage(String(body.input ?? ""), { mode: "mock" });
-      const session = runtime.create(dsl, { verdict: "PASS", score: 0.95, recommended_action: "ACCEPT" });
+      const session = runtime.create(dsl, {
+        verdict: "PASS",
+        score: 0.95,
+        recommended_action: "ACCEPT"
+      });
       await store.save(session);
       return sendJson(res, session, 201);
     }
@@ -37,7 +63,11 @@ export const server = http.createServer(async (req, res) => {
         runtime.answer(session, String(body.questionId), String(body.answer));
       } else if (req.method === "POST" && action === "confirm") {
         const body = await readJson(req);
-        runtime.confirm(session, String(body.confirmationId), String(body.planHash ?? session.planHash));
+        runtime.confirm(
+          session,
+          String(body.confirmationId),
+          String(body.planHash ?? session.planHash)
+        );
       } else if (req.method === "POST" && action === "reject") runtime.reject(session);
       else if (req.method === "POST" && action === "cancel") runtime.cancel(session);
       else if (req.method === "POST" && action === "execute") {
@@ -54,13 +84,17 @@ export const server = http.createServer(async (req, res) => {
 });
 
 if (process.env.NODE_ENV !== "test") {
-  server.listen(port, () => console.log(`office-dsl backend listening on http://127.0.0.1:${port}`));
+  server.listen(port, () =>
+    console.log(`office-dsl backend listening on http://127.0.0.1:${port}`)
+  );
 }
 
 async function readJson(req: http.IncomingMessage): Promise<Record<string, unknown>> {
   const chunks: Buffer[] = [];
   for await (const chunk of req) chunks.push(Buffer.from(chunk));
-  return chunks.length ? (JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>) : {};
+  return chunks.length
+    ? (JSON.parse(Buffer.concat(chunks).toString("utf8")) as Record<string, unknown>)
+    : {};
 }
 
 function sendJson(res: http.ServerResponse, value: unknown, status = 200): void {

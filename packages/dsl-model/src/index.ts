@@ -32,7 +32,12 @@ export interface TaskDsl {
 export interface SourceRef {
   id: string;
   connector: "mock";
-  name: "mock.customers" | "mock.invoices" | "mock.employees" | "mock.activity_logs" | "mock.outbox";
+  name:
+    | "mock.customers"
+    | "mock.invoices"
+    | "mock.employees"
+    | "mock.activity_logs"
+    | "mock.outbox";
 }
 
 export interface Step {
@@ -109,7 +114,16 @@ export const taskDslJsonSchema = {
   $id: "https://wellmanifest.local/schemas/office-dsl-v1.json",
   title: "Office DSL v1",
   type: "object",
-  required: ["version", "task", "sources", "steps", "output", "policies", "expectedResults", "errorHandling"],
+  required: [
+    "version",
+    "task",
+    "sources",
+    "steps",
+    "output",
+    "policies",
+    "expectedResults",
+    "errorHandling"
+  ],
   properties: {
     version: { const: DSL_VERSION },
     task: { type: "object" },
@@ -135,29 +149,41 @@ export function validateTaskDsl(value: unknown): ValidationResult {
   const issues: ValidationIssue[] = [];
   const root = value as Partial<TaskDsl> | null;
   if (!root || typeof root !== "object") return fail("$", "DSL must be an object");
-  if (root.version !== DSL_VERSION) issues.push({ path: "version", message: `must be ${DSL_VERSION}` });
-  if (!root.task?.id || !root.task.input) issues.push({ path: "task", message: "id and input are required" });
+  if (root.version !== DSL_VERSION)
+    issues.push({ path: "version", message: `must be ${DSL_VERSION}` });
+  if (!root.task?.id || !root.task.input)
+    issues.push({ path: "task", message: "id and input are required" });
   if (!Array.isArray(root.sources)) issues.push({ path: "sources", message: "must be an array" });
   else {
     root.sources.forEach((source, index) => {
       if (!source.id) issues.push({ path: `sources[${index}].id`, message: "is required" });
-      if (source.connector !== "mock") issues.push({ path: `sources[${index}].connector`, message: "only mock is allowed" });
-      if (!sources.has(source.name)) issues.push({ path: `sources[${index}].name`, message: "unknown source" });
+      if (source.connector !== "mock")
+        issues.push({ path: `sources[${index}].connector`, message: "only mock is allowed" });
+      if (!sources.has(source.name))
+        issues.push({ path: `sources[${index}].name`, message: "unknown source" });
     });
   }
-  if (!Array.isArray(root.steps) || root.steps.length === 0) issues.push({ path: "steps", message: "must not be empty" });
+  if (!Array.isArray(root.steps) || root.steps.length === 0)
+    issues.push({ path: "steps", message: "must not be empty" });
   else {
     root.steps.forEach((step, index) => {
       if (!step.id) issues.push({ path: `steps[${index}].id`, message: "is required" });
-      if (!actions.has(step.action)) issues.push({ path: `steps[${index}].action`, message: "unknown action" });
+      if (!actions.has(step.action))
+        issues.push({ path: `steps[${index}].action`, message: "unknown action" });
       if (step.action === "email.send" && step.confirm?.required !== true) {
-        issues.push({ path: `steps[${index}].confirm`, message: "email.send requires confirmation" });
+        issues.push({
+          path: `steps[${index}].confirm`,
+          message: "email.send requires confirmation"
+        });
       }
-      if (step.action === "user.ask" && !step.ask) issues.push({ path: `steps[${index}].ask`, message: "is required" });
+      if (step.action === "user.ask" && !step.ask)
+        issues.push({ path: `steps[${index}].ask`, message: "is required" });
     });
   }
-  if (!root.output?.saveAs || !root.output.format) issues.push({ path: "output", message: "format and saveAs are required" });
-  if (!root.errorHandling?.onFailure) issues.push({ path: "errorHandling", message: "onFailure is required" });
+  if (!root.output?.saveAs || !root.output.format)
+    issues.push({ path: "output", message: "format and saveAs are required" });
+  if (!root.errorHandling?.onFailure)
+    issues.push({ path: "errorHandling", message: "onFailure is required" });
   return { ok: issues.length === 0, issues };
 
   function fail(path: string, message: string): ValidationResult {
@@ -172,7 +198,9 @@ export function renderHumanDsl(dsl: TaskDsl): string {
     ...dsl.sources.map((source) => `SOURCE ${source.id} ${source.name}`),
     ...dsl.steps.flatMap((step) => [
       `STEP ${step.id} "${step.description}"`,
-      step.when ? `WHEN ${step.when.var} ${step.when.op} ${JSON.stringify(step.when.value ?? true)}` : "",
+      step.when
+        ? `WHEN ${step.when.var} ${step.when.op} ${JSON.stringify(step.when.value ?? true)}`
+        : "",
       `DO ${step.action}`,
       `WITH ${JSON.stringify(step.with)}`,
       step.saveAs ? `SAVE ${step.saveAs}` : "",
@@ -180,7 +208,9 @@ export function renderHumanDsl(dsl: TaskDsl): string {
       step.confirm ? `CONFIRM ${step.confirm.id} "${step.confirm.prompt}"` : ""
     ]),
     `OUTPUT ${dsl.output.format} SAVE ${dsl.output.saveAs}`,
-    ...dsl.policies.map((policy) => `POLICY ${policy.decision} ${policy.subject} "${policy.reason}"`)
+    ...dsl.policies.map(
+      (policy) => `POLICY ${policy.decision} ${policy.subject} "${policy.reason}"`
+    )
   ];
   return lines.filter(Boolean).join("\n");
 }

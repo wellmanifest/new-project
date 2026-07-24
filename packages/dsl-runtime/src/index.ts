@@ -18,7 +18,12 @@ export type TaskState =
   | "DENIED"
   | "CANCELLED";
 
-export type PolicyDecision = "ALLOW" | "DENY" | "REQUIRE_CONFIRMATION" | "REQUIRE_INPUT" | "REQUIRE_CAPABILITY";
+export type PolicyDecision =
+  | "ALLOW"
+  | "DENY"
+  | "REQUIRE_CONFIRMATION"
+  | "REQUIRE_INPUT"
+  | "REQUIRE_CAPABILITY";
 
 export interface PlanAction {
   stepId: string;
@@ -105,7 +110,14 @@ export class StateMachine {
     CREATED: ["PLANNING", "CANCELLED"],
     PLANNING: ["DSL_GENERATED", "FAILED", "CANCELLED"],
     DSL_GENERATED: ["VALIDATING", "CANCELLED"],
-    VALIDATING: ["READY", "WAITING_FOR_INPUT", "WAITING_FOR_CONFIRMATION", "VERIFICATION_FAILED", "DENIED", "CANCELLED"],
+    VALIDATING: [
+      "READY",
+      "WAITING_FOR_INPUT",
+      "WAITING_FOR_CONFIRMATION",
+      "VERIFICATION_FAILED",
+      "DENIED",
+      "CANCELLED"
+    ],
     VERIFICATION_FAILED: ["PLANNING", "DENIED", "CANCELLED"],
     WAITING_FOR_INPUT: ["VALIDATING", "CANCELLED"],
     WAITING_FOR_CONFIRMATION: ["READY", "DENIED", "CANCELLED"],
@@ -176,7 +188,11 @@ export function createDefaultRegistry(): ActionRegistry {
     requiresConfirmation: false,
     async run(step, context) {
       const input = context.vars[String(step.with.from)] ?? [];
-      return { title: step.with.title, rows: input, summary: `Generated report with ${Array.isArray(input) ? input.length : 0} rows` };
+      return {
+        title: step.with.title,
+        rows: input,
+        summary: `Generated report with ${Array.isArray(input) ? input.length : 0} rows`
+      };
     }
   });
   registry.register({
@@ -185,7 +201,9 @@ export function createDefaultRegistry(): ActionRegistry {
     capability: "email.draft",
     requiresConfirmation: false,
     async run(step, context) {
-      const rows = context.vars[String(step.with.from)] as Array<Record<string, unknown>> | undefined;
+      const rows = context.vars[String(step.with.from)] as
+        | Array<Record<string, unknown>>
+        | undefined;
       return (rows ?? []).map((row) => ({
         to: row.email,
         subject: "Payment reminder",
@@ -221,8 +239,24 @@ export function createDefaultRegistry(): ActionRegistry {
       return { path: target };
     }
   });
-  registry.register({ name: "user.ask", risk: "low", capability: "user.input", requiresConfirmation: false, async run(step) { return step.ask; } });
-  registry.register({ name: "user.confirm", risk: "low", capability: "user.confirm", requiresConfirmation: true, async run(step) { return step.confirm; } });
+  registry.register({
+    name: "user.ask",
+    risk: "low",
+    capability: "user.input",
+    requiresConfirmation: false,
+    async run(step) {
+      return step.ask;
+    }
+  });
+  registry.register({
+    name: "user.confirm",
+    risk: "low",
+    capability: "user.confirm",
+    requiresConfirmation: true,
+    async run(step) {
+      return step.confirm;
+    }
+  });
   return registry;
 }
 
@@ -231,15 +265,39 @@ export class PolicyEngine {
     const findings: PolicyFinding[] = [];
     for (const step of dsl.steps) {
       const action = registry.get(step.action);
-      if (!action) findings.push({ decision: "DENY", stepId: step.id, reason: `Unknown action ${step.action}` });
-      if (step.action.includes("shell") || JSON.stringify(step.with).match(/\b(eval|Function|rm\s+-rf|del\s+\/)/i)) {
-        findings.push({ decision: "DENY", stepId: step.id, reason: "Dynamic code or shell command attempt is blocked" });
+      if (!action)
+        findings.push({
+          decision: "DENY",
+          stepId: step.id,
+          reason: `Unknown action ${step.action}`
+        });
+      if (
+        step.action.includes("shell") ||
+        JSON.stringify(step.with).match(/\b(eval|Function|rm\s+-rf|del\s+\/)/i)
+      ) {
+        findings.push({
+          decision: "DENY",
+          stepId: step.id,
+          reason: "Dynamic code or shell command attempt is blocked"
+        });
       }
       if (step.action === "email.send" && step.confirm?.required !== true) {
-        findings.push({ decision: "REQUIRE_CONFIRMATION", stepId: step.id, reason: "email.send always requires confirmation" });
+        findings.push({
+          decision: "REQUIRE_CONFIRMATION",
+          stepId: step.id,
+          reason: "email.send always requires confirmation"
+        });
       }
-      if ((step.action === "email.prepare" || step.action === "email.send") && !step.with.from && !step.with.to) {
-        findings.push({ decision: "DENY", stepId: step.id, reason: "Email operation has no recipient source" });
+      if (
+        (step.action === "email.prepare" || step.action === "email.send") &&
+        !step.with.from &&
+        !step.with.to
+      ) {
+        findings.push({
+          decision: "DENY",
+          stepId: step.id,
+          reason: "Email operation has no recipient source"
+        });
       }
       if (step.action === "file.export") {
         try {
@@ -249,7 +307,9 @@ export class PolicyEngine {
         }
       }
     }
-    return findings.length ? findings : [{ decision: "ALLOW", reason: "Deterministic policy checks passed" }];
+    return findings.length
+      ? findings
+      : [{ decision: "ALLOW", reason: "Deterministic policy checks passed" }];
   }
 }
 
@@ -315,41 +375,57 @@ export class Runtime {
     session.answers[questionId] = answer;
     session.audit.answers[questionId] = answer;
     this.state.transition(session, "VALIDATING", "answer received");
-    if (session.dsl.steps.some((step) => step.confirm?.required)) this.state.transition(session, "WAITING_FOR_CONFIRMATION", "confirmation required");
+    if (session.dsl.steps.some((step) => step.confirm?.required))
+      this.state.transition(session, "WAITING_FOR_CONFIRMATION", "confirmation required");
     else this.state.transition(session, "READY", "ready after answer");
   }
 
   confirm(session: TaskSession, confirmationId: string, planHash: string): void {
-    if (planHash !== session.planHash) throw new Error("Plan hash changed; confirmation is invalid");
+    if (planHash !== session.planHash)
+      throw new Error("Plan hash changed; confirmation is invalid");
     if (session.confirmations[confirmationId]) throw new Error("Confirmation already used");
     session.confirmations[confirmationId] = planHash;
     session.audit.confirmations[confirmationId] = planHash;
-    if (session.state === "WAITING_FOR_CONFIRMATION") this.state.transition(session, "READY", "confirmation received");
+    if (session.state === "WAITING_FOR_CONFIRMATION")
+      this.state.transition(session, "READY", "confirmation received");
   }
 
   reject(session: TaskSession): void {
-    if (["SUCCEEDED", "FAILED", "DENIED", "CANCELLED"].includes(session.state)) throw new Error("Task already terminal");
+    if (["SUCCEEDED", "FAILED", "DENIED", "CANCELLED"].includes(session.state))
+      throw new Error("Task already terminal");
     this.state.transition(session, "DENIED", "user rejected task");
   }
 
   cancel(session: TaskSession): void {
-    if (["SUCCEEDED", "FAILED", "DENIED", "CANCELLED"].includes(session.state)) throw new Error("Task already terminal");
+    if (["SUCCEEDED", "FAILED", "DENIED", "CANCELLED"].includes(session.state))
+      throw new Error("Task already terminal");
     this.state.transition(session, "CANCELLED", "user cancelled task");
   }
 
   async execute(session: TaskSession, execute = false): Promise<ActionResult[]> {
     if (session.state !== "READY") throw new Error(`Task is not ready: ${session.state}`);
     this.state.transition(session, "RUNNING", "execution started");
-    const context: ActionContext = { vars: { ...session.answers }, dryRun: !execute, dataDir: this.dataDir, exportDir: this.exportDir };
+    const context: ActionContext = {
+      vars: { ...session.answers },
+      dryRun: !execute,
+      dataDir: this.dataDir,
+      exportDir: this.exportDir
+    };
     try {
       for (const step of session.dsl.steps) {
         if (step.ask || step.action === "user.ask") continue;
-        if (step.confirm?.required && !session.confirmations[step.confirm.id]) throw new Error(`Missing confirmation ${step.confirm.id}`);
+        if (step.confirm?.required && !session.confirmations[step.confirm.id])
+          throw new Error(`Missing confirmation ${step.confirm.id}`);
         const action = this.registry.get(step.action);
         if (!action) throw new Error(`Unknown action ${step.action}`);
         const output = await action.run(step, context);
         if (step.saveAs) context.vars[step.saveAs] = output;
-        session.audit.executed_actions.push({ stepId: step.id, action: step.action, dryRun: context.dryRun, output });
+        session.audit.executed_actions.push({
+          stepId: step.id,
+          action: step.action,
+          dryRun: context.dryRun,
+          output
+        });
       }
       this.state.transition(session, "SUCCEEDED", "execution finished");
       return session.audit.executed_actions;
@@ -390,6 +466,7 @@ async function readJsonArray(file: string): Promise<Array<Record<string, unknown
 function safeResolve(root: string, requested: string): string {
   const base = path.resolve(root);
   const target = path.resolve(base, requested);
-  if (target !== base && !target.startsWith(`${base}${path.sep}`)) throw new Error("Path traversal blocked");
+  if (target !== base && !target.startsWith(`${base}${path.sep}`))
+    throw new Error("Path traversal blocked");
   return target;
 }

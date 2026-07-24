@@ -5,17 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Office DSL MVP</title>
     <style>
-      body { margin: 0; font-family: system-ui, sans-serif; background: #f7f8fb; color: #1f2937; }
-      header, main { max-width: 1100px; margin: 0 auto; padding: 24px; }
-      header { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-      textarea { width: 100%; min-height: 92px; box-sizing: border-box; font: inherit; padding: 12px; border: 1px solid #b8c0cc; border-radius: 6px; }
-      button { border: 1px solid #475569; background: #243447; color: white; padding: 9px 12px; border-radius: 6px; cursor: pointer; }
-      button.secondary { background: white; color: #243447; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 16px; }
-      section { background: white; border: 1px solid #d9dee7; border-radius: 8px; padding: 16px; }
-      pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 6px; max-height: 360px; overflow: auto; }
-      .actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 18px; }
-      input { padding: 9px; border: 1px solid #b8c0cc; border-radius: 6px; min-width: 220px; }
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #f7f8fb;
+        color: #1f2937;
+      }
+      header,
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+      textarea {
+        width: 100%;
+        min-height: 92px;
+        box-sizing: border-box;
+        font: inherit;
+        padding: 12px;
+        border: 1px solid #b8c0cc;
+        border-radius: 6px;
+      }
+      button {
+        border: 1px solid #475569;
+        background: #243447;
+        color: white;
+        padding: 9px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: white;
+        color: #243447;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+        gap: 16px;
+      }
+      section {
+        background: white;
+        border: 1px solid #d9dee7;
+        border-radius: 8px;
+        padding: 16px;
+      }
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 12px;
+        border-radius: 6px;
+        max-height: 360px;
+        overflow: auto;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 12px 0 18px;
+      }
+      input {
+        padding: 9px;
+        border: 1px solid #b8c0cc;
+        border-radius: 6px;
+        min-width: 220px;
+      }
     </style>
   </head>
   <body>
@@ -33,10 +94,22 @@
         <button id="execute" class="secondary">Dry-run execute</button>
       </div>
       <div class="grid">
-        <section><h2>DSL</h2><pre id="dsl"></pre></section>
-        <section><h2>Validation and verifier</h2><pre id="verify"></pre></section>
-        <section><h2>Plan</h2><pre id="plan"></pre></section>
-        <section><h2>Result and audit</h2><pre id="audit"></pre></section>
+        <section>
+          <h2>DSL</h2>
+          <pre id="dsl"></pre>
+        </section>
+        <section>
+          <h2>Validation and verifier</h2>
+          <pre id="verify"></pre>
+        </section>
+        <section>
+          <h2>Plan</h2>
+          <pre id="plan"></pre>
+        </section>
+        <section>
+          <h2>Result and audit</h2>
+          <pre id="audit"></pre>
+        </section>
       </div>
     </main>
     <script>
@@ -48,12 +121,20 @@
       };
       $("confirm").onclick = async () => {
         const confirmation = current?.dsl?.steps?.find((s) => s.confirm)?.confirm;
-        if (confirmation) current = await post(`/api/tasks/${current.id}/confirm`, { confirmationId: confirmation.id, planHash: current.planHash });
+        if (confirmation)
+          current = await post(`/api/tasks/${current.id}/confirm`, {
+            confirmationId: confirmation.id,
+            planHash: current.planHash
+          });
         render();
       };
       $("sendAnswer").onclick = async () => {
         const question = current?.dsl?.steps?.find((s) => s.ask)?.ask;
-        if (question) current = await post(`/api/tasks/${current.id}/answers`, { questionId: question.id, answer: $("answer").value });
+        if (question)
+          current = await post(`/api/tasks/${current.id}/answers`, {
+            questionId: question.id,
+            answer: $("answer").value
+          });
         render();
       };
       $("execute").onclick = async () => {
@@ -61,13 +142,29 @@
         render();
       };
       async function post(url, body) {
-        const res = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body)
+        });
         return res.json();
       }
       function render() {
         $("dsl").textContent = JSON.stringify(current.dsl, null, 2);
-        $("verify").textContent = JSON.stringify({ state: current.state, validation: current.audit.validation, verifier: current.audit.verifier }, null, 2);
-        $("plan").textContent = JSON.stringify({ planHash: current.planHash, plan: current.plan }, null, 2);
+        $("verify").textContent = JSON.stringify(
+          {
+            state: current.state,
+            validation: current.audit.validation,
+            verifier: current.audit.verifier
+          },
+          null,
+          2
+        );
+        $("plan").textContent = JSON.stringify(
+          { planHash: current.planHash, plan: current.plan },
+          null,
+          2
+        );
         $("audit").textContent = JSON.stringify(current.audit, null, 2);
       }
     </script>

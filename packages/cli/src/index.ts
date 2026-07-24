@@ -19,7 +19,14 @@ async function main(argv: string[]): Promise<void> {
       const dsl = await planFromNaturalLanguage(input, { mode: "mock" });
       const session = runtime.create(dsl, mockVerification(input, dsl));
       await store.save(session);
-      return output(json, { taskId: session.id, state: session.state, dsl, humanDsl: renderHumanDsl(dsl), plan: session.plan, planHash: session.planHash });
+      return output(json, {
+        taskId: session.id,
+        state: session.state,
+        dsl,
+        humanDsl: renderHumanDsl(dsl),
+        plan: session.plan,
+        planHash: session.planHash
+      });
     }
     if (command === "validate") {
       const dsl = parseTaskDsl(await readFile(required(args[0], "DSL_FILE"), "utf8"));
@@ -48,10 +55,20 @@ async function main(argv: string[]): Promise<void> {
       const session = await store.load(required(args[0], "TASK_ID"));
       const results = await runtime.execute(session, executeFlag);
       await store.save(session);
-      return output(json, { taskId: session.id, state: session.state, dryRun: !executeFlag, results, audit: session.audit });
+      return output(json, {
+        taskId: session.id,
+        state: session.state,
+        dryRun: !executeFlag,
+        results,
+        audit: session.audit
+      });
     }
     if (command === "history") {
-      const items = (await store.list()).map((session) => ({ taskId: session.id, state: session.state, input: session.dsl.task.input }));
+      const items = (await store.list()).map((session) => ({
+        taskId: session.id,
+        state: session.state,
+        input: session.dsl.task.input
+      }));
       return output(json, items);
     }
     help();
@@ -76,7 +93,9 @@ function mockVerification(input: string, dsl: unknown): unknown {
     contradictions: [],
     policy_violations: [],
     requires_confirmation: combined.includes("email.send") ? ["email.send"] : [],
-    explanation: unauthorized ? "DSL sends email although user requested drafts only." : "Mock verifier accepted DSL.",
+    explanation: unauthorized
+      ? "DSL sends email although user requested drafts only."
+      : "Mock verifier accepted DSL.",
     recommended_action: unauthorized ? "REGENERATE" : "ACCEPT"
   };
 }

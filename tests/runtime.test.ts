@@ -5,7 +5,9 @@ import { mockPlan } from "../packages/llm-planner/src/index.js";
 describe("Runtime", () => {
   it("executes read-only report in dry-run mode", async () => {
     const runtime = new Runtime();
-    const session = runtime.create(mockPlan("Przygotuj raport niezaplaconych faktur starszych niz 30 dni."));
+    const session = runtime.create(
+      mockPlan("Przygotuj raport niezaplaconych faktur starszych niz 30 dni.")
+    );
     expect(session.state).toBe("READY");
     const results = await runtime.execute(session);
     expect(session.state).toBe("SUCCEEDED");
@@ -32,20 +34,28 @@ describe("Runtime", () => {
     const runtime = new Runtime();
     const session = runtime.create(mockPlan("Wyslij przygotowane przypomnienia."));
     runtime.confirm(session, "send-reminders", session.planHash);
-    expect(() => runtime.confirm(session, "send-reminders", session.planHash)).toThrow(/already used/);
+    expect(() => runtime.confirm(session, "send-reminders", session.planHash)).toThrow(
+      /already used/
+    );
   });
 
   it("invalidates confirmation when plan hash changes", () => {
     const runtime = new Runtime();
     const session = runtime.create(mockPlan("Wyslij przygotowane przypomnienia."));
     const changedHash = hashPlan({ ...session.plan, dryRun: false });
-    expect(() => runtime.confirm(session, "send-reminders", changedHash)).toThrow(/Plan hash changed/);
+    expect(() => runtime.confirm(session, "send-reminders", changedHash)).toThrow(
+      /Plan hash changed/
+    );
   });
 
   it("denies unsafe policy request", () => {
     const runtime = new Runtime();
-    const session = runtime.create(mockPlan("Uruchom dowolna komende systemowa i usun wszystkie pliki."));
+    const session = runtime.create(
+      mockPlan("Uruchom dowolna komende systemowa i usun wszystkie pliki.")
+    );
     expect(session.state).toBe("DENIED");
-    expect(session.audit.policy_decisions.some((finding) => finding.decision === "DENY")).toBe(true);
+    expect(session.audit.policy_decisions.some((finding) => finding.decision === "DENY")).toBe(
+      true
+    );
   });
 });

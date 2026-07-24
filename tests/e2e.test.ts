@@ -7,7 +7,11 @@ describe("E2E NL to DSL to verification to runtime", () => {
     const nl = "Przygotuj raport niezaplaconych faktur starszych niz 30 dni.";
     const dsl = mockPlan(nl);
     const runtime = new Runtime();
-    const session = runtime.create(dsl, { verdict: "PASS", score: 0.95, recommended_action: "ACCEPT" });
+    const session = runtime.create(dsl, {
+      verdict: "PASS",
+      score: 0.95,
+      recommended_action: "ACCEPT"
+    });
     expect(session.audit.validation.ok).toBe(true);
     expect(session.state).toBe("READY");
     await runtime.execute(session);

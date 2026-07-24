@@ -7,10 +7,18 @@ export class FileTaskStore {
 
   async save(session: TaskSession): Promise<void> {
     await mkdir(this.dir, { recursive: true });
-    await writeFile(path.join(this.dir, `${session.id}.json`), `${JSON.stringify(session, null, 2)}\n`, "utf8");
+    await writeFile(
+      path.join(this.dir, `${session.id}.json`),
+      `${JSON.stringify(session, null, 2)}\n`,
+      "utf8"
+    );
     const auditDir = process.env.OFFICE_DSL_AUDIT_DIR ?? ".office-dsl/audit";
     await mkdir(auditDir, { recursive: true });
-    await writeFile(path.join(auditDir, `${session.id}.json`), `${JSON.stringify(session.audit, null, 2)}\n`, "utf8");
+    await writeFile(
+      path.join(auditDir, `${session.id}.json`),
+      `${JSON.stringify(session.audit, null, 2)}\n`,
+      "utf8"
+    );
   }
 
   async load(id: string): Promise<TaskSession> {
@@ -20,6 +28,10 @@ export class FileTaskStore {
   async list(): Promise<TaskSession[]> {
     await mkdir(this.dir, { recursive: true });
     const files = (await readdir(this.dir)).filter((file) => file.endsWith(".json"));
-    return Promise.all(files.map((file) => readFile(path.join(this.dir, file), "utf8").then((text) => JSON.parse(text) as TaskSession)));
+    return Promise.all(
+      files.map((file) =>
+        readFile(path.join(this.dir, file), "utf8").then((text) => JSON.parse(text) as TaskSession)
+      )
+    );
   }
 }
