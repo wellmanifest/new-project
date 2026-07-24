@@ -20,7 +20,7 @@ DONE:
 - `apps/web`: static demo UI.
 - `verifier`: Python mock verifier with Pydantic report model and optional LiteLLM/OpenRouter path.
 - `examples`: six office examples with legacy flat fixtures plus canonical `scenario.json`, `in/`, and `out/` structure.
-- `examples-chat`: four executable Human1/Human2 negotiation scenarios with line-by-line artifacts, expected outcomes, bilateral current-hash approval finalization, approval invalidation, and cancellation coverage.
+- `examples-chat`: four executable Human1/Human2 negotiation scenarios with line-by-line artifacts, expected outcomes, bilateral current-hash approval finalization, approval invalidation, cancellation coverage, and generated `.dsl` files rendered as line-oriented text rather than JSON.
 - `tests`: TypeScript and Python tests for current scope, including example runner, chat negotiation runner, CLI, backend, store, security, runtime, and Intent/Contract model coverage.
 - Documentation alignment pass: README, TODO, VERSION, CHANGELOG, this handoff, and `docs/system-purpose-and-runtime-flow.md`.
 - Example runner pass: `@office-dsl/example-runner`, `example:run`, `examples:run`, root `verify`, and safe `project.sh` command dispatch.
@@ -132,6 +132,7 @@ corepack pnpm run verify
 
 ## Recent Stable Milestones
 
+- `0.7.1`: generated `examples-chat` `.dsl` artifacts use editable line-oriented DSL text and are validated before writing.
 - `0.7.0`: minimal runtime Human1/Human2 canonical approval records and invalidation after snapshot changes.
 - `0.6.0`: executable Human1/Human2 chat negotiation examples and bilateral current-hash finalization checks.
 - `0.5.0`: GitHub Actions verify workflow plus Codex sandbox Vitest limitation documentation.
@@ -152,6 +153,6 @@ corepack pnpm run verify
 - `docs/codex-sandbox-vitest.md` - local sandbox Vitest/Vite limitation.
 - `packages/intent-contract-model/src/index.ts` - canonical model and adapter.
 - `packages/dsl-runtime/src/index.ts` - current runtime and approval limitations.
-- `packages/example-runner/src/chat.ts` - deterministic chat negotiation example runner.
+- `packages/example-runner/src/chat.ts` - deterministic chat negotiation example runner and generated `.dsl` text validator.
 - `examples-chat/` - executable chat negotiation scenarios.
 - `.github/workflows/verify.yml` - CI verification workflow.

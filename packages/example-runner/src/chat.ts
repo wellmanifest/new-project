@@ -458,9 +458,9 @@ async function writeEventArtifacts(
   const eventDir = path.join(generatedDir, event.author, String(event.event).padStart(3, "0"));
   await mkdir(eventDir, { recursive: true });
   await writeFile(path.join(eventDir, "prompt.txt"), `${event.raw}\n`, "utf8");
-  await writeJson(path.join(eventDir, "intent-contract.dsl"), intent);
-  await writeJson(path.join(eventDir, "party-contract.dsl"), partyContract);
-  await writeJson(path.join(eventDir, "merged-contract.dsl"), merged);
+  await writeDsl(path.join(eventDir, "intent-contract.dsl"), renderIntentDsl(intent));
+  await writeDsl(path.join(eventDir, "party-contract.dsl"), renderPartyContractDsl(partyContract));
+  await writeDsl(path.join(eventDir, "merged-contract.dsl"), renderMergedContractDsl(merged));
   await writeFile(
     path.join(eventDir, "diff.md"),
     `${diffLines.join("\n") || "No contract change."}\n`,
@@ -483,7 +483,7 @@ async function writeFinalArtifacts(
     hash: merged.hash,
     merged
   };
-  await writeJson(path.join(finalDir, "final-contract.dsl"), finalContract);
+  await writeDsl(path.join(finalDir, "final-contract.dsl"), renderFinalContractDsl(finalContract));
   const markdown = renderContractMarkdown(finalContract);
   await writeFile(path.join(finalDir, "contract.md"), markdown, "utf8");
   await writeFile(path.join(finalDir, "contract.pdf"), renderMinimalPdf(markdown), "binary");
@@ -493,11 +493,7 @@ async function writeFinalArtifacts(
     approvals: approvals.filter((approval) => approval.status === "ACTIVE")
   });
   await writeFile(path.join(finalDir, "diff-summary.md"), `${diffSummary.join("\n\n")}\n`, "utf8");
-  await writeJson(path.join(finalDir, "annex.dsl"), {
-    version: "contract-annex.v1",
-    hash: merged.hash,
-    dsl: finalContract
-  });
+  await writeDsl(path.join(finalDir, "annex.dsl"), renderAnnexDsl(finalContract));
 }
 
 function renderContractMarkdown(finalContract: {
@@ -547,6 +543,164 @@ function renderMinimalPdf(markdown: string): string {
   return pdf;
 }
 
+export function validateChatDslText(text: string): void {
+  const lines = text.split(/\r?\n/).filter((line) => line.trim() && !line.trim().startsWith("#"));
+  if (!lines[0]?.startsWith("DOCUMENT ")) throw new Error("DSL must start with DOCUMENT");
+  if (/^\s*[\[{]/.test(text)) throw new Error("DSL text must not use JSON object or array syntax");
+  const allowed =
+    /^(DOCUMENT|VERSION|TYPE|EVENT|LINE|AUTHOR|TEXT|UPDATE|APPROVAL|CANCELLATION|PARTY|FIELD|VALUE|SOURCE|ACCEPTED_BY|REJECTED_BY|END_FIELD|CHANGE|HASH|STATUS|MISSING|CONFLICT|END_CONFLICT|INCLUDE|ASSERT|ANNEX|END_DOCUMENT)(\b|\s|$)/;
+  for (const line of lines) {
+    if (!allowed.test(line.trim())) throw new Error(`Unsupported DSL line: ${line}`);
+    if ((line.match(/"/g)?.length ?? 0) % 2 !== 0)
+      throw new Error(`Unbalanced quotes in DSL line: ${line}`);
+  }
+}
+
+function renderIntentDsl(intent: IntentArtifact): string {
+  const lines = [
+    "DOCUMENT CHAT_INTENT",
+    "VERSION 1",
+    `TYPE ${intent.version}`,
+    `EVENT ${intent.event}`,
+    `LINE ${intent.line}`,
+    `AUTHOR ${partyToken(intent.author)}`,
+    `TEXT ${quoteDsl(intent.text)}`
+  ];
+  for (const update of intent.updates)
+    lines.push(`UPDATE ${fieldToken(update.field)} ${quoteDsl(update.value)}`);
+  lines.push(`APPROVAL ${boolToken(intent.approval)}`);
+  lines.push(`CANCELLATION ${boolToken(intent.cancellation)}`);
+  lines.push("END_DOCUMENT");
+  return `${lines.join("\n")}\n`;
+}
+
+function renderPartyContractDsl(contract: PartyContract): string {
+  const lines = ["DOCUMENT PARTY_CONTRACT", "VERSION 1", `PARTY ${partyToken(contract.party)}`];
+  for (const [field, value] of Object.entries(contract.fields).sort(([a], [b]) =>
+    a.localeCompare(b)
+  )) {
+    lines.push(`FIELD ${fieldToken(field)}`);
+    lines.push(`VALUE ${quoteDsl(value.value)}`);
+    lines.push(`SOURCE ${partyToken(value.source.party)} LINE ${value.source.line}`);
+    lines.push(`TEXT ${quoteDsl(value.source.text)}`);
+    lines.push(`ACCEPTED_BY ${listToken(value.acceptedBy.map(partyToken))}`);
+    lines.push(`REJECTED_BY ${listToken(value.rejectedBy.map(partyToken))}`);
+    lines.push("END_FIELD");
+  }
+  for (const change of contract.changes) {
+    lines.push(
+      `CHANGE ${fieldToken(change.field)} LINE ${change.line} FROM ${quoteDsl(change.previous)} TO ${quoteDsl(change.next)}`
+    );
+  }
+  lines.push("END_DOCUMENT");
+  return `${lines.join("\n")}\n`;
+}
+
+function renderMergedContractDsl(merged: MergedContract): string {
+  const lines = [
+    "DOCUMENT MERGED_CONTRACT",
+    "VERSION 1",
+    `TYPE ${merged.version}`,
+    `HASH ${quoteDsl(merged.hash)}`
+  ];
+  for (const field of requiredFields) {
+    const value = merged.fields[field];
+    if (!value) continue;
+    lines.push(...renderContractValue(field, value));
+  }
+  lines.push(`MISSING ${listToken(merged.missing.map(fieldToken))}`);
+  for (const conflict of merged.conflicts) {
+    lines.push(`CONFLICT ${fieldToken(conflict.field)}`);
+    for (const value of conflict.values) {
+      lines.push(
+        `VALUE ${quoteDsl(value.value)} SOURCE ${partyToken(value.source.party)} LINE ${value.source.line}`
+      );
+    }
+    lines.push("END_CONFLICT");
+  }
+  lines.push("END_DOCUMENT");
+  return `${lines.join("\n")}\n`;
+}
+
+function renderFinalContractDsl(finalContract: {
+  status: string;
+  hash: string;
+  merged: MergedContract;
+}): string {
+  const lines = [
+    "DOCUMENT FINAL_CONTRACT",
+    "VERSION 1",
+    `STATUS ${finalContract.status}`,
+    `HASH ${quoteDsl(finalContract.hash)}`,
+    "INCLUDE MERGED_CONTRACT"
+  ];
+  for (const field of requiredFields) {
+    const value = finalContract.merged.fields[field];
+    if (value) lines.push(...renderContractValue(field, value));
+  }
+  lines.push("ASSERT APPROVALS = [USER1, USER2]");
+  lines.push("ASSERT FINAL_ARTIFACTS_ALLOWED");
+  lines.push("END_DOCUMENT");
+  return `${lines.join("\n")}\n`;
+}
+
+function renderAnnexDsl(finalContract: {
+  status: string;
+  hash: string;
+  merged: MergedContract;
+}): string {
+  const lines = [
+    "DOCUMENT CONTRACT_ANNEX",
+    "VERSION 1",
+    `ANNEX FINAL_CONTRACT HASH ${quoteDsl(finalContract.hash)}`,
+    `STATUS ${finalContract.status}`,
+    `HASH ${quoteDsl(finalContract.merged.hash)}`,
+    "INCLUDE MERGED_CONTRACT"
+  ];
+  for (const field of requiredFields) {
+    const value = finalContract.merged.fields[field];
+    if (value) lines.push(...renderContractValue(field, value));
+  }
+  lines.push("END_DOCUMENT");
+  return `${lines.join("\n")}\n`;
+}
+
+function renderContractValue(field: string, value: ContractValue): string[] {
+  return [
+    `FIELD ${fieldToken(field)}`,
+    `VALUE ${quoteDsl(value.value)}`,
+    `SOURCE ${partyToken(value.source.party)} LINE ${value.source.line}`,
+    `TEXT ${quoteDsl(value.source.text)}`,
+    `ACCEPTED_BY ${listToken(value.acceptedBy.map(partyToken))}`,
+    `REJECTED_BY ${listToken(value.rejectedBy.map(partyToken))}`,
+    "END_FIELD"
+  ];
+}
+
+async function writeDsl(file: string, text: string): Promise<void> {
+  validateChatDslText(text);
+  await writeFile(file, text, "utf8");
+}
+
+function quoteDsl(value: string): string {
+  return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+}
+
+function partyToken(party: ChatParty): string {
+  return party.toUpperCase();
+}
+
+function fieldToken(field: string): string {
+  return field.replace(/[A-Z]/g, (letter) => `_${letter}`).toUpperCase();
+}
+
+function boolToken(value: boolean): string {
+  return value ? "TRUE" : "FALSE";
+}
+
+function listToken(values: string[]): string {
+  return `[${values.join(", ")}]`;
+}
 function createSummary(
   id: string,
   outcome: ChatOutcome,

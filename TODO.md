@@ -124,6 +124,8 @@ NOT IMPLEMENTED:
   - Done when compatible values are accepted into one merged field, conflicting values are preserved with source references, missing required fields remain explicit, and the merged hash is stable.
 - [x] Generate a readable diff after every utterance.
   - Done when each event writes `diff.md` showing added fields, changed positions, invalidated approvals, conflicts, approvals, or no material change.
+- [x] Render generated `.dsl` artifacts as line-oriented editable DSL, not JSON.
+  - Done when `intent-contract.dsl`, `party-contract.dsl`, `merged-contract.dsl`, `final-contract.dsl`, and `annex.dsl` use `DOCUMENT`/`FIELD`/`VALUE`/`ASSERT` syntax, reject JSON object syntax, and are validated before writing.
 - [x] Detect conflicts and changes of position.
   - Done when tests prove competing party values block finalization and a party's changed field is recorded as a changed position.
 - [x] Accept only the same current merged contract version from both parties.

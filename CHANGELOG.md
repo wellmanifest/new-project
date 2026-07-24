@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.1] - 2026-07-24
+
+### Changed
+
+- Changed generated `examples-chat` `.dsl` artifacts from JSON serialization to line-oriented editable DSL text using `DOCUMENT`, `FIELD`, `VALUE`, `SOURCE`, and `ASSERT` commands.
+- Kept JSON only for machine-comparison files such as `summary.json`, `status.json`, scenario manifests, expected summaries, and `approvals.json`.
+- Updated package, app, verifier, and OpenAPI version metadata to `0.7.1`.
+
+### Tests
+
+- Added validation that generated `.dsl` artifacts start with `DOCUMENT`, reject JSON object/array syntax, use only supported DSL commands, and cannot be parsed as JSON.
+
 ## [0.7.0] - 2026-07-24
 
 ### Added

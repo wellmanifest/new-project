@@ -6,7 +6,8 @@ import { describe, expect, it } from "vitest";
 import {
   discoverChatScenarios,
   parseChat,
-  runChatScenario
+  runChatScenario,
+  validateChatDslText
 } from "../packages/example-runner/src/index.js";
 
 const repoRoot = process.cwd();
@@ -45,16 +46,23 @@ describe("examples-chat runner", () => {
   it("updates the speaking party contract and merges compatible values", async () => {
     const { generatedRoot, result } = await runChat("01-short-agreement");
     expect(result.ok).toBe(true);
-    const partyContract = JSON.parse(
-      await readFile(path.join(generatedRoot, "user1", "001", "party-contract.dsl"), "utf8")
-    ) as { fields: { price?: { value: string } } };
-    expect(partyContract.fields.price?.value).toBe("5000 PLN");
+    const partyContract = await readFile(
+      path.join(generatedRoot, "user1", "001", "party-contract.dsl"),
+      "utf8"
+    );
+    validateChatDslText(partyContract);
+    expect(partyContract).toContain("DOCUMENT PARTY_CONTRACT");
+    expect(partyContract).toContain("FIELD PRICE");
+    expect(partyContract).toContain('VALUE "5000 PLN"');
 
-    const merged = JSON.parse(
-      await readFile(path.join(generatedRoot, "user1", "007", "merged-contract.dsl"), "utf8")
-    ) as { fields: { price?: { acceptedBy: string[] } }; conflicts: unknown[] };
-    expect(merged.conflicts).toEqual([]);
-    expect(merged.fields.price?.acceptedBy).toEqual(["user1", "user2"]);
+    const merged = await readFile(
+      path.join(generatedRoot, "user1", "007", "merged-contract.dsl"),
+      "utf8"
+    );
+    validateChatDslText(merged);
+    expect(merged).toContain("DOCUMENT MERGED_CONTRACT");
+    expect(merged).toContain("ACCEPTED_BY [USER1, USER2]");
+    expect(merged).not.toContain("CONFLICT PRICE");
     await rm(generatedRoot, { recursive: true, force: true });
   });
 
@@ -153,7 +161,13 @@ describe("examples-chat runner", () => {
     expect(approvals.approvals.every((approval) => approval.approvedHash === approvals.hash)).toBe(
       true
     );
-    expect(existsSync(path.join(generatedRoot, "final", "final-contract.dsl"))).toBe(true);
+    const finalDsl = await readFile(
+      path.join(generatedRoot, "final", "final-contract.dsl"),
+      "utf8"
+    );
+    validateChatDslText(finalDsl);
+    expect(finalDsl).toContain("DOCUMENT FINAL_CONTRACT");
+    expect(finalDsl.trim().startsWith("{")).toBe(false);
     expect(existsSync(path.join(generatedRoot, "final", "contract.pdf"))).toBe(true);
     await rm(generatedRoot, { recursive: true, force: true });
   });
@@ -169,6 +183,23 @@ describe("examples-chat runner", () => {
     }
   });
 
+  it("validates generated .dsl artifacts as line-oriented text, not JSON", async () => {
+    const { generatedRoot, result } = await runChat("01-short-agreement");
+    expect(result.ok).toBe(true);
+    for (const file of [
+      path.join(generatedRoot, "user1", "001", "intent-contract.dsl"),
+      path.join(generatedRoot, "user1", "001", "party-contract.dsl"),
+      path.join(generatedRoot, "user1", "007", "merged-contract.dsl"),
+      path.join(generatedRoot, "final", "final-contract.dsl"),
+      path.join(generatedRoot, "final", "annex.dsl")
+    ]) {
+      const dsl = await readFile(file, "utf8");
+      expect(() => JSON.parse(dsl)).toThrow();
+      expect(dsl).toMatch(/^DOCUMENT /);
+      validateChatDslText(dsl);
+    }
+    await rm(generatedRoot, { recursive: true, force: true });
+  });
   it("executes all four scenarios with expected outcomes", async () => {
     const expected = new Map([
       ["01-short-agreement", "AGREED"],

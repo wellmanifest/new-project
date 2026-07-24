@@ -200,7 +200,7 @@ The current manifests use a fixture DSL source because the existing expected DSL
 
 ### Chat Negotiation Examples
 
-`examples-chat` scenarios are executable regression fixtures, not static samples. Each scenario has `scenario.json`, `chat.txt`, and `out/expected.summary.json`. The chat runner processes each `@user1`/`@user2` line in order, writes deterministic artifacts after every utterance, compares the generated summary with the expected outcome, and ends as either `AGREED` or `CANCELLED`.
+`examples-chat` scenarios are executable regression fixtures, not static samples. Each scenario has `scenario.json`, `chat.txt`, and `out/expected.summary.json`. The chat runner processes each `@user1`/`@user2` line in order, writes deterministic artifacts after every utterance, validates generated `.dsl` files as line-oriented text, compares the generated summary with the expected outcome, and ends as either `AGREED` or `CANCELLED`.
 
 Run one chat scenario:
 
@@ -213,6 +213,8 @@ Run all chat scenarios:
 ```powershell
 corepack pnpm run examples-chat:run
 ```
+
+Generated `.dsl` artifacts intentionally use the same line-oriented style as the fenced `dsl` snippets in `POLICY.md` and `CONTRIBUTING.md`, with commands such as `DOCUMENT`, `FIELD`, `VALUE`, `SOURCE`, and `ASSERT`; they are not JSON. Editors can associate `.dsl` with HCL/Terraform or generic config highlighting for easier manual editing, while the runner validates the project-specific DSL commands before writing artifacts.
 
 For agreed scenarios, `final-contract.dsl`, `contract.pdf`, and `approvals.json` are created only when both parties approve the same current merged contract hash. A one-side approval cannot create final artifacts, and a later contract change invalidates the earlier approval. Cancelled scenarios never create final contract or PDF artifacts.
 

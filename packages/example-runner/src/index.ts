@@ -9,6 +9,7 @@ export {
   loadChatScenarioManifest,
   parseChat,
   runChatScenario,
+  validateChatDslText,
   validateChatScenarioManifest
 } from "./chat.js";
 export {
