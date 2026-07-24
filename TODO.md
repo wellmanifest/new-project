@@ -1,511 +1,291 @@
 # TODO
 
-## Cel projektu
+This roadmap is intentionally split between the current offline Office DSL MVP and the target Intent/Contract DSL Runtime. A checked item means the behavior exists in code or documentation and has at least relevant validation for the current scope. Target features must not be described as done until implemented and tested.
 
-Zbudować pierwszą, kompletnie testowalną wersję systemu formalizującego intencje i ustalenia ludzi:
+## Current Baseline
 
-```text
-NL / rozmowa / wytyczne tekstowe
-→ LLM
-→ formalny DSL
-→ diagnoza braków i sprzeczności
-→ walidacja Python
-→ akceptacja użytkownika lub obu stron
-→ TypeScript runtime
-→ wygenerowany dokument, kontrakt albo opis zadania
-→ wynik i audyt
-```
+DONE:
 
-DSL ma być czytelny dla człowieka i możliwy do jednoznacznego przetwarzania przez agentów AI oraz runtime.
+- Offline `office.dsl.v1` model, parser, structural validator, and human-readable token renderer.
+- Mock planner for selected single-message office commands.
+- TypeScript runtime with simple state machine, policy checks, `user.ask`, one-side confirmation, plan hashing, dry-run mock actions, file store, and audit records.
+- CLI, backend API, static web demo, mock data, six static examples, Vitest tests, and Python verifier tests.
 
-System ma obsługiwać oba kierunki:
+PARTIAL:
 
-- NL → DSL
-- DSL → NL / dokument końcowy
+- OpenRouter and LiteLLM paths exist but are not the validated default path.
+- Clarification exists as workflow steps, not as a general missing/ambiguous/conflicting field model.
+- Rendering exists as readable DSL text, not formal documents.
+- Hashing is based on execution plan content, not canonical Intent/Contract DSL snapshots.
 
-Pierwsza wersja ma działać wyłącznie na mockach i danych przykładowych.
+MOCK:
 
----
+- Planner semantic understanding.
+- Python verifier semantic judgment.
+- External connectors and email delivery.
+- Web UI as a production surface.
 
-## Etap 0 — analiza i zabezpieczenie repozytorium
+NOT IMPLEMENTED:
 
-- [x] Przeanalizować strukturę repozytorium.
-- [x] Przeanalizować `README.md`.
-- [x] Przeanalizować `POLICY.md`.
-- [x] Przeanalizować `CONTRIBUTING.md`.
-- [x] Przeanalizować materiały badawcze w `research/`.
-- [x] Przeanalizować `project.sh`.
-- [x] Zweryfikować przeniesienie historycznych folderów do `research/`.
-- [x] Opisać aktualny cel projektu w `docs/architecture.md`.
-- [x] Opisać rolę LLM, Python verifiera, runtime’u oraz ludzi uczestniczących w procesie.
-- [x] Opisać, dlaczego `project.sh` jest albo nie jest używany w MVP.
-- [x] Sprawdzić, czy żadna zawartość badawcza nie została utracona.
-- [x] Doprowadzić repozytorium do kontrolowanego stanu bez przypadkowych usunięć.
-- [x] Naprawić konfigurację pnpm i instalację zależności.
+- Canonical Intent/Contract DSL, Human2 approval, field traceability, legal renderers, example runner, code generation, DSL-based test generation, and runtime-to-Python verifier integration.
 
 ---
 
-## Etap 1 — przypadki użycia i wymagania
+## Phase 0 - Repository Audit And Documentation Alignment
 
-Status: basic MVP scope, actors, single command flow, questions, and one-side approval are documented and covered; two-party conversation, text files, and full acceptance criteria remain open.
-
-
-- [x] Zdefiniować zakres MVP.
-- [x] Zdefiniować aktorów:
-  - Human1 — autor intencji lub zleceniodawca,
-  - Human2 — odbiorca, wykonawca albo druga strona umowy,
-  - LLM — formalizacja i interpretacja,
-  - Python verifier — walidacja znaczeniowa,
-  - TypeScript runtime — walidacja techniczna, orkiestracja i renderowanie.
-- [x] Zdefiniować przepływ dla pojedynczego polecenia użytkownika.
-- [ ] Zdefiniować przepływ dla rozmowy dwóch stron.
-- [ ] Zdefiniować przepływ dla wytycznych zapisanych w pliku tekstowym.
-- [x] Zdefiniować proces akceptacji przez jedną stronę.
-- [ ] Zdefiniować proces akceptacji przez obie strony kontraktu.
-- [ ] Zdefiniować proces odrzucenia i ponownej edycji.
-- [x] Zdefiniować proces zadawania pytań doprecyzowujących.
-- [ ] Zdefiniować, kiedy dokument jest wystarczająco kompletny dla jego odbiorcy.
-- [ ] Zdefiniować kryteria końcowego odbioru MVP.
+- [x] Audit `README.md`, `TODO.md`, `CHANGELOG.md`, `VERSION.md`, `CONTRIBUTING.md`, `POLICY.md`, `HANDOFF.md`, `docs/`, `research/`, `examples/`, `packages/`, `apps/`, `verifier/`, `tests/`, and `mock-data/`.
+  - Done when the documented status is based on actual files and tests, not README claims.
+- [x] Create `docs/system-purpose-and-runtime-flow.md`.
+  - Done when it describes purpose, H2M/H2H, runtime flow, LLM, verifier, traceability, approvals, documents, code, tests, examples, and current-vs-target state with Mermaid diagrams.
+- [x] Update README to separate current implementation from target architecture.
+  - Done when Office DSL MVP is no longer presented as the full system.
+- [x] Rebuild TODO into staged phases with concrete outcomes and completion criteria.
+  - Done when checked items match code evidence.
+- [x] Update HANDOFF, CHANGELOG, and VERSION metadata for the documentation alignment pass.
+  - Done when the next agent has a clear start point and no mock is presented as production behavior.
 
 ---
 
-## Etap 2 — specyfikacja Intent/Contract DSL
+## Phase 1 - Stabilize Current Office DSL MVP
 
-Status: narrow `office.dsl.v1` is implemented and tested; full Intent/Contract DSL remains open.
-
-
-- [x] Zdefiniować kanoniczny model DSL.
-- [x] Zdefiniować wersję języka.
-- [x] Zdefiniować AST.
-- [x] Zdefiniować JSON Schema.
-- [x] Przygotować czytelną reprezentację DSL dla człowieka.
-- [x] Zdefiniować konwersję JSON/AST → human-readable DSL.
-- [ ] Zdefiniować konwersję DSL → dokument w języku naturalnym.
-
-### Konstrukcje DSL
-
-- [ ] `CONTRACT`
-- [x] `TASK`
-- [ ] `PARTY`
-- [ ] `ROLE`
-- [ ] `INTENT`
-- [x] `SOURCE`
-- [ ] `SUBJECT`
-- [ ] `OBLIGATION`
-- [ ] `DELIVERABLE`
-- [ ] `DEADLINE`
-- [ ] `PAYMENT`
-- [x] `CONDITION`
-- [ ] `ACCEPTANCE_CRITERIA`
-- [ ] `EXCLUSION`
-- [ ] `ASSUMPTION`
-- [x] `QUESTION`
-- [ ] `APPROVAL`
-- [x] `OUTPUT`
-- [ ] `RENDER`
-- [x] `POLICY`
-
-### Statusy informacji
-
-- [x] `KNOWN`
-- [ ] `CONFIRMED`
-- [ ] `MISSING`
-- [ ] `INCOMPLETE`
-- [ ] `AMBIGUOUS`
-- [ ] `CONFLICTING`
-- [ ] `ASSUMED`
-- [x] `REQUIRES_CONFIRMATION`
-- [x] `REJECTED`
-
-### Diagnostyka DSL
-
-- [x] Wykrywanie brakujących danych.
-- [ ] Wykrywanie niejednoznacznych terminów i wartości.
-- [ ] Wykrywanie sprzecznych wypowiedzi stron.
-- [ ] Wykrywanie założeń dodanych przez LLM.
-- [ ] Wykrywanie elementów niezaakceptowanych przez obie strony.
-- [x] Wykrywanie działań lub warunków, których nikt nie zlecił.
-- [ ] Powiązanie każdego ustalenia ze źródłem w rozmowie lub pliku.
-- [x] Generowanie konkretnych pytań dotyczących brakujących pól.
+- [x] Keep `office.dsl.v1` structurally valid for current examples.
+  - Done when `parseTaskDsl` and `validateTaskDsl` pass existing DSL fixtures.
+- [x] Keep supported mock actions explicit.
+  - Done when unsupported actions fail validation or policy checks.
+- [x] Keep email send guarded by confirmation.
+  - Done when `email.send` without confirmation is rejected by DSL validation and runtime tests.
+- [x] Keep unsafe shell/dynamic-code/path traversal requests blocked.
+  - Done when security tests cover these cases.
+- [x] Keep dry-run execution as default.
+  - Done when tests show mock sending does not perform real external delivery.
+- [ ] Add a root `verify` script that runs typecheck, lint, format check, TypeScript tests, Python tests, and `git diff --check`.
+  - Done when `corepack pnpm run verify` works on Windows and Linux.
+- [ ] Fix or document any dependency/link issue that prevents default Vitest startup in the Codex sandbox.
+  - Done when the exact environment failure is reproducible or removed.
 
 ---
 
-## Etap 3 — TypeScript runtime
+## Phase 2 - Canonical Intent/Contract DSL
 
-Status: mock office-task runtime is implemented and tested; Human2, bilateral approval, contracts, and contract generators remain open.
-
-
-- [x] Utworzyć parser DSL.
-- [x] Utworzyć walidator strukturalny.
-- [ ] Utworzyć walidator semantyczny.
-- [x] Utworzyć TypeScript runtime.
-- [x] Utworzyć state machine.
-- [x] Utworzyć policy engine.
-- [x] Utworzyć registry obsługiwanych operacji.
-- [ ] Utworzyć mechanizm diagnozowania braków.
-- [x] Utworzyć mechanizm pytań do Human1.
-- [ ] Utworzyć mechanizm pytań do Human2.
-- [x] Utworzyć proces akceptacji jednej strony.
-- [ ] Utworzyć proces akceptacji obu stron.
-- [x] Unieważniać akceptację po zmianie DSL lub planu.
-- [x] Utworzyć hash zaakceptowanej wersji DSL.
-- [x] Utworzyć renderer DSL → dokument NL.
-- [ ] Utworzyć mockowy generator umowy.
-- [ ] Utworzyć mockowy generator opisu zadania.
-- [x] Utworzyć zapis audytu.
-- [x] Utworzyć CLI dla Windows i Linux.
-
-### Stany runtime’u
-
-Status: runtime currently uses simplified states; target Human1/Human2 state names remain open.
-
-
-- [x] `CREATED`
-- [ ] `ANALYZING_INPUT`
-- [x] `DSL_GENERATED`
-- [x] `VALIDATING`
-- [ ] `WAITING_FOR_INPUT_HUMAN1`
-- [ ] `WAITING_FOR_INPUT_HUMAN2`
-- [ ] `WAITING_FOR_APPROVAL_HUMAN1`
-- [ ] `WAITING_FOR_APPROVAL_HUMAN2`
-- [ ] `APPROVED`
-- [x] `REJECTED`
-- [ ] `RENDERING`
-- [x] `SUCCEEDED`
-- [x] `FAILED`
-- [x] `DENIED`
-- [x] `CANCELLED`
+- [ ] Define the canonical DSL package boundary separate from `office.dsl.v1`.
+  - Done when the repo has a documented versioned model such as `intent.dsl.v1` or `contract.dsl.v1` and existing Office DSL compatibility is preserved.
+- [ ] Add core constructs: `DOCUMENT`, `CONTRACT`, `PARTY`, `ROLE`, `INTENT`, `SUBJECT`, `OBLIGATION`, `DELIVERABLE`, `DEADLINE`, `PAYMENT`, `CONDITION`, `DEPENDENCY`, `ACCEPTANCE_CRITERIA`, `EXCLUSION`, `ASSUMPTION`, `RISK`, `CONFLICT`, `QUESTION`, `APPROVAL`, `SOURCE_REFERENCE`, `RENDER`, and `EXECUTION`.
+  - Done when each construct has TypeScript types, validation rules, and at least one fixture.
+- [ ] Add field status semantics: `CONFIRMED`, `MISSING`, `INCOMPLETE`, `AMBIGUOUS`, `CONFLICTING`, `ASSUMED`, `REJECTED`, and `NOT_APPLICABLE`.
+  - Done when fields can carry status, source, required-for-completion flag, and approvals.
+- [ ] Define canonical JSON serialization and stable hashing rules.
+  - Done when equivalent DSL snapshots hash identically across Windows and Linux.
+- [ ] Add migration or adapter notes from `office.dsl.v1` to the canonical model.
+  - Done when current examples still validate or have a documented compatibility path.
 
 ---
 
-## Etap 4 — LLM planner
+## Phase 3 - Missing, Ambiguous, And Conflicting Information Model
 
-Status: mock planner for a single command is tested; OpenRouter, conversations, and file inputs remain open.
-
-
-- [x] Utworzyć tryb mock działający bez internetu.
-- [ ] Utworzyć opcjonalną integrację OpenRouter.
-- [x] Obsłużyć wejście typu pojedyncza wypowiedź.
-- [ ] Obsłużyć wejście typu historia rozmowy.
-- [ ] Obsłużyć wejście typu plik z wytycznymi.
-- [x] Generować wyłącznie wynik zgodny ze schematem.
-- [ ] Oznaczać założenia utworzone przez LLM.
-- [ ] Zachowywać źródło każdego ustalenia.
-- [ ] Nie uzupełniać braków niepotwierdzonymi informacjami.
-- [x] Generować propozycje pytań doprecyzowujących.
-- [ ] Obsłużyć ponowne wygenerowanie DSL po odpowiedzi użytkownika.
+- [ ] Implement completeness validation for required fields.
+  - Done when missing deadline/payment/acceptance criteria can be represented and reported without guessing.
+- [ ] Implement ambiguity detection hooks.
+  - Done when a field can be marked `AMBIGUOUS` with competing interpretations and a generated question.
+- [ ] Implement conflict representation.
+  - Done when contradictory values from Human1 and Human2 can coexist with source references and block finalization.
+- [ ] Implement assumption tracking.
+  - Done when LLM-added values are marked `ASSUMED` and require explicit approval.
+- [ ] Add source traceability for material fields.
+  - Done when each relevant field can point to message ID, speaker, file path, or source span.
 
 ---
 
-## Etap 5 — Python verifier
+## Phase 4 - Human1/Human2 Conversation Workflow
 
-Status: package and mock verifier are tested; full semantic validation for conversations, guideline files, and final documents remains open.
-
-
-- [x] Utworzyć pakiet Python 3.11+.
-- [x] Utworzyć tryb mock.
-- [ ] Utworzyć opcjonalną integrację LiteLLM/OpenRouter.
-- [ ] Walidować zgodność NL → DSL.
-- [ ] Walidować zgodność historii rozmowy → DSL.
-- [ ] Walidować zgodność wytycznych tekstowych → DSL.
-- [ ] Walidować zgodność DSL → dokument końcowy.
-- [ ] Sprawdzać pominięte ustalenia.
-- [x] Sprawdzać działania i warunki dodane przez LLM.
-- [ ] Sprawdzać sprzeczności.
-- [ ] Sprawdzać niepotwierdzone założenia.
-- [ ] Sprawdzać kompletność z perspektywy Human1.
-- [ ] Sprawdzać kompletność z perspektywy Human2.
-- [ ] Sprawdzać, czy odbiorca może jednoznacznie wykonać zadanie.
-- [x] Zwracać wynik `PASS`, `FAIL` albo `NEEDS_REVIEW`.
-- [x] Zwracać raport JSON możliwy do przetwarzania przez runtime.
+- [ ] Define conversation input format for Human1 and Human2.
+  - Done when examples can store speaker, message ID, timestamp, and text.
+- [ ] Add planner support for conversation history.
+  - Done when a two-party fixture produces partial DSL with sources and unresolved fields.
+- [ ] Add runtime routing of questions to Human1 or Human2.
+  - Done when the runtime knows which party must answer a missing or conflicting field.
+- [ ] Add bilateral approval records.
+  - Done when Human1 and Human2 approvals include party, hash, timestamp, and verdict.
+- [ ] Invalidate approvals after DSL changes.
+  - Done when tests prove both sides must reapprove after any material DSL edit.
+- [ ] Support reopening clarification after Human2 rejects insufficient detail.
+  - Done when Human2 can block finalization and trigger a question back to Human1.
 
 ---
 
-## Etap 6 — struktura `examples`
+## Phase 5 - Bidirectional NL <-> DSL
 
-Status: six flat examples validate offline; `scenario.json`, `in/`, `out/`, and diff runner remain open.
+- [ ] Define controlled NL-to-DSL planner prompts and response schemas for OpenRouter.
+  - Done when schema validation rejects malformed LLM output.
+- [ ] Add single-message planner mode beyond current mock patterns.
+  - Done when fixtures cover varied natural language without hard-coded action matching.
+- [ ] Add guideline-file planner mode.
+  - Done when text guidelines can produce DSL with missing fields and source references.
+- [ ] Add DSL-to-NL summary renderer.
+  - Done when every rendered statement maps back to a DSL field.
+- [ ] Add round-trip regression tests.
+  - Done when DSL rendered to NL and reprocessed does not introduce unauthorized meaning for selected fixtures.
 
+---
 
-Każdy scenariusz ma mieć osobny folder:
+## Phase 6 - Contract And Legal Document Renderers
 
-```text
-examples/<numer>-<nazwa>/
-├── scenario.json
-├── README.md
-├── in/
-│   ├── conversation.md lub input.md
-│   ├── context.json
-│   ├── parties.json
-│   ├── policies.md
-│   └── legal-guidelines.md
-└── out/
-    ├── expected.dsl
-    ├── expected-validation.json
-    ├── expected-questions.json
-    ├── expected-document.md
-    └── expected-audit.json
-```
+- [ ] Define renderer responsibilities and legal disclaimers.
+  - Done when docs state that generated documents are drafts and must not invent terms.
+- [ ] Implement task delegation renderer.
+  - Done when output includes assignee, deliverable, deadline, dependencies, exclusions, and acceptance criteria from DSL only.
+- [ ] Implement service agreement renderer.
+  - Done when payment, parties, scope, acceptance, and exclusions render from approved DSL.
+- [ ] Implement employment agreement/guideline renderer as draft output.
+  - Done when legal-guideline fixtures render without unsupported fields.
+- [ ] Add document-to-DSL traceability map.
+  - Done when each paragraph references DSL paths or source references.
 
-- [ ] Utworzyć wspólny format `scenario.json`.
-- [ ] Utworzyć runner pojedynczego przykładu.
-- [ ] Utworzyć runner wszystkich przykładów.
-- [ ] Runtime ma pobierać dane wyłącznie z `in/`.
-- [ ] Wygenerowane rezultaty zapisywać do katalogu tymczasowego.
-- [ ] Porównywać rezultaty z `out/`.
-- [ ] Uruchamiać Python verifier dla każdego scenariusza.
-- [ ] Zwracać czytelny raport różnic.
-- [ ] Umożliwić ponowne uruchomienie po zmianie danych wejściowych.
-- [x] Umożliwić uruchomienie bez internetu.
+---
 
-### Scenariusze MVP
+## Phase 7 - Example Runner And Regression Fixtures
+
+- [ ] Define `scenario.json`.
+  - Done when it declares input files, expected outputs, verifier mode, runtime mode, and optional answer scripts.
+- [ ] Convert or mirror examples into `in/` and `out/` structure.
+  - Done when existing six examples can still run and target examples have room for richer artifacts.
+- [ ] Add runner for a single example.
+  - Done when `corepack pnpm example:run <name>` generates artifacts and returns non-zero on mismatch.
+- [ ] Add runner for all examples.
+  - Done when `corepack pnpm examples:run` is CI-friendly on Windows and Linux.
+- [ ] Add readable diffs for generated versus expected artifacts.
+  - Done when JSON and Markdown differences are easy to inspect.
+- [ ] Run Python verifier from the example runner when configured.
+  - Done when verifier output is saved and compared.
+
+Target scenario set:
 
 - [ ] `01-chat-to-dsl`
-  - pojedyncza wypowiedź użytkownika,
-  - formalizacja intencji,
-  - brak dokumentu prawnego.
-
-- [ ] `02-ambiguous-chat`
-  - polecenie nieprecyzyjne,
-  - wygenerowanie pytań,
-  - brak zgadywania przez LLM.
-
-- [ ] `03-two-party-conversation-to-contract`
-  - historia rozmowy Human1 i Human2,
-  - wykrycie uzgodnień,
-  - wykrycie braków,
-  - wygenerowanie projektu kontraktu.
-
-- [ ] `04-conflicting-contract-terms`
-  - strony podają sprzeczne kwoty albo terminy,
-  - runtime blokuje renderowanie końcowej umowy.
-
-- [ ] `05-service-contract`
-  - rozmowa dotycząca wykonania strony internetowej,
-  - zakres, cena, termin, kryteria odbioru,
-  - umowa-zlecenie lub kontrakt usługowy.
-
-- [ ] `06-employment-guidelines-to-contract`
-  - plik tekstowy z wytycznymi,
-  - DSL,
-  - wykrycie braków,
-  - mockowa umowa o pracę.
-
-- [ ] `07-task-delegation`
-  - użytkownik zleca zadanie drugiej osobie,
-  - wykonawca, termin, rezultat, kryteria odbioru.
-
-- [ ] `08-task-insufficient-for-recipient`
-  - zleceniodawca akceptuje DSL,
-  - odbiorca nadal nie ma wystarczających danych,
-  - system generuje pytania do zleceniodawcy.
-
-- [ ] `09-both-parties-approval`
-  - obie strony muszą zatwierdzić ten sam hash DSL.
-
-- [ ] `10-plan-changed-after-approval`
-  - zmiana DSL unieważnia wcześniejsze akceptacje.
-
-- [ ] `11-polish-language-and-diacritics`
-  - polskie znaki,
-  - odmiana nazwisk,
-  - daty i kwoty w języku polskim,
-  - brak utraty znaczenia.
-
-- [ ] `12-informal-user-language`
-  - potoczna, niepełna wypowiedź,
-  - runtime diagnozuje brakujące elementy.
-
-- [ ] `13-added-terms-by-llm`
-  - LLM dodaje nieuzgodniony warunek,
-  - Python verifier wykrywa problem.
-
-- [ ] `14-source-traceability`
-  - każde pole DSL ma wskazane źródło w rozmowie.
-
-- [ ] `15-render-dsl-back-to-nl`
-  - DSL renderowany do czytelnego opisu,
-  - ponowne parsowanie nie zmienia znaczenia.
+- [ ] `02-chat-history-to-service-agreement`
+- [ ] `03-guidelines-to-employment-agreement`
+- [ ] `04-task-delegation`
+- [ ] `05-office-command`
+- [ ] ambiguous chat with one-question-at-a-time policy
+- [ ] conflicting contract terms
+- [ ] both-party approval of the same hash
+- [ ] approval invalidated after DSL change
+- [ ] source traceability for every material field
 
 ---
 
-## Etap 7 — backend i frontend demonstracyjny
+## Phase 8 - Test Generation From DSL
 
-Status: backend and static frontend cover single input, DSL, plan, answer, confirmation, dry-run, and audit; upload, conversation history, source display, and final document remain open.
-
-
-- [x] Utworzyć backend API korzystający z tego samego runtime’u co CLI.
-- [x] Utworzyć frontend do wprowadzenia pojedynczej wypowiedzi.
-- [ ] Dodać możliwość wklejenia historii rozmowy.
-- [ ] Dodać możliwość przesłania pliku z wytycznymi.
-- [x] Wyświetlać wygenerowany DSL.
-- [ ] Wyświetlać źródła poszczególnych ustaleń.
-- [ ] Wyświetlać braki, sprzeczności i założenia.
-- [x] Obsłużyć odpowiedzi Human1 i Human2.
-- [ ] Obsłużyć akceptację obu stron.
-- [ ] Wyświetlać dokument końcowy.
-- [x] Wyświetlać audyt.
+- [ ] Define test-generation DSL inputs: `REQUIREMENT`, `INVARIANT`, `ACCEPTANCE_CRITERIA`, `PROHIBITED_BEHAVIOR`, `EXPECTED_OUTPUT`, `ERROR_HANDLING`, and `SECURITY_POLICY`.
+  - Done when these inputs are typed and validated.
+- [ ] Generate unit test specifications from DSL.
+  - Done when generated tests map to acceptance criteria and can be verified.
+- [ ] Generate integration/API/E2E/security test specifications from DSL where applicable.
+  - Done when fixture coverage proves the mapping.
+- [ ] Verify test coverage against DSL acceptance criteria.
+  - Done when uncovered criteria appear in verifier output.
 
 ---
 
-## Etap 8 — testy
+## Phase 9 - JS/Node.js Code Generation
 
-Status: Vitest and Python verifier tests pass for the current scope; full contract, language-quality, and example diff-runner tests remain open.
-
-
-### Testy jednostkowe
-
-- [x] Parser.
-- [x] JSON Schema.
-- [x] AST.
-- [ ] Walidator semantyczny.
-- [ ] Diagnostyka braków.
-- [ ] Diagnostyka sprzeczności.
-- [x] State machine.
-- [x] Akceptacje i hashowanie.
-- [x] Renderer DSL → NL.
-- [x] Audyt.
-
-### Testy integracyjne
-
-- [x] NL → mock LLM → DSL.
-- [ ] Conversation → mock LLM → DSL.
-- [ ] Text guidelines → DSL.
-- [ ] DSL → Python verifier.
-- [x] DSL → pytania.
-- [x] Odpowiedzi → aktualizacja DSL.
-- [x] Akceptacja Human1.
-- [ ] Akceptacja Human2.
-- [ ] DSL → dokument końcowy.
-- [x] Wynik → audyt.
-
-### Testy regresyjne `examples`
-
-- [ ] Uruchomić każdy folder `examples/*`.
-- [ ] Porównać wygenerowany DSL z oczekiwanym rezultatem.
-- [ ] Porównać listę braków i pytań.
-- [ ] Porównać końcowy dokument.
-- [ ] Porównać audyt.
-- [ ] Wyświetlić różnice po zmianie danych wejściowych.
-
-### Testy jakości języka
-
-- [ ] Polskie znaki.
-- [ ] Polskie daty i kwoty.
-- [ ] Literówki.
-- [ ] Język potoczny.
-- [ ] Bardzo precyzyjne polecenia.
-- [ ] Niepełne polecenia.
-- [ ] Sprzeczne wypowiedzi stron.
-- [ ] Różne style komunikacji z AI.
-
-### Testy bezpieczeństwa i poprawności
-
-- [x] Brak wykonania bez akceptacji.
-- [ ] Brak dokumentu końcowego przy nierozwiązanych sprzecznościach.
-- [ ] Brak automatycznego zgadywania danych.
-- [ ] Wykrycie warunków dodanych przez LLM.
-- [x] Unieważnienie akceptacji po zmianie DSL.
-- [x] Odporność na prompt injection w rozmowie i danych.
-- [x] Brak `eval` i wykonywania kodu generowanego przez LLM.
-- [x] Brak prawdziwych operacji zewnętrznych w trybie mock.
+- [ ] Define allowed code-generation targets.
+  - Done when generated artifacts have a bounded runtime, dependency, and security model.
+- [ ] Generate implementation plan from approved DSL.
+  - Done when plan output is deterministic and auditable.
+- [ ] Generate JS/Node.js code from DSL-approved requirements.
+  - Done when generated code is never created directly from loose prompt text.
+- [ ] Run generated tests against generated code.
+  - Done when results are included in verifier input.
 
 ---
 
-## Etap 9 — komendy uruchomieniowe
+## Phase 10 - Python Semantic Verifier
 
-Status: root commands `typecheck`, `test`, `test:e2e`, and `cli` exist; dedicated `example:run`, `examples:run`, `verify`, and Python test scripts remain open.
-
-
-- [ ] Dodać komendę uruchamiającą pojedynczy przykład:
-
-```bash
-pnpm example:run 03-two-party-conversation-to-contract
-```
-
-- [ ] Dodać komendę uruchamiającą wszystkie przykłady:
-
-```bash
-pnpm examples:run
-```
-
-- [ ] Dodać komendę pełnej walidacji:
-
-```bash
-pnpm verify
-```
-
-- [x] Dodać komendę testów TypeScript.
-- [ ] Dodać komendę testów Python.
-- [x] Dodać pełny test E2E.
-- [ ] Wszystkie domyślne komendy mają działać offline.
+- [x] Provide Python package with Pydantic report model and mock mode.
+  - Done for current Office DSL scope.
+- [x] Return machine-readable verdict and recommended action.
+  - Done for current mock verifier fields.
+- [ ] Validate original NL against approved DSL.
+  - Done when missing requirements, contradictions, and unauthorized assumptions are detected beyond heuristics.
+- [ ] Validate DSL against rendered document.
+  - Done when document mismatches are reported with DSL paths.
+- [ ] Validate DSL against generated code and tests.
+  - Done when behavior mismatches and uncovered acceptance criteria are reported.
+- [ ] Integrate TypeScript runtime with Python verifier execution.
+  - Done when runtime can call verifier, capture output, and gate finalization.
+- [ ] Validate OpenRouter/LiteLLM mode.
+  - Done when documented setup and tests or manual validation prove the online path.
 
 ---
 
-## Etap 10 — CI i dokumentacja
+## Phase 11 - CLI For Windows And Linux
 
-Status: main docs are updated; CI and separate spec/security/testing/install docs remain open.
-
-
-- [ ] Dodać CI dla Windows.
-- [ ] Dodać CI dla Linux.
-- [ ] Dodać lint.
-- [x] Dodać typecheck.
-- [x] Dodać testy TypeScript.
-- [x] Dodać testy Python.
-- [ ] Dodać testy wszystkich przykładów.
-- [ ] Dodać build backendu i frontendu.
-- [x] Zaktualizować `README.md`.
-- [x] Utworzyć `docs/architecture.md`.
-- [ ] Utworzyć `docs/dsl-specification.md`.
-- [ ] Utworzyć `docs/contract-workflow.md`.
-- [ ] Utworzyć `docs/example-format.md`.
-- [ ] Utworzyć `docs/security-model.md`.
-- [ ] Utworzyć `docs/testing.md`.
-- [ ] Utworzyć dokumentację Windows i Linux.
-- [ ] Opisać konfigurację OpenRouter i LiteLLM.
+- [x] Provide current Office DSL CLI commands.
+  - Done for `plan`, `run`, `validate`, `inspect`, `answer`, `confirm`, `reject`, `execute`, and `history`.
+- [ ] Add canonical Intent/Contract CLI commands.
+  - Done when CLI can process message, conversation, guideline file, approvals, render, verify, and example runner flows.
+- [ ] Add Windows/Linux path compatibility tests.
+  - Done when CI validates both OS targets.
+- [ ] Add clear JSON and human-readable output modes for new workflows.
+  - Done when automation and human review both have stable outputs.
 
 ---
 
-## Etap 11 — zakończenie
+## Phase 12 - Backend And Frontend Integration
 
-Status: local validation for `0.1.0` is done; clean git status is pending the final commit and push.
-
-
-- [ ] Uruchomić wszystkie przykłady.
-- [x] Uruchomić pełny typecheck.
-- [x] Uruchomić pełne testy TypeScript.
-- [x] Uruchomić pełne testy Python.
-- [x] Uruchomić pełne testy E2E.
-- [ ] Sprawdzić brak zawieszonych procesów.
-- [x] Sprawdzić zgodność dokumentacji z kodem.
-- [x] Zaktualizować wszystkie pozycje w `TODO.md`.
-- [x] Utworzyć `VERSION.md`.
-- [x] Ustawić wersję MVP `0.1.0`.
-- [x] Utworzyć lub zaktualizować `CHANGELOG.md`.
-- [x] Wykonać końcowy audyt repozytorium.
-- [ ] Potwierdzić czysty `git status`.
+- [x] Provide current backend API and static demo UI for the Office DSL MVP.
+  - Done for single input, generated DSL, plan, answers, confirmation, execution, and audit display.
+- [ ] Add conversation and guideline-file input surfaces.
+  - Done when UI/API accepts structured conversation and files.
+- [ ] Display field statuses, source references, gaps, assumptions, and conflicts.
+  - Done when users can inspect why runtime is blocked.
+- [ ] Add Human1/Human2 approval flows.
+  - Done when both parties can approve the same hash or reopen clarification.
+- [ ] Display rendered documents with traceability.
+  - Done when document fragments link back to DSL paths.
 
 ---
 
-## Kryteria ukończenia MVP
+## Phase 13 - Security, Audit, And Policy Enforcement
 
-Status: narrow Office DSL MVP criteria are met; full Intent/Contract criteria remain open.
+- [x] Block obvious unsafe office actions in deterministic policy checks.
+  - Done for current tests.
+- [x] Keep prompt-injection samples as data in mock log search.
+  - Done for current security test.
+- [ ] Define canonical security policy for LLM, runtime, renderer, codegen, and verifier.
+  - Done when each component has explicit deny/allow boundaries.
+- [ ] Add audit event schema for the full lifecycle.
+  - Done when input, DSL snapshots, source refs, questions, answers, approvals, verifier output, render output, generated code/tests, and execution results are captured.
+- [ ] Add secret handling and redaction policy.
+  - Done when generated artifacts and logs are checked for secrets.
+- [ ] Add authorization model for Human1/Human2 and backend/API usage.
+  - Done when parties cannot approve or edit outside their role.
 
-MVP uznajemy za poprawnie wykonane, jeżeli:
+---
 
-- [x] Pojedyncza wypowiedź może zostać zamieniona na DSL.
-- [ ] Historia rozmowy dwóch stron może zostać zamieniona na DSL.
-- [ ] Plik z wytycznymi może zostać zamieniony na DSL.
-- [ ] System wykrywa braki, sprzeczności i niejednoznaczności.
-- [ ] System nie zgaduje brakujących danych.
-- [ ] Python verifier wykrywa pominięcia i elementy dodane przez LLM.
-- [x] Human1 może zaakceptować lub odrzucić DSL.
-- [ ] Human2 może ocenić, czy DSL wystarcza do wykonania zadania.
-- [ ] Kontrakt wymagający dwóch stron nie jest finalizowany bez obu akceptacji.
-- [x] Runtime może wyrenderować DSL do czytelnego dokumentu.
-- [ ] Dokument końcowy zachowuje znaczenie zaakceptowanego DSL.
-- [ ] Każdy scenariusz w `examples/` można uruchomić ponownie.
-- [ ] Zmiana wejścia powoduje ponowną walidację i czytelny raport różnic.
-- [ ] Wszystkie testy domyślne działają offline.
-- [ ] Testy przechodzą na Windows i Linux.
-- [x] Wynik oraz audyt są czytelne dla człowieka i agenta AI.
+## Phase 14 - Production Hardening
+
+- [ ] Add CI for Windows and Linux.
+  - Done when default checks pass on both systems.
+- [ ] Add packaging/release policy.
+  - Done when version updates are unambiguous across package metadata, changelog, and docs.
+- [ ] Add persistence strategy beyond local JSON files.
+  - Done when audit and task state can survive production deployment requirements.
+- [ ] Add observability and failure-mode documentation.
+  - Done when operators know how to diagnose planner, runtime, verifier, renderer, and codegen failures.
+- [ ] Add threat model and compliance review for contract/document workflows.
+  - Done when legal/document generation risks are explicitly reviewed.
+
+---
+
+## Next 10 Implementation Tasks
+
+1. Add the root `verify` script and document its exact command sequence.
+2. Define `scenario.json` for current examples.
+3. Build a single-example runner with generated artifact output.
+4. Build all-example runner and CI-friendly diff reporting.
+5. Add a canonical field-status model draft in TypeScript types.
+6. Add source-reference types for DSL fields.
+7. Add a minimal Human1/Human2 approval record model.
+8. Change hashing design from plan hash only to canonical DSL snapshot hash.
+9. Add runtime-to-Python verifier invocation behind a mock-safe interface.
+10. Add the first target fixture: `01-chat-to-dsl` with `in/` and `out/` artifacts.
