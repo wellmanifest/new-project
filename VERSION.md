@@ -2,81 +2,83 @@
 
 ## Current Version
 
-`0.1.0`
+`0.1.1`
+
+## Version Type
+
+Documentation-alignment patch over the `0.1.0` offline Office DSL MVP.
+
+This version clarifies the real project direction and implementation boundaries. It does not add new runtime features.
 
 ## Project Status
 
-First working offline MVP. The validated scope covers single-request Office DSL planning, JSON DSL validation, TypeScript runtime orchestration, mock execution, audit output, Python mock verification, CLI, backend API, static web demo, and static example validation.
+The repository currently contains a working offline Office DSL MVP and a newly aligned documentation/backlog layer for the target Intent/Contract DSL Runtime.
 
-## Version Scope
+Current validated implementation scope:
 
-Included in `0.1.0`:
+- single-request Office DSL planning through mock planner,
+- `office.dsl.v1` JSON validation,
+- TypeScript runtime orchestration,
+- deterministic policy checks,
+- simple clarification questions,
+- one-side confirmation with plan hash,
+- mock dry-run execution,
+- audit output,
+- CLI, backend API, static web demo,
+- Python mock verifier package,
+- static example fixtures,
+- TypeScript and Python tests for the current scope.
 
-- Offline mock planner for single natural-language office commands.
-- `office.dsl.v1` JSON DSL model.
-- Parser, structural validator, and human-readable DSL renderer.
-- TypeScript runtime with state machine, policy engine, action registry, dry-run execution, confirmation handling, answer handling, plan hashing, and audit records.
-- CLI, backend API, and static web demo.
-- Python verifier in mock mode.
-- Mock data and six example scenarios.
-- TypeScript and Python tests.
+Target scope documented but not implemented:
 
-Not included in `0.1.0`:
+- canonical Intent/Contract DSL,
+- Human1/Human2 bilateral approval,
+- field-level missing/ambiguous/conflicting/assumed statuses,
+- source traceability for every material field,
+- contract and legal document renderers,
+- example runner with regeneration and diffs,
+- JS/Node.js code generation,
+- DSL-based test generation,
+- TypeScript runtime integration with the Python verifier.
 
-- Full Intent/Contract DSL.
-- Bilateral contract approval.
-- Contract document generation.
-- Conversation/file-guidelines planner modes.
-- Dedicated example diff runner.
-- Verified OpenRouter/LiteLLM execution.
+## Included In 0.1.1
 
-## Runtime Compatibility
+- Added `docs/system-purpose-and-runtime-flow.md`.
+- Updated README to separate current implementation, partial behavior, mocks, and target architecture.
+- Rebuilt TODO into phased roadmap with concrete completion criteria.
+- Updated documentation index and handoff notes.
+- Updated changelog and root package metadata for a documentation-only patch release.
 
-Validated in this workspace:
+## Not Included In 0.1.1
 
-- Windows: validated.
-- Node.js: `24.18.0` during Vitest runs.
-- pnpm: `9.12.0` through Corepack, matching `packageManager`.
+- No runtime rewrite.
+- No new DSL implementation beyond `office.dsl.v1`.
+- No Human2 approval implementation.
+- No verifier orchestration from TypeScript runtime.
+- No example runner implementation.
+- No code/test generation.
+
+## Runtime Compatibility Notes
+
+Declared by the repository:
+
+- pnpm: `9.12.0` through `packageManager`.
 - TypeScript: `5.7.3`.
 - Vitest: `3.0.4`.
-- Python: tests ran on Python `3.14`; verifier package declares `>=3.11`.
+- Python verifier: `>=3.11`.
 
-Expected but not validated in this run:
+Validated in this documentation pass:
 
-- Linux.
-- Other supported Node.js versions.
-- Python 3.11-3.13.
+- Windows workspace checks listed in the final task report.
 
-## Test Results
+Expected but not yet fully validated as release criteria:
 
-Latest validated results in this task:
+- Linux behavior.
+- Online OpenRouter planner mode.
+- Online LiteLLM/OpenRouter verifier mode.
 
-- Targeted Vitest runtime: 6 tests passed in 10.11 s.
-- Targeted Vitest security: 3 tests passed in 7.07 s.
-- Targeted Vitest E2E: 2 tests passed in 9.12 s.
-- Full Vitest: 15 tests passed across 4 files in 18.18 s.
-- Python verifier: 3 tests passed in 10.84 s, with one pytest cache warning.
-- Example validation: 6 example folders validated through CLI expected DSL plus JSON parsing of expected plan and verification files.
-- Typecheck: confirmed by user before this pass and re-run during final validation.
+## Versioning Policy Note
 
-## Known Limitations
+The repository does not yet define a formal release policy. This pass uses a conservative patch bump from `0.1.0` to `0.1.1` because it changes documentation, roadmap, and repository metadata without adding runtime features.
 
-- Validated planner behavior is mock-based and pattern-based.
-- The Python verifier is a mock semantic verifier, not a full proof of NL/DSL equivalence.
-- The web UI is a demo surface, not a complete production frontend.
-- Runtime confirmation is one-side confirmation, not bilateral contract approval.
-- Example validation does not yet regenerate and diff actual outputs.
-
-## Next Stage
-
-Continue with TODO Etap 1 and Etap 2 for the full Intent/Contract DSL scope:
-
-1. Define the complete MVP use-case requirements for single-command, two-party conversation, and text-guidelines flows.
-2. Specify the full Contract/Intent DSL model and status semantics.
-3. Extend examples into the planned `scenario.json` plus `in/` and `out/` folder format.
-4. Build an example runner that regenerates outputs and reports diffs.
-
-## Final Validation Note
-
-Final validation note: an earlier full Vitest run passed 15/15, but a later final rerun in this Codex session failed before test collection because local pnpm links in `node_modules` could not resolve `@vitest/utils`. No install was run after the user requested not to rerun install. Manual relink attempts were not committed because `node_modules` is ignored. The next operator should refresh dependencies with `corepack pnpm install --frozen-lockfile` and rerun the final validation.
-
+A future production hardening task should define how root package metadata, package versions, OpenAPI metadata, `VERSION.md`, and `CHANGELOG.md` are kept in sync.

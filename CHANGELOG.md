@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.1] - 2026-07-24
+
+### Changed
+
+- Reframed the project documentation around intent formalization and the target Intent/Contract DSL Runtime vision.
+- Added `docs/system-purpose-and-runtime-flow.md` with Mermaid diagrams for architecture, NL-to-DSL-to-NL flow, missing-data handling, Human1/Human2 approval, and DSL-to-code/tests/verifier flow.
+- Rebuilt `TODO.md` into staged phases with explicit completion criteria and current implementation status.
+- Updated `README.md`, `docs/README.md`, `HANDOFF.md`, and `VERSION.md` to clearly separate implemented behavior, partial behavior, mocks, and target architecture.
+- Updated root package metadata to `0.1.1` for this documentation-alignment patch.
+
+### Not Added
+
+- No new runtime behavior was implemented.
+- No canonical Intent/Contract DSL was implemented.
+- No Human1/Human2 bilateral approval was implemented.
+- No legal document renderer, code generator, test generator, or example runner was implemented.
+
 ## [0.1.0] - 2026-07-23
 
 ### Added
@@ -41,8 +58,3 @@
 - OpenRouter and LiteLLM code paths are optional but not tested in this offline MVP pass.
 - Linux compatibility is not verified in this run.
 - Python tests passed with one pytest cache warning caused by a cache directory write denial; test assertions passed.
-
-### Validation note
-
-- Final validation note: an earlier full Vitest run passed 15/15, but a later final rerun in this Codex session failed before test collection because local pnpm links in `node_modules` could not resolve `@vitest/utils`. No install was run after the user requested not to rerun install. Manual relink attempts were not committed because `node_modules` is ignored. The next operator should refresh dependencies with `corepack pnpm install --frozen-lockfile` and rerun the final validation.
-
