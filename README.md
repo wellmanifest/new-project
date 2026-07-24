@@ -47,8 +47,8 @@ DONE:
 - `apps/backend` exposes the same runtime through HTTP endpoints.
 - `apps/web` provides a static demo UI.
 - `verifier` contains a Python package with mock verification and an optional LiteLLM/OpenRouter path.
-- `examples` contains six static office examples.
-- `tests` cover the current TypeScript runtime, DSL model, security checks, E2E mock flow, and Python verifier behavior.
+- `examples` contains six office examples with `scenario.json`, `in/`, `out/`, and legacy fixture files.
+- `tests` cover the current TypeScript runtime, DSL model, security checks, E2E mock flow, Python verifier behavior, and example runner.
 
 PARTIAL:
 
@@ -71,7 +71,6 @@ NOT IMPLEMENTED:
 - Conversation-history and guideline-file planner modes.
 - Field-level statuses such as `CONFIRMED`, `MISSING`, `AMBIGUOUS`, `CONFLICTING`, and `ASSUMED`.
 - Contract/legal document renderers.
-- Example runner that regenerates outputs and diffs against expected artifacts.
 - JS/Node.js code generation.
 - Test generation from DSL requirements and acceptance criteria.
 - Runtime integration that calls the Python verifier as part of the normal TypeScript flow.
@@ -165,6 +164,24 @@ Useful endpoints:
 - `POST /api/tasks/{id}/execute`
 - `GET /api/tasks/{id}/audit`
 
+## Example Runner
+
+Current examples now have canonical `scenario.json` manifests plus mirrored `in/` and `out/` folders. The runner writes generated artifacts to `.office-dsl/generated/examples/<scenario-id>/` and compares them with expected outputs.
+
+Run one example:
+
+```powershell
+corepack pnpm run example:run -- 01-read-only-report
+```
+
+Run all examples:
+
+```powershell
+corepack pnpm run examples:run
+```
+
+The current manifests use a fixture DSL source because the existing expected DSL files are stable, while the mock planner still produces random task IDs. The manifest format also reserves planner modes for future `mock` and `openrouter` scenarios.
+
 ## Tests And Checks
 
 Install:
@@ -203,6 +220,20 @@ Python verifier tests:
 $env:PYTHONPATH='verifier'
 python -m pytest verifier/tests -q
 ```
+
+Python verifier tests:
+
+```powershell
+corepack pnpm run python:test
+```
+
+Full repository verification:
+
+```powershell
+corepack pnpm run verify
+```
+
+The same operations are available through `project.sh`, for example `bash project.sh verify`, `bash project.sh examples`, and `bash project.sh example 01-read-only-report`.
 
 Whitespace check:
 

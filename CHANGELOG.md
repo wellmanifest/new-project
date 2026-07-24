@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.2.0] - 2026-07-24
+
+### Added
+
+- Added canonical `scenario.json` manifests for the six current office examples.
+- Added mirrored `in/` and `out/` example fixture folders while keeping legacy fixture files in place.
+- Added `@office-dsl/example-runner` with single-scenario and all-scenario commands.
+- Added generated example artifacts under `.office-dsl/generated/examples/<scenario-id>/`.
+- Added Python verifier execution from the example runner in configured scenarios.
+- Added root `verify`, `example:run`, `examples:run`, and `python:test` scripts.
+- Added safe `project.sh` command dispatch for install, typecheck, lint, format, tests, examples, verify, and backend startup.
+
+### Changed
+
+- Changed `project.sh` so the old network-heavy analysis workflow runs only through explicit `legacy-analyze`.
+- Updated package, app, verifier, and OpenAPI version metadata to `0.2.0`.
+- Updated README, TODO, VERSION, and handoff guidance for the new repeatable example workflow.
+
+### Fixed
+
+- Fixed the mock Python verifier so a policy subject mentioning `email.send` is not treated as an executed `email.send` action.
+
+### Tests
+
+- Added Vitest coverage for scenario manifest loading and a real single-scenario runner execution.
+- Added Python verifier regression coverage for policy-subject versus action detection.
+
+### Known limitations
+
+- Current example manifests use fixture DSL input because the existing mock planner still emits random task IDs and does not reproduce the stable expected fixtures.
+- The example runner supports current Office DSL scenarios; target Intent/Contract scenarios are still roadmap items.
+- In the Codex sandbox, `tsx`/Vitest process spawning can require running the command outside the sandbox.
+
 ## [0.1.1] - 2026-07-24
 
 ### Changed

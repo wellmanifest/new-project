@@ -9,7 +9,7 @@ DONE:
 - Offline `office.dsl.v1` model, parser, structural validator, and human-readable token renderer.
 - Mock planner for selected single-message office commands.
 - TypeScript runtime with simple state machine, policy checks, `user.ask`, one-side confirmation, plan hashing, dry-run mock actions, file store, and audit records.
-- CLI, backend API, static web demo, mock data, six static examples, Vitest tests, and Python verifier tests.
+- CLI, backend API, static web demo, mock data, six runner-backed examples, Vitest tests, and Python verifier tests.
 
 PARTIAL:
 
@@ -27,7 +27,7 @@ MOCK:
 
 NOT IMPLEMENTED:
 
-- Canonical Intent/Contract DSL, Human2 approval, field traceability, legal renderers, example runner, code generation, DSL-based test generation, and runtime-to-Python verifier integration.
+- Canonical Intent/Contract DSL, Human2 approval, field traceability, legal renderers, code generation, DSL-based test generation, and runtime-to-Python verifier integration.
 
 ---
 
@@ -58,7 +58,7 @@ NOT IMPLEMENTED:
   - Done when security tests cover these cases.
 - [x] Keep dry-run execution as default.
   - Done when tests show mock sending does not perform real external delivery.
-- [ ] Add a root `verify` script that runs typecheck, lint, format check, TypeScript tests, Python tests, and `git diff --check`.
+- [x] Add a root `verify` script that runs typecheck, lint, format check, TypeScript tests, Python tests, and `git diff --check`.
   - Done when `corepack pnpm run verify` works on Windows and Linux.
 - [ ] Fix or document any dependency/link issue that prevents default Vitest startup in the Codex sandbox.
   - Done when the exact environment failure is reproducible or removed.
@@ -144,17 +144,17 @@ NOT IMPLEMENTED:
 
 ## Phase 7 - Example Runner And Regression Fixtures
 
-- [ ] Define `scenario.json`.
+- [x] Define `scenario.json`.
   - Done when it declares input files, expected outputs, verifier mode, runtime mode, and optional answer scripts.
-- [ ] Convert or mirror examples into `in/` and `out/` structure.
+- [x] Convert or mirror examples into `in/` and `out/` structure.
   - Done when existing six examples can still run and target examples have room for richer artifacts.
-- [ ] Add runner for a single example.
-  - Done when `corepack pnpm example:run <name>` generates artifacts and returns non-zero on mismatch.
-- [ ] Add runner for all examples.
-  - Done when `corepack pnpm examples:run` is CI-friendly on Windows and Linux.
-- [ ] Add readable diffs for generated versus expected artifacts.
+- [x] Add runner for a single example.
+  - Done when `corepack pnpm run example:run -- <name>` generates artifacts and returns non-zero on mismatch.
+- [x] Add runner for all examples.
+  - Done when `corepack pnpm run examples:run` is CI-friendly on Windows and Linux.
+- [x] Add readable diffs for generated versus expected artifacts.
   - Done when JSON and Markdown differences are easy to inspect.
-- [ ] Run Python verifier from the example runner when configured.
+- [x] Run Python verifier from the example runner when configured.
   - Done when verifier output is saved and compared.
 
 Target scenario set:
@@ -279,13 +279,13 @@ Target scenario set:
 
 ## Next 10 Implementation Tasks
 
-1. Add the root `verify` script and document its exact command sequence.
-2. Define `scenario.json` for current examples.
-3. Build a single-example runner with generated artifact output.
-4. Build all-example runner and CI-friendly diff reporting.
-5. Add a canonical field-status model draft in TypeScript types.
-6. Add source-reference types for DSL fields.
-7. Add a minimal Human1/Human2 approval record model.
-8. Change hashing design from plan hash only to canonical DSL snapshot hash.
-9. Add runtime-to-Python verifier invocation behind a mock-safe interface.
-10. Add the first target fixture: `01-chat-to-dsl` with `in/` and `out/` artifacts.
+1. Add CI wiring for `corepack pnpm run verify` on Windows and Linux.
+2. Decide whether default Vitest sandbox `spawn EPERM` should be solved by config or documented as an environment limitation.
+3. Add a canonical field-status model draft in TypeScript types.
+4. Add source-reference types for DSL fields.
+5. Add a minimal Human1/Human2 approval record model.
+6. Change hashing design from plan hash only to canonical DSL snapshot hash.
+7. Add runtime-to-Python verifier invocation behind a mock-safe interface.
+8. Add the first target fixture: `01-chat-to-dsl` with `in/` and `out/` artifacts.
+9. Add planner-backed scenario mode coverage for mock planner output normalization.
+10. Add Markdown diff output for future rendered document artifacts.

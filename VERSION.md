@@ -2,17 +2,17 @@
 
 ## Current Version
 
-`0.1.1`
+`0.2.0`
 
 ## Version Type
 
-Documentation-alignment patch over the `0.1.0` offline Office DSL MVP.
+Minor feature release over `0.1.1`.
 
-This version clarifies the real project direction and implementation boundaries. It does not add new runtime features.
+This version adds the first repeatable example-regression workflow and a repository verification command. It does not add the canonical Intent/Contract DSL or Human1/Human2 approval model.
 
 ## Project Status
 
-The repository currently contains a working offline Office DSL MVP and a newly aligned documentation/backlog layer for the target Intent/Contract DSL Runtime.
+The repository contains a working offline Office DSL MVP plus a repeatable scenario runner for the current example fixtures.
 
 Current validated implementation scope:
 
@@ -26,7 +26,9 @@ Current validated implementation scope:
 - audit output,
 - CLI, backend API, static web demo,
 - Python mock verifier package,
-- static example fixtures,
+- canonical example manifests with `in/` and `out/` folders,
+- deterministic single-example and all-example runner,
+- root verification command,
 - TypeScript and Python tests for the current scope.
 
 Target scope documented but not implemented:
@@ -36,27 +38,30 @@ Target scope documented but not implemented:
 - field-level missing/ambiguous/conflicting/assumed statuses,
 - source traceability for every material field,
 - contract and legal document renderers,
-- example runner with regeneration and diffs,
 - JS/Node.js code generation,
 - DSL-based test generation,
-- TypeScript runtime integration with the Python verifier.
+- TypeScript runtime integration with the Python verifier as a normal gating step.
 
-## Included In 0.1.1
+## Included In 0.2.0
 
-- Added `docs/system-purpose-and-runtime-flow.md`.
-- Updated README to separate current implementation, partial behavior, mocks, and target architecture.
-- Rebuilt TODO into phased roadmap with concrete completion criteria.
-- Updated documentation index and handoff notes.
-- Updated changelog and root package metadata for a documentation-only patch release.
+- Added `scenario.json` manifests for all six current examples.
+- Added mirrored `in/message.txt` and `out/expected.*.json` fixture structure for all current examples.
+- Added `@office-dsl/example-runner`.
+- Added `corepack pnpm run example:run -- <scenario>`.
+- Added `corepack pnpm run examples:run`.
+- Added `corepack pnpm run verify`.
+- Added `corepack pnpm run python:test`.
+- Added safe command dispatch in `project.sh`.
+- Fixed mock verifier action detection so policy subjects are not treated as executed actions.
 
-## Not Included In 0.1.1
+## Not Included In 0.2.0
 
-- No runtime rewrite.
-- No new DSL implementation beyond `office.dsl.v1`.
+- No canonical Intent/Contract DSL implementation.
 - No Human2 approval implementation.
-- No verifier orchestration from TypeScript runtime.
-- No example runner implementation.
-- No code/test generation.
+- No legal document renderer.
+- No JS/Node.js code generator.
+- No DSL-based test generator.
+- No planner-backed regeneration of current stable expected DSL fixtures.
 
 ## Runtime Compatibility Notes
 
@@ -67,9 +72,10 @@ Declared by the repository:
 - Vitest: `3.0.4`.
 - Python verifier: `>=3.11`.
 
-Validated in this documentation pass:
+Validated in this pass:
 
 - Windows workspace checks listed in the final task report.
+- Example runner with Python verifier in mock mode.
 
 Expected but not yet fully validated as release criteria:
 
@@ -79,6 +85,6 @@ Expected but not yet fully validated as release criteria:
 
 ## Versioning Policy Note
 
-The repository does not yet define a formal release policy. This pass uses a conservative patch bump from `0.1.0` to `0.1.1` because it changes documentation, roadmap, and repository metadata without adding runtime features.
+This pass uses a minor bump from `0.1.1` to `0.2.0` because it adds a new backward-compatible example-runner feature and repository verification command.
 
 A future production hardening task should define how root package metadata, package versions, OpenAPI metadata, `VERSION.md`, and `CHANGELOG.md` are kept in sync.

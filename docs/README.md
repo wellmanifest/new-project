@@ -33,7 +33,7 @@ Historical research folders live under `research/` and should not be moved back 
 - `apps/backend/` - demo HTTP API.
 - `apps/web/` - static demo UI.
 - `verifier/` - Python verifier package.
-- `examples/` - current static office fixtures.
+- `examples/` - current office fixtures with `scenario.json`, `in/`, `out/`, and legacy flat files.
 - `tests/` - TypeScript tests.
 - `mock-data/` - local offline data.
 
@@ -51,4 +51,4 @@ Historical research folders live under `research/` and should not be moved back 
 
 ## Current Boundary
 
-The validated repository is an offline Office DSL MVP. The target Intent/Contract DSL, Human1/Human2 approvals, field traceability, legal renderers, code generation, test generation, and semantic verifier orchestration are roadmap items, not completed features.
+The validated repository is an offline Office DSL MVP with a repeatable example runner. The target Intent/Contract DSL, Human1/Human2 approvals, field traceability, legal renderers, code generation, test generation, and semantic verifier orchestration are roadmap items, not completed features.

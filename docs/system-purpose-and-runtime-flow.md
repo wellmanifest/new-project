@@ -295,7 +295,7 @@ examples/
     conversation.md
 ```
 
-Current implementation status: the repository has six flat office examples: read-only report, clarification, email drafts, confirmed send, policy denial, and log analysis. Each has `input.txt`, `expected.json`, `expected-plan.json`, and `expected-verification.json`. There is no example runner that regenerates and diffs artifacts.
+Current implementation status: the repository has six office examples: read-only report, clarification, email drafts, confirmed send, policy denial, and log analysis. Each keeps legacy flat fixtures and now also has `scenario.json`, `in/`, and `out/` files. The example runner generates artifacts under `.office-dsl/generated/examples/<scenario-id>/` and compares them with expected outputs. Current manifests use fixture DSL input because the mock planner still emits non-deterministic task IDs.
 
 ## 17. End-To-End Target Scenarios
 
@@ -341,7 +341,7 @@ DONE:
 - mock data actions and dry-run execution,
 - CLI, backend API, and static web demo,
 - Python mock verifier package,
-- static example fixtures,
+- static example fixtures plus runner-driven scenario manifests,
 - TypeScript and Python tests for current scope.
 
 PARTIAL:
@@ -365,7 +365,7 @@ NOT IMPLEMENTED:
 - field-level source traceability,
 - conflict and assumption model,
 - contract/legal renderers,
-- example runner with diffs,
+- planner-backed example regeneration for current stable fixtures,
 - JS/Node.js code generation,
 - DSL-based test generation,
 - runtime-to-Python verifier integration,

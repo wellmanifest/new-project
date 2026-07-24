@@ -18,9 +18,10 @@ DONE:
 - `apps/backend`: HTTP API using the same runtime.
 - `apps/web`: static demo UI.
 - `verifier`: Python mock verifier with Pydantic report model and optional LiteLLM/OpenRouter path.
-- `examples`: six flat static office examples.
+- `examples`: six office examples with legacy flat fixtures plus canonical `scenario.json`, `in/`, and `out/` structure.
 - `tests`: TypeScript and Python tests for current scope.
 - Documentation alignment pass: README, TODO, VERSION, CHANGELOG, this handoff, and `docs/system-purpose-and-runtime-flow.md`.
+- Example runner pass: `@office-dsl/example-runner`, `example:run`, `examples:run`, root `verify`, and safe `project.sh` command dispatch.
 
 ## Mock Or Partial Areas
 
@@ -48,7 +49,6 @@ NOT IMPLEMENTED:
 - Field-level source traceability.
 - Conflict and assumption model.
 - Contract/legal renderers.
-- Example runner with regeneration and diffs.
 - JS/Node.js code generation.
 - Test generation from DSL.
 - Runtime invocation of the Python verifier as a gating step.
@@ -57,11 +57,11 @@ NOT IMPLEMENTED:
 
 Start with repeatability before expanding semantics:
 
-1. Add a root `verify` script for typecheck, lint, format, TypeScript tests, Python tests, and `git diff --check`.
-2. Define `scenario.json` for the current six examples.
-3. Build `example:run <name>` that regenerates artifacts and compares them with expected outputs.
-4. Build `examples:run` for all examples.
-5. Only then start adding canonical field statuses and source-reference types.
+1. Wire `corepack pnpm run verify` into CI for Windows and Linux.
+2. Decide how to handle the Codex sandbox `spawn EPERM` limitation for `tsx` and Vitest.
+3. Add canonical field statuses and source-reference types.
+4. Add a minimal Human1/Human2 approval record model.
+5. Add the first target Intent/Contract scenario fixture after the current runner stays stable.
 
 Reason: without an example runner, the richer Intent/Contract DSL can drift without clear regression feedback.
 
@@ -72,7 +72,7 @@ Reason: without an example runner, the richer Intent/Contract DSL can drift with
 - `hashPlan` is not a canonical DSL hash.
 - The mock planner is not semantic NL understanding.
 - The Python verifier does not prove NL/DSL/document/code/test equivalence.
-- Static examples are not executable regression scenarios yet.
+- Current examples are executable regression scenarios, but they use fixture DSL input rather than planner-regenerated DSL because mock planner IDs are still non-deterministic.
 - The backend/web demo is not a production workflow UI.
 
 ## How To Run
@@ -128,6 +128,26 @@ Validate one example DSL:
 corepack pnpm cli -- validate examples/01-read-only-report/expected.json --json
 ```
 
+Run one example:
+
+```powershell
+corepack pnpm run example:run -- 01-read-only-report
+```
+
+Run all examples:
+
+```powershell
+corepack pnpm run examples:run
+```
+
+Run all repository checks:
+
+```powershell
+corepack pnpm run verify
+```
+
+The same operations are available through `project.sh`, for example `bash project.sh verify`.
+
 ## Important Files
 
 - `docs/system-purpose-and-runtime-flow.md` - main purpose and runtime-flow architecture.
@@ -139,7 +159,7 @@ corepack pnpm cli -- validate examples/01-read-only-report/expected.json --json
 - `packages/dsl-runtime/src/index.ts` - current runtime/state/policy/action implementation.
 - `packages/llm-planner/src/index.ts` - current mock/OpenRouter planner.
 - `verifier/office_dsl_verifier/core.py` - current Python verifier.
-- `examples/` - static fixtures that should become runner-driven scenarios.
+- `examples/` - runner-driven office fixtures with legacy flat files plus `scenario.json`, `in/`, and `out/`.
 
 ## Validation Notes
 
