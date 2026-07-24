@@ -49,7 +49,8 @@ DONE:
 - `apps/web` provides a static demo UI.
 - `verifier` contains a Python package with mock verification and an optional LiteLLM/OpenRouter path.
 - `examples` contains six office examples with `scenario.json`, `in/`, `out/`, and legacy fixture files.
-- `tests` cover the current TypeScript runtime, DSL model, security checks, E2E mock flow, Python verifier behavior, and example runner.
+- `examples-chat` contains four executable Human1/Human2 negotiation scenarios with `scenario.json`, `chat.txt`, and expected outcomes.
+- `tests` cover the current TypeScript runtime, DSL model, security checks, E2E mock flow, Python verifier behavior, example runner, and chat negotiation runner.
 
 PARTIAL:
 
@@ -198,6 +199,24 @@ corepack pnpm run examples:run
 
 The current manifests use a fixture DSL source because the existing expected DSL files are stable, while the mock planner still produces random task IDs. The manifest format also reserves planner modes for future `mock` and `openrouter` scenarios.
 
+### Chat Negotiation Examples
+
+`examples-chat` scenarios are executable regression fixtures, not static samples. Each scenario has `scenario.json`, `chat.txt`, and `out/expected.summary.json`. The chat runner processes each `@user1`/`@user2` line in order, writes deterministic artifacts after every utterance, compares the generated summary with the expected outcome, and ends as either `AGREED` or `CANCELLED`.
+
+Run one chat scenario:
+
+```powershell
+corepack pnpm run example-chat:run -- 01-short-agreement
+```
+
+Run all chat scenarios:
+
+```powershell
+corepack pnpm run examples-chat:run
+```
+
+For agreed scenarios, `final-contract.dsl`, `contract.pdf`, and `approvals.json` are created only when both parties approve the same current merged contract hash. A one-side approval cannot create final artifacts, and a later contract change invalidates the earlier approval. Cancelled scenarios never create final contract or PDF artifacts.
+
 ## Tests And Checks
 
 Install:
@@ -249,7 +268,7 @@ Full repository verification:
 corepack pnpm run verify
 ```
 
-The same operations are available through `project.sh`, for example `bash project.sh verify`, `bash project.sh examples`, and `bash project.sh example 01-read-only-report`.
+The same operations are available through `project.sh`, for example `bash project.sh verify`, `bash project.sh examples`, `bash project.sh example 01-read-only-report`, `bash project.sh examples-chat`, and `bash project.sh example-chat 01-short-agreement`.
 
 Whitespace check:
 

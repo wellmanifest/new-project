@@ -24,6 +24,7 @@ const steps: Step[] = [
     env: { ...process.env, PYTHONPATH: pythonPath }
   },
   { label: "example runner", command: "corepack", args: ["pnpm", "run", "examples:run"] },
+  { label: "chat example runner", command: "corepack", args: ["pnpm", "run", "examples-chat:run"] },
   { label: "git diff whitespace", command: "git", args: ["diff", "--check"] }
 ];
 

@@ -1,0 +1,9 @@
+@user1 Chcialbym zawrzec umowe o wykonanie strona internetowa za 4500 PLN do 30 czerwca.
+@user2 Proponuje strona internetowa za 7000 PLN do 15 lipca.
+@user1 Moge podniesc cene do 5500 PLN.
+@user2 Cena 6500 PLN i termin do 10 lipca.
+@user1 Odbior: dziala formularz kontaktowy.
+@user2 Gotowe gdy strona wdrozona na hostingu.
+@user1 Platnosc: po odbiorze.
+@user2 Nie akceptuje tych warunkow i koncze rozmowy.
+@user1 Zgoda.

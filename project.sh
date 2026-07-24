@@ -19,6 +19,8 @@ Project commands:
   python-test         Run Python verifier tests
   example <name>      Run one example scenario
   examples            Run all example scenarios
+  example-chat <name> Run one chat negotiation example
+  examples-chat       Run all chat negotiation examples
   verify              Run typecheck, lint, format, tests, examples, and git diff check
   dev-backend         Start backend and static web demo
   legacy-analyze      Run the historical network-heavy analysis workflow
@@ -61,6 +63,13 @@ case "${1:-help}" in
     ;;
   examples)
     pnpm_run examples:run
+    ;;
+  example-chat)
+    shift
+    pnpm_run example-chat:run -- "$@"
+    ;;
+  examples-chat)
+    pnpm_run examples-chat:run
     ;;
   verify)
     pnpm_run verify

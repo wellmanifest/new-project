@@ -1,6 +1,6 @@
 {
   "name": "office-dsl-mvp",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@9.12.0",
@@ -8,7 +8,7 @@
     "build": "tsc -b",
     "typecheck": "tsc -b --pretty false",
     "lint": "eslint \"packages/**/*.ts\" \"apps/**/*.ts\" \"tests/**/*.ts\" eslint.config.js",
-    "format": "prettier --check README.md TODO.md CHANGELOG.md VERSION.md CONTRIBUTING.md POLICY.md HANDOFF.md docs/**/*.md examples/**/*.md examples/**/*.json package.json pnpm-workspace.yaml tsconfig.json eslint.config.js apps/web/public/index.html packages/**/*.ts packages/**/*.json apps/**/*.ts apps/**/*.json tests/**/*.ts",
+    "format": "prettier --check README.md TODO.md CHANGELOG.md VERSION.md CONTRIBUTING.md POLICY.md HANDOFF.md docs/**/*.md examples/**/*.md examples/**/*.json examples-chat/**/*.json package.json pnpm-workspace.yaml tsconfig.json eslint.config.js apps/web/public/index.html packages/**/*.ts packages/**/*.json apps/**/*.ts apps/**/*.json tests/**/*.ts",
     "test": "vitest run --dir tests --exclude **/.pytest_cache/** --exclude verifier/**",
     "test:e2e": "vitest run tests/e2e.test.ts --exclude **/.pytest_cache/** --exclude verifier/**",
     "python:test": "tsx packages/example-runner/src/verify.ts python-test",
@@ -16,7 +16,9 @@
     "examples:run": "tsx packages/example-runner/src/index.ts all",
     "verify": "tsx packages/example-runner/src/verify.ts",
     "dev:backend": "tsx apps/backend/src/server.ts",
-    "cli": "tsx packages/cli/src/index.ts"
+    "cli": "tsx packages/cli/src/index.ts",
+    "example-chat:run": "tsx packages/example-runner/src/index.ts chat-run",
+    "examples-chat:run": "tsx packages/example-runner/src/index.ts chat-all"
   },
   "devDependencies": {
     "@types/node": "22.13.1",

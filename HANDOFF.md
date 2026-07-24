@@ -20,7 +20,8 @@ DONE:
 - `apps/web`: static demo UI.
 - `verifier`: Python mock verifier with Pydantic report model and optional LiteLLM/OpenRouter path.
 - `examples`: six office examples with legacy flat fixtures plus canonical `scenario.json`, `in/`, and `out/` structure.
-- `tests`: TypeScript and Python tests for current scope, including example runner, CLI, backend, store, security, runtime, and Intent/Contract model coverage.
+- `examples-chat`: four executable Human1/Human2 negotiation scenarios with line-by-line artifacts, expected outcomes, bilateral current-hash approval finalization, approval invalidation, and cancellation coverage.
+- `tests`: TypeScript and Python tests for current scope, including example runner, chat negotiation runner, CLI, backend, store, security, runtime, and Intent/Contract model coverage.
 - Documentation alignment pass: README, TODO, VERSION, CHANGELOG, this handoff, and `docs/system-purpose-and-runtime-flow.md`.
 - Example runner pass: `@office-dsl/example-runner`, `example:run`, `examples:run`, root `verify`, and safe `project.sh` command dispatch.
 - GitHub Actions workflow: `.github/workflows/verify.yml` runs `bash project.sh install` and `bash project.sh verify` on Ubuntu and Windows.
@@ -46,7 +47,7 @@ PARTIAL:
 NOT IMPLEMENTED:
 
 - Runtime integration of the canonical Intent/Contract DSL.
-- Human1/Human2 bilateral approval.
+- Production Human1/Human2 bilateral approval runtime flow.
 - Conversation-history ingestion.
 - Guideline-file ingestion.
 - Runtime/planner population of field-level source traceability.
@@ -62,7 +63,7 @@ Start with approval semantics before expanding rendering or code generation:
 
 1. Add a minimal Human1/Human2 approval record model.
 2. Wire canonical DSL snapshot hashing into approvals.
-3. Add the first target Intent/Contract scenario fixture after the current runner stays stable.
+3. Promote fixture-level chat negotiation semantics into runtime/planner-backed Intent/Contract workflow after the current runner stays stable.
 4. Add runtime-to-Python verifier invocation behind a mock-safe interface.
 
 Reason: without explicit approval semantics, the richer Intent/Contract DSL can be generated but cannot yet become a shared approved artifact.
@@ -74,7 +75,8 @@ Reason: without explicit approval semantics, the richer Intent/Contract DSL can 
 - `hashPlan` is not a canonical DSL hash.
 - The mock planner is not semantic NL understanding.
 - The Python verifier does not prove NL/DSL/document/code/test equivalence.
-- Current examples are executable regression scenarios, but they use fixture DSL input rather than planner-regenerated DSL because mock planner IDs are still non-deterministic.
+- Current office examples are executable regression scenarios, but they use fixture DSL input rather than planner-regenerated DSL because mock planner IDs are still non-deterministic.
+- Current chat examples are executable regression scenarios for deterministic negotiation behavior, not arbitrary production conversation understanding.
 - The backend/web demo is not a production workflow UI.
 
 ## How To Run
@@ -131,6 +133,7 @@ corepack pnpm run verify
 
 ## Recent Stable Milestones
 
+- `0.6.0`: executable Human1/Human2 chat negotiation examples and bilateral current-hash finalization checks.
 - `0.5.0`: GitHub Actions verify workflow plus Codex sandbox Vitest limitation documentation.
 - `0.4.0`: Office DSL to Intent/Contract adapter and expanded regression coverage.
 - `0.3.0`: canonical Intent/Contract model boundary.
@@ -149,4 +152,6 @@ corepack pnpm run verify
 - `docs/codex-sandbox-vitest.md` - local sandbox Vitest/Vite limitation.
 - `packages/intent-contract-model/src/index.ts` - canonical model and adapter.
 - `packages/dsl-runtime/src/index.ts` - current runtime and approval limitations.
+- `packages/example-runner/src/chat.ts` - deterministic chat negotiation example runner.
+- `examples-chat/` - executable chat negotiation scenarios.
 - `.github/workflows/verify.yml` - CI verification workflow.

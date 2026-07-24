@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.6.0] - 2026-07-24
+
+### Added
+
+- Added executable `examples-chat` scenarios for short agreement, long negotiation agreement, short cancellation, and long cancellation conversations.
+- Added a deterministic chat example runner that processes `@user1`/`@user2` conversations line by line, maintains per-party contract state, merges contracts, writes per-event diffs, and compares generated summaries with expected outcomes.
+- Added bilateral merged-hash approval checks so final chat artifacts are created only after both parties approve the same current merged contract hash.
+- Added deterministic final chat artifacts for agreed scenarios: `final-contract.dsl`, `contract.md`, `contract.pdf`, `approvals.json`, `diff-summary.md`, and `annex.dsl`.
+- Added Vitest coverage for chat parsing, scenario discovery, merge behavior, conflict detection, position changes, approval invalidation, finalization, cancellation, and all four chat scenario outcomes.
+
+### Changed
+
+- Added `example-chat:run`, `examples-chat:run`, `project.sh example-chat`, and `project.sh examples-chat` commands.
+- Included the chat example runner in the root `verify` flow.
+- Updated package, app, verifier, and OpenAPI version metadata to `0.6.0`.
+
+### Known limitations
+
+- The chat negotiation runner is deterministic fixture infrastructure for regression coverage; it is not yet the production planner/runtime integration for arbitrary natural-language contract negotiation.
+- The generated PDF is a minimal deterministic renderer for example verification, not a legal document renderer.
+
 ## [0.5.0] - 2026-07-24
 
 ### Added

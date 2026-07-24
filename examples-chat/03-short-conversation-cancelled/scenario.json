@@ -1,0 +1,11 @@
+{
+  "version": "example-chat.scenario.v1",
+  "id": "03-short-conversation-cancelled",
+  "title": "Short conversation cancelled",
+  "input": {
+    "chat": "chat.txt"
+  },
+  "expected": {
+    "summary": "out/expected.summary.json"
+  }
+}

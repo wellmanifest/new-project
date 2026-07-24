@@ -112,6 +112,35 @@ NOT IMPLEMENTED:
 
 ---
 
+## Phase 4A - Testable Human1/Human2 Negotiation Examples
+
+- [x] Store executable Human1/Human2 chat examples with `scenario.json` and `chat.txt`.
+  - Done when `examples-chat/01-short-agreement`, `02-long-negotiation-agreement`, `03-short-conversation-cancelled`, and `04-long-negotiation-cancelled` are runnable by the example runner and declare expected summaries.
+- [x] Process each conversation line by line.
+  - Done when every non-empty `@user1`/`@user2` line becomes a numbered event with generated per-event artifacts.
+- [x] Maintain separate contract state for each side plus a merged contract.
+  - Done when generated artifacts include the speaking party contract and the current merged contract after every utterance.
+- [x] Merge the two party contracts deterministically.
+  - Done when compatible values are accepted into one merged field, conflicting values are preserved with source references, missing required fields remain explicit, and the merged hash is stable.
+- [x] Generate a readable diff after every utterance.
+  - Done when each event writes `diff.md` showing added fields, changed positions, invalidated approvals, conflicts, approvals, or no material change.
+- [x] Detect conflicts and changes of position.
+  - Done when tests prove competing party values block finalization and a party's changed field is recorded as a changed position.
+- [x] Accept only the same current merged contract version from both parties.
+  - Done when `final-contract.dsl`, `contract.pdf`, and `approvals.json` are written only after active Human1 and Human2 approvals reference the current merged hash with no missing fields or conflicts.
+- [x] Invalidate approvals after any merged contract change.
+  - Done when a one-side approval becomes `INVALIDATED` if a later utterance changes the merged contract hash.
+- [x] Support ending a conversation without agreement.
+  - Done when cancellation scenarios end as `CANCELLED` and do not produce `final-contract.dsl`, `contract.pdf`, or `approvals.json`.
+- [x] Generate final DSL, PDF, approvals, diff summary, and annex only after bilateral approval.
+  - Done when agreed scenarios create final artifacts under `final/` only at the event where the second party approves the same current hash.
+- [x] Add commands for chat examples and include them in verification.
+  - Done when `example-chat:run`, `examples-chat:run`, `project.sh example-chat`, `project.sh examples-chat`, and the root `verify` flow execute the chat examples.
+- [x] Compare generated artifacts with expected outcomes and cover the flow with tests.
+  - Done when the runner compares generated `summary.json` with `out/expected.summary.json`, and tests cover parsing, discovery, merging, conflict detection, approval invalidation, finalization, cancellation, and all four scenario outcomes.
+
+---
+
 ## Phase 5 - Bidirectional NL <-> DSL
 
 - [ ] Define controlled NL-to-DSL planner prompts and response schemas for OpenRouter.

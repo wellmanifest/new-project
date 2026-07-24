@@ -36,6 +36,7 @@ Historical research folders live under `research/` and should not be moved back 
 - `apps/web/` - static demo UI.
 - `verifier/` - Python verifier package.
 - `examples/` - current office fixtures with `scenario.json`, `in/`, `out/`, and legacy flat files.
+- `examples-chat/` - executable Human1/Human2 negotiation fixtures with per-line processing and expected outcomes.
 - `tests/` - TypeScript tests.
 - `mock-data/` - local offline data.
 
@@ -53,4 +54,4 @@ Historical research folders live under `research/` and should not be moved back 
 
 ## Current Boundary
 
-The validated repository is an offline Office DSL MVP with a repeatable example runner, a standalone Intent/Contract model package, and a deterministic Office DSL compatibility adapter. The target Intent/Contract DSL, Human1/Human2 approvals, field traceability, legal renderers, code generation, test generation, and semantic verifier orchestration are roadmap items, not completed features.
+The validated repository is an offline Office DSL MVP with repeatable office and chat example runners, a standalone Intent/Contract model package, and a deterministic Office DSL compatibility adapter. The `examples-chat` runner covers fixture-level Human1/Human2 negotiation semantics, including bilateral current-hash approval and cancellation behavior. Production runtime Human1/Human2 approvals, planner-driven conversation ingestion, field traceability, legal renderers, code generation, test generation, and semantic verifier orchestration are roadmap items, not completed features.

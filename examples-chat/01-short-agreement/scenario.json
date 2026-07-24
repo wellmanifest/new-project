@@ -1,0 +1,11 @@
+{
+  "version": "example-chat.scenario.v1",
+  "id": "01-short-agreement",
+  "title": "Short agreement",
+  "input": {
+    "chat": "chat.txt"
+  },
+  "expected": {
+    "summary": "out/expected.summary.json"
+  }
+}

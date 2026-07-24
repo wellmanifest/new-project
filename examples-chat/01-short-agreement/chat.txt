@@ -1,0 +1,7 @@
+@user1 Chcialbym zawrzec umowe o wykonanie strona internetowa za 5000 PLN do 30 czerwca.
+@user2 Zgadzam sie: strona internetowa za 5000 PLN do 30 czerwca.
+@user1 Odbior: dziala formularz kontaktowy.
+@user2 Gotowe gdy strona wdrozona na hostingu.
+@user1 Platnosc: po odbiorze.
+@user2 Zgadzam sie na aktualne warunki.
+@user1 Zgoda.
