@@ -1,0 +1,1 @@
+Przygotuj wiadomosci przypominajace dla klientow z fakturami starszymi niz 30 dni, ale ich nie wysylaj.

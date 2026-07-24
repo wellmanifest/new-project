@@ -1,6 +1,6 @@
 {
   "name": "office-dsl-mvp",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@9.12.0",
@@ -11,6 +11,10 @@
     "format": "prettier --check README.md TODO.md CHANGELOG.md VERSION.md CONTRIBUTING.md POLICY.md HANDOFF.md docs/**/*.md examples/**/*.md examples/**/*.json package.json pnpm-workspace.yaml tsconfig.json eslint.config.js apps/web/public/index.html packages/**/*.ts apps/**/*.ts tests/**/*.ts",
     "test": "vitest run tests",
     "test:e2e": "vitest run tests/e2e.test.ts",
+    "python:test": "tsx packages/example-runner/src/verify.ts python-test",
+    "example:run": "tsx packages/example-runner/src/index.ts run",
+    "examples:run": "tsx packages/example-runner/src/index.ts all",
+    "verify": "tsx packages/example-runner/src/verify.ts",
     "dev:backend": "tsx apps/backend/src/server.ts",
     "cli": "tsx packages/cli/src/index.ts"
   },

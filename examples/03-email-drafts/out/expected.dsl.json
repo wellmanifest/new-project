@@ -1,0 +1,36 @@
+{
+  "version": "office.dsl.v1",
+  "task": {
+    "id": "example-03",
+    "title": "Prepare reminder drafts",
+    "input": "Przygotuj wiadomosci przypominajace dla klientow z fakturami starszymi niz 30 dni, ale ich nie wysylaj.",
+    "createdBy": "example"
+  },
+  "sources": [{ "id": "invoices", "connector": "mock", "name": "mock.invoices" }],
+  "steps": [
+    {
+      "id": "load-overdue",
+      "description": "Read unpaid invoices older than 30 days",
+      "action": "database.query",
+      "with": { "dataset": "invoices", "kind": "unpaidInvoicesOlderThanDays", "days": 30 },
+      "saveAs": "overdue"
+    },
+    {
+      "id": "drafts",
+      "description": "Prepare reminder drafts without sending",
+      "action": "email.prepare",
+      "with": { "from": "overdue" },
+      "saveAs": "drafts"
+    }
+  ],
+  "output": { "format": "json", "saveAs": "result" },
+  "policies": [
+    {
+      "decision": "DENY",
+      "subject": "email.send",
+      "reason": "User explicitly requested no sending"
+    }
+  ],
+  "expectedResults": ["Prepare drafts", "Do not send"],
+  "errorHandling": { "onFailure": "stop" }
+}

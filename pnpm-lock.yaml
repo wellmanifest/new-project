@@ -40,6 +40,8 @@ importers:
 
   packages/dsl-runtime: {}
 
+  packages/example-runner: {}
+
   packages/llm-planner: {}
 
 packages:

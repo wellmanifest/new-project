@@ -1,0 +1,29 @@
+{
+  "version": "example.scenario.v1",
+  "id": "06-log-analysis",
+  "title": "Failed invoice log analysis",
+  "kind": "office-command",
+  "input": {
+    "message": "in/message.txt"
+  },
+  "pipeline": {
+    "planner": {
+      "kind": "fixture",
+      "dsl": "out/expected.dsl.json"
+    },
+    "runtime": {
+      "mode": "mock",
+      "dryRun": true,
+      "execute": false
+    },
+    "verifier": {
+      "kind": "python",
+      "mode": "mock"
+    }
+  },
+  "expected": {
+    "dsl": "out/expected.dsl.json",
+    "plan": "out/expected.plan.json",
+    "verification": "out/expected.verification.json"
+  }
+}
