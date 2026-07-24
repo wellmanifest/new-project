@@ -2,6 +2,12 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { TaskDsl, Step, validateTaskDsl } from "../../dsl-model/src/index.js";
+import {
+  hashIntentContractDsl,
+  officeDslToIntentContractDsl,
+  validateIntentContractDsl,
+  type IntentContractDsl
+} from "../../intent-contract-model/src/index.js";
 
 export type TaskState =
   | "CREATED"
@@ -24,6 +30,20 @@ export type PolicyDecision =
   | "REQUIRE_CONFIRMATION"
   | "REQUIRE_INPUT"
   | "REQUIRE_CAPABILITY";
+export type RuntimeApprovalParty = "Human1" | "Human2";
+export type RuntimeApprovalDecision = "APPROVED" | "REJECTED";
+
+export interface RuntimeApprovalRecord {
+  id: string;
+  party: RuntimeApprovalParty;
+  dslHash: string;
+  decision: RuntimeApprovalDecision;
+  approvedAt: string;
+  status: "ACTIVE" | "INVALIDATED";
+  invalidatedAt?: string;
+  invalidatedByHash?: string;
+  reason?: string;
+}
 
 export interface PlanAction {
   stepId: string;
@@ -50,6 +70,8 @@ export interface AuditRecord {
   verifier: unknown;
   plan: ExecutionPlan;
   plan_hash: string;
+  intent_contract_hash: string;
+  approvals: RuntimeApprovalRecord[];
   answers: Record<string, string>;
   confirmations: Record<string, string>;
   policy_decisions: PolicyFinding[];
@@ -65,6 +87,9 @@ export interface TaskSession {
   dsl: TaskDsl;
   plan: ExecutionPlan;
   planHash: string;
+  intentContractDsl: IntentContractDsl;
+  intentContractHash: string;
+  approvals: RuntimeApprovalRecord[];
   answers: Record<string, string>;
   confirmations: Record<string, string>;
   audit: AuditRecord;
@@ -326,12 +351,17 @@ export class Runtime {
     const validation = validateTaskDsl(dsl);
     const plan = this.plan(dsl, true);
     const planHash = hashPlan(plan);
+    const intentContractDsl = officeDslToIntentContractDsl(dsl).dsl;
+    const intentContractHash = hashIntentContractDsl(intentContractDsl);
     const session: TaskSession = {
       id: dsl.task.id || randomUUID(),
       state: "CREATED",
       dsl,
       plan,
       planHash,
+      intentContractDsl,
+      intentContractHash,
+      approvals: [],
       answers: {},
       confirmations: {},
       audit: {
@@ -344,6 +374,8 @@ export class Runtime {
         verifier,
         plan,
         plan_hash: planHash,
+        intent_contract_hash: intentContractHash,
+        approvals: [],
         answers: {},
         confirmations: {},
         policy_decisions: [],
@@ -380,6 +412,78 @@ export class Runtime {
     else this.state.transition(session, "READY", "ready after answer");
   }
 
+  approveIntentContract(
+    session: TaskSession,
+    party: RuntimeApprovalParty,
+    dslHash: string,
+    decision: RuntimeApprovalDecision = "APPROVED",
+    approvedAt = new Date().toISOString()
+  ): RuntimeApprovalRecord {
+    if (dslHash !== session.intentContractHash) {
+      throw new Error("Intent/Contract DSL hash changed; approval is invalid");
+    }
+    for (const approval of session.approvals) {
+      if (approval.status === "ACTIVE" && approval.party === party) {
+        approval.status = "INVALIDATED";
+        approval.invalidatedAt = approvedAt;
+        approval.invalidatedByHash = session.intentContractHash;
+        approval.reason = "superseded by a newer approval from the same party";
+      }
+    }
+    const approval: RuntimeApprovalRecord = {
+      id: `${session.id}:${party}:${session.approvals.length + 1}`,
+      party,
+      dslHash,
+      decision,
+      approvedAt,
+      status: "ACTIVE"
+    };
+    session.approvals.push(approval);
+    session.audit.approvals = session.approvals;
+    return approval;
+  }
+
+  hasBilateralIntentContractApproval(session: TaskSession): boolean {
+    const activeApprovals = session.approvals.filter(
+      (approval) =>
+        approval.status === "ACTIVE" &&
+        approval.decision === "APPROVED" &&
+        approval.dslHash === session.intentContractHash
+    );
+    return (
+      activeApprovals.some((approval) => approval.party === "Human1") &&
+      activeApprovals.some((approval) => approval.party === "Human2")
+    );
+  }
+
+  updateIntentContractDsl(
+    session: TaskSession,
+    dsl: IntentContractDsl,
+    reason = "intent contract dsl changed",
+    changedAt = new Date().toISOString()
+  ): string {
+    const validation = validateIntentContractDsl(dsl);
+    if (!validation.ok) {
+      throw new Error(
+        validation.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; ")
+      );
+    }
+    const nextHash = hashIntentContractDsl(dsl);
+    if (nextHash === session.intentContractHash) return nextHash;
+    for (const approval of session.approvals) {
+      if (approval.status === "ACTIVE") {
+        approval.status = "INVALIDATED";
+        approval.invalidatedAt = changedAt;
+        approval.invalidatedByHash = nextHash;
+        approval.reason = reason;
+      }
+    }
+    session.intentContractDsl = dsl;
+    session.intentContractHash = nextHash;
+    session.audit.intent_contract_hash = nextHash;
+    session.audit.approvals = session.approvals;
+    return nextHash;
+  }
   confirm(session: TaskSession, confirmationId: string, planHash: string): void {
     if (planHash !== session.planHash)
       throw new Error("Plan hash changed; confirmation is invalid");

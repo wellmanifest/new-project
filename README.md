@@ -43,21 +43,21 @@ DONE:
 - `packages/dsl-model` defines `office.dsl.v1`, structural validation, parsing, and a readable token renderer.
 - `packages/intent-contract-model` defines the standalone `intent-contract.dsl.v1` model boundary with formal fields, statuses, source references, canonical serialization, stable hashing, and a deterministic Office DSL adapter.
 - `packages/llm-planner` provides a deterministic mock planner for a few single-command office scenarios.
-- `packages/dsl-runtime` creates sessions, evaluates policies, asks simple clarification questions, handles one-side confirmation, computes a plan hash, executes mock actions, and records audit data.
+- `packages/dsl-runtime` creates sessions, evaluates policies, asks simple clarification questions, handles one-side Office confirmation, computes a plan hash, stores a canonical Intent/Contract snapshot hash, tracks minimal Human1/Human2 approval records, executes mock actions, and records audit data.
 - `packages/cli` exposes plan, validate, inspect, answer, confirm, reject, execute, and history commands.
 - `apps/backend` exposes the same runtime through HTTP endpoints.
 - `apps/web` provides a static demo UI.
 - `verifier` contains a Python package with mock verification and an optional LiteLLM/OpenRouter path.
 - `examples` contains six office examples with `scenario.json`, `in/`, `out/`, and legacy fixture files.
 - `examples-chat` contains four executable Human1/Human2 negotiation scenarios with `scenario.json`, `chat.txt`, and expected outcomes.
-- `tests` cover the current TypeScript runtime, DSL model, security checks, E2E mock flow, Python verifier behavior, example runner, and chat negotiation runner.
+- `tests` cover the current TypeScript runtime, canonical approval records, DSL model, security checks, E2E mock flow, Python verifier behavior, example runner, and chat negotiation runner.
 
 PARTIAL:
 
 - OpenRouter and LiteLLM code paths exist, but the validated flow is mock/offline mode.
 - Clarifying questions exist only as `user.ask` workflow steps, not as a general field-status model.
 - DSL rendering exists as a readable office DSL listing, not as legal or contract document generation.
-- The plan hash protects current confirmations, but runtime approvals are not yet based on canonical Intent/Contract DSL snapshots.
+- Office action confirmation is still plan-hash based; canonical Intent/Contract approval records exist in runtime APIs but are not yet exposed through CLI/backend/UI flows.
 
 MOCK:
 
@@ -68,8 +68,7 @@ MOCK:
 
 NOT IMPLEMENTED:
 
-- Runtime integration of the canonical Intent/Contract DSL.
-- Human1/Human2 bilateral approval.
+- CLI/backend/UI integration of canonical Intent/Contract approval flows.
 - Conversation-history and guideline-file planner modes.
 - Contract/legal document renderers.
 - JS/Node.js code generation.
@@ -167,7 +166,7 @@ Useful endpoints:
 
 ## Intent/Contract Model
 
-The canonical model currently lives in `packages/intent-contract-model` and is intentionally separate from the working Office DSL runtime. It provides:
+The canonical model currently lives in `packages/intent-contract-model`. The Office DSL runtime stores a migrated canonical snapshot hash for approval records, while the model package still owns the DSL structure and hashing helpers. It provides:
 
 - `intent-contract.dsl.v1`,
 - core constructs for documents, contracts, parties, obligations, deliverables, deadlines, payments, conflicts, questions, approvals, render directives, and execution directives,

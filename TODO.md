@@ -16,7 +16,7 @@ PARTIAL:
 - OpenRouter and LiteLLM paths exist but are not the validated default path.
 - Clarification exists as workflow steps, not as a general missing/ambiguous/conflicting field model.
 - Rendering exists as readable Office DSL text, not formal documents.
-- Office runtime hashing is based on execution plan content; the Intent/Contract model has canonical snapshot hashing and an Office DSL adapter, but runtime approvals still do not use canonical snapshots yet.
+- Office runtime confirmations still use execution plan hashes; the runtime now also stores a canonical Intent/Contract snapshot hash and minimal Human1/Human2 approval records, but this is not yet exposed through CLI/backend/UI flows.
 
 MOCK:
 
@@ -27,7 +27,7 @@ MOCK:
 
 NOT IMPLEMENTED:
 
-- Human2 approval, runtime field traceability population, legal renderers, code generation, DSL-based test generation, canonical DSL approval integration, and runtime-to-Python verifier integration.
+- runtime field traceability population, legal renderers, code generation, DSL-based test generation, CLI/backend/UI exposure for canonical approvals, and runtime-to-Python verifier integration.
 
 ---
 
@@ -103,9 +103,9 @@ NOT IMPLEMENTED:
   - Done when a two-party fixture produces partial DSL with sources and unresolved fields.
 - [ ] Add runtime routing of questions to Human1 or Human2.
   - Done when the runtime knows which party must answer a missing or conflicting field.
-- [ ] Add bilateral approval records.
+- [x] Add bilateral approval records.
   - Done when Human1 and Human2 approvals include party, hash, timestamp, and verdict.
-- [ ] Invalidate approvals after DSL changes.
+- [x] Invalidate approvals after DSL changes.
   - Done when tests prove both sides must reapprove after any material DSL edit.
 - [ ] Support reopening clarification after Human2 rejects insufficient detail.
   - Done when Human2 can block finalization and trigger a question back to Human1.
@@ -308,13 +308,13 @@ Target scenario set:
 
 ## Next 10 Implementation Tasks
 
-1. Add a minimal Human1/Human2 approval record model to runtime workflows.
-2. Integrate canonical DSL snapshot hashing into approval checks.
-3. Add runtime-to-Python verifier invocation behind a mock-safe interface.
-4. Add the first target fixture: `01-chat-to-dsl` with `in/` and `out/` artifacts.
-5. Add planner-backed scenario mode coverage for mock planner output normalization.
-6. Add Markdown diff output for future rendered document artifacts.
-7. Add runtime population of source references from planner or scenario inputs.
-8. Add adapter output artifacts for current Office DSL examples.
-9. Add canonical Intent/Contract CLI commands.
-10. Define canonical security policy for LLM, runtime, renderer, codegen, and verifier.
+1. Add runtime-to-Python verifier invocation behind a mock-safe interface.
+2. Add the first target fixture: `01-chat-to-dsl` with `in/` and `out/` artifacts.
+3. Add planner-backed scenario mode coverage for mock planner output normalization.
+4. Add Markdown diff output for future rendered document artifacts.
+5. Add runtime population of source references from planner or scenario inputs.
+6. Add adapter output artifacts for current Office DSL examples.
+7. Add canonical Intent/Contract CLI commands.
+8. Define canonical security policy for LLM, runtime, renderer, codegen, and verifier.
+9. Add CLI/backend exposure for Human1/Human2 canonical approval records.
+10. Add renderer gating that requires bilateral canonical approval before document output.

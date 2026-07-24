@@ -14,7 +14,7 @@ DONE:
 - `packages/dsl-model`: `office.dsl.v1`, parser, structural validator, JSON schema object, and human-readable token renderer.
 - `packages/intent-contract-model`: standalone `intent-contract.dsl.v1` model, formal fields, statuses, source references, canonical serialization, stable hashing, and Office DSL compatibility adapter.
 - `packages/llm-planner`: deterministic mock planner for selected single-message office commands plus optional OpenRouter path.
-- `packages/dsl-runtime`: simple state machine, deterministic policy engine, action registry, mock data operations, dry-run execution, `user.ask`, one-side confirmation, plan hash, audit persistence, and file task store.
+- `packages/dsl-runtime`: simple state machine, deterministic policy engine, action registry, mock data operations, dry-run execution, `user.ask`, one-side Office confirmation, plan hash, canonical Intent/Contract snapshot hash, minimal Human1/Human2 approval records, approval invalidation, audit persistence, and file task store.
 - `packages/cli`: plan/run, validate, inspect, answer, confirm, reject, execute, and history.
 - `apps/backend`: HTTP API using the same runtime.
 - `apps/web`: static demo UI.
@@ -40,14 +40,13 @@ PARTIAL:
 - OpenRouter/LiteLLM code paths exist but are not validated as the default flow.
 - Clarification exists only as workflow `user.ask`, not field-level missing/ambiguous/conflicting statuses.
 - Rendering is a readable office DSL listing, not formal contract/legal documents.
-- Office runtime hashing is plan-based; the standalone Intent/Contract model has canonical DSL snapshot hashing and an Office DSL adapter, but it is not wired into runtime approvals yet.
+- Office action confirmation is plan-based; runtime canonical approval records are hash-based, but they are not wired into CLI/backend/UI flows yet.
 - Codex Windows sandbox blocks Vitest/Vite process creation with `spawn EPERM`; see `docs/codex-sandbox-vitest.md`.
 - Audit exists for office-task sessions, not the full target lifecycle.
 
 NOT IMPLEMENTED:
 
-- Runtime integration of the canonical Intent/Contract DSL.
-- Production Human1/Human2 bilateral approval runtime flow.
+- CLI/backend/UI exposure for canonical Intent/Contract approval flows.
 - Conversation-history ingestion.
 - Guideline-file ingestion.
 - Runtime/planner population of field-level source traceability.
@@ -59,20 +58,20 @@ NOT IMPLEMENTED:
 
 ## Priority For The Next Agent
 
-Start with approval semantics before expanding rendering or code generation:
+Continue from verifier and exposure work before expanding rendering or code generation:
 
-1. Add a minimal Human1/Human2 approval record model.
-2. Wire canonical DSL snapshot hashing into approvals.
+1. Add runtime-to-Python verifier invocation behind a mock-safe interface.
+2. Expose canonical approval records through CLI/backend flows.
 3. Promote fixture-level chat negotiation semantics into runtime/planner-backed Intent/Contract workflow after the current runner stays stable.
-4. Add runtime-to-Python verifier invocation behind a mock-safe interface.
+4. Add the first target Intent/Contract scenario fixture after the current runner stays stable.
 
-Reason: without explicit approval semantics, the richer Intent/Contract DSL can be generated but cannot yet become a shared approved artifact.
+Reason: runtime approval records now exist, but they are still not available through user-facing workflows or verifier gates.
 
 ## What Not To Misread As Done
 
 - `renderHumanDsl` is not a legal document generator.
-- Current confirmation is not Human1/Human2 approval.
-- `hashPlan` is not a canonical DSL hash.
+- Current Office action confirmation is separate from Human1/Human2 canonical approval records.
+- `hashPlan` is still only the Office execution-plan confirmation hash; canonical approval records use the Intent/Contract snapshot hash.
 - The mock planner is not semantic NL understanding.
 - The Python verifier does not prove NL/DSL/document/code/test equivalence.
 - Current office examples are executable regression scenarios, but they use fixture DSL input rather than planner-regenerated DSL because mock planner IDs are still non-deterministic.
@@ -133,6 +132,7 @@ corepack pnpm run verify
 
 ## Recent Stable Milestones
 
+- `0.7.0`: minimal runtime Human1/Human2 canonical approval records and invalidation after snapshot changes.
 - `0.6.0`: executable Human1/Human2 chat negotiation examples and bilateral current-hash finalization checks.
 - `0.5.0`: GitHub Actions verify workflow plus Codex sandbox Vitest limitation documentation.
 - `0.4.0`: Office DSL to Intent/Contract adapter and expanded regression coverage.

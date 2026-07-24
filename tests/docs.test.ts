@@ -35,7 +35,7 @@ describe("documentation alignment", () => {
   it("keeps version metadata consistent across VERSION.md and CHANGELOG.md", async () => {
     const version = await readRoot("VERSION.md");
     const changelog = await readRoot("CHANGELOG.md");
-    expect(version).toMatch(/`0\.6\.0`/);
-    expect(changelog).toMatch(/0\.6\.0/);
+    expect(version).toMatch(/`0\.7\.0`/);
+    expect(changelog).toMatch(/0\.7\.0/);
   });
 });

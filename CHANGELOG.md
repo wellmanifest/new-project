@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.7.0] - 2026-07-24
+
+### Added
+
+- Added minimal Human1/Human2 canonical approval records to the TypeScript runtime.
+- Added per-session canonical Intent/Contract DSL snapshots and stable snapshot hashes derived from the Office DSL compatibility adapter.
+- Added runtime APIs to approve the current canonical DSL hash, check bilateral approval, and invalidate active approvals when the canonical DSL changes.
+- Added Vitest coverage for current-hash approval, stale-hash rejection, bilateral approval detection, and approval invalidation after canonical DSL changes.
+
+### Changed
+
+- Runtime audit records now include `intent_contract_hash` and canonical approval records.
+- Updated package, app, verifier, and OpenAPI version metadata to `0.7.0`.
+
+### Known limitations
+
+- Canonical approval records are available in runtime APIs but are not yet exposed through CLI, backend, or web flows.
+- Office action confirmation still uses plan hashes for current Office DSL execution controls.
+
 ## [0.6.0] - 2026-07-24
 
 ### Added

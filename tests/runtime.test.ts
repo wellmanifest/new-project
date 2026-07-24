@@ -169,6 +169,60 @@ describe("Runtime", () => {
     expect(() => runtime.cancel(session)).toThrow(/already terminal/);
   });
 
+  it("tracks Human1 and Human2 approvals against the canonical Intent/Contract DSL hash", () => {
+    const runtime = new Runtime();
+    const session = runtime.create(mockPlan("Przygotuj raport"));
+
+    expect(session.intentContractHash).toHaveLength(64);
+    expect(session.audit.intent_contract_hash).toBe(session.intentContractHash);
+
+    const human1 = runtime.approveIntentContract(session, "Human1", session.intentContractHash);
+    expect(human1).toMatchObject({ party: "Human1", decision: "APPROVED", status: "ACTIVE" });
+    expect(runtime.hasBilateralIntentContractApproval(session)).toBe(false);
+
+    const human2 = runtime.approveIntentContract(session, "Human2", session.intentContractHash);
+    expect(human2).toMatchObject({ party: "Human2", decision: "APPROVED", status: "ACTIVE" });
+    expect(runtime.hasBilateralIntentContractApproval(session)).toBe(true);
+    expect(session.audit.approvals).toBe(session.approvals);
+  });
+
+  it("rejects approvals for stale canonical Intent/Contract DSL hashes", () => {
+    const runtime = new Runtime();
+    const session = runtime.create(mockPlan("Przygotuj raport"));
+
+    expect(() => runtime.approveIntentContract(session, "Human1", "not-current-hash")).toThrow(
+      /hash changed/
+    );
+    expect(session.approvals).toEqual([]);
+  });
+
+  it("invalidates active Human1 and Human2 approvals when the canonical DSL changes", () => {
+    const runtime = new Runtime();
+    const session = runtime.create(mockPlan("Przygotuj raport"));
+    runtime.approveIntentContract(session, "Human1", session.intentContractHash);
+    runtime.approveIntentContract(session, "Human2", session.intentContractHash);
+    expect(runtime.hasBilateralIntentContractApproval(session)).toBe(true);
+
+    const changedDsl = JSON.parse(
+      JSON.stringify(session.intentContractDsl)
+    ) as typeof session.intentContractDsl;
+    changedDsl.document.title.value = "Changed title";
+    const nextHash = runtime.updateIntentContractDsl(
+      session,
+      changedDsl,
+      "test changed title",
+      "2026-07-24T12:00:00.000Z"
+    );
+
+    expect(nextHash).toBe(session.intentContractHash);
+    expect(nextHash).not.toBe(session.approvals[0]?.dslHash);
+    expect(session.approvals.every((approval) => approval.status === "INVALIDATED")).toBe(true);
+    expect(session.approvals.every((approval) => approval.reason === "test changed title")).toBe(
+      true
+    );
+    expect(session.audit.intent_contract_hash).toBe(nextHash);
+    expect(runtime.hasBilateralIntentContractApproval(session)).toBe(false);
+  });
   it("throws when executing a non-ready session", async () => {
     const runtime = new Runtime();
     const session = runtime.create(mockPlan("Wyslij przygotowane przypomnienia."));
