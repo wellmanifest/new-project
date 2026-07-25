@@ -127,7 +127,9 @@ export function validateScenarioManifest(manifest: ScenarioManifest, scenarioDir
 
 export async function runScenario(options: ScenarioRunOptions): Promise<ScenarioRunResult> {
   const manifest = await loadScenarioManifest(options.scenarioDir);
-  const generatedDir = options.generatedRoot ?? path.join(options.scenarioDir, "generated");
+  const generatedDir =
+    options.generatedRoot ??
+    path.join(options.repoRoot, ".office-dsl", "examples", manifest.id);
   await rm(generatedDir, { recursive: true, force: true });
   await mkdir(generatedDir, { recursive: true });
 
@@ -249,10 +251,18 @@ async function runPythonVerifier(
   mode: string,
   generatedDir: string
 ): Promise<Record<string, unknown>> {
-  const dslFile = path.join(generatedDir, "verifier-input.dsl.json");
-  const planFile = path.join(generatedDir, "verifier-input.plan.json");
-  await writeFile(dslFile, `${stableJson(dsl)}\n`, "utf8");
-  await writeFile(planFile, `${stableJson(plan)}\n`, "utf8");
+  const dslFile = path.join(generatedDir, "verifier-input.dsl.md");
+  const planFile = path.join(generatedDir, "verifier-input.plan.md");
+  await writeDslMd(generatedDir, "verifier-input.dsl.md", "OFFICE_TASK", renderHumanDsl(dsl));
+  const planDsl = [
+    "# PLAN",
+    "",
+    "```dsl",
+    ...plan.actions.map((action) => `ACTION ${action}`),
+    "```",
+    ""
+  ].join("\n");
+  await writeFile(planFile, planDsl, "utf8");
   const env = {
     ...process.env,
     PYTHONPATH: appendPythonPath(process.env.PYTHONPATH, path.join(repoRoot, "verifier"))

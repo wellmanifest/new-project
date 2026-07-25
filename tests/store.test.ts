@@ -11,13 +11,11 @@ describe("FileTaskStore", () => {
 
   beforeEach(async () => {
     tmpDir = await mkdtemp(path.join(os.tmpdir(), "office-dsl-store-"));
-    process.env.OFFICE_DSL_TASK_DIR = path.join(tmpDir, "tasks");
-    process.env.OFFICE_DSL_AUDIT_DIR = path.join(tmpDir, "audit");
+    process.env.OFFICE_DSL_TASK_DIR = tmpDir;
   });
 
   afterEach(async () => {
     delete process.env.OFFICE_DSL_TASK_DIR;
-    delete process.env.OFFICE_DSL_AUDIT_DIR;
     await rm(tmpDir, { recursive: true, force: true });
   });
 
@@ -26,8 +24,8 @@ describe("FileTaskStore", () => {
     const session = new Runtime().create(mockPlan("Przygotuj raport"));
     await store.save(session);
 
-    const taskFile = path.join(tmpDir, "tasks", `${session.id}.json`);
-    const auditFile = path.join(tmpDir, "audit", `${session.id}.json`);
+    const taskFile = path.join(tmpDir, "mock-llm", "tasks", `${session.id}.json`);
+    const auditFile = path.join(tmpDir, "mock-llm", "audit", `${session.id}.json`);
     expect((await stat(taskFile)).isFile()).toBe(true);
     expect((await stat(auditFile)).isFile()).toBe(true);
   });

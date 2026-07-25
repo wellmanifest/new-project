@@ -1,5 +1,22 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Reorganized `.office-dsl/` into per-client folders:
+  - Runtime task sessions and audit records are now stored under `.office-dsl/<createdBy>/tasks/` and `.office-dsl/<createdBy>/audit/` instead of a flat `.office-dsl/tasks/` + `.office-dsl/audit/` dump.
+  - `examples` runner outputs are now placed under `.office-dsl/examples/<scenario>/`.
+  - `examples-chat` runner outputs are now placed under `.office-dsl/examples-chat/<scenario>/<user>/<event>/` with a shared `final/` directory.
+- Replaced remaining JSON artifacts with DSL/markdown files (`*.dsl.md`) so generated responses follow the `CONTRIBUTING.md` / `POLICY.md` fenced DSL style.
+- Updated Python verifier to read DSL/markdown input files (`verifier-input.dsl.md`, `verifier-input.plan.md`) and parse actions directly from the DSL text instead of requiring JSON.
+- Removed obsolete `.gitignore` entries for `examples/*/generated/` and `examples-chat/*/generated/` since all generated outputs now live under `.office-dsl/`.
+
+### Tests
+
+- Updated `store.test.ts` for per-client `FileTaskStore` directory layout.
+- Updated `chat-runner.test.ts` paths to reflect `user/<event>/` artifact placement.
+
 ## [0.7.2] - 2026-07-24
 
 ### Changed

@@ -62,6 +62,12 @@ NOT IMPLEMENTED:
   - Done when `corepack pnpm run verify` works on Windows and Linux.
 - [x] Fix or document any dependency/link issue that prevents default Vitest startup in the Codex sandbox.
   - Done when the exact environment failure is reproducible or removed. Documented in `docs/codex-sandbox-vitest.md`; root test scripts avoid `.pytest_cache` scanning, but this Codex Windows sandbox still blocks Vite/Vitest process creation with `spawn EPERM`.
+- [x] Reorganize `.office-dsl/` into per-client folders.
+  - Done when runtime tasks/audit, `examples`, and `examples-chat` outputs each have a dedicated `<client>/<scenario>` path and no flat `tasks/` + `audit/` dump remains.
+- [x] Remove JSON from generated runner artifacts.
+  - Done when `examples` and `examples-chat` runners emit only DSL/markdown files (`*.dsl.md`, `*.dsl.hcl`, `*.md`, `*.pdf`) and expected files are compared as objects in memory.
+- [x] Update Python verifier to consume DSL/markdown inputs instead of JSON.
+  - Done when `verifier-input.dsl.md` and `verifier-input.plan.md` are parsed directly and mock verifier results match the previous JSON-based behavior.
 
 ---
 

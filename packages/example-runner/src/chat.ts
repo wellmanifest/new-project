@@ -158,7 +158,9 @@ export async function runChatScenario(options: {
   generatedRoot?: string;
 }): Promise<ChatRunResult> {
   const manifest = await loadChatScenarioManifest(options.scenarioDir);
-  const generatedDir = options.generatedRoot ?? path.join(options.scenarioDir, "generated");
+  const generatedDir =
+    options.generatedRoot ??
+    path.join(options.repoRoot, ".office-dsl", "examples-chat", manifest.id);
   await rm(generatedDir, { recursive: true, force: true });
   await mkdir(generatedDir, { recursive: true });
 
@@ -454,7 +456,7 @@ async function writeEventArtifacts(
   diffLines: string[],
   status: Record<string, unknown>
 ): Promise<void> {
-  const eventDir = generatedDir;
+  const eventDir = path.join(generatedDir, event.author, String(event.event).padStart(3, "0"));
   await mkdir(eventDir, { recursive: true });
   await writeFile(
     path.join(eventDir, `${eventPrefix(event)}.prompt.txt`),
