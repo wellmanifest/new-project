@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createField,
   diagnoseIntentContractDsl,
+  questionsForParty,
   type IntentContractDsl,
   type SourceReference
 } from "../packages/intent-contract-model/src/index.js";
@@ -87,6 +88,8 @@ describe("Phase 3 - missing, ambiguous, and conflicting information model", () =
     expect(question?.reason).toBe("MISSING");
     // The generated question asks for the value; it never invents one.
     expect(question?.prompt).toContain("Provide a value");
+    // No source speaker on the missing field, so routing is unknown.
+    expect(question?.targetParties).toEqual(["unknown"]);
   });
 
   it("marks an ambiguous field with competing interpretations and a clarifying question", () => {
@@ -112,6 +115,8 @@ describe("Phase 3 - missing, ambiguous, and conflicting information model", () =
     expect(question?.reason).toBe("AMBIGUOUS");
     expect(question?.interpretations).toEqual(["2026-01-01", "2026-02-01"]);
     expect(question?.prompt).toContain("2026-01-01 | 2026-02-01");
+    // The ambiguous value came from Human1, so Human1 is asked to clarify.
+    expect(question?.targetParties).toEqual(["Human1"]);
   });
 
   it("represents Human1/Human2 conflicting values with sources and blocks finalization", () => {
@@ -139,7 +144,10 @@ describe("Phase 3 - missing, ambiguous, and conflicting information model", () =
     expect(conflict?.sourceIds).toEqual(["m1", "m2"]);
     expect(conflict?.values).toHaveLength(2);
     expect(conflict?.values.map((v) => v.partyId)).toEqual(["human1", "human2"]);
-    expect(diagnosis.generatedQuestions.some((q) => q.reason === "CONFLICTING")).toBe(true);
+    const question = diagnosis.generatedQuestions.find((q) => q.path === "conflicts[0]");
+    expect(question?.reason).toBe("CONFLICTING");
+    // Both parties introduced competing values, so the conflict routes to both.
+    expect(question?.targetParties).toEqual(["Human1", "Human2"]);
   });
 
   it("requires explicit approval for assumed values and clears once approved", () => {
@@ -174,6 +182,44 @@ describe("Phase 3 - missing, ambiguous, and conflicting information model", () =
     const approved = diagnoseIntentContractDsl(dsl);
     expect(approved.unapprovedAssumptions).toEqual([]);
     expect(approved.finalizationReady).toBe(true);
+  });
+
+  it("routes generated questions to the party that must answer", () => {
+    const dsl = baseDsl();
+    // Human1-sourced ambiguous field.
+    dsl.deadlines.push({
+      id: "d-1",
+      forId: createField("deadline.forId", "deliverable-1", "CONFIRMED", true, human1Source),
+      dueAt: {
+        ...createField("deadline.dueAt", null, "AMBIGUOUS", true, human1Source),
+        interpretations: ["a", "b"]
+      }
+    });
+    // Human2-sourced missing required field.
+    dsl.deliverables.push({
+      id: "del-1",
+      description: createField<string>(
+        "deliverable.description",
+        null,
+        "MISSING",
+        true,
+        human2Source
+      ),
+      ownerPartyId: createField(
+        "deliverable.ownerPartyId",
+        "human2",
+        "CONFIRMED",
+        true,
+        human2Source
+      )
+    });
+    const diagnosis = diagnoseIntentContractDsl(dsl);
+    const human1Questions = questionsForParty(diagnosis, "Human1");
+    const human2Questions = questionsForParty(diagnosis, "Human2");
+    expect(human1Questions.map((q) => q.field)).toContain("deadline.dueAt");
+    expect(human1Questions.map((q) => q.field)).not.toContain("deliverable.description");
+    expect(human2Questions.map((q) => q.field)).toContain("deliverable.description");
+    expect(human2Questions.map((q) => q.field)).not.toContain("deadline.dueAt");
   });
 
   it("flags a material value without a source reference as a traceability gap", () => {

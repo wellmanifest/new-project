@@ -332,6 +332,8 @@ export type GeneratedQuestionReason =
   | "CONFLICTING"
   | "UNAPPROVED_ASSUMPTION";
 
+export type PartyRoute = "Human1" | "Human2" | "unknown";
+
 export interface CompletenessGap {
   path: string;
   field: string;
@@ -367,6 +369,7 @@ export interface GeneratedQuestion {
   field: string;
   reason: GeneratedQuestionReason;
   prompt: string;
+  targetParties: PartyRoute[];
   interpretations?: string[];
 }
 
@@ -393,6 +396,7 @@ export function diagnoseIntentContractDsl(dsl: IntentContractDsl): IntentContrac
   for (const { path, field } of fields) {
     const material = field.requiredForCompletion;
     const hasValue = field.value !== null;
+    const route = routeFromSource(field.source);
 
     if (material && (field.status === "MISSING" || field.status === "INCOMPLETE")) {
       completenessGaps.push({ path, field: field.field, status: field.status });
@@ -400,7 +404,8 @@ export function diagnoseIntentContractDsl(dsl: IntentContractDsl): IntentContrac
         path,
         field: field.field,
         reason: "MISSING",
-        prompt: `Provide a value for "${field.field}"; it is required for completion and currently ${field.status}.`
+        prompt: `Provide a value for "${field.field}"; it is required for completion and currently ${field.status}.`,
+        targetParties: route
       });
     }
 
@@ -415,6 +420,7 @@ export function diagnoseIntentContractDsl(dsl: IntentContractDsl): IntentContrac
           interpretations.length > 0
             ? `Choose a single interpretation for "${field.field}": ${interpretations.join(" | ")}.`
             : `Clarify the intended meaning of "${field.field}"; it is ambiguous.`,
+        targetParties: route,
         interpretations
       });
     }
@@ -430,7 +436,8 @@ export function diagnoseIntentContractDsl(dsl: IntentContractDsl): IntentContrac
         path,
         field: field.field,
         reason: "CONFLICTING",
-        prompt: `Resolve the conflicting value for "${field.field}" before finalization.`
+        prompt: `Resolve the conflicting value for "${field.field}" before finalization.`,
+        targetParties: route
       });
     }
 
@@ -440,7 +447,8 @@ export function diagnoseIntentContractDsl(dsl: IntentContractDsl): IntentContrac
         path,
         field: field.field,
         reason: "UNAPPROVED_ASSUMPTION",
-        prompt: `Approve or correct the assumed value for "${field.field}": ${JSON.stringify(field.value)}.`
+        prompt: `Approve or correct the assumed value for "${field.field}": ${JSON.stringify(field.value)}.`,
+        targetParties: route
       });
     }
 
@@ -462,7 +470,8 @@ export function diagnoseIntentContractDsl(dsl: IntentContractDsl): IntentContrac
       reason: "CONFLICTING",
       prompt: `Resolve the conflict on "${node.field}" between sources ${
         node.sourceIds.length > 0 ? node.sourceIds.join(", ") : "unknown"
-      } before finalization.`
+      } before finalization.`,
+      targetParties: routeConflictNode(dsl, node)
     });
   });
 
@@ -493,6 +502,47 @@ export function diagnoseIntentContractDsl(dsl: IntentContractDsl): IntentContrac
     finalizationReady: blockingReasons.length === 0,
     blockingReasons
   };
+}
+
+export function questionsForParty(
+  diagnosis: IntentContractDiagnosis,
+  party: PartyRoute
+): GeneratedQuestion[] {
+  return diagnosis.generatedQuestions.filter((question) => question.targetParties.includes(party));
+}
+
+function routeFromSource(source: SourceReference | null): PartyRoute[] {
+  const speaker = source?.speaker;
+  if (speaker === "Human1" || speaker === "Human2") return [speaker];
+  return ["unknown"];
+}
+
+function routeConflictNode(dsl: IntentContractDsl, node: ConflictNode): PartyRoute[] {
+  const parties = new Set<PartyRoute>();
+  for (const value of node.values ?? []) {
+    const speaker = value.source?.speaker;
+    if (speaker === "Human1" || speaker === "Human2") parties.add(speaker);
+    const role = partyRoleFromId(dsl, value.partyId);
+    if (role) parties.add(role);
+  }
+  for (const id of node.sourceIds) {
+    const ref = dsl.sourceReferences.find((reference) => reference.id === id);
+    if (ref?.speaker === "Human1" || ref?.speaker === "Human2") parties.add(ref.speaker);
+  }
+  return parties.size > 0 ? sortRoutes([...parties]) : ["unknown"];
+}
+
+function partyRoleFromId(dsl: IntentContractDsl, partyId: string | undefined): PartyRoute | null {
+  if (!partyId) return null;
+  const party = dsl.parties.find((candidate) => candidate.id === partyId);
+  const role = party?.role.value;
+  return role === "Human1" || role === "Human2" ? role : null;
+}
+
+const routeOrder: Record<PartyRoute, number> = { Human1: 0, Human2: 1, unknown: 2 };
+
+function sortRoutes(routes: PartyRoute[]): PartyRoute[] {
+  return [...routes].sort((a, b) => routeOrder[a] - routeOrder[b]);
 }
 
 function validateArrayFields(

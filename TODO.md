@@ -111,8 +111,8 @@ Note: Phase 3 is implemented at the `@office-dsl/intent-contract-model` layer vi
   - Done when examples can store speaker, message ID, timestamp, and text.
 - [ ] Add planner support for conversation history.
   - Done when a two-party fixture produces partial DSL with sources and unresolved fields.
-- [ ] Add runtime routing of questions to Human1 or Human2.
-  - Done when the runtime knows which party must answer a missing or conflicting field.
+- [x] Add runtime routing of questions to Human1 or Human2.
+  - Done when the runtime knows which party must answer a missing or conflicting field. `diagnoseIntentContractDsl` now tags each generated question with `targetParties` (derived from `source.speaker`, `ConflictValue.partyId`, and `parties`), and `questionsForParty` filters questions per party. Surfacing this through the live runtime/CLI/UI is tracked in Phases 11 and 12.
 - [x] Add bilateral approval records.
   - Done when Human1 and Human2 approvals include party, hash, timestamp, and verdict.
 - [x] Invalidate approvals after DSL changes.

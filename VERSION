@@ -2,15 +2,15 @@
 
 ## Current Version
 
-`0.7.3`
+`0.7.4`
 
 ## Version Type
 
-Minor model-feature release over `0.7.2`.
+Minor model-feature release over `0.7.3`.
 
-This version implements the Phase 3 missing/ambiguous/conflicting information model at the `@office-dsl/intent-contract-model` layer: `diagnoseIntentContractDsl` reports completeness gaps, ambiguities with competing interpretations, Human1/Human2 conflicts with source references, unapproved assumptions, and material-field traceability gaps, and exposes a `finalizationReady` gate with `blockingReasons`. It also adds the `Phase 4B - Document Ingestion, OCR, And Recruitment Workflow` roadmap section to `TODO.md`, and renames `VERSION.md` to `VERSION`.
+This version implements Phase 4 question routing at the `@office-dsl/intent-contract-model` layer: `diagnoseIntentContractDsl` now tags every generated question with `targetParties` (`Human1`, `Human2`, or `unknown`) derived from source speaker, conflicting party values, party roles, and conflict source references, and a new `questionsForParty` helper filters unresolved-field questions per party. This builds on the `0.7.3` Phase 3 diagnosis (completeness gaps, ambiguities, conflicts, unapproved assumptions, traceability gaps, and the `finalizationReady` gate).
 
-The Phase 3 diagnosis is a model/reporting layer only; it never invents field values. Runtime, CLI, backend, and UI integration of the diagnosis and finalization gate remain open (Phases 4, 11, 12). No OCR or document-ingestion behavior is implemented in this version; Phase 4B is roadmap documentation only.
+Both the Phase 3 diagnosis and the Phase 4 routing are model/reporting layers only; they never invent field values. Live runtime, CLI, backend, and UI integration of the diagnosis, routing, and finalization gate remain open (Phases 11 and 12). No OCR or document-ingestion behavior is implemented in this version; Phase 4B is roadmap documentation only.
 
 ## Project Status
 

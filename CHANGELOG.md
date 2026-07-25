@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-07-25
+
+### Added
+
+- Implemented Phase 4 question routing in `@office-dsl/intent-contract-model`:
+  - Added `PartyRoute` and `GeneratedQuestion.targetParties`; `diagnoseIntentContractDsl` now routes each generated question to `Human1`, `Human2`, or `unknown`, derived from `SourceReference.speaker`, `ConflictValue.partyId`, party roles, and conflict `sourceIds`.
+  - Added `questionsForParty(diagnosis, party)` to filter unresolved-field questions per party.
+
+### Changed
+
+- Marked the Phase 4 "Add runtime routing of questions to Human1 or Human2" TODO item as done at the model layer; live runtime/CLI/UI surfacing remains tracked in Phases 11 and 12.
+- Updated root package and `VERSION` metadata to `0.7.4`.
+
+### Tests
+
+- Extended `tests/intent-contract-diagnosis.test.ts` with routing assertions (Human1-sourced ambiguity, unknown routing for unsourced missing fields, both-party conflict routing) and a `questionsForParty` per-party routing case.
+- Updated `tests/docs.test.ts` to assert `VERSION`/`CHANGELOG.md` consistency at `0.7.4`.
+
 ## [0.7.3] - 2026-07-25
 
 ### Added
