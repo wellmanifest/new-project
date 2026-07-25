@@ -33,12 +33,12 @@ Current validated implementation scope:
 - CLI, backend API, static web demo for the current Office DSL flow,
 - Python mock verifier package,
 - canonical office example manifests with `in/` and `out/` folders,
-- deterministic single-example and all-example runner,
+- deterministic single-example and all-example runner with generated `*.dsl.hcl` artifacts beside each `examples/<scenario>/`,
 - executable `examples-chat` scenarios for Human1/Human2 negotiation regression,
 - line-by-line chat artifacts with party contract state, merged contract state, diffs, status, approvals, conflicts, and cancellation summaries,
-- generated chat DSL artifacts rendered as `*.dsl.hcl` HCL-like editable project DSL, not JSON,
-- generated chat outputs colocated with each scenario under `examples-chat/<scenario>/generated/`,
-- final chat DSL/PDF/approval artifacts only after both parties approve the same current merged contract hash,
+- generated chat DSL artifacts rendered as flat `*.dsl.hcl` HCL-like editable project DSL, not JSON,
+- generated chat outputs colocated as flat files under `examples-chat/<scenario>/generated/`,
+- final chat DSL/PDF/approval artifacts (`final-contract.dsl.hcl`, `contract.pdf`, `approvals.dsl.hcl`) only after both parties approve the same current merged contract hash,
 - root verification command,
 - GitHub Actions workflow for `project.sh install` and `project.sh verify` on Windows and Linux,
 - `intent-contract.dsl.v1` model package with formal fields, statuses, source references, canonical serialization, and stable hashing,
@@ -64,7 +64,7 @@ Target scope documented but not implemented:
 - Moved default generated chat outputs into `examples-chat/<scenario>/generated/`, beside `scenario.json` and `chat.txt`.
 - Flattened generated per-event files into one scenario-local generated folder using names such as `001-user1.intent-contract.dsl.hcl`.
 - Added `examples-chat/*/generated/` to `.gitignore`.
-- Kept machine comparison files as JSON: `scenario.json`, `summary.json`, `status.json`, expected summaries, and `approvals.json`.
+- Kept checked-in scenario manifests and expected summaries as JSON; generated runner artifacts use `*.dsl.hcl`, Markdown, or PDF instead of JSON.
 - Updated package, app, verifier, and OpenAPI version metadata to `0.7.2`.
 
 ## Not Included In 0.7.2
@@ -102,6 +102,6 @@ Expected but not yet fully validated as release criteria:
 
 ## Versioning Policy Note
 
-This pass uses a patch bump from `0.7.1` to `0.7.2` because it changes generated chat artifact layout and the editor-friendly generated DSL file format without adding a new production runtime surface.
+The current corrective pass keeps `0.7.4` metadata unchanged and aligns generated runner artifact layout and file extensions with the documented `*.dsl.hcl` convention.
 
 A future production hardening task should define how root package metadata, package versions, OpenAPI metadata, `VERSION`, and `CHANGELOG.md` are kept in sync.

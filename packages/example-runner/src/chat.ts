@@ -246,7 +246,7 @@ export async function runChatScenario(options: {
     approvals,
     cancelledReason
   );
-  await writeDslMd(path.join(generatedDir, "summary.dsl.md"), "CHAT_SUMMARY", renderSummaryDsl(summary));
+  await writeDsl(path.join(generatedDir, "summary.dsl.hcl"), renderSummaryDsl(summary));
   const failures = await compareExpectedSummary(options.scenarioDir, manifest, summary);
   return {
     id: manifest.id,
@@ -454,7 +454,7 @@ async function writeEventArtifacts(
   diffLines: string[],
   status: Record<string, unknown>
 ): Promise<void> {
-  const eventDir = path.join(generatedDir, event.author, String(event.event).padStart(3, "0"));
+  const eventDir = generatedDir;
   await mkdir(eventDir, { recursive: true });
   await writeFile(
     path.join(eventDir, `${eventPrefix(event)}.prompt.txt`),
@@ -478,7 +478,10 @@ async function writeEventArtifacts(
     `${diffLines.join("\n") || "No contract change."}\n`,
     "utf8"
   );
-  await writeDslMd(path.join(eventDir, `${eventPrefix(event)}.status.dsl.md`), "CHAT_STATUS", renderStatusDsl(status));
+  await writeDsl(
+    path.join(eventDir, `${eventPrefix(event)}.status.dsl.hcl`),
+    renderStatusDsl(status)
+  );
 }
 
 function eventPrefix(event: ChatLine): string {
@@ -506,9 +509,8 @@ async function writeFinalArtifacts(
   const markdown = renderContractMarkdown(finalContract);
   await writeFile(path.join(finalDir, "contract.md"), markdown, "utf8");
   await writeFile(path.join(finalDir, "contract.pdf"), renderMinimalPdf(markdown), "binary");
-  await writeDslMd(
-    path.join(finalDir, "approvals.dsl.md"),
-    "CHAT_APPROVALS",
+  await writeDsl(
+    path.join(finalDir, "approvals.dsl.hcl"),
     renderApprovalsDsl(merged.hash, approvals)
   );
   await writeFile(path.join(finalDir, "diff-summary.md"), `${diffSummary.join("\n\n")}\n`, "utf8");
@@ -570,7 +572,7 @@ export function validateChatDslText(text: string): void {
   if (!hasBalancedBraces(text)) throw new Error("DSL/HCL braces are not balanced");
   if ((text.match(/"/g)?.length ?? 0) % 2 !== 0) throw new Error("DSL/HCL quotes are not balanced");
   const allowed =
-    /^(document|field|conflict|change)\s+|^(version|type|event|line|author|text|updates|approval|cancellation|party|value|source_party|source_line|accepted_by|rejected_by|hash|status|missing|include|assert|annex|from|to)\s*=/;
+    /^(document|field|conflict|change|approval)\s+|^(version|type|event|line|author|text|updates|approval|cancellation|party|value|source_party|source_line|accepted_by|rejected_by|hash|status|missing|include|assert|annex|from|to|id|outcome|event_count|final_created|final_hash|cancelled_reason|current_hash|final_allowed|approved_hash|invalidated_by_line|reason)\s*=/;
   for (const rawLine of text.split(/\r?\n/)) {
     const line = rawLine.trim();
     if (!line || line === "}" || line.startsWith("#")) continue;
@@ -800,61 +802,55 @@ function compareSubset(
     failures.push(`${label} expected ${String(expected)} but got ${String(actual)}`);
 }
 
-async function writeDslMd(file: string, docType: string, body: string): Promise<void> {
-  await writeFile(file, `# ${docType}\n\n\`\`\`dsl\n${body.trim()}\n\`\`\`\n`, "utf8");
-}
-
 function renderSummaryDsl(summary: ChatRunSummary): string {
-  const lines = [
-    "CHAT_SUMMARY",
-    `ID ${summary.id}`,
-    `OUTCOME ${summary.outcome}`,
-    `EVENT_COUNT ${summary.eventCount}`,
-    `FINAL_CREATED ${summary.finalCreated}`
+  const body = [
+    assign("id", summary.id),
+    assign("outcome", summary.outcome),
+    assign("event_count", summary.eventCount),
+    assign("final_created", summary.finalCreated)
   ];
-  if (summary.finalHash) lines.push(`FINAL_HASH ${summary.finalHash}`);
-  if (summary.cancelledReason) lines.push(`CANCELLED_REASON "${summary.cancelledReason}"`);
-  for (const field of summary.missing) {
-    lines.push(`MISSING ${field}`);
-  }
+  if (summary.finalHash) body.push(assign("final_hash", summary.finalHash));
+  if (summary.cancelledReason) body.push(assign("cancelled_reason", summary.cancelledReason));
+  body.push(assign("missing", summary.missing.map(fieldToken)));
   for (const conflict of summary.conflicts) {
-    lines.push(`CONFLICT ${conflict.field} ${conflict.values.map((v) => `"${v}"`).join(" ")}`);
+    body.push(block("conflict", fieldToken(conflict.field), [assign("value", conflict.values)]));
   }
-  for (const approval of summary.approvals) {
-    lines.push(
-      `APPROVAL ${approval.party} ${approval.approvedHash} ${approval.status}${
-        approval.invalidatedByLine ? ` INVALIDATED_BY ${approval.invalidatedByLine}` : ""
-      }`
-    );
-  }
-  return lines.join("\n");
+  for (const approval of summary.approvals) body.push(renderApprovalDsl(approval));
+  return block("document", "CHAT_SUMMARY", body);
 }
 
 function renderStatusDsl(status: Record<string, unknown>): string {
-  const lines = ["CHAT_STATUS"];
-  lines.push(`OUTCOME ${status.outcome}`);
-  lines.push(`CURRENT_HASH ${status.currentHash}`);
-  for (const field of status.missing as string[]) {
-    lines.push(`MISSING ${field}`);
-  }
+  const body = [
+    assign("outcome", String(status.outcome)),
+    assign("current_hash", String(status.currentHash)),
+    assign("missing", (status.missing as string[]).map(fieldToken)),
+    assign("final_allowed", Boolean(status.finalAllowed))
+  ];
+  if (status.cancelledReason) body.push(assign("cancelled_reason", String(status.cancelledReason)));
   for (const conflict of status.conflicts as Array<{ field: string; values: string[] }>) {
-    lines.push(`CONFLICT ${conflict.field} ${conflict.values.map((v) => `"${v}"`).join(" ")}`);
+    body.push(block("conflict", fieldToken(conflict.field), [assign("value", conflict.values)]));
   }
-  for (const approval of status.approvals as ApprovalRecord[]) {
-    lines.push(`APPROVAL ${approval.party} ${approval.approvedHash} ${approval.status}`);
-  }
-  lines.push(`FINAL_ALLOWED ${status.finalAllowed}`);
-  if (status.cancelledReason) {
-    lines.push(`CANCELLED_REASON "${status.cancelledReason}"`);
-  }
-  return lines.join("\n");
+  for (const approval of status.approvals as ApprovalRecord[])
+    body.push(renderApprovalDsl(approval));
+  return block("document", "CHAT_STATUS", body);
 }
 
 function renderApprovalsDsl(hash: string, approvals: ApprovalRecord[]): string {
   const active = approvals.filter((approval) => approval.status === "ACTIVE");
-  const lines = ["CHAT_APPROVALS", `STATUS ${active.length > 0 ? "APPROVED" : "PENDING"}`, `HASH ${hash}`];
-  for (const approval of active) {
-    lines.push(`APPROVAL ${approval.party} ${approval.approvedHash}`);
-  }
-  return lines.join("\n");
+  const body = [assign("status", active.length > 0 ? "APPROVED" : "PENDING"), assign("hash", hash)];
+  for (const approval of active) body.push(renderApprovalDsl(approval));
+  return block("document", "CHAT_APPROVALS", body);
+}
+
+function renderApprovalDsl(approval: ApprovalRecord): string {
+  const body = [
+    assign("party", partyToken(approval.party)),
+    assign("approved_hash", approval.approvedHash),
+    assign("line", approval.line),
+    assign("status", approval.status)
+  ];
+  if (approval.invalidatedByLine)
+    body.push(assign("invalidated_by_line", approval.invalidatedByLine));
+  if (approval.reason) body.push(assign("reason", approval.reason));
+  return block("approval", partyToken(approval.party), body);
 }

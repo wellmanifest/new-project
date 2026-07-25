@@ -295,7 +295,7 @@ examples/
     conversation.md
 ```
 
-Current implementation status: the repository has six office examples: read-only report, clarification, email drafts, confirmed send, policy denial, and log analysis. Each keeps legacy flat fixtures and now also has `scenario.json`, `in/`, and `out/` files. The example runner generates artifacts under `.office-dsl/generated/examples/<scenario-id>/` and compares them with expected outputs. Current manifests use fixture DSL input because the mock planner still emits non-deterministic task IDs.
+Current implementation status: the repository has six office examples: read-only report, clarification, email drafts, confirmed send, policy denial, and log analysis. Each keeps legacy flat fixtures and now also has `scenario.json`, `in/`, and `out/` files. The example runner generates artifacts under `examples/<scenario>/generated/` and compares them with expected outputs. Current manifests use fixture DSL input because the mock planner still emits non-deterministic task IDs.
 
 ## 17. End-To-End Target Scenarios
 

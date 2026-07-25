@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { cp, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -38,6 +39,20 @@ describe("example runner", () => {
     });
   });
 
+  it("writes default generated outputs beside the example scenario as .dsl.hcl", async () => {
+    const scenarioDir = path.join(repoRoot, "examples", "01-read-only-report");
+    const generatedRoot = path.join(scenarioDir, "generated");
+    await rm(generatedRoot, { recursive: true, force: true });
+
+    const result = await runScenario({ repoRoot, scenarioDir });
+
+    expect(result.generatedDir).toBe(generatedRoot);
+    expect(existsSync(path.join(generatedRoot, "actual.dsl.hcl"))).toBe(true);
+    expect(existsSync(path.join(generatedRoot, "actual.plan.dsl.hcl"))).toBe(true);
+    expect(existsSync(path.join(generatedRoot, "verifier-input.dsl.hcl"))).toBe(true);
+    expect(existsSync(path.join(generatedRoot, "actual.dsl.md"))).toBe(false);
+    await rm(generatedRoot, { recursive: true, force: true });
+  });
   it("discovers all six example scenarios", async () => {
     const scenarios = await discoverScenarios(repoRoot);
     const ids = scenarios.map((scenario) => path.basename(scenario));

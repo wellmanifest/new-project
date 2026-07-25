@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Flattened `examples-chat/<scenario>/generated/` event artifacts back into one scenario-local folder instead of `generated/<user>/<event>/` subfolders.
+- Standardized generated runner DSL artifacts on `*.dsl.hcl`, replacing chat `summary/status/approvals.dsl.md` files and regular example `actual/verifier-input.*.md` DSL artifacts.
+- Updated docs and TODO entries so generated example locations and file formats match the runner behavior.
+
 ## [0.7.4] - 2026-07-25
 
 ### Added

@@ -20,7 +20,7 @@ DONE:
 - `apps/web`: static demo UI.
 - `verifier`: Python mock verifier with Pydantic report model and optional LiteLLM/OpenRouter path.
 - `examples`: six office examples with legacy flat fixtures plus canonical `scenario.json`, `in/`, and `out/` structure.
-- `examples-chat`: four executable Human1/Human2 negotiation scenarios with line-by-line artifacts, expected outcomes, bilateral current-hash approval finalization, approval invalidation, cancellation coverage, and generated `*.dsl.hcl` files rendered as HCL-highlighted project DSL rather than JSON.
+- `examples-chat`: four executable Human1/Human2 negotiation scenarios with line-by-line artifacts, expected outcomes, bilateral current-hash approval finalization, approval invalidation, cancellation coverage, and flat scenario-local generated `*.dsl.hcl` files rendered as HCL-highlighted project DSL rather than JSON.
 - `tests`: TypeScript and Python tests for current scope, including example runner, chat negotiation runner, CLI, backend, store, security, runtime, and Intent/Contract model coverage.
 - Documentation alignment pass: README, TODO, VERSION, CHANGELOG, this handoff, and `docs/system-purpose-and-runtime-flow.md`.
 - Example runner pass: `@office-dsl/example-runner`, `example:run`, `examples:run`, root `verify`, and safe `project.sh` command dispatch.

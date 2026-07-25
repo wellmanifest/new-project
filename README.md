@@ -182,7 +182,7 @@ corepack pnpm test
 
 ## Example Runner
 
-Current examples now have canonical `scenario.json` manifests plus mirrored `in/` and `out/` folders. The runner writes generated artifacts to `.office-dsl/generated/examples/<scenario-id>/` and compares them with expected outputs.
+Current examples now have canonical `scenario.json` manifests plus mirrored `in/` and `out/` folders. The runner writes generated artifacts to `examples/<scenario>/generated/` and compares them with expected outputs.
 
 Run one example:
 
@@ -214,9 +214,9 @@ Run all chat scenarios:
 corepack pnpm run examples-chat:run
 ```
 
-Generated DSL artifacts use `*.dsl.hcl`: HCL-like syntax for automatic editor highlighting, with project-specific blocks such as `document`, `field`, `conflict`, and `change`. They are not JSON and are not Terraform files; HCL is only the host shape for coloring and manual editing. The runner validates the project-specific DSL/HCL structure before writing artifacts. By default, generated chat outputs are written next to each scenario under `examples-chat/<scenario>/generated/`, which is ignored by Git.
+Generated DSL artifacts use `*.dsl.hcl`: HCL-like syntax for automatic editor highlighting, with project-specific blocks such as `document`, `field`, `conflict`, and `change`. They are not JSON and are not Terraform files; HCL is only the host shape for coloring and manual editing. The runner validates the project-specific DSL/HCL structure before writing artifacts. By default, generated chat outputs are written as flat files next to each scenario under `examples-chat/<scenario>/generated/`, which is ignored by Git.
 
-For agreed scenarios, `final-contract.dsl.hcl`, `contract.pdf`, and `approvals.json` are created only when both parties approve the same current merged contract hash. A one-side approval cannot create final artifacts, and a later contract change invalidates the earlier approval. Cancelled scenarios never create final contract or PDF artifacts.
+For agreed scenarios, `final-contract.dsl.hcl`, `contract.pdf`, and `approvals.dsl.hcl` are created only when both parties approve the same current merged contract hash. A one-side approval cannot create final artifacts, and a later contract change invalidates the earlier approval. Cancelled scenarios never create final contract or PDF artifacts.
 
 ## Tests And Checks
 

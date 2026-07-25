@@ -47,7 +47,7 @@ describe("examples-chat runner", () => {
     const { generatedRoot, result } = await runChat("01-short-agreement");
     expect(result.ok).toBe(true);
     const partyContract = await readFile(
-      path.join(generatedRoot, "user1", "001", "001-user1.party-contract.dsl.hcl"),
+      path.join(generatedRoot, "001-user1.party-contract.dsl.hcl"),
       "utf8"
     );
     validateChatDslText(partyContract);
@@ -56,7 +56,7 @@ describe("examples-chat runner", () => {
     expect(partyContract).toContain('value = "5000 PLN"');
 
     const merged = await readFile(
-      path.join(generatedRoot, "user1", "007", "007-user1.merged-contract.dsl.hcl"),
+      path.join(generatedRoot, "007-user1.merged-contract.dsl.hcl"),
       "utf8"
     );
     validateChatDslText(merged);
@@ -69,21 +69,18 @@ describe("examples-chat runner", () => {
   it("detects conflicts before the parties converge", async () => {
     const { generatedRoot, result } = await runChat("02-long-negotiation-agreement");
     expect(result.ok).toBe(true);
-    const statusDsl = await readFile(
-      path.join(generatedRoot, "user2", "002", "002-user2.status.dsl.md"),
-      "utf8"
-    );
-    expect(statusDsl).toContain('CONFLICT price "4000 PLN" "6000 PLN"');
+    const statusDsl = await readFile(path.join(generatedRoot, "002-user2.status.dsl.hcl"), "utf8");
+    validateChatDslText(statusDsl);
+    expect(statusDsl).toContain('document "CHAT_STATUS" {');
+    expect(statusDsl).toContain('conflict "PRICE" {');
+    expect(statusDsl).toContain('value = ["4000 PLN", "6000 PLN"]');
     await rm(generatedRoot, { recursive: true, force: true });
   });
 
   it("writes a readable diff when a party changes position", async () => {
     const { generatedRoot, result } = await runChat("02-long-negotiation-agreement");
     expect(result.ok).toBe(true);
-    const diff = await readFile(
-      path.join(generatedRoot, "user1", "003", "003-user1.diff.md"),
-      "utf8"
-    );
+    const diff = await readFile(path.join(generatedRoot, "003-user1.diff.md"), "utf8");
     expect(diff).toContain("Changed price: 4000 PLN -> 5000 PLN");
     await rm(generatedRoot, { recursive: true, force: true });
   });
@@ -157,7 +154,9 @@ describe("examples-chat runner", () => {
       new Set(["user1", "user2"])
     );
     expect(
-      result.summary.approvals.every((approval) => approval.approvedHash === result.summary.finalHash)
+      result.summary.approvals.every(
+        (approval) => approval.approvedHash === result.summary.finalHash
+      )
     ).toBe(true);
     const finalDsl = await readFile(
       path.join(generatedRoot, "final", "final-contract.dsl.hcl"),
@@ -185,11 +184,14 @@ describe("examples-chat runner", () => {
     const { generatedRoot, result } = await runChat("01-short-agreement");
     expect(result.ok).toBe(true);
     for (const file of [
-      path.join(generatedRoot, "user1", "001", "001-user1.intent-contract.dsl.hcl"),
-      path.join(generatedRoot, "user1", "001", "001-user1.party-contract.dsl.hcl"),
-      path.join(generatedRoot, "user1", "007", "007-user1.merged-contract.dsl.hcl"),
+      path.join(generatedRoot, "001-user1.intent-contract.dsl.hcl"),
+      path.join(generatedRoot, "001-user1.party-contract.dsl.hcl"),
+      path.join(generatedRoot, "007-user1.merged-contract.dsl.hcl"),
+      path.join(generatedRoot, "002-user2.status.dsl.hcl"),
+      path.join(generatedRoot, "summary.dsl.hcl"),
       path.join(generatedRoot, "final", "final-contract.dsl.hcl"),
-      path.join(generatedRoot, "final", "annex.dsl.hcl")
+      path.join(generatedRoot, "final", "annex.dsl.hcl"),
+      path.join(generatedRoot, "final", "approvals.dsl.hcl")
     ]) {
       const dsl = await readFile(file, "utf8");
       expect(() => JSON.parse(dsl)).toThrow();
@@ -206,9 +208,12 @@ describe("examples-chat runner", () => {
     const result = await runChatScenario({ repoRoot, scenarioDir });
 
     expect(result.generatedDir).toBe(generatedRoot);
-    expect(existsSync(path.join(generatedRoot, "user1", "001", "001-user1.intent-contract.dsl.hcl"))).toBe(true);
-    expect(existsSync(path.join(generatedRoot, "user1", "001", "001-user1.party-contract.dsl.hcl"))).toBe(true);
+    expect(existsSync(path.join(generatedRoot, "001-user1.intent-contract.dsl.hcl"))).toBe(true);
+    expect(existsSync(path.join(generatedRoot, "001-user1.party-contract.dsl.hcl"))).toBe(true);
     expect(existsSync(path.join(generatedRoot, "final", "final-contract.dsl.hcl"))).toBe(true);
+    expect(existsSync(path.join(generatedRoot, "summary.dsl.hcl"))).toBe(true);
+    expect(existsSync(path.join(generatedRoot, "user1"))).toBe(false);
+    expect(existsSync(path.join(generatedRoot, "final", "approvals.dsl.hcl"))).toBe(true);
     await rm(generatedRoot, { recursive: true, force: true });
   });
   it("executes all four scenarios with expected outcomes", async () => {

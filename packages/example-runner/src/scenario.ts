@@ -155,15 +155,18 @@ export async function runScenario(options: ScenarioRunOptions): Promise<Scenario
   const humanDsl = renderHumanDsl(dsl);
 
   const artifacts = { dsl, validation, questions, plan, verification, humanDsl };
-  await writeDslMd(generatedDir, "actual.dsl.md", "OFFICE_TASK", humanDsl);
-  await writeDslMd(generatedDir, "actual.validation.md", "VALIDATION", renderValidationDsl(validation));
-  await writeDslMd(generatedDir, "actual.questions.md", "QUESTIONS", renderQuestionsDsl(questions));
-  await writeDslMd(generatedDir, "actual.plan.md", "PLAN", renderPlanDsl(plan));
-  await writeDslMd(generatedDir, "actual.verification.md", "VERIFICATION", renderVerificationDsl(verification));
-  await writeDslMd(
+  await writeDslHcl(generatedDir, "actual.dsl.hcl", humanDsl);
+  await writeDslHcl(generatedDir, "actual.validation.dsl.hcl", renderValidationDsl(validation));
+  await writeDslHcl(generatedDir, "actual.questions.dsl.hcl", renderQuestionsDsl(questions));
+  await writeDslHcl(generatedDir, "actual.plan.dsl.hcl", renderPlanDsl(plan));
+  await writeDslHcl(
     generatedDir,
-    "actual.python-verification.md",
-    "PYTHON_VERIFICATION",
+    "actual.verification.dsl.hcl",
+    renderVerificationDsl(verification)
+  );
+  await writeDslHcl(
+    generatedDir,
+    "actual.python-verification.dsl.hcl",
     renderVerificationDsl(rawVerification)
   );
 
@@ -255,18 +258,11 @@ async function runPythonVerifier(
   mode: string,
   generatedDir: string
 ): Promise<Record<string, unknown>> {
-  const dslFile = path.join(generatedDir, "verifier-input.dsl.md");
-  const planFile = path.join(generatedDir, "verifier-input.plan.md");
-  await writeDslMd(generatedDir, "verifier-input.dsl.md", "OFFICE_TASK", renderHumanDsl(dsl));
-  const planDsl = [
-    "# PLAN",
-    "",
-    "```dsl",
-    ...plan.actions.map((action) => `ACTION ${action}`),
-    "```",
-    ""
-  ].join("\n");
-  await writeFile(planFile, planDsl, "utf8");
+  const dslFile = path.join(generatedDir, "verifier-input.dsl.hcl");
+  const planFile = path.join(generatedDir, "verifier-input.plan.dsl.hcl");
+  await writeDslHcl(generatedDir, "verifier-input.dsl.hcl", renderHumanDsl(dsl));
+  const planDsl = ["PLAN", ...plan.actions.map((action) => `ACTION ${action}`)].join("\n");
+  await writeFile(planFile, `${planDsl}\n`, "utf8");
   const env = {
     ...process.env,
     PYTHONPATH: appendPythonPath(process.env.PYTHONPATH, path.join(repoRoot, "verifier"))
@@ -410,13 +406,8 @@ function compareJson(failures: string[], label: string, expected: unknown, actua
   }
 }
 
-async function writeDslMd(
-  dir: string,
-  name: string,
-  docType: string,
-  body: string
-): Promise<void> {
-  await writeFile(path.join(dir, name), `# ${docType}\n\n\`\`\`dsl\n${body.trim()}\n\`\`\`\n`, "utf8");
+async function writeDslHcl(dir: string, name: string, body: string): Promise<void> {
+  await writeFile(path.join(dir, name), `${body.trim()}\n`, "utf8");
 }
 
 function renderValidationDsl(validation: ValidationResult): string {

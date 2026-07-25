@@ -65,11 +65,11 @@ NOT IMPLEMENTED:
 - [x] Reorganize `.office-dsl/` into per-client folders for runtime state.
   - Done when runtime task sessions and audit records are stored under `.office-dsl/<createdBy>/tasks/` and `.office-dsl/<createdBy>/audit/` and no flat `tasks/` + `audit/` dump remains.
 - [x] Keep generated `examples` and `examples-chat` outputs beside their scenarios.
-  - Done when `examples/<scenario>/generated/` and `examples-chat/<scenario>/generated/<user>/<event>/` hold all runner output and `.office-dsl/` only stores runtime state.
+  - Done when `examples/<scenario>/generated/` and flat `examples-chat/<scenario>/generated/` files hold all runner output and `.office-dsl/` only stores runtime state.
 - [x] Remove JSON from generated runner artifacts.
-  - Done when `*.dsl.md` files use plain line-oriented DSL commands (e.g. `VALIDATION`, `PLAN`, `ACTION`, `CHAT_STATUS`) without embedded JSON strings.
+  - Done when generated runner artifacts use `*.dsl.hcl` project DSL/HCL files or human-readable Markdown/PDF files, without JSON output artifacts.
 - [x] Update Python verifier to consume DSL/markdown inputs instead of JSON.
-  - Done when `verifier-input.dsl.md` and `verifier-input.plan.md` are parsed directly and mock verifier results match the previous JSON-based behavior.
+  - Done when `verifier-input.dsl.hcl` and `verifier-input.plan.dsl.hcl` are parsed directly and mock verifier results match the previous JSON-based behavior.
 
 ---
 
@@ -139,17 +139,17 @@ Note: Phase 3 is implemented at the `@office-dsl/intent-contract-model` layer vi
 - [x] Detect conflicts and changes of position.
   - Done when tests prove competing party values block finalization and a party's changed field is recorded as a changed position.
 - [x] Accept only the same current merged contract version from both parties.
-  - Done when `final-contract.dsl.hcl`, `contract.pdf`, and `approvals.json` are written only after active Human1 and Human2 approvals reference the current merged hash with no missing fields or conflicts.
+  - Done when `final-contract.dsl.hcl`, `contract.pdf`, and `approvals.dsl.hcl` are written only after active Human1 and Human2 approvals reference the current merged hash with no missing fields or conflicts.
 - [x] Invalidate approvals after any merged contract change.
   - Done when a one-side approval becomes `INVALIDATED` if a later utterance changes the merged contract hash.
 - [x] Support ending a conversation without agreement.
-  - Done when cancellation scenarios end as `CANCELLED` and do not produce `final-contract.dsl.hcl`, `contract.pdf`, or `approvals.json`.
+  - Done when cancellation scenarios end as `CANCELLED` and do not produce `final-contract.dsl.hcl`, `contract.pdf`, or `approvals.dsl.hcl`.
 - [x] Generate final DSL, PDF, approvals, diff summary, and annex only after bilateral approval.
   - Done when agreed scenarios create final artifacts under `examples-chat/<scenario>/generated/final/` only at the event where the second party approves the same current hash.
 - [x] Add commands for chat examples and include them in verification.
   - Done when `example-chat:run`, `examples-chat:run`, `project.sh example-chat`, `project.sh examples-chat`, and the root `verify` flow execute the chat examples.
 - [x] Compare generated artifacts with expected outcomes and cover the flow with tests.
-  - Done when the runner compares generated `summary.json` with `out/expected.summary.json`, and tests cover parsing, discovery, merging, conflict detection, approval invalidation, finalization, cancellation, and all four scenario outcomes.
+  - Done when the runner compares the generated summary model with `out/expected.summary.json`, writes `summary.dsl.hcl`, and tests cover parsing, discovery, merging, conflict detection, approval invalidation, finalization, cancellation, and all four scenario outcomes.
 
 ---
 

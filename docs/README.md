@@ -36,7 +36,7 @@ Historical research folders live under `research/` and should not be moved back 
 - `apps/web/` - static demo UI.
 - `verifier/` - Python verifier package.
 - `examples/` - current office fixtures with `scenario.json`, `in/`, `out/`, and legacy flat files.
-- `examples-chat/` - executable Human1/Human2 negotiation fixtures with per-line processing, expected outcomes, and scenario-local generated `*.dsl.hcl` artifacts in editable HCL-highlighted project DSL text.
+- `examples-chat/` - executable Human1/Human2 negotiation fixtures with per-line processing, expected outcomes, and flat scenario-local generated `*.dsl.hcl` artifacts in editable HCL-highlighted project DSL text.
 - `tests/` - TypeScript tests.
 - `mock-data/` - local offline data.
 
