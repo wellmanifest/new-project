@@ -12,3 +12,4 @@ __pycache__/
 .pytest_cache/
 pytest-cache-files-*/
 examples-chat/*/generated/
+examples/*/generated/

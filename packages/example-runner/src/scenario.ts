@@ -127,9 +127,7 @@ export function validateScenarioManifest(manifest: ScenarioManifest, scenarioDir
 
 export async function runScenario(options: ScenarioRunOptions): Promise<ScenarioRunResult> {
   const manifest = await loadScenarioManifest(options.scenarioDir);
-  const generatedDir =
-    options.generatedRoot ??
-    path.join(options.repoRoot, ".office-dsl", "generated", "examples", manifest.id);
+  const generatedDir = options.generatedRoot ?? path.join(options.scenarioDir, "generated");
   await rm(generatedDir, { recursive: true, force: true });
   await mkdir(generatedDir, { recursive: true });
 
@@ -156,13 +154,12 @@ export async function runScenario(options: ScenarioRunOptions): Promise<Scenario
   const humanDsl = renderHumanDsl(dsl);
 
   const artifacts = { dsl, validation, questions, plan, verification, humanDsl };
-  await writeArtifact(generatedDir, "actual.dsl.json", dsl);
-  await writeArtifact(generatedDir, "actual.validation.json", validation);
-  await writeArtifact(generatedDir, "actual.questions.json", questions);
-  await writeArtifact(generatedDir, "actual.plan.json", plan);
-  await writeArtifact(generatedDir, "actual.verification.json", verification);
-  await writeArtifact(generatedDir, "actual.python-verification.json", rawVerification);
-  await writeFile(path.join(generatedDir, "actual.human.dsl"), `${humanDsl}\n`, "utf8");
+  await writeDslMd(generatedDir, "actual.dsl.md", "OFFICE_TASK", humanDsl);
+  await writeDslMd(generatedDir, "actual.validation.md", "VALIDATION", validation);
+  await writeDslMd(generatedDir, "actual.questions.md", "QUESTIONS", questions);
+  await writeDslMd(generatedDir, "actual.plan.md", "PLAN", plan);
+  await writeDslMd(generatedDir, "actual.verification.md", "VERIFICATION", verification);
+  await writeDslMd(generatedDir, "actual.python-verification.md", "PYTHON_VERIFICATION", rawVerification);
 
   const failures = await compareExpected(options.scenarioDir, manifest, artifacts);
   return {
@@ -254,8 +251,8 @@ async function runPythonVerifier(
 ): Promise<Record<string, unknown>> {
   const dslFile = path.join(generatedDir, "verifier-input.dsl.json");
   const planFile = path.join(generatedDir, "verifier-input.plan.json");
-  await writeArtifact(generatedDir, path.basename(dslFile), dsl);
-  await writeArtifact(generatedDir, path.basename(planFile), plan);
+  await writeFile(dslFile, `${stableJson(dsl)}\n`, "utf8");
+  await writeFile(planFile, `${stableJson(plan)}\n`, "utf8");
   const env = {
     ...process.env,
     PYTHONPATH: appendPythonPath(process.env.PYTHONPATH, path.join(repoRoot, "verifier"))
@@ -399,8 +396,44 @@ function compareJson(failures: string[], label: string, expected: unknown, actua
   }
 }
 
-async function writeArtifact(dir: string, name: string, value: unknown): Promise<void> {
-  await writeFile(path.join(dir, name), `${stableJson(value)}\n`, "utf8");
+async function writeDslMd(dir: string, name: string, docType: string, value: unknown): Promise<void> {
+  const body = typeof value === "string" ? value.trim() : jsonToDsl(docType, value);
+  await writeFile(path.join(dir, name), `# ${docType}\n\n\`\`\`dsl\n${body}\n\`\`\`\n`, "utf8");
+}
+
+function jsonToDsl(docType: string, value: unknown): string {
+  return `document "${docType}" {\n${renderDslValue(value, 1)}\n}`;
+}
+
+function renderDslValue(value: unknown, indent: number): string {
+  const pad = "  ".repeat(indent);
+  if (value === null) return `${pad}null`;
+  if (typeof value === "boolean") return `${pad}${value ? "true" : "false"}`;
+  if (typeof value === "number") return `${pad}${value}`;
+  if (typeof value === "string") return `${pad}"${value.replace(/"/g, '\\"')}"`;
+  if (Array.isArray(value)) {
+    return value.map((item, index) => `${pad}item_${index} = ${renderDslInline(item)}`).join("\n");
+  }
+  if (typeof value === "object") {
+    return Object.entries(value as Record<string, unknown>)
+      .map(([key, val]) => `${pad}${key} = ${renderDslInline(val)}`)
+      .join("\n");
+  }
+  return `${pad}${String(value)}`;
+}
+
+function renderDslInline(value: unknown): string {
+  if (value === null) return "null";
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (typeof value === "number") return String(value);
+  if (typeof value === "string") return `"${String(value).replace(/"/g, '\\"')}"`;
+  if (Array.isArray(value)) return `[${value.map(renderDslInline).join(", ")}]`;
+  if (typeof value === "object") {
+    return `{\n${Object.entries(value as Record<string, unknown>)
+      .map(([k, v]) => `  ${k} = ${renderDslInline(v)}`)
+      .join("\n")}\n}`;
+  }
+  return String(value);
 }
 
 function stableJson(value: unknown): string {

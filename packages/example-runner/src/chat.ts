@@ -246,7 +246,7 @@ export async function runChatScenario(options: {
     approvals,
     cancelledReason
   );
-  await writeJson(path.join(generatedDir, "summary.json"), summary);
+  await writeDslMd(path.join(generatedDir, "summary.dsl.md"), "CHAT_SUMMARY", summary);
   const failures = await compareExpectedSummary(options.scenarioDir, manifest, summary);
   return {
     id: manifest.id,
@@ -478,7 +478,7 @@ async function writeEventArtifacts(
     `${diffLines.join("\n") || "No contract change."}\n`,
     "utf8"
   );
-  await writeJson(path.join(eventDir, `${eventPrefix(event)}.status.json`), status);
+  await writeDslMd(path.join(eventDir, `${eventPrefix(event)}.status.dsl.md`), "CHAT_STATUS", status);
 }
 
 function eventPrefix(event: ChatLine): string {
@@ -506,7 +506,7 @@ async function writeFinalArtifacts(
   const markdown = renderContractMarkdown(finalContract);
   await writeFile(path.join(finalDir, "contract.md"), markdown, "utf8");
   await writeFile(path.join(finalDir, "contract.pdf"), renderMinimalPdf(markdown), "binary");
-  await writeJson(path.join(finalDir, "approvals.json"), {
+  await writeDslMd(path.join(finalDir, "approvals.dsl.md"), "CHAT_APPROVALS", {
     status: "APPROVED",
     hash: merged.hash,
     approvals: approvals.filter((approval) => approval.status === "ACTIVE")
@@ -800,6 +800,42 @@ function compareSubset(
     failures.push(`${label} expected ${String(expected)} but got ${String(actual)}`);
 }
 
-async function writeJson(file: string, value: unknown): Promise<void> {
-  await writeFile(file, `${stableJson(value)}\n`, "utf8");
+async function writeDslMd(file: string, docType: string, value: unknown): Promise<void> {
+  const body = typeof value === "string" ? value.trim() : jsonToDsl(docType, value);
+  await writeFile(file, `# ${docType}\n\n\`\`\`dsl\n${body}\n\`\`\`\n`, "utf8");
+}
+
+function jsonToDsl(docType: string, value: unknown): string {
+  return `document "${docType}" {\n${renderDslValue(value, 1)}\n}`;
+}
+
+function renderDslValue(value: unknown, indent: number): string {
+  const pad = "  ".repeat(indent);
+  if (value === null) return `${pad}null`;
+  if (typeof value === "boolean") return `${pad}${value ? "true" : "false"}`;
+  if (typeof value === "number") return `${pad}${value}`;
+  if (typeof value === "string") return `${pad}"${value.replace(/"/g, '\\"')}"`;
+  if (Array.isArray(value)) {
+    return value.map((item, index) => `${pad}item_${index} = ${renderDslInline(item)}`).join("\n");
+  }
+  if (typeof value === "object") {
+    return Object.entries(value as Record<string, unknown>)
+      .map(([key, val]) => `${pad}${key} = ${renderDslInline(val)}`)
+      .join("\n");
+  }
+  return `${pad}${String(value)}`;
+}
+
+function renderDslInline(value: unknown): string {
+  if (value === null) return "null";
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (typeof value === "number") return String(value);
+  if (typeof value === "string") return `"${String(value).replace(/"/g, '\\"')}"`;
+  if (Array.isArray(value)) return `[${value.map(renderDslInline).join(", ")}]`;
+  if (typeof value === "object") {
+    return `{\n${Object.entries(value as Record<string, unknown>)
+      .map(([k, v]) => `  ${k} = ${renderDslInline(v)}`)
+      .join("\n")}\n}`;
+  }
+  return String(value);
 }

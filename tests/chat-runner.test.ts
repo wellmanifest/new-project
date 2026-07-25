@@ -69,10 +69,8 @@ describe("examples-chat runner", () => {
   it("detects conflicts before the parties converge", async () => {
     const { generatedRoot, result } = await runChat("02-long-negotiation-agreement");
     expect(result.ok).toBe(true);
-    const status = JSON.parse(
-      await readFile(path.join(generatedRoot, "002-user2.status.json"), "utf8")
-    ) as { conflicts: Array<{ field: string; values: string[] }> };
-    expect(status.conflicts.some((conflict) => conflict.field === "price")).toBe(true);
+    const statusDsl = await readFile(path.join(generatedRoot, "002-user2.status.dsl.md"), "utf8");
+    expect(statusDsl).toContain('field = "price"');
     await rm(generatedRoot, { recursive: true, force: true });
   });
 
@@ -137,11 +135,8 @@ describe("examples-chat runner", () => {
     expect(result.summary.approvals.some((approval) => approval.status === "INVALIDATED")).toBe(
       true
     );
-    const status = JSON.parse(
-      await readFile(path.join(generatedRoot, "013-user2.status.json"), "utf8")
-    ) as { approvals: Array<{ status: string; invalidatedByLine?: number }> };
     expect(
-      status.approvals.some(
+      result.summary.approvals.some(
         (approval) => approval.status === "INVALIDATED" && approval.invalidatedByLine === 13
       )
     ).toBe(true);
@@ -152,15 +147,12 @@ describe("examples-chat runner", () => {
     const { generatedRoot, result } = await runChat("01-short-agreement");
     expect(result.summary.outcome).toBe("AGREED");
     expect(result.summary.finalCreated).toBe(true);
-    const approvals = JSON.parse(
-      await readFile(path.join(generatedRoot, "final", "approvals.json"), "utf8")
-    ) as { hash: string; approvals: Array<{ party: string; approvedHash: string }> };
-    expect(new Set(approvals.approvals.map((approval) => approval.party))).toEqual(
+    expect(new Set(result.summary.approvals.map((approval) => approval.party))).toEqual(
       new Set(["user1", "user2"])
     );
-    expect(approvals.approvals.every((approval) => approval.approvedHash === approvals.hash)).toBe(
-      true
-    );
+    expect(
+      result.summary.approvals.every((approval) => approval.approvedHash === result.summary.finalHash)
+    ).toBe(true);
     const finalDsl = await readFile(
       path.join(generatedRoot, "final", "final-contract.dsl.hcl"),
       "utf8"
