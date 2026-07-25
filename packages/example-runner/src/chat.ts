@@ -158,9 +158,7 @@ export async function runChatScenario(options: {
   generatedRoot?: string;
 }): Promise<ChatRunResult> {
   const manifest = await loadChatScenarioManifest(options.scenarioDir);
-  const generatedDir =
-    options.generatedRoot ??
-    path.join(options.repoRoot, ".office-dsl", "examples-chat", manifest.id);
+  const generatedDir = options.generatedRoot ?? path.join(options.scenarioDir, "generated");
   await rm(generatedDir, { recursive: true, force: true });
   await mkdir(generatedDir, { recursive: true });
 
@@ -248,7 +246,7 @@ export async function runChatScenario(options: {
     approvals,
     cancelledReason
   );
-  await writeDslMd(path.join(generatedDir, "summary.dsl.md"), "CHAT_SUMMARY", summary);
+  await writeDslMd(path.join(generatedDir, "summary.dsl.md"), "CHAT_SUMMARY", renderSummaryDsl(summary));
   const failures = await compareExpectedSummary(options.scenarioDir, manifest, summary);
   return {
     id: manifest.id,
@@ -480,7 +478,7 @@ async function writeEventArtifacts(
     `${diffLines.join("\n") || "No contract change."}\n`,
     "utf8"
   );
-  await writeDslMd(path.join(eventDir, `${eventPrefix(event)}.status.dsl.md`), "CHAT_STATUS", status);
+  await writeDslMd(path.join(eventDir, `${eventPrefix(event)}.status.dsl.md`), "CHAT_STATUS", renderStatusDsl(status));
 }
 
 function eventPrefix(event: ChatLine): string {
@@ -508,11 +506,11 @@ async function writeFinalArtifacts(
   const markdown = renderContractMarkdown(finalContract);
   await writeFile(path.join(finalDir, "contract.md"), markdown, "utf8");
   await writeFile(path.join(finalDir, "contract.pdf"), renderMinimalPdf(markdown), "binary");
-  await writeDslMd(path.join(finalDir, "approvals.dsl.md"), "CHAT_APPROVALS", {
-    status: "APPROVED",
-    hash: merged.hash,
-    approvals: approvals.filter((approval) => approval.status === "ACTIVE")
-  });
+  await writeDslMd(
+    path.join(finalDir, "approvals.dsl.md"),
+    "CHAT_APPROVALS",
+    renderApprovalsDsl(merged.hash, approvals)
+  );
   await writeFile(path.join(finalDir, "diff-summary.md"), `${diffSummary.join("\n\n")}\n`, "utf8");
   await writeDsl(path.join(finalDir, "annex.dsl.hcl"), renderAnnexDsl(finalContract));
 }
@@ -802,42 +800,61 @@ function compareSubset(
     failures.push(`${label} expected ${String(expected)} but got ${String(actual)}`);
 }
 
-async function writeDslMd(file: string, docType: string, value: unknown): Promise<void> {
-  const body = typeof value === "string" ? value.trim() : jsonToDsl(docType, value);
-  await writeFile(file, `# ${docType}\n\n\`\`\`dsl\n${body}\n\`\`\`\n`, "utf8");
+async function writeDslMd(file: string, docType: string, body: string): Promise<void> {
+  await writeFile(file, `# ${docType}\n\n\`\`\`dsl\n${body.trim()}\n\`\`\`\n`, "utf8");
 }
 
-function jsonToDsl(docType: string, value: unknown): string {
-  return `document "${docType}" {\n${renderDslValue(value, 1)}\n}`;
+function renderSummaryDsl(summary: ChatRunSummary): string {
+  const lines = [
+    "CHAT_SUMMARY",
+    `ID ${summary.id}`,
+    `OUTCOME ${summary.outcome}`,
+    `EVENT_COUNT ${summary.eventCount}`,
+    `FINAL_CREATED ${summary.finalCreated}`
+  ];
+  if (summary.finalHash) lines.push(`FINAL_HASH ${summary.finalHash}`);
+  if (summary.cancelledReason) lines.push(`CANCELLED_REASON "${summary.cancelledReason}"`);
+  for (const field of summary.missing) {
+    lines.push(`MISSING ${field}`);
+  }
+  for (const conflict of summary.conflicts) {
+    lines.push(`CONFLICT ${conflict.field} ${conflict.values.map((v) => `"${v}"`).join(" ")}`);
+  }
+  for (const approval of summary.approvals) {
+    lines.push(
+      `APPROVAL ${approval.party} ${approval.approvedHash} ${approval.status}${
+        approval.invalidatedByLine ? ` INVALIDATED_BY ${approval.invalidatedByLine}` : ""
+      }`
+    );
+  }
+  return lines.join("\n");
 }
 
-function renderDslValue(value: unknown, indent: number): string {
-  const pad = "  ".repeat(indent);
-  if (value === null) return `${pad}null`;
-  if (typeof value === "boolean") return `${pad}${value ? "true" : "false"}`;
-  if (typeof value === "number") return `${pad}${value}`;
-  if (typeof value === "string") return `${pad}"${value.replace(/"/g, '\\"')}"`;
-  if (Array.isArray(value)) {
-    return value.map((item, index) => `${pad}item_${index} = ${renderDslInline(item)}`).join("\n");
+function renderStatusDsl(status: Record<string, unknown>): string {
+  const lines = ["CHAT_STATUS"];
+  lines.push(`OUTCOME ${status.outcome}`);
+  lines.push(`CURRENT_HASH ${status.currentHash}`);
+  for (const field of status.missing as string[]) {
+    lines.push(`MISSING ${field}`);
   }
-  if (typeof value === "object") {
-    return Object.entries(value as Record<string, unknown>)
-      .map(([key, val]) => `${pad}${key} = ${renderDslInline(val)}`)
-      .join("\n");
+  for (const conflict of status.conflicts as Array<{ field: string; values: string[] }>) {
+    lines.push(`CONFLICT ${conflict.field} ${conflict.values.map((v) => `"${v}"`).join(" ")}`);
   }
-  return `${pad}${String(value)}`;
+  for (const approval of status.approvals as ApprovalRecord[]) {
+    lines.push(`APPROVAL ${approval.party} ${approval.approvedHash} ${approval.status}`);
+  }
+  lines.push(`FINAL_ALLOWED ${status.finalAllowed}`);
+  if (status.cancelledReason) {
+    lines.push(`CANCELLED_REASON "${status.cancelledReason}"`);
+  }
+  return lines.join("\n");
 }
 
-function renderDslInline(value: unknown): string {
-  if (value === null) return "null";
-  if (typeof value === "boolean") return value ? "true" : "false";
-  if (typeof value === "number") return String(value);
-  if (typeof value === "string") return `"${String(value).replace(/"/g, '\\"')}"`;
-  if (Array.isArray(value)) return `[${value.map(renderDslInline).join(", ")}]`;
-  if (typeof value === "object") {
-    return `{\n${Object.entries(value as Record<string, unknown>)
-      .map(([k, v]) => `  ${k} = ${renderDslInline(v)}`)
-      .join("\n")}\n}`;
+function renderApprovalsDsl(hash: string, approvals: ApprovalRecord[]): string {
+  const active = approvals.filter((approval) => approval.status === "ACTIVE");
+  const lines = ["CHAT_APPROVALS", `STATUS ${active.length > 0 ? "APPROVED" : "PENDING"}`, `HASH ${hash}`];
+  for (const approval of active) {
+    lines.push(`APPROVAL ${approval.party} ${approval.approvedHash}`);
   }
-  return String(value);
+  return lines.join("\n");
 }

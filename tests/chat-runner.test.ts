@@ -73,7 +73,7 @@ describe("examples-chat runner", () => {
       path.join(generatedRoot, "user2", "002", "002-user2.status.dsl.md"),
       "utf8"
     );
-    expect(statusDsl).toContain('field = "price"');
+    expect(statusDsl).toContain('CONFLICT price "4000 PLN" "6000 PLN"');
     await rm(generatedRoot, { recursive: true, force: true });
   });
 
@@ -198,9 +198,9 @@ describe("examples-chat runner", () => {
     }
     await rm(generatedRoot, { recursive: true, force: true });
   });
-  it("writes generated outputs under .office-dsl/examples-chat per user and event", async () => {
+  it("writes generated outputs beside the chat scenario", async () => {
     const scenarioDir = path.join(repoRoot, "examples-chat", "01-short-agreement");
-    const generatedRoot = path.join(repoRoot, ".office-dsl", "examples-chat", "01-short-agreement");
+    const generatedRoot = path.join(scenarioDir, "generated");
     await rm(generatedRoot, { recursive: true, force: true });
 
     const result = await runChatScenario({ repoRoot, scenarioDir });

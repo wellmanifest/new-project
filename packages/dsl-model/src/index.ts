@@ -196,21 +196,42 @@ export function renderHumanDsl(dsl: TaskDsl): string {
     `TASK ${dsl.task.id} "${dsl.task.title}"`,
     `INPUT "${dsl.task.input}"`,
     ...dsl.sources.map((source) => `SOURCE ${source.id} ${source.name}`),
-    ...dsl.steps.flatMap((step) => [
-      `STEP ${step.id} "${step.description}"`,
-      step.when
-        ? `WHEN ${step.when.var} ${step.when.op} ${JSON.stringify(step.when.value ?? true)}`
-        : "",
-      `DO ${step.action}`,
-      `WITH ${JSON.stringify(step.with)}`,
-      step.saveAs ? `SAVE ${step.saveAs}` : "",
-      step.ask ? `ASK ${step.ask.id} "${step.ask.prompt}" SAVE ${step.ask.saveAs}` : "",
-      step.confirm ? `CONFIRM ${step.confirm.id} "${step.confirm.prompt}"` : ""
-    ]),
+    ...dsl.steps.flatMap((step) => {
+      const body = [
+        step.when
+          ? `WHEN ${step.when.var} ${step.when.op} ${renderDslScalar(step.when.value ?? true)}`
+          : "",
+        `DO ${step.action}`,
+        ...renderWithBlock(step.with),
+        step.saveAs ? `SAVE ${step.saveAs}` : "",
+        step.ask ? `ASK ${step.ask.id} "${step.ask.prompt}" SAVE ${step.ask.saveAs}` : "",
+        step.confirm ? `CONFIRM ${step.confirm.id} "${step.confirm.prompt}"` : ""
+      ];
+      return [`STEP ${step.id} "${step.description}"`, ...body];
+    }),
     `OUTPUT ${dsl.output.format} SAVE ${dsl.output.saveAs}`,
     ...dsl.policies.map(
       (policy) => `POLICY ${policy.decision} ${policy.subject} "${policy.reason}"`
     )
   ];
   return lines.filter(Boolean).join("\n");
+}
+
+function renderWithBlock(withObj: Record<string, unknown>): string[] {
+  const entries = Object.entries(withObj);
+  if (entries.length === 0) return ["WITH {}"];
+  return [
+    "WITH {",
+    ...entries.map(([key, value]) => `  ${key} = ${renderDslScalar(value)}`),
+    "}"
+  ];
+}
+
+function renderDslScalar(value: unknown): string {
+  if (value === null) return "null";
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (typeof value === "number") return String(value);
+  if (typeof value === "string") return `"${value.replace(/"/g, '\\"')}"`;
+  if (Array.isArray(value)) return `[${value.map(renderDslScalar).join(", ")}]`;
+  return String(value);
 }

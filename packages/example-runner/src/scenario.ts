@@ -6,7 +6,8 @@ import {
   parseTaskDsl,
   renderHumanDsl,
   TaskDsl,
-  validateTaskDsl
+  validateTaskDsl,
+  ValidationResult
 } from "../../dsl-model/src/index.js";
 import { Runtime, TaskSession } from "../../dsl-runtime/src/index.js";
 
@@ -127,9 +128,7 @@ export function validateScenarioManifest(manifest: ScenarioManifest, scenarioDir
 
 export async function runScenario(options: ScenarioRunOptions): Promise<ScenarioRunResult> {
   const manifest = await loadScenarioManifest(options.scenarioDir);
-  const generatedDir =
-    options.generatedRoot ??
-    path.join(options.repoRoot, ".office-dsl", "examples", manifest.id);
+  const generatedDir = options.generatedRoot ?? path.join(options.scenarioDir, "generated");
   await rm(generatedDir, { recursive: true, force: true });
   await mkdir(generatedDir, { recursive: true });
 
@@ -157,11 +156,16 @@ export async function runScenario(options: ScenarioRunOptions): Promise<Scenario
 
   const artifacts = { dsl, validation, questions, plan, verification, humanDsl };
   await writeDslMd(generatedDir, "actual.dsl.md", "OFFICE_TASK", humanDsl);
-  await writeDslMd(generatedDir, "actual.validation.md", "VALIDATION", validation);
-  await writeDslMd(generatedDir, "actual.questions.md", "QUESTIONS", questions);
-  await writeDslMd(generatedDir, "actual.plan.md", "PLAN", plan);
-  await writeDslMd(generatedDir, "actual.verification.md", "VERIFICATION", verification);
-  await writeDslMd(generatedDir, "actual.python-verification.md", "PYTHON_VERIFICATION", rawVerification);
+  await writeDslMd(generatedDir, "actual.validation.md", "VALIDATION", renderValidationDsl(validation));
+  await writeDslMd(generatedDir, "actual.questions.md", "QUESTIONS", renderQuestionsDsl(questions));
+  await writeDslMd(generatedDir, "actual.plan.md", "PLAN", renderPlanDsl(plan));
+  await writeDslMd(generatedDir, "actual.verification.md", "VERIFICATION", renderVerificationDsl(verification));
+  await writeDslMd(
+    generatedDir,
+    "actual.python-verification.md",
+    "PYTHON_VERIFICATION",
+    renderVerificationDsl(rawVerification)
+  );
 
   const failures = await compareExpected(options.scenarioDir, manifest, artifacts);
   return {
@@ -406,44 +410,74 @@ function compareJson(failures: string[], label: string, expected: unknown, actua
   }
 }
 
-async function writeDslMd(dir: string, name: string, docType: string, value: unknown): Promise<void> {
-  const body = typeof value === "string" ? value.trim() : jsonToDsl(docType, value);
-  await writeFile(path.join(dir, name), `# ${docType}\n\n\`\`\`dsl\n${body}\n\`\`\`\n`, "utf8");
+async function writeDslMd(
+  dir: string,
+  name: string,
+  docType: string,
+  body: string
+): Promise<void> {
+  await writeFile(path.join(dir, name), `# ${docType}\n\n\`\`\`dsl\n${body.trim()}\n\`\`\`\n`, "utf8");
 }
 
-function jsonToDsl(docType: string, value: unknown): string {
-  return `document "${docType}" {\n${renderDslValue(value, 1)}\n}`;
+function renderValidationDsl(validation: ValidationResult): string {
+  const lines = ["VALIDATION"];
+  if (validation.ok) {
+    lines.push("OK true");
+  } else {
+    lines.push("OK false");
+    for (const issue of validation.issues) {
+      lines.push(`ISSUE path="${issue.path}" message="${issue.message}"`);
+    }
+  }
+  return lines.join("\n");
 }
 
-function renderDslValue(value: unknown, indent: number): string {
-  const pad = "  ".repeat(indent);
-  if (value === null) return `${pad}null`;
-  if (typeof value === "boolean") return `${pad}${value ? "true" : "false"}`;
-  if (typeof value === "number") return `${pad}${value}`;
-  if (typeof value === "string") return `${pad}"${value.replace(/"/g, '\\"')}"`;
-  if (Array.isArray(value)) {
-    return value.map((item, index) => `${pad}item_${index} = ${renderDslInline(item)}`).join("\n");
+function renderQuestionsDsl(
+  questions: Array<{ stepId: string; id?: string; prompt?: string; saveAs?: string }>
+): string {
+  const lines = ["QUESTIONS"];
+  if (questions.length === 0) {
+    lines.push("NONE");
+  } else {
+    for (const question of questions) {
+      const id = question.id ?? question.stepId;
+      const prompt = question.prompt ?? "";
+      const saveAs = question.saveAs ?? "";
+      lines.push(`QUESTION ${id} "${prompt}" SAVE ${saveAs}`);
+    }
   }
-  if (typeof value === "object") {
-    return Object.entries(value as Record<string, unknown>)
-      .map(([key, val]) => `${pad}${key} = ${renderDslInline(val)}`)
-      .join("\n");
-  }
-  return `${pad}${String(value)}`;
+  return lines.join("\n");
 }
 
-function renderDslInline(value: unknown): string {
-  if (value === null) return "null";
-  if (typeof value === "boolean") return value ? "true" : "false";
-  if (typeof value === "number") return String(value);
-  if (typeof value === "string") return `"${String(value).replace(/"/g, '\\"')}"`;
-  if (Array.isArray(value)) return `[${value.map(renderDslInline).join(", ")}]`;
-  if (typeof value === "object") {
-    return `{\n${Object.entries(value as Record<string, unknown>)
-      .map(([k, v]) => `  ${k} = ${renderDslInline(v)}`)
-      .join("\n")}\n}`;
+function renderPlanDsl(plan: PlanSummary): string {
+  const lines = ["PLAN"];
+  for (const action of plan.actions) {
+    lines.push(`ACTION ${action}`);
   }
-  return String(value);
+  lines.push(`requiresInput ${plan.requiresInput}`);
+  lines.push(`requiresConfirmation ${plan.requiresConfirmation}`);
+  lines.push(`dryRun ${plan.dryRun}`);
+  lines.push(`expectedState ${plan.expectedState}`);
+  return lines.join("\n");
+}
+
+function renderVerificationDsl(verification: Record<string, unknown>): string {
+  const lines = ["VERIFICATION"];
+  for (const [key, value] of Object.entries(verification).sort(([a], [b]) => a.localeCompare(b))) {
+    if (Array.isArray(value) && value.length === 0) continue;
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        lines.push(`${key.toUpperCase()} "${String(item).replace(/"/g, '\\"')}"`);
+      }
+    } else if (typeof value === "string") {
+      lines.push(`${key.toUpperCase()} "${value.replace(/"/g, '\\"')}"`);
+    } else if (typeof value === "boolean" || typeof value === "number") {
+      lines.push(`${key.toUpperCase()} ${value}`);
+    } else if (value !== null) {
+      lines.push(`${key.toUpperCase()} "${String(value).replace(/"/g, '\\"')}"`);
+    }
+  }
+  return lines.join("\n");
 }
 
 function stableJson(value: unknown): string {

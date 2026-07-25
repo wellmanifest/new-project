@@ -4,18 +4,20 @@
 
 ### Changed
 
-- Reorganized `.office-dsl/` into per-client folders:
-  - Runtime task sessions and audit records are now stored under `.office-dsl/<createdBy>/tasks/` and `.office-dsl/<createdBy>/audit/` instead of a flat `.office-dsl/tasks/` + `.office-dsl/audit/` dump.
-  - `examples` runner outputs are now placed under `.office-dsl/examples/<scenario>/`.
-  - `examples-chat` runner outputs are now placed under `.office-dsl/examples-chat/<scenario>/<user>/<event>/` with a shared `final/` directory.
-- Replaced remaining JSON artifacts with DSL/markdown files (`*.dsl.md`) so generated responses follow the `CONTRIBUTING.md` / `POLICY.md` fenced DSL style.
+- Reorganized `.office-dsl/` into per-client folders for runtime state:
+  - Task sessions and audit records are now stored under `.office-dsl/<createdBy>/tasks/` and `.office-dsl/<createdBy>/audit/` instead of a flat `.office-dsl/tasks/` + `.office-dsl/audit/` dump.
+- Restored example outputs to live beside their scenarios:
+  - `examples` runner outputs are placed under `examples/<scenario>/generated/`.
+  - `examples-chat` runner outputs are placed under `examples-chat/<scenario>/generated/<user>/<event>/` with a shared `final/` directory.
+- Removed JSON from all generated runner artifacts. Generated `.dsl.md` files now use the same plain line-oriented DSL commands as other DSL files (e.g. `VALIDATION`, `PLAN`, `ACTION`, `QUESTION`, `CHAT_STATUS`, `CHAT_SUMMARY`, `CHAT_APPROVALS`).
+- Updated `renderHumanDsl` so `WITH` and `WHEN` blocks are rendered as plain DSL instead of embedded JSON strings.
 - Updated Python verifier to read DSL/markdown input files (`verifier-input.dsl.md`, `verifier-input.plan.md`) and parse actions directly from the DSL text instead of requiring JSON.
-- Removed obsolete `.gitignore` entries for `examples/*/generated/` and `examples-chat/*/generated/` since all generated outputs now live under `.office-dsl/`.
+- Restored `examples/*/generated/` and `examples-chat/*/generated/` to `.gitignore`.
 
 ### Tests
 
 - Updated `store.test.ts` for per-client `FileTaskStore` directory layout.
-- Updated `chat-runner.test.ts` paths to reflect `user/<event>/` artifact placement.
+- Updated `chat-runner.test.ts` paths and assertions to match the restored scenario-side output and plain DSL format.
 
 ## [0.7.2] - 2026-07-24
 

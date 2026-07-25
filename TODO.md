@@ -62,10 +62,12 @@ NOT IMPLEMENTED:
   - Done when `corepack pnpm run verify` works on Windows and Linux.
 - [x] Fix or document any dependency/link issue that prevents default Vitest startup in the Codex sandbox.
   - Done when the exact environment failure is reproducible or removed. Documented in `docs/codex-sandbox-vitest.md`; root test scripts avoid `.pytest_cache` scanning, but this Codex Windows sandbox still blocks Vite/Vitest process creation with `spawn EPERM`.
-- [x] Reorganize `.office-dsl/` into per-client folders.
-  - Done when runtime tasks/audit, `examples`, and `examples-chat` outputs each have a dedicated `<client>/<scenario>` path and no flat `tasks/` + `audit/` dump remains.
+- [x] Reorganize `.office-dsl/` into per-client folders for runtime state.
+  - Done when runtime task sessions and audit records are stored under `.office-dsl/<createdBy>/tasks/` and `.office-dsl/<createdBy>/audit/` and no flat `tasks/` + `audit/` dump remains.
+- [x] Keep generated `examples` and `examples-chat` outputs beside their scenarios.
+  - Done when `examples/<scenario>/generated/` and `examples-chat/<scenario>/generated/<user>/<event>/` hold all runner output and `.office-dsl/` only stores runtime state.
 - [x] Remove JSON from generated runner artifacts.
-  - Done when `examples` and `examples-chat` runners emit only DSL/markdown files (`*.dsl.md`, `*.dsl.hcl`, `*.md`, `*.pdf`) and expected files are compared as objects in memory.
+  - Done when `*.dsl.md` files use plain line-oriented DSL commands (e.g. `VALIDATION`, `PLAN`, `ACTION`, `CHAT_STATUS`) without embedded JSON strings.
 - [x] Update Python verifier to consume DSL/markdown inputs instead of JSON.
   - Done when `verifier-input.dsl.md` and `verifier-input.plan.md` are parsed directly and mock verifier results match the previous JSON-based behavior.
 
