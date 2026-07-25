@@ -28,6 +28,7 @@ export interface SourceReference {
   speaker?: "Human1" | "Human2" | "system" | "unknown";
   path?: string;
   quote?: string;
+  span?: { start: number; end: number };
 }
 
 export interface FormalField<T> {
@@ -37,6 +38,7 @@ export interface FormalField<T> {
   requiredForCompletion: boolean;
   source: SourceReference | null;
   approvedBy: string[];
+  interpretations?: string[];
 }
 
 export interface IntentContractDsl {
@@ -158,11 +160,18 @@ export interface RiskNode {
   level: FormalField<"low" | "medium" | "high">;
 }
 
+export interface ConflictValue {
+  partyId?: string;
+  value: unknown;
+  source: SourceReference | null;
+}
+
 export interface ConflictNode {
   id: string;
   field: string;
   description: FormalField<string>;
   sourceIds: string[];
+  values?: ConflictValue[];
 }
 
 export interface QuestionNode {
@@ -289,6 +298,201 @@ export function canonicalizeIntentContractDsl(dsl: IntentContractDsl): string {
 
 export function hashIntentContractDsl(dsl: IntentContractDsl): string {
   return createHash("sha256").update(canonicalizeIntentContractDsl(dsl)).digest("hex");
+}
+
+export interface CollectedField {
+  path: string;
+  field: FormalField<unknown>;
+}
+
+export function collectFormalFields(dsl: IntentContractDsl): CollectedField[] {
+  const out: CollectedField[] = [];
+  walk(dsl as unknown, "");
+  return out;
+
+  function walk(value: unknown, path: string): void {
+    if (!value || typeof value !== "object") return;
+    if (isFormalFieldLike(value)) {
+      out.push({ path, field: value as FormalField<unknown> });
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => walk(item, `${path}[${index}]`));
+      return;
+    }
+    for (const [key, child] of Object.entries(value)) {
+      walk(child, path ? `${path}.${key}` : key);
+    }
+  }
+}
+
+export type GeneratedQuestionReason =
+  | "MISSING"
+  | "AMBIGUOUS"
+  | "CONFLICTING"
+  | "UNAPPROVED_ASSUMPTION";
+
+export interface CompletenessGap {
+  path: string;
+  field: string;
+  status: FieldStatus;
+}
+
+export interface AmbiguityReport {
+  path: string;
+  field: string;
+  interpretations: string[];
+}
+
+export interface ConflictReport {
+  path: string;
+  field: string;
+  sourceIds: string[];
+  values: ConflictValue[];
+}
+
+export interface AssumptionReport {
+  path: string;
+  field: string;
+  value: unknown;
+}
+
+export interface TraceabilityGap {
+  path: string;
+  field: string;
+}
+
+export interface GeneratedQuestion {
+  path: string;
+  field: string;
+  reason: GeneratedQuestionReason;
+  prompt: string;
+  interpretations?: string[];
+}
+
+export interface IntentContractDiagnosis {
+  completenessGaps: CompletenessGap[];
+  ambiguities: AmbiguityReport[];
+  conflicts: ConflictReport[];
+  unapprovedAssumptions: AssumptionReport[];
+  traceabilityGaps: TraceabilityGap[];
+  generatedQuestions: GeneratedQuestion[];
+  finalizationReady: boolean;
+  blockingReasons: string[];
+}
+
+export function diagnoseIntentContractDsl(dsl: IntentContractDsl): IntentContractDiagnosis {
+  const fields = collectFormalFields(dsl);
+  const completenessGaps: CompletenessGap[] = [];
+  const ambiguities: AmbiguityReport[] = [];
+  const unapprovedAssumptions: AssumptionReport[] = [];
+  const traceabilityGaps: TraceabilityGap[] = [];
+  const conflicts: ConflictReport[] = [];
+  const generatedQuestions: GeneratedQuestion[] = [];
+
+  for (const { path, field } of fields) {
+    const material = field.requiredForCompletion;
+    const hasValue = field.value !== null;
+
+    if (material && (field.status === "MISSING" || field.status === "INCOMPLETE")) {
+      completenessGaps.push({ path, field: field.field, status: field.status });
+      generatedQuestions.push({
+        path,
+        field: field.field,
+        reason: "MISSING",
+        prompt: `Provide a value for "${field.field}"; it is required for completion and currently ${field.status}.`
+      });
+    }
+
+    if (field.status === "AMBIGUOUS") {
+      const interpretations = field.interpretations ?? [];
+      ambiguities.push({ path, field: field.field, interpretations });
+      generatedQuestions.push({
+        path,
+        field: field.field,
+        reason: "AMBIGUOUS",
+        prompt:
+          interpretations.length > 0
+            ? `Choose a single interpretation for "${field.field}": ${interpretations.join(" | ")}.`
+            : `Clarify the intended meaning of "${field.field}"; it is ambiguous.`,
+        interpretations
+      });
+    }
+
+    if (field.status === "CONFLICTING") {
+      conflicts.push({
+        path,
+        field: field.field,
+        sourceIds: field.source ? [field.source.id] : [],
+        values: []
+      });
+      generatedQuestions.push({
+        path,
+        field: field.field,
+        reason: "CONFLICTING",
+        prompt: `Resolve the conflicting value for "${field.field}" before finalization.`
+      });
+    }
+
+    if (field.status === "ASSUMED" && hasValue && field.approvedBy.length === 0) {
+      unapprovedAssumptions.push({ path, field: field.field, value: field.value });
+      generatedQuestions.push({
+        path,
+        field: field.field,
+        reason: "UNAPPROVED_ASSUMPTION",
+        prompt: `Approve or correct the assumed value for "${field.field}": ${JSON.stringify(field.value)}.`
+      });
+    }
+
+    if (material && hasValue && field.source === null) {
+      traceabilityGaps.push({ path, field: field.field });
+    }
+  }
+
+  dsl.conflicts.forEach((node, index) => {
+    conflicts.push({
+      path: `conflicts[${index}]`,
+      field: node.field,
+      sourceIds: node.sourceIds,
+      values: node.values ?? []
+    });
+    generatedQuestions.push({
+      path: `conflicts[${index}]`,
+      field: node.field,
+      reason: "CONFLICTING",
+      prompt: `Resolve the conflict on "${node.field}" between sources ${
+        node.sourceIds.length > 0 ? node.sourceIds.join(", ") : "unknown"
+      } before finalization.`
+    });
+  });
+
+  const blockingReasons: string[] = [];
+  for (const gap of completenessGaps) {
+    blockingReasons.push(`${gap.path} is ${gap.status} but required for completion.`);
+  }
+  for (const ambiguity of ambiguities) {
+    blockingReasons.push(`${ambiguity.path} is ambiguous and needs a single interpretation.`);
+  }
+  for (const conflict of conflicts) {
+    blockingReasons.push(`${conflict.path} has an unresolved conflict on "${conflict.field}".`);
+  }
+  for (const assumption of unapprovedAssumptions) {
+    blockingReasons.push(`${assumption.path} is an assumed value that requires explicit approval.`);
+  }
+  for (const trace of traceabilityGaps) {
+    blockingReasons.push(`${trace.path} carries a material value without a source reference.`);
+  }
+
+  return {
+    completenessGaps,
+    ambiguities,
+    conflicts,
+    unapprovedAssumptions,
+    traceabilityGaps,
+    generatedQuestions,
+    finalizationReady: blockingReasons.length === 0,
+    blockingReasons
+  };
 }
 
 function validateArrayFields(

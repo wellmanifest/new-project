@@ -2,13 +2,15 @@
 
 ## Current Version
 
-`0.7.2`
+`0.7.3`
 
 ## Version Type
 
-Patch generated-layout and highlighting release over `0.7.1`.
+Minor model-feature release over `0.7.2`.
 
-This version changes generated `examples-chat` DSL artifacts to `*.dsl.hcl`, using HCL-like syntax for automatic editor highlighting while keeping project-specific DSL semantics. It also writes generated chat outputs next to each scenario under an ignored `generated/` folder.
+This version implements the Phase 3 missing/ambiguous/conflicting information model at the `@office-dsl/intent-contract-model` layer: `diagnoseIntentContractDsl` reports completeness gaps, ambiguities with competing interpretations, Human1/Human2 conflicts with source references, unapproved assumptions, and material-field traceability gaps, and exposes a `finalizationReady` gate with `blockingReasons`. It also adds the `Phase 4B - Document Ingestion, OCR, And Recruitment Workflow` roadmap section to `TODO.md`, and renames `VERSION.md` to `VERSION`.
+
+The Phase 3 diagnosis is a model/reporting layer only; it never invents field values. Runtime, CLI, backend, and UI integration of the diagnosis and finalization gate remain open (Phases 4, 11, 12). No OCR or document-ingestion behavior is implemented in this version; Phase 4B is roadmap documentation only.
 
 ## Project Status
 
@@ -102,4 +104,4 @@ Expected but not yet fully validated as release criteria:
 
 This pass uses a patch bump from `0.7.1` to `0.7.2` because it changes generated chat artifact layout and the editor-friendly generated DSL file format without adding a new production runtime surface.
 
-A future production hardening task should define how root package metadata, package versions, OpenAPI metadata, `VERSION.md`, and `CHANGELOG.md` are kept in sync.
+A future production hardening task should define how root package metadata, package versions, OpenAPI metadata, `VERSION`, and `CHANGELOG.md` are kept in sync.

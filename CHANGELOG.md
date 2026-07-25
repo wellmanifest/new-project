@@ -2,7 +2,27 @@
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-07-25
+
+### Added
+
+- Implemented the Phase 3 missing/ambiguous/conflicting information model in `@office-dsl/intent-contract-model`:
+  - Added `diagnoseIntentContractDsl` and `collectFormalFields`, producing completeness gaps, ambiguity reports, conflict reports, unapproved-assumption reports, traceability gaps, deterministic generated questions, and a `finalizationReady` gate with `blockingReasons`.
+  - Added optional model fields for Phase 3: `SourceReference.span`, `FormalField.interpretations`, and `ConflictNode.values`/`ConflictValue` for competing Human1/Human2 values with source references.
+- Added `Phase 4B - Document Ingestion, OCR, And Recruitment Workflow` to `TODO.md`, describing the target multi-candidate recruitment flow (one job offer negotiated against many CVs), document ingestion for `oferta.md`/`cv.md`/`cv.pdf`, PDF text extraction and OCR fallback behind mock-safe interfaces, per-candidate proposal generation, CHAT/EMAIL negotiation reuse, acceptance/rejection finalization, and the `[numer-rekrutacji--stanowisko]/[numer-osoby]/{in/…,out/contract.dsl.txt,chat.txt}` folder convention.
+- Referenced the new document ingestion/OCR recruitment workflow in the `TODO.md` baseline `NOT IMPLEMENTED` summary.
+
 ### Changed
+
+- Renamed `VERSION.md` to `VERSION` and updated references in `README.md`, `docs/README.md`, `HANDOFF.md`, and `tests/docs.test.ts`; removed the extensionless `VERSION` file from the Prettier format glob.
+- Updated root package and `VERSION` metadata to `0.7.3`.
+
+### Tests
+
+- Added `tests/intent-contract-diagnosis.test.ts` covering completeness gaps, ambiguity interpretations with generated questions, Human1/Human2 conflict representation, assumption approval gating, traceability gaps, and finalization readiness.
+- Updated `tests/docs.test.ts` to assert `VERSION`/`CHANGELOG.md` consistency at `0.7.3`.
+
+### Changed (previously unreleased)
 
 - Reorganized `.office-dsl/` into per-client folders for runtime state:
   - Task sessions and audit records are now stored under `.office-dsl/<createdBy>/tasks/` and `.office-dsl/<createdBy>/audit/` instead of a flat `.office-dsl/tasks/` + `.office-dsl/audit/` dump.
@@ -14,7 +34,7 @@
 - Updated Python verifier to read DSL/markdown input files (`verifier-input.dsl.md`, `verifier-input.plan.md`) and parse actions directly from the DSL text instead of requiring JSON.
 - Restored `examples/*/generated/` and `examples-chat/*/generated/` to `.gitignore`.
 
-### Tests
+### Tests (previously unreleased)
 
 - Updated `store.test.ts` for per-client `FileTaskStore` directory layout.
 - Updated `chat-runner.test.ts` paths and assertions to match the restored scenario-side output and plain DSL format.

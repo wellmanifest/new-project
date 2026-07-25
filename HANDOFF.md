@@ -148,7 +148,7 @@ corepack pnpm run verify
 - `TODO.md` - staged roadmap and implementation priorities.
 - `README.md` - current status, target architecture, commands, and limitations.
 - `CHANGELOG.md` - release history.
-- `VERSION.md` - current version scope and validation notes.
+- `VERSION` - current version scope and validation notes.
 - `docs/system-purpose-and-runtime-flow.md` - target system architecture and runtime flow.
 - `docs/office-to-intent-contract-migration.md` - Office DSL compatibility adapter notes.
 - `docs/codex-sandbox-vitest.md` - local sandbox Vitest/Vite limitation.

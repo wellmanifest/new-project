@@ -9,7 +9,7 @@
 - `POLICY.md` - repository safety and evidence rules.
 - `CONTRIBUTING.md` - procedural workflow for repository changes.
 - `HANDOFF.md` - next-agent handoff and immediate priorities.
-- `VERSION.md` - current version and validation notes.
+- `VERSION` - current version and validation notes.
 - `CHANGELOG.md` - release history.
 - `docs/research-migration-audit.md` - audit of historical research migration.
 - docs/office-to-i

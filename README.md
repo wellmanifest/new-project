@@ -301,5 +301,5 @@ OpenRouter planner mode requires `OPENROUTER_API_KEY`. Python LiteLLM/OpenRouter
   te
 - [TODO.md](TODO.md) - staged implementation roadmap.
 - [HANDOFF.md](HANDOFF.md) - next-agent handoff notes.
-- [VERSION.md](VERSION.md) - version scope and validation notes.
+- [VERSION](VERSION) - version scope and validation notes.
 - [CHANGELOG.md](CHANGELOG.md) - release history.

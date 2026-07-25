@@ -14,7 +14,7 @@ DONE:
 PARTIAL:
 
 - OpenRouter and LiteLLM paths exist but are not the validated default path.
-- Clarification exists as workflow steps, not as a general missing/ambiguous/conflicting field model.
+- A general missing/ambiguous/conflicting field model exists at the `intent-contract-model` layer (`diagnoseIntentContractDsl`), but runtime clarification still uses simple `user.ask` workflow steps; the diagnosis is not yet wired into the runtime/CLI/backend/UI.
 - Rendering exists as readable Office DSL text, not formal documents.
 - Office runtime confirmations still use execution plan hashes; the runtime now also stores a canonical Intent/Contract snapshot hash and minimal Human1/Human2 approval records, but this is not yet exposed through CLI/backend/UI flows.
 
@@ -27,7 +27,7 @@ MOCK:
 
 NOT IMPLEMENTED:
 
-- runtime field traceability population, legal renderers, code generation, DSL-based test generation, CLI/backend/UI exposure for canonical approvals, and runtime-to-Python verifier integration.
+- runtime field traceability population, legal renderers, code generation, DSL-based test generation, CLI/backend/UI exposure for canonical approvals, runtime-to-Python verifier integration, and document ingestion/OCR with the multi-candidate recruitment workflow (Phase 4B).
 
 ---
 
@@ -90,16 +90,18 @@ NOT IMPLEMENTED:
 
 ## Phase 3 - Missing, Ambiguous, And Conflicting Information Model
 
-- [ ] Implement completeness validation for required fields.
-  - Done when missing deadline/payment/acceptance criteria can be represented and reported without guessing.
-- [ ] Implement ambiguity detection hooks.
-  - Done when a field can be marked `AMBIGUOUS` with competing interpretations and a generated question.
-- [ ] Implement conflict representation.
-  - Done when contradictory values from Human1 and Human2 can coexist with source references and block finalization.
-- [ ] Implement assumption tracking.
-  - Done when LLM-added values are marked `ASSUMED` and require explicit approval.
-- [ ] Add source traceability for material fields.
-  - Done when each relevant field can point to message ID, speaker, file path, or source span.
+- [x] Implement completeness validation for required fields.
+  - Done when missing deadline/payment/acceptance criteria can be represented and reported without guessing. `diagnoseIntentContractDsl` reports required `MISSING`/`INCOMPLETE` fields as completeness gaps and emits a question that asks for the value without inventing one.
+- [x] Implement ambiguity detection hooks.
+  - Done when a field can be marked `AMBIGUOUS` with competing interpretations and a generated question. `FormalField.interpretations` carries competing interpretations and the diagnosis emits an `AMBIGUOUS` question listing them.
+- [x] Implement conflict representation.
+  - Done when contradictory values from Human1 and Human2 can coexist with source references and block finalization. `ConflictNode.values`/`ConflictValue` hold competing party values with source references, and the diagnosis lists them and clears `finalizationReady`.
+- [x] Implement assumption tracking.
+  - Done when LLM-added values are marked `ASSUMED` and require explicit approval. Unapproved `ASSUMED` value-carrying fields (empty `approvedBy`) block finalization until approved.
+- [x] Add source traceability for material fields.
+  - Done when each relevant field can point to message ID, speaker, file path, or source span. `SourceReference` carries `id`, `speaker`, `path`, `quote`, and `span`, and the diagnosis flags any material valued field without a source as a traceability gap.
+
+Note: Phase 3 is implemented at the `@office-dsl/intent-contract-model` layer via `diagnoseIntentContractDsl`. Wiring the diagnosis and `finalizationReady` gate into the runtime, CLI, backend, and UI is tracked in Phases 4, 11, and 12.
 
 ---
 
@@ -148,6 +150,45 @@ NOT IMPLEMENTED:
   - Done when `example-chat:run`, `examples-chat:run`, `project.sh example-chat`, `project.sh examples-chat`, and the root `verify` flow execute the chat examples.
 - [x] Compare generated artifacts with expected outcomes and cover the flow with tests.
   - Done when the runner compares generated `summary.json` with `out/expected.summary.json`, and tests cover parsing, discovery, merging, conflict detection, approval invalidation, finalization, cancellation, and all four scenario outcomes.
+
+---
+
+## Phase 4B - Document Ingestion, OCR, And Recruitment Workflow
+
+Goal: support a multi-candidate recruitment flow where one job offer is negotiated against many CVs. Each candidate lives in an isolated folder, receives an individual proposal derived from the shared offer, negotiates through CHAT/EMAIL, and ends in acceptance or rejection. This phase depends on the Phase 4/4A Human1/Human2 negotiation, merge, conflict, and approval model and the Phase 6 renderers.
+
+Target folder convention (one recruitment, many candidates):
+
+```text
+[numer-rekrutacji--stanowisko]/
+  [numer-osoby]/
+    in/
+      oferta.md        # shared job offer (Markdown), copied or referenced per candidate
+      cv.pdf           # candidate CV as PDF (text-based or scanned)
+      cv.md            # candidate CV as Markdown (extracted or provided)
+    out/
+      contract.dsl.txt # final per-candidate contract, only after bilateral approval
+    chat.txt           # per-candidate negotiation transcript
+```
+
+- [ ] Define a document ingestion interface for offers and CVs.
+  - Done when Markdown offers (`oferta.md`) and CV inputs in Markdown (`cv.md`) and PDF (`cv.pdf`) load into the runtime as source documents with source references, without inventing content.
+- [ ] Add PDF text extraction for text-based CVs.
+  - Done when a text-based `cv.pdf` is parsed to plain text through a known Node PDF library (for example `pdf-parse` or `pdfjs-dist`) behind a mock-safe interface with a deterministic fixture path.
+- [ ] Add OCR fallback for scanned or image-only CVs.
+  - Done when an image-only CV can be routed to an OCR provider (external API or a local library such as Tesseract) behind a mock-safe interface, and mock mode remains the validated default.
+- [ ] Normalize extracted offer/CV content into Intent/Contract DSL source.
+  - Done when extracted text maps into canonical source documents with field statuses and source spans, never fabricating terms that are absent from the offer or CV.
+- [ ] Implement the recruitment folder convention in the example runner.
+  - Done when the runner discovers and processes `[numer-rekrutacji--stanowisko]/[numer-osoby]/` folders and reads/writes `in/oferta.md`, `in/cv.pdf`, `in/cv.md`, `out/contract.dsl.txt`, and `chat.txt`.
+- [ ] Generate a per-candidate proposal from the shared offer.
+  - Done when each candidate folder derives an individual proposal (different terms allowed per candidate) from one `oferta.md` plus that candidate's CV, with no cross-contamination between candidates.
+- [ ] Run per-candidate CHAT/EMAIL negotiation.
+  - Done when each candidate negotiates through the chat/email workflow reusing the Human1/Human2 merge, conflict, position-change, and approval model, writing the transcript to `chat.txt`.
+- [ ] Finalize acceptance or rejection per candidate.
+  - Done when an accepted candidate writes `out/contract.dsl.txt` only after bilateral approval of the same current contract hash, and a rejected or withdrawn candidate ends without a final contract.
+- [ ] Add a recruitment example and regression tests.
+  - Done when a fixture recruitment with one offer and multiple candidate folders runs end to end, covers at least one acceptance and one rejection, and is compared deterministically like the other example runners.
 
 ---
 

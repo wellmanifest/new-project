@@ -32,10 +32,10 @@ describe("documentation alignment", () => {
     expect(doc).toMatch(/Vitest|Vite|spawn|EPERM/i);
   });
 
-  it("keeps version metadata consistent across VERSION.md and CHANGELOG.md", async () => {
-    const version = await readRoot("VERSION.md");
+  it("keeps version metadata consistent across VERSION and CHANGELOG.md", async () => {
+    const version = await readRoot("VERSION");
     const changelog = await readRoot("CHANGELOG.md");
-    expect(version).toMatch(/`0\.7\.2`/);
-    expect(changelog).toMatch(/0\.7\.2/);
+    expect(version).toMatch(/`0\.7\.3`/);
+    expect(changelog).toMatch(/0\.7\.3/);
   });
 });
