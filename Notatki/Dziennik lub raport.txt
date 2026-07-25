@@ -15,3 +15,10 @@ ale może tez propnowac inne rzeczy wtedy runtime ma generować pliki tak długo
 - trzeba było poprawić wyniki gdyż styl przypomial bardzije json niż nasz wybrany jezyk
 - trzeba jeszcze przetestować czy zmiany nie były chwilowe i czy nowe miejsce plikow wykonancyh jest zapisane w dobrym miejscu
 - trzeba tez kontuowac prace dalej uzywajac listy todo 
+
+25.07
+- poprawiłem sposób gdzie generują się pliki genereted oraz sposób zapisu
+- agent robil dalesze zadania z TODO
+- sprawdzenie codexem czy devin poprawnie wykonał zadania
+TODO:
+ - dodac automatyczne tworzone readme oraz automatycznie tworzena dokumentacje bazujaca na example wszystko ma znajdować się w scripts i zadnej llm nie ma go tworzy 
