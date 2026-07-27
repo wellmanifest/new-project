@@ -1,3 +1,9 @@
-from .core import VerificationReport, verify
+from .core import SemanticVerificationReport, SemanticVerifierInput, VerificationReport, verify, verify_semantic
 
-__all__ = ["VerificationReport", "verify"]
+__all__ = [
+    "SemanticVerificationReport",
+    "SemanticVerifierInput",
+    "VerificationReport",
+    "verify",
+    "verify_semantic",
+]

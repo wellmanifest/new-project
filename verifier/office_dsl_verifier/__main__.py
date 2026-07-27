@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 
-from .core import verify
+from .core import SemanticVerifierInput, verify, verify_semantic
 
 
 def _extract_dsl_block(text: str) -> str:
@@ -25,11 +26,21 @@ def _parse_actions(text: str) -> list[str]:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--nl", required=True)
-    parser.add_argument("--dsl", required=True)
-    parser.add_argument("--plan", required=True)
+    parser.add_argument("--nl")
+    parser.add_argument("--dsl")
+    parser.add_argument("--plan")
+    parser.add_argument("--semantic-input")
     parser.add_argument("--mode", default="mock")
     args = parser.parse_args()
+
+    if args.semantic_input:
+        with open(args.semantic_input, "r", encoding="utf-8") as file:
+            semantic_input = SemanticVerifierInput.model_validate(json.load(file))
+        print(verify_semantic(semantic_input, mode=args.mode).model_dump_json(indent=2))
+        return
+
+    if not args.nl or not args.dsl or not args.plan:
+        parser.error("--nl, --dsl, and --plan are required unless --semantic-input is used")
     with open(args.dsl, "r", encoding="utf-8") as file:
         dsl_text = file.read()
     with open(args.plan, "r", encoding="utf-8") as file:

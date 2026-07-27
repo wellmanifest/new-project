@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.10.0] - 2026-07-27
+## [0.11.0] - 2026-07-27
 
 ### Added
 
@@ -24,6 +24,9 @@
 - Added Phase 9 JS/Node.js code generation in the new `@office-dsl/codegen` package with a bounded dependency-free Node ESM target and fixed generated outputs.
 - Added deterministic approved-DSL implementation planning, JS artifact generation, generated Node.js test execution, file-hash verification, and `codegen.verifier-input.v1` output.
 - Added `docs/code-generation.md` describing the approval gate, target boundary, artifacts, generated tests, and verifier input.
+- Added Phase 10 semantic verifier input/report models, deterministic Python checks for original NL/source quotes, approved DSL gaps/conflicts/assumptions, rendered document mismatches, codegen test failures, and testgen uncovered acceptance criteria.
+- Added TypeScript `runPythonSemanticVerifier` bridge and `Runtime.createWithPythonSemanticVerifier` gating to capture Python verifier reports in audit and block failed/review-needed sessions at `VERIFICATION_FAILED`.
+- Added `docs/semantic-verifier.md` documenting the mock-safe semantic verifier boundary and OpenRouter/LiteLLM limitation.
 
 ### Changed
 
@@ -33,6 +36,8 @@
 - Marked Phase 8 TODO items complete for the test-generation inputs, spec generation, and coverage verification; runtime/verifier integration remains open.
 - Marked Phase 9 TODO items complete for the package-level JS/Node.js code-generation boundary; runtime/CLI/backend/UI/Python-verifier integration remains open.
 - Updated root package, codegen package, `VERSION`, docs, and documentation consistency tests to `0.10.0`.
+- Marked mock-safe Phase 10 TODO items complete for NL-vs-DSL checks, rendered-document checks, code/test verifier-input checks, and TypeScript runtime integration; live OpenRouter/LiteLLM validation remains open.
+- Updated root package, dsl-runtime package, verifier package, `VERSION`, docs, and documentation consistency tests to `0.11.0`.
 
 ### Tests
 
@@ -40,6 +45,7 @@
 - Added `tests/document-renderer.test.ts` coverage for the draft disclaimer, task delegation, service agreement, employment/guideline renderers, explicit gap and assumption handling, the document-to-DSL traceability map, and renderer dispatch.
 - Added `tests/testgen.test.ts` coverage for input validation, deterministic DSL extraction, unit spec mapping to acceptance criteria, integration/API/E2E/security/error-handling generation, and coverage verification that surfaces uncovered acceptance criteria.
 - Added `tests/codegen.test.ts` coverage for allowed targets, approval gating, deterministic implementation plans, generated JS artifacts, generated Node.js test execution, source safety checks, file hashes, and verifier input test results.
+- Added Python verifier tests for semantic PASS/FAIL/NEEDS_REVIEW behavior and OpenRouter configuration guarding, plus `tests/semantic-verifier.test.ts` for TypeScript-to-Python invocation and runtime gating.
 
 ## [0.8.0] - 2026-07-27
 

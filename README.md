@@ -46,6 +46,7 @@ DONE:
 - `packages/document-renderer` renders task delegation, service agreement, and employment/guideline draft documents from an Intent/Contract DSL snapshot, with a draft legal disclaimer, explicit gap markers for unresolved fields, and a document-to-DSL traceability map.
 - `packages/testgen` defines typed `intent-contract.testgen-input.v1` inputs, extracts them deterministically from an Intent/Contract DSL snapshot, generates unit/integration/API/E2E/security/error-handling test specifications, and verifies coverage against acceptance criteria.
 - `packages/codegen` defines a bounded JS/Node.js code-generation target, creates deterministic implementation plans from bilaterally approved Intent/Contract DSL snapshots, emits dependency-free Node ESM artifacts, runs generated tests, and returns verifier input with generated file hashes and test results.
+- `verifier` exposes a mock-safe semantic verifier that checks original NL/source quotes against approved DSL, rendered document coverage against DSL paths, generated code test results, uncovered generated-test acceptance criteria, and can be invoked from the TypeScript runtime.
 - `packages/dsl-runtime` creates sessions, evaluates policies, asks simple clarification questions, handles one-side Office confirmation, computes a plan hash, stores a canonical Intent/Contract snapshot hash, tracks minimal Human1/Human2 approval records, executes mock actions, and records audit data.
 - `packages/cli` exposes plan, validate, inspect, answer, confirm, reject, execute, and history commands.
 - `apps/backend` exposes the same runtime through HTTP endpoints.
@@ -53,13 +54,13 @@ DONE:
 - `verifier` contains a Python package with mock verification and an optional LiteLLM/OpenRouter path.
 - `examples` contains six office examples with `scenario.json`, `in/`, `out/`, and legacy fixture files.
 - `examples-chat` contains four executable Human1/Human2 negotiation scenarios with `scenario.json`, `chat.txt`, and expected outcomes.
-- `tests` cover the current TypeScript runtime, canonical approval records, DSL model, security checks, E2E mock flow, Python verifier behavior, example runners, chat/recruitment negotiation runners, NL <-> DSL round-trip utilities, contract/legal document rendering, DSL-driven test-generation spec and coverage verification, and approved-DSL JS/Node.js code generation.
+- `tests` cover the current TypeScript runtime, canonical approval records, DSL model, security checks, E2E mock flow, Python verifier behavior, example runners, chat/recruitment negotiation runners, NL <-> DSL round-trip utilities, contract/legal document rendering, DSL-driven test-generation spec and coverage verification, approved-DSL JS/Node.js code generation, and TypeScript-to-Python semantic verifier integration.
 
 PARTIAL:
 
 - OpenRouter and LiteLLM code paths exist, and the planner now has a controlled OpenRouter response schema boundary, but the validated flow is still mock/offline mode.
 - Clarifying questions exist only as `user.ask` workflow steps, not as a general field-status model.
-- Document, test, and JS/Node.js code generation are implemented as `@office-dsl` packages but are not yet wired into the runtime/CLI/backend/UI/verifier flows as production surfaces.
+- Document, test, JS/Node.js code generation, and Python semantic verification are implemented as package/runtime boundaries but are not yet wired into the CLI/backend/UI as production surfaces.
 - Office action confirmation is still plan-hash based; canonical Intent/Contract approval records exist in runtime APIs but are not yet exposed through CLI/backend/UI flows.
 
 MOCK:
@@ -73,8 +74,8 @@ NOT IMPLEMENTED:
 
 - CLI/backend/UI integration of canonical Intent/Contract approval flows.
 - Production OpenRouter validation for arbitrary conversation history and guideline files.
-- Runtime/CLI/backend/UI wiring for contract/legal document rendering, test generation, and JS/Node.js code generation as production flows.
-- Runtime integration that calls the Python verifier as part of the normal TypeScript flow.
+- Runtime/CLI/backend/UI wiring for contract/legal document rendering, test generation, JS/Node.js code generation, and semantic verification as production flows.
+- Live OpenRouter/LiteLLM semantic verifier validation in the default test suite.
 
 ## Example Uses
 
@@ -320,6 +321,7 @@ OpenRouter planner mode requires `OPENROUTER_API_KEY`. Python LiteLLM/OpenRouter
 - [docs/document-renderers.md](docs/document-renderers.md) - contract/legal document renderer responsibilities, legal disclaimers, and the document-to-DSL traceability map.
 - [docs/test-generation.md](docs/test-generation.md) - test-generation DSL inputs, spec generation, and coverage verification against acceptance criteria.
 - [docs/code-generation.md](docs/code-generation.md) - bounded JS/Node.js code-generation target, approved DSL gate, generated artifacts, and verifier input.
+- [docs/semantic-verifier.md](docs/semantic-verifier.md) - Python semantic verifier inputs, reports, mock checks, TypeScript runtime bridge, and OpenRouter/LiteLLM boundary.
 - [TODO.md](TODO.md) - staged implementation roadmap.
 - [HANDOFF.md](HANDOFF.md) - next-agent handoff notes.
 - [VERSION](VERSION) - version scope and validation notes.

@@ -1,7 +1,17 @@
+export {
+  runPythonSemanticVerifier,
+  type SemanticVerificationReport,
+  type SemanticVerifierInput
+} from "./python-verifier.js";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { TaskDsl, Step, validateTaskDsl } from "../../dsl-model/src/index.js";
+import {
+  runPythonSemanticVerifier,
+  type PythonSemanticVerifierOptions,
+  type SemanticVerifierInput
+} from "./python-verifier.js";
 import {
   hashIntentContractDsl,
   officeDslToIntentContractDsl,
@@ -338,6 +348,12 @@ export class PolicyEngine {
   }
 }
 
+function verifierBlocksExecution(verifier: unknown): boolean {
+  if (!verifier || typeof verifier !== "object") return false;
+  const verdict = (verifier as { verdict?: unknown }).verdict;
+  return verdict === "FAIL" || verdict === "NEEDS_REVIEW";
+}
+
 export class Runtime {
   private state = new StateMachine();
   constructor(
@@ -392,6 +408,8 @@ export class Runtime {
     session.audit.policy_decisions = policies;
     if (!validation.ok || policies.some((finding) => finding.decision === "DENY")) {
       this.state.transition(session, "DENIED", "validation or policy denied task");
+    } else if (verifierBlocksExecution(verifier)) {
+      this.state.transition(session, "VERIFICATION_FAILED", "semantic verifier did not pass");
     } else if (dsl.steps.some((step) => step.ask)) {
       this.state.transition(session, "WAITING_FOR_INPUT", "clarification required");
     } else if (dsl.steps.some((step) => step.confirm?.required)) {
@@ -400,6 +418,15 @@ export class Runtime {
       this.state.transition(session, "READY", "ready to run");
     }
     return session;
+  }
+
+  async createWithPythonSemanticVerifier(
+    dsl: TaskDsl,
+    input: SemanticVerifierInput,
+    options: PythonSemanticVerifierOptions = {}
+  ): Promise<TaskSession> {
+    const verifier = await runPythonSemanticVerifier(input, options);
+    return this.create(dsl, verifier);
   }
 
   answer(session: TaskSession, questionId: string, answer: string): void {

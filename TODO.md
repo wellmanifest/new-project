@@ -27,7 +27,7 @@ MOCK:
 
 NOT IMPLEMENTED:
 
-- runtime field traceability population, CLI/backend/UI exposure for canonical approvals, runtime-to-Python verifier integration, and production document ingestion/OCR providers beyond the deterministic mock-safe recruitment example runner. Contract/legal document renderers (Phase 6), test-generation (Phase 8), and JS/Node.js code generation (Phase 9) now exist as `@office-dsl` packages; wiring them into the runtime/CLI/backend/UI/verifier remains open.
+- runtime field traceability population, CLI/backend/UI exposure for canonical approvals, production OpenRouter/LiteLLM semantic verifier validation, and production document ingestion/OCR providers beyond the deterministic mock-safe recruitment example runner. Contract/legal document renderers (Phase 6), test-generation (Phase 8), JS/Node.js code generation (Phase 9), and mock-safe Python semantic verifier integration (Phase 10) now exist as package/runtime boundaries; wiring them into runtime/CLI/backend/UI production flows remains open.
 
 ---
 
@@ -284,15 +284,15 @@ Target scenario set:
   - Done for current Office DSL scope.
 - [x] Return machine-readable verdict and recommended action.
   - Done for current mock verifier fields.
-- [ ] Validate original NL against approved DSL.
-  - Done when missing requirements, contradictions, and unauthorized assumptions are detected beyond heuristics.
-- [ ] Validate DSL against rendered document.
-  - Done when document mismatches are reported with DSL paths.
-- [ ] Validate DSL against generated code and tests.
-  - Done when behavior mismatches and uncovered acceptance criteria are reported.
-- [ ] Integrate TypeScript runtime with Python verifier execution.
-  - Done when runtime can call verifier, capture output, and gate finalization.
-- [ ] Validate OpenRouter/LiteLLM mode.
+- [x] Validate original NL against approved DSL.
+  - Done when missing requirements, contradictions, and unauthorized assumptions are detected beyond heuristics. `verify_semantic` accepts `semantic-verifier.input.v1`-style data, checks required `MISSING`/`INCOMPLETE` fields, unresolved conflicts, unapproved `ASSUMED` fields, and source quotes against original NL, and returns structured findings in `semantic-verifier.report.v1`; covered by `verifier/tests/test_verifier.py`.
+- [x] Validate DSL against rendered document.
+  - Done when document mismatches are reported with DSL paths. The semantic verifier compares rendered document text against renderable DSL values for document title, parties, deliverables, obligations, acceptance criteria, payments, deadlines, conditions, and exclusions, and reports `document_mismatches` with DSL paths.
+- [x] Validate DSL against generated code and tests.
+  - Done when behavior mismatches and uncovered acceptance criteria are reported. The semantic verifier consumes `codegen.verifier-input.v1` test results and `testgen.verifier-input.v1` uncovered acceptance criteria, reports failed generated tests as `code_mismatches`, and reports uncovered criteria as `uncovered_acceptance_criteria`.
+- [x] Integrate TypeScript runtime with Python verifier execution.
+  - Done when runtime can call verifier, capture output, and gate finalization. `runPythonSemanticVerifier` invokes `python -m office_dsl_verifier --semantic-input ...`, and `Runtime.createWithPythonSemanticVerifier` stores the report in audit and gates `FAIL`/`NEEDS_REVIEW` sessions at `VERIFICATION_FAILED`; covered by `tests/semantic-verifier.test.ts`.
+- [ ] Validate OpenRouter/LiteLLM mode. **Test gap:** semantic verifier mode now validates that `OPENROUTER_API_KEY` and `litellm` are configured before leaving mock mode, but no live OpenRouter/LiteLLM semantic-verifier request has been executed in default tests.
   - Done when documented setup and tests or manual validation prove the online path.
 
 ---
