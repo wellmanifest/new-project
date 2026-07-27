@@ -187,6 +187,9 @@ export interface ApprovalNode {
   dslHash: string;
   decision: "APPROVED" | "REJECTED";
   approvedAt: string;
+  field?: string;
+  reason?: string;
+  source?: SourceReference | null;
 }
 
 export interface RenderDirective {
@@ -330,7 +333,8 @@ export type GeneratedQuestionReason =
   | "MISSING"
   | "AMBIGUOUS"
   | "CONFLICTING"
-  | "UNAPPROVED_ASSUMPTION";
+  | "UNAPPROVED_ASSUMPTION"
+  | "REJECTED";
 
 export type PartyRoute = "Human1" | "Human2" | "unknown";
 
@@ -364,6 +368,14 @@ export interface TraceabilityGap {
   field: string;
 }
 
+export interface RejectedApprovalReport {
+  path: string;
+  partyId: string;
+  party: PartyRoute;
+  field: string;
+  reason: string;
+}
+
 export interface GeneratedQuestion {
   path: string;
   field: string;
@@ -379,6 +391,7 @@ export interface IntentContractDiagnosis {
   conflicts: ConflictReport[];
   unapprovedAssumptions: AssumptionReport[];
   traceabilityGaps: TraceabilityGap[];
+  rejectedApprovals: RejectedApprovalReport[];
   generatedQuestions: GeneratedQuestion[];
   finalizationReady: boolean;
   blockingReasons: string[];
@@ -390,6 +403,7 @@ export function diagnoseIntentContractDsl(dsl: IntentContractDsl): IntentContrac
   const ambiguities: AmbiguityReport[] = [];
   const unapprovedAssumptions: AssumptionReport[] = [];
   const traceabilityGaps: TraceabilityGap[] = [];
+  const rejectedApprovals: RejectedApprovalReport[] = [];
   const conflicts: ConflictReport[] = [];
   const generatedQuestions: GeneratedQuestion[] = [];
 
@@ -475,6 +489,27 @@ export function diagnoseIntentContractDsl(dsl: IntentContractDsl): IntentContrac
     });
   });
 
+  dsl.approvals.forEach((approval, index) => {
+    if (approval.decision !== "REJECTED") return;
+    const party = routeApprovalParty(dsl, approval);
+    const field = approval.field ?? "contract";
+    const reason = approval.reason ?? "Approval was rejected without a detailed reason.";
+    rejectedApprovals.push({
+      path: `approvals[${index}]`,
+      partyId: approval.partyId,
+      party,
+      field,
+      reason
+    });
+    generatedQuestions.push({
+      path: `approvals[${index}]`,
+      field,
+      reason: "REJECTED",
+      prompt: `${party} rejected "${field}" and needs clarification from Human1: ${reason}`,
+      targetParties: party === "Human2" ? ["Human1"] : ["unknown"]
+    });
+  });
+
   const blockingReasons: string[] = [];
   for (const gap of completenessGaps) {
     blockingReasons.push(`${gap.path} is ${gap.status} but required for completion.`);
@@ -492,12 +527,19 @@ export function diagnoseIntentContractDsl(dsl: IntentContractDsl): IntentContrac
     blockingReasons.push(`${trace.path} carries a material value without a source reference.`);
   }
 
+  for (const rejection of rejectedApprovals) {
+    blockingReasons.push(
+      `${rejection.path} was rejected by ${rejection.party} for "${rejection.field}": ${rejection.reason}`
+    );
+  }
+
   return {
     completenessGaps,
     ambiguities,
     conflicts,
     unapprovedAssumptions,
     traceabilityGaps,
+    rejectedApprovals,
     generatedQuestions,
     finalizationReady: blockingReasons.length === 0,
     blockingReasons
@@ -509,6 +551,15 @@ export function questionsForParty(
   party: PartyRoute
 ): GeneratedQuestion[] {
   return diagnosis.generatedQuestions.filter((question) => question.targetParties.includes(party));
+}
+
+function routeApprovalParty(dsl: IntentContractDsl, approval: ApprovalNode): PartyRoute {
+  const role = partyRoleFromId(dsl, approval.partyId);
+  if (role) return role;
+  const normalized = approval.partyId.toLowerCase();
+  if (normalized === "human1" || normalized.includes("human1")) return "Human1";
+  if (normalized === "human2" || normalized.includes("human2")) return "Human2";
+  return "unknown";
 }
 
 function routeFromSource(source: SourceReference | null): PartyRoute[] {

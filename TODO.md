@@ -117,8 +117,8 @@ Note: Phase 3 is implemented at the `@office-dsl/intent-contract-model` layer vi
   - Done when Human1 and Human2 approvals include party, hash, timestamp, and verdict.
 - [x] Invalidate approvals after DSL changes.
   - Done when tests prove both sides must reapprove after any material DSL edit.
-- [ ] Support reopening clarification after Human2 rejects insufficient detail.
-  - Done when Human2 can block finalization and trigger a question back to Human1.
+- [x] Support reopening clarification after Human2 rejects insufficient detail.
+  - Done when Human2 can block finalization and trigger a question back to Human1. `diagnoseIntentContractDsl` now reports `REJECTED` approval records, blocks finalization, and generates a reopened clarification question routed to Human1 when Human2 rejects a field as insufficient.
 
 ---
 

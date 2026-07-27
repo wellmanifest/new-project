@@ -222,6 +222,80 @@ describe("Phase 3 - missing, ambiguous, and conflicting information model", () =
     expect(human2Questions.map((q) => q.field)).not.toContain("deadline.dueAt");
   });
 
+  it("reopens clarification to Human1 when Human2 rejects insufficient detail", () => {
+    const dsl = baseDsl();
+    dsl.parties.push(
+      {
+        id: "human1",
+        name: createField("party.name", "Human1", "CONFIRMED", true, human1Source),
+        role: createField("party.role", "Human1", "CONFIRMED", true, human1Source)
+      },
+      {
+        id: "human2",
+        name: createField("party.name", "Human2", "CONFIRMED", true, human2Source),
+        role: createField("party.role", "Human2", "CONFIRMED", true, human2Source)
+      }
+    );
+    dsl.approvals.push({
+      id: "reject-insufficient-scope",
+      partyId: "human2",
+      dslHash: "hash-current",
+      decision: "REJECTED",
+      approvedAt: "2026-07-27T10:10:00.000Z",
+      field: "deliverable.description",
+      reason: "Zakres odbioru jest za malo szczegolowy.",
+      source: human2Source
+    });
+
+    const diagnosis = diagnoseIntentContractDsl(dsl);
+    const reopened = diagnosis.generatedQuestions.find(
+      (question) => question.reason === "REJECTED"
+    );
+
+    expect(diagnosis.finalizationReady).toBe(false);
+    expect(diagnosis.rejectedApprovals).toEqual([
+      {
+        path: "approvals[0]",
+        partyId: "human2",
+        party: "Human2",
+        field: "deliverable.description",
+        reason: "Zakres odbioru jest za malo szczegolowy."
+      }
+    ]);
+    expect(reopened).toMatchObject({
+      path: "approvals[0]",
+      field: "deliverable.description",
+      reason: "REJECTED",
+      targetParties: ["Human1"]
+    });
+    expect(reopened?.prompt).toContain("Human2 rejected");
+    expect(reopened?.prompt).toContain("Zakres odbioru jest za malo szczegolowy.");
+    expect(questionsForParty(diagnosis, "Human1")).toContainEqual(reopened);
+    expect(questionsForParty(diagnosis, "Human2")).not.toContainEqual(reopened);
+    expect(diagnosis.blockingReasons).toContain(
+      'approvals[0] was rejected by Human2 for "deliverable.description": Zakres odbioru jest za malo szczegolowy.'
+    );
+  });
+
+  it("does not reopen clarification for Human2 approvals", () => {
+    const dsl = baseDsl();
+    dsl.approvals.push({
+      id: "approval-human2",
+      partyId: "human2",
+      dslHash: "hash-current",
+      decision: "APPROVED",
+      approvedAt: "2026-07-27T10:10:00.000Z",
+      field: "deliverable.description"
+    });
+
+    const diagnosis = diagnoseIntentContractDsl(dsl);
+
+    expect(diagnosis.rejectedApprovals).toEqual([]);
+    expect(diagnosis.generatedQuestions.some((question) => question.reason === "REJECTED")).toBe(
+      false
+    );
+    expect(diagnosis.finalizationReady).toBe(true);
+  });
   it("flags a material value without a source reference as a traceability gap", () => {
     const dsl = baseDsl();
     dsl.document.type.source = null;

@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [0.7.7] - 2026-07-27
+
+### Added
+
+- Added rejected-approval diagnosis in `@office-dsl/intent-contract-model`: Human2 rejections can now block finalization and reopen a clarification question routed back to Human1.
+- Extended `ApprovalNode` with optional `field`, `reason`, and `source` metadata so rejection context can identify the insufficient field and explanation.
+
+### Changed
+
+- Marked the Phase 4 "Support reopening clarification after Human2 rejects insufficient detail" TODO item as complete at the model diagnosis layer; live runtime/CLI/backend/UI surfacing remains tracked separately.
+- Updated root package, intent-contract model package, `VERSION`, and documentation consistency tests to `0.7.7`.
+
+### Tests
+
+- Extended `tests/intent-contract-diagnosis.test.ts` with Human2 rejection reopening coverage and a non-reopening approved-control case.
+
 ## [0.7.6] - 2026-07-27
 
 ### Added
