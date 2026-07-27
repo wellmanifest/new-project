@@ -1,0 +1,11 @@
+{
+  "version": "example-recruitment.document-process-test.v1",
+  "id": "001-kasia-wrona-pdf2md",
+  "process": "pdf2md",
+  "input": "in/cv.pdf",
+  "output": "out/cv.md",
+  "expect": {
+    "contains": ["# CV: Kasia Wrona", "Umiejetnosci: SQL, raportowanie, Python"],
+    "notContains": ["%PDF", "xref", "trailer"]
+  }
+}

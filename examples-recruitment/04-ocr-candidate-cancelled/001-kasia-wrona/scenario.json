@@ -1,0 +1,11 @@
+{
+  "version": "example-chat.scenario.v1",
+  "id": "001-kasia-wrona",
+  "title": "Kasia Wrona OCR recruitment cancelled",
+  "input": {
+    "chat": "chat.txt"
+  },
+  "expected": {
+    "summary": "out/expected.summary.json"
+  }
+}

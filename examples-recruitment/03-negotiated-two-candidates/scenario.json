@@ -1,0 +1,8 @@
+{
+  "version": "example-recruitment.scenario.v1",
+  "id": "03-negotiated-two-candidates",
+  "title": "Negotiated two-candidate recruitment",
+  "expected": {
+    "summary": "out/expected.summary.json"
+  }
+}

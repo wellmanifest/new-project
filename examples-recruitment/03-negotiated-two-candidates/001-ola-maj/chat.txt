@@ -1,0 +1,9 @@
+@user1 Stanowisko: Backend Engineer. Wynagrodzenie 20000 PLN. Termin do 2026-11-15.
+@user2 Moge zaakceptowac Backend Engineer za 22000 PLN do 2026-11-15.
+@user1 Stanowisko: Backend Engineer. Wynagrodzenie 22000 PLN. Termin do 2026-11-15.
+@user2 Stanowisko: Backend Engineer. Wynagrodzenie 22000 PLN. Termin do 2026-11-15.
+@user1 Akceptacja: podpisanie umowy i przekazanie dostepow.
+@user2 Gotowe gdy umowa podpisana i dostepy przekazane.
+@user1 Platnosc: miesiecznie po akceptacji.
+@user2 Zgadzam sie na aktualne warunki.
+@user1 Zgoda.

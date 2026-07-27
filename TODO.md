@@ -201,7 +201,7 @@ Target folder convention (one recruitment, many candidates):
 - [x] Finalize acceptance or rejection per candidate.
   - Done when an accepted candidate writes `out/contract.dsl.txt` only after bilateral approval of the same current contract hash, and a rejected or withdrawn candidate ends without a final contract. Accepted fixtures create ignored `out/contract.dsl.txt`; rejected/cancelled candidates do not.
 - [x] Add a recruitment example and regression tests.
-  - Done when a fixture recruitment with one offer and multiple candidate folders runs end to end, covers at least one acceptance and one rejection, keeps per-person document-process fixtures inside each candidate folder, and is compared deterministically like the other example runners. `examples-recruitment/01-multi-candidate` and `tests/recruitment-runner.test.ts` cover Markdown/PDF/OCR ingestion, proposal generation, accepted finalization, rejected non-finalization, candidate-local document processes, and expected summary comparison.
+  - Done when a fixture recruitment with one offer and multiple candidate folders runs end to end, covers at least one acceptance and one rejection, keeps per-person document-process fixtures inside each candidate folder, and is compared deterministically like the other example runners. `examples-recruitment/01-multi-candidate`, `02-single-candidate-agreement`, `03-negotiated-two-candidates`, `04-ocr-candidate-cancelled`, and `tests/recruitment-runner.test.ts` cover Markdown/PDF/OCR ingestion, proposal generation, accepted finalization, rejected non-finalization, negotiated acceptance, cancellation, candidate-local document processes, and expected summary comparison.
 
 ---
 

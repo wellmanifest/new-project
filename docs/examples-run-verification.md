@@ -18,7 +18,7 @@ Note: the first sandboxed `examples` run failed with the known Windows Codex san
 | ---------------------- | ------ | -------------------- |
 | `examples`             | PASS   | 6/6 scenarios passed |
 | `examples-chat`        | PASS   | 4/4 scenarios passed |
-| `examples-recruitment` | PASS   | 1/1 scenario passed  |
+| `examples-recruitment` | PASS   | 4/4 scenarios passed |
 
 Office examples:
 
@@ -39,6 +39,9 @@ Chat examples:
 Recruitment examples:
 
 - `01-multi-candidate`: PASS, accepted `1`, rejected `1`
+- `02-single-candidate-agreement`: PASS, accepted `1`, rejected `0`
+- `03-negotiated-two-candidates`: PASS, accepted `2`, rejected `0`
+- `04-ocr-candidate-cancelled`: PASS, accepted `0`, rejected `1`
 
 ## Artifact Checks
 
@@ -82,7 +85,7 @@ Summary outputs confirm:
 
 ## Recruitment Finalization Rules
 
-The recruitment summary reports:
+The first recruitment summary reports:
 
 - `candidate_count = 2`
 - `accepted = ["001-anna-nowak"]`
@@ -102,4 +105,4 @@ Document process checks also match the agreed fixture layout:
 
 ## Conclusion
 
-The current examples produce the planned outputs. The generated files are local to each example family, generated DSL files use project DSL/HCL text instead of JSON, final chat contract/PDF/approval artifacts are created only for `AGREED` scenarios, cancelled chat scenarios do not create final contract/PDF artifacts, and recruitment creates a final candidate contract only for the accepted candidate.
+The current examples produce the planned outputs. `examples-recruitment` now covers four runnable scenarios: mixed accepted/rejected candidates, single-candidate direct agreement, two-candidate negotiated agreement including PDF text extraction, and OCR-fallback cancellation. The generated files are local to each example family, generated DSL files use project DSL/HCL text instead of JSON, final chat contract/PDF/approval artifacts are created only for `AGREED` scenarios, cancelled chat scenarios do not create final contract/PDF artifacts, and recruitment creates a final candidate contract only for the accepted candidate.

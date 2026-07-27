@@ -1,0 +1,7 @@
+@user1 Stanowisko: DevOps Engineer. Wynagrodzenie 21000 PLN. Termin do 2026-12-01.
+@user2 Stanowisko: DevOps Engineer. Wynagrodzenie 21000 PLN. Termin do 2026-12-01.
+@user1 Akceptacja: podpisanie umowy i potwierdzenie gotowosci operacyjnej.
+@user2 Gotowe gdy umowa podpisana i gotowosc operacyjna potwierdzona.
+@user1 Platnosc: miesiecznie po akceptacji.
+@user2 Zgadzam sie na aktualne warunki.
+@user1 Zgoda.

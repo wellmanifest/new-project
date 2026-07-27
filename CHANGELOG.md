@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added three more `examples-recruitment` scenarios so the recruitment fixture set now has four runnable cases covering single acceptance, negotiated acceptance, PDF text extraction, OCR fallback, and cancellation.
 - Added `@office-dsl/chat-negotiation`, `@office-dsl/recruitment-workflow`, `@office-dsl/document-ingestion`, `@office-dsl/dsl-artifact-renderer`, `@office-dsl/regression-runner`, `@office-dsl/verifier-bridge`, and `@office-dsl/verifier-mock` package boundaries.
 - Added `tests/package-boundary.test.ts` to guard extracted packages, package-name imports, workspace dependency declarations, and lockstep package/app versions.
 

@@ -17,7 +17,12 @@ const scenarioDir = path.join(repoRoot, "examples-recruitment", "01-multi-candid
 describe("examples-recruitment runner", () => {
   it("discovers recruitment scenarios", async () => {
     const scenarios = await discoverRecruitmentScenarios(repoRoot);
-    expect(scenarios.map((scenario) => path.basename(scenario))).toEqual(["01-multi-candidate"]);
+    expect(scenarios.map((scenario) => path.basename(scenario))).toEqual([
+      "01-multi-candidate",
+      "02-single-candidate-agreement",
+      "03-negotiated-two-candidates",
+      "04-ocr-candidate-cancelled"
+    ]);
   });
 
   it("runs one-file document process fixtures for md2pdf and pdf2md", async () => {
