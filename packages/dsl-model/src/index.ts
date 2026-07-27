@@ -220,11 +220,7 @@ export function renderHumanDsl(dsl: TaskDsl): string {
 function renderWithBlock(withObj: Record<string, unknown>): string[] {
   const entries = Object.entries(withObj);
   if (entries.length === 0) return ["WITH {}"];
-  return [
-    "WITH {",
-    ...entries.map(([key, value]) => `  ${key} = ${renderDslScalar(value)}`),
-    "}"
-  ];
+  return ["WITH {", ...entries.map(([key, value]) => `  ${key} = ${renderDslScalar(value)}`), "}"];
 }
 
 function renderDslScalar(value: unknown): string {

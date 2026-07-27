@@ -2,11 +2,29 @@
 
 ## [Unreleased]
 
+## [0.7.5] - 2026-07-27
+
+### Added
+
+- Added the `intent-contract.conversation.v1` input model in `@office-dsl/intent-contract-model` with typed `Human1`, `Human2`, and `system` messages, unique message IDs, ISO timestamps, non-empty text validation, parser support, and source-reference mapping for every conversation line.
+- Added a checked-in Human1/Human2 conversation fixture for the canonical model package.
+
+### Changed
+
+- Marked the Phase 4 "Define conversation input format for Human1 and Human2" TODO item as complete at the model layer; planner, CLI, backend, and UI integration remain tracked separately.
+- Updated root package, intent-contract model package, `VERSION`, and documentation consistency tests to `0.7.5`.
+
 ### Fixed
 
 - Flattened `examples-chat/<scenario>/generated/` event artifacts back into one scenario-local folder instead of `generated/<user>/<event>/` subfolders.
 - Standardized generated runner DSL artifacts on `*.dsl.hcl`, replacing chat `summary/status/approvals.dsl.md` files and regular example `actual/verifier-input.*.md` DSL artifacts.
 - Updated docs and TODO entries so generated example locations and file formats match the runner behavior.
+- Normalized existing DSL model formatting so the repository format check stays green.
+- Updated Python verifier tests to call the current text-and-action-list `verify` API.
+
+### Tests
+
+- Added `tests/intent-contract-conversation.test.ts` coverage for valid conversations, invalid versions, duplicate message IDs, invalid speakers, invalid timestamps, empty text, parse errors, and message-to-source-reference mapping.
 
 ## [0.7.4] - 2026-07-25
 

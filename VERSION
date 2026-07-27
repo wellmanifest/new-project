@@ -2,15 +2,15 @@
 
 ## Current Version
 
-`0.7.4`
+`0.7.5`
 
 ## Version Type
 
-Minor model-feature release over `0.7.3`.
+Minor model-feature release over `0.7.4`.
 
-This version implements Phase 4 question routing at the `@office-dsl/intent-contract-model` layer: `diagnoseIntentContractDsl` now tags every generated question with `targetParties` (`Human1`, `Human2`, or `unknown`) derived from source speaker, conflicting party values, party roles, and conflict source references, and a new `questionsForParty` helper filters unresolved-field questions per party. This builds on the `0.7.3` Phase 3 diagnosis (completeness gaps, ambiguities, conflicts, unapproved assumptions, traceability gaps, and the `finalizationReady` gate).
+This version implements the Phase 4 Human1/Human2 conversation input format at the `@office-dsl/intent-contract-model` layer. The package now exposes `intent-contract.conversation.v1`, typed `Conversation`/`ConversationMessage` records for `Human1`, `Human2`, and `system`, validation for version, unique message IDs, ISO timestamps, and non-empty text, parser support, and conversion from each message to traceable `SourceReference` entries.
 
-Both the Phase 3 diagnosis and the Phase 4 routing are model/reporting layers only; they never invent field values. Live runtime, CLI, backend, and UI integration of the diagnosis, routing, and finalization gate remain open (Phases 11 and 12). No OCR or document-ingestion behavior is implemented in this version; Phase 4B is roadmap documentation only.
+The Phase 3 diagnosis, Phase 4 question routing, and Phase 4 conversation input format are model/reporting layers only; they never invent field values. Live planner, CLI, backend, and UI integration of full conversation history, diagnosis, routing, and finalization gates remains open (Phases 5, 11, and 12). No OCR or document-ingestion behavior is implemented in this version; Phase 4B is roadmap documentation only.
 
 ## Project Status
 
@@ -42,6 +42,7 @@ Current validated implementation scope:
 - root verification command,
 - GitHub Actions workflow for `project.sh install` and `project.sh verify` on Windows and Linux,
 - `intent-contract.dsl.v1` model package with formal fields, statuses, source references, canonical serialization, and stable hashing,
+- `intent-contract.conversation.v1` model package input format with Human1/Human2/system messages, validation, parsing, and source-reference conversion,
 - deterministic `officeDslToIntentContractDsl` compatibility adapter with migration notes,
 - expanded regression coverage for DSL validation, runtime controls, security policy, canonical approval records, CLI workflows, backend API workflows, file-backed store behavior, example runners, and chat negotiation behavior,
 - documented Codex Windows sandbox `spawn EPERM` limitation for Vitest/Vite startup,
@@ -50,28 +51,30 @@ Current validated implementation scope:
 Target scope documented but not implemented:
 
 - CLI/backend/web exposure for canonical Intent/Contract approval flows,
-- production Human1/Human2 conversation workflow,
+- production Human1/Human2 conversation workflow beyond the typed model input format,
 - planner population of field-level source traceability,
 - contract and legal document renderers,
 - JS/Node.js code generation,
 - DSL-based test generation,
 - TypeScript runtime integration with the Python verifier as a normal gating step.
 
-## Included In 0.7.2
+## Included In 0.7.5
 
+- Added typed `intent-contract.conversation.v1` Human1/Human2/system conversation input records with validation, parsing, and source-reference mapping.
+- Added regression coverage and a checked-in fixture for the conversation input format.
 - Changed generated chat DSL files to `*.dsl.hcl` for automatic HCL/Terraform-style syntax highlighting by extension.
 - Changed generated DSL contents to HCL-like project blocks such as `document`, `field`, `conflict`, and `change`.
 - Moved default generated chat outputs into `examples-chat/<scenario>/generated/`, beside `scenario.json` and `chat.txt`.
 - Flattened generated per-event files into one scenario-local generated folder using names such as `001-user1.intent-contract.dsl.hcl`.
 - Added `examples-chat/*/generated/` to `.gitignore`.
 - Kept checked-in scenario manifests and expected summaries as JSON; generated runner artifacts use `*.dsl.hcl`, Markdown, or PDF instead of JSON.
-- Updated package, app, verifier, and OpenAPI version metadata to `0.7.2`.
+- Updated root package, intent-contract model package, changelog, and documentation consistency tests to `0.7.5`.
 
-## Not Included In 0.7.2
+## Not Included In 0.7.5
 
 - No CLI commands for canonical approvals.
 - No backend/web Human1/Human2 approval UI.
-- No production planner support for arbitrary conversation history.
+- No production planner support for arbitrary conversation history beyond typed input validation.
 - No legal contract renderer beyond the deterministic example PDF artifact.
 - No JS/Node.js code generator.
 - No DSL-based test generator.
@@ -92,7 +95,7 @@ Validated in this pass:
 - TypeScript runtime tests for canonical approval records and invalidation.
 - Existing TypeScript and Python checks listed in the final task report.
 - Office and chat example runners.
-- Intent/Contract model and adapter tests.
+- Intent/Contract model, conversation input, and adapter tests.
 - Reproduced the Codex Windows sandbox `spawn EPERM` limitation and used the approved escalated path for commands that require Node/Vite process creation in this environment.
 
 Expected but not yet fully validated as release criteria:
@@ -102,6 +105,6 @@ Expected but not yet fully validated as release criteria:
 
 ## Versioning Policy Note
 
-The current corrective pass keeps `0.7.4` metadata unchanged and aligns generated runner artifact layout and file extensions with the documented `*.dsl.hcl` convention.
+The current pass promotes the generated-artifact cleanup and conversation input model to `0.7.5`. Root package metadata, the intent-contract model package, `VERSION`, `CHANGELOG.md`, and documentation consistency tests are updated together for this milestone.
 
-A future production hardening task should define how root package metadata, package versions, OpenAPI metadata, `VERSION`, and `CHANGELOG.md` are kept in sync.
+A future production hardening task should define how all package, app, verifier, and OpenAPI version metadata are kept in sync when a broader release touches those surfaces.

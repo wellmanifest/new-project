@@ -107,8 +107,8 @@ Note: Phase 3 is implemented at the `@office-dsl/intent-contract-model` layer vi
 
 ## Phase 4 - Human1/Human2 Conversation Workflow
 
-- [ ] Define conversation input format for Human1 and Human2.
-  - Done when examples can store speaker, message ID, timestamp, and text.
+- [x] Define conversation input format for Human1 and Human2.
+  - Done when examples can store speaker, message ID, timestamp, and text. `Conversation`/`ConversationMessage` now define `intent-contract.conversation.v1` with `Human1`, `Human2`, and `system` speakers; `validateConversation`/`parseConversation` enforce version, unique message IDs, ISO timestamps, and non-empty text; `conversationToSourceReferences` maps each line to traceable message sources.
 - [ ] Add planner support for conversation history.
   - Done when a two-party fixture produces partial DSL with sources and unresolved fields.
 - [x] Add runtime routing of questions to Human1 or Human2.

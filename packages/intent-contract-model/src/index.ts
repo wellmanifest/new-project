@@ -545,6 +545,95 @@ function sortRoutes(routes: PartyRoute[]): PartyRoute[] {
   return [...routes].sort((a, b) => routeOrder[a] - routeOrder[b]);
 }
 
+export const CONVERSATION_VERSION = "intent-contract.conversation.v1";
+
+export type ConversationSpeaker = "Human1" | "Human2" | "system";
+
+export interface ConversationMessage {
+  id: string;
+  speaker: ConversationSpeaker;
+  timestamp: string;
+  text: string;
+}
+
+export interface Conversation {
+  version: typeof CONVERSATION_VERSION;
+  id: string;
+  messages: ConversationMessage[];
+}
+
+const conversationSpeakers = new Set<ConversationSpeaker>(["Human1", "Human2", "system"]);
+
+export function validateConversation(value: unknown): IntentContractValidationResult {
+  const issues: IntentContractValidationIssue[] = [];
+  if (!value || typeof value !== "object") {
+    return { ok: false, issues: [{ path: "$", message: "conversation must be an object" }] };
+  }
+  const root = value as Partial<Conversation>;
+  if (root.version !== CONVERSATION_VERSION) {
+    issues.push({ path: "version", message: `must be ${CONVERSATION_VERSION}` });
+  }
+  if (!root.id || typeof root.id !== "string") {
+    issues.push({ path: "id", message: "is required" });
+  }
+  if (!Array.isArray(root.messages)) {
+    issues.push({ path: "messages", message: "must be an array" });
+    return { ok: issues.length === 0, issues };
+  }
+  const seenIds = new Set<string>();
+  root.messages.forEach((message, index) => {
+    const path = `messages[${index}]`;
+    if (!message || typeof message !== "object") {
+      issues.push({ path, message: "must be an object" });
+      return;
+    }
+    const msg = message as Partial<ConversationMessage>;
+    if (!msg.id || typeof msg.id !== "string") {
+      issues.push({ path: `${path}.id`, message: "is required" });
+    } else if (seenIds.has(msg.id)) {
+      issues.push({ path: `${path}.id`, message: `duplicate message id "${msg.id}"` });
+    } else {
+      seenIds.add(msg.id);
+    }
+    if (!conversationSpeakers.has(msg.speaker as ConversationSpeaker)) {
+      issues.push({ path: `${path}.speaker`, message: "must be Human1, Human2, or system" });
+    }
+    if (
+      !msg.timestamp ||
+      typeof msg.timestamp !== "string" ||
+      Number.isNaN(Date.parse(msg.timestamp))
+    ) {
+      issues.push({ path: `${path}.timestamp`, message: "must be an ISO-8601 timestamp" });
+    }
+    if (!msg.text || typeof msg.text !== "string" || !msg.text.trim()) {
+      issues.push({ path: `${path}.text`, message: "is required" });
+    }
+  });
+  return { ok: issues.length === 0, issues };
+}
+
+export function parseConversation(input: string): Conversation {
+  const parsed = JSON.parse(input) as unknown;
+  const result = validateConversation(parsed);
+  if (!result.ok) {
+    throw new Error(result.issues.map((issue) => `${issue.path}: ${issue.message}`).join("; "));
+  }
+  return parsed as Conversation;
+}
+
+export function messageToSourceReference(message: ConversationMessage): SourceReference {
+  return {
+    type: "message",
+    id: message.id,
+    speaker: message.speaker,
+    quote: message.text
+  };
+}
+
+export function conversationToSourceReferences(conversation: Conversation): SourceReference[] {
+  return conversation.messages.map(messageToSourceReference);
+}
+
 function validateArrayFields(
   value: unknown,
   path: string,
