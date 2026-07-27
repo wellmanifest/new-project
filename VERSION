@@ -2,15 +2,15 @@
 
 ## Current Version
 
-`0.7.5`
+`0.7.6`
 
 ## Version Type
 
-Minor model-feature release over `0.7.4`.
+Minor planner-feature release over `0.7.5`.
 
-This version implements the Phase 4 Human1/Human2 conversation input format at the `@office-dsl/intent-contract-model` layer. The package now exposes `intent-contract.conversation.v1`, typed `Conversation`/`ConversationMessage` records for `Human1`, `Human2`, and `system`, validation for version, unique message IDs, ISO timestamps, and non-empty text, parser support, and conversion from each message to traceable `SourceReference` entries.
+This version implements deterministic Phase 4 planner support for Human1/Human2 conversation history in `@office-dsl/llm-planner`. `mockPlanConversationHistory` converts `intent-contract.conversation.v1` fixtures into valid partial `intent-contract.dsl.v1` snapshots, preserves every message as a source reference, extracts simple payment and deadline hints, and keeps unresolved legal or approval details as blocking questions instead of guessing values.
 
-The Phase 3 diagnosis, Phase 4 question routing, and Phase 4 conversation input format are model/reporting layers only; they never invent field values. Live planner, CLI, backend, and UI integration of full conversation history, diagnosis, routing, and finalization gates remains open (Phases 5, 11, and 12). No OCR or document-ingestion behavior is implemented in this version; Phase 4B is roadmap documentation only.
+The Phase 3 diagnosis, Phase 4 question routing, conversation input format, and mock conversation-history planner are model/planner layers only. Live OpenRouter conversation planning, CLI, backend, and UI integration of full conversation history, diagnosis, routing, and finalization gates remains open (Phases 5, 11, and 12). No OCR or document-ingestion behavior is implemented in this version; Phase 4B is roadmap documentation only.
 
 ## Project Status
 
@@ -43,6 +43,7 @@ Current validated implementation scope:
 - GitHub Actions workflow for `project.sh install` and `project.sh verify` on Windows and Linux,
 - `intent-contract.dsl.v1` model package with formal fields, statuses, source references, canonical serialization, and stable hashing,
 - `intent-contract.conversation.v1` model package input format with Human1/Human2/system messages, validation, parsing, and source-reference conversion,
+- deterministic mock conversation-history planner that produces partial `intent-contract.dsl.v1` with sources, unresolved fields, and blocking questions,
 - deterministic `officeDslToIntentContractDsl` compatibility adapter with migration notes,
 - expanded regression coverage for DSL validation, runtime controls, security policy, canonical approval records, CLI workflows, backend API workflows, file-backed store behavior, example runners, and chat negotiation behavior,
 - documented Codex Windows sandbox `spawn EPERM` limitation for Vitest/Vite startup,
@@ -51,15 +52,16 @@ Current validated implementation scope:
 Target scope documented but not implemented:
 
 - CLI/backend/web exposure for canonical Intent/Contract approval flows,
-- production Human1/Human2 conversation workflow beyond the typed model input format,
+- production Human1/Human2 conversation workflow beyond typed input validation and deterministic mock fixture planning,
 - planner population of field-level source traceability,
 - contract and legal document renderers,
 - JS/Node.js code generation,
 - DSL-based test generation,
 - TypeScript runtime integration with the Python verifier as a normal gating step.
 
-## Included In 0.7.5
+## Included In 0.7.6
 
+- Added deterministic `mockPlanConversationHistory` conversion from Human1/Human2 conversation fixtures into partial Intent/Contract DSL snapshots.
 - Added typed `intent-contract.conversation.v1` Human1/Human2/system conversation input records with validation, parsing, and source-reference mapping.
 - Added regression coverage and a checked-in fixture for the conversation input format.
 - Changed generated chat DSL files to `*.dsl.hcl` for automatic HCL/Terraform-style syntax highlighting by extension.
@@ -68,13 +70,13 @@ Target scope documented but not implemented:
 - Flattened generated per-event files into one scenario-local generated folder using names such as `001-user1.intent-contract.dsl.hcl`.
 - Added `examples-chat/*/generated/` to `.gitignore`.
 - Kept checked-in scenario manifests and expected summaries as JSON; generated runner artifacts use `*.dsl.hcl`, Markdown, or PDF instead of JSON.
-- Updated root package, intent-contract model package, changelog, and documentation consistency tests to `0.7.5`.
+- Updated root package, llm-planner package, changelog, and documentation consistency tests to `0.7.6`.
 
-## Not Included In 0.7.5
+## Not Included In 0.7.6
 
 - No CLI commands for canonical approvals.
 - No backend/web Human1/Human2 approval UI.
-- No production planner support for arbitrary conversation history beyond typed input validation.
+- No production/OpenRouter planner support for arbitrary conversation history beyond deterministic mock fixture planning.
 - No legal contract renderer beyond the deterministic example PDF artifact.
 - No JS/Node.js code generator.
 - No DSL-based test generator.
@@ -95,7 +97,7 @@ Validated in this pass:
 - TypeScript runtime tests for canonical approval records and invalidation.
 - Existing TypeScript and Python checks listed in the final task report.
 - Office and chat example runners.
-- Intent/Contract model, conversation input, and adapter tests.
+- Intent/Contract model, conversation input, mock conversation planner, and adapter tests.
 - Reproduced the Codex Windows sandbox `spawn EPERM` limitation and used the approved escalated path for commands that require Node/Vite process creation in this environment.
 
 Expected but not yet fully validated as release criteria:
@@ -105,6 +107,6 @@ Expected but not yet fully validated as release criteria:
 
 ## Versioning Policy Note
 
-The current pass promotes the generated-artifact cleanup and conversation input model to `0.7.5`. Root package metadata, the intent-contract model package, `VERSION`, `CHANGELOG.md`, and documentation consistency tests are updated together for this milestone.
+The current pass promotes deterministic conversation-history planner support to `0.7.6`. Root package metadata, the llm-planner package, `VERSION`, `CHANGELOG.md`, and documentation consistency tests are updated together for this milestone.
 
 A future production hardening task should define how all package, app, verifier, and OpenAPI version metadata are kept in sync when a broader release touches those surfaces.

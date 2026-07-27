@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [0.7.6] - 2026-07-27
+
+### Added
+
+- Added `mockPlanConversationHistory` in `@office-dsl/llm-planner` to convert `intent-contract.conversation.v1` Human1/Human2 fixtures into valid partial `intent-contract.dsl.v1` snapshots with source references, deterministic payment/deadline hints, unresolved fields, and blocking questions.
+
+### Changed
+
+- Marked the Phase 4 "Add planner support for conversation history" TODO item as complete for the deterministic mock/fixture planner path; production OpenRouter, CLI, backend, and UI conversation ingestion remain tracked separately.
+- Updated root package, llm-planner package, `VERSION`, and documentation consistency tests to `0.7.6`.
+
+### Tests
+
+- Added `tests/llm-planner-conversation.test.ts` coverage for conversation-history planning, source preservation, extracted payment/deadline fields, unresolved questions, and non-ready finalization diagnosis.
+
 ## [0.7.5] - 2026-07-27
 
 ### Added

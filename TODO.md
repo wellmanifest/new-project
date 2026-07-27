@@ -109,8 +109,8 @@ Note: Phase 3 is implemented at the `@office-dsl/intent-contract-model` layer vi
 
 - [x] Define conversation input format for Human1 and Human2.
   - Done when examples can store speaker, message ID, timestamp, and text. `Conversation`/`ConversationMessage` now define `intent-contract.conversation.v1` with `Human1`, `Human2`, and `system` speakers; `validateConversation`/`parseConversation` enforce version, unique message IDs, ISO timestamps, and non-empty text; `conversationToSourceReferences` maps each line to traceable message sources.
-- [ ] Add planner support for conversation history.
-  - Done when a two-party fixture produces partial DSL with sources and unresolved fields.
+- [x] Add planner support for conversation history.
+  - Done when a two-party fixture produces partial DSL with sources and unresolved fields. `mockPlanConversationHistory` converts `intent-contract.conversation.v1` fixtures into valid partial `intent-contract.dsl.v1`, preserves every line as a source reference, extracts deterministic payment/deadline hints, and leaves unresolved legal/approval fields as blocking questions.
 - [x] Add runtime routing of questions to Human1 or Human2.
   - Done when the runtime knows which party must answer a missing or conflicting field. `diagnoseIntentContractDsl` now tags each generated question with `targetParties` (derived from `source.speaker`, `ConflictValue.partyId`, and `parties`), and `questionsForParty` filters questions per party. Surfacing this through the live runtime/CLI/UI is tracked in Phases 11 and 12.
 - [x] Add bilateral approval records.

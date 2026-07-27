@@ -123,7 +123,7 @@ The target LLM planner should:
 - generate questions for unresolved fields,
 - support single messages, conversations, and guideline files.
 
-Current implementation status: `packages/llm-planner` has a deterministic mock planner and an optional OpenRouter code path. The validated path is mock mode. The mock planner uses simple text matching and does not perform semantic extraction from arbitrary conversation history.
+Current implementation status: `packages/llm-planner` has a deterministic mock planner, deterministic mock conversion from checked-in `intent-contract.conversation.v1` fixtures to partial Intent/Contract DSL, and an optional OpenRouter code path. The validated path is mock mode. The mock planner uses simple text matching and fixture rules; it does not perform production semantic extraction from arbitrary conversation history.
 
 ## 7. Role Of The Runtime
 
