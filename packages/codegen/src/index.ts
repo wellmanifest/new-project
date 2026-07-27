@@ -11,7 +11,7 @@ import {
   type FormalField,
   type IntentContractDsl,
   type SourceReference
-} from "../../intent-contract-model/src/index.js";
+} from "@office-dsl/intent-contract-model";
 
 const execFileAsync = promisify(execFile);
 

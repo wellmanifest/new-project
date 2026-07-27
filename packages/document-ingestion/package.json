@@ -1,0 +1,11 @@
+{
+  "name": "@office-dsl/document-ingestion",
+  "version": "0.12.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@office-dsl/pdf-generator": "workspace:*"
+  }
+}

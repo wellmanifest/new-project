@@ -42,7 +42,7 @@ Human-to-Human (H2H) starts with communication between two sides:
 
 In H2H, Human1 approval alone is not enough. Human2 must be able to say whether the DSL is sufficient to perform the work or accept the agreement. Both sides must approve the same DSL hash. Any DSL change invalidates previous approvals.
 
-Current implementation status: only one-side confirmation exists. Human2, bilateral approval, and contract reopening are not implemented.
+Current implementation status: one-side Office action confirmation still exists for legacy Office DSL tasks, and the canonical Intent/Contract layer now has Human1/Human2 approval records, current-hash approval detection, approval invalidation, rejection diagnosis, and runnable chat/recruitment fixtures that prove bilateral approval behavior. Production CLI/backend/UI exposure remains open.
 
 ## 4. Target Architecture
 
@@ -65,7 +65,7 @@ flowchart LR
   Verifier --> Audit["Audit and machine-readable verdict"]
 ```
 
-Boundary note: today the TypeScript runtime does not call the Python verifier. The CLI and backend attach mock verifier objects. The Python verifier package can be run separately.
+Boundary note: the TypeScript runtime can call the Python semantic verifier through the shared verifier bridge for mock-safe semantic reports. CLI and backend still use deterministic mock verifier paths for their default Office DSL flows unless explicitly wired through the semantic verifier boundary.
 
 ## 5. Role Of The DSL
 
@@ -237,7 +237,7 @@ Target document types include:
 
 A final document must be generated only from approved DSL data. It should expose missing fields and conflicts instead of hiding them.
 
-Current implementation status: no contract or legal document renderer is implemented.
+Current implementation status: `@office-dsl/document-renderer` implements deterministic draft renderers for task delegation, service agreement, and employment/guideline documents from `intent-contract.dsl.v1`. Production runtime/CLI/backend/UI gating and surface integration remain open.
 
 ## 14. Code And Test Generation
 
@@ -254,7 +254,7 @@ flowchart LR
 
 The target system should generate tests from formal DSL elements such as requirements, invariants, acceptance criteria, prohibited behavior, expected output, error handling, and security policy.
 
-Current implementation status: there is no JS/Node.js code generator and no DSL-based test generator. Existing tests cover the runtime, DSL model, security checks, E2E mock flow, and Python verifier package.
+Current implementation status: `@office-dsl/codegen` implements deterministic JS/Node.js package-level generation for approved DSL inputs, and `@office-dsl/testgen` implements DSL-derived test specifications and coverage reports. Runtime/CLI/backend/UI production wiring remains open.
 
 ## 15. Python Semantic Verifier
 
@@ -277,7 +277,7 @@ NEEDS_REVIEW
 
 and include score, missing requirements, contradictions, unauthorized assumptions, uncovered acceptance criteria, code behavior mismatches, document mismatches, and recommended action.
 
-Current implementation status: `verifier/office_dsl_verifier` is a Pydantic package with mock heuristics and an optional LiteLLM/OpenRouter path. The mock verifier checks a few unsafe or unauthorized-action patterns; it is not a full semantic verifier.
+Current implementation status: `verifier/office_dsl_verifier` provides mock-safe semantic checks plus an explicit LiteLLM/OpenRouter mode. The TypeScript side calls it through `@office-dsl/verifier-bridge`; default verification remains deterministic and offline.
 
 ## 16. Examples
 
@@ -349,7 +349,7 @@ PARTIAL:
 
 - OpenRouter and LiteLLM paths exist but are not validated as the default flow,
 - clarification exists only as workflow `user.ask`,
-- legal document rendering is not implemented; canonical DSL-to-NL summary rendering exists for traceable statements,
+- package-level legal/document rendering exists, while production runtime/CLI/backend/UI wiring remains open,
 - audit exists for office-task sessions, not full intent/contract lifecycle.
 
 MOCK:
@@ -361,13 +361,8 @@ MOCK:
 
 NOT IMPLEMENTED:
 
-- canonical Intent/Contract DSL,
-- Human1/Human2 bilateral approval,
-- runtime population of field-level source traceability,
-- runtime conflict and assumption diagnosis,
-- contract/legal renderers,
+- runtime population of field-level source traceability from live planner sessions,
+- production CLI/backend/UI exposure for canonical approvals and document/code/test generation,
+- production OCR/PDF providers beyond deterministic fixture extraction,
 - live-provider planner-backed example regeneration for current stable fixtures,
-- JS/Node.js code generation,
-- DSL-based test generation,
-- runtime-to-Python verifier integration,
 - production security, auth, persistence, and CI hardening.

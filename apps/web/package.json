@@ -1,5 +1,6 @@
 {
   "name": "@office-dsl/web",
-  "version": "0.7.2",
-  "type": "module"
+  "version": "0.12.0",
+  "type": "module",
+  "dependencies": {}
 }

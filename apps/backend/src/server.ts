@@ -1,18 +1,14 @@
 import http from "node:http";
 import { readFile } from "node:fs/promises";
-import {
-  createDefaultRegistry,
-  Runtime,
-  type RuntimeApprovalParty
-} from "../../../packages/dsl-runtime/src/index.js";
-import { FileTaskStore } from "../../../packages/dsl-runtime/src/store.js";
-import { planFromNaturalLanguage } from "../../../packages/llm-planner/src/index.js";
+import { createDefaultRegistry, Runtime, type RuntimeApprovalParty } from "@office-dsl/dsl-runtime";
+import { FileTaskStore } from "@office-dsl/dsl-runtime/store";
+import { planFromNaturalLanguage } from "@office-dsl/llm-planner";
 import {
   diagnoseIntentContractDsl,
   questionsForParty,
   validateIntentContractDsl,
   type IntentContractDsl
-} from "../../../packages/intent-contract-model/src/index.js";
+} from "@office-dsl/intent-contract-model";
 
 const runtime = new Runtime();
 const store = new FileTaskStore();

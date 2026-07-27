@@ -3,7 +3,7 @@ import {
   validateIntentContractDsl,
   type FormalField,
   type IntentContractDsl
-} from "../../intent-contract-model/src/index.js";
+} from "@office-dsl/intent-contract-model";
 
 export const TESTGEN_INPUT_VERSION = "intent-contract.testgen-input.v1";
 export const TESTGEN_VERSION = "testgen.v1";

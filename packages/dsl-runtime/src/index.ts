@@ -6,7 +6,7 @@ export {
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { TaskDsl, Step, validateTaskDsl } from "../../dsl-model/src/index.js";
+import { TaskDsl, Step, validateTaskDsl } from "@office-dsl/dsl-model";
 import {
   runPythonSemanticVerifier,
   type PythonSemanticVerifierOptions,
@@ -17,7 +17,7 @@ import {
   officeDslToIntentContractDsl,
   validateIntentContractDsl,
   type IntentContractDsl
-} from "../../intent-contract-model/src/index.js";
+} from "@office-dsl/intent-contract-model";
 
 export type TaskState =
   | "CREATED"

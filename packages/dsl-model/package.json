@@ -1,8 +1,9 @@
 {
   "name": "@office-dsl/dsl-model",
-  "version": "0.7.2",
+  "version": "0.12.0",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
-  }
+  },
+  "dependencies": {}
 }

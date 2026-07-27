@@ -8,7 +8,7 @@ import {
   type FormalField,
   type IntentContractDsl,
   type SourceReference
-} from "../../intent-contract-model/src/index.js";
+} from "@office-dsl/intent-contract-model";
 
 export const STRUCTURED_PLANNER_RESPONSE_VERSION = "intent-contract.planner-response.v1";
 

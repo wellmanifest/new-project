@@ -1,8 +1,12 @@
 {
   "name": "@office-dsl/llm-planner",
-  "version": "0.9.0",
+  "version": "0.12.0",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@office-dsl/dsl-model": "workspace:*",
+    "@office-dsl/intent-contract-model": "workspace:*"
   }
 }

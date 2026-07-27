@@ -15,8 +15,8 @@ PARTIAL:
 
 - OpenRouter and LiteLLM paths exist but are not the validated default path.
 - A general missing/ambiguous/conflicting field model exists at the `intent-contract-model` layer (`diagnoseIntentContractDsl`), but runtime clarification still uses simple `user.ask` workflow steps; the diagnosis is not yet wired into the runtime/CLI/backend/UI.
-- Rendering exists as readable Office DSL text, not formal documents.
-- Office runtime confirmations still use execution plan hashes; the runtime now also stores a canonical Intent/Contract snapshot hash and minimal Human1/Human2 approval records, but this is not yet exposed through CLI/backend/UI flows.
+- Rendering exists as readable Office DSL text plus package-level Intent/Contract document renderers; production runtime/CLI/backend/UI wiring remains open.
+- Office runtime confirmations still use execution plan hashes; canonical Intent/Contract snapshot hashes and Human1/Human2 approval records exist, with production CLI/backend/UI exposure still open.
 
 MOCK:
 
@@ -69,7 +69,11 @@ NOT IMPLEMENTED:
 - [x] Remove JSON from generated runner artifacts.
   - Done when generated runner artifacts use `*.dsl.hcl` project DSL/HCL files or human-readable Markdown/PDF files, without JSON output artifacts.
 - [x] Update Python verifier to consume DSL/markdown inputs instead of JSON.
+
   - Done when `verifier-input.dsl.hcl` and `verifier-input.plan.dsl.hcl` are parsed directly and mock verifier results match the previous JSON-based behavior.
+
+- [x] Extract package boundaries for examples-first workflows and shared utilities.
+  - Done when chat negotiation, recruitment workflow, document ingestion, DSL artifact rendering, regression comparison, Python verifier bridging, and CLI mock verification live in dedicated `@office-dsl/*` packages and `tests/package-boundary.test.ts` prevents package-boundary regressions.
 
 ---
 
@@ -361,7 +365,6 @@ Phase 11 is implemented as a `@office-dsl/cli` extension. Remaining open work: i
 
 ## Next 10 Implementation Tasks
 
-1. Add runtime-to-Python verifier invocation behind a mock-safe interface.
 2. Add the first target fixture: `01-chat-to-dsl` with `in/` and `out/` artifacts.
 3. Add planner-backed scenario mode coverage for mock planner output normalization.
 4. Add Markdown diff output for future rendered document artifacts.
@@ -370,4 +373,4 @@ Phase 11 is implemented as a `@office-dsl/cli` extension. Remaining open work: i
 7. Add canonical Intent/Contract CLI commands.
 8. Define canonical security policy for LLM, runtime, renderer, codegen, and verifier.
 9. Add CLI/backend exposure for Human1/Human2 canonical approval records.
-10. Add renderer gating that requires bilateral canonical approval before document output.
+10. Wire renderer gating through production runtime/CLI/backend flows so document output requires bilateral canonical approval.

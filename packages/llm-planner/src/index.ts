@@ -18,7 +18,7 @@ export {
   type RenderedStatement
 } from "./intent-contract.js";
 import { randomUUID } from "node:crypto";
-import { DSL_VERSION, TaskDsl } from "../../dsl-model/src/index.js";
+import { DSL_VERSION, TaskDsl } from "@office-dsl/dsl-model";
 import {
   INTENT_CONTRACT_DSL_VERSION,
   conversationToSourceReferences,
@@ -29,7 +29,7 @@ import {
   type ConversationSpeaker,
   type IntentContractDsl,
   type SourceReference
-} from "../../intent-contract-model/src/index.js";
+} from "@office-dsl/intent-contract-model";
 
 export type PlannerMode = "mock" | "openrouter";
 

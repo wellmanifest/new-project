@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import { readFile } from "node:fs/promises";
-import { parseTaskDsl, renderHumanDsl } from "../../dsl-model/src/index.js";
-import { Runtime } from "../../dsl-runtime/src/index.js";
-import { FileTaskStore } from "../../dsl-runtime/src/store.js";
-import { planFromNaturalLanguage } from "../../llm-planner/src/index.js";
+import { parseTaskDsl, renderHumanDsl } from "@office-dsl/dsl-model";
+import { Runtime } from "@office-dsl/dsl-runtime";
+import { FileTaskStore } from "@office-dsl/dsl-runtime/store";
+import { planFromNaturalLanguage } from "@office-dsl/llm-planner";
+import { mockVerification } from "@office-dsl/verifier-mock";
 
 const runtime = new Runtime();
 const store = new FileTaskStore();
@@ -79,25 +80,6 @@ async function main(argv: string[]): Promise<void> {
     else console.error(`Error: ${message}`);
     process.exitCode = 1;
   }
-}
-
-function mockVerification(input: string, dsl: unknown): unknown {
-  const combined = `${input} ${JSON.stringify(dsl)}`.toLowerCase();
-  const unauthorized = input.toLowerCase().includes("nie wysy") && combined.includes("email.send");
-  return {
-    verdict: unauthorized ? "FAIL" : "PASS",
-    score: unauthorized ? 0.2 : 0.95,
-    intent_coverage: unauthorized ? 0.7 : 0.95,
-    missing_requirements: [],
-    unauthorized_actions: unauthorized ? ["email.send"] : [],
-    contradictions: [],
-    policy_violations: [],
-    requires_confirmation: combined.includes("email.send") ? ["email.send"] : [],
-    explanation: unauthorized
-      ? "DSL sends email although user requested drafts only."
-      : "Mock verifier accepted DSL.",
-    recommended_action: unauthorized ? "REGENERATE" : "ACCEPT"
-  };
 }
 
 function output(json: boolean, value: unknown): void {

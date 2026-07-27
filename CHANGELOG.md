@@ -4,8 +4,17 @@
 
 ### Added
 
+- Added `@office-dsl/chat-negotiation`, `@office-dsl/recruitment-workflow`, `@office-dsl/document-ingestion`, `@office-dsl/dsl-artifact-renderer`, `@office-dsl/regression-runner`, `@office-dsl/verifier-bridge`, and `@office-dsl/verifier-mock` package boundaries.
+- Added `tests/package-boundary.test.ts` to guard extracted packages, package-name imports, workspace dependency declarations, and lockstep package/app versions.
+
 - Added `@office-dsl/pdf-generator` as a standalone package for deterministic minimal PDF generation and fixture text extraction, and moved chat/recruitment PDF generation out of `@office-dsl/example-runner`.
 - Added `system:check`, `project.sh system-check`, and Windows `project.bat system-check` aliases for the full functional system test suite, plus regression coverage that keeps TypeScript tests, Python verifier tests, examples, chat examples, recruitment examples, formatting, linting, typechecking, and whitespace checks wired together.
+
+### Changed
+
+- Moved chat negotiation, recruitment workflow, deterministic document ingestion/OCR fixture processing, DSL artifact rendering, regression comparison, Python verifier invocation, and CLI mock verification out of example-runner/CLI internals.
+- Updated all workspace package/app versions to `0.12.0` and replaced internal source-relative package imports with package-name imports plus `workspace:*` dependencies.
+- Updated stale architecture/status documentation for `project.sh`, bilateral approval, renderers, codegen, testgen, and Python verifier integration.
 
 ## [0.12.0] - 2026-07-27
 

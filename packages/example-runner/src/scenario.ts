@@ -1,17 +1,16 @@
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm } from "node:fs/promises";
 import path from "node:path";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import {
   parseTaskDsl,
   renderHumanDsl,
   TaskDsl,
   validateTaskDsl,
   ValidationResult
-} from "../../dsl-model/src/index.js";
-import { Runtime, TaskSession } from "../../dsl-runtime/src/index.js";
-
-const execFileAsync = promisify(execFile);
+} from "@office-dsl/dsl-model";
+import { Runtime, TaskSession } from "@office-dsl/dsl-runtime";
+import { writeDslHcl } from "@office-dsl/dsl-artifact-renderer";
+import { compareJson, compareSubset } from "@office-dsl/regression-runner";
+import { runOfficeDslVerifier } from "@office-dsl/verifier-bridge";
 
 export const SCENARIO_VERSION = "example.scenario.v1";
 
@@ -209,12 +208,12 @@ async function loadDsl(scenarioDir: string, manifest: ScenarioManifest): Promise
     );
   }
   if (manifest.pipeline.planner.kind === "mock") {
-    const { planFromNaturalLanguage } = await import("../../llm-planner/src/index.js");
+    const { planFromNaturalLanguage } = await import("@office-dsl/llm-planner");
     return planFromNaturalLanguage(await readScenarioInput(scenarioDir, manifest), {
       mode: "mock"
     });
   }
-  const { planFromNaturalLanguage } = await import("../../llm-planner/src/index.js");
+  const { planFromNaturalLanguage } = await import("@office-dsl/llm-planner");
   return planFromNaturalLanguage(await readScenarioInput(scenarioDir, manifest), {
     mode: "openrouter",
     model: manifest.pipeline.planner.model
@@ -258,41 +257,15 @@ async function runPythonVerifier(
   mode: string,
   generatedDir: string
 ): Promise<Record<string, unknown>> {
-  const dslFile = path.join(generatedDir, "verifier-input.dsl.hcl");
-  const planFile = path.join(generatedDir, "verifier-input.plan.dsl.hcl");
-  await writeDslHcl(generatedDir, "verifier-input.dsl.hcl", renderHumanDsl(dsl));
   const planDsl = ["PLAN", ...plan.actions.map((action) => `ACTION ${action}`)].join("\n");
-  await writeFile(planFile, `${planDsl}\n`, "utf8");
-  const env = {
-    ...process.env,
-    PYTHONPATH: appendPythonPath(process.env.PYTHONPATH, path.join(repoRoot, "verifier"))
-  };
-  const { stdout } = await execFileAsync(
-    "python",
-    [
-      "-m",
-      "office_dsl_verifier",
-      "--nl",
-      inputText.trim(),
-      "--dsl",
-      dslFile,
-      "--plan",
-      planFile,
-      "--mode",
-      mode
-    ],
-    {
-      cwd: repoRoot,
-      env,
-      windowsHide: true,
-      maxBuffer: 1024 * 1024
-    }
-  );
-  return JSON.parse(stdout) as Record<string, unknown>;
-}
-
-function appendPythonPath(current: string | undefined, value: string): string {
-  return current ? `${value}${path.delimiter}${current}` : value;
+  return runOfficeDslVerifier({
+    repoRoot,
+    inputText,
+    dslText: renderHumanDsl(dsl),
+    planText: planDsl,
+    mode,
+    generatedDir
+  });
 }
 
 function normalizeVerification(
@@ -374,42 +347,6 @@ function comparePlanAssertions(
   }
 }
 
-function compareSubset(
-  failures: string[],
-  label: string,
-  expected: unknown,
-  actual: unknown
-): void {
-  if (Array.isArray(expected)) {
-    compareJson(failures, label, expected, actual);
-    return;
-  }
-  if (expected && typeof expected === "object") {
-    for (const [key, value] of Object.entries(expected)) {
-      compareSubset(
-        failures,
-        `${label}.${key}`,
-        value,
-        (actual as Record<string, unknown> | undefined)?.[key]
-      );
-    }
-    return;
-  }
-  compareJson(failures, label, expected, actual);
-}
-
-function compareJson(failures: string[], label: string, expected: unknown, actual: unknown): void {
-  const expectedText = stableJson(expected);
-  const actualText = stableJson(actual);
-  if (expectedText !== actualText) {
-    failures.push(`${label} mismatch\nexpected: ${expectedText}\nactual:   ${actualText}`);
-  }
-}
-
-async function writeDslHcl(dir: string, name: string, body: string): Promise<void> {
-  await writeFile(path.join(dir, name), `${body.trim()}\n`, "utf8");
-}
-
 function renderValidationDsl(validation: ValidationResult): string {
   const lines = ["VALIDATION"];
   if (validation.ok) {
@@ -469,20 +406,4 @@ function renderVerificationDsl(verification: Record<string, unknown>): string {
     }
   }
   return lines.join("\n");
-}
-
-function stableJson(value: unknown): string {
-  return JSON.stringify(sortValue(value), null, 2);
-}
-
-function sortValue(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(sortValue);
-  if (value && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([key, item]) => [key, sortValue(item)])
-    );
-  }
-  return value;
 }

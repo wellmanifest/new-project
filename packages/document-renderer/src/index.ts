@@ -10,7 +10,7 @@ import {
   type IntentContractDsl,
   type ObligationNode,
   type PaymentNode
-} from "../../intent-contract-model/src/index.js";
+} from "@office-dsl/intent-contract-model";
 
 export const DOCUMENT_RENDERER_VERSION = "document-renderer.v1";
 

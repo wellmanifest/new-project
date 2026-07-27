@@ -1,8 +1,9 @@
 # Package Boundary Audit
 
 Date: 2026-07-27
+Status: resolved in the package-boundary milestone
 
-This audit checks whether the repository has more issues similar to the earlier PDF generator problem: functionality that should live in a dedicated package, shared module, or single source of truth but is still embedded in an example runner, CLI file, or duplicated helper.
+This audit checked whether the repository had more issues similar to the earlier PDF generator problem: functionality that should live in a dedicated package, shared module, or single source of truth but was embedded in an example runner, CLI file, or duplicated helper.
 
 ## Scope
 
@@ -13,104 +14,85 @@ Reviewed areas:
 - CLI and shell verifier paths
 - documentation/version status that could mislead future work
 
-The PDF generator package is treated as the resolved baseline. `packages/pdf-generator` now exists and exports deterministic Markdown-to-PDF fixture generation.
+## Resolution Summary
 
-## Findings
+The audit findings have been fixed by extracting dedicated packages, switching internal code to package-name imports, documenting a lockstep package/app version policy, and adding `tests/package-boundary.test.ts` as a regression guard.
 
-### P1 - Chat negotiation engine is embedded in the example runner
+Resolved package boundaries:
 
-Evidence: `packages/example-runner/src/chat.ts` contains chat parsing, line-by-line interpretation, party state, contract merge logic, approval invalidation, finalization rules, DSL rendering, expected-output comparison, and artifact writing.
+- `@office-dsl/pdf-generator` owns deterministic minimal PDF generation and fixture text extraction.
+- `@office-dsl/chat-negotiation` owns Human1/Human2 chat parsing, line-by-line negotiation, party states, merge, conflict detection, approval invalidation, finalization, and chat artifacts.
+- `@office-dsl/document-ingestion` owns deterministic `md2pdf`/`pdf2md` fixture processing and mock-safe OCR fallback routing.
+- `@office-dsl/recruitment-workflow` owns recruitment candidate orchestration, proposals, source mapping, per-candidate chat reuse, and acceptance/rejection summaries.
+- `@office-dsl/dsl-artifact-renderer` owns shared DSL/HCL block, assignment, quoting, indentation, and file-writing helpers.
+- `@office-dsl/regression-runner` owns stable JSON sorting and subset/full comparison helpers.
+- `@office-dsl/verifier-bridge` owns Python verifier invocation, verifier input files, environment setup, and `PYTHONPATH` handling.
+- `@office-dsl/verifier-mock` owns the shared CLI/shell mock verifier.
 
-Why this is a problem: `@office-dsl/example-runner` should orchestrate runnable fixtures. The Human1/Human2 negotiation domain engine is reusable product logic and should be testable without the example runner.
+## Fixed Findings
 
-Recommended action: extract a package such as `@office-dsl/chat-negotiation` or `@office-dsl/negotiation-engine`. Keep examples responsible only for loading `scenario.json`, `chat.txt`, expected artifacts, and calling the package.
+### P1 - Chat negotiation engine was embedded in the example runner
 
-### P1 - Recruitment workflow is embedded in the example runner
+Fixed: the implementation moved to `packages/chat-negotiation/src/index.ts`. `packages/example-runner/src/chat.ts` is now a compatibility re-export, so the example runner only discovers and invokes fixtures.
 
-Evidence: `packages/example-runner/src/recruitment.ts` contains document process execution, Markdown/PDF/OCR fixture routing, candidate status/proposal generation, source reference extraction, Intent/Contract DSL rendering, and expected-output comparison.
+Guard: `tests/package-boundary.test.ts` requires `@office-dsl/chat-negotiation` to exist and prevents source-relative package imports.
 
-Why this is a problem: recruitment ingestion and proposal generation are application workflow logic, not only example orchestration.
+### P1 - Recruitment workflow was embedded in the example runner
 
-Recommended action: extract one or two packages, for example `@office-dsl/document-ingestion` for md/pdf/ocr fixture flow and `@office-dsl/recruitment-workflow` for candidate/proposal/contract workflow.
+Fixed: recruitment orchestration moved to `packages/recruitment-workflow/src/index.ts`, while document process execution moved further down to `packages/document-ingestion/src/index.ts`. `packages/example-runner/src/recruitment.ts` is now a compatibility re-export.
 
-### P2 - DSL artifact rendering helpers are duplicated
+Guard: `tests/package-boundary.test.ts` requires both packages and checks their workspace dependencies.
 
-Evidence: `packages/example-runner/src/scenario.ts`, `packages/example-runner/src/chat.ts`, and `packages/example-runner/src/recruitment.ts` each contain local helpers for DSL/HCL-style artifact writing such as block/assignment/string quoting and specific `render...Dsl` functions.
+### P2 - DSL artifact rendering helpers were duplicated
 
-Why this is a problem: after the decision that generated DSL files must not be JSON, the DSL textual format needs one writer/validator boundary. Local renderers make it easy for examples to drift into incompatible syntax.
+Fixed: common DSL/HCL writer helpers moved to `@office-dsl/dsl-artifact-renderer` and are used by the extracted chat, recruitment, and example-runner scenario flows.
 
-Recommended action: create a shared package such as `@office-dsl/dsl-artifact-renderer`, or extend the existing DSL/model packages with a canonical text writer and parser/validator.
+Guard: package imports and dependencies are checked by `tests/package-boundary.test.ts`.
 
-### P2 - Regression comparison logic is duplicated
+### P2 - Regression comparison logic was duplicated
 
-Evidence: example runner modules implement separate `compareSubset`, stable sort/stringify, and expected summary comparison helpers.
+Fixed: stable JSON and subset/full comparison helpers moved to `@office-dsl/regression-runner` and are used by chat, recruitment, and general scenario comparison paths.
 
-Why this is a problem: every example family can accidentally compare expected output differently. That weakens regression tests.
+Guard: package imports and dependencies are checked by `tests/package-boundary.test.ts`.
 
-Recommended action: extract a small `@office-dsl/regression-runner` or test utility package that owns stable JSON, subset comparison, artifact existence checks, and readable mismatch reporting.
+### P2 - Python verifier bridge was split across packages
 
-### P2 - Python verifier bridge is split across packages
+Fixed: Python verifier execution and environment handling moved to `@office-dsl/verifier-bridge`. `@office-dsl/dsl-runtime` re-exports the semantic verifier through its existing public API, and the example runner calls `runOfficeDslVerifier` from the same bridge.
 
-Evidence: `packages/dsl-runtime/src/python-verifier.ts` owns one Python semantic verifier invocation path, while `packages/example-runner/src/scenario.ts` has its own Python verifier runner and `PYTHONPATH` handling.
+Guard: package imports and dependencies are checked by `tests/package-boundary.test.ts`.
 
-Why this is a problem: Python invocation, environment setup, and failure reporting should be one maintained boundary.
+### P2 - CLI mock verifier code was duplicated
 
-Recommended action: create or centralize into `@office-dsl/verifier-bridge`, then make runtime, CLI, and examples call it.
+Fixed: CLI and shell now import `mockVerification` from `@office-dsl/verifier-mock`.
 
-### P2 - CLI mock verifier code is duplicated
+Guard: package imports and dependencies are checked by `tests/package-boundary.test.ts`.
 
-Evidence: `packages/cli/src/index.ts` and `packages/cli/src/shell.ts` both contain a `mockVerification` implementation.
+### P2 - Internal package boundaries were bypassed by source-relative imports
 
-Why this is a problem: CLI and shell can diverge on the same CQRS/verification behavior.
+Fixed: package/app source imports now use `@office-dsl/*` package names instead of `../../.../src/index.js` style imports. `package.json` files declare internal dependencies with `workspace:*`, and `@office-dsl/dsl-runtime` exposes `./store` for the file store subpath.
 
-Recommended action: move the mock verifier behind one shared verifier interface used by both CLI entrypoints.
+Guard: `tests/package-boundary.test.ts` fails when packages/apps reintroduce source-relative package imports or omit workspace dependency declarations.
 
-### P2 - Internal package boundaries are bypassed by source-relative imports
+### P2 - Documentation contained stale implementation status
 
-Evidence: packages import each other through paths like `../../pdf-generator/src/index.js`, `../../intent-contract-model/src/index.js`, and other `../../.../src/index.js` imports.
+Fixed: `VERSION`, `TODO.md`, `CHANGELOG.md`, `docs/system-purpose-and-runtime-flow.md`, `docs/architecture.md`, and `docs/README.md` were updated to describe the current package-level boundaries and the remaining production wiring gaps.
 
-Why this is a problem: packages exist, but they are not fully package-clean. Source-relative imports bypass `package.json` dependency declarations and make the packages harder to publish, test, or consume independently.
+Guard: existing docs tests plus the boundary test reduce the chance that package status drifts again.
 
-Recommended action: add workspace dependency declarations and import through package names, for example `@office-dsl/pdf-generator`, once the build setup supports it reliably.
+### P3 - Version policy for packages was unclear
 
-### P2 - Documentation contains stale implementation status
+Fixed: workspace packages and apps now use lockstep `0.12.0` package metadata for this milestone.
 
-Evidence found during audit:
+Guard: `tests/package-boundary.test.ts` asserts package/app versions remain at `0.12.0` for this release line.
 
-- `docs/system-purpose-and-runtime-flow.md` still says bilateral Human1/Human2 approval, canonical Intent/Contract DSL, legal document rendering, JS code generation, DSL-based test generation, and Python verifier integration are not implemented or not connected in places where the repo now has implementations or partial implementations.
-- `docs/architecture.md` still says `project.sh` is historical/not active, but the current workflow uses `project.sh` for verification.
-- `VERSION` under current version notes still lists some already-created capabilities as not included.
+### P3 - TODO contained stale next-task entries
 
-Why this is a problem: future agents and maintainers can make wrong decisions from stale docs.
+Fixed: already-implemented next-task entries for runtime-to-Python verifier invocation and canonical Intent/Contract CLI commands were removed from the immediate next-task list, and a completed package-boundary extraction item was added.
 
-Recommended action: run a dedicated docs consistency pass before GUI phases. Do not only update changelog; fix architecture/status pages too.
+## Current Next Milestone
 
-### P3 - Version policy for packages is unclear
-
-Evidence: the root and some new/current packages are at `0.12.0`, while older packages remain at earlier versions. This may be intentional independent versioning, but no clear policy was found during this audit.
-
-Why this matters: when the user asks to update `VERSION.md` and other version sources, it is unclear which package versions must move together.
-
-Recommended action: document whether packages use lockstep or independent versions. If lockstep is intended, add a script/test that checks package version consistency.
-
-### P3 - TODO contains stale next-task entries
-
-Evidence: `TODO.md` still lists some next implementation tasks that appear already implemented, such as runtime-to-Python verifier invocation and canonical Intent/Contract CLI commands.
-
-Why this matters: work selection from TODO can repeat completed tasks or skip the real next boundary cleanup.
-
-Recommended action: update TODO after the package-boundary cleanup decision. Mark only verified completed items and move boundary extraction tasks into the next non-GUI milestone.
-
-## Recommended Next Milestone
-
-Before starting GUI-focused phases, make the examples-first application easier to maintain by extracting these boundaries:
-
-1. `@office-dsl/chat-negotiation`
-2. `@office-dsl/document-ingestion` and/or `@office-dsl/recruitment-workflow`
-3. `@office-dsl/dsl-artifact-renderer`
-4. `@office-dsl/regression-runner` or shared comparison utilities
-5. one verifier bridge used by runtime, CLI, shell, and examples
+The next non-GUI milestone should use the extracted packages rather than adding more logic to the example runner. The important remaining work is production wiring: expose canonical approvals, document rendering, code generation, test generation, and semantic verification through runtime/CLI/backend flows without duplicating business logic.
 
 ## Non-goals
 
-This audit does not implement Phase 12, Phase 13, or Phase 14. It only lists boundary and consistency issues that should be fixed while the project remains examples-first.
+This audit resolution does not implement Phase 12, Phase 13, or Phase 14. The project remains examples-first until production GUI/backend wiring is explicitly prioritized.

@@ -1,0 +1,16 @@
+{
+  "name": "@office-dsl/recruitment-workflow",
+  "version": "0.12.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@office-dsl/chat-negotiation": "workspace:*",
+    "@office-dsl/dsl-artifact-renderer": "workspace:*",
+    "@office-dsl/intent-contract-model": "workspace:*",
+    "@office-dsl/pdf-generator": "workspace:*",
+    "@office-dsl/regression-runner": "workspace:*",
+    "@office-dsl/document-ingestion": "workspace:*"
+  }
+}

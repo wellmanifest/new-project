@@ -1,8 +1,13 @@
 {
   "name": "@office-dsl/backend",
-  "version": "0.7.2",
+  "version": "0.12.0",
   "type": "module",
   "scripts": {
     "dev": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "@office-dsl/dsl-runtime": "workspace:*",
+    "@office-dsl/intent-contract-model": "workspace:*",
+    "@office-dsl/llm-planner": "workspace:*"
   }
 }

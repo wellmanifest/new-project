@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { PolicySpec, SourceRef, Step, TaskDsl } from "../../dsl-model/src/index.js";
+import type { PolicySpec, SourceRef, Step, TaskDsl } from "@office-dsl/dsl-model";
 
 export const INTENT_CONTRACT_DSL_VERSION = "intent-contract.dsl.v1";
 

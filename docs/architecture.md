@@ -138,9 +138,9 @@ MVP powinno byc oceniane przez mozliwosc ponownego uruchomienia przykladow offli
 
 ## Decyzja dotyczaca project.sh
 
-`project.sh` nie jest aktywnym bootstrapem MVP. Skrypt instaluje narzedzia z sieci, uruchamia generatory analityczne i moze tworzyc albo nadpisywac artefakty poza waskim zakresem MVP. To jest sprzeczne z wymaganiem, ze pierwsza wersja ma dzialac w trybie mock, offline i bez przypadkowego nadpisywania pracy.
+`project.sh` jest aktywnym, bezpiecznym wrapperem komend projektu. Obsluguje instalacje workspace, typecheck, lint, format, testy, przyklady, verify i system-check. Na Windows ten sam zakres udostepnia `project.bat`.
 
-W MVP `project.sh` jest traktowany jako material historyczny i kontekst narzedziowy. Nie nalezy uruchamiac komend zakomentowanych w tym pliku ani uzywac go do walidacji dokumentacyjnych. Jezeli w przyszlosci skrypt ma wrocic jako element projektu, powinien zostac przepisany na jawne, bezpieczne i offline'owe komendy workspace.
+Historyczny, sieciowy workflow analityczny zostal odseparowany pod jawna komenda `legacy-analyze`, wiec rutynowa walidacja powinna uzywac `project.sh verify` albo `project.sh system-check`.
 
 ## Granice MVP
 

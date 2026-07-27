@@ -1,0 +1,9 @@
+{
+  "name": "@office-dsl/regression-runner",
+  "version": "0.12.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {}
+}

@@ -5,22 +5,22 @@ import {
   hashIntentContractDsl,
   parseIntentContractDsl,
   validateIntentContractDsl
-} from "../../intent-contract-model/src/index.js";
+} from "@office-dsl/intent-contract-model";
 import {
   mockPlanGuidelineFileToIntentContractDsl,
   mockPlanIntentContractFromNaturalLanguage
 } from "../../llm-planner/src/intent-contract.js";
-import { renderDocument } from "../../document-renderer/src/index.js";
+import { renderDocument } from "@office-dsl/document-renderer";
 import {
   extractTestGenerationInput,
   generateTestSuite,
   renderTestPlanMarkdown,
   verifyTestCoverage
-} from "../../testgen/src/index.js";
-import { generateNodeCodeFromApprovedDsl } from "../../codegen/src/index.js";
-import { runChatScenario } from "../../example-runner/src/chat.js";
+} from "@office-dsl/testgen";
+import { generateNodeCodeFromApprovedDsl } from "@office-dsl/codegen";
+import { runChatScenario } from "@office-dsl/chat-negotiation";
 import { runScenario } from "../../example-runner/src/scenario.js";
-import { runRecruitmentScenario } from "../../example-runner/src/recruitment.js";
+import { runRecruitmentScenario } from "@office-dsl/recruitment-workflow";
 import { fileUrlToPath, normalizePathArgument, platformName } from "./cross-platform.js";
 
 export const INTENT_CLI_VERSION = "well-manifest-intent.cli.v1";
