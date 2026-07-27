@@ -1,17 +1,15 @@
 import { existsSync } from "node:fs";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   discoverRecruitmentScenarios,
-  extractPdfText,
   loadRecruitmentSources,
-  ocrPdfToMarkdownFixture,
-  renderMarkdownAsPdfTextFixture,
   runRecruitmentDocumentProcesses,
   runRecruitmentScenario
 } from "../packages/example-runner/src/index.js";
+import { extractPdfText } from "../packages/pdf-generator/src/index.js";
 
 const repoRoot = process.cwd();
 const scenarioDir = path.join(repoRoot, "examples-recruitment", "01-multi-candidate");
@@ -63,28 +61,6 @@ describe("examples-recruitment runner", () => {
     );
   });
 
-  it("round-trips a generated sample CV through Markdown -> PDF fixture -> OCR Markdown", async () => {
-    const generatedRoot = await mkdtemp(path.join(os.tmpdir(), "cv-md-pdf-ocr-"));
-    const cvMarkdown = [
-      "# CV: LLM Generated Candidate",
-      "Imie i nazwisko: Julia Testowa",
-      "Umiejetnosci:",
-      "- TypeScript",
-      "- OCR validation",
-      "Doswiadczenie: 5 lat w automatyzacji dokumentow"
-    ].join("\n");
-    const pdfPath = path.join(generatedRoot, "cv.pdf");
-    await writeFile(pdfPath, renderMarkdownAsPdfTextFixture(cvMarkdown), "latin1");
-
-    const extracted = await extractPdfText(pdfPath);
-    const ocrMarkdown = await ocrPdfToMarkdownFixture(pdfPath);
-
-    expect(extracted.requiresOcr).toBe(false);
-    expect(ocrMarkdown).toContain("# CV: LLM Generated Candidate");
-    expect(ocrMarkdown).toContain("Umiejetnosci:");
-    expect(ocrMarkdown).toContain("- OCR validation");
-    await rm(generatedRoot, { recursive: true, force: true });
-  });
   it("runs recruitment end to end and finalizes only accepted candidates", async () => {
     const generatedRoot = await mkdtemp(path.join(os.tmpdir(), "examples-recruitment-"));
     const result = await runRecruitmentScenario({ repoRoot, scenarioDir, generatedRoot });

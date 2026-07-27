@@ -31,6 +31,7 @@ Historical research folders live under `research/` and should not be moved back 
 - `packages/intent-contract-model/` - standalone canonical `intent-contract.dsl.v1` model, status semantics, source references, stable hashing, and Office DSL adapter.
 - `packages/dsl-runtime/` - current TypeScript runtime, state machine, policies, actions, hashing, audit, and file store.
 - `packages/llm-planner/` - mock planner, controlled NL <-> DSL Intent/Contract planner utilities, and optional OpenRouter path.
+- `packages/pdf-generator/` - deterministic minimal PDF generation and text extraction for fixture-backed Markdown/PDF flows.
 - `packages/cli/` - CLI entrypoint.
 - `apps/backend/` - demo HTTP API.
 - `apps/web/` - static demo UI.

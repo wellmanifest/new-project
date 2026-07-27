@@ -1,0 +1,8 @@
+﻿{
+  "name": "@office-dsl/pdf-generator",
+  "version": "0.12.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

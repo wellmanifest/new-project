@@ -7,11 +7,9 @@ import { discoverRecruitmentScenarios, runRecruitmentScenario } from "./recruitm
 
 export {
   discoverRecruitmentScenarios,
-  extractPdfText,
   loadRecruitmentScenarioManifest,
   loadRecruitmentSources,
   ocrPdfToMarkdownFixture,
-  renderMarkdownAsPdfTextFixture,
   runRecruitmentDocumentProcesses,
   runRecruitmentScenario,
   validateRecruitmentScenarioManifest

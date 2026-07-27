@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { renderTextAsMinimalPdf } from "../../pdf-generator/src/index.js";
 
 export const CHAT_SCENARIO_VERSION = "example-chat.scenario.v1";
 export type ChatParty = "user1" | "user2";
@@ -511,7 +512,7 @@ async function writeFinalArtifacts(
   );
   const markdown = renderContractMarkdown(finalContract);
   await writeFile(path.join(finalDir, "contract.md"), markdown, "utf8");
-  await writeFile(path.join(finalDir, "contract.pdf"), renderMinimalPdf(markdown), "binary");
+  await writeFile(path.join(finalDir, "contract.pdf"), renderTextAsMinimalPdf(markdown), "binary");
   await writeDsl(
     path.join(finalDir, "approvals.dsl.hcl"),
     renderApprovalsDsl(merged.hash, approvals)
@@ -538,33 +539,6 @@ function renderContractMarkdown(finalContract: {
   }
   lines.push("", "## Annex", "See annex.dsl.hcl for the canonical DSL representation.", "");
   return lines.join("\n");
-}
-
-function renderMinimalPdf(markdown: string): string {
-  const text = markdown
-    .split(/\r?\n/)
-    .filter(Boolean)
-    .slice(0, 24)
-    .map((line) => line.replace(/[()\\]/g, ""));
-  const content = `BT /F1 10 Tf 50 780 Td ${text.map((line, index) => `${index ? "0 -14 Td " : ""}(${line}) Tj`).join(" ")} ET`;
-  const objects = [
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
-    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-    `<< /Length ${Buffer.byteLength(content, "binary")} >>\nstream\n${content}\nendstream`
-  ];
-  let pdf = "%PDF-1.4\n";
-  const offsets = [0];
-  objects.forEach((object, index) => {
-    offsets.push(Buffer.byteLength(pdf, "binary"));
-    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
-  });
-  const xrefOffset = Buffer.byteLength(pdf, "binary");
-  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  for (const offset of offsets.slice(1)) pdf += `${String(offset).padStart(10, "0")} 00000 n \n`;
-  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
-  return pdf;
 }
 
 export function validateChatDslText(text: string): void {

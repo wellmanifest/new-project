@@ -3,6 +3,11 @@ import { existsSync } from "node:fs";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
+  extractPdfText,
+  normalizePdfTextMarkdown,
+  renderMarkdownAsPdfTextFixture
+} from "../../pdf-generator/src/index.js";
+import {
   INTENT_CONTRACT_DSL_VERSION,
   createField,
   validateIntentContractDsl,
@@ -326,70 +331,10 @@ export async function loadRecruitmentSources(
   return sources;
 }
 
-export function renderMarkdownAsPdfTextFixture(markdown: string): string {
-  const textLines = markdown.split(/\r?\n/).map((line) => line.replace(/\r/g, ""));
-  const content = [
-    "BT",
-    "/F1 11 Tf",
-    "72 760 Td",
-    "14 TL",
-    ...textLines.map((line, index) => `${index === 0 ? "" : "T* "}(${escapePdfString(line)}) Tj`),
-    "ET"
-  ].join("\n");
-  const objects = [
-    "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
-    "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n",
-    "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n",
-    "4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n",
-    `5 0 obj\n<< /Length ${Buffer.byteLength(content, "latin1")} >>\nstream\n${content}\nendstream\nendobj\n`
-  ];
-  let pdf = "%PDF-1.4\n";
-  const offsets = [0];
-  for (const object of objects) {
-    offsets.push(Buffer.byteLength(pdf, "latin1"));
-    pdf += object;
-  }
-  const xrefOffset = Buffer.byteLength(pdf, "latin1");
-  pdf += `xref\n0 ${objects.length + 1}\n`;
-  pdf += "0000000000 65535 f \n";
-  for (const offset of offsets.slice(1)) pdf += `${String(offset).padStart(10, "0")} 00000 n \n`;
-  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
-  return pdf;
-}
-
-function escapePdfString(value: string): string {
-  return value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
-}
-
 export async function ocrPdfToMarkdownFixture(pdfPath: string): Promise<string> {
   const pdf = await extractPdfText(pdfPath);
-  if (pdf.text.trim()) return normalizeOcrMarkdown(pdf.text);
-  return normalizeOcrMarkdown(await runMockOcr(pdfPath));
-}
-
-function normalizeOcrMarkdown(text: string): string {
-  const normalized = text
-    .replace(/\r\n/g, "\n")
-    .split("\n")
-    .map((line) => line.trimEnd())
-    .join("\n")
-    .trim();
-  return `${normalized.replace(/^(# .+)\n(?!\n)/, "$1\n\n")}\n`;
-}
-export async function extractPdfText(
-  pdfPath: string
-): Promise<{ text: string; requiresOcr: boolean }> {
-  const raw = await readFile(pdfPath, "latin1");
-  if (raw.includes("OFFICE_DSL_SCANNED_IMAGE_ONLY")) return { text: "", requiresOcr: true };
-  const markerLines = raw
-    .split(/\r?\n/)
-    .filter((line) => line.startsWith("%TEXT:"))
-    .map((line) => line.slice("%TEXT:".length).trim());
-  if (markerLines.length > 0) return { text: markerLines.join("\n"), requiresOcr: false };
-  const strings = [...raw.matchAll(/\(([^()]*)\)\s*Tj/g)].map((match) =>
-    unescapePdfText(match[1] ?? "")
-  );
-  return { text: strings.join("\n"), requiresOcr: strings.length === 0 };
+  if (pdf.text.trim()) return normalizePdfTextMarkdown(pdf.text);
+  return normalizePdfTextMarkdown(await runMockOcr(pdfPath));
 }
 
 async function pushMarkdownSource(
@@ -911,10 +856,6 @@ function extractListValues(text: string, heading: string): string[] {
 
 function unique(values: string[]): string[] {
   return [...new Set(values.filter(Boolean))];
-}
-
-function unescapePdfText(value: string): string {
-  return value.replace(/\\\)/g, ")").replace(/\\\(/g, "(").replace(/\\n/g, "\n");
 }
 
 function sha256(value: string): string {
