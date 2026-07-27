@@ -81,8 +81,7 @@ def verify_semantic(
     )
     if selected == "mock":
         return _mock_semantic_verify(parsed)
-    _validate_openrouter_runtime()
-    raise RuntimeError("Semantic OpenRouter verification is not implemented in the validated default")
+    return _openrouter_semantic_verify(parsed)
 
 
 def _mock_verify(
@@ -355,5 +354,54 @@ def _openrouter_verify(
         ],
         response_format={"type": "json_object"},
     )
-    content = response["choices"][0]["message"]["content"]
+    content = _litellm_message_content(response)
     return VerificationReport.model_validate_json(content)
+
+
+def _openrouter_semantic_verify(value: SemanticVerifierInput) -> SemanticVerificationReport:
+    _validate_openrouter_runtime()
+    import litellm
+
+    response = litellm.completion(
+        model=os.getenv("OPENROUTER_MODEL", "openrouter/openai/gpt-4.1-mini"),
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a semantic verifier for Intent/Contract DSL artifacts. "
+                    "Return only JSON matching semantic-verifier.report.v1. "
+                    "Do not invent missing facts; report gaps, contradictions, "
+                    "unauthorized assumptions, document mismatches, code mismatches, "
+                    "and uncovered acceptance criteria."
+                ),
+            },
+            {
+                "role": "user",
+                "content": json.dumps(
+                    {
+                        "expected_report_version": "semantic-verifier.report.v1",
+                        "allowed_verdicts": ["PASS", "FAIL", "NEEDS_REVIEW"],
+                        "allowed_recommended_actions": ["ACCEPT", "REGENERATE", "ASK_USER", "BLOCK"],
+                        "input": value.model_dump(mode="json"),
+                    },
+                    ensure_ascii=False,
+                    sort_keys=True,
+                ),
+            },
+        ],
+        response_format={"type": "json_object"},
+        temperature=0,
+    )
+    content = _litellm_message_content(response)
+    return SemanticVerificationReport.model_validate_json(content)
+
+
+def _litellm_message_content(response: Any) -> str:
+    if isinstance(response, dict):
+        return str(response["choices"][0]["message"]["content"])
+    choices = getattr(response, "choices")
+    first = choices[0]
+    message = first["message"] if isinstance(first, dict) else getattr(first, "message")
+    content = message["content"] if isinstance(message, dict) else getattr(message, "content")
+    return str(content)

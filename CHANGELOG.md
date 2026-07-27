@@ -2,8 +2,11 @@
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-07-27
+
 ### Added
 
+- Added explicit Phase 10 LiteLLM/OpenRouter semantic verifier mode for `verify_semantic(..., mode="openrouter")`, including structured `semantic-verifier.report.v1` provider parsing, deterministic monkeypatched adapter coverage, and an opt-in live smoke test gated by `RUN_OPENROUTER_SEMANTIC_TEST=1` plus `OPENROUTER_API_KEY`.
 - Added Phase 11 cross-platform CLI surface in `packages/cli`: `well-manifest-intent` entry point with canonical Intent/Contract commands (`plan`, `plan-file`, `render`, `testgen`, `codegen`, `verify`, `approve`, `chat`, `example`, `recruitment`, `version`, `help`).
 - Added `packages/cli/src/cross-platform.ts` helpers for `file://` URL decoding, POSIX/Windows separator normalization, and dynamic-import safe URL conversion.
 - Added `--json` and `--human` output modes for all canonical CLI commands.
@@ -12,6 +15,8 @@
 
 ### Changed
 
+- Marked Phase 10 complete for the Python semantic verifier boundary while keeping default verification offline and mock-safe.
+- Updated root package, dsl-runtime package, verifier package, `VERSION`, and documentation consistency tests to `0.12.0`.
 - Marked Phase 11 TODO items complete for canonical Intent/Contract CLI commands and Windows/Linux path compatibility.
 
 ## [0.11.0] - 2026-07-27

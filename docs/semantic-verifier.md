@@ -65,7 +65,34 @@ execute until it is regenerated or otherwise resolved.
 
 ## OpenRouter/LiteLLM Boundary
 
-Non-mock mode requires `OPENROUTER_API_KEY` and the optional `litellm` dependency.
-The current test suite validates that this configuration is required before
-leaving mock mode, but it does not execute a live OpenRouter/LiteLLM semantic
-verification request. Live provider validation remains an open Phase 10 item.
+Non-mock semantic verification is available through LiteLLM/OpenRouter and must
+be enabled explicitly. The default `verify` flow stays deterministic and offline.
+
+Setup:
+
+```bash
+python -m pip install -e verifier[openrouter]
+export OPENROUTER_API_KEY=...
+export OPENROUTER_MODEL=openrouter/openai/gpt-4.1-mini
+python -m office_dsl_verifier --semantic-input path/to/semantic-input.json --mode openrouter
+```
+
+The OpenRouter adapter sends the semantic verifier input as JSON, asks for a
+`semantic-verifier.report.v1` JSON object, parses the response through the
+Pydantic report model, and rejects malformed provider output.
+
+Validation coverage:
+
+- default tests prove that non-mock mode refuses to run without
+  `OPENROUTER_API_KEY`,
+- default tests monkeypatch `litellm.completion` and prove that the OpenRouter
+  semantic adapter sends the expected model, API key, response format,
+  temperature, and semantic input,
+- an optional live smoke test is available with:
+
+```bash
+RUN_OPENROUTER_SEMANTIC_TEST=1 OPENROUTER_API_KEY=... python -m pytest verifier/tests/test_verifier.py -q
+```
+
+The optional live smoke test is intentionally opt-in so default repository
+verification never depends on network access or secrets.

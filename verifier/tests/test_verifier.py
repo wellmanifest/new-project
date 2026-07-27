@@ -1,4 +1,9 @@
 import json
+import os
+import sys
+from types import SimpleNamespace
+
+import pytest
 
 from office_dsl_verifier import verify, verify_semantic
 
@@ -162,3 +167,84 @@ def test_semantic_verifier_requires_openrouter_configuration_outside_mock() -> N
         assert "OPENROUTER_API_KEY" in str(exc)
     else:
         raise AssertionError("openrouter mode should require explicit configuration")
+
+
+def test_semantic_verifier_calls_litellm_in_openrouter_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[dict[str, object]] = []
+
+    def completion(**kwargs: object) -> dict[str, object]:
+        calls.append(kwargs)
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "content": json.dumps(
+                            {
+                                "version": "semantic-verifier.report.v1",
+                                "verdict": "PASS",
+                                "score": 0.91,
+                                "findings": [],
+                                "missing_requirements": [],
+                                "contradictions": [],
+                                "unauthorized_assumptions": [],
+                                "document_mismatches": [],
+                                "code_mismatches": [],
+                                "uncovered_acceptance_criteria": [],
+                                "recommended_action": "ACCEPT",
+                                "explanation": "LiteLLM semantic verifier adapter returned a structured report.",
+                            }
+                        )
+                    }
+                }
+            ]
+        }
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setenv("OPENROUTER_MODEL", "openrouter/test/model")
+    monkeypatch.setitem(sys.modules, "litellm", SimpleNamespace(completion=completion))
+
+    report = verify_semantic(
+        {
+            "original_nl": "Website agreement for Landing page.",
+            "approved_dsl": semantic_dsl(),
+            "rendered_document": "# Website agreement\nLanding page\nLoads in under two seconds\n",
+        },
+        mode="openrouter",
+    )
+
+    assert report.verdict == "PASS"
+    assert report.recommended_action == "ACCEPT"
+    assert len(calls) == 1
+    call = calls[0]
+    assert call["model"] == "openrouter/test/model"
+    assert call["api_key"] == "test-key"
+    assert call["response_format"] == {"type": "json_object"}
+    assert call["temperature"] == 0
+    user_message = call["messages"][1]["content"]  # type: ignore[index]
+    assert "semantic-verifier.report.v1" in user_message
+    assert "Landing page" in user_message
+
+
+@pytest.mark.skipif(
+    not bool(os.getenv("RUN_OPENROUTER_SEMANTIC_TEST"))
+    or not bool(os.getenv("OPENROUTER_API_KEY")),
+    reason="Set RUN_OPENROUTER_SEMANTIC_TEST=1 and OPENROUTER_API_KEY to run the live OpenRouter smoke test.",
+)
+def test_semantic_verifier_live_openrouter_smoke() -> None:
+    report = verify_semantic(
+        {
+            "original_nl": "Website agreement for Landing page. Loads in under two seconds.",
+            "approved_dsl": semantic_dsl(),
+            "rendered_document": "# Website agreement\nLanding page\nLoads in under two seconds\n",
+            "codegen_verifier_input": {
+                "generatedFiles": [{"path": "src/contract-spec.mjs", "sha256": "a" * 64}],
+                "testResults": [{"name": "generated tests", "passed": True}],
+            },
+            "testgen_verifier_input": {"uncoveredAcceptanceCriteriaIds": []},
+        },
+        mode="openrouter",
+    )
+
+    assert report.version == "semantic-verifier.report.v1"
+    assert report.verdict in {"PASS", "FAIL", "NEEDS_REVIEW"}
+    assert 0 <= report.score <= 1

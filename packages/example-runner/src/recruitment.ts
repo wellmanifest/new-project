@@ -368,12 +368,13 @@ export async function ocrPdfToMarkdownFixture(pdfPath: string): Promise<string> 
 }
 
 function normalizeOcrMarkdown(text: string): string {
-  return `${text
+  const normalized = text
     .replace(/\r\n/g, "\n")
     .split("\n")
     .map((line) => line.trimEnd())
     .join("\n")
-    .trim()}\n`;
+    .trim();
+  return `${normalized.replace(/^(# .+)\n(?!\n)/, "$1\n\n")}\n`;
 }
 export async function extractPdfText(
   pdfPath: string

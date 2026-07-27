@@ -2,11 +2,11 @@
 
 ## Current Version
 
-`0.11.0`
+`0.12.0`
 
 ## Version Type
 
-Minor semantic-verifier milestone over `0.10.0`.
+Minor semantic-verifier OpenRouter/LiteLLM milestone over `0.11.0`.
 
 This version implements Phase 5 bidirectional NL <-> DSL support for the deterministic, mock-safe Intent/Contract planner boundary. `@office-dsl/llm-planner` now defines a controlled `intent-contract.planner-response.v1` response schema for OpenRouter-style output, validates malformed responses before DSL creation, converts valid structured responses into canonical `intent-contract.dsl.v1`, plans varied single-message natural language and guideline-file text into sourced DSL fields, renders DSL back to traceable natural-language summary statements, and includes round-trip regression checks that prevent rendered NL from introducing unauthorized field paths.
 
@@ -18,7 +18,7 @@ This version also implements Phase 8 test generation in the new `@office-dsl/tes
 
 This version also implements Phase 9 JS/Node.js code generation in the new `@office-dsl/codegen` package. It defines a bounded dependency-free Node ESM target, requires bilateral Human1/Human2 approval of the current Intent/Contract DSL hash before generation, emits a deterministic implementation plan, generates a package manifest, contract-spec module, and generated Node.js test file, runs that generated test file in a temporary workspace, checks generated source for forbidden dynamic/network/process APIs, verifies file hashes, and returns `codegen.verifier-input.v1` with generated file metadata and test results. Code generation is still a package-level deterministic boundary; runtime, CLI, backend, UI, and Python-verifier integration remain open.
 
-This version also implements the mock-safe Phase 10 Python semantic verifier boundary. `verify_semantic` accepts structured semantic input, detects missing required DSL fields, unresolved conflicts, unapproved assumptions, source quotes absent from original NL, rendered-document mismatches with DSL paths, failed generated code tests, and uncovered generated-test acceptance criteria. The TypeScript runtime can invoke `python -m office_dsl_verifier --semantic-input ...`, capture `semantic-verifier.report.v1` in audit, and gate failed or review-needed sessions at `VERIFICATION_FAILED`. Live OpenRouter/LiteLLM semantic verifier validation remains outside the default verified path.
+This version also implements the mock-safe Phase 10 Python semantic verifier boundary. `verify_semantic` accepts structured semantic input, detects missing required DSL fields, unresolved conflicts, unapproved assumptions, source quotes absent from original NL, rendered-document mismatches with DSL paths, failed generated code tests, and uncovered generated-test acceptance criteria. The TypeScript runtime can invoke `python -m office_dsl_verifier --semantic-input ...`, capture `semantic-verifier.report.v1` in audit, and gate failed or review-needed sessions at `VERIFICATION_FAILED`. LiteLLM/OpenRouter semantic verifier mode is implemented behind explicit configuration and validated by default with a monkeypatched provider adapter plus an opt-in live smoke test.
 
 This version also implements Phase 11 cross-platform CLI support. `packages/cli` adds a `well-manifest-intent` entry point (`packages/cli/src/intent.ts`) that exposes canonical Intent/Contract commands (`plan`, `plan-file`, `render`, `testgen`, `codegen`, `verify`, `approve`, `chat`, `example`, `recruitment`, `version`, `help`) with `--json` and `--human` output modes. A `packages/cli/src/cross-platform.ts` helper module normalizes POSIX/Windows paths and `file://` URLs for both operating systems, and `project.bat` provides the same validation workflow as `./project.sh` on Windows. The canonical CLI commands are implemented but are not yet fully integrated with runtime approval gates, backend endpoints, or UI flows.
 
@@ -69,10 +69,11 @@ Target scope documented but not implemented:
 - production OCR/PDF provider integration beyond deterministic fixture extraction,
 - runtime population of field-level source traceability from live planner sessions,
 - runtime/CLI/backend/UI production wiring for contract/legal document rendering, JS/Node.js code generation, DSL-based test generation, and semantic verification,
-- live OpenRouter/LiteLLM semantic verifier validation as a default or manually proven path.
+- default live OpenRouter/LiteLLM execution; the live smoke test remains opt-in because it requires network access and secrets.
 
-## Included In 0.11.0
+## Included In 0.12.0
 
+- Added explicit LiteLLM/OpenRouter semantic verifier mode with structured `semantic-verifier.report.v1` parsing, deterministic adapter coverage, and an opt-in live smoke test.
 - Added controlled NL-to-DSL planner schema, validation, and OpenRouter prompt boundary.
 - Added deterministic single-message and guideline-file Intent/Contract DSL planners.
 - Added traceable DSL-to-NL summary renderer and rendered statement path extraction.
@@ -82,9 +83,9 @@ Target scope documented but not implemented:
 - Added Python semantic verifier checks and TypeScript runtime bridge with `VERIFICATION_FAILED` gating.
 - Updated root package, dsl-runtime package, verifier package, changelog, docs, and documentation consistency tests to `0.11.0`.
 
-## Not Included In 0.11.0
+## Not Included In 0.12.0
 
-- No default online OpenRouter execution or live provider validation.
+- No default online OpenRouter execution; live provider validation is opt-in through `RUN_OPENROUTER_SEMANTIC_TEST=1`.
 - No production semantic verifier for arbitrary NL-to-DSL equivalence.
 - No CLI/backend/web surface for the new canonical NL <-> DSL planner utilities.
 - No legal contract renderer beyond existing deterministic example artifacts.
@@ -111,7 +112,7 @@ Validated in this pass:
 Expected but not yet fully validated as release criteria:
 
 - Online OpenRouter planner mode.
-- Online LiteLLM/OpenRouter verifier mode.
+- Online LiteLLM/OpenRouter verifier mode in the default verification flow.
 
 ## Versioning Policy Note
 
