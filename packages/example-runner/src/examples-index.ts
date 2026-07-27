@@ -1,0 +1,325 @@
+#!/usr/bin/env node
+import { readdir, readFile, stat, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+type JsonObject = Record<string, unknown>;
+type ScenarioKind = "office" | "chat" | "recruitment";
+
+interface ArtifactIndexOptions {
+  repoRoot: string;
+  outputPath: string;
+}
+
+interface ScenarioEntry {
+  id: string;
+  title: string;
+  dir: string;
+  kind: ScenarioKind;
+  manifest: JsonObject;
+}
+
+const DEFAULT_OUTPUT = "docs/examples-artifacts-index.md";
+const GROUPS: Array<{ kind: ScenarioKind; dir: string; command: string }> = [
+  { kind: "office", dir: "examples", command: ".\\project.bat examples" },
+  { kind: "chat", dir: "examples-chat", command: ".\\project.bat examples-chat" },
+  {
+    kind: "recruitment",
+    dir: "examples-recruitment",
+    command: ".\\project.bat examples-recruitment"
+  }
+];
+const KEY_OUTPUT_NAMES = new Set([
+  "actual.dsl.hcl",
+  "actual.plan.dsl.hcl",
+  "actual.verification.dsl.hcl",
+  "summary.dsl.hcl",
+  "contract.dsl.txt",
+  "proposal.dsl.txt",
+  "status.dsl.txt",
+  "contract.pdf",
+  "final-contract.dsl.hcl",
+  "approvals.dsl.hcl",
+  "cancelled-summary.md"
+]);
+
+export async function writeExamplesArtifactsIndex(
+  options: Partial<ArtifactIndexOptions> = {}
+): Promise<string> {
+  const repoRoot = options.repoRoot ?? process.cwd();
+  const outputPath = path.resolve(repoRoot, options.outputPath ?? DEFAULT_OUTPUT);
+  const markdown = await buildExamplesArtifactsIndex(repoRoot);
+  await writeFile(outputPath, markdown, "utf8");
+  return outputPath;
+}
+
+export async function buildExamplesArtifactsIndex(repoRoot = process.cwd()): Promise<string> {
+  const sections: string[] = [];
+  sections.push("# Examples Artifacts Index", "");
+  sections.push(`Generated: ${new Date().toISOString()}`, "");
+  sections.push(
+    "This file merges all runnable example metadata, inputs, expected fixtures, and generated output locations into one review surface. Large, repeated, or binary artifacts are linked instead of embedded."
+  );
+  sections.push("", "## How To Refresh", "");
+  sections.push("- `./project.sh examples-index`");
+  sections.push("- On Windows: `.\\project.bat examples-index`");
+  sections.push("", "## Runner Commands", "");
+  for (const group of GROUPS) sections.push(`- \`${group.command}\` -> \`${group.dir}/\``);
+  sections.push("");
+
+  for (const group of GROUPS) {
+    const scenarios = await discoverScenarioEntries(repoRoot, group.kind, group.dir);
+    sections.push(`## ${titleCase(group.kind)} Examples`, "");
+    sections.push(`Command: \`${group.command}\``, "");
+    sections.push("| Scenario | Expected Fixtures | Output Location | Key Result |");
+    sections.push("| --- | --- | --- | --- |");
+    for (const scenario of scenarios) sections.push(await renderScenarioRow(repoRoot, scenario));
+    sections.push("");
+    for (const scenario of scenarios)
+      sections.push(await renderScenarioDetails(repoRoot, scenario));
+  }
+
+  return `${sections.join("\n").trimEnd()}\n`;
+}
+
+async function discoverScenarioEntries(
+  repoRoot: string,
+  kind: ScenarioKind,
+  groupDir: string
+): Promise<ScenarioEntry[]> {
+  const root = path.join(repoRoot, groupDir);
+  const dirs = await listChildDirs(root);
+  const entries: ScenarioEntry[] = [];
+  for (const dir of dirs) {
+    const manifestPath = path.join(dir, "scenario.json");
+    if (!(await exists(manifestPath))) continue;
+    const manifest = await readJson(manifestPath);
+    entries.push({
+      id: String(manifest.id ?? path.basename(dir)),
+      title: String(manifest.title ?? path.basename(dir)),
+      dir,
+      kind,
+      manifest
+    });
+  }
+  return entries.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+async function renderScenarioRow(repoRoot: string, scenario: ScenarioEntry): Promise<string> {
+  const expectedCount = (await expectedFilesForDir(scenario.dir)).length;
+  return `| ${link(repoRoot, scenario.dir, scenario.id)} | ${folderStatus(repoRoot, scenario.dir, "expected", expectedCount)} | ${await outputLocationStatus(repoRoot, scenario)} | ${escapeTable(await keyResult(scenario))} |`;
+}
+
+async function renderScenarioDetails(repoRoot: string, scenario: ScenarioEntry): Promise<string> {
+  const lines: string[] = [];
+  lines.push(`### ${scenario.id}`, "");
+  lines.push(`Title: ${scenario.title}`);
+  lines.push(
+    `Manifest: ${link(repoRoot, path.join(scenario.dir, "scenario.json"), "scenario.json")}`
+  );
+  lines.push(`Input: ${linkList(repoRoot, await inputFiles(scenario)) || "none"}`);
+  lines.push(`Expected: ${linkList(repoRoot, await expectedFilesForDir(scenario.dir)) || "none"}`);
+  lines.push(await generatedSummary(repoRoot, scenario.dir));
+
+  if (scenario.kind === "recruitment") {
+    const candidateDetails = await renderCandidateDetails(repoRoot, scenario.dir);
+    if (candidateDetails.length) {
+      lines.push("", "Candidates and document processes:", "", ...candidateDetails);
+    }
+  }
+
+  const summary = await loadExpectedSummary(scenario);
+  if (summary) {
+    lines.push("", "Expected summary:", "", "```json", JSON.stringify(summary, null, 2), "```");
+  }
+  lines.push("");
+  return lines.join("\n");
+}
+
+async function renderCandidateDetails(repoRoot: string, scenarioDir: string): Promise<string[]> {
+  const candidateDirs = [];
+  for (const dir of await listChildDirs(scenarioDir)) {
+    if (await exists(path.join(dir, "scenario.json"))) candidateDirs.push(dir);
+  }
+  const lines: string[] = [];
+  for (const candidateDir of candidateDirs.sort((a, b) =>
+    path.basename(a).localeCompare(path.basename(b))
+  )) {
+    const candidateManifest = await readJson(path.join(candidateDir, "scenario.json"));
+    const candidateId = String(candidateManifest.id ?? path.basename(candidateDir));
+    const expectedCount = (await expectedFilesForDir(candidateDir)).length;
+    const outputCount = (await generatedAndOutFiles(candidateDir)).length;
+    lines.push(
+      `- ${link(repoRoot, candidateDir, candidateId)}: ${folderStatus(repoRoot, candidateDir, "expected", expectedCount)}; ${folderStatus(repoRoot, candidateDir, "out", outputCount)}`
+    );
+    lines.push(...(await renderDocumentProcesses(repoRoot, candidateDir)));
+  }
+  return lines;
+}
+
+async function renderDocumentProcesses(repoRoot: string, candidateDir: string): Promise<string[]> {
+  const processRoot = path.join(candidateDir, "document-processes");
+  if (!(await exists(processRoot))) return [];
+  const lines: string[] = [];
+  for (const processDir of (await listChildDirs(processRoot)).sort((a, b) =>
+    path.basename(a).localeCompare(path.basename(b))
+  )) {
+    const testPath = path.join(processDir, "test.json");
+    const test = (await exists(testPath)) ? await readJson(testPath) : {};
+    const process = String(test.process ?? path.basename(processDir));
+    const inCount = (await filesInDir(path.join(processDir, "in"))).length;
+    const outCount = (await filesInDir(path.join(processDir, "out"))).length;
+    const testLink = (await exists(testPath))
+      ? link(repoRoot, testPath, "test.json")
+      : "no test.json";
+    lines.push(
+      `  - ${process}: ${folderStatus(repoRoot, processDir, "in", inCount)} -> ${folderStatus(repoRoot, processDir, "out", outCount)}; ${testLink}`
+    );
+  }
+  return lines;
+}
+
+async function inputFiles(scenario: ScenarioEntry): Promise<string[]> {
+  const input = objectValue(scenario.manifest.input);
+  const files: string[] = [];
+  for (const value of Object.values(input)) {
+    if (typeof value === "string") files.push(path.join(scenario.dir, value));
+    if (Array.isArray(value)) {
+      for (const item of value)
+        if (typeof item === "string") files.push(path.join(scenario.dir, item));
+    }
+  }
+  if (scenario.kind === "chat") files.push(path.join(scenario.dir, "chat.txt"));
+  return existingOnly(unique(files));
+}
+
+async function outputLocationStatus(repoRoot: string, scenario: ScenarioEntry): Promise<string> {
+  const generatedCount = (await filesInDir(path.join(scenario.dir, "generated"))).length;
+  const outCount = (await filesInDir(path.join(scenario.dir, "out"))).length;
+  const parts = [];
+  if (generatedCount) parts.push(folderStatus(repoRoot, scenario.dir, "generated", generatedCount));
+  if (outCount) parts.push(folderStatus(repoRoot, scenario.dir, "out", outCount));
+  return parts.join("<br>") || "not generated yet";
+}
+
+async function generatedSummary(repoRoot: string, dir: string): Promise<string> {
+  const files = await generatedAndOutFiles(dir);
+  if (!files.length) return "Generated/output: not generated yet";
+  const keyFiles = files.filter(
+    (file) =>
+      KEY_OUTPUT_NAMES.has(path.basename(file)) || file.includes(`${path.sep}final${path.sep}`)
+  );
+  const keyLinks = linkList(repoRoot, keyFiles.slice(0, 12));
+  const overflow = keyFiles.length > 12 ? `; plus ${keyFiles.length - 12} more key files` : "";
+  return `Generated/output: ${files.length} files. Key links: ${keyLinks || "see output folder"}${overflow}`;
+}
+
+async function keyResult(scenario: ScenarioEntry): Promise<string> {
+  const summary = await loadExpectedSummary(scenario);
+  if (scenario.kind === "chat" && summary) {
+    const outcome = String(summary.outcome ?? "UNKNOWN");
+    const finalCreated = String(summary.finalCreated ?? summary.final_created ?? "unknown");
+    return `${outcome}; final created: ${finalCreated}`;
+  }
+  if (scenario.kind === "recruitment" && summary) {
+    const accepted = Array.isArray(summary.accepted) ? summary.accepted.length : 0;
+    const rejected = Array.isArray(summary.rejected) ? summary.rejected.length : 0;
+    return `accepted: ${accepted}; rejected: ${rejected}`;
+  }
+  const expected = Object.keys(objectValue(scenario.manifest.expected));
+  return expected.length ? `expected fixtures: ${expected.join(", ")}` : "see linked files";
+}
+
+async function loadExpectedSummary(scenario: ScenarioEntry): Promise<JsonObject | undefined> {
+  const summaryPath = path.join(scenario.dir, "expected", "summary.json");
+  if (!(await exists(summaryPath))) return undefined;
+  return readJson(summaryPath);
+}
+
+async function expectedFilesForDir(dir: string): Promise<string[]> {
+  return filesInDir(path.join(dir, "expected"));
+}
+
+async function generatedAndOutFiles(dir: string): Promise<string[]> {
+  return [
+    ...(await filesInDir(path.join(dir, "generated"))),
+    ...(await filesInDir(path.join(dir, "out")))
+  ];
+}
+
+async function listChildDirs(dir: string): Promise<string[]> {
+  if (!(await exists(dir))) return [];
+  const entries = await readdir(dir, { withFileTypes: true });
+  return entries.filter((entry) => entry.isDirectory()).map((entry) => path.join(dir, entry.name));
+}
+
+async function filesInDir(dir: string): Promise<string[]> {
+  if (!(await exists(dir))) return [];
+  const entries = await readdir(dir, { withFileTypes: true });
+  return entries
+    .filter((entry) => entry.isFile())
+    .map((entry) => path.join(dir, entry.name))
+    .sort((a, b) => a.localeCompare(b));
+}
+
+async function existingOnly(files: string[]): Promise<string[]> {
+  const existing: string[] = [];
+  for (const file of files) if (await exists(file)) existing.push(file);
+  return existing;
+}
+
+async function readJson(file: string): Promise<JsonObject> {
+  return JSON.parse(await readFile(file, "utf8")) as JsonObject;
+}
+
+async function exists(file: string): Promise<boolean> {
+  try {
+    await stat(file);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function objectValue(value: unknown): JsonObject {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as JsonObject) : {};
+}
+
+function folderStatus(repoRoot: string, baseDir: string, folder: string, count: number): string {
+  if (!count) return `${folder}/ missing or empty`;
+  return `${link(repoRoot, path.join(baseDir, folder), `${folder}/`)} (${count})`;
+}
+
+function linkList(repoRoot: string, files: string[]): string {
+  return files.map((file) => link(repoRoot, file, path.basename(file))).join(", ");
+}
+
+function link(repoRoot: string, file: string, label: string): string {
+  const relative = path.relative(repoRoot, file).replace(/\\/g, "/");
+  return `[${escapeTable(label)}](../${relative})`;
+}
+
+function escapeTable(value: string): string {
+  return value.replace(/\|/g, "\\|");
+}
+
+function titleCase(value: string): string {
+  return value.slice(0, 1).toUpperCase() + value.slice(1);
+}
+
+function unique(values: string[]): string[] {
+  return [...new Set(values)];
+}
+
+async function main(argv: string[]): Promise<void> {
+  const outputArg = argv.find((arg) => arg !== "--");
+  const output = await writeExamplesArtifactsIndex({ outputPath: outputArg ?? DEFAULT_OUTPUT });
+  console.log(`examples artifacts index: ${path.relative(process.cwd(), output)}`);
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main(process.argv.slice(2)).catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
+}

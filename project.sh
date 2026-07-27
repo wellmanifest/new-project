@@ -25,6 +25,7 @@ Project commands:
   examples-chat       Run all chat negotiation examples
   example-recruitment <name> Run one recruitment example
   examples-recruitment Run all recruitment examples
+  examples-index [file] Build one Markdown index for all example inputs, expected files and outputs
   verify              Run typecheck, lint, format, tests, examples, and git diff check
   system-check        Run the full functional system test suite
   dev-backend         Start backend and static web demo
@@ -82,6 +83,10 @@ case "${1:-help}" in
     ;;
   examples-recruitment)
     pnpm_run examples-recruitment:run
+    ;;
+  examples-index)
+    shift
+    pnpm_run examples:index -- "$@"
     ;;
   verify)
     pnpm_run verify

@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added a generated examples artifacts index command that merges office, chat, and recruitment example inputs, expected fixtures, and output links into one Markdown file.
 - Added three more `examples-recruitment` scenarios so the recruitment fixture set now has four runnable cases covering single acceptance, negotiated acceptance, PDF text extraction, OCR fallback, and cancellation.
 - Added `@office-dsl/chat-negotiation`, `@office-dsl/recruitment-workflow`, `@office-dsl/document-ingestion`, `@office-dsl/dsl-artifact-renderer`, `@office-dsl/regression-runner`, `@office-dsl/verifier-bridge`, and `@office-dsl/verifier-mock` package boundaries.
 - Added `tests/package-boundary.test.ts` to guard extracted packages, package-name imports, workspace dependency declarations, and lockstep package/app versions.
@@ -191,7 +192,7 @@
 - Implemented the Phase 3 missing/ambiguous/conflicting information model in `@office-dsl/intent-contract-model`:
   - Added `diagnoseIntentContractDsl` and `collectFormalFields`, producing completeness gaps, ambiguity reports, conflict reports, unapproved-assumption reports, traceability gaps, deterministic generated questions, and a `finalizationReady` gate with `blockingReasons`.
   - Added optional model fields for Phase 3: `SourceReference.span`, `FormalField.interpretations`, and `ConflictNode.values`/`ConflictValue` for competing Human1/Human2 values with source references.
-- Added `Phase 4B - Document Ingestion, OCR, And Recruitment Workflow` to `TODO.md`, describing the target multi-candidate recruitment flow (one job offer negotiated against many CVs), document ingestion for `oferta.md`/`cv.md`/`cv.pdf`, PDF text extraction and OCR fallback behind mock-safe interfaces, per-candidate proposal generation, CHAT/EMAIL negotiation reuse, acceptance/rejection finalization, and the `[numer-rekrutacji--stanowisko]/[numer-osoby]/{in/…,out/contract.dsl.txt,chat.txt}` folder convention.
+- Added `Phase 4B - Document Ingestion, OCR, And Recruitment Workflow` to `TODO.md`, describing the target multi-candidate recruitment flow (one job offer negotiated against many CVs), document ingestion for `oferta.md`/`cv.md`/`cv.pdf`, PDF text extraction and OCR fallback behind mock-safe interfaces, per-candidate proposal generation, CHAT/EMAIL negotiation reuse, acceptance/rejection finalization, and the `[numer-rekrutacji--stanowisko]/[numer-osoby]/{in/â€¦,out/contract.dsl.txt,chat.txt}` folder convention.
 - Referenced the new document ingestion/OCR recruitment workflow in the `TODO.md` baseline `NOT IMPLEMENTED` summary.
 
 ### Changed

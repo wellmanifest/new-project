@@ -34,6 +34,7 @@ echo   example-chat ^<name^> Run one chat negotiation example
 echo   examples-chat       Run all chat negotiation examples
 echo   example-recruitment ^<name^> Run one recruitment example
 echo   examples-recruitment Run all recruitment examples
+echo   examples-index       Build one Markdown index for all example inputs, expected files and outputs
 echo   verify              Run typecheck, lint, format, tests, examples, Python tests and git diff check
 echo   system-check        Run the full functional system test suite
 echo   dev-backend         Start backend and static web demo
@@ -98,6 +99,10 @@ exit /b %ERRORLEVEL%
 
 :examples-recruitment
 call corepack pnpm run examples-recruitment:run
+exit /b %ERRORLEVEL%
+
+:examples-index
+call corepack pnpm run examples:index -- %2
 exit /b %ERRORLEVEL%
 
 :verify
