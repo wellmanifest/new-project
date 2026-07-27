@@ -37,6 +37,7 @@ Historical research folders live under `research/` and should not be moved back 
 - `verifier/` - Python verifier package.
 - `examples/` - current office fixtures with `scenario.json`, `in/`, `out/`, and legacy flat files.
 - `examples-chat/` - executable Human1/Human2 negotiation fixtures with per-line processing, expected outcomes, and flat scenario-local generated `*.dsl.hcl` artifacts in editable HCL-highlighted project DSL text.
+- `examples-recruitment/` - executable multi-candidate recruitment fixture with deterministic offer/CV ingestion, text PDF extraction, mock OCR fallback, per-candidate proposals, chat negotiation reuse, and accepted/rejected outcomes.
 - `tests/` - TypeScript tests.
 - `mock-data/` - local offline data.
 
@@ -54,4 +55,4 @@ Historical research folders live under `research/` and should not be moved back 
 
 ## Current Boundary
 
-The validated repository is an offline Office DSL MVP with repeatable office and chat example runners, a standalone Intent/Contract model package, a deterministic Office DSL compatibility adapter, deterministic mock conversation-history planning for checked-in fixtures, and minimal runtime canonical approval records. The `examples-chat` runner covers fixture-level Human1/Human2 negotiation semantics, including bilateral current-hash approval and cancellation behavior. CLI/backend/UI approval flows, production/OpenRouter conversation ingestion, full planner field traceability, legal renderers, code generation, test generation, and semantic verifier orchestration are roadmap items, not completed features.
+The validated repository is an offline Office DSL MVP with repeatable office and chat example runners, a standalone Intent/Contract model package, a deterministic Office DSL compatibility adapter, deterministic mock conversation-history planning for checked-in fixtures, deterministic recruitment example ingestion for checked-in offer/CV fixtures, and minimal runtime canonical approval records. The `examples-chat` runner covers fixture-level Human1/Human2 negotiation semantics, including bilateral current-hash approval and cancellation behavior; `examples-recruitment` covers deterministic multi-candidate acceptance/rejection on top of that chat workflow. CLI/backend/UI approval flows, production/OpenRouter conversation ingestion, production OCR/PDF providers, full planner field traceability, legal renderers, code generation, test generation, and semantic verifier orchestration are roadmap items, not completed features.

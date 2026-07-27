@@ -1,0 +1,4 @@
+@user1 Stanowisko: Frontend Engineer. Wynagrodzenie 18000 PLN. Termin do 2026-09-01.
+@user2 Nie pasuje mi termin do 2026-09-01, moge od 2026-11-01.
+@user1 Akceptacja: podpisanie umowy i potwierdzenie dostepnosci.
+@user2 Rezygnuje, nie akceptuje tych warunkow.

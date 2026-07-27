@@ -13,3 +13,8 @@ __pycache__/
 pytest-cache-files-*/
 examples-chat/*/generated/
 examples/*/generated/
+
+examples-recruitment/**/generated/
+examples-recruitment/**/out/contract.dsl.txt
+examples-recruitment/**/out/proposal.dsl.txt
+examples-recruitment/**/out/status.dsl.txt

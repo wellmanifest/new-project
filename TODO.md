@@ -27,21 +27,21 @@ MOCK:
 
 NOT IMPLEMENTED:
 
-- runtime field traceability population, legal renderers, code generation, DSL-based test generation, CLI/backend/UI exposure for canonical approvals, runtime-to-Python verifier integration, and document ingestion/OCR with the multi-candidate recruitment workflow (Phase 4B).
+- runtime field traceability population, legal renderers, code generation, DSL-based test generation, CLI/backend/UI exposure for canonical approvals, runtime-to-Python verifier integration, and production document ingestion/OCR providers beyond the deterministic mock-safe recruitment example runner.
 
 ---
 
 ## Phase 0 - Repository Audit And Documentation Alignment
 
-- [x] Audit `README.md`, `TODO.md`, `CHANGELOG.md`, `VERSION.md`, `CONTRIBUTING.md`, `POLICY.md`, `HANDOFF.md`, `docs/`, `research/`, `examples/`, `packages/`, `apps/`, `verifier/`, `tests/`, and `mock-data/`.
+- [ ] Audit `README.md`, `TODO.md`, `CHANGELOG.md`, `VERSION.md`, `CONTRIBUTING.md`, `POLICY.md`, `HANDOFF.md`, `docs/`, `research/`, `examples/`, `packages/`, `apps/`, `verifier/`, `tests/`, and `mock-data/`. **Test gap:** `tests/docs.test.ts` only checks `README.md`, `VERSION`/`CHANGELOG.md`, `docs/system-purpose-and-runtime-flow.md`, and `docs/codex-sandbox-vitest.md`; it does not validate `TODO.md`, `CONTRIBUTING.md`, `POLICY.md`, `HANDOFF.md`, or the `research/`, `examples/`, `packages/`, `apps/`, `verifier/`, `tests/`, and `mock-data/` directories.
   - Done when the documented status is based on actual files and tests, not README claims.
 - [x] Create `docs/system-purpose-and-runtime-flow.md`.
   - Done when it describes purpose, H2M/H2H, runtime flow, LLM, verifier, traceability, approvals, documents, code, tests, examples, and current-vs-target state with Mermaid diagrams.
 - [x] Update README to separate current implementation from target architecture.
   - Done when Office DSL MVP is no longer presented as the full system.
-- [x] Rebuild TODO into staged phases with concrete outcomes and completion criteria.
+- [ ] Rebuild TODO into staged phases with concrete outcomes and completion criteria. **Test gap:** no test validates the `TODO.md` phase structure, completion criteria, or that checked items match code evidence.
   - Done when checked items match code evidence.
-- [x] Update HANDOFF, CHANGELOG, and VERSION metadata for the documentation alignment pass.
+- [ ] Update HANDOFF, CHANGELOG, and VERSION metadata for the documentation alignment pass. **Test gap:** `tests/docs.test.ts` validates `VERSION`/`CHANGELOG.md` consistency but does not check `HANDOFF.md` contents or that mocks are not presented as production behavior.
   - Done when the next agent has a clear start point and no mock is presented as production behavior.
 
 ---
@@ -58,7 +58,7 @@ NOT IMPLEMENTED:
   - Done when security tests cover these cases.
 - [x] Keep dry-run execution as default.
   - Done when tests show mock sending does not perform real external delivery.
-- [x] Add a root `verify` script that runs typecheck, lint, format check, TypeScript tests, Python tests, and `git diff --check`.
+- [ ] Add a root `verify` script that runs typecheck, lint, format check, TypeScript tests, Python tests, and `git diff --check`. **Test gap:** `packages/example-runner/src/verify.ts` exists and `pnpm run verify` is wired, but no test in `tests/` exercises the verify pipeline or asserts that it runs on Windows and Linux.
   - Done when `corepack pnpm run verify` works on Windows and Linux.
 - [x] Fix or document any dependency/link issue that prevents default Vitest startup in the Codex sandbox.
   - Done when the exact environment failure is reproducible or removed. Documented in `docs/codex-sandbox-vitest.md`; root test scripts avoid `.pytest_cache` scanning, but this Codex Windows sandbox still blocks Vite/Vitest process creation with `spawn EPERM`.
@@ -124,7 +124,7 @@ Note: Phase 3 is implemented at the `@office-dsl/intent-contract-model` layer vi
 
 ## Phase 4A - Testable Human1/Human2 Negotiation Examples
 
-- [x] Store executable Human1/Human2 chat examples with `scenario.json` and `chat.txt`.
+- [x] Store executable Human1/Human2 chat examples with `scenario.json` and `chat.txt`. `examples-recruitment` discovery processes candidate folders with local `in/`, `out/`, `chat.txt`, and scenario-local generated artifacts.
   - Done when `examples-chat/01-short-agreement`, `02-long-negotiation-agreement`, `03-short-conversation-cancelled`, and `04-long-negotiation-cancelled` are runnable by the example runner and declare expected summaries.
 - [x] Process each conversation line by line.
   - Done when every non-empty `@user1`/`@user2` line becomes a numbered event with generated per-event artifacts.
@@ -144,7 +144,7 @@ Note: Phase 3 is implemented at the `@office-dsl/intent-contract-model` layer vi
   - Done when a one-side approval becomes `INVALIDATED` if a later utterance changes the merged contract hash.
 - [x] Support ending a conversation without agreement.
   - Done when cancellation scenarios end as `CANCELLED` and do not produce `final-contract.dsl.hcl`, `contract.pdf`, or `approvals.dsl.hcl`.
-- [x] Generate final DSL, PDF, approvals, diff summary, and annex only after bilateral approval.
+- [ ] Generate final DSL, PDF, approvals, diff summary, and annex only after bilateral approval. **Test gap:** `tests/chat-runner.test.ts` asserts `final-contract.dsl.hcl`, `contract.pdf`, `approvals.dsl.hcl`, and `annex.dsl.hcl`, but it does not check `final/diff-summary.md` or `final/contract.md` content/existence.
   - Done when agreed scenarios create final artifacts under `examples-chat/<scenario>/generated/final/` only at the event where the second party approves the same current hash.
 - [x] Add commands for chat examples and include them in verification.
   - Done when `example-chat:run`, `examples-chat:run`, `project.sh example-chat`, `project.sh examples-chat`, and the root `verify` flow execute the chat examples.
@@ -171,24 +171,24 @@ Target folder convention (one recruitment, many candidates):
     chat.txt           # per-candidate negotiation transcript
 ```
 
-- [ ] Define a document ingestion interface for offers and CVs.
-  - Done when Markdown offers (`oferta.md`) and CV inputs in Markdown (`cv.md`) and PDF (`cv.pdf`) load into the runtime as source documents with source references, without inventing content.
-- [ ] Add PDF text extraction for text-based CVs.
-  - Done when a text-based `cv.pdf` is parsed to plain text through a known Node PDF library (for example `pdf-parse` or `pdfjs-dist`) behind a mock-safe interface with a deterministic fixture path.
-- [ ] Add OCR fallback for scanned or image-only CVs.
-  - Done when an image-only CV can be routed to an OCR provider (external API or a local library such as Tesseract) behind a mock-safe interface, and mock mode remains the validated default.
-- [ ] Normalize extracted offer/CV content into Intent/Contract DSL source.
-  - Done when extracted text maps into canonical source documents with field statuses and source spans, never fabricating terms that are absent from the offer or CV.
-- [ ] Implement the recruitment folder convention in the example runner.
-  - Done when the runner discovers and processes `[numer-rekrutacji--stanowisko]/[numer-osoby]/` folders and reads/writes `in/oferta.md`, `in/cv.pdf`, `in/cv.md`, `out/contract.dsl.txt`, and `chat.txt`.
-- [ ] Generate a per-candidate proposal from the shared offer.
-  - Done when each candidate folder derives an individual proposal (different terms allowed per candidate) from one `oferta.md` plus that candidate's CV, with no cross-contamination between candidates.
-- [ ] Run per-candidate CHAT/EMAIL negotiation.
-  - Done when each candidate negotiates through the chat/email workflow reusing the Human1/Human2 merge, conflict, position-change, and approval model, writing the transcript to `chat.txt`.
-- [ ] Finalize acceptance or rejection per candidate.
-  - Done when an accepted candidate writes `out/contract.dsl.txt` only after bilateral approval of the same current contract hash, and a rejected or withdrawn candidate ends without a final contract.
-- [ ] Add a recruitment example and regression tests.
-  - Done when a fixture recruitment with one offer and multiple candidate folders runs end to end, covers at least one acceptance and one rejection, and is compared deterministically like the other example runners.
+- [x] Define a document ingestion interface for offers and CVs.
+  - Done when Markdown offers (`oferta.md`) and CV inputs in Markdown (`cv.md`) and PDF (`cv.pdf`) load into the runtime as source documents with source references, without inventing content. `loadRecruitmentSources` returns source documents with line-level `SourceReference` entries for offer, Markdown CV, text PDF CV, and OCR-fallback CV inputs.
+- [x] Add PDF text extraction for text-based CVs.
+  - Done when a text-based `cv.pdf` is parsed to plain text through a deterministic mock-safe PDF text extractor with a fixture path. `extractPdfText` handles deterministic fixture text markers and PDF text operators without network or external side effects.
+- [x] Add OCR fallback for scanned or image-only CVs.
+  - Done when an image-only CV can be routed to an OCR provider (external API or a local library such as Tesseract) behind a mock-safe interface, and mock mode remains the validated default. Scanned fixture PDFs route to deterministic `cv.ocr.txt` mock OCR text; production OCR providers remain outside the validated default.
+- [x] Normalize extracted offer/CV content into Intent/Contract DSL source.
+  - Done when extracted text maps into canonical source documents with field statuses and source spans, never fabricating terms that are absent from the offer or CV. The recruitment runner creates a partial `intent-contract.dsl.v1` with sourced role, candidate, salary, start date, skills, missing governing law, and source spans.
+- [x] Implement the recruitment folder convention in the example runner.
+  - Done when the runner discovers and processes `[numer-rekrutacji--stanowisko]/[numer-osoby]/` folders and reads/writes `in/oferta.md`, `in/cv.pdf`, `in/cv.md`, `out/contract.dsl.txt`, and `chat.txt`. `examples-recruitment` discovery processes candidate folders with local `in/`, `out/`, `chat.txt`, and scenario-local generated artifacts.
+- [x] Generate a per-candidate proposal from the shared offer.
+  - Done when each candidate folder derives an individual proposal (different terms allowed per candidate) from one `oferta.md` plus that candidate's CV, with no cross-contamination between candidates. Each candidate writes an ignored `out/proposal.dsl.txt` with a deterministic proposal hash derived only from that candidate's sources.
+- [x] Run per-candidate CHAT/EMAIL negotiation.
+  - Done when each candidate negotiates through the chat/email workflow reusing the Human1/Human2 merge, conflict, position-change, and approval model, writing the transcript to `chat.txt`. Recruitment candidates run through `runChatScenario`, preserving bilateral current-hash approval and cancellation semantics.
+- [x] Finalize acceptance or rejection per candidate.
+  - Done when an accepted candidate writes `out/contract.dsl.txt` only after bilateral approval of the same current contract hash, and a rejected or withdrawn candidate ends without a final contract. Accepted fixtures create ignored `out/contract.dsl.txt`; rejected/cancelled candidates do not.
+- [x] Add a recruitment example and regression tests.
+  - Done when a fixture recruitment with one offer and multiple candidate folders runs end to end, covers at least one acceptance and one rejection, and is compared deterministically like the other example runners. `examples-recruitment/01-multi-candidate` and `tests/recruitment-runner.test.ts` cover Markdown/PDF/OCR ingestion, proposal generation, accepted finalization, rejected non-finalization, and expected summary comparison.
 
 ---
 
@@ -344,7 +344,7 @@ Target scenario set:
 
 ## Phase 14 - Production Hardening
 
-- [x] Add CI for Windows and Linux.
+- [ ] Add CI for Windows and Linux. **Test gap:** `.github/workflows/verify.yml` exists, but no test validates its presence, matrix configuration, or that default checks pass on `ubuntu-latest` and `windows-latest`.
   - Done when default checks pass on both systems. CI wiring is in `.github/workflows/verify.yml` and runs `bash project.sh install` plus `bash project.sh verify` on `ubuntu-latest` and `windows-latest`.
 - [ ] Add packaging/release policy.
   - Done when version updates are unambiguous across package metadata, changelog, and docs.

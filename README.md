@@ -218,6 +218,24 @@ Generated DSL artifacts use `*.dsl.hcl`: HCL-like syntax for automatic editor hi
 
 For agreed scenarios, `final-contract.dsl.hcl`, `contract.pdf`, and `approvals.dsl.hcl` are created only when both parties approve the same current merged contract hash. A one-side approval cannot create final artifacts, and a later contract change invalidates the earlier approval. Cancelled scenarios never create final contract or PDF artifacts.
 
+### Recruitment Examples
+
+`examples-recruitment` contains executable multi-candidate recruitment fixtures. The runner ingests `oferta.md`, `cv.md`, and `cv.pdf`, uses deterministic mock OCR fallback for scanned fixture PDFs, generates sourced proposal DSL, reuses chat negotiation scenarios per candidate, and compares accepted/rejected summaries with expected outputs.
+
+Run one recruitment scenario:
+
+```powershell
+corepack pnpm run example-recruitment:run -- 01-multi-candidate
+```
+
+Run all recruitment scenarios:
+
+```powershell
+corepack pnpm run examples-recruitment:run
+```
+
+Generated recruitment artifacts are written under `examples-recruitment/<scenario>/generated/` and per-candidate `out/` files. These generated outputs are ignored by Git.
+
 ## Tests And Checks
 
 Install:
@@ -297,8 +315,7 @@ OpenRouter planner mode requires `OPENROUTER_API_KEY`. Python LiteLLM/OpenRouter
 - [docs/system-purpose-and-runtime-flow.md](docs/system-purpose-and-runtime-flow.md) - target purpose, runtime flow, diagrams, current-vs-target state.
 - [docs/architecture.md](docs/architecture.md) - earlier MVP architecture notes.
 - [docs/research-migration-audit.md](docs/research-migration-audit.md) - research migration audit.
-- [docs/office-to-i
-  te
+- [docs/office-to-intent-contract-mapping.md](docs/office-to-intent-contract-mapping.md) - mapping from office requests to Intent/Contract DSL.
 - [TODO.md](TODO.md) - staged implementation roadmap.
 - [HANDOFF.md](HANDOFF.md) - next-agent handoff notes.
 - [VERSION](VERSION) - version scope and validation notes.

@@ -3,7 +3,16 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { discoverChatScenarios, runChatScenario } from "./chat.js";
 import { discoverScenarios, runScenario } from "./scenario.js";
+import { discoverRecruitmentScenarios, runRecruitmentScenario } from "./recruitment.js";
 
+export {
+  discoverRecruitmentScenarios,
+  extractPdfText,
+  loadRecruitmentScenarioManifest,
+  loadRecruitmentSources,
+  runRecruitmentScenario,
+  validateRecruitmentScenarioManifest
+} from "./recruitment.js";
 export {
   discoverChatScenarios,
   loadChatScenarioManifest,
@@ -44,6 +53,29 @@ async function main(argv: string[]): Promise<void> {
     process.exitCode = failed.length ? 1 : 0;
     return;
   }
+  if (command === "recruitment-run") {
+    if (!target) throw new Error("Usage: example-runner recruitment-run <scenario-name-or-path>");
+    const scenarioDir = resolveRecruitmentScenario(repoRoot, target);
+    const result = await runRecruitmentScenario({ repoRoot, scenarioDir });
+    printRecruitmentResult(result);
+    process.exitCode = result.ok ? 0 : 1;
+    return;
+  }
+  if (command === "recruitment-all") {
+    const dirs = await discoverRecruitmentScenarios(repoRoot);
+    const results = [];
+    for (const scenarioDir of dirs) {
+      const result = await runRecruitmentScenario({ repoRoot, scenarioDir });
+      results.push(result);
+      printRecruitmentResult(result);
+    }
+    const failed = results.filter((result) => !result.ok);
+    console.log(
+      `\nexamples-recruitment: ${results.length - failed.length}/${results.length} passed`
+    );
+    process.exitCode = failed.length ? 1 : 0;
+    return;
+  }
   if (command === "run") {
     if (!target) throw new Error("Usage: example-runner run <scenario-name-or-path>");
     const scenarioDir = resolveScenario(repoRoot, target);
@@ -66,7 +98,7 @@ async function main(argv: string[]): Promise<void> {
     return;
   }
   console.log(
-    "Usage: example-runner run <scenario-name-or-path> | all | chat-run <scenario-name-or-path> | chat-all"
+    "Usage: example-runner run <scenario-name-or-path> | all | chat-run <scenario-name-or-path> | chat-all | recruitment-run <scenario-name-or-path> | recruitment-all"
   );
   process.exitCode = 2;
 }
@@ -83,9 +115,24 @@ function resolveChatScenario(repoRoot: string, target: string): string {
   return path.join(repoRoot, "examples-chat", target);
 }
 
+function resolveRecruitmentScenario(repoRoot: string, target: string): string {
+  if (path.isAbsolute(target)) return target;
+  if (target.includes("/") || target.includes("\\")) return path.resolve(repoRoot, target);
+  return path.join(repoRoot, "examples-recruitment", target);
+}
+
 function printResult(result: Awaited<ReturnType<typeof runScenario>>): void {
   const marker = result.ok ? "PASS" : "FAIL";
   console.log(`${marker} ${result.id}`);
+  console.log(`  generated: ${path.relative(process.cwd(), result.generatedDir)}`);
+  for (const failure of result.failures) console.log(`  - ${failure}`);
+}
+
+function printRecruitmentResult(result: Awaited<ReturnType<typeof runRecruitmentScenario>>): void {
+  const marker = result.ok ? "PASS" : "FAIL";
+  console.log(`${marker} ${result.id}`);
+  console.log(`  accepted: ${result.summary.accepted.length}`);
+  console.log(`  rejected: ${result.summary.rejected.length}`);
   console.log(`  generated: ${path.relative(process.cwd(), result.generatedDir)}`);
   for (const failure of result.failures) console.log(`  - ${failure}`);
 }

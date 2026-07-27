@@ -2,15 +2,15 @@
 
 ## Current Version
 
-`0.7.7`
+`0.8.0`
 
 ## Version Type
 
-Minor model-feature release over `0.7.6`.
+Minor workflow-feature release over `0.7.7`.
 
-This version implements Phase 4 reopening of clarification after Human2 rejects insufficient detail at the `@office-dsl/intent-contract-model` diagnosis layer. `ApprovalNode` can now carry optional rejected-field context (`field`, `reason`, and `source`), and `diagnoseIntentContractDsl` reports rejected approvals, blocks finalization, and generates a reopened clarification question routed to Human1 when Human2 rejects a field.
+This version implements Phase 4B deterministic document ingestion, OCR fallback, and multi-candidate recruitment examples in `@office-dsl/example-runner`. The runner discovers `examples-recruitment` scenarios, loads `oferta.md`, `cv.md`, and `cv.pdf`, extracts deterministic text-PDF fixtures, routes scanned/image-only fixture PDFs through mock OCR text, normalizes sourced offer/CV content into partial Intent/Contract DSL, generates per-candidate proposals, reuses the Human1/Human2 chat runner for negotiation, and writes `out/contract.dsl.txt` only for candidates whose chat reaches bilateral approval of the same current contract hash.
 
-The Phase 3 diagnosis, Phase 4 question routing, conversation input format, mock conversation-history planner, and rejected-approval reopening are model/planner layers only. Live runtime, CLI, backend, and UI integration of rejection-driven clarification remains open (Phases 11 and 12). No OCR or document-ingestion behavior is implemented in this version; Phase 4B is roadmap documentation only.
+The Phase 4B implementation is deterministic and mock-safe. It validates the folder convention and fixture workflow end to end, but it does not install or call a production OCR provider, external PDF service, or live recruitment backend. CLI/backend/UI surfacing for canonical approvals and production document-ingestion surfaces remains open in later phases.
 
 ## Project Status
 
@@ -35,6 +35,7 @@ Current validated implementation scope:
 - canonical office example manifests with `in/` and `out/` folders,
 - deterministic single-example and all-example runner with generated `*.dsl.hcl` artifacts beside each `examples/<scenario>/`,
 - executable `examples-chat` scenarios for Human1/Human2 negotiation regression,
+- executable `examples-recruitment` multi-candidate recruitment fixture with deterministic Markdown/PDF/OCR ingestion, per-candidate proposals, accepted/rejected outcomes, and chat-runner negotiation reuse,
 - line-by-line chat artifacts with party contract state, merged contract state, diffs, status, approvals, conflicts, and cancellation summaries,
 - generated chat DSL artifacts rendered as flat `*.dsl.hcl` HCL-like editable project DSL, not JSON,
 - generated chat outputs colocated as flat files under `examples-chat/<scenario>/generated/`,
@@ -53,15 +54,19 @@ Current validated implementation scope:
 Target scope documented but not implemented:
 
 - CLI/backend/web exposure for canonical Intent/Contract approval flows,
-- production Human1/Human2 conversation workflow beyond typed input validation, deterministic mock fixture planning, and model-layer rejection diagnosis,
+- production Human1/Human2 conversation workflow beyond typed input validation, deterministic mock fixture planning, model-layer rejection diagnosis, and deterministic recruitment fixtures,
+- production OCR/PDF provider integration beyond deterministic fixture extraction,
 - planner population of field-level source traceability,
 - contract and legal document renderers,
 - JS/Node.js code generation,
 - DSL-based test generation,
 - TypeScript runtime integration with the Python verifier as a normal gating step.
 
-## Included In 0.7.7
+## Included In 0.8.0
 
+- Added deterministic Phase 4B recruitment example runner and `examples-recruitment/01-multi-candidate` fixture.
+- Added document ingestion for `oferta.md`, `cv.md`, text `cv.pdf`, and mock OCR fallback through `cv.ocr.txt`.
+- Added per-candidate proposal generation and final `out/contract.dsl.txt` only after bilateral current-hash approval.
 - Added rejected-approval diagnosis that blocks finalization and reopens Human1 clarification when Human2 rejects insufficient detail.
 - Added deterministic `mockPlanConversationHistory` conversion from Human1/Human2 conversation fixtures into partial Intent/Contract DSL snapshots.
 - Added typed `intent-contract.conversation.v1` Human1/Human2/system conversation input records with validation, parsing, and source-reference mapping.
@@ -72,14 +77,15 @@ Target scope documented but not implemented:
 - Flattened generated per-event files into one scenario-local generated folder using names such as `001-user1.intent-contract.dsl.hcl`.
 - Added `examples-chat/*/generated/` to `.gitignore`.
 - Kept checked-in scenario manifests and expected summaries as JSON; generated runner artifacts use `*.dsl.hcl`, Markdown, or PDF instead of JSON.
-- Updated root package, intent-contract model package, changelog, and documentation consistency tests to `0.7.7`.
+- Updated root package, intent-contract model package, changelog, and documentation consistency tests to `0.8.0`.
 
-## Not Included In 0.7.7
+## Not Included In 0.8.0
 
 - No CLI commands for canonical approvals.
 - No backend/web Human1/Human2 approval or rejection UI.
 - No production/OpenRouter planner support for arbitrary conversation history beyond deterministic mock fixture planning.
-- No legal contract renderer beyond the deterministic example PDF artifact.
+- No production OCR provider or external PDF extraction dependency beyond deterministic fixture extraction.
+- No legal contract renderer beyond deterministic example artifacts.
 - No JS/Node.js code generator.
 - No DSL-based test generator.
 
@@ -99,7 +105,7 @@ Validated in this pass:
 - TypeScript runtime tests for canonical approval records and invalidation.
 - Existing TypeScript and Python checks listed in the final task report.
 - Office and chat example runners.
-- Intent/Contract model, rejected approval diagnosis, conversation input, mock conversation planner, and adapter tests.
+- Intent/Contract model, rejected approval diagnosis, conversation input, mock conversation planner, recruitment runner, and adapter tests.
 - Reproduced the Codex Windows sandbox `spawn EPERM` limitation and used the approved escalated path for commands that require Node/Vite process creation in this environment.
 
 Expected but not yet fully validated as release criteria:
@@ -109,6 +115,6 @@ Expected but not yet fully validated as release criteria:
 
 ## Versioning Policy Note
 
-The current pass promotes rejected-approval clarification reopening to `0.7.7`. Root package metadata, the intent-contract model package, `VERSION`, `CHANGELOG.md`, and documentation consistency tests are updated together for this milestone.
+The current pass promotes rejected-approval clarification reopening to `0.8.0`. Root package metadata, the intent-contract model package, `VERSION`, `CHANGELOG.md`, and documentation consistency tests are updated together for this milestone.
 
 A future production hardening task should define how all package, app, verifier, and OpenAPI version metadata are kept in sync when a broader release touches those surfaces.

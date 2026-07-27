@@ -2,6 +2,36 @@
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-07-27
+
+### Added
+
+- Added Phase 4B deterministic recruitment example runner with `example-recruitment:run`, `examples-recruitment:run`, `project.sh example-recruitment`, and `project.sh examples-recruitment` commands.
+- Added `examples-recruitment/01-multi-candidate`, covering one accepted and one rejected candidate with `oferta.md`, `cv.md`, `cv.pdf`, OCR mock fallback, per-candidate `chat.txt`, expected summaries, and ignored generated/final artifacts.
+- Added document ingestion for recruitment offers and CVs with source documents, line-level source references, deterministic text-PDF extraction, and mock OCR routing through `cv.ocr.txt`.
+- Added per-candidate proposal generation, partial Intent/Contract DSL normalization, chat-runner negotiation reuse, and final `out/contract.dsl.txt` creation only after bilateral approval of the current chat contract hash.
+- Added `ROADMAP.md` describing current capabilities, target CQRS+ES architecture, REST API surface, CLI shell design, and release milestones.
+- Added `packages/cli/src/shell.ts` as an interactive REPL and one-shot command shell for the runtime, exposing `create`, `get`, `list`, `answer`, `confirm`, `approve`, `reject`, `cancel`, `execute`, and `audit` commands.
+- Added `cli:shell` script to `package.json`.
+- Extended `apps/backend/src/server.ts` with CQRS+ES-style endpoints:
+  - `POST /api/tasks/{id}/approve` for Human1/Human2 canonical DSL hash approval.
+  - `POST /api/tasks/{id}/dsl` for replacing the canonical Intent/Contract DSL snapshot.
+  - `GET /api/tasks/{id}/events` for state-transition event stream projection.
+  - `GET /api/tasks/{id}/approvals` for canonical approval records.
+  - `GET /api/tasks/{id}/questions` for unresolved questions with optional `?party` filter.
+- Wired `diagnoseIntentContractDsl` and `questionsForParty` into the backend query endpoints.
+
+### Changed
+
+- Included recruitment examples in root `verify` and documented Phase 4B as implemented for deterministic mock-safe fixtures; production OCR providers remain outside the validated default.
+- Updated root package, example-runner package, `VERSION`, docs, and documentation consistency tests to `0.8.0`.
+- Updated `TODO.md` to uncheck several Phase 0, Phase 1, Phase 4A, and Phase 14 items that lack sufficient test coverage, with inline `Test gap:` notes explaining the missing validation.
+- Updated `apps/backend/src/server.ts` `openapi.json` to document the new CQRS+ES endpoints.
+
+### Tests
+
+- Added `tests/recruitment-runner.test.ts` coverage for recruitment discovery, Markdown/PDF/OCR ingestion, source references, accepted-candidate finalization, rejected-candidate non-finalization, and expected summary comparison.
+
 ## [0.7.7] - 2026-07-27
 
 ### Added

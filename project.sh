@@ -21,6 +21,8 @@ Project commands:
   examples            Run all example scenarios
   example-chat <name> Run one chat negotiation example
   examples-chat       Run all chat negotiation examples
+  example-recruitment <name> Run one recruitment example
+  examples-recruitment Run all recruitment examples
   verify              Run typecheck, lint, format, tests, examples, and git diff check
   dev-backend         Start backend and static web demo
   legacy-analyze      Run the historical network-heavy analysis workflow
@@ -70,6 +72,13 @@ case "${1:-help}" in
     ;;
   examples-chat)
     pnpm_run examples-chat:run
+    ;;
+  example-recruitment)
+    shift
+    pnpm_run example-recruitment:run -- "$@"
+    ;;
+  examples-recruitment)
+    pnpm_run examples-recruitment:run
     ;;
   verify)
     pnpm_run verify

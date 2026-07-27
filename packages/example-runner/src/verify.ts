@@ -25,6 +25,11 @@ const steps: Step[] = [
   },
   { label: "example runner", command: "corepack", args: ["pnpm", "run", "examples:run"] },
   { label: "chat example runner", command: "corepack", args: ["pnpm", "run", "examples-chat:run"] },
+  {
+    label: "recruitment example runner",
+    command: "corepack",
+    args: ["pnpm", "run", "examples-recruitment:run"]
+  },
   { label: "git diff whitespace", command: "git", args: ["diff", "--check"] }
 ];
 

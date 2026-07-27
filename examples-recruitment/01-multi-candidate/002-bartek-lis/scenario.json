@@ -1,0 +1,11 @@
+{
+  "version": "example-chat.scenario.v1",
+  "id": "002-bartek-lis",
+  "title": "Bartek Lis recruitment negotiation",
+  "input": {
+    "chat": "chat.txt"
+  },
+  "expected": {
+    "summary": "out/expected.summary.json"
+  }
+}

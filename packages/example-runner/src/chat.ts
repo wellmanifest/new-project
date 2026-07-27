@@ -276,6 +276,9 @@ function interpretLine(event: ChatLine): IntentArtifact {
   if (normalized.includes("strona internetowa") || normalized.includes("strone internetowa")) {
     capture(updates, "service", "strona internetowa");
   }
+  const role = normalized.match(/(?:stanowisko|rola)[:\s]+([^,.]+?)(?:\.|,|$)/i)?.[1]?.trim();
+  capture(updates, "service", role);
+
   const acceptance = normalized
     .match(/(?:odbior|akceptacja|kryteria odbioru)[:\s]+([^,.]+?)(?:\.|,|$)/i)?.[1]
     ?.trim();

@@ -295,7 +295,7 @@ examples/
     conversation.md
 ```
 
-Current implementation status: the repository has six office examples: read-only report, clarification, email drafts, confirmed send, policy denial, and log analysis. Each keeps legacy flat fixtures and now also has `scenario.json`, `in/`, and `out/` files. The example runner generates artifacts under `examples/<scenario>/generated/` and compares them with expected outputs. Current manifests use fixture DSL input because the mock planner still emits non-deterministic task IDs.
+Current implementation status: the repository has six office examples, four chat-negotiation examples, and one multi-candidate recruitment example. Office examples keep legacy flat fixtures and now also have `scenario.json`, `in/`, and `out/` files. Chat examples process Human1/Human2 negotiation line by line. Recruitment examples ingest checked-in `oferta.md`, `cv.md`, and `cv.pdf` fixtures, use deterministic text extraction or mock OCR fallback, generate per-candidate proposals, reuse the chat runner, and compare accepted/rejected outcomes. Generated artifacts are written beside each scenario under ignored `generated/` folders or ignored per-candidate final outputs.
 
 ## 17. End-To-End Target Scenarios
 
