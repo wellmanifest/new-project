@@ -85,6 +85,42 @@ describe("Backend API", () => {
     expect(loaded.state).toBe("READY");
   });
 
+  it("exposes CQRS-style approvals, questions, and event stream endpoints", async () => {
+    const created = (await postJson("/api/tasks", {
+      input: "Przygotuj raport"
+    })) as { id: string; intentContractHash: string };
+
+    const questions = (await getJson(`/api/tasks/${created.id}/questions?party=Human1`)) as {
+      finalizationReady: boolean;
+      questions: unknown[];
+    };
+    expect(questions).toHaveProperty("finalizationReady");
+    expect(Array.isArray(questions.questions)).toBe(true);
+
+    const human1 = (await postJson(`/api/tasks/${created.id}/approve`, {
+      party: "Human1",
+      hash: created.intentContractHash
+    })) as { approvals: unknown[] };
+    expect(human1.approvals).toHaveLength(1);
+
+    const human2 = (await postJson(`/api/tasks/${created.id}/approve`, {
+      party: "Human2",
+      hash: created.intentContractHash
+    })) as { approvals: unknown[] };
+    expect(human2.approvals).toHaveLength(2);
+
+    const approvals = (await getJson(`/api/tasks/${created.id}/approvals`)) as unknown[];
+    expect(approvals).toHaveLength(2);
+
+    const events = (await getJson(`/api/tasks/${created.id}/events`)) as Array<{
+      from: string;
+      to: string;
+      reason: string;
+    }>;
+    expect(events.map((event) => event.to)).toEqual(
+      expect.arrayContaining(["DSL_GENERATED", "VALIDATING", "READY"])
+    );
+  });
   it("answers clarification, executes dry-run, and returns audit", async () => {
     const created = (await postJson("/api/tasks", {
       input: "Przygotuj raport sprzedazy."

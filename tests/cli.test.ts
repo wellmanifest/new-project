@@ -10,6 +10,7 @@ const execFileAsync = promisify(execFile);
 const repoRoot = process.cwd();
 const node = process.execPath;
 const tsxArgs = ["--import", "tsx", "packages/cli/src/index.ts"];
+const shellArgs = ["--import", "tsx", "packages/cli/src/shell.ts"];
 
 interface CliEnv {
   OFFICE_DSL_TASK_DIR: string;
@@ -35,6 +36,23 @@ async function runCli(
   return { code: 0, stdout, stderr, json };
 }
 
+async function runShell(
+  args: string[],
+  env: CliEnv
+): Promise<{ stdout: string; stderr: string; json: unknown }> {
+  const { stdout, stderr } = await execFileAsync(node, [...shellArgs, ...args], {
+    cwd: repoRoot,
+    env: { ...process.env, ...env }
+  });
+  let json: unknown;
+  try {
+    json = JSON.parse(stdout);
+  } catch {
+    json = null;
+  }
+  return { stdout, stderr, json };
+}
+
 describe("CLI", () => {
   let tmpDir: string;
   let env: CliEnv;
@@ -53,6 +71,12 @@ describe("CLI", () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
+  it("runs the CQRS shell in one-shot mode", async () => {
+    const result = await runShell(["create", "Przygotuj raport"], env);
+    expect(result.json).toMatchObject({ state: "READY" });
+    expect(result.json).toHaveProperty("taskId");
+    expect(result.json).toHaveProperty("intentContractHash");
+  });
   it("plans a task and returns JSON with state READY", async () => {
     const result = await runCli(["plan", "Przygotuj raport", "--json"], env);
     expect(result.json).toMatchObject({

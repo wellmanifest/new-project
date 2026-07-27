@@ -10,6 +10,8 @@ export {
   extractPdfText,
   loadRecruitmentScenarioManifest,
   loadRecruitmentSources,
+  ocrPdfToMarkdownFixture,
+  renderMarkdownAsPdfTextFixture,
   runRecruitmentScenario,
   validateRecruitmentScenarioManifest
 } from "./recruitment.js";

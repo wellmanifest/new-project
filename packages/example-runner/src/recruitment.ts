@@ -219,6 +219,28 @@ export async function loadRecruitmentSources(
   return sources;
 }
 
+export function renderMarkdownAsPdfTextFixture(markdown: string): string {
+  const escapedLines = markdown
+    .split(/\r?\n/)
+    .map((line) => `%TEXT:${line.replace(/\r/g, "")}`)
+    .join("\n");
+  return [`%PDF-1.4`, `%OFFICE_DSL_MARKDOWN_TEXT_FIXTURE`, escapedLines, `%%EOF`, ``].join("\n");
+}
+
+export async function ocrPdfToMarkdownFixture(pdfPath: string): Promise<string> {
+  const pdf = await extractPdfText(pdfPath);
+  if (pdf.text.trim()) return normalizeOcrMarkdown(pdf.text);
+  return normalizeOcrMarkdown(await runMockOcr(pdfPath));
+}
+
+function normalizeOcrMarkdown(text: string): string {
+  return `${text
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .join("\n")
+    .trim()}\n`;
+}
 export async function extractPdfText(
   pdfPath: string
 ): Promise<{ text: string; requiresOcr: boolean }> {
