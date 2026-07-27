@@ -27,7 +27,7 @@ MOCK:
 
 NOT IMPLEMENTED:
 
-- runtime field traceability population, code generation, DSL-based test generation, CLI/backend/UI exposure for canonical approvals, runtime-to-Python verifier integration, and production document ingestion/OCR providers beyond the deterministic mock-safe recruitment example runner. Contract/legal document renderers (Phase 6) and test-generation (Phase 8) now exist as `@office-dsl` packages; wiring them into the runtime/CLI/backend/UI/verifier remains open.
+- runtime field traceability population, CLI/backend/UI exposure for canonical approvals, runtime-to-Python verifier integration, and production document ingestion/OCR providers beyond the deterministic mock-safe recruitment example runner. Contract/legal document renderers (Phase 6), test-generation (Phase 8), and JS/Node.js code generation (Phase 9) now exist as `@office-dsl` packages; wiring them into the runtime/CLI/backend/UI/verifier remains open.
 
 ---
 
@@ -267,14 +267,14 @@ Target scenario set:
 
 ## Phase 9 - JS/Node.js Code Generation
 
-- [ ] Define allowed code-generation targets.
-  - Done when generated artifacts have a bounded runtime, dependency, and security model.
-- [ ] Generate implementation plan from approved DSL.
-  - Done when plan output is deterministic and auditable.
-- [ ] Generate JS/Node.js code from DSL-approved requirements.
-  - Done when generated code is never created directly from loose prompt text.
-- [ ] Run generated tests against generated code.
-  - Done when results are included in verifier input.
+- [x] Define allowed code-generation targets.
+  - Done when generated artifacts have a bounded runtime, dependency, and security model. `@office-dsl/codegen` exposes `ALLOWED_CODE_GENERATION_TARGETS` with the bounded `node-esm-contract-module` target: Node ESM, no dependencies, read-only fixture filesystem policy, disabled network, no child process policy for generated artifacts, and fixed output files.
+- [x] Generate implementation plan from approved DSL.
+  - Done when plan output is deterministic and auditable. `createImplementationPlanFromApprovedDsl` validates the current Intent/Contract DSL, requires active Human1/Human2 approvals for the current approval-free DSL hash, and emits deterministic plan steps with input DSL paths and output files.
+- [x] Generate JS/Node.js code from DSL-approved requirements.
+  - Done when generated code is never created directly from loose prompt text. `generateNodeCodeFromApprovedDsl` only accepts an approved `intent-contract.dsl.v1` snapshot and emits a dependency-free package manifest, contract-spec module, generated test file, hashes, and verifier input.
+- [x] Run generated tests against generated code.
+  - Done when results are included in verifier input. `runGeneratedNodeTests` writes generated artifacts to a temporary folder, executes the generated Node.js test file, checks the generated source for forbidden dynamic/network/process APIs, verifies file hashes, and returns `codegen.verifier-input.v1` with test results; covered by `tests/codegen.test.ts`.
 
 ---
 

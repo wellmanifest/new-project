@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.9.0] - 2026-07-27
+## [0.10.0] - 2026-07-27
 
 ### Added
 
@@ -21,6 +21,9 @@
 - Added `generateUnitTestSpecs` and `generateTestSuite` producing unit, integration, API, E2E, security, and error-handling specifications that map back to DSL input items and paths.
 - Added `verifyTestCoverage` producing a `testgen.coverage.v1` report and `testgen.verifier-input.v1` output that surface uncovered acceptance criteria, plus `renderTestPlanMarkdown` for a traceable Markdown test plan.
 - Added `packages/testgen/fixtures/testgen-input.json` and `docs/test-generation.md`.
+- Added Phase 9 JS/Node.js code generation in the new `@office-dsl/codegen` package with a bounded dependency-free Node ESM target and fixed generated outputs.
+- Added deterministic approved-DSL implementation planning, JS artifact generation, generated Node.js test execution, file-hash verification, and `codegen.verifier-input.v1` output.
+- Added `docs/code-generation.md` describing the approval gate, target boundary, artifacts, generated tests, and verifier input.
 
 ### Changed
 
@@ -28,12 +31,15 @@
 - Marked Phase 5 TODO items complete for the deterministic mock-safe planner, renderer, and round-trip validation boundary; production OpenRouter execution remains outside the validated default.
 - Marked Phase 6 TODO items complete for the document renderers and traceability map; wiring renderers into runtime/CLI/backend/UI remains open.
 - Marked Phase 8 TODO items complete for the test-generation inputs, spec generation, and coverage verification; runtime/verifier integration remains open.
+- Marked Phase 9 TODO items complete for the package-level JS/Node.js code-generation boundary; runtime/CLI/backend/UI/Python-verifier integration remains open.
+- Updated root package, codegen package, `VERSION`, docs, and documentation consistency tests to `0.10.0`.
 
 ### Tests
 
 - Added `tests/nl-dsl-roundtrip.test.ts` coverage for malformed planner-response rejection, valid schema-to-DSL conversion, varied single-message NL planning, guideline-file planning, traceable DSL-to-NL rendering, and round-trip checks that prevent unauthorized new field paths.
 - Added `tests/document-renderer.test.ts` coverage for the draft disclaimer, task delegation, service agreement, employment/guideline renderers, explicit gap and assumption handling, the document-to-DSL traceability map, and renderer dispatch.
 - Added `tests/testgen.test.ts` coverage for input validation, deterministic DSL extraction, unit spec mapping to acceptance criteria, integration/API/E2E/security/error-handling generation, and coverage verification that surfaces uncovered acceptance criteria.
+- Added `tests/codegen.test.ts` coverage for allowed targets, approval gating, deterministic implementation plans, generated JS artifacts, generated Node.js test execution, source safety checks, file hashes, and verifier input test results.
 
 ## [0.8.0] - 2026-07-27
 

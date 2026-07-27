@@ -2,11 +2,11 @@
 
 ## Current Version
 
-`0.9.0`
+`0.10.0`
 
 ## Version Type
 
-Minor planner-feature release over `0.8.0`.
+Minor code-generation milestone over `0.9.0`.
 
 This version implements Phase 5 bidirectional NL <-> DSL support for the deterministic, mock-safe Intent/Contract planner boundary. `@office-dsl/llm-planner` now defines a controlled `intent-contract.planner-response.v1` response schema for OpenRouter-style output, validates malformed responses before DSL creation, converts valid structured responses into canonical `intent-contract.dsl.v1`, plans varied single-message natural language and guideline-file text into sourced DSL fields, renders DSL back to traceable natural-language summary statements, and includes round-trip regression checks that prevent rendered NL from introducing unauthorized field paths.
 
@@ -15,6 +15,8 @@ The Phase 5 implementation is validated offline. It does not call OpenRouter dur
 This version also implements Phase 6 contract and legal document renderers in the new `@office-dsl/document-renderer` package. The renderers turn an `intent-contract.dsl.v1` snapshot into task delegation, service agreement, and employment/guideline draft documents, embed a draft legal disclaimer in every output, render missing/ambiguous/conflicting/unapproved fields as explicit gaps, and attach a document-to-DSL traceability map. The renderers are deterministic and read-only over the DSL and never invent terms. Wiring them into the runtime, CLI, backend, and UI, and gating rendering behind bilateral canonical approval, remains open.
 
 This version also implements Phase 8 test generation in the new `@office-dsl/testgen` package. It defines typed `intent-contract.testgen-input.v1` inputs (`REQUIREMENT`, `INVARIANT`, `ACCEPTANCE_CRITERIA`, `PROHIBITED_BEHAVIOR`, `EXPECTED_OUTPUT`, `ERROR_HANDLING`, `SECURITY_POLICY`), extracts them deterministically from an Intent/Contract DSL snapshot, generates unit/integration/API/E2E/security/error-handling test specifications mapped back to DSL inputs, and verifies coverage against acceptance criteria with uncovered criteria surfaced in the verifier input. The generator is deterministic and read-only over the DSL; it does not execute generated code and does not create tests from loose prompt text. Runtime and Python-verifier integration remain open.
+
+This version also implements Phase 9 JS/Node.js code generation in the new `@office-dsl/codegen` package. It defines a bounded dependency-free Node ESM target, requires bilateral Human1/Human2 approval of the current Intent/Contract DSL hash before generation, emits a deterministic implementation plan, generates a package manifest, contract-spec module, and generated Node.js test file, runs that generated test file in a temporary workspace, checks generated source for forbidden dynamic/network/process APIs, verifies file hashes, and returns `codegen.verifier-input.v1` with generated file metadata and test results. Code generation is still a package-level deterministic boundary; runtime, CLI, backend, UI, and Python-verifier integration remain open.
 
 ## Project Status
 
@@ -53,7 +55,7 @@ Current validated implementation scope:
 - deterministic `officeDslToIntentContractDsl` compatibility adapter with migration notes,
 - expanded regression coverage for DSL validation, runtime controls, security policy, canonical approval records, CLI workflows, backend API workflows, file-backed store behavior, example runners, chat/recruitment negotiation behavior, and NL <-> DSL round trips,
 - documented Codex Windows sandbox `spawn EPERM` limitation for Vitest/Vite startup,
-- TypeScript and Python tests for the current scope.
+- TypeScript and Python tests for the current scope, including DSL-driven test-generation coverage and approved-DSL JS/Node.js code-generation tests.
 
 Target scope documented but not implemented:
 
@@ -62,20 +64,20 @@ Target scope documented but not implemented:
 - production OpenRouter NL/guideline-file planner validation against live provider output,
 - production OCR/PDF provider integration beyond deterministic fixture extraction,
 - runtime population of field-level source traceability from live planner sessions,
-- contract and legal document renderers,
-- JS/Node.js code generation,
-- DSL-based test generation,
+- runtime/CLI/backend/UI production wiring for contract/legal document rendering, JS/Node.js code generation, and DSL-based test generation,
 - TypeScript runtime integration with the Python verifier as a normal gating step.
 
-## Included In 0.9.0
+## Included In 0.10.0
 
 - Added controlled NL-to-DSL planner schema, validation, and OpenRouter prompt boundary.
 - Added deterministic single-message and guideline-file Intent/Contract DSL planners.
 - Added traceable DSL-to-NL summary renderer and rendered statement path extraction.
 - Added NL <-> DSL round-trip regression tests.
-- Updated root package, llm-planner package, changelog, docs, and documentation consistency tests to `0.9.0`.
+- Added Phase 8 test-generation package and Phase 9 code-generation package.
+- Added deterministic approved-DSL code generation, generated Node.js test execution, and `codegen.verifier-input.v1` output.
+- Updated root package, codegen package, changelog, docs, and documentation consistency tests to `0.10.0`.
 
-## Not Included In 0.9.0
+## Not Included In 0.10.0
 
 - No default online OpenRouter execution or live provider validation.
 - No production semantic verifier for arbitrary NL-to-DSL equivalence.
