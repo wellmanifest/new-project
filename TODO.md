@@ -27,7 +27,7 @@ MOCK:
 
 NOT IMPLEMENTED:
 
-- runtime field traceability population, code generation, DSL-based test generation, CLI/backend/UI exposure for canonical approvals, runtime-to-Python verifier integration, and production document ingestion/OCR providers beyond the deterministic mock-safe recruitment example runner. Contract/legal document renderers now exist at the `@office-dsl/document-renderer` layer (Phase 6); wiring them into the runtime/CLI/backend/UI remains open.
+- runtime field traceability population, code generation, DSL-based test generation, CLI/backend/UI exposure for canonical approvals, runtime-to-Python verifier integration, and production document ingestion/OCR providers beyond the deterministic mock-safe recruitment example runner. Contract/legal document renderers (Phase 6) and test-generation (Phase 8) now exist as `@office-dsl` packages; wiring them into the runtime/CLI/backend/UI/verifier remains open.
 
 ---
 
@@ -254,14 +254,14 @@ Target scenario set:
 
 ## Phase 8 - Test Generation From DSL
 
-- [ ] Define test-generation DSL inputs: `REQUIREMENT`, `INVARIANT`, `ACCEPTANCE_CRITERIA`, `PROHIBITED_BEHAVIOR`, `EXPECTED_OUTPUT`, `ERROR_HANDLING`, and `SECURITY_POLICY`.
-  - Done when these inputs are typed and validated.
-- [ ] Generate unit test specifications from DSL.
-  - Done when generated tests map to acceptance criteria and can be verified.
-- [ ] Generate integration/API/E2E/security test specifications from DSL where applicable.
-  - Done when fixture coverage proves the mapping.
-- [ ] Verify test coverage against DSL acceptance criteria.
-  - Done when uncovered criteria appear in verifier output.
+- [x] Define test-generation DSL inputs: `REQUIREMENT`, `INVARIANT`, `ACCEPTANCE_CRITERIA`, `PROHIBITED_BEHAVIOR`, `EXPECTED_OUTPUT`, `ERROR_HANDLING`, and `SECURITY_POLICY`.
+  - Done when these inputs are typed and validated. `@office-dsl/testgen` defines `intent-contract.testgen-input.v1` with typed `TestGenerationItem` categories, `validateTestGenerationInput`, and deterministic `extractTestGenerationInput` from an Intent/Contract DSL snapshot; covered by `tests/testgen.test.ts`.
+- [x] Generate unit test specifications from DSL.
+  - Done when generated tests map to acceptance criteria and can be verified. `generateUnitTestSpecs` emits a unit spec for every acceptance criterion (plus requirements, invariants, and expected outputs), each carrying `mapsToItemIds` and `dslPaths`, and `verifyTestCoverage` confirms the mapping.
+- [x] Generate integration/API/E2E/security test specifications from DSL where applicable.
+  - Done when fixture coverage proves the mapping. `generateTestSuite` emits integration, API, E2E, security, and error-handling specs where the corresponding inputs exist; `tests/testgen.test.ts` asserts each kind is produced and maps to its input items from the fixture.
+- [x] Verify test coverage against DSL acceptance criteria.
+  - Done when uncovered criteria appear in verifier output. `verifyTestCoverage` reports `uncoveredAcceptanceCriteria` and includes `uncoveredAcceptanceCriteriaIds`/`uncoveredItemIds` in `testgen.verifier-input.v1`; a regression proves a dropped acceptance criterion surfaces as uncovered.
 
 ---
 

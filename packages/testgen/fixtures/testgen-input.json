@@ -1,0 +1,62 @@
+{
+  "version": "intent-contract.testgen-input.v1",
+  "dslHash": "fixture-hash-0001",
+  "items": [
+    {
+      "id": "req-int-website",
+      "category": "REQUIREMENT",
+      "text": "Commission Adam to build a website.",
+      "sourceDslPaths": ["intents.intent-website.description"],
+      "sourceIds": ["message-1"]
+    },
+    {
+      "id": "inv-single-active-contract",
+      "category": "INVARIANT",
+      "text": "Only one active contract version may exist at a time.",
+      "sourceDslPaths": ["conditions.condition-active.description"],
+      "sourceIds": ["system-1"]
+    },
+    {
+      "id": "acc-form-works",
+      "category": "ACCEPTANCE_CRITERIA",
+      "text": "The contact form sends an email successfully.",
+      "sourceDslPaths": ["acceptanceCriteria.acceptance-form.description"],
+      "sourceIds": ["message-2"]
+    },
+    {
+      "id": "acc-responsive",
+      "category": "ACCEPTANCE_CRITERIA",
+      "text": "The website is responsive on mobile and desktop.",
+      "sourceDslPaths": ["acceptanceCriteria.acceptance-responsive.description"],
+      "sourceIds": ["message-2"]
+    },
+    {
+      "id": "proh-no-hosting",
+      "category": "PROHIBITED_BEHAVIOR",
+      "text": "Hosting must not be provisioned unless separately confirmed.",
+      "sourceDslPaths": ["exclusions.exclusion-hosting.description"],
+      "sourceIds": ["assumption-9"]
+    },
+    {
+      "id": "out-website",
+      "category": "EXPECTED_OUTPUT",
+      "text": "A deployed website meeting the agreed scope.",
+      "sourceDslPaths": ["deliverables.deliverable-website.description"],
+      "sourceIds": ["message-1"]
+    },
+    {
+      "id": "err-payment-missing",
+      "category": "ERROR_HANDLING",
+      "text": "If payment terms are missing, block finalization and report the gap.",
+      "sourceDslPaths": ["risks.risk-payment.description"],
+      "sourceIds": ["system-2"]
+    },
+    {
+      "id": "sec-no-secret-exfil",
+      "category": "SECURITY_POLICY",
+      "text": "The system must never exfiltrate secrets or API keys from the form backend.",
+      "sourceDslPaths": ["exclusions.exclusion-security.description"],
+      "sourceIds": ["policy-1"]
+    }
+  ]
+}

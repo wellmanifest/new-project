@@ -17,17 +17,23 @@
 - Added a document-to-DSL traceability map (`traceability` array plus a `Traceability Map` table) linking each rendered item to its DSL field paths and source reference ids.
 - Added `packages/document-renderer/fixtures/task-delegation.intent-contract.json` and `employment-agreement.intent-contract.json` renderer inputs.
 - Added `docs/document-renderers.md` describing renderer responsibilities, legal disclaimers, and the must-not-invent-terms policy.
+- Added Phase 8 test generation in the new `@office-dsl/testgen` package: typed `intent-contract.testgen-input.v1` inputs (`REQUIREMENT`, `INVARIANT`, `ACCEPTANCE_CRITERIA`, `PROHIBITED_BEHAVIOR`, `EXPECTED_OUTPUT`, `ERROR_HANDLING`, `SECURITY_POLICY`), `validateTestGenerationInput`, and deterministic `extractTestGenerationInput` from an Intent/Contract DSL snapshot.
+- Added `generateUnitTestSpecs` and `generateTestSuite` producing unit, integration, API, E2E, security, and error-handling specifications that map back to DSL input items and paths.
+- Added `verifyTestCoverage` producing a `testgen.coverage.v1` report and `testgen.verifier-input.v1` output that surface uncovered acceptance criteria, plus `renderTestPlanMarkdown` for a traceable Markdown test plan.
+- Added `packages/testgen/fixtures/testgen-input.json` and `docs/test-generation.md`.
 
 ### Changed
 
 - Updated root package, llm-planner package, `VERSION`, docs, and documentation consistency tests to `0.9.0`.
 - Marked Phase 5 TODO items complete for the deterministic mock-safe planner, renderer, and round-trip validation boundary; production OpenRouter execution remains outside the validated default.
 - Marked Phase 6 TODO items complete for the document renderers and traceability map; wiring renderers into runtime/CLI/backend/UI remains open.
+- Marked Phase 8 TODO items complete for the test-generation inputs, spec generation, and coverage verification; runtime/verifier integration remains open.
 
 ### Tests
 
 - Added `tests/nl-dsl-roundtrip.test.ts` coverage for malformed planner-response rejection, valid schema-to-DSL conversion, varied single-message NL planning, guideline-file planning, traceable DSL-to-NL rendering, and round-trip checks that prevent unauthorized new field paths.
 - Added `tests/document-renderer.test.ts` coverage for the draft disclaimer, task delegation, service agreement, employment/guideline renderers, explicit gap and assumption handling, the document-to-DSL traceability map, and renderer dispatch.
+- Added `tests/testgen.test.ts` coverage for input validation, deterministic DSL extraction, unit spec mapping to acceptance criteria, integration/API/E2E/security/error-handling generation, and coverage verification that surfaces uncovered acceptance criteria.
 
 ## [0.8.0] - 2026-07-27
 

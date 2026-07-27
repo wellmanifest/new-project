@@ -1,8 +1,9 @@
+import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { promisify } from "node:util";
 import {
   collectFormalFields,
   hashIntentContractDsl,
@@ -11,6 +12,8 @@ import {
   type IntentContractDsl,
   type SourceReference
 } from "../../intent-contract-model/src/index.js";
+
+const execFileAsync = promisify(execFile);
 
 export const CODEGEN_VERSION = "codegen.node.v1";
 
@@ -100,6 +103,11 @@ export const ALLOWED_CODE_GENERATION_TARGETS: AllowedCodeGenerationTarget[] = [
 
 export class CodeGenerationError extends Error {}
 
+export function hashCodeGenerationDslSnapshot(dsl: IntentContractDsl): string {
+  const approvalFreeDsl: IntentContractDsl = { ...dsl, approvals: [] };
+  return hashIntentContractDsl(approvalFreeDsl);
+}
+
 export function getAllowedCodeGenerationTarget(
   target: CodeGenerationTarget = "node-esm-contract-module"
 ): AllowedCodeGenerationTarget {
@@ -160,13 +168,15 @@ export function createImplementationPlanFromApprovedDsl(
       },
       {
         id: "emit-generated-tests",
-        description: "Emit dependency-free Node.js tests derived from the approved DSL hash and spec.",
+        description:
+          "Emit dependency-free Node.js tests derived from the approved DSL hash and spec.",
         inputDslPaths: ["approvals", ...inputDslPaths],
         outputPath: "test/contract-spec.test.mjs"
       },
       {
         id: "emit-package-manifest",
-        description: "Emit a bounded package manifest with no dependencies and ESM runtime metadata.",
+        description:
+          "Emit a bounded package manifest with no dependencies and ESM runtime metadata.",
         inputDslPaths: ["version", "execution"],
         outputPath: "package.json"
       }
@@ -202,16 +212,15 @@ export async function runGeneratedNodeTests(
       const fullPath = path.join(tempDir, generated.path);
       await writeFileWithParents(fullPath, generated.content);
     }
-    const moduleUrl = pathToFileURL(path.join(tempDir, "src", "contract-spec.mjs")).href;
-    const generatedModule = (await import(`${moduleUrl}?cache=${Date.now()}`)) as {
-      contractSpec: ContractSpec;
-      summarizeContract: () => string;
-    };
+    const testFile = path.join(tempDir, "test", "contract-spec.test.mjs");
     const source = await readFile(path.join(tempDir, "src", "contract-spec.mjs"), "utf8");
     const tests: GeneratedTestResult[] = [
-      test("exports current approved DSL hash", () => generatedModule.contractSpec.dslHash === result.plan.dslHash),
-      test("summary contains document title", () => generatedModule.summarizeContract().includes(generatedModule.contractSpec.document.title)),
-      test("generated code contains no dynamic evaluation", () => !/\b(eval|Function|child_process|fetch|XMLHttpRequest)\b/.test(source)),
+      await asyncTest("generated Node.js test file exits successfully", async () => {
+        await execFileAsync(process.execPath, [testFile], { cwd: tempDir });
+        return true;
+      }),
+      test("generated code contains no dynamic evaluation", () =>
+        !/\b(eval|Function|child_process|fetch|XMLHttpRequest)\b/.test(source)),
       test("generated files match recorded hashes", () =>
         result.files.every((generated) => sha256(generated.content) === generated.sha256))
     ];
@@ -334,15 +343,26 @@ function test(name: string, fn: () => boolean): GeneratedTestResult {
   }
 }
 
+async function asyncTest(name: string, fn: () => Promise<boolean>): Promise<GeneratedTestResult> {
+  try {
+    return { name, passed: await fn() };
+  } catch (error) {
+    return { name, passed: false, message: error instanceof Error ? error.message : String(error) };
+  }
+}
+
 async function writeFileWithParents(filePath: string, content: string): Promise<void> {
-  await import("node:fs/promises").then(async ({ mkdir }) => {
-    await mkdir(path.dirname(filePath), { recursive: true });
-  });
+  const { mkdir } = await import("node:fs/promises");
+  await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, content);
 }
 
 function stringValue(field: FormalField<unknown>): string | null {
-  return typeof field.value === "string" ? field.value : field.value === null ? null : String(field.value);
+  return typeof field.value === "string"
+    ? field.value
+    : field.value === null
+      ? null
+      : String(field.value);
 }
 
 function sourceLabel(source: SourceReference): string {

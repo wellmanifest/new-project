@@ -44,6 +44,7 @@ DONE:
 - `packages/intent-contract-model` defines the standalone `intent-contract.dsl.v1` model boundary with formal fields, statuses, source references, canonical serialization, stable hashing, and a deterministic Office DSL adapter.
 - `packages/llm-planner` provides deterministic mock planners for office scenarios, conversation fixtures, and selected canonical NL/guideline-file to Intent/Contract DSL flows, plus a controlled OpenRouter response schema boundary.
 - `packages/document-renderer` renders task delegation, service agreement, and employment/guideline draft documents from an Intent/Contract DSL snapshot, with a draft legal disclaimer, explicit gap markers for unresolved fields, and a document-to-DSL traceability map.
+- `packages/testgen` defines typed `intent-contract.testgen-input.v1` inputs, extracts them deterministically from an Intent/Contract DSL snapshot, generates unit/integration/API/E2E/security/error-handling test specifications, and verifies coverage against acceptance criteria.
 - `packages/dsl-runtime` creates sessions, evaluates policies, asks simple clarification questions, handles one-side Office confirmation, computes a plan hash, stores a canonical Intent/Contract snapshot hash, tracks minimal Human1/Human2 approval records, executes mock actions, and records audit data.
 - `packages/cli` exposes plan, validate, inspect, answer, confirm, reject, execute, and history commands.
 - `apps/backend` exposes the same runtime through HTTP endpoints.
@@ -51,13 +52,13 @@ DONE:
 - `verifier` contains a Python package with mock verification and an optional LiteLLM/OpenRouter path.
 - `examples` contains six office examples with `scenario.json`, `in/`, `out/`, and legacy fixture files.
 - `examples-chat` contains four executable Human1/Human2 negotiation scenarios with `scenario.json`, `chat.txt`, and expected outcomes.
-- `tests` cover the current TypeScript runtime, canonical approval records, DSL model, security checks, E2E mock flow, Python verifier behavior, example runners, chat/recruitment negotiation runners, and NL <-> DSL round-trip utilities.
+- `tests` cover the current TypeScript runtime, canonical approval records, DSL model, security checks, E2E mock flow, Python verifier behavior, example runners, chat/recruitment negotiation runners, NL <-> DSL round-trip utilities, contract/legal document rendering, and DSL-driven test-generation spec and coverage verification.
 
 PARTIAL:
 
 - OpenRouter and LiteLLM code paths exist, and the planner now has a controlled OpenRouter response schema boundary, but the validated flow is still mock/offline mode.
 - Clarifying questions exist only as `user.ask` workflow steps, not as a general field-status model.
-- DSL rendering exists as a readable office DSL listing, not as legal or contract document generation.
+- Document and test generation are implemented as `@office-dsl` packages but are not yet wired into the runtime/CLI/backend/UI/verifier flows or gated behind bilateral canonical approval.
 - Office action confirmation is still plan-hash based; canonical Intent/Contract approval records exist in runtime APIs but are not yet exposed through CLI/backend/UI flows.
 
 MOCK:
@@ -318,6 +319,7 @@ OpenRouter planner mode requires `OPENROUTER_API_KEY`. Python LiteLLM/OpenRouter
 - [docs/research-migration-audit.md](docs/research-migration-audit.md) - research migration audit.
 - [docs/office-to-intent-contract-mapping.md](docs/office-to-intent-contract-mapping.md) - mapping from office requests to Intent/Contract DSL.
 - [docs/document-renderers.md](docs/document-renderers.md) - contract/legal document renderer responsibilities, legal disclaimers, and the document-to-DSL traceability map.
+- [docs/test-generation.md](docs/test-generation.md) - test-generation DSL inputs, spec generation, and coverage verification against acceptance criteria.
 - [TODO.md](TODO.md) - staged implementation roadmap.
 - [HANDOFF.md](HANDOFF.md) - next-agent handoff notes.
 - [VERSION](VERSION) - version scope and validation notes.
