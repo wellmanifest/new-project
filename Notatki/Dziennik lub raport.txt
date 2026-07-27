@@ -22,3 +22,11 @@ ale może tez propnowac inne rzeczy wtedy runtime ma generować pliki tak długo
 - sprawdzenie codexem czy devin poprawnie wykonał zadania
 TODO:
  - dodac automatyczne tworzone readme oraz automatycznie tworzena dokumentacje bazujaca na example wszystko ma znajdować się w scripts i zadnej llm nie ma go tworzy 
+
+27.07
+- wykonanie każdego TODO które nie dotyczy gui itd.
+- dodanie pliku makefile i generowane readme za pomocą readme.sh
+- wygenerowanie pliku który podsumuwuje co to jest w projekcje itd.
+TODO:
+Przenieść repo (tylko sam projekt dsl bez zasad pracy etc repo ma zostać ponieważ jest repo z zasadami tworzenia projektów itd) do subactor
+
