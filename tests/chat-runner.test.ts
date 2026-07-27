@@ -88,7 +88,7 @@ describe("examples-chat runner", () => {
   it("does not create final artifacts after approval from only one side", async () => {
     const tmp = await mkdtemp(path.join(os.tmpdir(), "one-sided-approval-"));
     const scenarioDir = path.join(tmp, "scenario");
-    await mkdir(path.join(scenarioDir, "out"), { recursive: true });
+    await mkdir(path.join(scenarioDir, "expected"), { recursive: true });
     const chat = (
       await readFile(path.join(repoRoot, "examples-chat", "01-short-agreement", "chat.txt"), "utf8")
     )
@@ -105,7 +105,7 @@ describe("examples-chat runner", () => {
           id: "one-sided-approval",
           title: "One sided approval",
           input: { chat: "chat.txt" },
-          expected: { summary: "out/expected.summary.json" }
+          expected: { summary: "expected/summary.json" }
         },
         null,
         2
@@ -113,7 +113,7 @@ describe("examples-chat runner", () => {
       "utf8"
     );
     await writeFile(
-      path.join(scenarioDir, "out", "expected.summary.json"),
+      path.join(scenarioDir, "expected", "summary.json"),
       JSON.stringify(
         { id: "one-sided-approval", outcome: "NEGOTIATING", eventCount: 6, finalCreated: false },
         null,

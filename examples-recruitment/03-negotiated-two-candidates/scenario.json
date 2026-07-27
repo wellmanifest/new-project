@@ -3,6 +3,6 @@
   "id": "03-negotiated-two-candidates",
   "title": "Negotiated two-candidate recruitment",
   "expected": {
-    "summary": "out/expected.summary.json"
+    "summary": "expected/summary.json"
   }
 }

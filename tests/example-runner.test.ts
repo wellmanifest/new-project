@@ -85,7 +85,7 @@ describe("example runner", () => {
     const scenarioDir = path.join(generatedRoot, "bad-plan");
     await cp(baseDir, scenarioDir, { recursive: true });
     await writeFile(
-      path.join(scenarioDir, "out", "expected.plan.json"),
+      path.join(scenarioDir, "expected", "plan.json"),
       JSON.stringify(
         {
           actions: ["email.send"],

@@ -52,7 +52,7 @@ Generated artifacts are written beside the scenario that produced them:
 - recruitment outputs go to `examples-recruitment/01-multi-candidate/generated/`
 - recruitment per-candidate final/proposal/status files go to the candidate-local `out/`
 
-No generated JSON artifacts were found under any `generated/` folder. JSON remains only as checked-in expected fixtures under `out/`, for example `expected.summary.json` and `expected.dsl.json`.
+No generated JSON artifacts were found under any `generated/` folder. Checked-in expected JSON fixtures live under `expected/`, not under `out/`; `out/` is reserved for scenario output artifacts.
 
 No new example-runner artifacts were written under `.office-dsl/`.
 

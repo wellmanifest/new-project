@@ -6,6 +6,6 @@
     "chat": "chat.txt"
   },
   "expected": {
-    "summary": "out/expected.summary.json"
+    "summary": "expected/summary.json"
   }
 }

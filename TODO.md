@@ -153,7 +153,7 @@ Note: Phase 3 is implemented at the `@office-dsl/intent-contract-model` layer vi
 - [x] Add commands for chat examples and include them in verification.
   - Done when `example-chat:run`, `examples-chat:run`, `project.sh example-chat`, `project.sh examples-chat`, and the root `verify` flow execute the chat examples.
 - [x] Compare generated artifacts with expected outcomes and cover the flow with tests.
-  - Done when the runner compares the generated summary model with `out/expected.summary.json`, writes `summary.dsl.hcl`, and tests cover parsing, discovery, merging, conflict detection, approval invalidation, finalization, cancellation, and all four scenario outcomes.
+  - Done when the runner compares the generated summary model with `expected/summary.json`, writes `summary.dsl.hcl`, and tests cover parsing, discovery, merging, conflict detection, approval invalidation, finalization, cancellation, and all four scenario outcomes.
 
 ---
 

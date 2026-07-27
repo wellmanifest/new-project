@@ -3,6 +3,6 @@
   "id": "02-single-candidate-agreement",
   "title": "Single candidate accepted recruitment",
   "expected": {
-    "summary": "out/expected.summary.json"
+    "summary": "expected/summary.json"
   }
 }

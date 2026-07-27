@@ -53,7 +53,7 @@ describe("Intent/Contract DSL model", () => {
 
   it("migrates Office DSL into a valid Intent/Contract snapshot", async () => {
     const officeDsl = parseTaskDsl(
-      await readFile("examples/01-read-only-report/out/expected.dsl.json", "utf8")
+      await readFile("examples/01-read-only-report/expected/dsl.json", "utf8")
     );
     const migrated = officeDslToIntentContractDsl(officeDsl);
     expect(validateIntentContractDsl(migrated.dsl).ok).toBe(true);
@@ -67,7 +67,7 @@ describe("Intent/Contract DSL model", () => {
 
   it("migrates Office DSL clarification steps into missing canonical questions", async () => {
     const officeDsl = parseTaskDsl(
-      await readFile("examples/02-clarification/out/expected.dsl.json", "utf8")
+      await readFile("examples/02-clarification/expected/dsl.json", "utf8")
     );
     const migrated = officeDslToIntentContractDsl(officeDsl);
     expect(migrated.dsl.questions).toHaveLength(1);
@@ -78,7 +78,7 @@ describe("Intent/Contract DSL model", () => {
 
   it("hashes migrated Office DSL snapshots deterministically", async () => {
     const officeDsl = parseTaskDsl(
-      await readFile("examples/03-email-drafts/out/expected.dsl.json", "utf8")
+      await readFile("examples/03-email-drafts/expected/dsl.json", "utf8")
     );
     const first = officeDslToIntentContractDsl(officeDsl).dsl;
     const second = officeDslToIntentContractDsl(JSON.parse(JSON.stringify(officeDsl))).dsl;

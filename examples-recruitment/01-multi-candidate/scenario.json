@@ -3,6 +3,6 @@
   "id": "01-multi-candidate",
   "title": "Multi-candidate recruitment",
   "expected": {
-    "summary": "out/expected.summary.json"
+    "summary": "expected/summary.json"
   }
 }
