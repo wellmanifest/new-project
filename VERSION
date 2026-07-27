@@ -48,7 +48,7 @@ Current validated implementation scope:
 - canonical office example manifests with `in/` and `out/` folders,
 - deterministic single-example and all-example runner with generated `*.dsl.hcl` artifacts beside each `examples/<scenario>/`,
 - executable `examples-chat` scenarios for Human1/Human2 negotiation regression,
-- four executable `examples-recruitment` fixtures with deterministic Markdown/PDF/OCR ingestion, candidate-local document-process fixtures, per-candidate proposals, accepted/rejected outcomes, negotiated acceptance, cancellation, and chat-runner negotiation reuse,
+- four executable `examples-recruitment` fixtures with deterministic Markdown/PDF/OCR ingestion, scenario-level one-process document fixtures, per-candidate proposals, accepted/rejected outcomes, negotiated acceptance, cancellation, and chat-runner negotiation reuse,
 - controlled `intent-contract.planner-response.v1` schema and prompt boundary for OpenRouter-style NL-to-DSL output,
 - deterministic single-message NL and guideline-file planning into canonical Intent/Contract DSL with source references and explicit missing fields,
 - traceable DSL-to-NL summary rendering with statement-to-DSL path mapping,

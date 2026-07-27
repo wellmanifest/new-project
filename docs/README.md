@@ -5,6 +5,7 @@
 - `README.md` - project purpose, current implementation status, target architecture, commands, and limitations.
 - `TODO.md` - staged implementation roadmap with completion criteria.
 - `docs/system-purpose-and-runtime-flow.md` - primary architecture document for intent formalization, H2M/H2H, runtime flow, approvals, traceability, documents, code, tests, verifier, examples, and current-vs-target state.
+- `docs/project-summary.md` - current whole-project summary with diagrams, implemented scope, verification evidence, known mock/partial areas, and remaining production work.
 - `docs/architecture.md` - earlier MVP architecture notes for the offline Office DSL implementation.
 - `POLICY.md` - repository safety and evidence rules.
 - `CONTRIBUTING.md` - procedural workflow for repository changes.

@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added `docs/project-summary.md` with current project status, architecture and workflow diagrams, verification evidence, and remaining production work.
 - Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added a generated examples artifacts index command that merges office, chat, and recruitment example inputs, expected fixtures, and output links into one Markdown file.
 - Added three more `examples-recruitment` scenarios so the recruitment fixture set now has four runnable cases covering single acceptance, negotiated acceptance, PDF text extraction, OCR fallback, and cancellation.
@@ -16,7 +17,7 @@
 ### Changed
 
 - Moved checked-in expected JSON fixtures from `out/` to `expected/` across office, chat, and recruitment examples so `out/` stays reserved for generated/result artifacts.
-- Reorganized `examples-recruitment/01-multi-candidate` so each candidate owns its `document-processes/`, keeping Anna and Bartek operations inside their person folders instead of mixing process folders at the recruitment root.
+- Standardized `examples-recruitment` document conversion fixtures so every md2pdf/pdf2md process is a scenario-level one-process folder with its own `in/`, `out/`, and `test.json`.
 - Moved chat negotiation, recruitment workflow, deterministic document ingestion/OCR fixture processing, DSL artifact rendering, regression comparison, Python verifier invocation, and CLI mock verification out of example-runner/CLI internals.
 - Updated all workspace package/app versions to `0.12.0` and replaced internal source-relative package imports with package-name imports plus `workspace:*` dependencies.
 - Updated stale architecture/status documentation for `project.sh`, bilateral approval, renderers, codegen, testgen, and Python verifier integration.
@@ -201,7 +202,7 @@
 - Implemented the Phase 3 missing/ambiguous/conflicting information model in `@office-dsl/intent-contract-model`:
   - Added `diagnoseIntentContractDsl` and `collectFormalFields`, producing completeness gaps, ambiguity reports, conflict reports, unapproved-assumption reports, traceability gaps, deterministic generated questions, and a `finalizationReady` gate with `blockingReasons`.
   - Added optional model fields for Phase 3: `SourceReference.span`, `FormalField.interpretations`, and `ConflictNode.values`/`ConflictValue` for competing Human1/Human2 values with source references.
-- Added `Phase 4B - Document Ingestion, OCR, And Recruitment Workflow` to `TODO.md`, describing the target multi-candidate recruitment flow (one job offer negotiated against many CVs), document ingestion for `oferta.md`/`cv.md`/`cv.pdf`, PDF text extraction and OCR fallback behind mock-safe interfaces, per-candidate proposal generation, CHAT/EMAIL negotiation reuse, acceptance/rejection finalization, and the `[numer-rekrutacji--stanowisko]/[numer-osoby]/{in/â€¦,out/contract.dsl.txt,chat.txt}` folder convention.
+- Added `Phase 4B - Document Ingestion, OCR, And Recruitment Workflow` to `TODO.md`, describing the target multi-candidate recruitment flow (one job offer negotiated against many CVs), document ingestion for `oferta.md`/`cv.md`/`cv.pdf`, PDF text extraction and OCR fallback behind mock-safe interfaces, per-candidate proposal generation, CHAT/EMAIL negotiation reuse, acceptance/rejection finalization, and the `[numer-rekrutacji--stanowisko]/[numer-osoby]/{in/Ă˘â‚¬Â¦,out/contract.dsl.txt,chat.txt}` folder convention.
 - Referenced the new document ingestion/OCR recruitment workflow in the `TODO.md` baseline `NOT IMPLEMENTED` summary.
 
 ### Changed
