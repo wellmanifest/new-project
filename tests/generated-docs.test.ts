@@ -23,11 +23,15 @@ const generatedExampleReadmes = [
   "examples-recruitment/01-multi-candidate/001-anna-nowak/README.md",
   "examples-recruitment/01-multi-candidate/002-bartek-lis/README.md",
   "examples-recruitment/02-single-candidate-agreement/README.md",
+  "examples-recruitment/02-single-candidate-agreement/001-ewa-zielinska-md2pdf/README.md",
   "examples-recruitment/02-single-candidate-agreement/001-ewa-zielinska/README.md",
   "examples-recruitment/03-negotiated-two-candidates/README.md",
+  "examples-recruitment/03-negotiated-two-candidates/001-ola-maj-md2pdf/README.md",
+  "examples-recruitment/03-negotiated-two-candidates/002-jan-kot-pdf2md/README.md",
   "examples-recruitment/03-negotiated-two-candidates/001-ola-maj/README.md",
   "examples-recruitment/03-negotiated-two-candidates/002-jan-kot/README.md",
   "examples-recruitment/04-ocr-candidate-cancelled/README.md",
+  "examples-recruitment/04-ocr-candidate-cancelled/001-kasia-wrona-pdf2md/README.md",
   "examples-recruitment/04-ocr-candidate-cancelled/001-kasia-wrona/README.md"
 ];
 

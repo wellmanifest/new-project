@@ -229,8 +229,9 @@ async function renderCandidateReadme(
       "No candidate input files found."
   );
   lines.push("", "## Document Processes", "");
-  const processLines = await documentProcessLines(candidate.dir, candidate.dir);
-  lines.push(...(processLines.length ? processLines : ["No document processes declared."]));
+  lines.push(
+    "Document-process fixtures are scenario-level folders next to candidate folders, with one `test.json`, one `in/` side, and one `out/` side per process."
+  );
   lines.push("", "## Generated Artifacts", "");
   lines.push(
     "Candidate final/proposal/status artifacts are written to `out/` by the recruitment runner. Accepted candidates may receive `contract.dsl.txt`; rejected candidates must not rely on a final contract."
@@ -422,23 +423,6 @@ async function expectedCandidateResult(candidate: CandidateEntry): Promise<strin
   const outcome = summary.outcome ?? summary.chatOutcome ?? "UNKNOWN";
   const finalCreated = summary.finalCreated ?? summary.final_created ?? "unknown";
   return `${String(outcome)}; final created: ${String(finalCreated)}`;
-}
-
-async function documentProcessLines(baseDir: string, candidateDir: string): Promise<string[]> {
-  const processRoot = path.join(candidateDir, "document-processes");
-  if (!(await exists(processRoot))) return [];
-  const lines: string[] = [];
-  for (const processDir of await listChildDirs(processRoot)) {
-    const testPath = path.join(processDir, "test.json");
-    const test = await readOptionalJson(testPath);
-    const process = String(test?.process ?? path.basename(processDir));
-    const inFiles = await filesInDir(path.join(processDir, "in"));
-    const outFiles = await filesInDir(path.join(processDir, "out"));
-    lines.push(
-      `- ${process}: ${localFiles(baseDir, inFiles) || "no input files"} -> ${localFiles(baseDir, outFiles) || "no output files"}; ${localMaybe(baseDir, testPath, "test.json")}`
-    );
-  }
-  return lines;
 }
 
 function generatedNotes(groupDir: string): string {

@@ -21,7 +21,7 @@ The recruitment runner writes scenario summary artifacts under `generated/` and 
 
 ## Document Processes
 
-No scenario-level document processes declared.
+- [001-kasia-wrona-pdf2md: pdf2md](001-kasia-wrona-pdf2md/README.md)
 
 ## Candidates
 

@@ -163,29 +163,6 @@ async function renderCandidateDetails(repoRoot: string, scenarioDir: string): Pr
     lines.push(
       `- ${link(repoRoot, candidateDir, candidateId)}: ${folderStatus(repoRoot, candidateDir, "expected", expectedCount)}; output ${link(repoRoot, path.join(candidateDir, "out"), "out/")}`
     );
-    lines.push(...(await renderDocumentProcesses(repoRoot, candidateDir)));
-  }
-  return lines;
-}
-
-async function renderDocumentProcesses(repoRoot: string, candidateDir: string): Promise<string[]> {
-  const processRoot = path.join(candidateDir, "document-processes");
-  if (!(await exists(processRoot))) return [];
-  const lines: string[] = [];
-  for (const processDir of (await listChildDirs(processRoot)).sort((a, b) =>
-    path.basename(a).localeCompare(path.basename(b))
-  )) {
-    const testPath = path.join(processDir, "test.json");
-    const test = (await exists(testPath)) ? await readJson(testPath) : {};
-    const process = String(test.process ?? path.basename(processDir));
-    const inCount = (await filesInDir(path.join(processDir, "in"))).length;
-    const outCount = (await filesInDir(path.join(processDir, "out"))).length;
-    const testLink = (await exists(testPath))
-      ? link(repoRoot, testPath, "test.json")
-      : "no test.json";
-    lines.push(
-      `  - ${process}: ${folderStatus(repoRoot, processDir, "in", inCount)} -> ${folderStatus(repoRoot, processDir, "out", outCount)}; ${testLink}`
-    );
   }
   return lines;
 }

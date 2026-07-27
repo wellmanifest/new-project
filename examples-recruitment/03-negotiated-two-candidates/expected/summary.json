@@ -7,7 +7,7 @@
     {
       "id": "001-ola-maj-md2pdf",
       "process": "md2pdf",
-      "processDir": "001-ola-maj/document-processes/md2pdf",
+      "processDir": "001-ola-maj-md2pdf",
       "input": "in/cv.md",
       "output": "out/cv.pdf",
       "ok": true,
@@ -16,7 +16,7 @@
     {
       "id": "002-jan-kot-pdf2md",
       "process": "pdf2md",
-      "processDir": "002-jan-kot/document-processes/pdf2md",
+      "processDir": "002-jan-kot-pdf2md",
       "input": "in/cv.pdf",
       "output": "out/cv.md",
       "ok": true,

@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -50,6 +50,30 @@ describe("examples-recruitment runner", () => {
     expect(generatedMarkdown).toContain("Umiejetnosci: TypeScript, React, testy automatyczne");
   });
 
+  it("keeps every document process as a scenario-level one-process folder", async () => {
+    const recruitmentRoot = path.join(repoRoot, "examples-recruitment");
+    for (const scenario of await discoverRecruitmentScenarios(repoRoot)) {
+      const entries = await readdir(scenario, { withFileTypes: true });
+      const processDirs = entries
+        .filter((entry) => entry.isDirectory() && /-(md2pdf|pdf2md)$/.test(entry.name))
+        .map((entry) => path.join(scenario, entry.name))
+        .sort((a, b) => path.basename(a).localeCompare(path.basename(b)));
+      expect(processDirs.length, path.relative(recruitmentRoot, scenario)).toBeGreaterThan(0);
+      for (const processDir of processDirs) {
+        expect(existsSync(path.join(processDir, "test.json"))).toBe(true);
+        expect(existsSync(path.join(processDir, "in"))).toBe(true);
+        expect(existsSync(path.join(processDir, "out"))).toBe(true);
+      }
+
+      const candidateDirs = entries.filter(
+        (entry) =>
+          entry.isDirectory() && existsSync(path.join(scenario, entry.name, "scenario.json"))
+      );
+      for (const candidate of candidateDirs) {
+        expect(existsSync(path.join(scenario, candidate.name, "document-processes"))).toBe(false);
+      }
+    }
+  });
   it("loads Markdown offers, Markdown CVs, text PDFs, and OCR fallback sources", async () => {
     const annaSources = await loadRecruitmentSources(path.join(scenarioDir, "001-anna-nowak"));
     expect(annaSources.map((source) => source.kind)).toEqual(["offer-md", "cv-md"]);

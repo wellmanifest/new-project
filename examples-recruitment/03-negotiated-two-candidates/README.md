@@ -21,7 +21,8 @@ The recruitment runner writes scenario summary artifacts under `generated/` and 
 
 ## Document Processes
 
-No scenario-level document processes declared.
+- [001-ola-maj-md2pdf: md2pdf](001-ola-maj-md2pdf/README.md)
+- [002-jan-kot-pdf2md: pdf2md](002-jan-kot-pdf2md/README.md)
 
 ## Candidates
 
