@@ -226,7 +226,11 @@ export async function runRecruitmentScenario(options: {
 export async function runRecruitmentDocumentProcesses(
   scenarioDir: string
 ): Promise<RecruitmentDocumentProcessResult[]> {
-  return runDocumentProcesses(scenarioDir);
+  const results = await runDocumentProcesses(scenarioDir);
+  return results.map((result) => ({
+    ...result,
+    processDir: path.relative(scenarioDir, result.processDir).replace(/\\/g, "/")
+  }));
 }
 
 export async function loadRecruitmentSources(
@@ -684,6 +688,7 @@ function renderRecruitmentSummaryDsl(summary: RecruitmentRunSummary): string {
     ...summary.documentProcesses.map((process) =>
       block("document_process", process.id, [
         assign("process", process.process),
+        assign("folder", process.processDir),
         assign("input", process.input),
         assign("output", process.output),
         assign("ok", process.ok),

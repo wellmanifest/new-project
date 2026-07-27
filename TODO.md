@@ -172,6 +172,15 @@ Target folder convention (one recruitment, many candidates):
       cv.md            # candidate CV as Markdown (extracted or provided)
     out/
       contract.dsl.txt # final per-candidate contract, only after bilateral approval
+    document-processes/
+      md2pdf/
+        test.json
+        in/
+        out/
+      pdf2md/
+        test.json
+        in/
+        out/
     chat.txt           # per-candidate negotiation transcript
 ```
 
@@ -184,7 +193,7 @@ Target folder convention (one recruitment, many candidates):
 - [x] Normalize extracted offer/CV content into Intent/Contract DSL source.
   - Done when extracted text maps into canonical source documents with field statuses and source spans, never fabricating terms that are absent from the offer or CV. The recruitment runner creates a partial `intent-contract.dsl.v1` with sourced role, candidate, salary, start date, skills, missing governing law, and source spans.
 - [x] Implement the recruitment folder convention in the example runner.
-  - Done when the runner discovers and processes `[numer-rekrutacji--stanowisko]/[numer-osoby]/` folders and reads/writes `in/oferta.md`, `in/cv.pdf`, `in/cv.md`, `out/contract.dsl.txt`, and `chat.txt`. `examples-recruitment` discovery processes candidate folders with local `in/`, `out/`, `chat.txt`, and scenario-local generated artifacts.
+  - Done when the runner discovers and processes `[numer-rekrutacji--stanowisko]/[numer-osoby]/` folders and reads/writes `in/oferta.md`, `in/cv.pdf`, `in/cv.md`, `out/contract.dsl.txt`, `document-processes/<process>/test.json`, and `chat.txt`. `examples-recruitment` discovery processes candidate folders with local `in/`, `out/`, `document-processes/`, `chat.txt`, and scenario-local generated artifacts.
 - [x] Generate a per-candidate proposal from the shared offer.
   - Done when each candidate folder derives an individual proposal (different terms allowed per candidate) from one `oferta.md` plus that candidate's CV, with no cross-contamination between candidates. Each candidate writes an ignored `out/proposal.dsl.txt` with a deterministic proposal hash derived only from that candidate's sources.
 - [x] Run per-candidate CHAT/EMAIL negotiation.
@@ -192,7 +201,7 @@ Target folder convention (one recruitment, many candidates):
 - [x] Finalize acceptance or rejection per candidate.
   - Done when an accepted candidate writes `out/contract.dsl.txt` only after bilateral approval of the same current contract hash, and a rejected or withdrawn candidate ends without a final contract. Accepted fixtures create ignored `out/contract.dsl.txt`; rejected/cancelled candidates do not.
 - [x] Add a recruitment example and regression tests.
-  - Done when a fixture recruitment with one offer and multiple candidate folders runs end to end, covers at least one acceptance and one rejection, and is compared deterministically like the other example runners. `examples-recruitment/01-multi-candidate` and `tests/recruitment-runner.test.ts` cover Markdown/PDF/OCR ingestion, proposal generation, accepted finalization, rejected non-finalization, and expected summary comparison.
+  - Done when a fixture recruitment with one offer and multiple candidate folders runs end to end, covers at least one acceptance and one rejection, keeps per-person document-process fixtures inside each candidate folder, and is compared deterministically like the other example runners. `examples-recruitment/01-multi-candidate` and `tests/recruitment-runner.test.ts` cover Markdown/PDF/OCR ingestion, proposal generation, accepted finalization, rejected non-finalization, candidate-local document processes, and expected summary comparison.
 
 ---
 

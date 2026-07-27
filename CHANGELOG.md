@@ -12,6 +12,7 @@
 
 ### Changed
 
+- Reorganized `examples-recruitment/01-multi-candidate` so each candidate owns its `document-processes/`, keeping Anna and Bartek operations inside their person folders instead of mixing process folders at the recruitment root.
 - Moved chat negotiation, recruitment workflow, deterministic document ingestion/OCR fixture processing, DSL artifact rendering, regression comparison, Python verifier invocation, and CLI mock verification out of example-runner/CLI internals.
 - Updated all workspace package/app versions to `0.12.0` and replaced internal source-relative package imports with package-name imports plus `workspace:*` dependencies.
 - Updated stale architecture/status documentation for `project.sh`, bilateral approval, renderers, codegen, testgen, and Python verifier integration.

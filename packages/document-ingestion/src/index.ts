@@ -26,6 +26,7 @@ export interface DocumentProcessTest {
 export interface DocumentProcessResult {
   id: string;
   process: DocumentProcess;
+  processDir: string;
   input: string;
   output: string;
   ok: boolean;
@@ -73,6 +74,7 @@ export async function runDocumentProcess(processDir: string): Promise<DocumentPr
   return {
     id: test.id,
     process: test.process,
+    processDir,
     input: test.input,
     output: test.output,
     ok: failures.length === 0,
@@ -81,13 +83,29 @@ export async function runDocumentProcess(processDir: string): Promise<DocumentPr
 }
 
 export async function discoverDocumentProcessDirs(scenarioDir: string): Promise<string[]> {
-  const entries = await readdir(scenarioDir, { withFileTypes: true });
-  return entries
-    .filter(
-      (entry) => entry.isDirectory() && existsSync(path.join(scenarioDir, entry.name, "test.json"))
-    )
-    .map((entry) => path.join(scenarioDir, entry.name))
-    .sort((a, b) => path.basename(a).localeCompare(path.basename(b)));
+  const dirs: string[] = [];
+  await collectDocumentProcessDirs(scenarioDir, dirs, 0);
+  return dirs.sort((a, b) =>
+    path.relative(scenarioDir, a).localeCompare(path.relative(scenarioDir, b))
+  );
+}
+
+async function collectDocumentProcessDirs(
+  dir: string,
+  results: string[],
+  depth: number
+): Promise<void> {
+  if (existsSync(path.join(dir, "test.json"))) {
+    results.push(dir);
+    return;
+  }
+  if (depth >= 4) return;
+  const entries = await readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (entry.name === "generated" || entry.name === "out" || entry.name === "in") continue;
+    await collectDocumentProcessDirs(path.join(dir, entry.name), results, depth + 1);
+  }
 }
 
 export async function ocrPdfToMarkdownFixture(pdfPath: string): Promise<string> {

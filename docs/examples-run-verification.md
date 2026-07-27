@@ -90,13 +90,15 @@ The recruitment summary reports:
 
 Candidate finalization matches the plan:
 
+Each candidate folder also owns its document-process fixtures, so person-level input, output, chat, status, generated summaries, and md/pdf conversion checks are no longer mixed at the recruitment root.
+
 - `001-anna-nowak` has `out/contract.dsl.txt` because the candidate outcome is `ACCEPTED`.
 - `002-bartek-lis` does not have `out/contract.dsl.txt` because the candidate outcome is `REJECTED`.
 
 Document process checks also match the agreed fixture layout:
 
-- `001-anna-nowak-md2pdf`: `process = "md2pdf"`, `input = "in/cv.md"`, `output = "out/cv.pdf"`, `ok = true`
-- `002-anna-nowak-pdf2md`: `process = "pdf2md"`, `input = "in/cv.pdf"`, `output = "out/cv.md"`, `ok = true`
+- `001-anna-nowak/document-processes/md2pdf`: `id = "001-anna-nowak-md2pdf"`, `process = "md2pdf"`, `input = "in/cv.md"`, `output = "out/cv.pdf"`, `ok = true`
+- `002-bartek-lis/document-processes/pdf2md`: `id = "002-bartek-lis-pdf2md"`, `process = "pdf2md"`, `input = "in/cv.pdf"`, `output = "out/cv.md"`, `ok = true`
 
 ## Conclusion
 
