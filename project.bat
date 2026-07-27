@@ -34,7 +34,8 @@ echo   example-chat ^<name^> Run one chat negotiation example
 echo   examples-chat       Run all chat negotiation examples
 echo   example-recruitment ^<name^> Run one recruitment example
 echo   examples-recruitment Run all recruitment examples
-echo   verify              Run typecheck, lint, format, tests and git diff check
+echo   verify              Run typecheck, lint, format, tests, examples, Python tests and git diff check
+echo   system-check        Run the full functional system test suite
 echo   dev-backend         Start backend and static web demo
 echo.
 exit /b 0
@@ -100,13 +101,21 @@ call corepack pnpm run examples-recruitment:run
 exit /b %ERRORLEVEL%
 
 :verify
-call :typecheck || exit /b 1
-call :lint || exit /b 1
-call :format || exit /b 1
-call :test || exit /b 1
-call git diff --exit-code
+call corepack pnpm run verify
+exit /b %ERRORLEVEL%
+
+:system-check
+call corepack pnpm run system:check
+exit /b %ERRORLEVEL%
+
+:functional-test
+call :system-check
+exit /b %ERRORLEVEL%
+
+:functional-tests
+call :system-check
 exit /b %ERRORLEVEL%
 
 :dev-backend
-call corepack pnpm run dev
+call corepack pnpm run dev:backend
 exit /b %ERRORLEVEL%

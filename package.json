@@ -22,7 +22,8 @@
     "example-chat:run": "tsx packages/example-runner/src/index.ts chat-run",
     "examples-chat:run": "tsx packages/example-runner/src/index.ts chat-all",
     "example-recruitment:run": "tsx packages/example-runner/src/index.ts recruitment-run",
-    "examples-recruitment:run": "tsx packages/example-runner/src/index.ts recruitment-all"
+    "examples-recruitment:run": "tsx packages/example-runner/src/index.ts recruitment-all",
+    "system:check": "tsx packages/example-runner/src/verify.ts"
   },
   "devDependencies": {
     "@types/node": "22.13.1",

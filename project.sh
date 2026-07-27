@@ -26,6 +26,7 @@ Project commands:
   example-recruitment <name> Run one recruitment example
   examples-recruitment Run all recruitment examples
   verify              Run typecheck, lint, format, tests, examples, and git diff check
+  system-check        Run the full functional system test suite
   dev-backend         Start backend and static web demo
   legacy-analyze      Run the historical network-heavy analysis workflow
 
@@ -84,6 +85,9 @@ case "${1:-help}" in
     ;;
   verify)
     pnpm_run verify
+    ;;
+  system-check|functional-test|functional-tests)
+    pnpm_run system:check
     ;;
   dev-backend)
     pnpm_run dev:backend

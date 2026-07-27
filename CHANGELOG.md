@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added `system:check`, `project.sh system-check`, and Windows `project.bat system-check` aliases for the full functional system test suite, plus regression coverage that keeps TypeScript tests, Python verifier tests, examples, chat examples, recruitment examples, formatting, linting, typechecking, and whitespace checks wired together.
+
 ## [0.12.0] - 2026-07-27
 
 ### Added
