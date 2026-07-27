@@ -1,8 +1,18 @@
 import http from "node:http";
 import { readFile } from "node:fs/promises";
-import { createDefaultRegistry, Runtime } from "../../../packages/dsl-runtime/src/index.js";
+import {
+  createDefaultRegistry,
+  Runtime,
+  type RuntimeApprovalParty
+} from "../../../packages/dsl-runtime/src/index.js";
 import { FileTaskStore } from "../../../packages/dsl-runtime/src/store.js";
 import { planFromNaturalLanguage } from "../../../packages/llm-planner/src/index.js";
+import {
+  diagnoseIntentContractDsl,
+  questionsForParty,
+  validateIntentContractDsl,
+  type IntentContractDsl
+} from "../../../packages/intent-contract-model/src/index.js";
 
 const runtime = new Runtime();
 const store = new FileTaskStore();
@@ -73,6 +83,37 @@ export const server = http.createServer(async (req, res) => {
       else if (req.method === "POST" && action === "execute") {
         const body = await readJson(req);
         await runtime.execute(session, body.execute === true);
+      } else if (req.method === "POST" && action === "approve") {
+        const body = await readJson(req);
+        const party = String(body.party ?? "");
+        if (party !== "Human1" && party !== "Human2") {
+          return sendJson(res, { error: "party must be Human1 or Human2" }, 400);
+        }
+        const hash = body.hash ? String(body.hash) : session.intentContractHash;
+        runtime.approveIntentContract(session, party as RuntimeApprovalParty, hash);
+      } else if (req.method === "POST" && action === "dsl") {
+        const body = await readJson(req);
+        const dsl = body.dsl as IntentContractDsl;
+        const validation = validateIntentContractDsl(dsl);
+        if (!validation.ok) {
+          return sendJson(res, { error: "DSL validation failed", issues: validation.issues }, 400);
+        }
+        runtime.updateIntentContractDsl(
+          session,
+          dsl,
+          typeof body.reason === "string" ? body.reason : "DSL updated via API"
+        );
+      } else if (req.method === "GET" && action === "events") {
+        return sendJson(res, session.audit.history);
+      } else if (req.method === "GET" && action === "approvals") {
+        return sendJson(res, session.approvals);
+      } else if (req.method === "GET" && action === "questions") {
+        const diagnosis = diagnoseIntentContractDsl(session.intentContractDsl);
+        const party = url.searchParams.get("party");
+        const questions = party
+          ? questionsForParty(diagnosis, party as RuntimeApprovalParty)
+          : diagnosis.generatedQuestions;
+        return sendJson(res, { finalizationReady: diagnosis.finalizationReady, questions });
       } else return sendJson(res, { error: "Not found" }, 404);
       await store.save(session);
       return sendJson(res, session);
@@ -118,6 +159,13 @@ function openApi(): unknown {
       "/api/tasks/{id}/reject": { post: { summary: "Reject task" } },
       "/api/tasks/{id}/execute": { post: { summary: "Execute task, dry-run by default" } },
       "/api/tasks/{id}/cancel": { post: { summary: "Cancel task" } },
+      "/api/tasks/{id}/approve": {
+        post: { summary: "Approve canonical Intent/Contract DSL hash" }
+      },
+      "/api/tasks/{id}/dsl": { post: { summary: "Update canonical Intent/Contract DSL snapshot" } },
+      "/api/tasks/{id}/events": { get: { summary: "Read state-transition event stream" } },
+      "/api/tasks/{id}/approvals": { get: { summary: "Read canonical approval records" } },
+      "/api/tasks/{id}/questions": { get: { summary: "Read unresolved questions" } },
       "/api/tasks/{id}/audit": { get: { summary: "Read audit record" } },
       "/api/actions": { get: { summary: "List registered actions" } },
       "/api/connectors": { get: { summary: "List mock connectors" } }

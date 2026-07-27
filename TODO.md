@@ -27,7 +27,7 @@ MOCK:
 
 NOT IMPLEMENTED:
 
-- runtime field traceability population, legal renderers, code generation, DSL-based test generation, CLI/backend/UI exposure for canonical approvals, runtime-to-Python verifier integration, and production document ingestion/OCR providers beyond the deterministic mock-safe recruitment example runner.
+- runtime field traceability population, code generation, DSL-based test generation, CLI/backend/UI exposure for canonical approvals, runtime-to-Python verifier integration, and production document ingestion/OCR providers beyond the deterministic mock-safe recruitment example runner. Contract/legal document renderers now exist at the `@office-dsl/document-renderer` layer (Phase 6); wiring them into the runtime/CLI/backend/UI remains open.
 
 ---
 
@@ -209,16 +209,16 @@ Target folder convention (one recruitment, many candidates):
 
 ## Phase 6 - Contract And Legal Document Renderers
 
-- [ ] Define renderer responsibilities and legal disclaimers.
-  - Done when docs state that generated documents are drafts and must not invent terms.
-- [ ] Implement task delegation renderer.
-  - Done when output includes assignee, deliverable, deadline, dependencies, exclusions, and acceptance criteria from DSL only.
-- [ ] Implement service agreement renderer.
-  - Done when payment, parties, scope, acceptance, and exclusions render from approved DSL.
-- [ ] Implement employment agreement/guideline renderer as draft output.
-  - Done when legal-guideline fixtures render without unsupported fields.
-- [ ] Add document-to-DSL traceability map.
-  - Done when each paragraph references DSL paths or source references.
+- [x] Define renderer responsibilities and legal disclaimers.
+  - Done when docs state that generated documents are drafts and must not invent terms. `docs/document-renderers.md` documents the responsibilities and the `DRAFT_DISCLAIMER`, and `@office-dsl/document-renderer` embeds the draft/must-not-invent disclaimer in every rendered document.
+- [x] Implement task delegation renderer.
+  - Done when output includes assignee, deliverable, deadline, dependencies, exclusions, and acceptance criteria from DSL only. `renderTaskDelegation` renders delegator/assignee, deliverables, deadlines, dependencies, exclusions, and acceptance criteria strictly from the DSL, emitting explicit gaps for missing fields.
+- [x] Implement service agreement renderer.
+  - Done when payment, parties, scope, acceptance, and exclusions render from approved DSL. `renderServiceAgreement` renders parties, scope (subjects/deliverables/obligations), payment with resolved payer/payee, acceptance criteria, exclusions, and governing law, and marks missing values as gaps.
+- [x] Implement employment agreement/guideline renderer as draft output.
+  - Done when legal-guideline fixtures render without unsupported fields. `renderEmploymentAgreement` renders employer/employee, duties, remuneration, term, conditions, guidelines, and exclusions from model fields only; `packages/document-renderer/fixtures/employment-agreement.intent-contract.json` renders without any unsupported field.
+- [x] Add document-to-DSL traceability map.
+  - Done when each paragraph references DSL paths or source references. Every rendered document returns a `traceability` array and appends a `Traceability Map` table mapping each item to `FormalField.field` DSL paths and `SourceReference.id` source ids.
 
 ---
 

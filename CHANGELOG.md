@@ -11,15 +11,23 @@
 - Added guideline-file planning for text guidelines with file-backed source references and missing-field preservation.
 - Added DSL-to-NL summary rendering as `intent-contract.nl-summary.v1`, where each rendered statement carries the source DSL path, field name, and optional source id.
 - Added rendered-statement path extraction for round-trip regression checks.
+- Added Phase 6 contract and legal document renderers in the new `@office-dsl/document-renderer` package: `renderTaskDelegation`, `renderServiceAgreement`, `renderEmploymentAgreement`, and a `renderDocument` dispatcher.
+- Added the shared `DRAFT_DISCLAIMER` embedded in every rendered document, marking output as a non-binding draft that must not invent terms.
+- Added explicit gap and unapproved-assumption handling so missing, ambiguous, conflicting, or rejected fields render as `[GAP: ...]` markers instead of fabricated legal language.
+- Added a document-to-DSL traceability map (`traceability` array plus a `Traceability Map` table) linking each rendered item to its DSL field paths and source reference ids.
+- Added `packages/document-renderer/fixtures/task-delegation.intent-contract.json` and `employment-agreement.intent-contract.json` renderer inputs.
+- Added `docs/document-renderers.md` describing renderer responsibilities, legal disclaimers, and the must-not-invent-terms policy.
 
 ### Changed
 
 - Updated root package, llm-planner package, `VERSION`, docs, and documentation consistency tests to `0.9.0`.
 - Marked Phase 5 TODO items complete for the deterministic mock-safe planner, renderer, and round-trip validation boundary; production OpenRouter execution remains outside the validated default.
+- Marked Phase 6 TODO items complete for the document renderers and traceability map; wiring renderers into runtime/CLI/backend/UI remains open.
 
 ### Tests
 
 - Added `tests/nl-dsl-roundtrip.test.ts` coverage for malformed planner-response rejection, valid schema-to-DSL conversion, varied single-message NL planning, guideline-file planning, traceable DSL-to-NL rendering, and round-trip checks that prevent unauthorized new field paths.
+- Added `tests/document-renderer.test.ts` coverage for the draft disclaimer, task delegation, service agreement, employment/guideline renderers, explicit gap and assumption handling, the document-to-DSL traceability map, and renderer dispatch.
 
 ## [0.8.0] - 2026-07-27
 

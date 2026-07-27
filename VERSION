@@ -12,6 +12,8 @@ This version implements Phase 5 bidirectional NL <-> DSL support for the determi
 
 The Phase 5 implementation is validated offline. It does not call OpenRouter during default verification and does not claim production semantic extraction from arbitrary documents; the controlled schema and prompt boundary are ready for an online provider to use behind explicit configuration.
 
+This version also implements Phase 6 contract and legal document renderers in the new `@office-dsl/document-renderer` package. The renderers turn an `intent-contract.dsl.v1` snapshot into task delegation, service agreement, and employment/guideline draft documents, embed a draft legal disclaimer in every output, render missing/ambiguous/conflicting/unapproved fields as explicit gaps, and attach a document-to-DSL traceability map. The renderers are deterministic and read-only over the DSL and never invent terms. Wiring them into the runtime, CLI, backend, and UI, and gating rendering behind bilateral canonical approval, remains open.
+
 ## Project Status
 
 The repository contains a working offline Office DSL MVP, repeatable office/chat/recruitment example runners, a standalone canonical Intent/Contract DSL model package, an Office DSL to Intent/Contract migration path, minimal runtime canonical approval records, and deterministic NL <-> DSL planner/rendering utilities for selected Intent/Contract fixtures.

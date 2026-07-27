@@ -1,0 +1,8 @@
+﻿{
+  "name": "@office-dsl/codegen",
+  "version": "0.10.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

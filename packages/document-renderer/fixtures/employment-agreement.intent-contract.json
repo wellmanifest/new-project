@@ -1,0 +1,400 @@
+{
+  "version": "intent-contract.dsl.v1",
+  "document": {
+    "id": "doc-employment-001",
+    "type": {
+      "field": "document.type",
+      "value": "EMPLOYMENT_AGREEMENT",
+      "status": "CONFIRMED",
+      "requiredForCompletion": true,
+      "source": {
+        "type": "file",
+        "id": "guidelines-1",
+        "path": "guidelines/employment.md",
+        "quote": "Zatrudniamy programistę na umowę o pracę."
+      },
+      "approvedBy": ["Human1"]
+    },
+    "title": {
+      "field": "document.title",
+      "value": "Software developer employment agreement",
+      "status": "CONFIRMED",
+      "requiredForCompletion": false,
+      "source": {
+        "type": "file",
+        "id": "guidelines-1",
+        "path": "guidelines/employment.md"
+      },
+      "approvedBy": ["Human1"]
+    },
+    "language": {
+      "field": "document.language",
+      "value": "pl",
+      "status": "CONFIRMED",
+      "requiredForCompletion": true,
+      "source": {
+        "type": "system",
+        "id": "locale-default"
+      },
+      "approvedBy": []
+    }
+  },
+  "contract": {
+    "id": "contract-employment-001",
+    "title": {
+      "field": "contract.title",
+      "value": "Employment agreement",
+      "status": "CONFIRMED",
+      "requiredForCompletion": false,
+      "source": {
+        "type": "file",
+        "id": "guidelines-1",
+        "path": "guidelines/employment.md"
+      },
+      "approvedBy": []
+    },
+    "governingLaw": {
+      "field": "contract.governingLaw",
+      "value": "Polish labour law",
+      "status": "CONFIRMED",
+      "requiredForCompletion": true,
+      "source": {
+        "type": "file",
+        "id": "guidelines-1",
+        "path": "guidelines/employment.md",
+        "quote": "zgodnie z Kodeksem pracy"
+      },
+      "approvedBy": []
+    }
+  },
+  "parties": [
+    {
+      "id": "party-employer",
+      "name": {
+        "field": "parties.party-employer.name",
+        "value": "Acme Sp. z o.o.",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "file",
+          "id": "guidelines-1",
+          "path": "guidelines/employment.md"
+        },
+        "approvedBy": []
+      },
+      "role": {
+        "field": "parties.party-employer.role",
+        "value": "Human1",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "system",
+          "id": "actor-employer"
+        },
+        "approvedBy": []
+      }
+    },
+    {
+      "id": "party-employee",
+      "name": {
+        "field": "parties.party-employee.name",
+        "value": "Jan Kowalski",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "file",
+          "id": "cv-1",
+          "path": "candidates/jan-kowalski/cv.md"
+        },
+        "approvedBy": []
+      },
+      "role": {
+        "field": "parties.party-employee.role",
+        "value": "Human2",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "system",
+          "id": "actor-employee"
+        },
+        "approvedBy": []
+      }
+    }
+  ],
+  "roles": [
+    {
+      "id": "role-employer",
+      "partyId": {
+        "field": "roles.role-employer.partyId",
+        "value": "party-employer",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "system",
+          "id": "role-mapping-1"
+        },
+        "approvedBy": []
+      },
+      "name": {
+        "field": "roles.role-employer.name",
+        "value": "employer",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "system",
+          "id": "role-name-1"
+        },
+        "approvedBy": []
+      }
+    }
+  ],
+  "intents": [
+    {
+      "id": "intent-hire",
+      "requesterPartyId": {
+        "field": "intents.intent-hire.requesterPartyId",
+        "value": "party-employer",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "file",
+          "id": "guidelines-1",
+          "path": "guidelines/employment.md"
+        },
+        "approvedBy": []
+      },
+      "description": {
+        "field": "intents.intent-hire.description",
+        "value": "Employ a software developer under a labour-law contract.",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "file",
+          "id": "guidelines-1",
+          "path": "guidelines/employment.md"
+        },
+        "approvedBy": []
+      }
+    }
+  ],
+  "subjects": [
+    {
+      "id": "subject-position",
+      "description": {
+        "field": "subjects.subject-position.description",
+        "value": "Software developer position",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "file",
+          "id": "guidelines-1",
+          "path": "guidelines/employment.md"
+        },
+        "approvedBy": []
+      }
+    }
+  ],
+  "obligations": [
+    {
+      "id": "obligation-develop",
+      "partyId": {
+        "field": "obligations.obligation-develop.partyId",
+        "value": "party-employee",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "file",
+          "id": "guidelines-1",
+          "path": "guidelines/employment.md"
+        },
+        "approvedBy": []
+      },
+      "description": {
+        "field": "obligations.obligation-develop.description",
+        "value": "Develop and maintain backend services.",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "file",
+          "id": "guidelines-1",
+          "path": "guidelines/employment.md"
+        },
+        "approvedBy": []
+      }
+    }
+  ],
+  "deliverables": [],
+  "deadlines": [
+    {
+      "id": "deadline-start",
+      "forId": {
+        "field": "deadlines.deadline-start.forId",
+        "value": "subject-position",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "system",
+          "id": "deadline-link"
+        },
+        "approvedBy": []
+      },
+      "dueAt": {
+        "field": "deadlines.deadline-start.dueAt",
+        "value": "2026-10-01",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "file",
+          "id": "guidelines-1",
+          "path": "guidelines/employment.md",
+          "quote": "od 1 października"
+        },
+        "approvedBy": []
+      }
+    }
+  ],
+  "payments": [
+    {
+      "id": "payment-salary",
+      "payerPartyId": {
+        "field": "payments.payment-salary.payerPartyId",
+        "value": "party-employer",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "file",
+          "id": "guidelines-1",
+          "path": "guidelines/employment.md"
+        },
+        "approvedBy": []
+      },
+      "payeePartyId": {
+        "field": "payments.payment-salary.payeePartyId",
+        "value": "party-employee",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "file",
+          "id": "guidelines-1",
+          "path": "guidelines/employment.md"
+        },
+        "approvedBy": []
+      },
+      "total": {
+        "field": "payments.payment-salary.total",
+        "value": {
+          "amount": 12000,
+          "currency": "PLN"
+        },
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "file",
+          "id": "guidelines-1",
+          "path": "guidelines/employment.md",
+          "quote": "12000 PLN brutto miesięcznie"
+        },
+        "approvedBy": []
+      }
+    }
+  ],
+  "conditions": [
+    {
+      "id": "condition-probation",
+      "description": {
+        "field": "conditions.condition-probation.description",
+        "value": "Three-month probation period applies.",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "file",
+          "id": "guidelines-1",
+          "path": "guidelines/employment.md"
+        },
+        "approvedBy": []
+      }
+    }
+  ],
+  "dependencies": [],
+  "acceptanceCriteria": [
+    {
+      "id": "guideline-review",
+      "description": {
+        "field": "acceptanceCriteria.guideline-review.description",
+        "value": "Employee follows the code review and security guidelines.",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "file",
+          "id": "guidelines-1",
+          "path": "guidelines/employment.md"
+        },
+        "approvedBy": []
+      },
+      "appliesToId": {
+        "field": "acceptanceCriteria.guideline-review.appliesToId",
+        "value": "subject-position",
+        "status": "CONFIRMED",
+        "requiredForCompletion": true,
+        "source": {
+          "type": "system",
+          "id": "acceptance-link"
+        },
+        "approvedBy": []
+      }
+    }
+  ],
+  "exclusions": [
+    {
+      "id": "exclusion-relocation",
+      "description": {
+        "field": "exclusions.exclusion-relocation.description",
+        "value": "Relocation costs are not covered.",
+        "status": "CONFIRMED",
+        "requiredForCompletion": false,
+        "source": {
+          "type": "file",
+          "id": "guidelines-1",
+          "path": "guidelines/employment.md"
+        },
+        "approvedBy": []
+      }
+    }
+  ],
+  "assumptions": [],
+  "risks": [],
+  "conflicts": [],
+  "questions": [],
+  "approvals": [],
+  "sourceReferences": [
+    {
+      "type": "file",
+      "id": "guidelines-1",
+      "path": "guidelines/employment.md",
+      "quote": "Zatrudniamy programistę na umowę o pracę."
+    },
+    {
+      "type": "file",
+      "id": "cv-1",
+      "path": "candidates/jan-kowalski/cv.md",
+      "quote": "Jan Kowalski, backend developer."
+    }
+  ],
+  "render": [
+    {
+      "id": "render-formal-document",
+      "target": {
+        "field": "render.render-formal-document.target",
+        "value": "formal_document",
+        "status": "CONFIRMED",
+        "requiredForCompletion": false,
+        "source": {
+          "type": "system",
+          "id": "render-policy"
+        },
+        "approvedBy": []
+      }
+    }
+  ],
+  "execution": []
+}

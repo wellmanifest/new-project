@@ -43,6 +43,7 @@ DONE:
 - `packages/dsl-model` defines `office.dsl.v1`, structural validation, parsing, and a readable token renderer.
 - `packages/intent-contract-model` defines the standalone `intent-contract.dsl.v1` model boundary with formal fields, statuses, source references, canonical serialization, stable hashing, and a deterministic Office DSL adapter.
 - `packages/llm-planner` provides deterministic mock planners for office scenarios, conversation fixtures, and selected canonical NL/guideline-file to Intent/Contract DSL flows, plus a controlled OpenRouter response schema boundary.
+- `packages/document-renderer` renders task delegation, service agreement, and employment/guideline draft documents from an Intent/Contract DSL snapshot, with a draft legal disclaimer, explicit gap markers for unresolved fields, and a document-to-DSL traceability map.
 - `packages/dsl-runtime` creates sessions, evaluates policies, asks simple clarification questions, handles one-side Office confirmation, computes a plan hash, stores a canonical Intent/Contract snapshot hash, tracks minimal Human1/Human2 approval records, executes mock actions, and records audit data.
 - `packages/cli` exposes plan, validate, inspect, answer, confirm, reject, execute, and history commands.
 - `apps/backend` exposes the same runtime through HTTP endpoints.
@@ -316,6 +317,7 @@ OpenRouter planner mode requires `OPENROUTER_API_KEY`. Python LiteLLM/OpenRouter
 - [docs/architecture.md](docs/architecture.md) - earlier MVP architecture notes.
 - [docs/research-migration-audit.md](docs/research-migration-audit.md) - research migration audit.
 - [docs/office-to-intent-contract-mapping.md](docs/office-to-intent-contract-mapping.md) - mapping from office requests to Intent/Contract DSL.
+- [docs/document-renderers.md](docs/document-renderers.md) - contract/legal document renderer responsibilities, legal disclaimers, and the document-to-DSL traceability map.
 - [TODO.md](TODO.md) - staged implementation roadmap.
 - [HANDOFF.md](HANDOFF.md) - next-agent handoff notes.
 - [VERSION](VERSION) - version scope and validation notes.
