@@ -21,6 +21,20 @@ describe("examples-recruitment runner", () => {
     expect(scenarios.map((scenario) => path.basename(scenario))).toEqual(["01-multi-candidate"]);
   });
 
+  it("keeps Anna's text CV PDF as a valid PDF file, not a marker-only pseudo PDF", async () => {
+    const pdfText = await readFile(
+      path.join(scenarioDir, "001-anna-nowak", "in", "cv.pdf"),
+      "latin1"
+    );
+    expect(pdfText).toMatch(/^%PDF-1\.4/);
+    expect(pdfText).toContain("1 0 obj");
+    expect(pdfText).toContain("/Type /Page");
+    expect(pdfText).toContain("xref");
+    expect(pdfText).toContain("trailer");
+    expect(pdfText).toContain("startxref");
+    expect(pdfText).not.toContain("%TEXT:");
+  });
+
   it("loads Markdown offers, Markdown CVs, text PDFs, and OCR fallback sources", async () => {
     const annaSources = await loadRecruitmentSources(path.join(scenarioDir, "001-anna-nowak"));
     expect(annaSources.map((source) => source.kind)).toEqual(["offer-md", "cv-md", "cv-pdf-text"]);
