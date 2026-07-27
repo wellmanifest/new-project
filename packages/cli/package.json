@@ -1,8 +1,9 @@
 {
   "name": "office-dsl",
-  "version": "0.7.2",
+  "version": "0.9.0",
   "type": "module",
   "bin": {
-    "office-dsl": "./src/index.ts"
+    "office-dsl": "./src/index.ts",
+    "well-manifest-intent": "./src/intent.ts"
   }
 }

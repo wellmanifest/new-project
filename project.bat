@@ -1,0 +1,112 @@
+@echo off
+setlocal EnableDelayedExpansion
+
+set ROOT=%~dp0
+set ROOT=%ROOT:~0,-1%
+
+if "%1"=="" (
+  call :usage
+  exit /b 0
+)
+
+if /I "%1"=="help" call :usage & exit /b 0
+if /I "%1"=="-h" call :usage & exit /b 0
+if /I "%1"=="--help" call :usage & exit /b 0
+
+set PIP_DISABLE_PIP_VERSION_CHECK=1
+
+call :%1 %2 %3 %4 %5 %6 %7 %8 %9
+exit /b %ERRORLEVEL%
+
+:usage
+echo Usage: project.bat ^<command^> [args]
+echo.
+echo Project commands:
+echo   install             Install workspace dependencies from pnpm lockfile
+echo   typecheck           Run TypeScript project references check
+echo   lint                Run ESLint on source and tests
+echo   format              Check formatting with Prettier
+echo   test                Run TypeScript tests
+echo   python-test         Run Python verifier tests
+echo   example ^<name^>      Run one example scenario
+echo   examples            Run all example scenarios
+echo   example-chat ^<name^> Run one chat negotiation example
+echo   examples-chat       Run all chat negotiation examples
+echo   example-recruitment ^<name^> Run one recruitment example
+echo   examples-recruitment Run all recruitment examples
+echo   verify              Run typecheck, lint, format, tests and git diff check
+echo   dev-backend         Start backend and static web demo
+echo.
+exit /b 0
+
+:install
+call corepack pnpm install --frozen-lockfile
+exit /b %ERRORLEVEL%
+
+:typecheck
+call corepack pnpm run typecheck
+exit /b %ERRORLEVEL%
+
+:lint
+call corepack pnpm run lint
+exit /b %ERRORLEVEL%
+
+:format
+call corepack pnpm run format
+exit /b %ERRORLEVEL%
+
+:test
+call corepack pnpm run test
+exit /b %ERRORLEVEL%
+
+:python-test
+call corepack pnpm run python:test
+exit /b %ERRORLEVEL%
+
+:example
+if "%2"=="" (
+  echo Usage: project.bat example ^<name^>
+  exit /b 2
+)
+call corepack pnpm run example:run -- %2
+exit /b %ERRORLEVEL%
+
+:examples
+call corepack pnpm run examples:run
+exit /b %ERRORLEVEL%
+
+:example-chat
+if "%2"=="" (
+  echo Usage: project.bat example-chat ^<name^>
+  exit /b 2
+)
+call corepack pnpm run example-chat:run -- %2
+exit /b %ERRORLEVEL%
+
+:examples-chat
+call corepack pnpm run examples-chat:run
+exit /b %ERRORLEVEL%
+
+:example-recruitment
+if "%2"=="" (
+  echo Usage: project.bat example-recruitment ^<name^>
+  exit /b 2
+)
+call corepack pnpm run example-recruitment:run -- %2
+exit /b %ERRORLEVEL%
+
+:examples-recruitment
+call corepack pnpm run examples-recruitment:run
+exit /b %ERRORLEVEL%
+
+:verify
+call :typecheck || exit /b 1
+call :lint || exit /b 1
+call :format || exit /b 1
+call :test || exit /b 1
+call git diff --exit-code
+exit /b %ERRORLEVEL%
+
+:dev-backend
+call corepack pnpm run dev
+exit /b %ERRORLEVEL%

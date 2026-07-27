@@ -1,0 +1,15 @@
+{
+  "version": "example-recruitment.document-process-test.v1",
+  "id": "002-anna-nowak-pdf2md",
+  "process": "pdf2md",
+  "input": "in/cv.pdf",
+  "output": "out/cv.md",
+  "expect": {
+    "contains": [
+      "# CV PDF: Anna Nowak",
+      "Umiejetnosci: TypeScript, React, testy automatyczne",
+      "Dostepnosc: od 2026-09-01"
+    ],
+    "notContains": ["%PDF", "xref", "trailer"]
+  }
+}

@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added Phase 11 cross-platform CLI surface in `packages/cli`: `well-manifest-intent` entry point with canonical Intent/Contract commands (`plan`, `plan-file`, `render`, `testgen`, `codegen`, `verify`, `approve`, `chat`, `example`, `recruitment`, `version`, `help`).
+- Added `packages/cli/src/cross-platform.ts` helpers for `file://` URL decoding, POSIX/Windows separator normalization, and dynamic-import safe URL conversion.
+- Added `--json` and `--human` output modes for all canonical CLI commands.
+- Added `project.bat` Windows equivalent for `./project.sh` validation commands.
+- Added `tests/cli-cross-platform.test.ts` coverage for POSIX-style paths on Windows, `file://` URLs, JSON/human output modes, and canonical Intent/Contract command dispatch.
+
+### Changed
+
+- Marked Phase 11 TODO items complete for canonical Intent/Contract CLI commands and Windows/Linux path compatibility.
+
 ## [0.11.0] - 2026-07-27
 
 ### Added

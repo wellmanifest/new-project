@@ -10,6 +10,8 @@ usage() {
   cat <<'USAGE'
 Usage: ./project.sh <command> [args]
 
+On Windows run project.bat with the same commands.
+
 Project commands:
   install             Install workspace dependencies from pnpm lockfile
   typecheck           Run TypeScript project references check

@@ -9,6 +9,7 @@ import {
   loadRecruitmentSources,
   ocrPdfToMarkdownFixture,
   renderMarkdownAsPdfTextFixture,
+  runRecruitmentDocumentProcesses,
   runRecruitmentScenario
 } from "../packages/example-runner/src/index.js";
 
@@ -21,26 +22,35 @@ describe("examples-recruitment runner", () => {
     expect(scenarios.map((scenario) => path.basename(scenario))).toEqual(["01-multi-candidate"]);
   });
 
-  it("keeps Anna's text CV PDF as a valid PDF file, not a marker-only pseudo PDF", async () => {
-    const pdfText = await readFile(
-      path.join(scenarioDir, "001-anna-nowak", "in", "cv.pdf"),
+  it("runs one-file document process fixtures for md2pdf and pdf2md", async () => {
+    const results = await runRecruitmentDocumentProcesses(scenarioDir);
+    expect(results).toEqual([
+      expect.objectContaining({ id: "001-anna-nowak-md2pdf", process: "md2pdf", ok: true }),
+      expect.objectContaining({ id: "002-anna-nowak-pdf2md", process: "pdf2md", ok: true })
+    ]);
+
+    const generatedPdf = await readFile(
+      path.join(scenarioDir, "001-anna-nowak-md2pdf", "out", "cv.pdf"),
       "latin1"
     );
-    expect(pdfText).toMatch(/^%PDF-1\.4/);
-    expect(pdfText).toContain("1 0 obj");
-    expect(pdfText).toContain("/Type /Page");
-    expect(pdfText).toContain("xref");
-    expect(pdfText).toContain("trailer");
-    expect(pdfText).toContain("startxref");
-    expect(pdfText).not.toContain("%TEXT:");
+    expect(generatedPdf).toMatch(/^%PDF-1\.4/);
+    expect(generatedPdf).toContain("/Type /Page");
+    expect(generatedPdf).toContain("xref");
+    expect(generatedPdf).toContain("trailer");
+    expect(generatedPdf).not.toContain("%TEXT:");
+
+    const generatedMarkdown = await readFile(
+      path.join(scenarioDir, "002-anna-nowak-pdf2md", "out", "cv.md"),
+      "utf8"
+    );
+    expect(generatedMarkdown).toContain("# CV PDF: Anna Nowak");
+    expect(generatedMarkdown).toContain("Umiejetnosci: TypeScript, React, testy automatyczne");
   });
 
   it("loads Markdown offers, Markdown CVs, text PDFs, and OCR fallback sources", async () => {
     const annaSources = await loadRecruitmentSources(path.join(scenarioDir, "001-anna-nowak"));
-    expect(annaSources.map((source) => source.kind)).toEqual(["offer-md", "cv-md", "cv-pdf-text"]);
-    expect(annaSources.find((source) => source.kind === "cv-pdf-text")?.text).toContain(
-      "Anna Nowak"
-    );
+    expect(annaSources.map((source) => source.kind)).toEqual(["offer-md", "cv-md"]);
+    expect(annaSources.find((source) => source.kind === "cv-md")?.text).toContain("Anna Nowak");
     expect(annaSources.every((source) => source.references.length > 0)).toBe(true);
 
     const scanned = await extractPdfText(path.join(scenarioDir, "002-bartek-lis", "in", "cv.pdf"));
@@ -84,7 +94,11 @@ describe("examples-recruitment runner", () => {
       id: "01-multi-candidate",
       candidateCount: 2,
       accepted: ["001-anna-nowak"],
-      rejected: ["002-bartek-lis"]
+      rejected: ["002-bartek-lis"],
+      documentProcesses: [
+        expect.objectContaining({ id: "001-anna-nowak-md2pdf", process: "md2pdf", ok: true }),
+        expect.objectContaining({ id: "002-anna-nowak-pdf2md", process: "pdf2md", ok: true })
+      ]
     });
     expect(result.summary.candidates[0]).toMatchObject({
       id: "001-anna-nowak",

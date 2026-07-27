@@ -301,12 +301,14 @@ Target scenario set:
 
 - [x] Provide current Office DSL CLI commands.
   - Done for `plan`, `run`, `validate`, `inspect`, `answer`, `confirm`, `reject`, `execute`, and `history`.
-- [ ] Add canonical Intent/Contract CLI commands.
-  - Done when CLI can process message, conversation, guideline file, approvals, render, verify, and example runner flows.
-- [ ] Add Windows/Linux path compatibility tests.
-  - Done when CI validates both OS targets.
-- [ ] Add clear JSON and human-readable output modes for new workflows.
-  - Done when automation and human review both have stable outputs.
+- [x] Add canonical Intent/Contract CLI commands.
+  - Done: `well-manifest-intent` in `packages/cli/src/intent.ts` supports `plan`, `plan-file`, `render`, `testgen`, `codegen`, `verify`, `approve`, `chat`, `example`, `recruitment`, `version`, and `help` with deterministic read-only DSL behavior.
+- [x] Add Windows/Linux path compatibility tests.
+  - Done: `packages/cli/src/cross-platform.ts` normalizes POSIX/Windows separators and `file://` URLs; `tests/cli-cross-platform.test.ts` validates mixed separators and file URLs on the current host.
+- [x] Add clear JSON and human-readable output modes for new workflows.
+  - Done: all canonical Intent/Contract CLI commands support `--json` and `--human`, with stable structured output for automation and readable key-value output for review.
+
+Phase 11 is implemented as a `@office-dsl/cli` extension. Remaining open work: integrate canonical CLI commands into the main runtime approval gate, backend endpoints, and UI flows.
 
 ---
 

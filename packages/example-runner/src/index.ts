@@ -12,6 +12,7 @@ export {
   loadRecruitmentSources,
   ocrPdfToMarkdownFixture,
   renderMarkdownAsPdfTextFixture,
+  runRecruitmentDocumentProcesses,
   runRecruitmentScenario,
   validateRecruitmentScenarioManifest
 } from "./recruitment.js";

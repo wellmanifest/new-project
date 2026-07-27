@@ -18,6 +18,7 @@
     "dev:backend": "tsx apps/backend/src/server.ts",
     "cli": "tsx packages/cli/src/index.ts",
     "cli:shell": "tsx packages/cli/src/shell.ts",
+    "cli:intent": "tsx packages/cli/src/intent.ts",
     "example-chat:run": "tsx packages/example-runner/src/index.ts chat-run",
     "examples-chat:run": "tsx packages/example-runner/src/index.ts chat-all",
     "example-recruitment:run": "tsx packages/example-runner/src/index.ts recruitment-run",

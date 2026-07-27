@@ -12,6 +12,9 @@ import {
 import { runChatScenario, type ChatOutcome, type ChatRunResult } from "./chat.js";
 
 export const RECRUITMENT_SCENARIO_VERSION = "example-recruitment.scenario.v1";
+export const RECRUITMENT_DOCUMENT_PROCESS_TEST_VERSION =
+  "example-recruitment.document-process-test.v1";
+export type RecruitmentDocumentProcess = "md2pdf" | "pdf2md";
 export type RecruitmentOutcome = "ACCEPTED" | "REJECTED";
 export type RecruitmentSourceKind = "offer-md" | "cv-md" | "cv-pdf-text" | "cv-pdf-ocr";
 
@@ -20,6 +23,28 @@ export interface RecruitmentScenarioManifest {
   id: string;
   title: string;
   expected: { summary: string };
+}
+
+export interface RecruitmentDocumentProcessTest {
+  version: typeof RECRUITMENT_DOCUMENT_PROCESS_TEST_VERSION;
+  id: string;
+  process: RecruitmentDocumentProcess;
+  input: string;
+  output: string;
+  expect?: {
+    contains?: string[];
+    notContains?: string[];
+    pdfStructure?: boolean;
+  };
+}
+
+export interface RecruitmentDocumentProcessResult {
+  id: string;
+  process: RecruitmentDocumentProcess;
+  input: string;
+  output: string;
+  ok: boolean;
+  failures: string[];
 }
 
 export interface RecruitmentSourceDocument {
@@ -58,6 +83,7 @@ export interface RecruitmentRunSummary {
   accepted: string[];
   rejected: string[];
   candidates: RecruitmentCandidateSummary[];
+  documentProcesses: RecruitmentDocumentProcessResult[];
 }
 
 export interface RecruitmentRunResult {
@@ -123,6 +149,7 @@ export async function runRecruitmentScenario(options: {
   await rm(generatedDir, { recursive: true, force: true });
   await mkdir(generatedDir, { recursive: true });
 
+  const documentProcesses = await runRecruitmentDocumentProcesses(options.scenarioDir);
   const candidates = await discoverCandidateDirs(options.scenarioDir);
   const results: CandidateRunContext[] = [];
   for (const candidateDir of candidates) {
@@ -177,13 +204,16 @@ export async function runRecruitmentScenario(options: {
     });
   }
 
-  const summary = createRecruitmentSummary(manifest.id, results);
+  const summary = createRecruitmentSummary(manifest.id, results, documentProcesses);
   await writeFile(
     path.join(generatedDir, "summary.dsl.hcl"),
     renderRecruitmentSummaryDsl(summary),
     "utf8"
   );
   const failures = await compareExpectedRecruitmentSummary(options.scenarioDir, manifest, summary);
+  for (const process of documentProcesses) {
+    failures.push(...process.failures.map((failure) => `${process.id}: ${failure}`));
+  }
   for (const result of results) {
     if (!result.chat.ok) failures.push(`${result.id}: chat summary did not match expected output`);
   }
@@ -195,6 +225,83 @@ export async function runRecruitmentScenario(options: {
     failures,
     summary
   };
+}
+
+export async function runRecruitmentDocumentProcesses(
+  scenarioDir: string
+): Promise<RecruitmentDocumentProcessResult[]> {
+  const processDirs = await discoverDocumentProcessDirs(scenarioDir);
+  const results: RecruitmentDocumentProcessResult[] = [];
+  for (const processDir of processDirs)
+    results.push(await runRecruitmentDocumentProcess(processDir));
+  return results;
+}
+
+async function runRecruitmentDocumentProcess(
+  processDir: string
+): Promise<RecruitmentDocumentProcessResult> {
+  const test = JSON.parse(
+    (await readFile(path.join(processDir, "test.json"), "utf8")).replace(/^\uFEFF/, "")
+  ) as RecruitmentDocumentProcessTest;
+  validateRecruitmentDocumentProcessTest(test, processDir);
+  const inputPath = path.join(processDir, test.input);
+  const outputPath = path.join(processDir, test.output);
+  await mkdir(path.dirname(outputPath), { recursive: true });
+  const failures: string[] = [];
+
+  if (test.process === "md2pdf") {
+    const markdown = await readFile(inputPath, "utf8");
+    await writeFile(outputPath, renderMarkdownAsPdfTextFixture(markdown), "latin1");
+  } else {
+    await writeFile(outputPath, await ocrPdfToMarkdownFixture(inputPath), "utf8");
+  }
+
+  const outputText = await readFile(outputPath, test.process === "md2pdf" ? "latin1" : "utf8");
+  if (test.expect?.pdfStructure) validateGeneratedPdfStructure(outputText, failures);
+  for (const expected of test.expect?.contains ?? []) {
+    if (!outputText.includes(expected))
+      failures.push(`output does not contain ${JSON.stringify(expected)}`);
+  }
+  for (const forbidden of test.expect?.notContains ?? []) {
+    if (outputText.includes(forbidden))
+      failures.push(`output unexpectedly contains ${JSON.stringify(forbidden)}`);
+  }
+  if (test.process === "pdf2md") {
+    const extracted = await ocrPdfToMarkdownFixture(inputPath);
+    if (extracted !== outputText) failures.push("pdf2md output is not deterministic");
+  }
+  return {
+    id: test.id,
+    process: test.process,
+    input: test.input,
+    output: test.output,
+    ok: failures.length === 0,
+    failures
+  };
+}
+
+function validateRecruitmentDocumentProcessTest(
+  test: RecruitmentDocumentProcessTest,
+  processDir: string
+): void {
+  if (test.version !== RECRUITMENT_DOCUMENT_PROCESS_TEST_VERSION) {
+    throw new Error(
+      `${processDir}: document process test version must be ${RECRUITMENT_DOCUMENT_PROCESS_TEST_VERSION}`
+    );
+  }
+  if (!test.id) throw new Error(`${processDir}: id is required`);
+  if (test.process !== "md2pdf" && test.process !== "pdf2md") {
+    throw new Error(`${processDir}: process must be md2pdf or pdf2md`);
+  }
+  if (!test.input || !test.output) throw new Error(`${processDir}: input and output are required`);
+}
+
+function validateGeneratedPdfStructure(pdfText: string, failures: string[]): void {
+  for (const token of ["%PDF-1.4", "1 0 obj", "/Type /Page", "xref", "trailer", "startxref"]) {
+    if (!pdfText.includes(token)) failures.push(`PDF output is missing ${token}`);
+  }
+  if (pdfText.includes("%TEXT:"))
+    failures.push("PDF output still uses marker-only pseudo PDF syntax");
 }
 
 export async function loadRecruitmentSources(
@@ -574,7 +681,8 @@ function createRecruitmentIntentContractDsl(
 
 function createRecruitmentSummary(
   id: string,
-  results: CandidateRunContext[]
+  results: CandidateRunContext[],
+  documentProcesses: RecruitmentDocumentProcessResult[]
 ): RecruitmentRunSummary {
   const candidates = results.map((result) => {
     const accepted = result.chat.summary.outcome === "AGREED";
@@ -601,8 +709,19 @@ function createRecruitmentSummary(
     rejected: candidates
       .filter((candidate) => candidate.outcome === "REJECTED")
       .map((candidate) => candidate.id),
-    candidates
+    candidates,
+    documentProcesses
   };
+}
+
+async function discoverDocumentProcessDirs(scenarioDir: string): Promise<string[]> {
+  const entries = await readdir(scenarioDir, { withFileTypes: true });
+  return entries
+    .filter((entry) => entry.isDirectory())
+    .filter((entry) => !["generated", "out"].includes(entry.name))
+    .map((entry) => path.join(scenarioDir, entry.name))
+    .filter((processDir) => existsSync(path.join(processDir, "test.json")))
+    .sort((a, b) => path.basename(a).localeCompare(path.basename(b)));
 }
 
 async function discoverCandidateDirs(scenarioDir: string): Promise<string[]> {
@@ -744,6 +863,15 @@ function renderRecruitmentSummaryDsl(summary: RecruitmentRunSummary): string {
     assign("candidate_count", summary.candidateCount),
     assign("accepted", summary.accepted),
     assign("rejected", summary.rejected),
+    ...summary.documentProcesses.map((process) =>
+      block("document_process", process.id, [
+        assign("process", process.process),
+        assign("input", process.input),
+        assign("output", process.output),
+        assign("ok", process.ok),
+        assign("failures", process.failures)
+      ])
+    ),
     ...summary.candidates.map((candidate) =>
       block("candidate", candidate.id, [
         assign("outcome", candidate.outcome),

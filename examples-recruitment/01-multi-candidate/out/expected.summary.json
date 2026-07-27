@@ -3,6 +3,24 @@
   "candidateCount": 2,
   "accepted": ["001-anna-nowak"],
   "rejected": ["002-bartek-lis"],
+  "documentProcesses": [
+    {
+      "id": "001-anna-nowak-md2pdf",
+      "process": "md2pdf",
+      "input": "in/cv.md",
+      "output": "out/cv.pdf",
+      "ok": true,
+      "failures": []
+    },
+    {
+      "id": "002-anna-nowak-pdf2md",
+      "process": "pdf2md",
+      "input": "in/cv.pdf",
+      "output": "out/cv.md",
+      "ok": true,
+      "failures": []
+    }
+  ],
   "candidates": [
     {
       "id": "001-anna-nowak",
@@ -10,7 +28,7 @@
       "chatOutcome": "AGREED",
       "finalCreated": true,
       "contractPath": "out/contract.dsl.txt",
-      "proposalHash": "87c835a976844bd36fede1f363a2b68a41b22df4adfb30f0c20e6e07ffdebc56",
+      "proposalHash": "725b8ed731bf087eef597d1b66322ac37990d67b0985bcaf42407ae49d37a1b9",
       "sourceDocuments": [
         {
           "id": "offer-md:in/oferta.md",
@@ -21,11 +39,6 @@
           "id": "cv-md:in/cv.md",
           "kind": "cv-md",
           "extraction": "markdown"
-        },
-        {
-          "id": "cv-pdf-text:in/cv.pdf",
-          "kind": "cv-pdf-text",
-          "extraction": "pdf-text"
         }
       ]
     },
