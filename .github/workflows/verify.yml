@@ -43,6 +43,12 @@ jobs:
         shell: bash
         run: python -m pip install -e "verifier[dev]"
 
+      - name: Check generated documentation
+        shell: bash
+        run: |
+          bash project.sh makedocs
+          git diff --exit-code -- README.md docs/documentation-index.md docs/examples-artifacts-index.md examples examples-chat examples-recruitment
+
       - name: Verify workspace
         shell: bash
         run: bash project.sh verify

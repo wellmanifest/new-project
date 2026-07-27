@@ -22,7 +22,9 @@ describe("functional system check scripts", () => {
     for (const expected of [
       "typecheck",
       "lint",
+      "documentation generation",
       "format",
+      "documentation freshness",
       "typescript tests",
       "python verifier tests",
       "example runner",
@@ -37,6 +39,9 @@ describe("functional system check scripts", () => {
     expect(verifyScript).toContain("examples-chat:run");
     expect(verifyScript).toContain("examples-recruitment:run");
     expect(verifyScript).toContain("pytest");
+    expect(verifyScript).toContain("docs:generate");
+    expect(verifyScript).toContain("docs/documentation-index.md");
+    expect(verifyScript).toContain("examples-chat");
   });
 
   it("keeps project.sh and project.bat wired to the same functional check", async () => {
@@ -46,8 +51,10 @@ describe("functional system check scripts", () => {
     expect(projectSh).toContain("system-check|functional-test|functional-tests");
     expect(projectSh).toContain("pnpm_run system:check");
     expect(projectSh).toContain("pnpm_run verify");
+    expect(projectSh).toContain("pnpm_run docs:generate");
 
     expect(projectBat).toContain("call corepack pnpm run verify");
+    expect(projectBat).toContain("call corepack pnpm run docs:generate");
     expect(projectBat).toContain(":system-check");
     expect(projectBat).toContain("call corepack pnpm run system:check");
     expect(projectBat).toContain("call corepack pnpm run dev:backend");

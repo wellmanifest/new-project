@@ -4,6 +4,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added a generated examples artifacts index command that merges office, chat, and recruitment example inputs, expected fixtures, and output links into one Markdown file.
 - Added three more `examples-recruitment` scenarios so the recruitment fixture set now has four runnable cases covering single acceptance, negotiated acceptance, PDF text extraction, OCR fallback, and cancellation.
 - Added `@office-dsl/chat-negotiation`, `@office-dsl/recruitment-workflow`, `@office-dsl/document-ingestion`, `@office-dsl/dsl-artifact-renderer`, `@office-dsl/regression-runner`, `@office-dsl/verifier-bridge`, and `@office-dsl/verifier-mock` package boundaries.
@@ -24,6 +25,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added explicit Phase 10 LiteLLM/OpenRouter semantic verifier mode for `verify_semantic(..., mode="openrouter")`, including structured `semantic-verifier.report.v1` provider parsing, deterministic monkeypatched adapter coverage, and an opt-in live smoke test gated by `RUN_OPENROUTER_SEMANTIC_TEST=1` plus `OPENROUTER_API_KEY`.
 - Added Phase 11 cross-platform CLI surface in `packages/cli`: `well-manifest-intent` entry point with canonical Intent/Contract commands (`plan`, `plan-file`, `render`, `testgen`, `codegen`, `verify`, `approve`, `chat`, `example`, `recruitment`, `version`, `help`).
 - Added `packages/cli/src/cross-platform.ts` helpers for `file://` URL decoding, POSIX/Windows separator normalization, and dynamic-import safe URL conversion.
@@ -41,6 +43,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added Phase 5 bidirectional NL <-> DSL support in `@office-dsl/llm-planner` with a controlled `intent-contract.planner-response.v1` schema, OpenRouter prompt boundary, schema validation, and canonical Intent/Contract DSL conversion.
 - Added deterministic single-message NL planning for canonical Intent/Contract DSL fields with source references, explicit missing governing-law handling, payment, deadline, deliverable, acceptance, and exclusion extraction.
 - Added guideline-file planning for text guidelines with file-backed source references and missing-field preservation.
@@ -86,6 +89,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added Phase 4B deterministic recruitment example runner with `example-recruitment:run`, `examples-recruitment:run`, `project.sh example-recruitment`, and `project.sh examples-recruitment` commands.
 - Added `examples-recruitment/01-multi-candidate`, covering one accepted and one rejected candidate with `oferta.md`, `cv.md`, `cv.pdf`, OCR mock fallback, per-candidate `chat.txt`, expected summaries, and ignored generated/final artifacts.
 - Added document ingestion for recruitment offers and CVs with source documents, line-level source references, deterministic text-PDF extraction, and mock OCR routing through `cv.ocr.txt`.
@@ -116,6 +120,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added rejected-approval diagnosis in `@office-dsl/intent-contract-model`: Human2 rejections can now block finalization and reopen a clarification question routed back to Human1.
 - Extended `ApprovalNode` with optional `field`, `reason`, and `source` metadata so rejection context can identify the insufficient field and explanation.
 
@@ -132,6 +137,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added `mockPlanConversationHistory` in `@office-dsl/llm-planner` to convert `intent-contract.conversation.v1` Human1/Human2 fixtures into valid partial `intent-contract.dsl.v1` snapshots with source references, deterministic payment/deadline hints, unresolved fields, and blocking questions.
 
 ### Changed
@@ -147,6 +153,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added the `intent-contract.conversation.v1` input model in `@office-dsl/intent-contract-model` with typed `Human1`, `Human2`, and `system` messages, unique message IDs, ISO timestamps, non-empty text validation, parser support, and source-reference mapping for every conversation line.
 - Added a checked-in Human1/Human2 conversation fixture for the canonical model package.
 
@@ -171,6 +178,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Implemented Phase 4 question routing in `@office-dsl/intent-contract-model`:
   - Added `PartyRoute` and `GeneratedQuestion.targetParties`; `diagnoseIntentContractDsl` now routes each generated question to `Human1`, `Human2`, or `unknown`, derived from `SourceReference.speaker`, `ConflictValue.partyId`, party roles, and conflict `sourceIds`.
   - Added `questionsForParty(diagnosis, party)` to filter unresolved-field questions per party.
@@ -189,6 +197,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Implemented the Phase 3 missing/ambiguous/conflicting information model in `@office-dsl/intent-contract-model`:
   - Added `diagnoseIntentContractDsl` and `collectFormalFields`, producing completeness gaps, ambiguity reports, conflict reports, unapproved-assumption reports, traceability gaps, deterministic generated questions, and a `finalizationReady` gate with `blockingReasons`.
   - Added optional model fields for Phase 3: `SourceReference.span`, `FormalField.interpretations`, and `ConflictNode.values`/`ConflictValue` for competing Human1/Human2 values with source references.
@@ -253,6 +262,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added minimal Human1/Human2 canonical approval records to the TypeScript runtime.
 - Added per-session canonical Intent/Contract DSL snapshots and stable snapshot hashes derived from the Office DSL compatibility adapter.
 - Added runtime APIs to approve the current canonical DSL hash, check bilateral approval, and invalidate active approvals when the canonical DSL changes.
@@ -272,6 +282,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added executable `examples-chat` scenarios for short agreement, long negotiation agreement, short cancellation, and long cancellation conversations.
 - Added a deterministic chat example runner that processes `@user1`/`@user2` conversations line by line, maintains per-party contract state, merges contracts, writes per-event diffs, and compares generated summaries with expected outcomes.
 - Added bilateral merged-hash approval checks so final chat artifacts are created only after both parties approve the same current merged contract hash.
@@ -293,6 +304,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added `.github/workflows/verify.yml` to run the repository verification workflow on `ubuntu-latest` and `windows-latest`.
 - Added `docs/codex-sandbox-vitest.md` documenting the Codex Windows sandbox `spawn EPERM` failure mode for Vitest/Vite startup and the required escalated verification path in this environment.
 
@@ -309,6 +321,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added `officeDslToIntentContractDsl` to convert validated `office.dsl.v1` tasks into canonical `intent-contract.dsl.v1` snapshots.
 - Added migration notes for adapter outputs with source path, target path, mapping decision, field status, and reason.
 - Added `docs/office-to-intent-contract-migration.md` documenting the compatibility path and deliberate omissions.
@@ -336,6 +349,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added `@office-dsl/intent-contract-model` as the canonical Intent/Contract DSL package boundary separate from `office.dsl.v1`.
 - Added `intent-contract.dsl.v1` TypeScript types for document, contract, party, role, intent, subject, obligation, deliverable, deadline, payment, condition, dependency, acceptance criteria, exclusion, assumption, risk, conflict, question, approval, source reference, render, and execution constructs.
 - Added field status semantics for `CONFIRMED`, `MISSING`, `INCOMPLETE`, `AMBIGUOUS`, `CONFLICTING`, `ASSUMED`, `REJECTED`, and `NOT_APPLICABLE`.
@@ -365,6 +379,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added canonical `scenario.json` manifests for the six current office examples.
 - Added mirrored `in/` and `out/` example fixture folders while keeping legacy fixture files in place.
 - Added `@office-dsl/example-runner` with single-scenario and all-scenario commands.
@@ -415,6 +430,7 @@
 
 ### Added
 
+- Added `script/readme.sh`, root `Makefile` documentation targets, generated README include menu, per-example README files, and CI documentation freshness checks.
 - Added offline Office DSL MVP workspace using pnpm workspaces.
 - Added `@office-dsl/dsl-model` with `office.dsl.v1` JSON model, parser, structural validation, and human-readable DSL rendering.
 - Added `@office-dsl/dsl-runtime` with state machine, policy engine, action registry, dry-run execution, confirmations, clarification answers, plan hashing, file task store, and audit records.

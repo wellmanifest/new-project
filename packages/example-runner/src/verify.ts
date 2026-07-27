@@ -15,7 +15,27 @@ const pythonPath = process.env.PYTHONPATH
 const steps: Step[] = [
   { label: "typecheck", command: "corepack", args: ["pnpm", "run", "typecheck"] },
   { label: "lint", command: "corepack", args: ["pnpm", "run", "lint"] },
+  {
+    label: "documentation generation",
+    command: "corepack",
+    args: ["pnpm", "run", "docs:generate"]
+  },
   { label: "format", command: "corepack", args: ["pnpm", "run", "format"] },
+  {
+    label: "documentation freshness",
+    command: "git",
+    args: [
+      "diff",
+      "--exit-code",
+      "--",
+      "README.md",
+      "docs/documentation-index.md",
+      "docs/examples-artifacts-index.md",
+      "examples",
+      "examples-chat",
+      "examples-recruitment"
+    ]
+  },
   { label: "typescript tests", command: "corepack", args: ["pnpm", "test"] },
   {
     label: "python verifier tests",
@@ -35,7 +55,9 @@ const steps: Step[] = [
 
 async function main(argv: string[]): Promise<void> {
   if (argv[0] === "python-test") {
-    await runStep(steps[4]);
+    const pythonStep = steps.find((step) => step.label === "python verifier tests");
+    if (!pythonStep) throw new Error("python verifier tests step is missing");
+    await runStep(pythonStep);
     return;
   }
   for (const step of steps) await runStep(step);

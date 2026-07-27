@@ -8,7 +8,7 @@
     "build": "tsc -b",
     "typecheck": "tsc -b --pretty false",
     "lint": "eslint \"packages/**/*.ts\" \"apps/**/*.ts\" \"tests/**/*.ts\" eslint.config.js",
-    "format": "prettier --check README.md TODO.md CHANGELOG.md CONTRIBUTING.md POLICY.md HANDOFF.md docs/**/*.md examples/**/*.md examples/**/*.json examples-chat/**/*.json examples-recruitment/**/*.md examples-recruitment/**/*.json package.json pnpm-workspace.yaml tsconfig.json eslint.config.js apps/web/public/index.html packages/**/*.ts packages/**/*.json apps/**/*.ts apps/**/*.json tests/**/*.ts",
+    "format": "prettier --check README.md TODO.md CHANGELOG.md CONTRIBUTING.md POLICY.md HANDOFF.md docs/**/*.md examples/**/*.md examples/**/*.json examples-chat/**/*.md examples-chat/**/*.json examples-recruitment/**/*.md examples-recruitment/**/*.json package.json pnpm-workspace.yaml tsconfig.json eslint.config.js apps/web/public/index.html packages/**/*.ts packages/**/*.json apps/**/*.ts apps/**/*.json tests/**/*.ts",
     "test": "vitest run --dir tests --exclude **/.pytest_cache/** --exclude verifier/**",
     "test:e2e": "vitest run tests/e2e.test.ts --exclude **/.pytest_cache/** --exclude verifier/**",
     "python:test": "tsx packages/example-runner/src/verify.ts python-test",
@@ -24,7 +24,9 @@
     "example-recruitment:run": "tsx packages/example-runner/src/index.ts recruitment-run",
     "examples-recruitment:run": "tsx packages/example-runner/src/index.ts recruitment-all",
     "system:check": "tsx packages/example-runner/src/verify.ts",
-    "examples:index": "tsx packages/example-runner/src/examples-index.ts"
+    "examples:index": "tsx packages/example-runner/src/examples-index.ts",
+    "docs:generate": "tsx packages/example-runner/src/docs.ts && prettier --write README.md docs/documentation-index.md docs/examples-artifacts-index.md examples/**/*.md examples-chat/**/*.md examples-recruitment/**/*.md",
+    "docs:check": "corepack pnpm run docs:generate && git diff --exit-code -- README.md docs/documentation-index.md docs/examples-artifacts-index.md examples examples-chat examples-recruitment"
   },
   "devDependencies": {
     "@types/node": "22.13.1",

@@ -26,6 +26,7 @@ Project commands:
   example-recruitment <name> Run one recruitment example
   examples-recruitment Run all recruitment examples
   examples-index [file] Build one Markdown index for all example inputs, expected files and outputs
+  makedocs           Generate README include menu and documentation indexes
   verify              Run typecheck, lint, format, tests, examples, and git diff check
   system-check        Run the full functional system test suite
   dev-backend         Start backend and static web demo
@@ -87,6 +88,9 @@ case "${1:-help}" in
   examples-index)
     shift
     pnpm_run examples:index -- "$@"
+    ;;
+  makedocs)
+    pnpm_run docs:generate
     ;;
   verify)
     pnpm_run verify
