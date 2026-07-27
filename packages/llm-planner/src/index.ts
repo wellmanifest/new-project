@@ -1,3 +1,22 @@
+export {
+  CONTROLLED_PLANNER_SCHEMA,
+  STRUCTURED_PLANNER_RESPONSE_VERSION,
+  buildOpenRouterIntentContractPrompt,
+  extractRenderedStatementPaths,
+  intentContractDslFromPlannerResponse,
+  mockPlanGuidelineFileToIntentContractDsl,
+  mockPlanIntentContractFromNaturalLanguage,
+  parseControlledPlannerResponse,
+  renderIntentContractDslToNaturalLanguage,
+  validateControlledPlannerResponse,
+  type ControlledPlannerField,
+  type ControlledPlannerFieldPath,
+  type ControlledPlannerResponse,
+  type ControlledPlannerSchema,
+  type ControlledPlannerSource,
+  type NaturalLanguageRenderResult,
+  type RenderedStatement
+} from "./intent-contract.js";
 import { randomUUID } from "node:crypto";
 import { DSL_VERSION, TaskDsl } from "../../dsl-model/src/index.js";
 import {

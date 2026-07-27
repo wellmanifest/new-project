@@ -194,16 +194,16 @@ Target folder convention (one recruitment, many candidates):
 
 ## Phase 5 - Bidirectional NL <-> DSL
 
-- [ ] Define controlled NL-to-DSL planner prompts and response schemas for OpenRouter.
-  - Done when schema validation rejects malformed LLM output.
-- [ ] Add single-message planner mode beyond current mock patterns.
-  - Done when fixtures cover varied natural language without hard-coded action matching.
-- [ ] Add guideline-file planner mode.
-  - Done when text guidelines can produce DSL with missing fields and source references.
-- [ ] Add DSL-to-NL summary renderer.
-  - Done when every rendered statement maps back to a DSL field.
-- [ ] Add round-trip regression tests.
-  - Done when DSL rendered to NL and reprocessed does not introduce unauthorized meaning for selected fixtures.
+- [x] Define controlled NL-to-DSL planner prompts and response schemas for OpenRouter.
+  - Done when schema validation rejects malformed LLM output. `CONTROLLED_PLANNER_SCHEMA`, `buildOpenRouterIntentContractPrompt`, `validateControlledPlannerResponse`, and `parseControlledPlannerResponse` define the mock-safe OpenRouter boundary; `tests/nl-dsl-roundtrip.test.ts` rejects malformed structured output, invalid payment shapes, unknown sources, and unsupported paths before DSL creation.
+- [x] Add single-message planner mode beyond current mock patterns.
+  - Done when fixtures cover varied natural language without hard-coded action matching. `mockPlanIntentContractFromNaturalLanguage` converts varied single-message service/task-style NL into canonical `intent-contract.dsl.v1` fields with source references, missing governing law, payment, deadline, deliverable, acceptance, and exclusions covered by regression tests.
+- [x] Add guideline-file planner mode.
+  - Done when text guidelines can produce DSL with missing fields and source references. `mockPlanGuidelineFileToIntentContractDsl` accepts guideline text plus source path, emits file-backed source references, preserves missing required fields, and is covered by `tests/nl-dsl-roundtrip.test.ts`.
+- [x] Add DSL-to-NL summary renderer.
+  - Done when every rendered statement maps back to a DSL field. `renderIntentContractDslToNaturalLanguage` emits `intent-contract.nl-summary.v1` statements with `dslPath`, field name, source id, and rendered text; tests assert every statement is traceable.
+- [x] Add round-trip regression tests.
+  - Done when DSL rendered to NL and reprocessed does not introduce unauthorized meaning for selected fixtures. `extractRenderedStatementPaths` and the round-trip regression assert the rendered NL contains exactly the valued DSL field paths and does not fabricate absent governing-law terms.
 
 ---
 

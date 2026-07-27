@@ -12,8 +12,8 @@
 - `VERSION` - current version and validation notes.
 - `CHANGELOG.md` - release history.
 - `docs/research-migration-audit.md` - audit of historical research migration.
-- docs/office-to-i
-- `project.sh` - historical script; not the active MVP bootstrap.
+- `docs/office-to-intent-contract-mapping.md` - mapping from Office DSL requests to canonical Intent/Contract DSL.
+- `project.sh` - active project command wrapper for install, checks, tests, examples, and verification.
 
 ## Research Materials
 
@@ -30,7 +30,7 @@ Historical research folders live under `research/` and should not be moved back 
 - `packages/dsl-model/` - current executable `office.dsl.v1` model, parser, validator, and renderer.
 - `packages/intent-contract-model/` - standalone canonical `intent-contract.dsl.v1` model, status semantics, source references, stable hashing, and Office DSL adapter.
 - `packages/dsl-runtime/` - current TypeScript runtime, state machine, policies, actions, hashing, audit, and file store.
-- `packages/llm-planner/` - mock planner and optional OpenRouter path.
+- `packages/llm-planner/` - mock planner, controlled NL <-> DSL Intent/Contract planner utilities, and optional OpenRouter path.
 - `packages/cli/` - CLI entrypoint.
 - `apps/backend/` - demo HTTP API.
 - `apps/web/` - static demo UI.
@@ -55,4 +55,4 @@ Historical research folders live under `research/` and should not be moved back 
 
 ## Current Boundary
 
-The validated repository is an offline Office DSL MVP with repeatable office and chat example runners, a standalone Intent/Contract model package, a deterministic Office DSL compatibility adapter, deterministic mock conversation-history planning for checked-in fixtures, deterministic recruitment example ingestion for checked-in offer/CV fixtures, and minimal runtime canonical approval records. The `examples-chat` runner covers fixture-level Human1/Human2 negotiation semantics, including bilateral current-hash approval and cancellation behavior; `examples-recruitment` covers deterministic multi-candidate acceptance/rejection on top of that chat workflow. CLI/backend/UI approval flows, production/OpenRouter conversation ingestion, production OCR/PDF providers, full planner field traceability, legal renderers, code generation, test generation, and semantic verifier orchestration are roadmap items, not completed features.
+The validated repository is an offline Office DSL MVP with repeatable office and chat example runners, a standalone Intent/Contract model package, a deterministic Office DSL compatibility adapter, deterministic mock conversation-history planning for checked-in fixtures, deterministic recruitment example ingestion for checked-in offer/CV fixtures, deterministic NL <-> DSL planner/rendering utilities for selected fixtures, and minimal runtime canonical approval records. The `examples-chat` runner covers fixture-level Human1/Human2 negotiation semantics, including bilateral current-hash approval and cancellation behavior; `examples-recruitment` covers deterministic multi-candidate acceptance/rejection on top of that chat workflow. CLI/backend/UI approval flows, production/OpenRouter provider validation, production OCR/PDF providers, full planner field traceability, legal renderers, code generation, test generation, and semantic verifier orchestration are roadmap items, not completed features.

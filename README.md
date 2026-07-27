@@ -42,7 +42,7 @@ DONE:
 
 - `packages/dsl-model` defines `office.dsl.v1`, structural validation, parsing, and a readable token renderer.
 - `packages/intent-contract-model` defines the standalone `intent-contract.dsl.v1` model boundary with formal fields, statuses, source references, canonical serialization, stable hashing, and a deterministic Office DSL adapter.
-- `packages/llm-planner` provides a deterministic mock planner for a few single-command office scenarios.
+- `packages/llm-planner` provides deterministic mock planners for office scenarios, conversation fixtures, and selected canonical NL/guideline-file to Intent/Contract DSL flows, plus a controlled OpenRouter response schema boundary.
 - `packages/dsl-runtime` creates sessions, evaluates policies, asks simple clarification questions, handles one-side Office confirmation, computes a plan hash, stores a canonical Intent/Contract snapshot hash, tracks minimal Human1/Human2 approval records, executes mock actions, and records audit data.
 - `packages/cli` exposes plan, validate, inspect, answer, confirm, reject, execute, and history commands.
 - `apps/backend` exposes the same runtime through HTTP endpoints.
@@ -50,18 +50,18 @@ DONE:
 - `verifier` contains a Python package with mock verification and an optional LiteLLM/OpenRouter path.
 - `examples` contains six office examples with `scenario.json`, `in/`, `out/`, and legacy fixture files.
 - `examples-chat` contains four executable Human1/Human2 negotiation scenarios with `scenario.json`, `chat.txt`, and expected outcomes.
-- `tests` cover the current TypeScript runtime, canonical approval records, DSL model, security checks, E2E mock flow, Python verifier behavior, example runner, and chat negotiation runner.
+- `tests` cover the current TypeScript runtime, canonical approval records, DSL model, security checks, E2E mock flow, Python verifier behavior, example runners, chat/recruitment negotiation runners, and NL <-> DSL round-trip utilities.
 
 PARTIAL:
 
-- OpenRouter and LiteLLM code paths exist, but the validated flow is mock/offline mode.
+- OpenRouter and LiteLLM code paths exist, and the planner now has a controlled OpenRouter response schema boundary, but the validated flow is still mock/offline mode.
 - Clarifying questions exist only as `user.ask` workflow steps, not as a general field-status model.
 - DSL rendering exists as a readable office DSL listing, not as legal or contract document generation.
 - Office action confirmation is still plan-hash based; canonical Intent/Contract approval records exist in runtime APIs but are not yet exposed through CLI/backend/UI flows.
 
 MOCK:
 
-- The planner is pattern-based in mock mode.
+- Planner semantic understanding is deterministic and heuristic in mock mode.
 - The verifier uses heuristics in mock mode.
 - Data sources and email operations use local mock data and dry-run behavior.
 - The frontend is a demo surface.
@@ -69,7 +69,7 @@ MOCK:
 NOT IMPLEMENTED:
 
 - CLI/backend/UI integration of canonical Intent/Contract approval flows.
-- Conversation-history and guideline-file planner modes.
+- Production OpenRouter validation for arbitrary conversation history and guideline files.
 - Contract/legal document renderers.
 - JS/Node.js code generation.
 - Test generation from DSL requirements and acceptance criteria.

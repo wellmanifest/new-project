@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-07-27
+
+### Added
+
+- Added Phase 5 bidirectional NL <-> DSL support in `@office-dsl/llm-planner` with a controlled `intent-contract.planner-response.v1` schema, OpenRouter prompt boundary, schema validation, and canonical Intent/Contract DSL conversion.
+- Added deterministic single-message NL planning for canonical Intent/Contract DSL fields with source references, explicit missing governing-law handling, payment, deadline, deliverable, acceptance, and exclusion extraction.
+- Added guideline-file planning for text guidelines with file-backed source references and missing-field preservation.
+- Added DSL-to-NL summary rendering as `intent-contract.nl-summary.v1`, where each rendered statement carries the source DSL path, field name, and optional source id.
+- Added rendered-statement path extraction for round-trip regression checks.
+
+### Changed
+
+- Updated root package, llm-planner package, `VERSION`, docs, and documentation consistency tests to `0.9.0`.
+- Marked Phase 5 TODO items complete for the deterministic mock-safe planner, renderer, and round-trip validation boundary; production OpenRouter execution remains outside the validated default.
+
+### Tests
+
+- Added `tests/nl-dsl-roundtrip.test.ts` coverage for malformed planner-response rejection, valid schema-to-DSL conversion, varied single-message NL planning, guideline-file planning, traceable DSL-to-NL rendering, and round-trip checks that prevent unauthorized new field paths.
+
 ## [0.8.0] - 2026-07-27
 
 ### Added

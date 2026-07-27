@@ -29,7 +29,7 @@ The DSL is the source of truth. It should capture:
 - approvals tied to a specific DSL version,
 - source references for each material field.
 
-Current implementation status: the repository implements a narrow executable `office.dsl.v1` for office tasks and a standalone `intent-contract.dsl.v1` model package. The canonical model is not yet integrated into the planner, runtime, renderer, or approvals.
+Current implementation status: the repository implements a narrow executable `office.dsl.v1` for office tasks, a standalone `intent-contract.dsl.v1` model package, deterministic planner adapters for selected canonical NL/conversation/guideline fixtures, and traceable DSL-to-NL summary rendering. The canonical model is still not exposed through the live CLI/backend/UI approval flows.
 
 ## 3. H2M And H2H
 
@@ -123,7 +123,7 @@ The target LLM planner should:
 - generate questions for unresolved fields,
 - support single messages, conversations, and guideline files.
 
-Current implementation status: `packages/llm-planner` has a deterministic mock planner, deterministic mock conversion from checked-in `intent-contract.conversation.v1` fixtures to partial Intent/Contract DSL, and an optional OpenRouter code path. The validated path is mock mode. The mock planner uses simple text matching and fixture rules; it does not perform production semantic extraction from arbitrary conversation history.
+Current implementation status: `packages/llm-planner` has a deterministic mock planner, deterministic mock conversion from checked-in `intent-contract.conversation.v1` fixtures to partial Intent/Contract DSL, controlled `intent-contract.planner-response.v1` schema validation for OpenRouter-style output, deterministic single-message and guideline-file Intent/Contract planning, traceable DSL-to-NL summary rendering, and an optional OpenRouter code path. The validated path is mock mode; production semantic extraction from arbitrary provider output remains outside the default verification path.
 
 ## 7. Role Of The Runtime
 
@@ -335,7 +335,7 @@ DONE:
 - offline workspace and pnpm scripts,
 - `office.dsl.v1` model and structural validation,
 - standalone `intent-contract.dsl.v1` model with statuses, source references, and stable hashing,
-- mock planner for single office commands,
+- mock planner for single office commands and selected canonical NL/guideline-file fixtures,
 - TypeScript runtime with simple state machine,
 - deterministic policy checks,
 - one-side confirmation with plan hash,
@@ -349,12 +349,12 @@ PARTIAL:
 
 - OpenRouter and LiteLLM paths exist but are not validated as the default flow,
 - clarification exists only as workflow `user.ask`,
-- DSL to NL exists only as a readable token renderer,
+- legal document rendering is not implemented; canonical DSL-to-NL summary rendering exists for traceable statements,
 - audit exists for office-task sessions, not full intent/contract lifecycle.
 
 MOCK:
 
-- planner semantic understanding,
+- production planner semantic understanding,
 - verifier semantic judgment,
 - external data and email operations,
 - web UI as a demo surface.
@@ -366,7 +366,7 @@ NOT IMPLEMENTED:
 - runtime population of field-level source traceability,
 - runtime conflict and assumption diagnosis,
 - contract/legal renderers,
-- planner-backed example regeneration for current stable fixtures,
+- live-provider planner-backed example regeneration for current stable fixtures,
 - JS/Node.js code generation,
 - DSL-based test generation,
 - runtime-to-Python verifier integration,

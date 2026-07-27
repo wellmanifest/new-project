@@ -2,19 +2,19 @@
 
 ## Current Version
 
-`0.8.0`
+`0.9.0`
 
 ## Version Type
 
-Minor workflow-feature release over `0.7.7`.
+Minor planner-feature release over `0.8.0`.
 
-This version implements Phase 4B deterministic document ingestion, OCR fallback, and multi-candidate recruitment examples in `@office-dsl/example-runner`. The runner discovers `examples-recruitment` scenarios, loads `oferta.md`, `cv.md`, and `cv.pdf`, extracts deterministic text-PDF fixtures, routes scanned/image-only fixture PDFs through mock OCR text, normalizes sourced offer/CV content into partial Intent/Contract DSL, generates per-candidate proposals, reuses the Human1/Human2 chat runner for negotiation, and writes `out/contract.dsl.txt` only for candidates whose chat reaches bilateral approval of the same current contract hash.
+This version implements Phase 5 bidirectional NL <-> DSL support for the deterministic, mock-safe Intent/Contract planner boundary. `@office-dsl/llm-planner` now defines a controlled `intent-contract.planner-response.v1` response schema for OpenRouter-style output, validates malformed responses before DSL creation, converts valid structured responses into canonical `intent-contract.dsl.v1`, plans varied single-message natural language and guideline-file text into sourced DSL fields, renders DSL back to traceable natural-language summary statements, and includes round-trip regression checks that prevent rendered NL from introducing unauthorized field paths.
 
-The Phase 4B implementation is deterministic and mock-safe. It validates the folder convention and fixture workflow end to end, but it does not install or call a production OCR provider, external PDF service, or live recruitment backend. CLI/backend/UI surfacing for canonical approvals and production document-ingestion surfaces remains open in later phases.
+The Phase 5 implementation is validated offline. It does not call OpenRouter during default verification and does not claim production semantic extraction from arbitrary documents; the controlled schema and prompt boundary are ready for an online provider to use behind explicit configuration.
 
 ## Project Status
 
-The repository contains a working offline Office DSL MVP, a repeatable scenario runner for the current example fixtures, executable chat-negotiation regression scenarios, a standalone canonical Intent/Contract DSL model package, an Office DSL to Intent/Contract migration path, minimal runtime canonical approval records, and CI wiring for the default verification workflow.
+The repository contains a working offline Office DSL MVP, repeatable office/chat/recruitment example runners, a standalone canonical Intent/Contract DSL model package, an Office DSL to Intent/Contract migration path, minimal runtime canonical approval records, and deterministic NL <-> DSL planner/rendering utilities for selected Intent/Contract fixtures.
 
 Current validated implementation scope:
 
@@ -36,10 +36,10 @@ Current validated implementation scope:
 - deterministic single-example and all-example runner with generated `*.dsl.hcl` artifacts beside each `examples/<scenario>/`,
 - executable `examples-chat` scenarios for Human1/Human2 negotiation regression,
 - executable `examples-recruitment` multi-candidate recruitment fixture with deterministic Markdown/PDF/OCR ingestion, per-candidate proposals, accepted/rejected outcomes, and chat-runner negotiation reuse,
-- line-by-line chat artifacts with party contract state, merged contract state, diffs, status, approvals, conflicts, and cancellation summaries,
-- generated chat DSL artifacts rendered as flat `*.dsl.hcl` HCL-like editable project DSL, not JSON,
-- generated chat outputs colocated as flat files under `examples-chat/<scenario>/generated/`,
-- final chat DSL/PDF/approval artifacts (`final-contract.dsl.hcl`, `contract.pdf`, `approvals.dsl.hcl`) only after both parties approve the same current merged contract hash,
+- controlled `intent-contract.planner-response.v1` schema and prompt boundary for OpenRouter-style NL-to-DSL output,
+- deterministic single-message NL and guideline-file planning into canonical Intent/Contract DSL with source references and explicit missing fields,
+- traceable DSL-to-NL summary rendering with statement-to-DSL path mapping,
+- round-trip NL <-> DSL regression checks for selected fixtures,
 - root verification command,
 - GitHub Actions workflow for `project.sh install` and `project.sh verify` on Windows and Linux,
 - `intent-contract.dsl.v1` model package with formal fields, statuses, source references, canonical serialization, and stable hashing,
@@ -47,7 +47,7 @@ Current validated implementation scope:
 - deterministic mock conversation-history planner that produces partial `intent-contract.dsl.v1` with sources, unresolved fields, and blocking questions,
 - rejected-approval diagnosis that blocks finalization and routes Human2 insufficient-detail rejections back to Human1 as reopened clarification questions,
 - deterministic `officeDslToIntentContractDsl` compatibility adapter with migration notes,
-- expanded regression coverage for DSL validation, runtime controls, security policy, canonical approval records, CLI workflows, backend API workflows, file-backed store behavior, example runners, and chat negotiation behavior,
+- expanded regression coverage for DSL validation, runtime controls, security policy, canonical approval records, CLI workflows, backend API workflows, file-backed store behavior, example runners, chat/recruitment negotiation behavior, and NL <-> DSL round trips,
 - documented Codex Windows sandbox `spawn EPERM` limitation for Vitest/Vite startup,
 - TypeScript and Python tests for the current scope.
 
@@ -55,37 +55,28 @@ Target scope documented but not implemented:
 
 - CLI/backend/web exposure for canonical Intent/Contract approval flows,
 - production Human1/Human2 conversation workflow beyond typed input validation, deterministic mock fixture planning, model-layer rejection diagnosis, and deterministic recruitment fixtures,
+- production OpenRouter NL/guideline-file planner validation against live provider output,
 - production OCR/PDF provider integration beyond deterministic fixture extraction,
-- planner population of field-level source traceability,
+- runtime population of field-level source traceability from live planner sessions,
 - contract and legal document renderers,
 - JS/Node.js code generation,
 - DSL-based test generation,
 - TypeScript runtime integration with the Python verifier as a normal gating step.
 
-## Included In 0.8.0
+## Included In 0.9.0
 
-- Added deterministic Phase 4B recruitment example runner and `examples-recruitment/01-multi-candidate` fixture.
-- Added document ingestion for `oferta.md`, `cv.md`, text `cv.pdf`, and mock OCR fallback through `cv.ocr.txt`.
-- Added per-candidate proposal generation and final `out/contract.dsl.txt` only after bilateral current-hash approval.
-- Added rejected-approval diagnosis that blocks finalization and reopens Human1 clarification when Human2 rejects insufficient detail.
-- Added deterministic `mockPlanConversationHistory` conversion from Human1/Human2 conversation fixtures into partial Intent/Contract DSL snapshots.
-- Added typed `intent-contract.conversation.v1` Human1/Human2/system conversation input records with validation, parsing, and source-reference mapping.
-- Added regression coverage and a checked-in fixture for the conversation input format.
-- Changed generated chat DSL files to `*.dsl.hcl` for automatic HCL/Terraform-style syntax highlighting by extension.
-- Changed generated DSL contents to HCL-like project blocks such as `document`, `field`, `conflict`, and `change`.
-- Moved default generated chat outputs into `examples-chat/<scenario>/generated/`, beside `scenario.json` and `chat.txt`.
-- Flattened generated per-event files into one scenario-local generated folder using names such as `001-user1.intent-contract.dsl.hcl`.
-- Added `examples-chat/*/generated/` to `.gitignore`.
-- Kept checked-in scenario manifests and expected summaries as JSON; generated runner artifacts use `*.dsl.hcl`, Markdown, or PDF instead of JSON.
-- Updated root package, intent-contract model package, changelog, and documentation consistency tests to `0.8.0`.
+- Added controlled NL-to-DSL planner schema, validation, and OpenRouter prompt boundary.
+- Added deterministic single-message and guideline-file Intent/Contract DSL planners.
+- Added traceable DSL-to-NL summary renderer and rendered statement path extraction.
+- Added NL <-> DSL round-trip regression tests.
+- Updated root package, llm-planner package, changelog, docs, and documentation consistency tests to `0.9.0`.
 
-## Not Included In 0.8.0
+## Not Included In 0.9.0
 
-- No CLI commands for canonical approvals.
-- No backend/web Human1/Human2 approval or rejection UI.
-- No production/OpenRouter planner support for arbitrary conversation history beyond deterministic mock fixture planning.
-- No production OCR provider or external PDF extraction dependency beyond deterministic fixture extraction.
-- No legal contract renderer beyond deterministic example artifacts.
+- No default online OpenRouter execution or live provider validation.
+- No production semantic verifier for arbitrary NL-to-DSL equivalence.
+- No CLI/backend/web surface for the new canonical NL <-> DSL planner utilities.
+- No legal contract renderer beyond existing deterministic example artifacts.
 - No JS/Node.js code generator.
 - No DSL-based test generator.
 
@@ -102,11 +93,9 @@ Declared by the repository:
 
 Validated in this pass:
 
-- TypeScript runtime tests for canonical approval records and invalidation.
-- Existing TypeScript and Python checks listed in the final task report.
-- Office and chat example runners.
-- Intent/Contract model, rejected approval diagnosis, conversation input, mock conversation planner, recruitment runner, and adapter tests.
-- Reproduced the Codex Windows sandbox `spawn EPERM` limitation and used the approved escalated path for commands that require Node/Vite process creation in this environment.
+- TypeScript tests including `tests/nl-dsl-roundtrip.test.ts`.
+- Existing Office, chat, and recruitment example runners through the root verification command.
+- Python verifier tests through the root verification command.
 
 Expected but not yet fully validated as release criteria:
 
@@ -115,6 +104,6 @@ Expected but not yet fully validated as release criteria:
 
 ## Versioning Policy Note
 
-The current pass promotes rejected-approval clarification reopening to `0.8.0`. Root package metadata, the intent-contract model package, `VERSION`, `CHANGELOG.md`, and documentation consistency tests are updated together for this milestone.
+Root package metadata, the llm-planner package, `VERSION`, `CHANGELOG.md`, and documentation consistency tests are updated together for this milestone.
 
 A future production hardening task should define how all package, app, verifier, and OpenAPI version metadata are kept in sync when a broader release touches those surfaces.
