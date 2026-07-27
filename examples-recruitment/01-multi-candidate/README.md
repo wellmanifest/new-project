@@ -19,6 +19,11 @@ No direct input files declared at scenario root.
 
 The recruitment runner writes scenario summary artifacts under `generated/` and candidate-local proposal/status/final contract artifacts under each candidate `out/` folder.
 
+## Document Processes
+
+- [001-anna-nowak-md2pdf: md2pdf](001-anna-nowak-md2pdf/README.md)
+- [002-anna-nowak-pdf2md: pdf2md](002-anna-nowak-pdf2md/README.md)
+
 ## Candidates
 
 - [001-anna-nowak: Anna Nowak recruitment negotiation](001-anna-nowak/README.md)

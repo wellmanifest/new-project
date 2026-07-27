@@ -1,5 +1,0 @@
-# CV: Bartek Lis
-
-Umiejetnosci: PHP, podstawy JavaScript
-Dostepnosc: od 2026-11-01
-Doswiadczenie: 2 lata w utrzymaniu stron.

@@ -186,12 +186,15 @@ Input: none
 Expected: [summary.json](../examples-recruitment/01-multi-candidate/expected/summary.json)
 Generated/output: [generated/](../examples-recruitment/01-multi-candidate/generated) with [summary.dsl.hcl](../examples-recruitment/01-multi-candidate/generated/summary.dsl.hcl); candidate-local outputs live under each candidate out/ folder
 
-Candidates and document processes:
+Document processes:
+
+- [001-anna-nowak-md2pdf](../examples-recruitment/01-multi-candidate/001-anna-nowak-md2pdf): md2pdf; [in/](../examples-recruitment/01-multi-candidate/001-anna-nowak-md2pdf/in) (1) -> [out/](../examples-recruitment/01-multi-candidate/001-anna-nowak-md2pdf/out) (1); [test.json](../examples-recruitment/01-multi-candidate/001-anna-nowak-md2pdf/test.json)
+- [002-anna-nowak-pdf2md](../examples-recruitment/01-multi-candidate/002-anna-nowak-pdf2md): pdf2md; [in/](../examples-recruitment/01-multi-candidate/002-anna-nowak-pdf2md/in) (2) -> [out/](../examples-recruitment/01-multi-candidate/002-anna-nowak-pdf2md/out) (1); [test.json](../examples-recruitment/01-multi-candidate/002-anna-nowak-pdf2md/test.json)
+
+Candidates:
 
 - [001-anna-nowak](../examples-recruitment/01-multi-candidate/001-anna-nowak): [expected/](../examples-recruitment/01-multi-candidate/001-anna-nowak/expected) (1); output [out/](../examples-recruitment/01-multi-candidate/001-anna-nowak/out)
-  - md2pdf: [in/](../examples-recruitment/01-multi-candidate/001-anna-nowak/document-processes/md2pdf/in) (1) -> [out/](../examples-recruitment/01-multi-candidate/001-anna-nowak/document-processes/md2pdf/out) (1); [test.json](../examples-recruitment/01-multi-candidate/001-anna-nowak/document-processes/md2pdf/test.json)
 - [002-bartek-lis](../examples-recruitment/01-multi-candidate/002-bartek-lis): [expected/](../examples-recruitment/01-multi-candidate/002-bartek-lis/expected) (1); output [out/](../examples-recruitment/01-multi-candidate/002-bartek-lis/out)
-  - pdf2md: [in/](../examples-recruitment/01-multi-candidate/002-bartek-lis/document-processes/pdf2md/in) (2) -> [out/](../examples-recruitment/01-multi-candidate/002-bartek-lis/document-processes/pdf2md/out) (1); [test.json](../examples-recruitment/01-multi-candidate/002-bartek-lis/document-processes/pdf2md/test.json)
 
 Expected summary:
 
@@ -205,16 +208,16 @@ Expected summary:
     {
       "id": "001-anna-nowak-md2pdf",
       "process": "md2pdf",
-      "processDir": "001-anna-nowak/document-processes/md2pdf",
+      "processDir": "001-anna-nowak-md2pdf",
       "input": "in/cv.md",
       "output": "out/cv.pdf",
       "ok": true,
       "failures": []
     },
     {
-      "id": "002-bartek-lis-pdf2md",
+      "id": "002-anna-nowak-pdf2md",
       "process": "pdf2md",
-      "processDir": "002-bartek-lis/document-processes/pdf2md",
+      "processDir": "002-anna-nowak-pdf2md",
       "input": "in/cv.pdf",
       "output": "out/cv.md",
       "ok": true,
@@ -274,7 +277,11 @@ Input: none
 Expected: [summary.json](../examples-recruitment/02-single-candidate-agreement/expected/summary.json)
 Generated/output: [generated/](../examples-recruitment/02-single-candidate-agreement/generated) with [summary.dsl.hcl](../examples-recruitment/02-single-candidate-agreement/generated/summary.dsl.hcl); candidate-local outputs live under each candidate out/ folder
 
-Candidates and document processes:
+Document processes:
+
+- no scenario-level document processes
+
+Candidates:
 
 - [001-ewa-zielinska](../examples-recruitment/02-single-candidate-agreement/001-ewa-zielinska): [expected/](../examples-recruitment/02-single-candidate-agreement/001-ewa-zielinska/expected) (1); output [out/](../examples-recruitment/02-single-candidate-agreement/001-ewa-zielinska/out)
   - md2pdf: [in/](../examples-recruitment/02-single-candidate-agreement/001-ewa-zielinska/document-processes/md2pdf/in) (1) -> [out/](../examples-recruitment/02-single-candidate-agreement/001-ewa-zielinska/document-processes/md2pdf/out) (1); [test.json](../examples-recruitment/02-single-candidate-agreement/001-ewa-zielinska/document-processes/md2pdf/test.json)
@@ -309,7 +316,11 @@ Input: none
 Expected: [summary.json](../examples-recruitment/03-negotiated-two-candidates/expected/summary.json)
 Generated/output: [generated/](../examples-recruitment/03-negotiated-two-candidates/generated) with [summary.dsl.hcl](../examples-recruitment/03-negotiated-two-candidates/generated/summary.dsl.hcl); candidate-local outputs live under each candidate out/ folder
 
-Candidates and document processes:
+Document processes:
+
+- no scenario-level document processes
+
+Candidates:
 
 - [001-ola-maj](../examples-recruitment/03-negotiated-two-candidates/001-ola-maj): [expected/](../examples-recruitment/03-negotiated-two-candidates/001-ola-maj/expected) (1); output [out/](../examples-recruitment/03-negotiated-two-candidates/001-ola-maj/out)
   - md2pdf: [in/](../examples-recruitment/03-negotiated-two-candidates/001-ola-maj/document-processes/md2pdf/in) (1) -> [out/](../examples-recruitment/03-negotiated-two-candidates/001-ola-maj/document-processes/md2pdf/out) (1); [test.json](../examples-recruitment/03-negotiated-two-candidates/001-ola-maj/document-processes/md2pdf/test.json)
@@ -355,7 +366,11 @@ Input: none
 Expected: [summary.json](../examples-recruitment/04-ocr-candidate-cancelled/expected/summary.json)
 Generated/output: [generated/](../examples-recruitment/04-ocr-candidate-cancelled/generated) with [summary.dsl.hcl](../examples-recruitment/04-ocr-candidate-cancelled/generated/summary.dsl.hcl); candidate-local outputs live under each candidate out/ folder
 
-Candidates and document processes:
+Document processes:
+
+- no scenario-level document processes
+
+Candidates:
 
 - [001-kasia-wrona](../examples-recruitment/04-ocr-candidate-cancelled/001-kasia-wrona): [expected/](../examples-recruitment/04-ocr-candidate-cancelled/001-kasia-wrona/expected) (1); output [out/](../examples-recruitment/04-ocr-candidate-cancelled/001-kasia-wrona/out)
   - pdf2md: [in/](../examples-recruitment/04-ocr-candidate-cancelled/001-kasia-wrona/document-processes/pdf2md/in) (2) -> [out/](../examples-recruitment/04-ocr-candidate-cancelled/001-kasia-wrona/document-processes/pdf2md/out) (1); [test.json](../examples-recruitment/04-ocr-candidate-cancelled/001-kasia-wrona/document-processes/pdf2md/test.json)

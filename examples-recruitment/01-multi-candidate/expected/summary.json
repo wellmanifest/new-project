@@ -7,16 +7,16 @@
     {
       "id": "001-anna-nowak-md2pdf",
       "process": "md2pdf",
-      "processDir": "001-anna-nowak/document-processes/md2pdf",
+      "processDir": "001-anna-nowak-md2pdf",
       "input": "in/cv.md",
       "output": "out/cv.pdf",
       "ok": true,
       "failures": []
     },
     {
-      "id": "002-bartek-lis-pdf2md",
+      "id": "002-anna-nowak-pdf2md",
       "process": "pdf2md",
-      "processDir": "002-bartek-lis/document-processes/pdf2md",
+      "processDir": "002-anna-nowak-pdf2md",
       "input": "in/cv.pdf",
       "output": "out/cv.md",
       "ok": true,

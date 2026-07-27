@@ -1,0 +1,5 @@
+# CV: Anna Nowak
+
+Umiejetnosci: TypeScript, React, testy automatyczne
+Dostepnosc: od 2026-09-01
+Doswiadczenie: 6 lat w aplikacjach frontend.

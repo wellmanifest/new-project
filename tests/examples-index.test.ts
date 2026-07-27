@@ -34,6 +34,13 @@ describe("examples artifacts index", () => {
     expect(markdown).toContain(
       "[001-anna-nowak](../examples-recruitment/01-multi-candidate/001-anna-nowak)"
     );
-    expect(markdown).toContain("Candidates and document processes:");
+    expect(markdown).toContain("Document processes:");
+    expect(markdown).toContain(
+      "[001-anna-nowak-md2pdf](../examples-recruitment/01-multi-candidate/001-anna-nowak-md2pdf)"
+    );
+    expect(markdown).toContain(
+      "[002-anna-nowak-pdf2md](../examples-recruitment/01-multi-candidate/002-anna-nowak-pdf2md)"
+    );
+    expect(markdown).toContain("Candidates:");
   });
 });

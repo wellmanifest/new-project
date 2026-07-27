@@ -29,11 +29,11 @@ describe("examples-recruitment runner", () => {
     const results = await runRecruitmentDocumentProcesses(scenarioDir);
     expect(results).toEqual([
       expect.objectContaining({ id: "001-anna-nowak-md2pdf", process: "md2pdf", ok: true }),
-      expect.objectContaining({ id: "002-bartek-lis-pdf2md", process: "pdf2md", ok: true })
+      expect.objectContaining({ id: "002-anna-nowak-pdf2md", process: "pdf2md", ok: true })
     ]);
 
     const generatedPdf = await readFile(
-      path.join(scenarioDir, "001-anna-nowak", "document-processes", "md2pdf", "out", "cv.pdf"),
+      path.join(scenarioDir, "001-anna-nowak-md2pdf", "out", "cv.pdf"),
       "latin1"
     );
     expect(generatedPdf).toMatch(/^%PDF-1\.4/);
@@ -43,11 +43,11 @@ describe("examples-recruitment runner", () => {
     expect(generatedPdf).not.toContain("%TEXT:");
 
     const generatedMarkdown = await readFile(
-      path.join(scenarioDir, "002-bartek-lis", "document-processes", "pdf2md", "out", "cv.md"),
+      path.join(scenarioDir, "002-anna-nowak-pdf2md", "out", "cv.md"),
       "utf8"
     );
-    expect(generatedMarkdown).toContain("# CV: Bartek Lis");
-    expect(generatedMarkdown).toContain("Umiejetnosci: PHP, podstawy JavaScript");
+    expect(generatedMarkdown).toContain("# CV: Anna Nowak");
+    expect(generatedMarkdown).toContain("Umiejetnosci: TypeScript, React, testy automatyczne");
   });
 
   it("loads Markdown offers, Markdown CVs, text PDFs, and OCR fallback sources", async () => {
@@ -80,13 +80,13 @@ describe("examples-recruitment runner", () => {
         expect.objectContaining({
           id: "001-anna-nowak-md2pdf",
           process: "md2pdf",
-          processDir: "001-anna-nowak/document-processes/md2pdf",
+          processDir: "001-anna-nowak-md2pdf",
           ok: true
         }),
         expect.objectContaining({
-          id: "002-bartek-lis-pdf2md",
+          id: "002-anna-nowak-pdf2md",
           process: "pdf2md",
-          processDir: "002-bartek-lis/document-processes/pdf2md",
+          processDir: "002-anna-nowak-pdf2md",
           ok: true
         })
       ]

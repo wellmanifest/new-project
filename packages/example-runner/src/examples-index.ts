@@ -109,9 +109,14 @@ async function renderScenarioDetails(repoRoot: string, scenario: ScenarioEntry):
   lines.push(generatedSummary(repoRoot, scenario));
 
   if (scenario.kind === "recruitment") {
+    const processDetails = await renderScenarioDocumentProcesses(repoRoot, scenario.dir);
     const candidateDetails = await renderCandidateDetails(repoRoot, scenario.dir);
-    if (candidateDetails.length) {
-      lines.push("", "Candidates and document processes:", "", ...candidateDetails);
+    if (processDetails.length || candidateDetails.length) {
+      lines.push("", "Document processes:", "");
+      lines.push(
+        ...(processDetails.length ? processDetails : ["- no scenario-level document processes"])
+      );
+      lines.push("", "Candidates:", "", ...candidateDetails);
     }
   }
 
@@ -123,6 +128,26 @@ async function renderScenarioDetails(repoRoot: string, scenario: ScenarioEntry):
   return lines.join("\n");
 }
 
+async function renderScenarioDocumentProcesses(
+  repoRoot: string,
+  scenarioDir: string
+): Promise<string[]> {
+  const lines: string[] = [];
+  for (const processDir of (await listChildDirs(scenarioDir)).sort((a, b) =>
+    path.basename(a).localeCompare(path.basename(b))
+  )) {
+    const testPath = path.join(processDir, "test.json");
+    if (!(await exists(testPath))) continue;
+    const test = await readJson(testPath);
+    const process = String(test.process ?? path.basename(processDir));
+    const inCount = (await filesInDir(path.join(processDir, "in"))).length;
+    const outCount = (await filesInDir(path.join(processDir, "out"))).length;
+    lines.push(
+      `- ${link(repoRoot, processDir, path.basename(processDir))}: ${process}; ${folderStatus(repoRoot, processDir, "in", inCount)} -> ${folderStatus(repoRoot, processDir, "out", outCount)}; ${link(repoRoot, testPath, "test.json")}`
+    );
+  }
+  return lines;
+}
 async function renderCandidateDetails(repoRoot: string, scenarioDir: string): Promise<string[]> {
   const candidateDirs = [];
   for (const dir of await listChildDirs(scenarioDir)) {

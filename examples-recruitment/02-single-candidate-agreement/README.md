@@ -19,6 +19,10 @@ No direct input files declared at scenario root.
 
 The recruitment runner writes scenario summary artifacts under `generated/` and candidate-local proposal/status/final contract artifacts under each candidate `out/` folder.
 
+## Document Processes
+
+No scenario-level document processes declared.
+
 ## Candidates
 
 - [001-ewa-zielinska: Ewa Zielinska recruitment agreement](001-ewa-zielinska/README.md)
