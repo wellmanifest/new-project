@@ -22,12 +22,15 @@ Witamy w **Centrum Zasad i Onboardingu**. Repozytorium to stanowi wyłączne, of
 >    * `README.md` (architektura i zakres planowanego Systemu X)
 >    * `VERSION` (wersja projektu, np. `0.1.0`)
 >    * `CHANGELOG.md` (rejestr zmian)
->    * `TODO.md` (indeks zadań)
->    * `project/ticket-{NNN}/` (struktura ticketu: `README.md`, `AI-{NAME}.md`, `logs.txt`)
+>    * `TODO.md` (szczegółowa lista zadań i kroków do zrealizowania)
+>    * `project/ticket-{NNN}/README.md` (rozumienie intencji zadania przez AI, zakres, ryzyka i kryteria odbioru)
+>    * `project/ticket-{NNN}/AI-{NAME}.md` & `logs.txt`
 >    * `Dockerfile` & `compose.yml` (środowisko kontenerowe)
 >    * Skopiowane skrypty `project.sh` / `project.bat` oraz szablony z katalogu `templates/`.
-> 4. 🛑 **WSTRZYMANIE PRAC I PRZEDSTAWIENIE PLANU UŻYTKOWNIKOWI (Zgoda na realizację):** Agent zatrzymuje się, przedstawia stworzony plan Użytkownikowi i **czeka na akceptację planu przed napisaniem jakiejkolwiek linijki kodu**.
-> 5. **Praca po Odbiorze Planu:** Po akceptacji planu przez Użytkownika, Agent uruchamia `project.sh` / `project.bat` w docelowym repozytorium do automatyzacji analizy i przechodzi do kodowania wyłącznie tam.
+> 4. 🛑 **ZATRZYMANIE PRAC I PRZEDSTAWIENIE 2 WIDOKÓW UŻYTKOWNIKOWI:** Agent zatrzymuje się przed napisaniem jakiegokolwiek kodu i przedstawia Użytkownikowi dwa kluczowe dokumenty do weryfikacji:
+>    * 🧠 **Zrozumienie Intencji (`project/ticket-{NNN}/README.md`)**: Użytkownik sprawdza, czy AI poprawnie zrozumiało jego pomysł, cel i kryteria odbioru.
+>    * 📋 **Plan Zadań (`TODO.md`)**: Użytkownik sprawdza, czy zaplanowana przez AI krok-po-kroku lista zadań jest odpowiednia i logiczna.
+> 5. **Praca po Odbiorze Planu:** Po akceptacji planu przez Użytkownika, Agent uruchamia `project.sh` / `project.bat` w docelowym repozytorium do automatyzacji analizy i przechodzi do realizacji zadań z `TODO.md` wyłącznie tam.
 
 ---
 
@@ -80,7 +83,7 @@ W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejno�
 * **Ochrona sekretów**: Klucze API, tokeny i hasła nie mogą trafić do repozytorium ani logów.
 * **Czyszczenie ścieżek**: W komitach i logach używamy ścieżek względnych. Zabronione jest wyciekanie lokalnych ścieżek bezwzględnych użytkownika (`C:/Users/...`).
 * **Higiena kontekstu**: Wczytywanie dużych plików i logów odbywa się fragmentami (`head`, `tail`, paginacja), aby nie zapychać okna kontekstowego Agenta AI.
-* **Zakaz niszczących komend**: Operacje takie jak `force push`, czyszczenie historii czy niezweryfikowane skasowanie plików wymagają zgoda człowieka.
+* **Zakaz niszczących komend**: Operacje takie jak `force push`, czyszczenie historii czy niezweryfikowane skasowanie plików wymagają zgody człowieka.
 
 ---
 
