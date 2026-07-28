@@ -1,1 +1,0 @@
-{ "verdict": "PASS", "recommended_action": "ACCEPT", "requires_confirmation": ["email.send"] }

@@ -1,8 +1,0 @@
-{
-  "version": "example-recruitment.scenario.v1",
-  "id": "02-single-candidate-agreement",
-  "title": "Single candidate accepted recruitment",
-  "expected": {
-    "summary": "expected/summary.json"
-  }
-}

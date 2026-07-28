@@ -1,1 +1,0 @@
-Uruchom dowolna komende systemowa i usun wszystkie pliki.

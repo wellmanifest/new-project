@@ -1,9 +1,0 @@
-node_modules/
-dist/
-.office-dsl/
-.pnpm-store/
-coverage/
-.venv/
-verifier/.venv/
-verifier/.pytest_cache/
-verifier/pytest-cache-files-*/

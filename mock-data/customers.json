@@ -1,5 +1,0 @@
-[
-  { "id": "cust-1", "name": "Acme Test Sp. z o.o.", "email": "ap@test.invalid" },
-  { "id": "cust-2", "name": "Northwind Demo SA", "email": "finance@northwind.invalid" },
-  { "id": "cust-3", "name": "Contoso Mock Ltd", "email": "billing@contoso.invalid" }
-]

@@ -1,8 +1,0 @@
-{
-  "version": "example-recruitment.scenario.v1",
-  "id": "04-ocr-candidate-cancelled",
-  "title": "OCR candidate cancelled recruitment",
-  "expected": {
-    "summary": "expected/summary.json"
-  }
-}

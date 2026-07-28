@@ -1,7 +1,0 @@
-@user1 Stanowisko: QA Engineer. Wynagrodzenie 14000 PLN. Termin do 2026-10-01.
-@user2 Stanowisko: QA Engineer. Wynagrodzenie 14000 PLN. Termin do 2026-10-01.
-@user1 Akceptacja: podpisanie umowy i plan testow.
-@user2 Gotowe gdy kandydat potwierdzi start i zakres testow.
-@user1 Platnosc: miesiecznie po akceptacji.
-@user2 Zgadzam sie na aktualne warunki.
-@user1 Zgoda.

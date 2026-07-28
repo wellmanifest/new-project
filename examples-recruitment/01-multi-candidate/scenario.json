@@ -1,8 +1,0 @@
-{
-  "version": "example-recruitment.scenario.v1",
-  "id": "01-multi-candidate",
-  "title": "Multi-candidate recruitment",
-  "expected": {
-    "summary": "expected/summary.json"
-  }
-}

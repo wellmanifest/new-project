@@ -1,5 +1,0 @@
-# CV: Kasia Wrona
-
-Umiejetnosci: SQL, raportowanie, Python
-Dostepnosc: od 2026-10-20
-Doswiadczenie: 4 lata analityki.

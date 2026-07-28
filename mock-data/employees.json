@@ -1,4 +1,0 @@
-[
-  { "id": "emp-1", "name": "Anna Kowalska", "email": "anna.kowalska@example.invalid", "role": "accountant" },
-  { "id": "emp-2", "name": "Jan Nowak", "email": "jan.nowak@example.invalid", "role": "manager" }
-]

@@ -1,3 +1,0 @@
-@user1 Stanowisko: Data Analyst. Wynagrodzenie 15000 PLN. Termin do 2026-10-20.
-@user2 Moge zaakceptowac tylko 18000 PLN.
-@user1 Nie akceptuje tych warunkow i koncze rozmowy.
