@@ -1,17 +1,73 @@
-﻿# Work Start Notes
+# Centrum Zasad i Onboardingu (Governance & Onboarding Hub)
 
-This repository is now reserved for human and AI onboarding material for this workspace.
+[![Purpose: Governance](https://img.shields.io/badge/Purpose-Governance_%26_Policy-blue.svg)](#)
+[![AI Agent Ready](https://img.shields.io/badge/AI_Agents-Ready-success.svg)](#)
 
-The Intent/Contract DSL Runtime project was migrated to the private GitHub repository:
+Witamy w **Centrum Zasad i Onboardingu**. Repozytorium to stanowi wyłączne, oficjalne źródło wytycznych, reguł bezpieczeństwa oraz procedur współpracy pomiędzy **ludźmi (Human)** a **autonomicznymi agentami AI**.
 
-https://github.com/subactor/intent-contract-dsl-runtime
+---
 
-Keep this repository focused on guidance such as:
+## 📌 Standard Tworzenia Nowych Systemów
 
-- `CONTRIBUTING.md` - collaboration and contribution rules.
-- `POLICY.md` - safety and operating policy.
-- `Prompt.txt` - startup prompt/context for agents or humans.
+> [!IMPORTANT]
+> **Zasada nadrzędna organizacji:**
+> 1. **Każdy nowy system / projekt powstaje w OSOBNYM, dedykowanym repozytorium na GitHubie.**
+> 2. **Każdy system obowiązkowo korzysta ze środowiska Docker (`Dockerfile`, `compose.yml`) oraz wszystkich dostępnych narzędzi deweloperskich.**
+> 3. Niniejsze repozytorium jest centrum zarządczym (Governance Hub) i służy do prowadzenia ticketów, onboarding'u oraz egzekwowania polityk bezpieczeństwa.
 
-A local migration backup ZIP is intentionally left in this folder for manual removal after the migration is fully accepted:
+---
 
-`intent-contract-dsl-runtime-migration-backup-20260728.zip`
+## 📖 Przewodnik i Zasady Pracy (Opis w Języku Naturalnym)
+
+*Poniższy opis stanowi przystępną wykładnię zasad zawartych w ścisłych plikach polityk [POLICY.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/POLICY.md) oraz [CONTRIBUTING.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/CONTRIBUTING.md). Jeśli formuła DSL w plikach jest dla kogoś trudna do zinterpretowania, ten przewodnik służy jako oficjalne wyjaśnienie.*
+
+### 1. Hierarchia Ważności Źródeł Prawdy
+W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejność ważności:
+1. 👑 **Bezpośrednie polecenie użytkownika (`USER_REQUEST`)** – najwyższy autorytet.
+2. 📁 **Aktualny stan plików w repozytorium (`FILESYSTEM`)**.
+3. 🛡️ **[POLICY.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/POLICY.md)** – bezwzględne zasady i zakazy bezpieczeństwa.
+4. 📋 **[CONTRIBUTING.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/CONTRIBUTING.md)** – procedura pracy i maszyna stanów.
+5. 📄 **README.md / Historia Git** – informacje pomocnicze i kontekstowe.
+
+---
+
+### 2. System Ticketów (`project/ticket-{NNN}`)
+* **Wymóg zakładania**: Każde zadanie składające się z więcej niż 1 kroku lub wymagające użycia Agenta AI **musi** posiadać swój folder pod `project/ticket-{NNN}`.
+* **Plik główny (`README.md`)**: Definiuje cel zadania, zakres, ryzyka i kryteria odbioru. Jest jedynym źródłem prawdy dla zakresu ticketu.
+* **Pliki uczestników (`user-{NAME}.md`, `AI-{NAME}.md`)**: Każdy pracujący człowiek lub Agent AI zapisuje tam swoje instrukcje, plan i wykonane zmiany na podstawie szablonów z katalogu [templates/](file:///c:/Users/Praca/fork/wellmanifest/new-project/templates).
+* **Logi (`logs.txt`)**: Wszystkie surowe wyniki komend i testów są dopisywane do pliku logów w formacie tekstowym.
+* **⚠️ Retencja (Nie wolno usuwać ticketów!)**: Foldery ticketów są trwale zachowywane. Agentom **nie wolno ich usuwać**, chyba że po zakończonym projekcie użytkownik wyraźnie wyda takie polecenie.
+
+---
+
+### 3. Bezpieczeństwo i Dobre Praktyki (`POLICY.md`)
+* **Weryfikacja faktów**: Twierdzenia bez dowodów (np. "test przeszedł" bez uruchomienia komendy) są zabronione.
+* **Ochrona sekretów**: Klucze API, tokeny i hasła nie mogą trafić do repozytorium ani logów.
+* **Czyszczenie ścieżek**: W komitach i logach używamy ścieżek względnych. Zabronione jest wyciekanie lokalnych ścieżek bezwzględnych użytkownika (`C:/Users/...`).
+* **Higiena kontekstu**: Wczytywanie dużych plików i logów odbywa się fragmentami (`head`, `tail`, paginacja), aby nie zapychać okna kontekstowego Agenta AI.
+* **Zakaz niszczących komend**: Operacje takie jak `force push`, czyszczenie historii czy niezweryfikowane skasowanie plików wymagają zgody człowieka.
+
+---
+
+### 4. Wymagania Środowiskowe (Docker i Narzędzia)
+* Każdy tworzony system **muszą** być budowany i uruchamiany w odizolowanym środowisku **Docker** (`Dockerfile`, `compose.yml`).
+* Należy korzystać ze wszystkich dostępnych narzędzi deweloperskich wspierających jakość kodu i automatyzację.
+
+---
+
+### 5. Maszyna Stanów (Przepływ Pracy)
+Praca nad każdym zadaniem przechodzi przez cykl stanów:
+`START` ➔ `ANALYSIS` ➔ `PLAN` ➔ `TOOLS` ➔ `DELEGATION` ➔ `EDIT` ➔ `VALIDATION` ➔ `PUBLICATION` ➔ `DONE` (lub `BLOCKED` w przypadku braku dowodów/blokady).
+
+---
+
+## 📂 Szybki Indeks Dokumentów Zarządczych i Skryptów
+
+| Dokument / Skrypt | Rola i Opis |
+| :--- | :--- |
+| 🛡️ **[POLICY.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/POLICY.md)** | Ścisłe zasady bezpieczeństwa, zakazy i limity (MODE STRICT). |
+| 📋 **[CONTRIBUTING.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/CONTRIBUTING.md)** | Procedura pracy, tickety, Docker i maszyna stanów (MODE PROCEDURAL). |
+| 🤖 **[AGENTS.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/AGENTS.md)** | Standardowy punkt wejścia dla agentów AI (Cursor, Claude Code, Antigravity itp.). |
+| 🗺️ **[llms.txt](file:///c:/Users/Praca/fork/wellmanifest/new-project/llms.txt)** | Mapa dokumentacji dla modeli LLM. |
+| 🛠️ **[project.sh](file:///c:/Users/Praca/fork/wellmanifest/new-project/project.sh)** / **[project.bat](file:///c:/Users/Praca/fork/wellmanifest/new-project/project.bat)** | Przywrócone oryginalne skrypty automatyzujące (jako wzorce do kopiowania). |
+| 📂 **[templates/](file:///c:/Users/Praca/fork/wellmanifest/new-project/templates)** | Czyste szablony dla ticketów i wpisów uczestników. |
