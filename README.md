@@ -26,7 +26,8 @@ Witamy w **Centrum Zasad i Onboardingu**. Repozytorium to stanowi wyłączne, of
 >    * `project/ticket-{NNN}/` (struktura ticketu: `README.md`, `AI-{NAME}.md`, `logs.txt`)
 >    * `Dockerfile` & `compose.yml` (środowisko kontenerowe)
 >    * Skopiowane skrypty `project.sh` / `project.bat` oraz szablony z katalogu `templates/`.
-> 4. **Praca Wyłącznie w Docelowym Repozytorium:** Agent uruchamia `project.sh` / `project.bat` w docelowym repozytorium do automatyzacji analizy i pracuje wyłącznie tam.
+> 4. 🛑 **WSTRZYMANIE PRAC I PRZEDSTAWIENIE PLANU UŻYTKOWNIKOWI (Zgoda na realizację):** Agent zatrzymuje się, przedstawia stworzony plan Użytkownikowi i **czeka na akceptację planu przed napisaniem jakiejkolwiek linijki kodu**.
+> 5. **Praca po Odbiorze Planu:** Po akceptacji planu przez Użytkownika, Agent uruchamia `project.sh` / `project.bat` w docelowym repozytorium do automatyzacji analizy i przechodzi do kodowania wyłącznie tam.
 
 ---
 
@@ -79,7 +80,7 @@ W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejno�
 * **Ochrona sekretów**: Klucze API, tokeny i hasła nie mogą trafić do repozytorium ani logów.
 * **Czyszczenie ścieżek**: W komitach i logach używamy ścieżek względnych. Zabronione jest wyciekanie lokalnych ścieżek bezwzględnych użytkownika (`C:/Users/...`).
 * **Higiena kontekstu**: Wczytywanie dużych plików i logów odbywa się fragmentami (`head`, `tail`, paginacja), aby nie zapychać okna kontekstowego Agenta AI.
-* **Zakaz niszczących komend**: Operacje takie jak `force push`, czyszczenie historii czy niezweryfikowane skasowanie plików wymagają zgody człowieka.
+* **Zakaz niszczących komend**: Operacje takie jak `force push`, czyszczenie historii czy niezweryfikowane skasowanie plików wymagają zgoda człowieka.
 
 ---
 
@@ -91,7 +92,7 @@ W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejno�
 
 ### 5. Maszyna Stanów (Przepływ Pracy)
 Praca nad każdym zadaniem w docelowym repozytorium przechodzi przez cykl stanów:
-`START` ➔ `ANALYSIS` ➔ `PLAN` ➔ `TOOLS` ➔ `DELEGATION` ➔ `EDIT` ➔ `VALIDATION` ➔ `PUBLICATION` ➔ `DONE` (lub `BLOCKED` w przypadku braku dowodów/blokady).
+`START` ➔ `ANALYSIS` ➔ `PLAN` ➔ `WAIT_FOR_APPROVAL` ➔ `TOOLS` ➔ `DELEGATION` ➔ `EDIT` ➔ `VALIDATION` ➔ `PUBLICATION` ➔ `DONE` (lub `BLOCKED` w przypadku braku dowodów/blokady).
 
 ---
 

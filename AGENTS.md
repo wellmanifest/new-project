@@ -24,4 +24,5 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
      - `TODO.md` (Task list for System X)
      - `project/ticket-{NNN}/` (Ticket files: `README.md`, `AI-{NAME}.md`, `logs.txt`)
      - `Dockerfile` & `compose.yml`
-  5. Executes `./project.sh` (or `project.bat`) in System X's repository to run automated Dev Tools (`code2llm`, `redup`, `prefact`, `doql`, `sumd`, `goal`) and works EXCLUSIVELY in System X's repository.
+  5. **STOP & WAIT FOR USER REVIEW**: Presents the initialized plan to the user for review and approval BEFORE writing any code.
+  6. **EXECUTE AFTER APPROVAL**: Upon user approval, executes `./project.sh` (or `project.bat`) in System X's repository to run Dev Tools and works EXCLUSIVELY in System X's repository.
