@@ -3,17 +3,40 @@
 [![Purpose: Governance](https://img.shields.io/badge/Purpose-Governance_%26_Policy-blue.svg)](#)
 [![AI Agent Ready](https://img.shields.io/badge/AI_Agents-Ready-success.svg)](#)
 
-Witamy w **Centrum Zasad i Onboardingu**. Repozytorium to stanowi wyłączne, oficjalne źródło wytycznych, reguł bezpieczeństwa oraz procedur współpracy pomiędzy **ludźmi (Human)** a **autonomicznymi agentami AI**.
+Witamy w **Centrum Zasad i Onboardingu**. Repozytorium to stanowi wyłączne, oficjalne źródło wytycznych, reguł bezpieczeństwa, automatyzacji oraz procedur współpracy pomiędzy **ludźmi (Human)** a **autonomicznymi agentami AI**.
 
 ---
 
 ## 📌 Standard Tworzenia Nowych Systemów
 
 > [!IMPORTANT]
-> **Zasada nadrzędna organizacji:**
-> 1. **Każdy nowy system / projekt powstaje w OSOBNYM, dedykowanym repozytorium na GitHubie.**
-> 2. **Każdy system obowiązkowo korzysta ze środowiska Docker (`Dockerfile`, `compose.yml`) oraz wszystkich dostępnych narzędzi deweloperskich.**
+> **Obowiązkowe zasady dla każdego nowego projektu:**
+> 1. **Każdy nowy system / aplikacja powstaje w OSOBNYM, dedykowanym repozytorium na GitHubie.**
+> 2. **Każdy system obowiązkowo korzysta ze środowiska Docker (`Dockerfile`, `compose.yml`) oraz zestawu dedykowanych narzędzi deweloperskich.**
 > 3. Niniejsze repozytorium jest centrum zarządczym (Governance Hub) i służy do prowadzenia ticketów, onboarding'u oraz egzekwowania polityk bezpieczeństwa.
+
+---
+
+## 🛠️ Zestaw Narzędzi Deweloperskich (Dev Tools)
+
+Wszystkie wymagane narzędzia automatyzujące są instalowane i uruchamiane automatycznie poprzez skrypt **`./project.sh`** (w środowisku Linux/macOS) lub **`project.bat`** (w środowisku Windows).
+
+Oto zwięzły opis narzędzi wchodzących w skład zestawu deweloperskiego:
+
+| Narzędzie | Krótki Opis i Przeznaczenie |
+| :--- | :--- |
+| 📦 **`code2llm`** | Pakuje kod źródłowy i strukturę projektu w zoptymalizowany format dla modeli AI/LLM (zapisuje analizę w podkatalogu `./project`). |
+| 🔄 **`redup`** | Skaner wykrywający powtórzenia i redundancje w kodzie źródłowym (generuje raport w formacie `toon`). |
+| 🛠️ **`prefact`** | Narzędzie do automatycznego przygotowywania refaktoryzacji oraz analizy zależności w kodzie. |
+| 🗄️ **`doql`** | Narzędzie analityczne generujące podsumowania strukturalne i relacyjne projektu (`app.doql.less`). |
+| 📊 **`sumd` / `sumr`** | Narzędzia generujące automatyczne raporty i podsumowania z zawartości plików i struktur repozytorium. |
+| 🎯 **`goal`** | Narzędzie do weryfikacji celów projektowych i zgodności ze specyfikacją wymagań. |
+| 🔤 **`code2logic`** / **`glon`** / **`regix`** | Narzędzia pomocnicze do zamiany kodu na reguły logiczne, operacji tekstowych i parsowania. |
+| 🤖 **`vallm`** | Moduł semantycznej walidacji i wsadowego przetwarzania kontekstu dla agentów i modeli LLM. |
+
+> **Uruchomienie instalacji i analizy:**
+> * Linux / macOS: `bash project.sh`
+> * Windows: `project.bat`
 
 ---
 
@@ -50,8 +73,8 @@ W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejno�
 ---
 
 ### 4. Wymagania Środowiskowe (Docker i Narzędzia)
-* Każdy tworzony system **muszą** być budowany i uruchamiany w odizolowanym środowisku **Docker** (`Dockerfile`, `compose.yml`).
-* Należy korzystać ze wszystkich dostępnych narzędzi deweloperskich wspierających jakość kodu i automatyzację.
+* Każdy tworzony system **musi** być budowany i uruchamiany w odizolowanym środowisku **Docker** (`Dockerfile`, `compose.yml`).
+* Należy obowiązkowo korzystać z zestawu narzędzi deweloperskich (`project.sh` / `project.bat`) do analizy i automatyzacji.
 
 ---
 
@@ -69,5 +92,5 @@ Praca nad każdym zadaniem przechodzi przez cykl stanów:
 | 📋 **[CONTRIBUTING.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/CONTRIBUTING.md)** | Procedura pracy, tickety, Docker i maszyna stanów (MODE PROCEDURAL). |
 | 🤖 **[AGENTS.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/AGENTS.md)** | Standardowy punkt wejścia dla agentów AI (Cursor, Claude Code, Antigravity itp.). |
 | 🗺️ **[llms.txt](file:///c:/Users/Praca/fork/wellmanifest/new-project/llms.txt)** | Mapa dokumentacji dla modeli LLM. |
-| 🛠️ **[project.sh](file:///c:/Users/Praca/fork/wellmanifest/new-project/project.sh)** / **[project.bat](file:///c:/Users/Praca/fork/wellmanifest/new-project/project.bat)** | Przywrócone oryginalne skrypty automatyzujące (jako wzorce do kopiowania). |
+| 🛠️ **[project.sh](file:///c:/Users/Praca/fork/wellmanifest/new-project/project.sh)** / **[project.bat](file:///c:/Users/Praca/fork/wellmanifest/new-project/project.bat)** | Skrypty instalujące i uruchamiające zestaw narzędzi deweloperskich. |
 | 📂 **[templates/](file:///c:/Users/Praca/fork/wellmanifest/new-project/templates)** | Czyste szablony dla ticketów i wpisów uczestników. |

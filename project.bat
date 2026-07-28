@@ -1,112 +1,54 @@
 @echo off
 setlocal EnableDelayedExpansion
+:: Author: Tom Sapletta · https://tom.sapletta.com
+:: Part of the ifURI solution.
+:: Windows equivalent of project.sh
 
-set ROOT=%~dp0
-set ROOT=%ROOT:~0,-1%
-
-if "%1"=="" (
-  call :usage
-  exit /b 0
-)
-
-if /I "%1"=="help" call :usage & exit /b 0
-if /I "%1"=="-h" call :usage & exit /b 0
-if /I "%1"=="--help" call :usage & exit /b 0
+cls
 
 set PIP_DISABLE_PIP_VERSION_CHECK=1
 
-call :%1 %2 %3 %4 %5 %6 %7 %8 %9
-exit /b %ERRORLEVEL%
+set VENV=venv
+set PIP=%VENV%\Scripts\pip.exe
 
-:usage
-echo Usage: project.bat ^<command^> [args]
-echo.
-echo Project commands:
-echo   install             Install workspace dependencies from pnpm lockfile
-echo   typecheck           Run TypeScript project references check
-echo   lint                Run ESLint on source and tests
-echo   format              Check formatting with Prettier
-echo   test                Run TypeScript tests
-echo   python-test         Run Python verifier tests
-echo   example ^<name^>      Run one example scenario
-echo   examples            Run all example scenarios
-echo   example-chat ^<name^> Run one chat negotiation example
-echo   examples-chat       Run all chat negotiation examples
-echo   example-recruitment ^<name^> Run one recruitment example
-echo   examples-recruitment Run all recruitment examples
-echo   verify              Run typecheck, lint, format, tests and git diff check
-echo   dev-backend         Start backend and static web demo
-echo.
-exit /b 0
-
-:install
-call corepack pnpm install --frozen-lockfile
-exit /b %ERRORLEVEL%
-
-:typecheck
-call corepack pnpm run typecheck
-exit /b %ERRORLEVEL%
-
-:lint
-call corepack pnpm run lint
-exit /b %ERRORLEVEL%
-
-:format
-call corepack pnpm run format
-exit /b %ERRORLEVEL%
-
-:test
-call corepack pnpm run test
-exit /b %ERRORLEVEL%
-
-:python-test
-call corepack pnpm run python:test
-exit /b %ERRORLEVEL%
-
-:example
-if "%2"=="" (
-  echo Usage: project.bat example ^<name^>
-  exit /b 2
+if not exist "%PIP%" (
+    echo Creating virtual environment...
+    python -m venv %VENV%
 )
-call corepack pnpm run example:run -- %2
-exit /b %ERRORLEVEL%
 
-:examples
-call corepack pnpm run examples:run
-exit /b %ERRORLEVEL%
+"%PIP%" install --upgrade pip -q 2>nul
 
-:example-chat
-if "%2"=="" (
-  echo Usage: project.bat example-chat ^<name^>
-  exit /b 2
+"%PIP%" install regix --upgrade --quiet
+"%PIP%" install prefact --upgrade --quiet
+"%PIP%" install vallm --upgrade --quiet
+"%PIP%" install redup --upgrade --quiet
+"%PIP%" install glon --upgrade --quiet
+"%PIP%" install code2logic --upgrade --quiet
+"%PIP%" install code2llm --upgrade --quiet
+
+"%VENV%\Scripts\code2llm.exe" ./ -f all -o ./project --no-chunk --exclude "*.md"
+"%VENV%\Scripts\redup.exe" scan . --format toon --output ./project --ext .mjs,.js,.php,.sh
+"%VENV%\Scripts\prefact.exe" -a -e "examples/**"
+
+"%PIP%" install doql --upgrade --quiet
+"%VENV%\Scripts\doql.exe" adopt . --format less --output app.doql.less --force
+
+"%PIP%" install sumd --upgrade --quiet
+"%VENV%\Scripts\sumd.exe" .
+"%VENV%\Scripts\sumr.exe" .
+
+if exist "..\goal\goal" (
+    if exist "..\goal\pyproject.toml" (
+        pip install -e ..\goal
+        "%PIP%" install -e ..\goal --quiet
+    )
+) else (
+    pip install -U goal
+    "%PIP%" install goal --upgrade --quiet
 )
-call corepack pnpm run example-chat:run -- %2
-exit /b %ERRORLEVEL%
 
-:examples-chat
-call corepack pnpm run examples-chat:run
-exit /b %ERRORLEVEL%
-
-:example-recruitment
-if "%2"=="" (
-  echo Usage: project.bat example-recruitment ^<name^>
-  exit /b 2
+if exist ".\tree.bat" (
+    call .\tree.bat
+) else (
+    echo Skipping tree snapshot: tree.bat not found.
 )
-call corepack pnpm run example-recruitment:run -- %2
-exit /b %ERRORLEVEL%
-
-:examples-recruitment
-call corepack pnpm run examples-recruitment:run
-exit /b %ERRORLEVEL%
-
-:verify
-call :typecheck || exit /b 1
-call :lint || exit /b 1
-call :format || exit /b 1
-call :test || exit /b 1
-call git diff --exit-code
-exit /b %ERRORLEVEL%
-
-:dev-backend
-call corepack pnpm run dev
-exit /b %ERRORLEVEL%
