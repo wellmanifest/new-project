@@ -9,11 +9,24 @@ Witamy w **Centrum Zasad i Onboardingu**. Repozytorium to stanowi wyłączne, of
 
 ## 📌 Standard Tworzenia Nowych Systemów
 
+> [!CAUTION]
+> 🛑 **BEZWZGLĘDNY ZAKAZ TWORZENIA TICKETÓW ANI PLIKÓW ZADAŃ W TYM REPOZYTORIUM:**
+> Repozytorium `wellmanifest/new-project` jest wyznaczonym źródłem prawdy dla polityk (READ-ONLY Governance Hub).
+> **W tym repozytorium NIE TWORZY SIĘ żadnych ticketów (`project/ticket-{NNN}`), zadań, logów ani plików projektu.**
+
 > [!IMPORTANT]
-> **Obowiązkowe zasady dla każdego nowego projektu:**
-> 1. **Każdy nowy system / aplikacja powstaje w OSOBNYM, dedykowanym repozytorium na GitHubie.**
-> 2. **Każdy system obowiązkowo korzysta ze środowiska Docker (`Dockerfile`, `compose.yml`) oraz zestawu dedykowanych narzędzi deweloperskich.**
-> 3. Niniejsze repozytorium jest centrum zarządczym (Governance Hub) i służy do prowadzenia ticketów, onboarding'u oraz egzekwowania polityk bezpieczeństwa.
+> **Obowiązkowy przepływ pracy dla każdego nowego projektu (System X):**
+> 1. **Czytanie Zasad:** Agent AI odczytuje polityki i reguły z niniejszego repozytorium `wellmanifest/new-project`.
+> 2. **Przejście do Docelowego Repozytorium:** Agent przenosi się całkowicie do docelowego/nowego repozytorium wskazanego dla Systemu X (lub tworzy nowy folder projektu zadeklarowany przez użytkownika).
+> 3. **Bootstrap w Nowym Repozytorium (Przed pisaniem kodu!):** W docelowym repozytorium Systemu X Agent od razu tworzy:
+>    * `README.md` (architektura i zakres planowanego Systemu X)
+>    * `VERSION` (wersja projektu, np. `0.1.0`)
+>    * `CHANGELOG.md` (rejestr zmian)
+>    * `TODO.md` (indeks zadań)
+>    * `project/ticket-{NNN}/` (struktura ticketu: `README.md`, `AI-{NAME}.md`, `logs.txt`)
+>    * `Dockerfile` & `compose.yml` (środowisko kontenerowe)
+>    * Skopiowane skrypty `project.sh` / `project.bat` oraz szablony z katalogu `templates/`.
+> 4. **Praca Wyłącznie w Docelowym Repozytorium:** Agent uruchamia `project.sh` / `project.bat` w docelowym repozytorium do automatyzacji analizy i pracuje wyłącznie tam.
 
 ---
 
@@ -21,8 +34,8 @@ Witamy w **Centrum Zasad i Onboardingu**. Repozytorium to stanowi wyłączne, of
 
 > [!TIP]
 > ⚡ **Zasada Oszczędności Tokenów i Czasu dla Agentów AI:**
-> Agenci AI mają **kategoryczny nakaz** uruchamiania skryptu `./project.sh` (Linux/macOS) lub `project.bat` (Windows) przed rozpoczęciem analizy kodu.
-> * **Jak to działa?** Agent nie traci tokenów ani czasu na żmudne, ręczne czytanie plik po pliku. Narzędzia (`code2llm`, `redup`, `prefact`, `doql`, `sumd`, `goal`) wykonują całą ciężką pracę analityczną i generują zwięzłe raporty pod katalogiem `./project/`.
+> Agenci AI mają **kategoryczny nakaz** uruchamiania skryptu `./project.sh` (Linux/macOS) lub `project.bat` (Windows) w docelowym repozytorium projektu przed rozpoczęciem analizy kodu.
+> * **Jak to działa?** Agent nie traci tokenów ani czasu na żmudne czytanie plik po pliku. Narzędzia (`code2llm`, `redup`, `prefact`, `doql`, `sumd`, `goal`) wykonują całą ciężką pracę analityczną i generują zwięzłe raporty pod katalogiem `./project/` w repozytorium docelowym.
 > * **Efekt:** Agent odczytuje gotowe raporty z narzędzi, błyskawicznie dowiaduje się o stanie kodu lub błędach i od razu podejmuje celne działania.
 
 | Narzędzie | Krótki Opis i Przeznaczenie |
@@ -33,7 +46,7 @@ Witamy w **Centrum Zasad i Onboardingu**. Repozytorium to stanowi wyłączne, of
 | 🗄️ **`doql`** | Narzędzie analityczne generujące podsumowania strukturalne i relacyjne projektu (`app.doql.less`). |
 | 📊 **`sumd` / `sumr`** | Narzędzia generujące automatyczne raporty i podsumowania z zawartości plików i struktur repozytorium. |
 | 🎯 **`goal`** | Narzędzie do weryfikacji celów projektowych i zgodności ze specyfikacją wymagań. |
-| 🔤 **`code2logic`** / **`glon`** / **`regix`** | Narzędzia pomocnicze do zamiamy kodu na reguły logiczne, operacji tekstowych i parsowania. |
+| 🔤 **`code2logic`** / **`glon`** / **`regix`** | Narzędzia pomocnicze do zamiany kodu na reguły logiczne, operacji tekstowych i parsowania. |
 | 🤖 **`vallm`** | Moduł semantycznej walidacji i wsadowego przetwarzania kontekstu dla agentów i modeli LLM. |
 
 ---
@@ -45,19 +58,19 @@ Witamy w **Centrum Zasad i Onboardingu**. Repozytorium to stanowi wyłączne, of
 ### 1. Hierarchia Ważności Źródeł Prawdy
 W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejność ważności:
 1. 👑 **Bezpośrednie polecenie użytkownika (`USER_REQUEST`)** – najwyższy autorytet.
-2. 📁 **Aktualny stan plików w repozytorium (`FILESYSTEM`)**.
+2. 📁 **Aktualny stan plików w docelowym repozytorium (`FILESYSTEM`)**.
 3. 🛡️ **[POLICY.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/POLICY.md)** – bezwzględne zasady i zakazy bezpieczeństwa.
 4. 📋 **[CONTRIBUTING.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/CONTRIBUTING.md)** – procedura pracy i maszyna stanów.
 5. 📄 **README.md / Historia Git** – informacje pomocnicze i kontekstowe.
 
 ---
 
-### 2. System Ticketów (`project/ticket-{NNN}`)
-* **Wymóg zakładania**: Każde zadanie składające się z więcej niż 1 kroku lub wymagające użycia Agenta AI **musi** posiadać swój folder pod `project/ticket-{NNN}`.
-* **Plik główny (`README.md`)**: Definiuje cel zadania, zakres, ryzyka i kryteria odbioru. Jest jedynym źródłem prawdy dla zakresu ticketu.
-* **Pliki uczestników (`user-{NAME}.md`, `AI-{NAME}.md`)**: Każdy pracujący człowiek lub Agent AI zapisuje tam swoje instrukcje, plan i wykonane zmiany na podstawie szablonów z katalogu [templates/](file:///c:/Users/Praca/fork/wellmanifest/new-project/templates).
+### 2. System Ticketów (`project/ticket-{NNN}` w Docelowym Repozytorium)
+* **Wymóg zakładania**: Każde zadanie składające się z więcej niż 1 kroku lub wymagające użycia Agenta AI **musi** posiadać swój folder pod `project/ticket-{NNN}` **w repozytorium docelowym projektu**.
+* **Plik główny (`README.md`)**: Definiuje cel zadania, zakres, ryzyka i kryteria odbioru w docelowym repozytorium. Jest jedynym źródłem prawdy dla zakresu ticketu.
+* **Pliki uczestników (`user-{NAME}.md`, `AI-{NAME}.md`)**: Każdy pracujący człowiek lub Agent AI zapisuje tam swoje instrukcje, plan i wykonane zmiany na podstawie szablonów z katalogu `templates/`.
 * **Logi (`logs.txt`)**: Wszystkie surowe wyniki komend i testów są dopisywane do pliku logów w formacie tekstowym.
-* **⚠️ Retencja (Nie wolno usuwać ticketów!)**: Foldery ticketów są trwale zachowywane. Agentom **nie wolno ich usuwać**, chyba że po zakończonym projekcie użytkownik wyraźnie wyda takie polecenie.
+* **⚠️ Retencja (Nie wolno usuwać ticketów!)**: Foldery ticketów są trwale zachowywane w docelowym repozytorium. Agentom **nie wolno ich usuwać**, chyba że po zakończonym projekcie użytkownik wyraźnie wyda takie polecenie.
 
 ---
 
@@ -77,7 +90,7 @@ W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejno�
 ---
 
 ### 5. Maszyna Stanów (Przepływ Pracy)
-Praca nad każdym zadaniem przechodzi przez cykl stanów:
+Praca nad każdym zadaniem w docelowym repozytorium przechodzi przez cykl stanów:
 `START` ➔ `ANALYSIS` ➔ `PLAN` ➔ `TOOLS` ➔ `DELEGATION` ➔ `EDIT` ➔ `VALIDATION` ➔ `PUBLICATION` ➔ `DONE` (lub `BLOCKED` w przypadku braku dowodów/blokady).
 
 ---
