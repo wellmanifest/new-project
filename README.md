@@ -17,11 +17,13 @@ Witamy w **Centrum Zasad i Onboardingu**. Repozytorium to stanowi wyłączne, of
 
 ---
 
-## 🛠️ Zestaw Narzędzi Deweloperskich (Dev Tools)
+## 🛠️ Zestaw Narzędzi Deweloperskich i Zasada "Dev Tools First"
 
-Wszystkie wymagane narzędzia automatyzujące są instalowane i uruchamiane automatycznie poprzez skrypt **`./project.sh`** (w środowisku Linux/macOS) lub **`project.bat`** (w środowisku Windows).
-
-Oto zwięzły opis narzędzi wchodzących w skład zestawu deweloperskiego:
+> [!TIP]
+> ⚡ **Zasada Oszczędności Tokenów i Czasu dla Agentów AI:**
+> Agenci AI mają **kategoryczny nakaz** uruchamiania skryptu `./project.sh` (Linux/macOS) lub `project.bat` (Windows) przed rozpoczęciem analizy kodu.
+> * **Jak to działa?** Agent nie traci tokenów ani czasu na żmudne, ręczne czytanie plik po pliku. Narzędzia (`code2llm`, `redup`, `prefact`, `doql`, `sumd`, `goal`) wykonują całą ciężką pracę analityczną i generują zwięzłe raporty pod katalogiem `./project/`.
+> * **Efekt:** Agent odczytuje gotowe raporty z narzędzi, błyskawicznie dowiaduje się o stanie kodu lub błędach i od razu podejmuje celne działania.
 
 | Narzędzie | Krótki Opis i Przeznaczenie |
 | :--- | :--- |
@@ -31,12 +33,8 @@ Oto zwięzły opis narzędzi wchodzących w skład zestawu deweloperskiego:
 | 🗄️ **`doql`** | Narzędzie analityczne generujące podsumowania strukturalne i relacyjne projektu (`app.doql.less`). |
 | 📊 **`sumd` / `sumr`** | Narzędzia generujące automatyczne raporty i podsumowania z zawartości plików i struktur repozytorium. |
 | 🎯 **`goal`** | Narzędzie do weryfikacji celów projektowych i zgodności ze specyfikacją wymagań. |
-| 🔤 **`code2logic`** / **`glon`** / **`regix`** | Narzędzia pomocnicze do zamiany kodu na reguły logiczne, operacji tekstowych i parsowania. |
+| 🔤 **`code2logic`** / **`glon`** / **`regix`** | Narzędzia pomocnicze do zamiamy kodu na reguły logiczne, operacji tekstowych i parsowania. |
 | 🤖 **`vallm`** | Moduł semantycznej walidacji i wsadowego przetwarzania kontekstu dla agentów i modeli LLM. |
-
-> **Uruchomienie instalacji i analizy:**
-> * Linux / macOS: `bash project.sh`
-> * Windows: `project.bat`
 
 ---
 

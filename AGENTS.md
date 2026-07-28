@@ -11,6 +11,7 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
 
 ## Quick Execution Rules
 - **Precedence**: `USER_REQUEST` > `FILESYSTEM` > `POLICY.md` > `CONTRIBUTING.md`.
+- **Dev Tools First (Token & Time Efficiency)**: Agents MUST run `./project.sh` (or `project.bat`) to execute automated tools (`code2llm`, `redup`, `prefact`, `doql`, `sumd`, `goal`) instead of manual file scanning. Work on tool-generated outputs in `./project/` to save tokens.
 - **New System Architecture**: EVERY new system MUST be created in a NEW separate repository on GitHub.
 - **Environment & Tools**: EVERY system MUST use Docker (`Dockerfile`, `compose.yml`) and all available development tools.
 - **Ticketing**: Multi-step tasks (>1 step) MUST be tracked under `project/ticket-{NNN}`.
