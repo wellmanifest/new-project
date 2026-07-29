@@ -30,8 +30,8 @@ DOCELOWE REPOZYTORIUM SYSTEMU X (Root)
     └── ticket-001/              <-- (Podkatalog Konkretnego Ticketu)
         ├── user-{NAME}.md       <-- (Notatki człowieka zdefiniowanego w .env / CLI)
         ├── preprompt.md         <-- (Wyciągnięte wytyczne z notatek & ustrukturyzowany workflow)
-        ├── ai-{AGENT}.md        <-- (MÓZG AGENTA: rozumienie intencji, plan, Kryteria Odbioru)
-        ├── ai-{AGENT}-logs.md   <-- (Dedykowany plik surowych logów tego agenta)
+        ├── ai-{PROVIDER}.md     <-- (MÓZG AGENTA: rozumienie intencji, plan, Kryteria Odbioru)
+        ├── ai-{PROVIDER}-logs.txt <-- (Dedykowany plik surowych logów tego agenta)
         └── changelog.md         <-- (Lokalny rejestr zmian dotyczący tylko tego ticketu)
 ```
 
