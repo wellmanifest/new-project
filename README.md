@@ -19,12 +19,11 @@ NOWE REPOZYTORIUM SYSTEMU X (Root)
 ├── 🛠️ project.sh / project.bat  <-- (Skrypty narzędzi deweloperskich)
 │
 └── 📁 project/                  <-- (Katalog zarządzania ticketami)
-    ├── 📜 README.md             <-- (Menu Katalogu Project: opis, linki do doku i indeks ticketów)
-    ├── ⚙️ readme.sh              <-- (Skrypt generujący/aktualizujący menu w README.md)
+    ├── 📜 README.md             <-- (Menu Katalogu Project: opis, linki do doku i indeks wszystkich ticketów)
+    ├── ⚙️ readme.sh              <-- (Skrypt generujący/aktualizujący menu w project/README.md)
     ├── ⚙️ new-ticket.sh          <-- (Skrypt generujący nowy katalog ticketu)
     │
     └── 📁 ticket-001/           <-- (Katalog Konkretnego Ticketu)
-        ├── 📜 README.md         <-- (Menu Ticketu: linki do doku, user-*, ai-*, logów, changelogu)
         ├── 👤 user-Mateusz.md   <-- (Ręczne notatki Mateusza & stały kontekst zadania)
         ├── 👤 user-Tom.md       <-- (Ręczne notatki Toma - ZAWSZE tworzony domyślnie!)
         ├── 🎯 preprompt.md      (Wyciągnięte z user-* wytyczne oraz ustrukturyzowany workflow)
@@ -48,10 +47,9 @@ NOWE REPOZYTORIUM SYSTEMU X (Root)
                │
                ▼
 [KROK III: URUCHOMIENIE new-ticket.sh] ───► Tworzy katalog project/ticket-001/ z plikami:
-               │                             ├── README.md (Menu Ticketu)
-               │                             ├── user-Mateusz.md (Notatki)
-               │                             ├── user-Tom.md (Notatki)
-               │                             └── changelog.md (Lokalny rejestr)
+               │                             ├── user-Mateusz.md (Notatki Mateusza)
+               │                             ├── user-Tom.md (Notatki Toma)
+               │                             └── changelog.md (Lokalny rejestr ticketu)
                ▼
 [KROK IV: EKSTRAKCJA WYTYCZNYCH] ─────────► Tworzy project/ticket-001/preprompt.md
                │
@@ -76,9 +74,8 @@ NOWE REPOZYTORIUM SYSTEMU X (Root)
 | **Root** | 🗺️ `README.md` | **Główne Menu Nawigacyjne Projektu**: spina całą dokumentację, polityki, moduły i tickety w czytelny spis treści. |
 | **Root** | 🚀 `VERSION` & 📋 `CHANGELOG.md` | **Rejestr Wydania Projektu**: zbiorczy numer wersji oraz wykaz wszystkich wprowadzonych modyfikacji w całym projekcie. |
 | **Root** | 📝 `TODO.md` | **Główny Harmonogram Zadań**: checklista kroków realizowanych w repozytorium przez ludzi i agentów AI. |
-| **`project/`** | 📜 `project/README.md` | **Menu Katalogu Project**: opisuje przeznaczenie katalogu `project/`, zawiera odnośniki do huba oraz indeks wszystkich ticketów. |
-| **`project/`** | ⚙️ `readme.sh` & `new-ticket.sh` | **Skrypty Automatyzacji**: `new-ticket.sh` tworzy strukturę nowego ticketu, a `readme.sh` aktualizuje menu nawigacyjne. |
-| **Ticket** | 📜 `README.md` (w ticketze) | **Menu Ticketu**: zawiera linki do dokumentacji zarządczej, Notatek Uczestników (`user-*`), Mózgu AI (`ai-*`), logów i changelogu. |
+| **`project/`** | 📜 `project/README.md` | **Menu Katalogu Project**: opisuje przeznaczenie katalogu `project/`, zawiera odnośniki do huba oraz dynamiczny indeks wszystkich ticketów i ich plików. |
+| **`project/`** | ⚙️ `readme.sh` & `new-ticket.sh` | **Skrypty Automatyzacji**: `new-ticket.sh` tworzy strukturę nowego ticketu, a `readme.sh` aktualizuje menu w `project/README.md`. |
 | **Ticket** | 👤 `user-Mateusz.md` & `user-Tom.md` | **Pliki Użytkowników**: zawierają ręczne notatki i polecenia od ludzi. Oba pliki są **zawsze tworzone domyślnie w każdym ticketze**. Służą jako stały kontekst zapytania. |
 | **Ticket** | 🎯 `preprompt.md` | **Wytyczne i Workflow**: ustrukturyzowane informacje wyciągnięte przez AI z plików `user-*.md` oraz ustalony schemat prac. |
 | **Ticket** | 🧠 `ai-{NAME}.md` | **MÓZG ROZUMIENIA AGENTA**: opis rozumienia intencji biznesowej, plan prac, koncepcja architektury oraz Kryteria Odbioru (Acceptance Criteria). |
@@ -141,8 +138,8 @@ W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejno�
 
 ### 2. System Ticketów (`project/ticket-{NNN}` w Docelowym Repozytorium)
 * **Wymóg zakładania**: Każde zadanie składające się z więcej niż 1 kroku lub wymagające użycia Agenta AI **musi** posiadać swój folder pod `project/ticket-{NNN}` **w repozytorium docelowym projektu**.
-* **Plik główny (`README.md`)**: Służy jako Menu nawigacyjne danego ticketu z linkami do dokumentacji i uczestników.
-* **Mózg Agenta (`ai-{NAME}.md`)**: Definiuje rozumienie intencji, zakres, ryzyka i kryteria odbioru (Acceptance Criteria). Jest jedynym źródłem prawdy dla zakątka pracy danego agenta.
+* **Menu projektu (`project/README.md`)**: Służy jako Menu nawigacyjne do wszystkich ticketów z linkami do dokumentacji i uczestników.
+* **Mózg Agenta (`ai-{NAME}.md`)**: Definiuje rozumienie intencji, zakres, ryzyka i kryteria odbioru (Acceptance Criteria). Jest jedynym źródłem prawdy dla zakresu pracy danego agenta.
 * **Pliki uczestników (`user-Mateusz.md`, `user-Tom.md`)**: Ręczne notatki człowieka wklejane przy każdym zleceniu jako stały kontekst.
 * **Logi (`ai-{NAME}-logs.md`)**: Wyłączne surowe wyjścia z konsoli i testów wykonywanych przez danego agenta.
 * **⚠️ Retencja (Nie wolno usuwać ticketów!)**: Foldery ticketów są trwale zachowywane w docelowym repozytorium. Agentom **nie wolno ich usuwać**, chyba że po zakończonym projekcie użytkownik wyraźnie wyda takie polecenie.
