@@ -3,41 +3,41 @@
 [![Purpose: Governance](https://img.shields.io/badge/Purpose-Governance_%26_Policy-blue.svg)](#)
 [![AI Agent Ready](https://img.shields.io/badge/AI_Agents-Ready-success.svg)](#)
 
-Repozytorium `wellmanifest/new-project` stanowi wyłączne, oficjalne źródło polityk bezpieczeństwa, procedur pracy oraz uniwersalnych narzędzi automatyzujących dla **ludzi** oraz **autonomicznym agentom AI**.
+Repozytorium `wellmanifest/new-project` stanowi wyłączne, oficjalne źródło polityk bezpieczeństwa, procedur pracy oraz uniwersalnych narzędzi automatyzujących dla ludzi oraz autonomicznych agentów AI.
 
-> 🛑 **POLITYKA READ-ONLY (`P-CORE-007`):** Niniejsze repozytorium jest hubem zasad. Nie tworzy się w nim fizycznych ticketów, logów ani plików wykonawczych. Każdy nowy system (System X) jest tworzony i rozwijany w osobnym repozytorium.
+> **POLITYKA READ-ONLY (`P-CORE-007`):** Niniejsze repozytorium jest hubem zasad. Nie tworzy się w nim fizycznych ticketów, logów ani plików wykonawczych. Każdy nowy system (System X) jest tworzony i rozwijany w osobnym repozytorium.
 
 ---
 
-## 📂 1. Struktura Drzewa Plików Repozytorium Docelowego
+## 1. Struktura Drzewa Plików Repozytorium Docelowego
 
 ```text
 DOCELOWE REPOZYTORIUM SYSTEMU X (Root)
 ├── .env.example                 <-- (Szablon konfiguracji: PROJECT_USERS, DEFAULT_AGENT)
 ├── .env                         <-- (Lokalna konfiguracja uaktualniona z .env.example)
-├── 📜 README.md                 <-- (Główne Menu Całego Projektu)
-├── 🚀 VERSION                   <-- (Wersja główna projektu, np. 0.1.0)
-├── 📋 CHANGELOG.md              <-- (Główny rejestr zmian projektu)
-├── 📝 TODO.md                   <-- (Główna checklista kroków i zadań)
-├── 🐳 Dockerfile & compose.yml  <-- (Odizolowane środowisko kontenerowe)
-├── 🛠️ project.sh / project.bat  <-- (Narzędzia analityczne: code2llm, redup, prefact, etc.)
+├── README.md                    <-- (Główne Menu Całego Projektu)
+├── VERSION                      <-- (Wersja główna projektu, np. 0.1.0)
+├── CHANGELOG.md                 <-- (Główny rejestr zmian projektu)
+├── TODO.md                      <-- (Główna checklista kroków i zadań)
+├── Dockerfile & compose.yml     <-- (Odizolowane środowisko kontenerowe)
+├── project.sh / project.bat     <-- (Narzędzia analityczne: code2llm, redup, prefact, etc.)
 │
-└── 📁 project/                  <-- (Katalog zarządzania ticketami)
-    ├── 📜 README.md             <-- (Menu Katalogu Project: opis, linki do huba i indeks ticketów)
-    ├── ⚙️ readme.sh / .bat      <-- (Skrypt automatycznie aktualizujący project/README.md)
-    ├── ⚙️ new-ticket.sh / .bat  <-- (Skrypt generujący strukturę nowego ticketu)
+└── project/                     <-- (Katalog zarządzania ticketami)
+    ├── README.md                <-- (Menu Katalogu Project: opis, linki do huba i indeks ticketów)
+    ├── readme.sh / .bat         <-- (Skrypt automatycznie aktualizujący project/README.md)
+    ├── new-ticket.sh / .bat     <-- (Skrypt generujący strukturę nowego ticketu)
     │
-    └── 📁 ticket-001/           <-- (Podkatalog Konkretnego Ticketu)
-        ├── 👤 user-{NAME}.md    <-- (Notatki człowieka zdefiniowanego w .env / CLI)
-        ├── 🎯 preprompt.md      <-- (Wyciągnięte wytyczne z notatek & ustrukturyzowany workflow)
-        ├── 🧠 ai-{AGENT}.md     <-- (MÓZG AGENTA: rozumienie intencji, plan, Kryteria Odbioru)
-        ├── 📝 ai-{AGENT}-logs.md<-- (Dedykowany plik surowych logów tego agenta)
-        └── 📋 changelog.md      <-- (Lokalny rejestr zmian dotyczący tylko tego ticketu)
+    └── ticket-001/              <-- (Podkatalog Konkretnego Ticketu)
+        ├── user-{NAME}.md       <-- (Notatki człowieka zdefiniowanego w .env / CLI)
+        ├── preprompt.md         <-- (Wyciągnięte wytyczne z notatek & ustrukturyzowany workflow)
+        ├── ai-{AGENT}.md        <-- (MÓZG AGENTA: rozumienie intencji, plan, Kryteria Odbioru)
+        ├── ai-{AGENT}-logs.md   <-- (Dedykowany plik surowych logów tego agenta)
+        └── changelog.md         <-- (Lokalny rejestr zmian dotyczący tylko tego ticketu)
 ```
 
 ---
 
-## 📐 2. Chronologia i Wynikanie ("Co z Czego Wynika")
+## 2. Chronologia i Wynikanie ("Co z Czego Wynika")
 
 Realizacja każdego zadania w docelowym repozytorium odbywa się według ściśle określonej kolejności:
 
@@ -59,10 +59,10 @@ Realizacja każdego zadania w docelowym repozytorium odbywa się według ściśl
    * 5.1. Agent AI analizuje notatki z plików `user-{NAME}.md` i tworzy plik `preprompt.md`, zawierający ustrukturyzowane wymagania oraz krok-po-kroku workflow.
 
 6. **Generowanie Mózgu AI (`ai-{AGENT}.md`) oraz Harmonogramu (`TODO.md`)**
-   * 6.1. Z pliku `preprompt.md` Agent generuje plik `ai-{AGENT}.md` (MÓZG AI), zawierający rozumienie intencji, koncepcję architektura, zakres i **Kryteria Odbioru (Acceptance Criteria)**.
+   * 6.1. Z pliku `preprompt.md` Agent generuje plik `ai-{AGENT}.md` (MÓZG AI), zawierający rozumienie intencji, koncepcję architektury, zakres i **Kryteria Odbioru (Acceptance Criteria)**.
    * 6.2. Agent wpisuje listę zadań wykonawczych do głównego pliku `TODO.md`.
 
-7. 🛑 **Wstrzymanie Pracy i Akceptacja Planu (`P-CORE-008`)**
+7. **Wstrzymanie Pracy i Akceptacja Planu (`P-CORE-008`)**
    * 7.1. Agent zatrzymuje przerwane kodowanie i przedstawia plik `ai-{AGENT}.md` oraz checklistę w `TODO.md` Użytkownikowi do weryfikacji.
    * 7.2. Pisanie kodu rozpoczyna się wyłącznie po wyraźnej zgodzie Użytkownika.
 
@@ -72,7 +72,7 @@ Realizacja każdego zadania w docelowym repozytorium odbywa się według ściśl
 
 ---
 
-## 📜 3. Specyfikacja Plików i Kontrakty (DSL)
+## 3. Specyfikacja Plików i Kontrakty (DSL)
 
 | Plik | Rola i Specyfikacja Kontraktu |
 | :--- | :--- |
@@ -86,7 +86,7 @@ Realizacja każdego zadania w docelowym repozytorium odbywa się według ściśl
 
 ---
 
-## 🛠️ Interfejs CLI Skryptów Automatyzujących
+## 4. Interfejs CLI Skryptów Automatyzujących
 
 ### Skrypt `new-ticket.sh` / `new-ticket.bat`
 Automatyzuje tworzenie struktury nowego ticketu na podstawie parametrów CLI lub pliku `.env`.
@@ -109,7 +109,7 @@ Skanuje katalog `project/` i automatycznie aktualizuje spis ticketów w `project
 
 ---
 
-## 🛑 Zasada Odbioru Planu przed Kodowaniem (`P-CORE-008`)
+## 5. Zasada Odbioru Planu przed Kodowaniem (`P-CORE-008`)
 
 Przed rozpoczęciem edycji plików źródłowych w nowym systemie Agent AI **musi**:
 1. Wygenerować plik `ai-{AGENT}.md` oraz uzupełnić `TODO.md`.
@@ -118,31 +118,31 @@ Przed rozpoczęciem edycji plików źródłowych w nowym systemie Agent AI **mus
 
 ---
 
-## 📖 Przewodnik i Zasady Pracy (Opis w Języku Naturalnym)
+## 6. Przewodnik i Zasady Pracy (Opis w Języku Naturalnym)
 
 *Poniższy opis stanowi przystępną wykładnię zasad zawartych w ścisłych plikach polityk [POLICY.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/POLICY.md) oraz [CONTRIBUTING.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/CONTRIBUTING.md). Jeśli formuła DSL w plikach jest dla kogoś trudna do zinterpretowania, ten przewodnik służy jako oficjalne wyjaśnienie.*
 
-### 1. Hierarchia Ważności Źródeł Prawdy
+### 6.1. Hierarchia Ważności Źródeł Prawdy
 W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejność ważności:
-1. 👑 **Bezpośrednie polecenie użytkownika (`USER_REQUEST`)** – najwyższy autorytet.
-2. 📁 **Aktualny stan plików w docelowym repozytorium (`FILESYSTEM`)**.
-3. 🛡️ **[POLICY.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/POLICY.md)** – bezwzględne zasady i zakazy bezpieczeństwa.
-4. 📋 **[CONTRIBUTING.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/CONTRIBUTING.md)** – procedura pracy i maszyna stanów.
-5. 📄 **README.md / Historia Git** – informacje pomocnicze i kontekstowe.
+1. **Bezpośrednie polecenie użytkownika (`USER_REQUEST`)** – najwyższy autorytet.
+2. **Aktualny stan plików w docelowym repozytorium (`FILESYSTEM`)**.
+3. **[POLICY.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/POLICY.md)** – bezwzględne zasady i zakazy bezpieczeństwa.
+4. **[CONTRIBUTING.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/CONTRIBUTING.md)** – procedura pracy i maszyna stanów.
+5. **README.md / Historia Git** – informacje pomocnicze i kontekstowe.
 
 ---
 
-### 2. System Ticketów (`project/ticket-{NNN}` w Docelowym Repozytorium)
+### 6.2. System Ticketów (`project/ticket-{NNN}` w Docelowym Repozytorium)
 * **Wymóg zakładania**: Każde zadanie składające się z więcej niż 1 kroku lub wymagające użycia Agenta AI **musi** posiadać swój folder pod `project/ticket-{NNN}` **w repozytorium docelowym projektu**.
 * **Menu projektu (`project/README.md`)**: Służy jako Menu nawigacyjne do wszystkich ticketów z linkami do dokumentacji i uczestników.
 * **Mózg Agenta (`ai-{AGENT}.md`)**: Definiuje rozumienie intencji, zakres, ryzyka i kryteria odbioru (Acceptance Criteria). Jest jedynym źródłem prawdy dla zakresu pracy danego agenta.
 * **Pliki uczestników (`user-mateusz.md`, `user-tom.md`)**: Ręczne notatki człowieka wklejane przy każdym zleceniu jako stały kontekst.
 * **Logi (`ai-{AGENT}-logs.md`)**: Wyłączne surowe wyjścia z konsoli i testów wykonywanych przez danego agenta.
-* **⚠️ Retencja (Nie wolno usuwać ticketów!)**: Foldery ticketów są trwale zachowywane w docelowym repozytorium. Agentom **nie wolno ich usuwać**, chyba że po zakończonym projekcie użytkownik wyraźnie wyda takie polecenie.
+* **Retencja (Nie wolno usuwać ticketów!)**: Foldery ticketów są trwale zachowywane w docelowym repozytorium. Agentom **nie wolno ich usuwać**, chyba że po zakończonym projekcie użytkownik wyraźnie wyda takie polecenie.
 
 ---
 
-### 3. Bezpieczeństwo i Dobre Praktyki (`POLICY.md`)
+### 6.3. Bezpieczeństwo i Dobre Praktyki (`POLICY.md`)
 * **Weryfikacja faktów**: Twierdzenia bez dowodów (np. "test przeszedł" bez uruchomienia komendy) są zabronione.
 * **Ochrona sekretów**: Klucze API, tokeny i hasła nie mogą trafić do repozytorium ani logów.
 * **Czyszczenie ścieżek**: W komitach i logach używamy ścieżek względnych. Zabronione jest wyciekanie lokalnych ścieżek bezwzględnych użytkownika (`C:/Users/...`).
@@ -151,25 +151,25 @@ W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejno�
 
 ---
 
-### 4. Wymagania Środowiskowe (Docker i Narzędzia)
+### 6.4. Wymagania Środowiskowe (Docker i Narzędzia)
 * Każdy tworzony system **musi** być budowany i uruchamiany w odizolowanym środowisku **Docker** (`Dockerfile`, `compose.yml`).
 * Należy obowiązkowo korzystać z zestawu narzędzi deweloperskich (`project.sh` / `project.bat`) do analizy i automatyzacji.
 
 ---
 
-### 5. Maszyna Stanów (Przepływ Pracy)
+### 6.5. Maszyna Stanów (Przepływ Pracy)
 Praca nad każdym zadaniem w docelowym repozytorium przechodzi przez cykl stanów:
 `START` ➔ `ANALYSIS` ➔ `PLAN` ➔ `WAIT_FOR_APPROVAL` ➔ `TOOLS` ➔ `DELEGATION` ➔ `EDIT` ➔ `VALIDATION` ➔ `PUBLICATION` ➔ `DONE` (lub `BLOCKED` w przypadku braku dowodów/blokady).
 
 ---
 
-## 📂 Szybki Indeks Dokumentów Zarządczych i Skryptów
+## 7. Indeks Dokumentów Zarządczych i Skryptów
 
 | Dokument / Skrypt | Rola i Opis |
 | :--- | :--- |
-| 🛡️ **[POLICY.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/POLICY.md)** | Ścisłe zasady bezpieczeństwa, zakazy i limity (MODE STRICT). |
-| 📋 **[CONTRIBUTING.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/CONTRIBUTING.md)** | Procedura pracy, tickety, Docker i maszyna stanów (MODE PROCEDURAL). |
-| 🤖 **[AGENTS.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/AGENTS.md)** | Standardowy punkt wejścia dla agentów AI (Cursor, Claude Code, Antigravity itp.). |
-| 🗺️ **[llms.txt](file:///c:/Users/Praca/fork/wellmanifest/new-project/llms.txt)** | Mapa dokumentacji dla modeli LLM. |
-| 🛠️ **[project.sh](file:///c:/Users/Praca/fork/wellmanifest/new-project/project.sh)** / **[project.bat](file:///c:/Users/Praca/fork/wellmanifest/new-project/project.bat)** | Skrypty instalujące i uruchamiające zestaw narzędzi deweloperskich. |
-| 📂 **[templates/](file:///c:/Users/Praca/fork/wellmanifest/new-project/templates)** | Czyste szablony dla ticketów i wpisów uczestników. |
+| **[POLICY.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/POLICY.md)** | Ścisłe zasady bezpieczeństwa, zakazy i limity (MODE STRICT). |
+| **[CONTRIBUTING.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/CONTRIBUTING.md)** | Procedura pracy, tickety, Docker i maszyna stanów (MODE PROCEDURAL). |
+| **[AGENTS.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/AGENTS.md)** | Standardowy punkt wejścia dla agentów AI (Cursor, Claude Code, Antigravity itp.). |
+| **[llms.txt](file:///c:/Users/Praca/fork/wellmanifest/new-project/llms.txt)** | Mapa dokumentacji dla modeli LLM. |
+| **[project.sh](file:///c:/Users/Praca/fork/wellmanifest/new-project/project.sh)** / **[project.bat](file:///c:/Users/Praca/fork/wellmanifest/new-project/project.bat)** | Skrypty instalujące i uruchamiające zestaw narzędzi deweloperskich. |
+| **[templates/](file:///c:/Users/Praca/fork/wellmanifest/new-project/templates)** | Czyste szablony dla ticketów i wpisów uczestników. |
