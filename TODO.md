@@ -8,15 +8,15 @@
 
 ## 📌 Etap 1: Przebudowa Przewodnika i Kolejności Plików w `README.md`
 
-- [ ] **Dodanie sekcji z diagramem ASCII w `README.md`**:
-  - [ ] Stworzyć diagram sekwencji i zależności pokazujący **co z czego wynika** oraz **dokładną kolejność chronologiczną**:
+- [x] **Dodanie sekcji z diagramem ASCII w `README.md`**:
+  - [x] Stworzyć diagram sekwencji i zależności pokazujący **co z czego wynika** oraz **dokładną kolejność chronologiczną**:
         `USER_REQUEST` → `user-mateusz.md` → `project/ticket-{NNN}/README.md` → `TODO.md` → `ai-{NAME}.md` + `ai-{NAME}-logs.md` → `VERSION` + `CHANGELOG.md`
-- [ ] **Zdefiniowanie ról plików w strukturze**:
-  - [ ] **`user-{NAME}.md`**: Notatki, zadania i stały kontekst zapytania od użytkownika.
-  - [ ] **`ai-{NAME}.md`**: Mózg agenta (rozumienie intencji, plan, akceptacja).
-  - [ ] **`ai-{NAME}-logs.md`**: Dedykowany plik z surowymi logami agenta.
-  - [ ] **`changelog.md`**: Rejestr zmian dla pojedynczego ticketu.
-  - [ ] **`preprompt.md`**: Wyciągnięte wytyczne z `user-{NAME}.md` i workflow.
+- [x] **Zdefiniowanie ról plików w strukturze**:
+  - [x] **`user-{NAME}.md`**: Notatki, zadania i stały kontekst zapytania od użytkownika.
+  - [x] **`ai-{NAME}.md`**: Mózg agenta (rozumienie intencji, plan, akceptacja).
+  - [x] **`ai-{NAME}-logs.md`**: Dedykowany plik z surowymi logami agenta.
+  - [x] **`changelog.md`**: Rejestr zmian dla pojedynczego ticketu.
+  - [x] **`preprompt.md`**: Wyciągnięte wytyczne z `user-{NAME}.md` i workflow.
 
 ---
 

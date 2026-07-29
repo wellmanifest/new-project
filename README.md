@@ -7,6 +7,53 @@ Witamy w **Centrum Zasad i Onboardingu**. Repozytorium to stanowi wyłączne, of
 
 ---
 
+## 📐 Chronologia i Kolejność Tworzenia Plików ("Co z Czego Wynika")
+
+Poniższy diagram ASCII ilustruje **dokładny przepływ i kolejność powstawania dokumentów** podczas realizowania nowego projektu / ticketu:
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                                1. USER_REQUEST                                   │
+│            (Polecenie biznesowe / notatki przesłane przez Człowieka)             │
+└────────────────────────────────────────┬─────────────────────────────────────────┘
+                                         │
+                                         ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                             2. user-{NAME}.md                                    │
+│  (Ręczne notatki człowieka, surowe wytyczne i stały kontekst w ticket-00X)       │
+└────────────────────────────────────────┬─────────────────────────────────────────┘
+                                         │
+                                         ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                    3. project/ticket-{NNN}/README.md                             │
+│   (Mózg Rozumienia: jak AI zrozumiało intencję, ryzyka, Acceptance Criteria)    │
+└────────────────────────────────────────┬─────────────────────────────────────────┘
+                                         │
+                                         ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                                 4. TODO.md                                       │
+│    (Checklista i harmonogram zadań krok-po-kroku w docelowym repozytorium)     │
+└────────────────────────────────────────┬─────────────────────────────────────────┘
+                                         │
+                                         ▼
+               🛑 ZATRZYMANIE PRAC & WERYFIKACJA UŻYTKOWNIKA 🛑
+                   (Odbiór rozumienia intencji oraz TODO)
+                                         │
+                                         ▼
+┌────────────────────────────────────────┴─────────────────────────────────────────┐
+│              5. ai-{NAME}.md   ORAZ   ai-{NAME}-logs.md                           │
+│  (Dziennik wykonawczy Agenta z planem) │ (Dedykowany plik surowych logów Agenta) │
+└────────────────────────────────────────┬─────────────────────────────────────────┘
+                                         │
+                                         ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                          6. VERSION & CHANGELOG.md                               │
+│      (Aktualizacja numeru wersji oraz rejestru zmian po wykonaniu zadania)       │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## 📌 Standard Tworzenia Nowych Systemów
 
 > [!CAUTION]
@@ -24,13 +71,30 @@ Witamy w **Centrum Zasad i Onboardingu**. Repozytorium to stanowi wyłączne, of
 >    * `CHANGELOG.md` (rejestr zmian)
 >    * `TODO.md` (szczegółowa lista zadań i kroków do zrealizowania)
 >    * `project/ticket-{NNN}/README.md` (rozumienie intencji zadania przez AI, zakres, ryzyka i kryteria odbioru)
->    * `project/ticket-{NNN}/AI-{NAME}.md` & `logs.txt`
+>    * `project/ticket-{NNN}/user-{NAME}.md` (notatki człowieka & stały kontekst zapytania)
+>    * `project/ticket-{NNN}/ai-{NAME}.md` & `project/ticket-{NNN}/ai-{NAME}-logs.md` (dziennik i logi agenta)
+>    * `project/ticket-{NNN}/changelog.md` (rejestr zmian specyficzny dla ticketu)
+>    * `project/ticket-{NNN}/preprompt.md` (wyciągnięte wytyczne i workflow)
 >    * `Dockerfile` & `compose.yml` (środowisko kontenerowe)
 >    * Skopiowane skrypty `project.sh` / `project.bat` oraz szablony z katalogu `templates/`.
 > 4. 🛑 **ZATRZYMANIE PRAC I PRZEDSTAWIENIE 2 WIDOKÓW UŻYTKOWNIKOWI:** Agent zatrzymuje się przed napisaniem jakiegokolwiek kodu i przedstawia Użytkownikowi dwa kluczowe dokumenty do weryfikacji:
 >    * 🧠 **Zrozumienie Intencji (`project/ticket-{NNN}/README.md`)**: Użytkownik sprawdza, czy AI poprawnie zrozumiało jego pomysł, cel i kryteria odbioru.
 >    * 📋 **Plan Zadań (`TODO.md`)**: Użytkownik sprawdza, czy zaplanowana przez AI krok-po-kroku lista zadań jest odpowiednia i logiczna.
 > 5. **Praca po Odbiorze Planu:** Po akceptacji planu przez Użytkownika, Agent uruchamia `project.sh` / `project.bat` w docelowym repozytorium do automatyzacji analizy i przechodzi do realizacji zadań z `TODO.md` wyłącznie tam.
+
+---
+
+## 📜 Opis Ról Plików w Strukturze Ticketu
+
+| Plik | Rola i Opis |
+| :--- | :--- |
+| 👤 **`user-{NAME}.md`** | **Ręczne notatki człowieka**: zawiera surowe polecenia, wytyczne i kontekst. Służy jako stały kotwiczący kontekst przy zapytaniach do AI. |
+| 🧠 **`project/ticket-{NNN}/README.md`** | **Mózg Rozumienia**: zawiera przemyślaną koncepcję AI, zakres, ryzyka i kryteria odbioru (Acceptance Criteria). |
+| 🤖 **`ai-{NAME}.md`** | **Dziennik Wykonawczy Agenta**: plan krok-po-kroku, przypisane instrukcje i rejestr zrealizowanych zmian. |
+| 📝 **`ai-{NAME}-logs.md`** | **Dedykowany plik logów Agenta**: surowe wyniki komend i testów wykonywanych wyłącznie przez danego agenta (logi nie mieszają się). |
+| 📋 **`changelog.md`** | **Rejestr zmian ticketu**: historia wydań i modyfikacji specyficzna tylko dla tego jednego ticketu. |
+| 🎯 **`preprompt.md`** | **Wytyczne i Workflow**: ustrukturyzowane informacje wyciągnięte przez AI z pliku `user-{NAME}.md` oraz zdefiniowane schematy pracy. |
+| 🗺️ **`README.md`** (Master Menu) | **Główne Menu Nawigacyjne**: spina całą dokumentację, polityki, tickety i logi w czytelny spis treści z linkami. |
 
 ---
 
@@ -72,8 +136,8 @@ W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejno�
 ### 2. System Ticketów (`project/ticket-{NNN}` w Docelowym Repozytorium)
 * **Wymóg zakładania**: Każde zadanie składające się z więcej niż 1 kroku lub wymagające użycia Agenta AI **musi** posiadać swój folder pod `project/ticket-{NNN}` **w repozytorium docelowym projektu**.
 * **Plik główny (`README.md`)**: Definiuje cel zadania, zakres, ryzyka i kryteria odbioru w docelowym repozytorium. Jest jedynym źródłem prawdy dla zakresu ticketu.
-* **Pliki uczestników (`user-{NAME}.md`, `AI-{NAME}.md`)**: Każdy pracujący człowiek lub Agent AI zapisuje tam swoje instrukcje, plan i wykonane zmiany na podstawie szablonów z katalogu `templates/`.
-* **Logi (`logs.txt`)**: Wszystkie surowe wyniki komend i testów są dopisywane do pliku logów w formacie tekstowym.
+* **Pliki uczestników (`user-{NAME}.md`, `ai-{NAME}.md`)**: Każdy pracujący człowiek lub Agent AI zapisuje tam swoje instrukcje, plan i wykonane zmiany na podstawie szablonów z katalogu `templates/`.
+* **Logi (`ai-{NAME}-logs.md`)**: Wszystkie surowe wyniki komend i testów danego agenta są dopisywane do jego pliku logów w formacie tekstowym.
 * **⚠️ Retencja (Nie wolno usuwać ticketów!)**: Foldery ticketów są trwale zachowywane w docelowym repozytorium. Agentom **nie wolno ich usuwać**, chyba że po zakończonym projekcie użytkownik wyraźnie wyda takie polecenie.
 
 ---
