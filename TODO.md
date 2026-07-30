@@ -31,9 +31,12 @@
 
 ---
 
-## 📝 Etap 3: Plik Wytycznych `preprompt.md`
+## 📝 Etap 3: Wzorzec Techniczny `preprompt.template.md` i Wytyczne
 
-- [ ] Stworzyć plik `preprompt.md` w korzeniu repozytorium z szablonami promptów, schematami ekstrakcji technicznej i wytycznymi dopytywania użytkownika o nowe wymagania.
+- [x] **Przygotowanie Wzorca Technicznego w `template/files/preprompt.template.md`**:
+  - [x] Stworzono w `template/files/preprompt.template.md` znormalizowany szablon dyrektyw technicznych ticketu (z polami na ograniczenia inżynieryjne, podlinkowaną specyfikację oraz twarde wymagania techniczne).
+  - [x] Zaktualizowano skrypt `project/new-ticket.sh`, aby używał szablonu `template/files/preprompt.template.md` przy generowaniu ticketu.
+  - [x] Udokumentowano rola `preprompt.md` w `template/files/README.md` oraz dokumentach zarządczych.
 
 ---
 

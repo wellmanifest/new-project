@@ -51,20 +51,30 @@ TICKET_DIR="project/$TICKET_ID"
 
 mkdir -p "$TICKET_DIR"
 
-# Initialize preprompt.md if missing
-if [ ! -f "$TICKET_DIR/preprompt.md" ]; then
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# Initialize preprompt.md from template if present, or write technical directives
+if [ -f "template/files/preprompt.template.md" ]; then
+  sed "s/{TICKET_ID}/$TICKET_ID/g; s/{SHORT_TITLE}/$TITLE/g; s/{TIMESTAMP}/$TIMESTAMP/g" template/files/preprompt.template.md > "$TICKET_DIR/preprompt.md"
+elif [ ! -f "$TICKET_DIR/preprompt.md" ]; then
   cat <<EOF > "$TICKET_DIR/preprompt.md"
-# Preprompt & Technical Directives ($TICKET_ID)
+# Preprompt & Wytyczne Techniczne ($TICKET_ID)
 
-- **Title**: $TITLE
-- **Created**: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+- **Tytuł Zadania**: $TITLE
+- **Utworzono**: $TIMESTAMP
 
-## Technical Requirements & Constraints
-- Implement requirements according to project architecture.
-- Follow Docker & Dev Tools rules.
+## Wymagania i Ograniczenia Techniczne
+- Zaimplementuj wymagania zgodnie z opisaną architekturą projektu.
+- Przestrzegaj odizolowanego środowiska Docker oraz zasad automatyzacji narzędzi deweloperskich (\`./project.sh\` / \`project.bat\`).
 
-## Linked Resources
-- Documentation: https://github.com/wellmanifest/new-project
+## Podlinkowane Zasoby i Dokumentacja Specyfikacji
+- Dokumentacja Zarządcza Hub: https://github.com/wellmanifest/new-project
+- Specyfikacja modułu: {Wpisz odnośnik do dokumentacji technicznej lub pliku}
+
+## Dyrektywy Wykonawcze dla Agenta AI
+- Odczytaj niniejsze wytyczne techniczne oraz notatki z \`user-{github_username}.md\`.
+- Na tej podstawie zbuduj specyfikację wykonawczą w pliku \`ai-{PROVIDER}.md\` (rozumienie intencji, zakres prac, koncepcja, Kryteria Odbioru).
+- Przed pisaniem kodu przedstaw plan w \`ai-{PROVIDER}.md\` oraz w \`TODO.md\` do weryfikacji człowieka (\`P-CORE-008\`).
 EOF
 fi
 
