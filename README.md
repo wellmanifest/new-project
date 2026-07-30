@@ -112,9 +112,14 @@ Skanuje katalog `project/` i automatycznie aktualizuje spis ticketów w `project
 ## 5. Zasada Odbioru Planu przed Kodowaniem (`P-CORE-008`)
 
 Przed rozpoczęciem edycji plików źródłowych w nowym systemie Agent AI **musi**:
-1. Wygenerować plik `ai-{AGENT}.md` oraz uzupełnić `TODO.md`.
+1. Wygenerować plik `ai-{PROVIDER}.md` oraz uzupełnić `TODO.md`.
 2. Przedstawić Użytkownikowi oba te dokumenty do wglądu.
 3. Uzyskać wyraźną akceptację (`"Zgoda"`, `"Plan zatwierdzony"`) przed przejściem do fazy wykonawczej.
+
+### 5.1. Zasada Kontynuacji Aktywnego Ticketu (`P-CORE-009` / `C-TICKET-008`)
+Dla kolejnych promptów i poprawek w ramach tego samego zadania Agent AI **nie tworzy nowych folderów ticketów**.
+* Agent wykorzystuje ponownie aktywny katalog `project/ticket-{NNN}/` i aktualizuje swój plik planu `ai-{PROVIDER}.md` oraz `TODO.md`.
+* **Agentowi zabrania się modyfikowania plików notatek człowieka (`user-{github_username}.md`)**.
 
 ---
 

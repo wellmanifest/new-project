@@ -28,3 +28,4 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
      - **Understanding View (`project/ticket-{NNN}/ai-{PROVIDER}.md`)**: User checks if AI correctly understood the task, intent, and acceptance criteria.
      - **Task Checklist View (`TODO.md`)**: User checks if AI's step-by-step task breakdown and checklist are appropriate.
   6. **EXECUTE AFTER APPROVAL**: Upon user approval, executes `./project.sh` (or `project.bat`) in System X's repository to run Dev Tools and works EXCLUSIVELY in System X's repository.
+  7. **CONTINUE ACTIVE TICKET (`P-CORE-009` / `C-TICKET-008`)**: For follow-up prompts or task continuation, DO NOT create new ticket folders. Re-use the active `project/ticket-{NNN}/` directory and update `ai-{PROVIDER}.md` and `TODO.md`. NEVER modify human-owned `user-{github_username}.md` files.
