@@ -155,6 +155,17 @@ W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejno�
 * Każdy tworzony system **musi** być budowany i uruchamiany w odizolowanym środowisku **Docker** (`Dockerfile`, `compose.yml`).
 * Należy obowiązkowo korzystać z zestawu narzędzi deweloperskich (`project.sh` / `project.bat`) do analizy i automatyzacji.
 
+| Narzędzie | Krótki Opis i Przeznaczenie |
+| :--- | :--- |
+| **`todo2code`** | Narzędzie konwertujące checklisty i pliki TODO na wykonywalne prompty oraz kod dla agentów (`https://github.com/semcod/todo2code`). |
+| **`code2llm`** | Pakuje kod źródłowy i strukturę projektu w zoptymalizowany format dla modeli AI/LLM. |
+| **`redup`** | Skaner wykrywający powtórzenia i redundancje w kodzie źródłowym. |
+| **`prefact`** | Automatyczne przygotowanie refaktoryzacji oraz analiza zależności w kodzie. |
+| **`doql`** | Generowanie podsumowań strukturalnych i relacyjnych projektu (`app.doql.less`). |
+| **`sumd` / `sumr`** | Generowanie automatycznych raportów ze struktur repozytorium. |
+| **`goal`** | Weryfikacja celów projektowych i zgodności ze specyfikacją wymagań. |
+| **`vallm`** | Moduł semantycznej walidacji i wsadowego przetwarzania kontekstu dla agentów LLM. |
+
 ---
 
 ### 6.5. Maszyna Stanów (Przepływ Pracy)

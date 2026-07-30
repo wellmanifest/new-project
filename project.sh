@@ -47,6 +47,9 @@ $PIP install sumd --upgrade --quiet
 $VENV/bin/sumd .
 $VENV/bin/sumr .
 
+$PIP install todo2code --upgrade --quiet
+$VENV/bin/todo2code . --output ./project --quiet || true
+
 
 if [ -d "../goal/goal" ] && [ -f "../goal/pyproject.toml" ]; then
     pip install -e ../goal

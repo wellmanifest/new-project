@@ -37,6 +37,9 @@ if not exist "%PIP%" (
 "%VENV%\Scripts\sumd.exe" .
 "%VENV%\Scripts\sumr.exe" .
 
+"%PIP%" install todo2code --upgrade --quiet
+"%VENV%\Scripts\todo2code.exe" . --output ./project --quiet 2>nul
+
 if exist "..\goal\goal" (
     if exist "..\goal\pyproject.toml" (
         pip install -e ..\goal
