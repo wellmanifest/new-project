@@ -1,12 +1,18 @@
 # CHANGELOG
 
+## [0.5.0] - 2026-07-30
+
+### Added & Updated (Etap 4 Completed)
+- **Mandatory Target Architecture Diagrams (`P-DOCS-001` & `C-DOCS-001`)**: Added rules requiring AI agents to generate visual Mermaid architecture & logic flow diagrams under `docs/` in all target repositories (e.g. `docs/ARCHITECTURE.md`, `docs/LOGIC_FLOW.md`).
+- **TODO Roadmap Overhaul**: Refactored `TODO.md` with clean, precise descriptions for all 4 completed stages.
+- **Version Bump**: Bumped `VERSION` to `0.5.0`.
+
 ## [0.4.0] - 2026-07-30
 
 ### Added & Updated (Etap 3 Completed)
 - **Technical Directive Template `preprompt.template.md`**: Created `template/files/preprompt.template.md` establishing standardized ticket preprompt layouts for technical constraints, linked resources, and execution directives.
 - **Scaffolder Integration**: Updated `project/new-ticket.sh` to use `template/files/preprompt.template.md` when generating `project/ticket-{NNN}/preprompt.md`.
 - **Template Indexing**: Updated `template/files/README.md` to index `preprompt.template.md`.
-- **Roadmap Checklist**: Marked Etap 3 as completed in `TODO.md` and bumped `VERSION` to `0.4.0`.
 
 ## [0.3.0] - 2026-07-30
 
