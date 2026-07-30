@@ -15,19 +15,19 @@
 
 ---
 
-## 📂 Etap 2: Struktura Katalogu `project/` i Skrypty Automatyzujące
+## 📂 Etap 2: Uniwersalne Skrypty Automatyzujące i Wzorzec `project/`
 
-- [ ] **Stworzenie `project/README.md`**:
-  - [ ] Opisać przeznaczenie folderu `project/`.
-  - [ ] Dodać linki do dokumentacji głównej `wellmanifest/new-project` oraz nawigacyjne menu ticketów.
-- [ ] **Stworzenie skryptu `project/new-ticket.sh` oraz `project/new-ticket.bat`**:
-  - [ ] Automatyczne generowanie katalogu `project/ticket-{NNN}/`.
-  - [ ] Inicjalizacja w ticketze plików `preprompt.md` (techniczne wytyczne i zasoby) oraz `changelog.md` (lokalny changelog).
-  - [ ] Automatyczna obsługa konfiguracji `.env` (`PROJECT_USERS`) i opcji CLI `--users` oraz `--agent`.
-- [ ] **Stworzenie skryptu `project/readme.sh` oraz `project/readme.bat`**:
-  - [ ] Automatyczne skanowanie ticketów i aktualizacja menu nawigacyjnego w `project/README.md`.
-- [ ] **Integracja Narzędzi Deweloperskich (`todo2code`)**:
-  - [ ] Zapewnienie wykorzystania `todo2code` w `project.sh` oraz `project.bat` do automatycznej zamiany zadań z `TODO.md` na wykonywalne procesy dla agentów AI.
+- [x] **Stworzenie Wzorca `template/files/project.template.md` oraz `project/README.md`**:
+  - [x] Stworzono szablon `project.template.md` w `template/files/` wg standardu `*.template.md`.
+  - [x] Opisano przeznaczenie folderu `project/` z odnośnikami do dokumentacji `wellmanifest/new-project` i indeksem ticketów.
+- [x] **Stworzenie Uniwersalnego Skryptu `project/new-ticket.sh`**:
+  - [x] Automatyczne numerowanie i tworzenie katalogu `project/ticket-{NNN}/`.
+  - [x] Inicjalizacja w ticketze plików `preprompt.md` (techniczne wytyczne i podlinkowane zasoby) oraz `changelog.md` (lokalny changelog).
+  - [x] Automatyczne wywołanie `./project/readme.sh`.
+- [x] **Stworzenie Uniwersalnego Skryptu `project/readme.sh`**:
+  - [x] Skanowanie ticketów i automatyczna regeneracja tabeli menu w `project/README.md`.
+- [x] **Uaktualnienie Reguł DSL (`C-TOOLS-006` w `CONTRIBUTING.md`)**:
+  - [x] Nakaz kopiowania gotowych skryptów z huba zamiast ich ponownego generowania z braku tokenów.
 
 ---
 
