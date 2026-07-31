@@ -1,415 +1,235 @@
-# POLICY — DSL regułowy projektu
-
-## 1. System
+# POLICY.md
 
 ```dsl
-SYSTEM polityka_projektu
-  DOMENA:    nazewnictwo, modularnosc, zarzadzanie_zaleznosciami, technologie, jakosc_kodu, bezpieczenstwo, zasieg, zgodnosc
-  ZASADA:    kazda_regula_ma_warunek_i_konsekwencje
+DOCUMENT POLICY
+VERSION 6
+LANGUAGE PL
+MODE STRICT
+PURPOSE "zasady, ograniczenia, zakazy i warunki zatrzymania"
 ```
 
-## 2. Reguły nazewnictwa
+## Zasady nadrzędne
 
 ```dsl
-REGULA R001: nazwa_repozytorium
-  DANE: repo_name
-  JESLI repo_name PASUJE_DO /^[a-z0-9](-?[a-z0-9]+)*$/ TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE
-    ZWROC_BLAD("R001: nazwa repozytorium musi byc lowercase i hyphen-separated; zakaz wielkich liter i podkreslnikow")
-  KONIEC
-KONIEC
+RULE P-CORE-001 TYPE REQUIRED
+WHEN ANY_ACTION
+DO APPLY_STRICTEST_APPLICABLE_RULE
+ASSERT POLICY_PRECEDENCE > CONTRIBUTING_PRECEDENCE
 
-REGULA R002: nazwa_pakietu
-  DANE: package_name, repo_name
-  JESLI package_name = repo_name TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE JESLI package_name PASUJE_DO /^[a-z0-9-]+$/ TO
-    ZWROC_OSTRZEZENIE("R002: package_name powinien zgadzac sie z repo_name")
-  W_PRZECIWNYM_RAZIE
-    ZWROC_BLAD("R002: package_name musi byc lowercase i hyphen-separated")
-  KONIEC
-KONIEC
+RULE P-CORE-002 TYPE REQUIRED
+WHEN CLAIM_MADE
+DO REQUIRE CURRENT_FILE_OR_COMMAND_EVIDENCE
+ASSERT CLAIM_STATUS IN [VERIFIED, UNVERIFIED]
 
-REGULA R003: nazwa_pliku_lub_katalogu
-  DANE: path
-  JESLI path ZAWIERA(spacja) LUB ZAWIERA(wielka_litera) LUB ZAWIERA(podkreslenie) TO
-    ZWROC_BLAD("R003: nazwy plikow i katalogow musza byc lowercase, hyphen-separated, bez spacji")
-  KONIEC
-KONIEC
+RULE P-CORE-003 TYPE FORBIDDEN
+WHEN CLAIM_STATUS = UNVERIFIED
+DO FORBID PRESENT_AS_FACT
+ASSERT UNVERIFIED_LABEL_REQUIRED
+
+RULE P-CORE-004 TYPE REQUIRED
+WHEN TASK_SCOPE_AMBIGUOUS
+DO SELECT_MINIMAL_SCOPE_MATCHING_USER_REQUEST
+ASSERT SCOPE_NOT_EXPANDED
+
+RULE P-CORE-005 TYPE FORBIDDEN
+WHEN GOVERNANCE_DOCUMENT_MODIFICATION_UNREQUESTED
+DO FORBID WRITE_OR_OVERWRITE
+ASSERT USER_APPROVAL_REQUIRED_FOR_GOVERNANCE_CHANGES
+
+RULE P-CORE-006 TYPE REQUIRED
+WHEN NEW_SYSTEM_OR_APPLICATION_CREATED
+DO REQUIRE SEPARATE_GITHUB_REPOSITORY AND DOCKER_ENVIRONMENT
+ASSERT EVERY_SYSTEM_LIVES_IN_ITS_OWN_REPOSITORY
+
+RULE P-CORE-007 TYPE FORBIDDEN
+WHEN TASK_FILE_OR_TICKET_CREATION_ATTEMPTED_IN_GOVERNANCE_HUB
+DO FORBID WRITE_OR_CREATE
+ASSERT GOVERNANCE_HUB_IS_READONLY_POLICY_SOURCE_NO_TASK_FILES_ALLOWED
+
+RULE P-CORE-008 TYPE REQUIRED
+WHEN INITIAL_BOOTSTRAP_AND_PLAN_CREATED_IN_TARGET_REPO
+DO PRESENT_PLAN_TO_USER_AND_WAIT_FOR_APPROVAL
+ASSERT USER_VERIFIES_AND_APPROVES_PLAN_BEFORE_CODING
+
+RULE P-CORE-009 TYPE REQUIRED
+WHEN USER_REQUEST_RECEIVED AND ACTIVE_UNFINISHED_TICKET_EXISTS
+DO CONTINUE_WORK_IN_EXISTING_TICKET_DIRECTORY
+DO UPDATE_AI_BRAIN_FILE ("ai-{PROVIDER}.md") AND TODO_ROADMAP
+FORBID MODIFY_USER_PARTICIPANT_FILE ("user-{github_username}.md")
+FORBID CREATE_NEW_TICKET_DIRECTORY
+ASSERT TICKET_REUSED_AND_AI_PLAN_EVOLVED_WITHOUT_TOUCHING_USER_FILE
 ```
 
-## 3. Reguły modularności
+## Źródła prawdy
 
 ```dsl
-REGULA R101: pojedyncza_odpowiedzialnosc
-  DANE: module
-  JESLI module.jednoznaczny_cel = PRAWDA
-     I module.wejscie_jasne = PRAWDA
-     I module.wyjscie_jasne = PRAWDA
-     I module.zaleznosci = minimalne
-     I module.testowalny = PRAWDA TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE
-    ZWROC_BLAD("R101: modul musi miec jeden cel, jasne wejscie/wyjscie, minimalne zaleznosci i byc testowalny")
-  KONIEC
-KONIEC
+SOURCE_ORDER = [
+  USER_REQUEST,
+  CURRENT_FILE_SYSTEM,
+  CURRENT_COMMAND_OUTPUT,
+  "POLICY.md",
+  "CONTRIBUTING.md",
+  "research/GPT56Luna/POLICY.md",
+  "research/GPT56Luna/CONTRIBUTING.md",
+  "README.md",
+  "docs/README.md",
+  GIT_HISTORY
+]
 
-REGULA R102: granice_modulow
-  DANE: module_a, module_b
-  JESLI sprzezenie(module_a, module_b) = niskie
-     I kohezja(module_a) = wysoka
-     I szczegoly_wewnetrzne(module_a) = ukryte
-     I dokumentacja(module_a) = istnieje TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE
-    ZWROC_BLAD("R102: moduly musza byc slabo sprzezone, spojne, hermetyzowane i udokumentowane")
-  KONIEC
-KONIEC
+RULE P-SOURCE-001 TYPE REQUIRED
+WHEN SOURCE_CONFLICT
+DO SELECT HIGHEST_PRECEDENCE_AVAILABLE_SOURCE
+ASSERT CONFLICT_REPORTED
 
-REGULA R103: struktura_katalogow
-  DANE: tree
-  JESLI istnieje(src) I istnieje(tests) I istnieje(docs) TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE
-    ZWROC_OSTRZEZENIE("R103: zalecana struktura: src/, tests/, docs/, examples/, scripts/, config/")
-  KONIEC
-KONIEC
+RULE P-SOURCE-002 TYPE REQUIRED
+WHEN GIT_HISTORY_CONFLICTS_WITH_CURRENT_FILES
+DO SELECT CURRENT_FILE_SYSTEM
+ASSERT HISTORY_IS_CONTEXT_ONLY
 
-REGULA R104: projektowanie_komponentow
-  DANE: component
-  JESLI component.zakres = skupiony
-     I (component.reusable = PRAWDA LUB uzasadniony_wyjatek)
-     I component.konfigurowalny = PRAWDA
-     I component.versioned = PRAWDA TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE
-    ZWROC_BLAD("R104: komponent musi byc skupiony, konfigurowalny i wersjonowany; wielokrotne uzycie wymaga uzasadnienia")
-  KONIEC
-KONIEC
+RULE P-SOURCE-003 TYPE FORBIDDEN
+WHEN DECISION_BASED_ONLY_ON_NAME
+DO STOP
+ASSERT EVIDENCE_REQUIRED
 ```
 
-## 4. Reguły zarządzania zależnościami
+## Zasady pracy z narzędziami
 
 ```dsl
-REGULA R201: dodaj_zaleznosc
-  DANE: dependency
-  JESLI dependency.necessary = FALSZ TO ZWROC_BLAD("R201: zaleznosc nie jest konieczna")
-  JESLI dependency.mature = FALSZ TO ZWROC_BLAD("R201: zaleznosc nie jest dojrzala i stabilna")
-  JESLI dependency.secure = FALSZ TO ZWROC_BLAD("R201: zaleznosc ma problemy bezpieczenstwa")
-  JESLI dependency.compatible = FALSZ TO ZWROC_BLAD("R201: zaleznosc niekompatybilna ze stosem")
-  JESLI dependency.license_ok = FALSZ TO ZWROC_BLAD("R201: licencja niekompatybilna")
-  JESLI wszystkie_powyzsze = PRAWDA TO
-    DODAJ_DO(plik_zaleznosci, dependency)
-    ZWROC_OK
-  KONIEC
-KONIEC
+RULE P-TOOL-001 TYPE REQUIRED
+WHEN TOOL_USED
+DO VERIFY TOOL_EXISTS AND INVOCATION_EXISTS
+ASSERT TOOL_STATUS = VERIFIED
 
-REGULA R202: wersja_zaleznosci
-  DANE: dependency
-  JESLI dependency.version = pinned_lub_dokladna TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE
-    ZWROC_OSTRZEZENIE("R202: wersja zaleznosci powinna byc przypieta dla reprodukowalnosci")
-  KONIEC
-KONIEC
+RULE P-TOOL-002 TYPE FORBIDDEN
+WHEN COMMAND_IN_project_sh_IS_COMMENTED
+DO FORBID EXECUTE_COMMAND
+ASSERT COMMENTED_COMMAND_NOT_USED
 
-REGULA R203: rozdziel_zaleznosci
-  DANE: dependency
-  JESLI dependency.uzywana_w_produkcji = PRAWDA TO
-    DODAJ_DO(zaleznosci_produkcyjne)
-  JESLI dependency.uzywana_w_rozwoju = PRAWDA TO
-    DODAJ_DO(zaleznosci_rozwojowe)
-  JESLI dependency.opcjonalna = PRAWDA TO
-    OZNACZ_JAKO(opcjonalna)
-  KONIEC
-KONIEC
+RULE P-TOOL-003 TYPE REQUIRED
+WHEN PACKAGE_INSTALLED AND COMMAND_NOT_INVOKED
+DO SET TOOL_STATUS = INSTALL_ONLY
+ASSERT TOOL_NOT_PRESENTED_AS_AVAILABLE
 
-REGULA R204: aktualizuj_zaleznosc
-  DANE: dependency, nowa_wersja
-  1. PRZECZYTAJ(changelog)
-  2. JESLI changelog ZAWIERA "breaking change" TO
-       WYKONAJ(testy_przed_i_po)
-       ZAPISZ(wymagane_zmiany_kodu)
-     KONIEC
-  3. AKTUALIZUJ_PO_JEDNEJ_NA_RAZ(dependency)
-  4. WYKONAJ(testy_calego_projektu)
-  5. JESLI testy = OK TO ZWROC_OK
-  6. W_PRZECIWNYM_RAZIE COFNIJ_WERSJE_LUB_NAPRAW
-KONIEC
+RULE P-TOOL-004 TYPE FORBIDDEN
+WHEN DOCUMENTATION_ONLY_CHANGE AND COMMAND = "project.sh"
+DO FORBID EXECUTE_COMMAND
+ASSERT INSTALL_OR_OVERWRITE_AVOIDED
+
+RULE P-TOOL-005 TYPE REQUIRED
+WHEN COMMAND_HAS_FORCE_OR_OVERWRITE_EFFECT
+DO REQUIRE TARGET_REVIEW AND EFFECT_REVIEW
+ASSERT OVERWRITE_RISK_RECORDED
+
+RULE P-TOOL-006 TYPE REQUIRED
+WHEN READING_LARGE_FILES_OR_LOGS
+DO USE_PAGINATION_OR_TAIL_OR_HEAD
+ASSERT CONTEXT_WINDOW_PRESERVED
+
+RULE P-TOOL-007 TYPE REQUIRED
+WHEN PROJECT_ANALYSIS_OR_REFACTOR_OR_AUDIT_REQUIRED
+DO RUN_AUTOMATED_DEV_TOOLS ("./project.sh" OR "project.bat") IN_TARGET_SYSTEM_REPO
+DO READ_GENERATED_REPORTS_IN_TARGET_PROJECT_DIR
+ASSERT MANUAL_TOKEN_HEAVY_SCANNING_AVOIDED
 ```
 
-## 5. Reguły praktyk — dozwolone i zabronione
+## Zasady pracy z agentami
 
 ```dsl
-REGULA R301: dozwolone_praktyki
-  DLA akcji W {pisz_kod, uzywaj_vcs, tworz_testy, semwer, changelog, ci_cd, dokumentacja, security, code_review, planowanie}:
-    JESLI akcja.wykonana = PRAWDA I akcja.zgodna_z_policy = PRAWDA TO
-      ZWROC_OK
-    W_PRZECIWNYM_RAZIE
-      ZWROC_OSTRZEZENIE("R301: oczekiwano praktyki " + akcji)
-    KONIEC
-  KONIEC
-KONIEC
+RULE P-AGENT-001 TYPE REQUIRED
+WHEN AGENT_USED
+DO VERIFY AGENT_DEFINITION AND AGENT_INVOCATION
+ASSERT AGENT_STATUS = VERIFIED
 
-REGULA R302: zabronione_antywzorce
-  DLA akcji W {duplikacja_funkcjonalnosci, pomijanie_testow, commit_sekretow, ignorowanie_podatnosci, kod_bez_dokumentacji, breaking_bez_wersji, pominiecie_review, ignorowanie_dlugu, dzialanie_bez_planu}:
-    JESLI akcja.wykryta = PRAWDA TO
-      ZWROC_BLAD("R302: zabronione dzialanie: " + akcji)
-    KONIEC
-  KONIEC
-KONIEC
+RULE P-AGENT-002 TYPE FORBIDDEN
+WHEN AGENT_STATUS != VERIFIED
+DO FORBID DELEGATE
+ASSERT LOCAL_WORKFLOW_OR_BLOCKER_REQUIRED
+
+RULE P-AGENT-003 TYPE REQUIRED
+WHEN AGENT_OUTPUT_USED
+DO VERIFY_OUTPUT_BEFORE_APPLYING
+ASSERT AGENT_OUTPUT_REVIEWED
+
+RULE P-AGENT-004 TYPE FORBIDDEN
+WHEN TICKET_DELETION_ATTEMPTED
+DO FORBID DELETE_TICKET_DIRECTORY
+ASSERT TICKET_DELETION_ALLOWED_ONLY_UPON_EXPLICIT_USER_REQUEST_AFTER_PROJECT_COMPLETION
+
+RULE P-AGENT-005 TYPE REQUIRED
+WHEN AGENT_STARTS_TASK
+DO SWITCH_TO_TARGET_SYSTEM_REPOSITORY
+DO INITIALIZE_BOOTSTRAP_AND_TICKET_FILES_IN_TARGET_SYSTEM_REPO
+DO PRESENT_PLAN_AND_WAIT_FOR_USER_REVIEW
+DO DELEGATE_ANALYSIS_TO_DEV_TOOLS ("./project.sh" OR "project.bat")
+ASSERT AGENT_WORKS_EXCLUSIVELY_IN_TARGET_SYSTEM_REPOSITORY
 ```
 
-## 6. Reguły wyboru technologii
+## Bezpieczeństwo
 
 ```dsl
-REGULA R401: wybor_jezyka
-  DANE: project_requirements, team_expertise, ecosystem, performance, maintenance
-  JESLI project_requirements.spehnione_przez(team_expertise, ecosystem, performance, maintenance) = PRAWDA TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE
-    ZWROC_BLAD("R401: jezyk nie spelnia wymagan projektu, ekipy, ekosystemu, wydajnosci lub utrzymania")
-  KONIEC
-KONIEC
+DENY_PATH = "C:/Users/Praca/fork/MatthiasLew/**"
+SECRET_PATTERNS = [API_KEY, TOKEN, PASSWORD, PRIVATE_KEY, ACCESS_KEY, CREDENTIAL]
 
-REGULA R402: wybor_frameworka
-  DANE: scope, complexity, support, docs, learning_curve, performance, integration
-  JESLI ocena(scope, complexity, support, docs, learning_curve, performance, integration) >= akceptowalna TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE
-    ZWROC_BLAD("R402: framework nie spelnia kryteriow wyboru")
-  KONIEC
-KONIEC
+RULE P-SEC-001 TYPE FORBIDDEN
+WHEN PATH_MATCHES DENY_PATH
+DO FORBID READ SEARCH WRITE EXECUTE
+ASSERT ACCESS_DENIED
 
-REGULA R403: wybor_narzedzia
-  DANE: problem, tool
-  JESLI tool.rozwiazuje(problem) = PRAWDA
-     I tool.dojrzaly = PRAWDA
-     I tool.dokumentacja = dobra
-     I tool.license_ok = PRAWDA TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE
-    ZWROC_BLAD("R403: narzedzie nie rozwiazuje problemu, nie jest dojrzale, slabo udokumentowane lub ma niekompatybilna licencje")
-  KONIEC
-KONIEC
+RULE P-SEC-002 TYPE FORBIDDEN
+WHEN SECRET_DETECTED
+DO FORBID WRITE COMMIT PUSH
+ASSERT HUMAN_DECISION_REQUIRED
+
+RULE P-SEC-003 TYPE REQUIRED
+WHEN NEW_DEPENDENCY_ADDED
+DO REQUIRE JUSTIFICATION VERSION LICENSE SECURITY_REVIEW
+ASSERT DEPENDENCY_REVIEWED
+
+RULE P-SEC-004 TYPE FORBIDDEN
+WHEN DEPENDENCY_UNPINNED_OR_UNJUSTIFIED_OR_LICENSE_CONFLICT
+DO FORBID ADD_DEPENDENCY
+ASSERT DEPENDENCY_REJECTED
+
+RULE P-SEC-005 TYPE FORBIDDEN
+WHEN OPERATION IN [FORCE_PUSH, HISTORY_DELETE, UNREVIEWED_DELETE, UNREVIEWED_OVERWRITE]
+DO STOP
+ASSERT EXPLICIT_USER_DECISION_REQUIRED
+
+RULE P-SEC-006 TYPE FORBIDDEN
+WHEN LOCAL_SYSTEM_ABS_PATH_DETECTED_IN_COMMIT_OR_LOGS
+DO SANITIZE_TO_RELATIVE_PATH
+ASSERT ONLY_RELATIVE_PATHS_ALLOWED
 ```
 
-## 7. Reguły jakości kodu
+## Obsługa konfliktów i blokad
 
 ```dsl
-REGULA R501: styl_kodu
-  DLA pliku W kod:
-    JESLI plik.zgodny_ze_stylem = PRAWDA
-       I plik.formatowanie_spojne = PRAWDA
-       I plik.nazwy_znaczace = PRAWDA
-       I plik.funkcje_skupione = PRAWDA TO
-      ZWROC_OK
-    W_PRZECIWNYM_RAZIE
-      ZWROC_OSTRZEZENIE("R501: styl kodu wymaga poprawy")
-    KONIEC
-  KONIEC
-KONIEC
+RULE P-BLOCK-001 TYPE REQUIRED
+WHEN REQUIRED_EVIDENCE_MISSING
+DO SET RESULT = BLOCKED
+ASSERT BLOCKER_REPORTED
 
-REGULA R502: testy_dla_krytycznej_logiki
-  DLA logiki_krytycznej W kod:
-    JESLI istnieje(test_jednostkowy) LUB istnieje(test_integracyjny) TO
-      ZWROC_OK
-    W_PRZECIWNYM_RAZIE
-      ZWROC_BLAD("R502: krytyczna logika wymaga testow")
-    KONIEC
-  KONIEC
-KONIEC
+RULE P-BLOCK-002 TYPE REQUIRED
+WHEN TEST_NOT_RUN
+DO REPORT REASON
+ASSERT TEST_PASS_NOT_CLAIMED
 
-REGULA R503: pokrycie_testami
-  DANE: coverage
-  JESLI coverage >= 0.80 TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE
-    ZWROC_OSTRZEZENIE("R503: pokrycie testami ponizej 80%")
-  KONIEC
-KONIEC
+RULE P-BLOCK-003 TYPE REQUIRED
+WHEN SECURITY_CONFLICT
+DO STOP
+ASSERT RESULT = BLOCKED
 
-REGULA R504: dokumentacja
-  DLA publicznego_api W kod:
-    JESLI publiczne_api.opisane = PRAWDA
-       I publiczne_api.przyklady_dzialaja = PRAWDA
-       I publiczne_api.aktualne = PRAWDA TO
-      ZWROC_OK
-    W_PRZECIWNYM_RAZIE
-      ZWROC_BLAD("R504: publiczne API i zlozone algorytmy wymagaja aktualnej dokumentacji z przykladami")
-    KONIEC
-  KONIEC
-KONIEC
+RULE P-BLOCK-004 TYPE REQUIRED
+WHEN USER_DECISION_REQUIRED
+DO STOP
+ASSERT ASSUMPTION_NOT_USED_AS_DECISION
 ```
 
-## 8. Reguły bezpieczeństwa
+## Dokumentacja
 
 ```dsl
-REGULA R601: sekrety
-  DLA sekretu W {haslo, token, klucz_api, certyfikat_prywatny}:
-    JESLI sekret.wystepuje_w_diff = PRAWDA TO
-      USUN_LUB_ZAMASKUJ(sekret)
-      ZWROC_BLAD("R601: wykryto sekret w diff")
-    KONIEC
-  KONIEC
-KONIEC
-
-REGULA R602: walidacja_wejscia
-  DLA dane_wejsciowe:
-    JESLI dane_wejsciowe.zwalidowane = PRAWDA
-       I dane_wejsciowe.oczyszczone = PRAWDA
-       I dane_wejsciowe.queries_parametryzowane = PRAWDA
-       I dane_wejsciowe.rate_limit = PRAWDA TO
-      ZWROC_OK
-    W_PRZECIWNYM_RAZIE
-      ZWROC_BLAD("R602: dane wejsciowe musza byc zwalidowane, oczyszczone, queries parametryzowane i rate-limited")
-    KONIEC
-  KONIEC
-KONIEC
-
-REGULA R603: audyt_zaleznosci
-  CO okres:
-    WYKONAJ(npm_audit) LUB WYKONAJ(pip-audit)
-    JESLI podatna_zaleznosc = wykryta TO
-      ZAKTUALIZUJ_LUB_ZASTAP(podatna_zaleznosc)
-    KONIEC
-  KONIEC
-KONIEC
-```
-
-## 9. Reguły komunikacji i współpracy
-
-```dsl
-REGULA R701: commit_message
-  DANE: message
-  JESLI message PASUJE_DO /^(feat|fix|test|docs|refactor|build|ci|chore|security)(\(.+\))?: .+/ TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE
-    ZWROC_BLAD("R701: commit message musi byc w formacie conventional commits")
-  KONIEC
-KONIEC
-
-REGULA R702: code_review
-  PRZED merge:
-    WYKONAJ(review)
-    JESLI review.znajduje_podatnosci = PRAWDA TO NAPRAW
-    JESLI review.pokrycie_testami = niewystarczajace TO UZUPELNIJ_TESTY
-    JESLI review.dokumentacja_nieaktualna = PRAWDA TO ZAKTUALIZUJ_DOKUMENTACJE
-    JESLI wszystkie_kryteria = OK TO ZWROC_OK
-  KONIEC
-KONIEC
-
-REGULA R703: issue_tracking
-  DLA issue:
-    JESLI issue.tytul_opisowy = PRAWDA
-       I issue.kroki_reprodukcji = PRAWDA
-       I issue.kategoria = przypisana
-       I issue.status = aktualny TO
-      ZWROC_OK
-    W_PRZECIWNYM_RAZIE
-      ZWROC_OSTRZEZENIE("R703: issue wymaga opisowego tytulu, krokow reprodukcji, kategorii i aktualnego statusu")
-    KONIEC
-  KONIEC
-KONIEC
-```
-
-## 10. Reguły zakresu i granic
-
-```dsl
-REGULA R801: zakres_projektu
-  DANE: feature
-  JESLI feature.zgodna_z_celami = PRAWDA
-     I (feature.konieczna = PRAWDA LUB feature.plugin = PRAWDA)
-     I feature.koszt_utrzymania <= akceptowalny
-     I feature.alternatywy_rozwazone = PRAWDA TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE
-    ZWROC_BLAD("R801: feature poza zakresem lub nieuzasadniona")
-  KONIEC
-KONIEC
-
-REGULA R802: deprecjonowanie
-  DANE: feature
-  JESLI feature.usuwana = PRAWDA TO
-    OZNACZ_JAKO(deprecated)
-    WYDEDYKUJ_GUIDE(migracji)
-    UTRZYMUJ_PRZEZ(major_version = obecna)
-    USUN_W(major_version = nastepna)
-  KONIEC
-KONIEC
-```
-
-## 11. Reguły zgodności i licencji
-
-```dsl
-REGULA R901: licencje
-  DANE: component
-  JESLI component.licencja = wybrana
-     I component.licencja_zaleznosci_kompatybilna = PRAWDA
-     I component.atrybucje = kompletne TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE
-    ZWROC_BLAD("R901: brak licencji, niekompatybilna licencja zaleznosci lub brak atrybucji")
-  KONIEC
-KONIEC
-
-REGULA R902: zgodnosc_prawna
-  DANE: project
-  JESLI project.rodo = spelnione
-     I project.ip = respektowane
-     I project.dostepnosc = uwzgledniona
-     I project.dokumentacja_zgodnosci = istnieje TO
-    ZWROC_OK
-  W_PRZECIWNYM_RAZIE
-    ZWROC_OSTRZEZENIE("R902: braki w zgodnosci prawnej lub dostepnosci")
-  KONIEC
-KONIEC
-```
-
-## 12. Reguły ciągłego doskonalenia
-
-```dsl
-REGULA R1001: przeglad_polityki
-  CO okres:
-    WYKONAJ(review POLICY.md)
-    JESLI zmiana_wymagana = PRAWDA TO
-      ZAPROPONUJ_ZMIANE
-      UZASADNIJ
-      POINFORMUJ_ZESPOL
-      WPROWADZ
-      ZAKTUALIZUJ(CHANGELOG)
-    KONIEC
-  KONIEC
-KONIEC
-
-REGULA R1002: metryki
-  CO okres:
-    ZMIERZ(jakosc_kodu)
-    ZMIERZ(pokrycie_testami)
-    ZMIERZ(wydajnosc)
-    ZMIERZ(incydenty_bezpieczenstwa)
-    ZMIERZ(skutecznosc_procesu)
-    ZAPISZ(metryki)
-  KONIEC
-KONIEC
-```
-
-## 13. Procedura rozstrzygania naruszeń
-
-```dsl
-PROCEDURA obsluz_naruszenie(regula, wykryty_stan):
-  1. ZIDENTYFIKUJ(regula, wykryty_stan)
-  2. JESLI wykryty_stan.poziom = BLAD TO
-       ZATRZYMAJ(dalsza_praca)
-       ZGLOS(wymagana_naprawa)
-     KONIEC
-  3. JESLI wykryty_stan.poziom = OSTRZEZENIE TO
-       ZAPISZ_DO_RAPORTU(wykryty_stan)
-       ROZWAZ(korekte)
-     KONIEC
-  4. JESLI wykryty_stan.poziom = OK TO
-       KONTYNUUJ
-     KONIEC
-KONIEC
+RULE P-DOCS-001 TYPE REQUIRED
+WHEN TARGET_SYSTEM_ARCHITECTURE_OR_FEATURE_DESIGNED
+DO REQUIRE_MERMAID_DIAGRAMS_IN_TARGET_PROJECT_DOCS_DIR ("docs/ARCHITECTURE.md", "docs/LOGIC_FLOW.md")
+ASSERT SYSTEM_ARCHITECTURE_AND_LOGIC_VISUALLY_DOCUMENTED
 ```

@@ -1,956 +1,191 @@
-# Ogólny standard pracy agentów AI
+# Centrum Zasad i Onboardingu (Governance & Onboarding Hub)
 
-## 1. Cel dokumentu
+[![Purpose: Governance](https://img.shields.io/badge/Purpose-Governance_%26_Policy-blue.svg)](#)
+[![AI Agent Ready](https://img.shields.io/badge/AI_Agents-Ready-success.svg)](#)
 
-Ten dokument określa wspólny standard tworzenia i rozwijania projektów przez ludzi oraz agentów AI.
+Repozytorium `wellmanifest/new-project` stanowi wyłączne, oficjalne źródło polityk bezpieczeństwa, procedur pracy oraz uniwersalnych narzędzi automatyzujących dla ludzi oraz autonomicznych agentów AI.
 
-Dokument jest przeznaczony do użycia w każdym nowym projekcie.
-
-Nie opisuje szczegółowej technologii konkretnego repozytorium. Określa natomiast:
-
-* obowiązkowy przebieg pracy,
-* sposób planowania zadań,
-* sposób wykorzystywania dostępnych agentów i narzędzi,
-* minimalne wymagania dotyczące struktury projektu,
-* minimalne wymagania dotyczące testów,
-* wymagania dotyczące konteneryzacji,
-* zasady wersjonowania,
-* zasady prowadzenia changelogu,
-* zasady tworzenia commitów i publikowania zmian.
-
-Szczegóły konkretnego projektu powinny znajdować się w jego dokumentacji, konfiguracji i skryptach.
+> **POLITYKA READ-ONLY (`P-CORE-007`):** Niniejsze repozytorium jest hubem zasad. Nie tworzy się w nim fizycznych ticketów, logów ani plików wykonawczych. Każdy nowy system (System X) jest tworzony i rozwijany w osobnym repozytorium.
 
 ---
 
-## 2. Zasada nadrzędna
-
-Przed tworzeniem własnego rozwiązania agent MUSI sprawdzić, czy dane zadanie może zostać wykonane przez:
-
-1. istniejącego agenta,
-2. istniejące narzędzie,
-3. istniejący skrypt,
-4. istniejący workflow,
-5. istniejący komponent dostępny w organizacji.
-
-Agent NIE POWINIEN odtwarzać funkcjonalności, która już istnieje.
-
-Główny agent powinien koordynować pracę i delegować zadania do właściwych narzędzi oraz agentów.
-
----
-
-## 3. Rozpoczęcie pracy
-
-Przed rozpoczęciem implementacji agent MUSI:
-
-1. przeczytać `CONTRIBUTING.md`,
-2. przeczytać dokumentację projektu,
-3. sprawdzić strukturę repozytorium,
-4. sprawdzić bieżący stan Git,
-5. sprawdzić dostępne narzędzia i agentów,
-6. sprawdzić istniejące testy i automatyzacje,
-7. utworzyć albo zaktualizować `TODO.md`,
-8. podzielić zadanie na mniejsze etapy,
-9. przypisać etapy do odpowiednich agentów lub narzędzi,
-10. dopiero wtedy rozpocząć pracę.
-
-Agent NIE MOŻE rozpoczynać większej implementacji bez planu zapisanego w `TODO.md`.
-
----
-
-## 4. TODO.md
-
-### 4.1. Przeznaczenie
-
-`TODO.md` jest dynamiczną kolejką pracy.
-
-Zawiera:
-
-* aktualne zadanie,
-* kolejne zadania,
-* etapy realizacji,
-* kryteria akceptacji,
-* wykryte problemy,
-* blokady,
-* zadania dopisane podczas działania agentów.
-
-`TODO.md` odpowiada na pytanie:
-
-> Co należy wykonać jako następne?
-
-`CONTRIBUTING.md` odpowiada na pytanie:
-
-> W jaki sposób należy wykonywać pracę?
-
-### 4.2. Ciągła pętla pracy
-
-Podczas wykonywania zadania można dopisywać nowe pozycje do `TODO.md`.
-
-Agent powinien:
-
-1. zakończyć aktualny bezpieczny etap,
-2. ponownie odczytać `TODO.md`,
-3. uwzględnić nowe zadania,
-4. kontynuować pracę bez przerywania całej pętli,
-5. przechodzić do kolejnych zadań, dopóki są one wykonalne.
-
-Agent może zatrzymać pracę tylko wtedy, gdy:
-
-* nie ma więcej zadań,
-* wszystkie zadania są zablokowane,
-* wymagana jest decyzja człowieka,
-* potrzebne są niedostępne dane dostępowe,
-* dalsza operacja jest ryzykowna,
-* wymagania są sprzeczne.
-
-### 4.3. Przykładowy format
-
-```markdown
-# TODO
-
-## TASK-001 — Nazwa zadania
-
-- **Status:** IN_PROGRESS
-- **Priorytet:** P1
-- **Źródło:** użytkownik
-- **Kryteria akceptacji:**
-  - wymaganie 1,
-  - wymaganie 2.
-
-### Etapy
-
-- [x] Analiza projektu
-- [x] Wybór odpowiednich narzędzi
-- [ ] Implementacja
-- [ ] Testy wykonane przez narzędzia testujące
-- [ ] Walidacja
-- [ ] Dokumentacja
-- [ ] Wersja i changelog
-- [ ] Commit i push
-
-### Nowe zadania wykryte podczas pracy
-
-- [ ] TASK-002 — ...
-```
-
----
-
-## 5. Dostępne narzędzia
-
-W tej sekcji należy opisać narzędzia dostępne dla agentów.
-
-Opis każdego narzędzia powinien zawierać:
-
-* nazwę,
-* przeznaczenie,
-* rodzaje obsługiwanych zadań,
-* sposób uruchomienia,
-* dane wejściowe,
-* wynik działania,
-* ograniczenia,
-* sytuacje, w których należy go użyć.
-
-Nie należy wpisywać informacji, które nie zostały potwierdzone w dokumentacji narzędzia.
-
-### Format opisu
-
-```markdown
-### Nazwa narzędzia
-
-**Przeznaczenie:**
-
-Opis potwierdzonego działania.
-
-**Użyj do:**
-
-- zadanie 1,
-- zadanie 2.
-
-**Nie używaj do:**
-
-- zadanie 1,
-- zadanie 2.
-
-**Sposób uruchomienia:**
-
-Opis albo odwołanie do dokumentacji.
-
-**Wynik działania:**
-
-Opis spodziewanego rezultatu.
-
-**Ograniczenia:**
-
-- ograniczenie 1,
-- ograniczenie 2.
-```
-
-### Narzędzia używane w project.sh
-
-#### code2llm
-
-**Przeznaczenie:**
-
-Konwertuje kod projektu do formatu odpowiedniego dla przetwarzania przez modele językowe.
-
-**Użyj do:**
-
-- analizy kodu przez LLM,
-- tworzenia reprezentacji semantycznej projektu,
-- przygotowania danych dla agentów AI.
-
-**Sposób uruchomienia:**
-
-```bash
-$VENV/bin/code2llm ./ -f all -o ./project --no-chunk --exclude '*.md'
-```
-
-**Wynik działania:**
-
-Generuje pliki w katalogu `./project` zawierające reprezentację kodu w formacie toon.
-
-**Ograniczenia:**
-
-- Wymaga wirtualnego środowiska Python,
-- Może pomijać pliki .md zgodnie z konfiguracją.
-
-#### redup
-
-**Przeznaczenie:**
-
-Skanuje projekt w poszukiwaniu duplikatów kodu.
-
-**Użyj do:**
-
-- wykrywania powtarzającego się kodu,
-- analizy jakości kodu,
-- identyfikacji możliwości refaktoryzacji.
-
-**Sposób uruchomienia:**
-
-```bash
-$VENV/bin/redup scan . --format toon --output ./project --ext .mjs,.js,.php,.sh
-```
-
-**Wynik działania:**
-
-Generuje raport duplikatów w formacie toon w katalogu `./project`.
-
-**Ograniczenia:**
-
-- Obsługuje określone rozszerzenia plików,
-- Wymaga odpowiedniego formatu wyjściowego.
-
-#### prefact
-
-**Przeznaczenie:**
-
-Narzędzie do pre-faktoryzacji kodu.
-
-**Użyj do:**
-
-- wstępnej analizy struktury kodu,
-- przygotowania do refaktoryzacji,
-- identyfikacji wzorców kodu.
-
-**Sposób uruchomienia:**
-
-```bash
-$VENV/bin/prefact -a -e "examples/**"
-```
-
-**Wynik działania:**
-
-Analizuje strukturę projektu z wyłączeniem katalogu examples.
-
-**Ograniczenia:**
-
-- Może wymagać konfiguracji wykluczeń,
-- Zależy od struktury projektu.
-
-#### vallm
-
-**Przeznaczenie:**
-
-Przetwarzanie wsadowe z wykorzystaniem modeli językowych.
-
-**Użyj do:**
-
-- masowej analizy kodu przez LLM,
-- semantycznego przetwarzania plików,
-- automatycznego generowania opisów.
-
-**Sposób uruchomienia:**
-
-```bash
-$VENV/bin/vallm batch . --recursive --format toon --output ./project
-```
-
-**Wynik działania:**
-
-Generuje przetworzone pliki w formacie toon z wykorzystaniem LLM.
-
-**Ograniczenia:**
-
-- Wymaga zainstalowanego modelu LLM (np. qwen2.5-coder:7b),
-- Może być czasochłonne dla dużych projektów.
-
-#### doql
-
-**Przeznaczenie:**
-
-Adaptacja projektu do formatu doql.
-
-**Użyj do:**
-
-- konwersji stylów i formatowania,
-- generowania plików konfiguracyjnych,
-- standaryzacji projektu.
-
-**Sposób uruchomienia:**
-
-```bash
-$VENV/bin/doql adopt . --format less --output app.doql.less --force
-```
-
-**Wynik działania:**
-
-Generuje plik `app.doql.less` z konfiguracją stylów.
-
-**Ograniczenia:**
-
-- Wymaga odpowiedniej struktury projektu,
-- Nadpisuje istniejące pliki przy użyciu --force.
-
-#### sumd
-
-**Przeznaczenie:**
-
-Sumaryzacja plików markdown w projekcie.
-
-**Użyj do:**
-
-- tworzenia podsumowań dokumentacji,
-- analizy zawartości plików .md,
-- szybkiego przeglądu dokumentacji.
-
-**Sposób uruchomienia:**
-
-```bash
-$VENV/bin/sumd .
-```
-
-**Wynik działania:**
-
-Generuje podsumowanie wszystkich plików markdown w projekcie.
-
-**Ograniczenia:**
-
-- Działa tylko na plikach markdown,
-- Zależy od jakości dokumentacji.
-
-#### sumr
-
-**Przeznaczenie:**
-
-Sumaryzacja raportów i wyników analizy.
-
-**Użyj do:**
-
-- agregacji wyników z innych narzędzi,
-- tworzenia podsumowań raportów,
-- szybkiego przeglądu wyników.
-
-**Sposób uruchomienia:**
-
-```bash
-$VENV/bin/sumr .
-```
-
-**Wynik działania:**
-
-Generuje podsumowanie raportów z analizy projektu.
-
-**Ograniczenia:**
-
-- Wymaga istnienia innych raportów,
-- Zależy od formatu danych wejściowych.
-
-#### goal
-
-**Przeznaczenie:**
-
-Narzędzie do zarządzania celami projektu i automatyzacji.
-
-**Użyj do:**
-
-- zarządzania zadaniami,
-- automatyzacji workflow,
-- koordynacji pracy agentów.
-
-**Sposób uruchomienia:**
-
-```bash
-$VENV/bin/goal -a
-```
-
-**Wynik działania:**
-
-Analizuje i zarządza celami projektu w sposób automatyczny.
-
-**Ograniczenia:**
-
-- Może wymagać konfiguracji celów,
-- Zależy od struktury projektu.
-
----
-
-## 6. Dostępni agenci
-
-Każdy dostępny agent powinien mieć opisany rzeczywisty zakres odpowiedzialności.
-
-Opis powinien bazować na:
-
-* dokumentacji agenta,
-* kodzie agenta,
-* faktycznie obsługiwanych wejściach,
-* faktycznie generowanych wynikach.
-
-Nie należy ustalać działania agenta wyłącznie na podstawie jego nazwy.
-
-### Format opisu
-
-```markdown
-### Nazwa agenta
-
-**Repozytorium:**
-
-Adres lub nazwa repozytorium.
-
-**Odpowiedzialność:**
-
-Potwierdzony zakres działania.
-
-**Użyj, gdy:**
-
-- sytuacja 1,
-- sytuacja 2.
-
-**Dane wejściowe:**
-
-Opis wymaganych danych.
-
-**Wynik:**
-
-Opis generowanego rezultatu.
-
-**Ograniczenia:**
-
-- ograniczenie 1,
-- ograniczenie 2.
-```
-
-### Agenci w ekosystemie
-
-#### test-agent (Subactor)
-
-**Repozytorium:**
-
-github.com/subactor/subactor/agents/test-agent
-
-**Odpowiedzialność:**
-
-Automatyczne testowanie kodu i generowanie raportów testowych.
-
-**Użyj, gdy:**
-
-- Należy uruchomić testy jednostkowe i integracyjne
-- Wymagane jest sprawdzenie pokrycia kodu testami
-- Potrzebny jest raport z wyników testów
-
-**Dane wejściowe:**
-
-Kod do przetestowania, konfiguracja testów, scenariusze testowe.
-
-**Wynik:**
-
-Raporty testowe, wyniki pokrycia, lista wykrytych błędów.
-
-**Ograniczenia:**
-
-- Wymaga poprawnie skonfigurowanego środowiska testowego
-- Może wymagać dodatkowych zależności dla konkretnych typów testów
-
-#### repair-agent (Subactor)
-
-**Repozytorium:**
-
-github.com/subactor/subactor/agents/repair-agent
-
-**Odpowiedzialność:**
-
-Automatyczna naprawa wykrytych błędów i problemów w kodzie.
-
-**Użyj, gdy:**
-
-- Test-agent wykrył błędy wymagające naprawy
-- Prefact zidentyfikował problemy z importami lub strukturą kodu
-- Wymagana jest automatyczna refaktoryzacja
-
-**Dane wejściowe:**
-
-Raporty z błędami, kod źródłowy, preferencje naprawy.
-
-**Wynik:**
-
-Naprawiony kod, raport z wprowadzonymi zmianami, sugestie dalszych działań.
-
-**Ograniczenia:**
-
-- Może nie naprawić wszystkich typów błędów
-- Wymaga zatwierdzenia zmian przed wdrożeniem
-
-#### validator-agent (Subactor)
-
-**Repozytorium:**
-
-github.com/subactor/subactor/agents/validator-agent
-
-**Odpowiedzialność:**
-
-Walidacja kodu pod kątem zgodności ze standardami i wymaganiami.
-
-**Użyj, gdy:**
-
-- Należy sprawdzić zgodność z politykami projektu
-- Wymagana jest walidacja przed wdrożeniem
-- Potrzebne jest sprawdzenie jakości kodu
-
-**Dane wejściowe:**
-
-Kod do walidacji, reguły walidacji, standardy projektu.
-
-**Wynik:**
-
-Raport walidacji, lista niezgodności, sugestie poprawek.
-
-**Ograniczenia:**
-
-- Wymaga zdefiniowanych reguł walidacji
-- Może generować fałszywe alarmy
-
-#### todo-agent (Subactor)
-
-**Repozytorium:**
-
-github.com/subactor/subactor/agents/todo-agent
-
-**Odpowiedzialność:**
-
-Zarządzanie listami zadań i planowaniem pracy.
-
-**Użyj, gdy:**
-
-- Należy utworzyć lub zaktualizować TODO.md
-- Wymagane jest planowanie kolejnych kroków
-- Potrzebne jest śledzenie postępu prac
-
-**Dane wejściowe:**
-
-Kontekst projektu, wykryte problemy, priorytety zadań.
-
-**Wynik:**
-
-Zaktualizowany TODO.md, plan pracy, priorytetyzowane zadania.
-
-**Ograniczenia:**
-
-- Wymaga zrozumienia kontekstu projektu
-- Może wymagać ręcznej weryfikacji priorytetów
-
-#### doctor-agent (Subactor)
-
-**Repozytorium:**
-
-github.com/subactor/subactor/agents/doctor-agent
-
-**Odpowiedzialność:**
-
-Diagnostyka projektu i wykrywanie problemów konfiguracyjnych.
-
-**Użyj, gdy:**
-
-- Projekt nie działa poprawnie
-- Wymagana jest diagnostyka środowiska
-- Potrzebne jest sprawdzenie zależności
-
-**Dane wejściowe:**
-
-Konfiguracja projektu, środowisko, logi błędów.
-
-**Wynik:**
-
-Raport diagnostyczny, lista problemów, sugestie napraw.
-
-**Ograniczenia:**
-
-- Może nie wykryć wszystkich typów problemów
-- Wymaga dostępu do środowiska projektu
-
----
-
-## 7. Standard tworzenia nowego projektu
-
-Każdy nowy projekt powinien posiadać co najmniej:
-
-* czytelny `README.md`,
-* `CONTRIBUTING.md`,
-* `TODO.md` podczas pracy agentów,
-* mechanizm wersjonowania,
-* `CHANGELOG.md`,
-* konfigurację środowiska bez sekretów,
-* testy,
-* automatyczny sposób uruchomienia testów,
-* konfigurację CI,
-* środowisko Docker, jeżeli projekt może zostać uruchomiony w kontenerze,
-* instrukcję uruchomienia,
-* instrukcję rozwoju projektu,
-* jasny podział katalogów.
-
-Agent powinien dobrać konkretne technologie do rodzaju projektu.
-
-Dokument nie narzuca:
-
-* języka programowania,
-* frameworka,
-* systemu testowego,
-* obrazu bazowego Docker,
-* menedżera pakietów,
-* konkretnego dostawcy CI.
-
----
-
-## 8. Docker
-
-Jeżeli charakter projektu pozwala na konteneryzację, agent MUSI przygotować środowisko Docker.
-
-Celem środowiska Docker jest:
-
-* uruchomienie projektu bez ręcznej konfiguracji hosta,
-* odtworzenie wymaganych zależności,
-* zapewnienie powtarzalnego środowiska,
-* umożliwienie automatycznego testowania,
-* sprawdzenie instalacji projektu od zera,
-* uproszczenie pracy ludzi i agentów.
-
-Środowisko Docker powinno:
-
-* budować się automatycznie,
-* uruchamiać projekt,
-* uruchamiać wymagane zależności,
-* umożliwiać wykonanie testów,
-* nie zawierać sekretów,
-* używać kontrolowanych wersji zależności,
-* posiadać mechanizm sprawdzania gotowości aplikacji, gdy ma to zastosowanie,
-* umożliwiać wyczyszczenie środowiska po testach.
-
-Agent powinien przygotować odpowiednie pliki, przykładowo:
-
-* `Dockerfile`,
-* `.dockerignore`,
-* `compose.yaml` lub odpowiednik,
-* skrypt uruchomienia,
-* skrypt testowy.
-
-Dobór dokładnej struktury zależy od konkretnego projektu.
-
-Nie należy tworzyć Dockera wyłącznie dla samego faktu jego posiadania, jeżeli projekt nie może lub nie powinien działać w kontenerze. Taka decyzja musi zostać uzasadniona w dokumentacji projektu.
-
----
-
-## 9. Testowanie
-
-### 9.1. Zasada delegowania
-
-Testy powinny być tworzone, uruchamiane i sprawdzane przede wszystkim przez dostępne narzędzia oraz agentów testujących.
-
-Główny agent powinien:
-
-1. określić wymagane scenariusze testowe,
-2. przekazać zadanie odpowiedniemu agentowi lub narzędziu,
-3. odebrać wynik testów,
-4. sprawdzić raport,
-5. przekazać wykryte problemy do odpowiedniego narzędzia naprawczego,
-6. ponownie uruchomić testy po poprawkach.
-
-Główny agent NIE POWINIEN ręcznie tworzyć pełnego zestawu testów, jeżeli dostępny agent testujący może wykonać to zadanie.
-
-### 9.2. Kiedy główny agent może zmieniać testy
-
-Główny agent może samodzielnie utworzyć albo zmienić testy, gdy:
-
-* nie istnieje odpowiednie narzędzie testujące,
-* narzędzie testujące nie obsługuje danego przypadku,
-* wygenerowany test jest niepoprawny,
-* test nie działa z powodu zmienionego interfejsu,
-* test nie odzwierciedla rzeczywistego wymagania,
-* naprawiany błąd wymaga natychmiastowego testu regresyjnego,
-* automatyczny agent testujący zakończył pracę błędem,
-* konieczna jest ręczna naprawa infrastruktury testowej.
-
-Przed ręczną zmianą testów agent powinien zapisać przyczynę w `TODO.md`.
-
-### 9.3. Minimalne wymagania
-
-Projekt powinien posiadać odpowiednie do swojego charakteru:
-
-* testy jednostkowe,
-* testy integracyjne,
-* testy regresyjne,
-* testy uruchomienia,
-* testy instalacji,
-* testy API lub kontraktowe,
-* testy Docker,
-* testy end-to-end,
-* testy wieloplatformowe.
-
-Nie każdy projekt wymaga wszystkich rodzajów testów. Agent testujący powinien ustalić właściwy zakres.
-
-### 9.4. Zakazane działania
-
-Agent NIE MOŻE:
-
-* usuwać testów tylko dlatego, że nie przechodzą,
-* wyłączać testów bez udokumentowanej przyczyny,
-* zmieniać oczekiwanego rezultatu testu wyłącznie w celu uzyskania pozytywnego wyniku,
-* przedstawiać pominiętego testu jako zaliczonego,
-* deklarować wykonania testów, które nie zostały uruchomione,
-* ukrywać błędów infrastruktury testowej.
-
----
-
-## 10. Walidacja i naprawa
-
-Po implementacji projekt powinien przejść przez osobne etapy:
-
-1. testowanie,
-2. walidację zgodności z wymaganiami,
-3. wykrywanie problemów,
-4. naprawę,
-5. ponowne testowanie,
-6. końcową walidację.
-
-Jeżeli dostępni są wyspecjalizowani agenci, każdy etap powinien zostać przekazany właściwemu agentowi.
-
-Przykładowy przepływ:
+## 1. Struktura Drzewa Plików Repozytorium Docelowego
 
 ```text
-Główny agent
-→ agent testujący
-→ agent walidujący
-→ agent naprawczy
-→ agent testujący
-→ końcowa walidacja
+DOCELOWE REPOZYTORIUM SYSTEMU X (Root)
+├── .env.example                 <-- (Szablon konfiguracji: PROJECT_USERS, DEFAULT_AGENT)
+├── .env                         <-- (Lokalna konfiguracja uaktualniona z .env.example)
+├── README.md                    <-- (Główne Menu Całego Projektu)
+├── VERSION                      <-- (Wersja główna projektu, np. 0.1.0)
+├── CHANGELOG.md                 <-- (Główny rejestr zmian projektu)
+├── TODO.md                      <-- (Główna checklista kroków i zadań)
+├── Dockerfile & compose.yml     <-- (Odizolowane środowisko kontenerowe)
+├── project.sh / project.bat     <-- (Narzędzia analityczne: code2llm, redup, prefact, etc.)
+│
+└── project/                     <-- (Katalog zarządzania ticketami)
+    ├── README.md                <-- (Menu Katalogu Project: opis, linki do huba i indeks ticketów)
+    ├── readme.sh / .bat         <-- (Skrypt automatycznie aktualizujący project/README.md)
+    ├── new-ticket.sh / .bat     <-- (Skrypt generujący strukturę nowego ticketu)
+    │
+    └── ticket-001/              <-- (Podkatalog Konkretnego Ticketu)
+        ├── user-{NAME}.md       <-- (Notatki człowieka zdefiniowanego w .env / CLI)
+        ├── preprompt.md         <-- (Wyciągnięte wytyczne z notatek & ustrukturyzowany workflow)
+        ├── ai-{PROVIDER}.md     <-- (MÓZG AGENTA: rozumienie intencji, plan, Kryteria Odbioru)
+        ├── ai-{PROVIDER}-logs.txt <-- (Dedykowany plik surowych logów tego agenta)
+        └── changelog.md         <-- (Lokalny rejestr zmian dotyczący tylko tego ticketu)
 ```
 
-Dokładny podział odpowiedzialności musi wynikać z rzeczywistej dokumentacji agentów.
+---
+
+## 2. Chronologia i Wynikanie ("Co z Czego Wynika")
+
+Realizacja każdego zadania w docelowym repozytorium odbywa się według ściśle określonej kolejności:
+
+1. **Wyszczególnienie Wymagań (`USER_REQUEST`)**
+   * 1.1. Człowiek przekazuje inicjujące notatki, wytyczne i polecenie biznesowe.
+
+2. **Inicjalizacja Korzenia Projektu (Root Level Bootstrap)**
+   * 2.1. Tworzony jest plik konfiguracji `.env` (na bazie `.env.example`).
+   * 2.2. Tworzone są pliki bazowe: `README.md` (Master Menu), `VERSION`, `CHANGELOG.md`, `TODO.md` oraz kontener `Dockerfile`/`compose.yml`.
+
+3. **Inicjalizacja Katalogu `project/`**
+   * 3.1. Tworzony jest `project/README.md` (Menu Ticketów), `project/readme.sh` oraz `project/new-ticket.sh`.
+
+4. **Wywołanie Skryptu `new-ticket.sh` (`project/ticket-{NNN}/`)**
+   * 4.1. Skrypt odczytuje listę aktywnych użytkowników z pliku `.env` (`PROJECT_USERS`) lub z flagi CLI `--users` i generuje odpowiednie pliki `user-{NAME}.md` (np. `user-mateusz.md`).
+   * 4.2. Generowany jest pusty lokalny plik `changelog.md` przeznaczony dla tego ticketu.
+
+5. **Ekstrakcja Wytycznych (`preprompt.md`)**
+   * 5.1. Agent AI analizuje notatki z plików `user-{NAME}.md` i tworzy plik `preprompt.md`, zawierający ustrukturyzowane wymagania oraz krok-po-kroku workflow.
+
+6. **Generowanie Mózgu AI (`ai-{AGENT}.md`) oraz Harmonogramu (`TODO.md`)**
+   * 6.1. Z pliku `preprompt.md` Agent generuje plik `ai-{AGENT}.md` (MÓZG AI), zawierający rozumienie intencji, koncepcję architektury, zakres i **Kryteria Odbioru (Acceptance Criteria)**.
+   * 6.2. Agent wpisuje listę zadań wykonawczych do głównego pliku `TODO.md`.
+
+7. **Wstrzymanie Pracy i Akceptacja Planu (`P-CORE-008`)**
+   * 7.1. Agent zatrzymuje przerwane kodowanie i przedstawia plik `ai-{AGENT}.md` oraz checklistę w `TODO.md` Użytkownikowi do weryfikacji.
+   * 7.2. Pisanie kodu rozpoczyna się wyłącznie po wyraźnej zgodzie Użytkownika.
+
+8. **Kodowanie, Logowanie i Rejestr Zmian**
+   * 8.1. Podczas wykonania Agent zapisuje surowe wyjścia z terminala i testów do pliku `ai-{AGENT}-logs.md`.
+   * 8.2. Po zakończeniu etapu Agent uzupełnia `project/ticket-{NNN}/changelog.md`, odznacza pozycje w `TODO.md`, a po wyznaczeniu wydania aktualizuje zbiorczy `CHANGELOG.md` i podbija `VERSION`.
 
 ---
 
-## 11. Dokumentacja
+## 3. Specyfikacja Plików i Kontrakty (DSL)
 
-Dokumentacja musi być aktualizowana razem z kodem.
-
-Po zmianie agent powinien sprawdzić:
-
-* czy sposób instalacji jest aktualny,
-* czy sposób uruchomienia jest aktualny,
-* czy konfiguracja jest opisana,
-* czy nowe funkcje są opisane,
-* czy ograniczenia są opisane,
-* czy przykłady nadal działają,
-* czy dokumentacja nie odwołuje się do usuniętych elementów.
-
-Dokumentacja nie może deklarować funkcji ani platform, które nie zostały sprawdzone.
+| Plik | Rola i Specyfikacja Kontraktu |
+| :--- | :--- |
+| **`.env.example`** | **Szablon Konfiguracji**: definiuje domyślne zmienne środowiskowe projektu (`PROJECT_USERS="mateusz"`, `DEFAULT_AGENT="antigravity"`). |
+| **`user-{NAME}.md`** | **Kontekst Człowieka**: ręczne notatki i polecenia od danego użytkownika. Służy jako stały kontekst w promptach LLM. |
+| **`preprompt.md`** | **Ustrukturyzowany Workflow**: przetworzone wytyczne z plików `user-*.md` ze zdefiniowanymi krokami wykonawczymi. |
+| **`ai-{AGENT}.md`** | **Mózg Agenta AI**: rozumienie intencji, zakres prac, specyfikacja techniczna i Kryteria Odbioru (AC). |
+| **`ai-{AGENT}-logs.md`** | **Dedykowane Logi**: wyłączne surowe wyjścia komend CLI i testów uruchamianych przez danego agenta. |
+| **`changelog.md`** | **Lokalny Changelog**: wykaz zmian i edycji wykonanych wyłącznie w ramach danego ticketu. |
+| **`project/README.md`** | **Master Menu**: centralny plik nawigacyjny indeksujący wszystkie tickety i ich pliki składowe. |
 
 ---
 
-## 12. Commity i push
+## 4. Interfejs CLI Skryptów Automatyzujących
 
-Agent powinien wykonywać małe, logiczne commity po zakończeniu spójnego etapu.
+### Skrypt `new-ticket.sh` / `new-ticket.bat`
+Automatyzuje tworzenie struktury nowego ticketu na podstawie parametrów CLI lub pliku `.env`.
 
-Nie należy wykonywać jednego ogromnego commita po zakończeniu całego projektu.
+```bash
+# Użycie podstawowe (pobiera PROJECT_USERS z pliku .env)
+./project/new-ticket.sh --title "Implementacja Walidacji"
 
-Zalecany format:
-
-```text
-<type>(<scope>): <krótki opis>
+# Użycie z jawnym podaniem użytkowników i agenta
+./project/new-ticket.sh --title "Naprawa Błędu" --users "mateusz,tom" --agent "codex"
 ```
 
-Przykładowe typy:
+### Skrypt `readme.sh` / `readme.bat`
+Skanuje katalog `project/` i automatycznie aktualizuje spis ticketów w `project/README.md`.
 
-* `feat`
-* `fix`
-* `test`
-* `docs`
-* `refactor`
-* `build`
-* `ci`
-* `chore`
-* `security`
-
-Przed commitem agent MUSI:
-
-1. sprawdzić zmienione pliki,
-2. sprawdzić diff,
-3. sprawdzić przypadkowe zmiany,
-4. sprawdzić sekrety,
-5. wykonać odpowiednie testy,
-6. zaktualizować `TODO.md`.
-
-Push powinien zostać wykonany po poprawnym commicie i wymaganej walidacji.
-
-Agent NIE MOŻE wykonywać force push ani operacji usuwających historię bez wyraźnej zgody.
-
----
-
-## 13. Wersjonowanie
-
-Każdy projekt powinien mieć jednoznacznie określoną wersję.
-
-Zalecanym standardem jest Semantic Versioning:
-
-```text
-MAJOR.MINOR.PATCH
+```bash
+# Aktualizacja indeksu w project/README.md
+./project/readme.sh
 ```
 
-* `PATCH` — kompatybilne poprawki,
-* `MINOR` — nowe kompatybilne funkcje,
-* `MAJOR` — zmiany niekompatybilne.
+---
 
-Dokładne miejsce przechowywania wersji zależy od technologii projektu.
+## 5. Zasada Odbioru Planu przed Kodowaniem (`P-CORE-008`)
 
-Może to być przykładowo:
+Przed rozpoczęciem edycji plików źródłowych w nowym systemie Agent AI **musi**:
+1. Wygenerować plik `ai-{PROVIDER}.md` oraz uzupełnić `TODO.md`.
+2. Przedstawić Użytkownikowi oba te dokumenty do wglądu.
+3. Uzyskać wyraźną akceptację (`"Zgoda"`, `"Plan zatwierdzony"`) przed przejściem do fazy wykonawczej.
 
-* `VERSION`,
-* `pyproject.toml`,
-* `package.json`,
-* plik projektu,
-* manifest aplikacji.
-
-Wersja musi być spójna we wszystkich wymaganych miejscach.
+### 5.1. Zasada Kontynuacji Aktywnego Ticketu (`P-CORE-009` / `C-TICKET-008`)
+Dla kolejnych promptów i poprawek w ramach tego samego zadania Agent AI **nie tworzy nowych folderów ticketów**.
+* Agent wykorzystuje ponownie aktywny katalog `project/ticket-{NNN}/` i aktualizuje swój plik planu `ai-{PROVIDER}.md` oraz `TODO.md`.
+* **Agentowi zabrania się modyfikowania plików notatek człowieka (`user-{github_username}.md`)**.
 
 ---
 
-## 14. CHANGELOG.md
+## 6. Przewodnik i Zasady Pracy (Opis w Języku Naturalnym)
 
-Po zakończeniu publikowalnego zakresu agent MUSI zaktualizować `CHANGELOG.md`.
+*Poniższy opis stanowi przystępną wykładnię zasad zawartych w ścisłych plikach polityk [POLICY.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/POLICY.md) oraz [CONTRIBUTING.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/CONTRIBUTING.md). Jeśli formuła DSL w plikach jest dla kogoś trudna do zinterpretowania, ten przewodnik służy jako oficjalne wyjaśnienie.*
 
-Changelog powinien zawierać informacje istotne dla:
-
-* użytkownika,
-* programisty,
-* osoby wdrażającej projekt,
-* kolejnego agenta.
-
-Powinien opisywać:
-
-* nowe funkcje,
-* zmienione zachowanie,
-* naprawione błędy,
-* usunięte elementy,
-* zmiany bezpieczeństwa,
-* zmiany niekompatybilne,
-* wymagane migracje.
-
-Changelog nie powinien być kopią historii commitów.
+### 6.1. Hierarchia Ważności Źródeł Prawdy
+W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejność ważności:
+1. **Bezpośrednie polecenie użytkownika (`USER_REQUEST`)** – najwyższy autorytet.
+2. **Aktualny stan plików w docelowym repozytorium (`FILESYSTEM`)**.
+3. **[POLICY.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/POLICY.md)** – bezwzględne zasady i zakazy bezpieczeństwa.
+4. **[CONTRIBUTING.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/CONTRIBUTING.md)** – procedura pracy i maszyna stanów.
+5. **README.md / Historia Git** – informacje pomocnicze i kontekstowe.
 
 ---
 
-## 15. Zakończenie pracy
-
-Po zakończeniu pełnego zakresu agent MUSI:
-
-1. upewnić się, że wszystkie zadania zostały wykonane albo opisane jako zablokowane,
-2. odebrać wyniki od agentów testujących,
-3. upewnić się, że testy przechodzą,
-4. wykonać walidację,
-5. naprawić wykryte problemy,
-6. ponownie wykonać testy,
-7. zaktualizować dokumentację,
-8. zaktualizować `CHANGELOG.md`,
-9. zaktualizować wersję,
-10. wykonać logiczne commity,
-11. wykonać push,
-12. zaktualizować `TODO.md`,
-13. przejść do kolejnego zadania, jeżeli istnieje.
+### 6.2. System Ticketów (`project/ticket-{NNN}` w Docelowym Repozytorium)
+* **Wymóg zakładania**: Każde zadanie składające się z więcej niż 1 kroku lub wymagające użycia Agenta AI **musi** posiadać swój folder pod `project/ticket-{NNN}` **w repozytorium docelowym projektu**.
+* **Menu projektu (`project/README.md`)**: Służy jako Menu nawigacyjne do wszystkich ticketów z linkami do dokumentacji i uczestników.
+* **Mózg Agenta (`ai-{AGENT}.md`)**: Definiuje rozumienie intencji, zakres, ryzyka i kryteria odbioru (Acceptance Criteria). Jest jedynym źródłem prawdy dla zakresu pracy danego agenta.
+* **Pliki uczestników (`user-mateusz.md`, `user-tom.md`)**: Ręczne notatki człowieka wklejane przy każdym zleceniu jako stały kontekst.
+* **Logi (`ai-{AGENT}-logs.md`)**: Wyłączne surowe wyjścia z konsoli i testów wykonywanych przez danego agenta.
+* **Retencja (Nie wolno usuwać ticketów!)**: Foldery ticketów są trwale zachowywane w docelowym repozytorium. Agentom **nie wolno ich usuwać**, chyba że po zakończonym projekcie użytkownik wyraźnie wyda takie polecenie.
 
 ---
 
-## 16. Definition of Done
-
-Praca jest zakończona, gdy:
-
-* [ ] wymagania zostały spełnione,
-* [ ] zadania w `TODO.md` są aktualne,
-* [ ] użyto właściwych agentów i narzędzi,
-* [ ] testy zostały wykonane przez właściwe narzędzia,
-* [ ] wyniki testów zostały sprawdzone,
-* [ ] wykryte problemy zostały naprawione,
-* [ ] testy zostały ponownie uruchomione,
-* [ ] walidacja zakończyła się powodzeniem,
-* [ ] Docker działa, jeżeli jest wymagany,
-* [ ] dokumentacja jest aktualna,
-* [ ] changelog został zaktualizowany,
-* [ ] wersja została zaktualizowana,
-* [ ] utworzono logiczne commity,
-* [ ] wykonano push,
-* [ ] nie dodano sekretów,
-* [ ] nie pozostawiono nieopisanych blokad.
+### 6.3. Bezpieczeństwo i Dobre Praktyki (`POLICY.md`)
+* **Weryfikacja faktów**: Twierdzenia bez dowodów (np. "test przeszedł" bez uruchomienia komendy) są zabronione.
+* **Ochrona sekretów**: Klucze API, tokeny i hasła nie mogą trafić do repozytorium ani logów.
+* **Czyszczenie ścieżek**: W komitach i logach używamy ścieżek względnych. Zabronione jest wyciekanie lokalnych ścieżek bezwzględnych użytkownika (`C:/Users/...`).
+* **Higiena kontekstu**: Wczytywanie dużych plików i logów odbywa się fragmentami (`head`, `tail`, paginacja), aby nie zapychać okna kontekstowego Agenta AI.
+* **Zakaz niszczących komend**: Operacje takie jak `force push`, czyszczenie historii czy niezweryfikowane skasowanie plików wymagają zgody człowieka.
 
 ---
 
-## 17. Self-improvement
+### 6.4. Wymagania Środowiskowe (Docker i Narzędzia)
+* Każdy tworzony system **musi** być budowany i uruchamiany w odizolowanym środowisku **Docker** (`Dockerfile`, `compose.yml`).
+* Należy obowiązkowo korzystać z zestawu narzędzi deweloperskich (`project.sh` / `project.bat`) do analizy i automatyzacji.
 
-Po zakończeniu większego zakresu agent powinien sprawdzić:
+| Narzędzie | Krótki Opis i Przeznaczenie |
+| :--- | :--- |
+| **`todo2code`** | Narzędzie konwertujące checklisty i pliki TODO na wykonywalne prompty oraz kod dla agentów (`https://github.com/semcod/todo2code`). |
+| **`code2llm`** | Pakuje kod źródłowy i strukturę projektu w zoptymalizowany format dla modeli AI/LLM. |
+| **`redup`** | Skaner wykrywający powtórzenia i redundancje w kodzie źródłowym. |
+| **`prefact`** | Automatyczne przygotowanie refaktoryzacji oraz analiza zależności w kodzie. |
+| **`doql`** | Generowanie podsumowań strukturalnych i relacyjnych projektu (`app.doql.less`). |
+| **`sumd` / `sumr`** | Generowanie automatycznych raportów ze struktur repozytorium. |
+| **`goal`** | Weryfikacja celów projektowych i zgodności ze specyfikacją wymagań. |
+| **`vallm`** | Moduł semantycznej walidacji i wsadowego przetwarzania kontekstu dla agentów LLM. |
 
-* czy istniejące narzędzia były wystarczające,
-* czy któryś etap wymagał zbędnej pracy ręcznej,
-* czy brakuje nowego agenta lub skryptu,
-* czy standard testów wymaga rozszerzenia,
-* czy dokumentacja narzędzi jest kompletna,
-* czy przepływ między agentami jest poprawny,
-* czy można skrócić pracę kolejnych agentów.
+---
 
-Propozycje poprawy powinny zostać dopisane do `TODO.md`.
+### 6.5. Maszyna Stanów (Przepływ Pracy)
+Praca nad każdym zadaniem w docelowym repozytorium przechodzi przez cykl stanów:
+`START` ➔ `ANALYSIS` ➔ `PLAN` ➔ `WAIT_FOR_APPROVAL` ➔ `TOOLS` ➔ `DELEGATION` ➔ `EDIT` ➔ `VALIDATION` ➔ `PUBLICATION` ➔ `DONE` (lub `BLOCKED` w przypadku braku dowodów/blokady).
 
-Zmiany standardu powinny być wprowadzane jako osobne, udokumentowane zadania.
+---
 
-## 18. Podsumowanie moich prac 21.07-22.07
-21.07
-Utworzenie repo
-Utworzenie Pliku README
-Utworzenie pierwszego pliku CONTRIBUTING
+## 7. Indeks Dokumentów Zarządczych i Skryptów
 
-22.07
-Uruchomienie 4 rodzajów LLM by sprawdziły istniejacy plik i napisały czy jest przez nich dobrze rozumiany i zaproponowały zmiany
-Sprawdzenie tych informacji i usuniecie Kimi K z dalszej pracy z powodu nie zadowalajacych wynikow
-Kazanie LLM wykonac przykladowy plik CONTRIBUTING u siebie w folderze
-Podsumowanie dlugosci czasu działania i ilosci wykorzystanych tokenow
-Kazanie LLM wykonac koncowy plik CONTRIBUTING używając DSL
-
-## 19. Co dalej
-
-  Bazując na informacjach od perplexity trzeba wybrac ktory sposob zapisu dsl jest tak samo czytelny dla LLM oraz człowieka 
-  Na bazie tych informacji stworzyc runtime 
-
-## 20. TODO
- - Przeanalizować pliki które stworzyły LLM za pomoca perplexity
- - jak napisze to wszystko co mowilem i podsumuje to co wczoraj w readme
- - plan dzialania co dalej
- - zapytaj go ktory z formatow proponuje i co zrobic dalej jesli by miec latwo do pisania dla czlowieka i maszyny i latwe do edycji dla czlowieka on powinnien zaproponowac wersje lepsza spelniajaca, lepsza wersje niz widzi, dam mu readme zeby on wiedzial do czego jest ten projekt itd 
- - stowrz folder perplexity wklei prompt pobierz oraz to co on napisal 
- - wymagania ten jezyk ma byc taki że jeśli człowiek da komende to tą komende bedzie procesować LMM i on bedzie mial dostep roznych danych/logow i bazie danych i bedzie musial wygenerować poprawny plik odnośnie co powinno sie zadziać bazujac na wszystkich informacjach ktore dostal powinnien wygenerować takie typu rzadanie dsl i dopiero ten dsl bedzie szedl dalej w system 
- - Potrzebuje runtime dsl w jezyku typescript z przykładami (w folderze example), testami i wzdrozeniem na przykładowej stronie www oraz na backend.   
-Procedura: NL -> [LLM ts] -> DSL [ts-runtime] -> js/nodejs code [frontend/backend]
-Dodać skrypt w python z użyciem openrouter + litellm, który sprawdzi, czy to co zostało wygenerowane na bazie NL oddaje logike w js/nodejs code
-Projekt DSL Typescritp runtime jako cli shell dla linux i windows ma byc wykrozystywany do codziennej pracy pracownika biurowego, ktory bedzie wykonywal polecenia do masyzny i zwrotnie otrzyma zapytanie precyzujace lub potwierdzenie na bazie istniejacych, podlaczonych danych do systemu, wszytsko to ma byc zdefiniwoane rowniez przez ten jezyk DSL
+| Dokument / Skrypt | Rola i Opis |
+| :--- | :--- |
+| **[POLICY.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/POLICY.md)** | Ścisłe zasady bezpieczeństwa, zakazy i limity (MODE STRICT). |
+| **[CONTRIBUTING.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/CONTRIBUTING.md)** | Procedura pracy, tickety, Docker i maszyna stanów (MODE PROCEDURAL). |
+| **[AGENTS.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/AGENTS.md)** | Standardowy punkt wejścia dla agentów AI (Cursor, Claude Code, Antigravity itp.). |
+| **[llms.txt](file:///c:/Users/Praca/fork/wellmanifest/new-project/llms.txt)** | Mapa dokumentacji dla modeli LLM. |
+| **[project.sh](file:///c:/Users/Praca/fork/wellmanifest/new-project/project.sh)** / **[project.bat](file:///c:/Users/Praca/fork/wellmanifest/new-project/project.bat)** | Skrypty instalujące i uruchamiające zestaw narzędzi deweloperskich. |
+| **[templates/](file:///c:/Users/Praca/fork/wellmanifest/new-project/templates)** | Czyste szablony dla ticketów i wpisów uczestników. |
