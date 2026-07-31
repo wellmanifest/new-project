@@ -3,6 +3,6 @@
 > Central repository for policy specifications, onboarding guidelines, and agent governance.
 
 ## Core Documentation
-- [README.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/README.md): Workspace overview, system rules, and quickstart checklist.
-- [POLICY.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/POLICY.md): Strict safety rules, source of truth hierarchy, tool and agent policies.
-- [CONTRIBUTING.md](file:///c:/Users/Praca/fork/wellmanifest/new-project/CONTRIBUTING.md): Procedural workflows, ticketing system, Docker constraints, and state transitions.
+- [README.md](README.md): Workspace overview, system rules, and quickstart checklist.
+- [POLICY.md](POLICY.md): Strict safety rules, source of truth hierarchy, tool and agent policies.
+- [CONTRIBUTING.md](CONTRIBUTING.md): Procedural workflows, ticketing system, Docker constraints, and state transitions.

@@ -1,96 +1,228 @@
 #!/usr/bin/env bash
-# Universal ticket scaffolder for System X repositories
-# Part of the Governance & Onboarding Hub solution.
+# Universal ticket scaffolder for target System X repositories.
 
-set -e
+set -euo pipefail
 
-TITLE=""
+TITLE="New Task Ticket"
 USERS=""
 AGENT="antigravity"
+FORCE_NEW=false
+
+usage() {
+  cat <<'EOF'
+Usage: ./project/new-ticket.sh [options]
+
+  -t, --title TITLE       Ticket title
+  -a, --agent ID         Agent provider/id used for ai-{ID}.md
+  -u, --users IDS        Compatibility input only; human files are not created
+      --force-new        Create a new ticket despite an unfinished ticket
+  -h, --help             Show this help
+
+Only a human may authorize --force-new. Human-owned user-*.md files must be
+created and written by that human or by a trusted intake boundary.
+EOF
+}
+
+require_value() {
+  if [[ $# -lt 2 || -z "${2:-}" ]]; then
+    echo "Missing value for $1" >&2
+    usage >&2
+    exit 2
+  fi
+}
 
 while [[ $# -gt 0 ]]; do
-  case $1 in
+  case "$1" in
     -t|--title)
+      require_value "$@"
       TITLE="$2"
       shift 2
       ;;
     -u|--users)
+      require_value "$@"
       USERS="$2"
       shift 2
       ;;
     -a|--agent)
+      require_value "$@"
       AGENT="$2"
       shift 2
       ;;
-    *)
+    --force-new)
+      FORCE_NEW=true
       shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      usage >&2
+      exit 2
       ;;
   esac
 done
 
-if [ -z "$TITLE" ]; then
-  TITLE="New Task Ticket"
+if [[ "$TITLE" == *$'\n'* || "$TITLE" == *$'\r'* ]]; then
+  echo "Ticket title must fit on one line" >&2
+  exit 2
 fi
 
-# Detect highest ticket number
-HIGHEST=0
-if [ -d "project" ]; then
+AGENT="$(printf '%s' "$AGENT" | tr '[:upper:]' '[:lower:]')"
+if [[ ! "$AGENT" =~ ^[a-z0-9][a-z0-9._-]*$ ]]; then
+  echo "Agent id must match [a-z0-9][a-z0-9._-]*" >&2
+  exit 2
+fi
+
+is_closed_ticket() {
+  local readme="$1/README.md"
+  [[ -f "$readme" ]] && grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*(DONE|CANCELLED)([[:space:]]|$)' "$readme"
+}
+
+highest=0
+active_ticket=""
+if [[ -d project ]]; then
   for dir in project/ticket-*; do
-    if [ -d "$dir" ]; then
-      NUM=$(echo "$dir" | sed -E 's/.*ticket-0*([0-9]+)$/\1/' || echo "0")
-      if [[ "$NUM" =~ ^[0-9]+$ ]] && [ "$NUM" -gt "$HIGHEST" ]; then
-        HIGHEST=$NUM
-      fi
+    [[ -d "$dir" ]] || continue
+    number="${dir##*-}"
+    [[ "$number" =~ ^[0-9]+$ ]] || continue
+    decimal=$((10#$number))
+    (( decimal > highest )) && highest=$decimal
+    if ! is_closed_ticket "$dir"; then
+      active_ticket="$dir"
     fi
   done
 fi
 
-NEXT_NUM=$((HIGHEST + 1))
-TICKET_ID=$(printf "ticket-%03d" "$NEXT_NUM")
-TICKET_DIR="project/$TICKET_ID"
+if [[ -n "$active_ticket" && "$FORCE_NEW" != true ]]; then
+  echo "Active ticket exists: $active_ticket" >&2
+  echo "Continue it, mark it DONE/CANCELLED, or use --force-new after an explicit human decision." >&2
+  exit 3
+fi
 
-mkdir -p "$TICKET_DIR"
+next_num=$((highest + 1))
+ticket_num="$(printf '%03d' "$next_num")"
+ticket_id="ticket-$ticket_num"
+ticket_dir="project/$ticket_id"
+timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+date_only="${timestamp%%T*}"
+agent_file="ai-$AGENT.md"
+agent_log="ai-$AGENT-logs.txt"
 
-TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+mkdir -p "$ticket_dir"
 
-# Initialize preprompt.md from template if present, or write technical directives
-if [ -f "template/files/preprompt.template.md" ]; then
-  sed "s/{TICKET_ID}/$TICKET_ID/g; s/{SHORT_TITLE}/$TITLE/g; s/{TIMESTAMP}/$TIMESTAMP/g" template/files/preprompt.template.md > "$TICKET_DIR/preprompt.md"
-elif [ ! -f "$TICKET_DIR/preprompt.md" ]; then
-  cat <<EOF > "$TICKET_DIR/preprompt.md"
-# Preprompt & Wytyczne Techniczne ($TICKET_ID)
+escape_sed() {
+  local value="$1"
+  value="${value//\\/\\\\}"
+  value="${value//&/\\&}"
+  value="${value//|/\\|}"
+  printf '%s' "$value"
+}
 
-- **Tytuł Zadania**: $TITLE
-- **Utworzono**: $TIMESTAMP
+render_template() {
+  local source="$1"
+  local target="$2"
+  sed \
+    -e "s|{TICKET_ID}|$(escape_sed "$ticket_id")|g" \
+    -e "s|{NNN}|$(escape_sed "$ticket_num")|g" \
+    -e "s|{SHORT_TITLE}|$(escape_sed "$TITLE")|g" \
+    -e "s|{TIMESTAMP}|$(escape_sed "$timestamp")|g" \
+    -e "s|{YYYY-MM-DD}|$(escape_sed "$date_only")|g" \
+    -e "s|{OWNER_NAME}|unresolved:human|g" \
+    -e "s|{PROVIDER}|$(escape_sed "$AGENT")|g" \
+    "$source" > "$target"
+}
 
-## Wymagania i Ograniczenia Techniczne
-- Zaimplementuj wymagania zgodnie z opisaną architekturą projektu.
-- Przestrzegaj odizolowanego środowiska Docker oraz zasad automatyzacji narzędzi deweloperskich (\`./project.sh\` / \`project.bat\`).
+if [[ -f template/files/ticket.template.md ]]; then
+  render_template template/files/ticket.template.md "$ticket_dir/README.md"
+else
+  cat > "$ticket_dir/README.md" <<EOF
+# Ticket $ticket_num: $TITLE
 
-## Podlinkowane Zasoby i Dokumentacja Specyfikacji
-- Dokumentacja Zarządcza Hub: https://github.com/wellmanifest/new-project
-- Specyfikacja modułu: {Wpisz odnośnik do dokumentacji technicznej lub pliku}
+- **ID**: $ticket_id
+- **Owner**: unresolved:human
+- **Status**: PLAN
+- **Workflow state**: WAIT_FOR_APPROVAL
+- **Created**: $date_only
 
-## Dyrektywy Wykonawcze dla Agenta AI
-- Odczytaj niniejsze wytyczne techniczne oraz notatki z \`user-{github_username}.md\`.
-- Na tej podstawie zbuduj specyfikację wykonawczą w pliku \`ai-{PROVIDER}.md\` (rozumienie intencji, zakres prac, koncepcja, Kryteria Odbioru).
-- Przed pisaniem kodu przedstaw plan w \`ai-{PROVIDER}.md\` oraz w \`TODO.md\` do weryfikacji człowieka (\`P-CORE-008\`).
+## Goal and scope
+
+To be completed from human-owned input.
+
+## Acceptance criteria
+
+- [ ] AC-01: Scope is approved by a human owner.
+
+## Participants
+
+- Human participant: unresolved; no user-* file was created by this script.
+- Agent participant: [$agent_file]($agent_file)
 EOF
 fi
 
-# Initialize changelog.md if missing
-if [ ! -f "$TICKET_DIR/changelog.md" ]; then
-  cat <<EOF > "$TICKET_DIR/changelog.md"
-# Ticket Changelog ($TICKET_ID)
+if [[ -f template/files/preprompt.template.md ]]; then
+  render_template template/files/preprompt.template.md "$ticket_dir/preprompt.md"
+else
+  cat > "$ticket_dir/preprompt.md" <<EOF
+# Ticket preprompt
 
-## [0.1.0] - $(date -u +"%Y-%m-%d")
-- Initial ticket scaffolding created.
+- **Task ID**: $ticket_id
+- **Task title**: $TITLE
+- **Created**: $timestamp
+
+Keep executable implementation outside this governance/evidence directory.
+Read a human-owned user-*.md file only when one exists.
 EOF
 fi
 
-# Automatically update master menu index
-if [ -f "project/readme.sh" ]; then
+if [[ -f template/files/agent-participant.template.md ]]; then
+  render_template template/files/agent-participant.template.md "$ticket_dir/$agent_file"
+else
+  cat > "$ticket_dir/$agent_file" <<EOF
+---
+participant-id: agent:$AGENT
+participant: $AGENT
+role: agent
+ticket: $ticket_id
+---
+# Participant: $AGENT (AI agent)
+
+## Understanding
+
+To be completed after reading human-owned input and the ticket preprompt.
+
+## Execution plan
+
+1. Validate the ticket scope and acceptance evidence before implementation.
+
+## Actual changes
+
+- None; waiting for approval.
+
+## Blockers
+
+- Human approval is required before implementation.
+EOF
+fi
+
+: > "$ticket_dir/$agent_log"
+
+cat > "$ticket_dir/changelog.md" <<EOF
+# Ticket Changelog ($ticket_id)
+
+## [0.1.0] - $date_only
+
+- Initial governance scaffold created.
+- No human participant identity or content was generated.
+EOF
+
+if [[ -n "$USERS" ]]; then
+  echo "warning: --users=$USERS did not create user-* files; human-owned input must come from a human or trusted intake boundary" >&2
+fi
+
+if [[ -f project/readme.sh ]]; then
   bash ./project/readme.sh
 fi
 
-echo "Successfully scaffolded $TICKET_DIR for title '$TITLE'."
+echo "Successfully scaffolded $ticket_dir for '$TITLE'."

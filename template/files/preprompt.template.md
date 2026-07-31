@@ -12,6 +12,9 @@
 - Specyfikacja modułu: {Wpisz odnośnik do dokumentacji technicznej lub pliku}
 
 ## Dyrektywy Wykonawcze dla Agenta AI
-- Odczytaj niniejsze wytyczne techniczne oraz notatki z `user-{github_username}.md`.
+- Odczytaj niniejsze wytyczne techniczne oraz istniejące, human-owned notatki
+  z `user-{github_username}.md`. Nie twórz ani nie modyfikuj ich za człowieka.
 - Na tej podstawie zbuduj specyfikację wykonawczą w pliku `ai-{PROVIDER}.md` (rozumienie intencji, zakres prac, koncepcja, Kryteria Odbioru).
 - Przed pisaniem kodu przedstaw plan w `ai-{PROVIDER}.md` oraz w `TODO.md` do weryfikacji człowieka (`P-CORE-008`).
+- Kod wykonywalny, testy i skrypty badawcze zapisuj poza katalogiem ticketu;
+  ticket przechowuje wyłącznie governance, decyzje, logi i dowody.

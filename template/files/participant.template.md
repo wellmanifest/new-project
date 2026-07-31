@@ -1,18 +1,8 @@
-# Uczestnik: {NAME} ({ROLE})
+# Legacy participant template: {NAME} ({ROLE})
 
-- **Ticket**: ticket-{NNN}
-- **Status**: ACTIVE / WAITING / DONE
+Use `human-participant.template.md` for human-owned input or
+`agent-participant.template.md` for agent-owned plans and reports. Do not use a
+single mixed template to blur ownership or epistemic type.
 
-## Przypisane Instrukcje i Notatki
-{Notatki człowieka, bezpośrednie polecenia i stały kontekst zadania}
-
-## Plan Wykonawczy
-1. Krok 1
-2. Krok 2
-
-## Wykonane Zmiany
-- Zmodyfikowano plik X
-- Zaktualizowano plik Y
-
-## Blokery i Otwarte Kwestie
-- Brak
+This compatibility file must not be generated into a ticket. Role-specific
+templates carry explicit participant ID, role, ticket and typed sections.

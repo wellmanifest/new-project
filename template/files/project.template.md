@@ -1,4 +1,4 @@
-# Indeks Ticketów i Menu Projektu (`project/`)
+# Indeks Ticketów (`project/TICKETS.md`)
 
 - **Dokumentacja Zarządcza Hub**: [Governance Hub (`wellmanifest/new-project`)](https://github.com/wellmanifest/new-project)
 - **Status Projektu**: AKTYWNY
@@ -6,7 +6,9 @@
 
 ## Opis Katalogu
 
-Katalog `project/` służy do zarządzania cyklem życia ticketów i procedurami zarządczymi w repozytorium docelowym.
+Katalog `project/` służy do zarządzania cyklem życia ticketów i procedurami
+zarządczymi w repozytorium docelowym. Osobny `TICKETS.md` nie przejmuje
+`project/README.md`, który może należeć do generatora analizy technicznej.
 
 ---
 
@@ -24,7 +26,7 @@ Katalog `project/` służy do zarządzania cyklem życia ticketów i procedurami
   ```bash
   ./project/new-ticket.sh --title "Nazwa Zadania"
   ```
-- **Aktualizacja indeksu w project/README.md**:
+- **Aktualizacja indeksu w project/TICKETS.md**:
   ```bash
   ./project/readme.sh
   ```

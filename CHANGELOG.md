@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [0.6.0] - 2026-07-31
+
+### Hardened ticket ownership and namespace
+
+- Moved the generated ticket index to `project/TICKETS.md`, preserving any
+  analysis-owned `project/README.md`.
+- Made `new-ticket.sh` fail closed when an unfinished ticket exists and added
+  validated agent IDs, complete ticket/agent scaffolding and safe template
+  rendering.
+- Stopped automatic human-file generation. Human intent must come from its
+  owner or a trusted intake boundary; unresolved routes use explicit role
+  sentinels.
+- Added role-specific participant templates with typed metadata and prohibited
+  executable implementation under ticket directories.
+- Removed machine-local documentation links and added an isolated regression
+  test for scaffolding, indexing, traversal protection and active-ticket reuse.
+
 ## [0.5.0] - 2026-07-30
 
 ### Added & Updated (Etap 4 Completed)
