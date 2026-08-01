@@ -5,6 +5,12 @@
 
 > **Podsumowanie zarządcze:** Niniejszy raport podsumowuje nową architekturę współpracy z autonomicznymi agentami AI oraz ludźmi w naszej organizacji. Opisuje zasady działania systemu, przetestowane symulacje oraz mechanizmy weryfikacji intencji biznesowych przed rozpoczęciem prac programistycznych.
 
+> **Nota wersji:** Treść poniżej opisuje historyczny stan do wersji 0.5.0.
+> Od wersji 0.8.0 bieżącym kontraktem są `POLICY.md`, `CONTRIBUTING.md`,
+> manifest policy-as-code i `docs/GOVERNANCE_ENFORCEMENT.md`. `project.sh` /
+> `project.bat` uruchamia najpierw deterministyczny gate; opcjonalna analiza
+> działa wyłącznie w obrazie Docker przypiętym digestem SHA-256.
+
 ---
 
 ## 📌 1. Kluczowe Zasady i Architektura Systemu
@@ -85,7 +91,9 @@ Wejdź i sprawdź, czy to, co miałeś w głowie, zostało wykonane poprawnie:
 - [x] **Repozytorium Zarządcze (`wellmanifest/new-project`)**: Jest czyste (READ-ONLY Hub), nie zawiera żadnych tymczasowych ticketów ani logów.
 - [x] **Zasada Osobnych Repozytoriów (`P-CORE-006`)**: Każdy nowy system powstaje w nowym repo na GitHubie.
 - [x] **Środowisko Docker (`C-DOCKER-003`)**: Kod i testy uruchamiane są wyłącznie w odizolowanym Dockerze.
-- [x] **Dev Tools (`P-TOOL-007`)**: Skrypty `project.sh` i `project.bat` automatyzują analitykę (`code2llm`, `redup`, `prefact`, `doql`, `sumd`, `goal`, `vallm`) i oszczędzają tokeny.
+- [x] **Dev Tools (stan historyczny 0.5.0)**: W tej wersji skrypty
+  `project.sh` i `project.bat` automatyzowały analitykę. Od 0.8.0 obowiązuje
+  opis z noty wersji powyżej: fail-closed gate i opcjonalny przypięty obraz.
 - [x] **Odbiór Planu (`P-CORE-008`)**: Agent zatrzymuje się po stworzeniu `project/ticket-001/README.md` oraz `TODO.md` i czeka na akceptację planu przed pisaniem kodu.
 
 ---

@@ -20,6 +20,7 @@ if grep -q 'TICKET_MAIN_FILE' "$repo_root/CONTRIBUTING.md"; then
 fi
 test -x "$repo_root/project/new-ticket.sh"
 test -x "$repo_root/project/readme.sh"
+grep -Fq "@sha256:[a-f0-9]{64}$" "$repo_root/project.bat"
 test -f "$repo_root/template/files/human-participant.template.md"
 test -f "$repo_root/template/files/agent-participant.template.md"
 
@@ -29,15 +30,27 @@ cp "$repo_root/project/readme.sh" "$fixture/project/readme.sh"
 cp -R "$repo_root/template/files" "$fixture/template/files"
 printf '%s\n' '# Analysis-owned project README' > "$fixture/project/README.md"
 
+set +e
 (
   cd "$fixture"
-  bash project/new-ticket.sh --title 'Validate A&B / routes' --agent Codex --users alice \
+  bash project/new-ticket.sh --title 'Missing workstream' > missing-workstream.out 2> missing-workstream.err
+)
+status=$?
+set -e
+test "$status" -eq 2
+grep -q 'Workstream is required' "$fixture/missing-workstream.err"
+test ! -d "$fixture/project/ticket-001"
+
+(
+  cd "$fixture"
+  bash project/new-ticket.sh --title 'Validate "A&B" / routes' --agent Codex --workstream application --users alice \
     > first.out 2> first.err
 )
 
 ticket="$fixture/project/ticket-001"
 test -f "$ticket/README.md"
 test -f "$ticket/preprompt.md"
+test -f "$ticket/intent.json"
 test -f "$ticket/ai-codex.md"
 test -f "$ticket/ai-codex-logs.txt"
 test -f "$ticket/changelog.md"
@@ -51,30 +64,53 @@ if grep -q '{[A-Z_-]*}' "$ticket/README.md" "$ticket/preprompt.md" "$ticket/ai-c
   echo 'Generated ticket contains unresolved template placeholders' >&2
   exit 1
 fi
+python3 - "$ticket/intent.json" <<'PY'
+import json
+import sys
+intent = json.load(open(sys.argv[1], encoding='utf-8'))
+assert intent['schema'] == 'new-project.intent/v2'
+assert intent['ticket'] == 'ticket-001'
+assert intent['summary'] == 'Validate "A&B" / routes'
+assert intent['workstream'] == 'application'
+assert intent['allowedPaths'] == ['project/ticket-001/**', 'TODO.md', 'project/TICKETS.md']
+assert intent['dependsOn'] == []
+assert intent['conflictsWith'] == []
+assert intent['integrationTicket'] is None
+PY
 
 set +e
 (
   cd "$fixture"
-  bash project/new-ticket.sh --title 'Must reuse active ticket' --agent codex \
+  bash project/new-ticket.sh --title 'Must reuse active ticket' --agent codex --workstream application \
     > second.out 2> second.err
 )
 status=$?
 set -e
 test "$status" -eq 3
-grep -q 'Active ticket exists: project/ticket-001' "$fixture/second.err"
+grep -q "Active ticket conflicts with workstream 'application': project/ticket-001" "$fixture/second.err"
 test ! -d "$fixture/project/ticket-002"
 
-sed -i 's/\*\*Status\*\*: PLAN/**Status**: DONE/' "$ticket/README.md"
 (
   cd "$fixture"
-  bash project/new-ticket.sh --title 'Second ticket' --agent codex > third.out
+  bash project/new-ticket.sh --title 'Parallel interface ticket' --agent codex-2 \
+    --workstream interfaces > parallel.out
+)
+test -d "$fixture/project/ticket-002"
+grep -q '"workstream": "interfaces"' "$fixture/project/ticket-002/intent.json"
+
+sed -i 's/\*\*Status\*\*: PLAN/**Status**: DONE/' "$ticket/README.md"
+sed -i 's/\*\*Status\*\*: PLAN/**Status**: DONE/' "$fixture/project/ticket-002/README.md"
+(
+  cd "$fixture"
+  bash project/new-ticket.sh --title 'Second ticket' --agent codex --workstream application > third.out
   cp project/TICKETS.md index.before
   bash project/readme.sh > /dev/null
   cmp -s index.before project/TICKETS.md
 )
-test -d "$fixture/project/ticket-002"
+test -d "$fixture/project/ticket-003"
 grep -q 'ticket-001' "$fixture/project/TICKETS.md"
 grep -q 'ticket-002' "$fixture/project/TICKETS.md"
+grep -q 'ticket-003' "$fixture/project/TICKETS.md"
 
 set +e
 (

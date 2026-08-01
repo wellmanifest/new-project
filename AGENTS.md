@@ -21,6 +21,7 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
   4. In System X's repository, BEFORE writing any code, initializes:
      - Root `README.md`, `VERSION`, `CHANGELOG.md`, `TODO.md`, `Dockerfile`, `compose.yml`.
      - Scaffolds `project/ticket-{NNN}/` containing `preprompt.md` (technical directives and resource links) and `changelog.md`.
+     - Creates machine-readable `intent.json`; its `allowedPaths` bounds implementation after approval.
      - `project/TICKETS.md` is the ticket index; existing `project/README.md` files owned by analysis generators remain untouched.
      - Human participant file `user-{github_username}.md` is created only by that human or a trusted intake boundary. An agent never creates or edits it on the human's behalf.
      - AI Agent Brain `ai-{PROVIDER}.md` (AI's understanding of the task, intent, scope, risks & Acceptance Criteria) uses explicit participant metadata and typed sections.
@@ -28,7 +29,10 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
   5. **STOP & WAIT FOR USER REVIEW (`P-CORE-008`)**: Presents the initialized plan to the user for review & approval before writing any code:
      - **Understanding View (`project/ticket-{NNN}/ai-{PROVIDER}.md`)**: User checks if AI correctly understood the task, intent, and acceptance criteria.
      - **Task Checklist View (`TODO.md`)**: User checks if AI's step-by-step task breakdown and checklist are appropriate.
-  6. **EXECUTE AFTER APPROVAL**: Upon user approval, executes `./project.sh` (or `project.bat`) in System X's repository to run Dev Tools and works EXCLUSIVELY in System X's repository.
-  7. **CONTINUE ACTIVE TICKET (`P-CORE-009` / `C-TICKET-008`)**: For follow-up prompts or task continuation, DO NOT create new ticket folders. Re-use the active `project/ticket-{NNN}/` directory and update `ai-{PROVIDER}.md` and `TODO.md`. NEVER modify human-owned `user-{github_username}.md` files.
+  6. **EXECUTE AFTER APPROVAL**: Upon user approval, executes `./project.sh` (or `project.bat`) in System X's repository to run the deterministic governance gate. Optional analysis then runs only through a digest-pinned Docker image. The agent works EXCLUSIVELY in System X's repository.
+     - Chat/Markdown approval authorizes the interactive session but is not trusted merge evidence. CI requires an independent GitHub review or signed attestation.
+  7. **CONTINUE MATCHING ACTIVE TICKET (`P-CORE-009` / `C-TICKET-008`)**: Re-use the active ticket when workstream and scope match. A separate active ticket is allowed only for a declared different workstream with no write-scope overlap. Each branch/PR must resolve to exactly one ticket. Update only the agent-owned `ai-{PROVIDER}.md` and project TODO; NEVER modify human-owned `user-{github_username}.md` files.
   8. **KEEP IMPLEMENTATION OUTSIDE THE TICKET**: `project/ticket-{NNN}/` contains governance, decisions, logs and captured evidence. Executable source, tests and research scripts belong in their normal repository directories.
   9. **ROUTE UNKNOWN OWNERS EXPLICITLY**: use `unresolved:human` or `unresolved:agent`; never emit an empty required-response route or infer identity from a name.
+  10. **RUN THE GATE**: `./project/governance-check.sh` must pass before stack tests and publication. Required governance decisions are deterministic; LLM findings are advisory.
+  11. **COORDINATE PARALLEL WORK**: Serialize ticket-ID allocation before branching, then use separate branches/worktrees and explicit `dependsOn`/`conflictsWith`. Shared contracts are edited only by the manifest-declared integration workstream; `integrationTicket` records coordination but does not transfer path ownership. One agent implements; a second agent may review read-only or own a non-overlapping ticket.

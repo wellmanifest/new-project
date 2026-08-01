@@ -1,0 +1,18 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "{TICKET_ID}",
+  "summary": "{SHORT_TITLE}",
+  "workstream": "{WORKSTREAM}",
+  "allowedPaths": [
+    "project/{TICKET_ID}/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

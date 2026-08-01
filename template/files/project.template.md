@@ -24,7 +24,7 @@ zarządczymi w repozytorium docelowym. Osobny `TICKETS.md` nie przejmuje
 
 - **Tworzenie nowego ticketu**:
   ```bash
-  ./project/new-ticket.sh --title "Nazwa Zadania"
+  ./project/new-ticket.sh --title "Nazwa Zadania" --workstream "application"
   ```
 - **Aktualizacja indeksu w project/TICKETS.md**:
   ```bash

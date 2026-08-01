@@ -61,10 +61,11 @@ status: WAIT_FOR_APPROVAL
 Rejestracja logów wykonawczych bazuje na znacznika czasu **ISO 8601 (UTC)** oraz strukturze **RFC 5424**:
 
 ```text
-[2026-07-29T12:23:31Z] [EXEC] [provider:antigravity] $ ./project.sh
-[2026-07-29T12:23:32Z] [STDOUT] Running code2llm analyzer...
-[2026-07-29T12:23:35Z] [STDOUT] Analysis written to project/code2llm-report.toon
-[2026-07-29T12:23:36Z] [EXIT] Command exited with code 0
+[2026-08-01T12:23:31Z] [EXEC] [provider:antigravity] $ ./project.sh --actor agent
+[2026-08-01T12:23:32Z] [STDOUT] GOV-PASS: passed (0 errors, 0 warnings)
+[2026-08-01T12:23:33Z] [EXEC] [provider:antigravity] $ NEW_PROJECT_ANALYSIS_IMAGE=registry.example/analysis@sha256:<64-hex-digest> ./project.sh
+[2026-08-01T12:23:35Z] [STDOUT] Analysis completed in the digest-pinned container.
+[2026-08-01T12:23:36Z] [EXIT] Command exited with code 0
 ```
 
 ---

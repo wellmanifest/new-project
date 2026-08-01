@@ -20,7 +20,7 @@ DOCELOWE REPOZYTORIUM SYSTEMU X (Root)
 ├── CHANGELOG.md                 <-- (Główny rejestr zmian projektu)
 ├── TODO.md                      <-- (Główna checklista kroków i zadań)
 ├── Dockerfile & compose.yml     <-- (Odizolowane środowisko kontenerowe)
-├── project.sh / project.bat     <-- (Narzędzia analityczne: code2llm, redup, prefact, etc.)
+├── project.sh / project.bat     <-- (Fail-closed governance gate; opcjonalna analiza w przypiętym obrazie)
 │
 └── project/                     <-- (Katalog zarządzania ticketami)
     ├── README.md                <-- (Opcjonalny plik generatora analizy; scaffolder go nie nadpisuje)
@@ -32,6 +32,7 @@ DOCELOWE REPOZYTORIUM SYSTEMU X (Root)
         ├── README.md            <-- (Cel, zakres, status i kryteria odbioru ticketu)
         ├── user-{NAME}.md       <-- (Opcjonalne notatki utworzone przez człowieka/trusted intake)
         ├── preprompt.md         <-- (Wyciągnięte wytyczne z notatek & ustrukturyzowany workflow)
+        ├── intent.json          <-- (Maszynowy, zatwierdzany zakres dozwolonych zmian)
         ├── ai-{PROVIDER}.md     <-- (MÓZG AGENTA: rozumienie intencji, plan, Kryteria Odbioru)
         ├── ai-{PROVIDER}-logs.txt <-- (Dedykowany plik surowych logów tego agenta)
         └── changelog.md         <-- (Lokalny rejestr zmian dotyczący tylko tego ticketu)
@@ -56,7 +57,7 @@ Realizacja każdego zadania w docelowym repozytorium odbywa się według ściśl
 4. **Wywołanie Skryptu `new-ticket.sh` (`project/ticket-{NNN}/`)**
    * 4.1. Skrypt tworzy `README.md`, `preprompt.md`, jawnie typowany `ai-{AGENT}.md`, pusty log agenta i `changelog.md`.
    * 4.2. Skrypt nie tworzy `user-*` ani tożsamości człowieka. Taki plik może utworzyć wyłącznie jego ludzki właściciel lub zaufana granica intake.
-   * 4.3. Jeżeli istnieje aktywny ticket, generator odmawia utworzenia następnego; `--force-new` wymaga jawnej decyzji człowieka.
+   * 4.3. Generator odmawia drugiego aktywnego ticketu w tym samym workstreamie albo przy nierozstrzygniętym workstreamie. Równoległy ticket wymaga jawnie innego workstreamu; ostateczny overlap sprawdza walidator.
 
 5. **Ekstrakcja Wytycznych (`preprompt.md`)**
    * 5.1. Agent AI analizuje tylko istniejące, human-owned notatki `user-{NAME}.md` i zapisuje własne rozumienie w `ai-{AGENT}.md`. Brak człowieka pozostaje `unresolved:human`.
@@ -96,12 +97,15 @@ Automatyzuje tworzenie struktury nowego ticketu bez przejmowania ludzkiej
 tożsamości i bez zapisywania kodu wykonywalnego w katalogu ticketu.
 
 ```bash
-# Użycie podstawowe
-./project/new-ticket.sh --title "Implementacja Walidacji"
+# Użycie podstawowe z jawnym workstreamem z manifestu
+./project/new-ticket.sh --title "Implementacja Walidacji" --workstream "application"
 
 # Użycie z jawnym agentem; --users jest tylko wejściem kompatybilności i nie
 # tworzy plików człowieka
-./project/new-ticket.sh --title "Naprawa Błędu" --agent "codex"
+./project/new-ticket.sh --title "Naprawa Błędu" --agent "codex" --workstream "application"
+
+# Niezależny ticket równoległy
+./project/new-ticket.sh --title "SDK klienta" --agent "codex-2" --workstream "interfaces"
 ```
 
 ### Skrypt `readme.sh`
@@ -114,6 +118,15 @@ błędem.
 ./project/readme.sh
 ```
 
+### Deterministyczny governance gate
+
+Wersja 0.8.0 dodaje workstreamy, intent v2, graf zależności, konflikty,
+integrację i bezkolizyjną pracę równoległą do manifestu policy-as-code, locka
+SHA-256, stabilnych diagnostyk `GOV-*` i reusable CI. Walidator blokuje
+implementację bez jednoznacznego ticketu, stanu `EDIT`, dozwolonego zakresu i —
+w trybie PR — zewnętrznej zgody. Szczegóły opisuje
+[`docs/GOVERNANCE_ENFORCEMENT.md`](docs/GOVERNANCE_ENFORCEMENT.md).
+
 ---
 
 ## 5. Zasada Odbioru Planu przed Kodowaniem (`P-CORE-008`)
@@ -124,8 +137,9 @@ Przed rozpoczęciem edycji plików źródłowych w nowym systemie Agent AI **mus
 3. Uzyskać wyraźną akceptację (`"Zgoda"`, `"Plan zatwierdzony"`) przed przejściem do fazy wykonawczej.
 
 ### 5.1. Zasada Kontynuacji Aktywnego Ticketu (`P-CORE-009` / `C-TICKET-008`)
-Dla kolejnych promptów i poprawek w ramach tego samego zadania Agent AI **nie tworzy nowych folderów ticketów**.
-* Agent wykorzystuje ponownie aktywny katalog `project/ticket-{NNN}/` i aktualizuje swój plik planu `ai-{PROVIDER}.md` oraz `TODO.md`.
+Dla kolejnych promptów i poprawek w ramach tego samego workstreamu i zakresu Agent AI **nie tworzy nowego ticketu**.
+* Agent wykorzystuje ponownie pasujący aktywny katalog `project/ticket-{NNN}/` i aktualizuje swój plik planu `ai-{PROVIDER}.md` oraz `TODO.md`.
+* Odrębny aktywny ticket jest dozwolony tylko w innym workstreamie, bez nakładania zakresu zapisu; każdy branch/PR musi należeć do dokładnie jednego ticketu.
 * **Agentowi zabrania się modyfikowania plików notatek człowieka (`user-{github_username}.md`)**.
 
 ---
@@ -167,7 +181,7 @@ W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejno�
 
 ### 6.4. Wymagania Środowiskowe (Docker i Narzędzia)
 * Każdy tworzony system **musi** być budowany i uruchamiany w odizolowanym środowisku **Docker** (`Dockerfile`, `compose.yml`).
-* Należy obowiązkowo korzystać z zestawu narzędzi deweloperskich (`project.sh` / `project.bat`) do analizy i automatyzacji.
+* `project.sh` / `project.bat` najpierw uruchamia deterministyczny governance gate. Analiza jest opcjonalna i może ruszyć dopiero w obrazie Docker przypiętym pełnym digestem SHA-256 przez `NEW_PROJECT_ANALYSIS_IMAGE`.
 
 | Narzędzie | Krótki Opis i Przeznaczenie |
 | :--- | :--- |
@@ -196,5 +210,5 @@ Praca nad każdym zadaniem w docelowym repozytorium przechodzi przez cykl stanó
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Procedura pracy, tickety, Docker i maszyna stanów (MODE PROCEDURAL). |
 | **[AGENTS.md](AGENTS.md)** | Standardowy punkt wejścia dla agentów AI (Cursor, Claude Code, Antigravity itp.). |
 | **[llms.txt](llms.txt)** | Mapa dokumentacji dla modeli LLM. |
-| **[project.sh](project.sh)** / **[project.bat](project.bat)** | Skrypty instalujące i uruchamiające zestaw narzędzi deweloperskich. |
+| **[project.sh](project.sh)** / **[project.bat](project.bat)** | Fail-closed wejście: najpierw governance gate, potem opcjonalna analiza w obrazie przypiętym digestem. |
 | **[template/](template/)** | Czyste szablony dla ticketów i wpisów uczestników. |

@@ -12,6 +12,9 @@ Katalog ten zawiera znormalizowane szablony plików wykorzystywane podczas gener
 | **`participant.template.md`** | nie jest generowany | Wskaźnik kompatybilności kierujący do szablonów zależnych od roli. |
 | **`ticket.template.md`** | `project/ticket-{NNN}/README.md` | Ogólny szablon specyfikacji ticketu i zakresu prac. |
 | **`preprompt.template.md`** | `project/ticket-{NNN}/preprompt.md` | Techniczne wytyczne ticketu, podlinkowane zasoby i ograniczenia inżynieryjne. |
+| **`intent.template.json`** | `project/ticket-{NNN}/intent.json` | Maszynowy zakres zmian używany przez deterministyczny governance gate. |
+| **`AGENTS.template.md`** | `AGENTS.md` | Trwały punkt wejścia wymuszający ticket-first dla agentów w repozytorium docelowym. |
+| **`CODEOWNERS.template`** | `.github/CODEOWNERS` | Wzorzec ochrony governance; wymaga zastąpienia unresolved prawdziwym zespołem GitHub. |
 
 ## Zastosowanie
 

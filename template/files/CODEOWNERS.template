@@ -1,0 +1,7 @@
+# Replace the unresolved role with a real GitHub team before enabling the rule.
+* @unresolved-governance-owner
+
+/.github/workflows/ @unresolved-governance-owner
+/.governance/ @unresolved-governance-owner
+/AGENTS.md @unresolved-governance-owner
+/project/ticket-*/user-*.md @unresolved-governance-owner

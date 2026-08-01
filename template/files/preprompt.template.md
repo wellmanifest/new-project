@@ -5,7 +5,9 @@
 
 ## Wymagania i Ograniczenia Techniczne
 - Zaimplementuj wymagania zgodnie z opisaną architekturą projektu.
-- Przestrzegaj odizolowanego środowiska Docker oraz zasad automatyzacji narzędzi deweloperskich (`./project.sh` / `project.bat`).
+- Przestrzegaj odizolowanego środowiska Docker. `./project.sh` / `project.bat`
+  uruchamia najpierw deterministyczny governance gate, a opcjonalną analizę
+  wyłącznie przez obraz przypięty digestem SHA-256.
 
 ## Podlinkowane Zasoby i Dokumentacja Specyfikacji
 - Dokumentacja Zarządcza Hub: https://github.com/wellmanifest/new-project

@@ -1,13 +1,26 @@
 # Migration backups
 *.zip
 
-# Logs & temporary files
+# Logs and temporary files
 *.log
 logs.txt
 tmp/
 temp/
 
-# OS / IDE generated files
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python-generated artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# OS and IDE-generated files
 .DS_Store
 Thumbs.db
 .vscode/

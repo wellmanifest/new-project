@@ -1,0 +1,25 @@
+name: governance-standard-ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Validate JSON contracts
+        run: |
+          python3 -m json.tool governance/manifest.schema.json >/dev/null
+          python3 -m json.tool governance/manifest.default.json >/dev/null
+          python3 -m json.tool governance/intent.schema.json >/dev/null
+          python3 -m json.tool governance/diagnostics.json >/dev/null
+          python3 -m json.tool governance/stack-profiles.json >/dev/null
+      - name: Test ticket governance scripts
+        run: bash tests/governance-scripts.test.sh
+      - name: Test deterministic governance validator
+        run: bash tests/governance-validator.test.sh

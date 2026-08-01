@@ -1,5 +1,43 @@
 # CHANGELOG
 
+## [0.8.0] - 2026-08-01
+
+### Concurrent workstream governance
+
+- Added named workstreams with owned paths, a per-workstream active-ticket
+  limit and deterministic rejection of overlapping active write scopes.
+- Added intent v2 dependency, conflict and integration-routing fields while
+  retaining read compatibility for archived intent v1 records.
+- Added stable diagnostics for unknown workstreams, ambiguous ticket routing,
+  dependency cycles/unmet prerequisites, active conflicts and shared-contract
+  changes without an integration ticket.
+- Added an explicit `WAIT_FOR_APPROVAL` state and made `--workstream` mandatory
+  so newly scaffolded tickets are valid before implementation begins.
+- Formalized the DSL legend, operator semantics, state-transition meaning and
+  the non-authoritative role of Git history for agents reading the policies.
+- Made diff discovery fail closed, rejected unsafe manifest/intent paths and
+  detected planned glob ownership/overlap before concrete files exist.
+- Bound GitHub review evidence to the current PR head and enforced full commit
+  SHAs plus 64-character analysis-image digests on both supported entry points.
+- Documented manager/developer/two-agent separation of duties, isolated
+  branches/worktrees and merge-queue enforcement.
+
+## [0.7.0] - 2026-08-01
+
+### Enforced policy-as-code
+
+- Added a versioned governance manifest/schema, machine-readable ticket intent,
+  stack profiles and a stable `GOV-*` diagnostic catalog.
+- Added a dependency-light deterministic validator with text, JSON and SARIF
+  output plus positive and negative transition fixtures.
+- Added a reusable GitHub workflow that checks independent review approval,
+  active-ticket identity, diff scope, ownership and manifest integrity.
+- Changed `project.sh`/`project.bat` into fail-closed governance entry points;
+  optional analysis tools now require an explicitly digest-pinned Docker image
+  and are never installed as unpinned latest packages on the host.
+- Documented required Rulesets/CODEOWNERS and kept LLM findings advisory rather
+  than part of the required merge decision.
+
 ## [0.6.0] - 2026-07-31
 
 ### Hardened ticket ownership and namespace
