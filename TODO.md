@@ -9,10 +9,9 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-006`](project/ticket-006/README.md) — zsynchronizować roadmapę,
-  TODO i indeks z wersją 0.10.0 oraz utworzyć bounded backlog. Stan:
-  `IN_PROGRESS / PUBLICATION`; lokalne testy przechodzą, oczekuje PR i
-  niezależnego exact-head approval.
+- [x] [`ticket-006`](project/ticket-006/README.md) — zsynchronizowano roadmapę,
+  TODO i indeks z wersją 0.10.0 oraz utworzono bounded backlog. Stan:
+  `DONE / DONE`; PR #6 przeszedł CI, exact-head approval i został scalony.
 
 - [ ] [`ticket-007`](project/ticket-007/README.md) — opublikować immutable
   `v0.10.0`, GitHub Release i dowody z czystego checkoutu. Stan: `BACKLOG`.

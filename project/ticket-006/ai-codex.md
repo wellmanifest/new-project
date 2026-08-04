@@ -30,7 +30,9 @@ scalone PR-y i nadal opisuje 0.9.0 jako nieopublikowany stan roboczy.
 - `TODO.md` i `project/TICKETS.md` zostały uzgodnione z nowym backlogiem.
 - Wszystkie trzy zestawy regresyjne, walidacja JSON, diff i kontrola tekstu
   przeszły; ticket przeszedł do `PUBLICATION`.
+- PR #6 został zatwierdzony przez Validator App dla exact HEAD i scalony do
+  `main`; ticket został domknięty jako `DONE`.
 
 ## Blockers
 
-- Brak blokad dla zakresu dokumentacyjnego ticketu 006.
+- Brak.
