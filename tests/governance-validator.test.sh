@@ -40,6 +40,10 @@ assert not module.matches('src/nested/app.js', ['src/*'])
 assert module.patterns_may_overlap('future/**', 'future/*.js')
 assert not module.patterns_may_overlap('src/**/x.json', 'src/**/y.json')
 assert module.pattern_covered_by('src/**/*.js', 'src/**')
+assert module.pattern_covered_by('test/cli*.test.ts', 'test/cli*')
+assert module.pattern_covered_by('test/cli-smoke.test.ts', 'test/cli*')
+assert not module.pattern_covered_by('test/mcp*.test.ts', 'test/cli*')
+assert not module.pattern_covered_by('test/cli*.test.ts', 'test/*.spec.ts')
 PY
 python3 - "$repo_root/scripts/governance_check.py" "$repo_root/governance/diagnostics.json" <<'PY'
 import json
@@ -232,6 +236,23 @@ with open(path, 'w', encoding='utf-8') as handle:
 PY
 }
 
+set_accepted_base() {
+  local target="$1"
+  local accepted_base="$2"
+  python3 - "$target/project/ticket-002/intent.json" "$accepted_base" <<'PY'
+import json
+import sys
+
+path, accepted_base = sys.argv[1:]
+with open(path, encoding='utf-8') as handle:
+    intent = json.load(handle)
+intent['delivery']['acceptedBaseSha'] = accepted_base
+with open(path, 'w', encoding='utf-8') as handle:
+    json.dump(intent, handle, indent=2)
+    handle.write('\n')
+PY
+}
+
 allowed="$fixture/allowed"
 make_fixture "$allowed"
 python3 - "$allowed" <<'PY'
@@ -267,7 +288,11 @@ dot_path="$fixture/dot-path"
 make_fixture "$dot_path"
 sed -i 's/"workstream": "application"/"workstream": "governance"/' "$dot_path/project/ticket-002/intent.json"
 sed -i 's#"allowedPaths": \["src/\*\*"\]#"allowedPaths": [".governance/**"]#' "$dot_path/project/ticket-002/intent.json"
-run_check "$dot_path" --changed-file .governance/manifest.json > "$fixture/dot-path.out"
+sed -i 's#"components": \[{"name": "application", "paths": \["src/\*\*"\]}\]#"components": [{"name": "governance", "paths": [".governance/**"]}]#' "$dot_path/project/ticket-002/intent.json"
+if ! run_check "$dot_path" --changed-file .governance/manifest.json > "$fixture/dot-path.out"; then
+  cat "$fixture/dot-path.out"
+  exit 1
+fi
 grep -q '^GOV-PASS:' "$fixture/dot-path.out"
 
 expect_code GOV-APPROVAL-001 run_check "$allowed" --changed-file src/app.js \
@@ -473,18 +498,28 @@ PY
 
 history_good="$fixture/history-good"
 make_fixture "$history_good"
+cp -R "$history_good/project/ticket-002" "$fixture/history-good-ticket"
+rm -rf "$history_good/project/ticket-002"
 (
   cd "$history_good"
   git init -q
   git config user.email governance@example.invalid
   git config user.name governance-fixture
   git add .
-  git commit -qm 'plan exists'
+  git commit -qm 'baseline without ticket'
   base="$(git rev-parse HEAD)"
+  git switch -qc ticket-002-work
+  cp -R "$fixture/history-good-ticket" project/ticket-002
+  set_accepted_base "$history_good" "$base"
+  git add project/ticket-002
+  git commit -qm 'plan exists'
   printf '%s\n' 'export const ok = 2;' > src/app.js
   git add src/app.js
   git commit -qm 'implementation after plan'
-  run_check "$history_good" --base "$base" > "$fixture/history-good.out"
+  if ! run_check "$history_good" --base "$base" > "$fixture/history-good.out"; then
+    cat "$fixture/history-good.out"
+    exit 1
+  fi
 )
 grep -q '^GOV-PASS:' "$fixture/history-good.out"
 
@@ -501,7 +536,9 @@ rm -f "$history_bad/src/app.js"
   git add .
   git commit -qm 'baseline without ticket'
   base="$(git rev-parse HEAD)"
+  git switch -qc ticket-002-work
   cp -R "$fixture/ticket-002.saved" project/ticket-002
+  set_accepted_base "$history_bad" "$base"
   printf '%s\n' 'export const late = true;' > src/app.js
   git add .
   git commit -qm 'ticket and implementation together'
