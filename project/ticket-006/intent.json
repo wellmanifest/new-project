@@ -1,0 +1,24 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-006",
+  "summary": "Synchronizacja roadmapy po wydaniu 0.10.0",
+  "workstream": "integration",
+  "allowedPaths": [
+    "docs/ROADMAP_AFTER_0.9.0.md",
+    "TODO.md",
+    "project/TICKETS.md",
+    "project/ticket-006/**",
+    "project/ticket-007/**",
+    "project/ticket-008/**",
+    "project/ticket-009/**",
+    "project/ticket-010/**",
+    "project/ticket-011/**",
+    "project/ticket-012/**",
+    "project/ticket-013/**"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

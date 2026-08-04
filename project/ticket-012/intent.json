@@ -1,0 +1,12 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-012",
+  "summary": "Fixture upgrade i rollback między wydaniami",
+  "workstream": "integration",
+  "allowedPaths": ["tests/adoption-lock.test.sh", "docs/GOAL_ADOPTION.md", "CHANGELOG.md", "project/ticket-012/**", "TODO.md", "project/TICKETS.md"],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": ["ticket-007", "ticket-010"],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

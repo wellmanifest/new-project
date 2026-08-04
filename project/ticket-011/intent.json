@@ -1,0 +1,12 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-011",
+  "summary": "Windows CI dla wrapperów i generatora",
+  "workstream": "infrastructure",
+  "allowedPaths": [".github/workflows/ci.yml", "project.bat", "project/governance-check.bat", "tests/windows-governance.test.ps1", "project/ticket-011/**", "TODO.md", "project/TICKETS.md"],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": ["ticket-007"],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

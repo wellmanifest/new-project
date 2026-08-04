@@ -1,121 +1,133 @@
-# Dalszy plan po 0.9.0
+# Roadmapa po integracji 0.10.0
 
 Status: aktywna roadmapa  
 Stan bazowy: 2026-08-04  
 Właściciel standardu: `wellmanifest/new-project`
 
-## 1. Stan obecny
+Nazwa pliku pozostaje zgodna z istniejącymi odnośnikami, ale dokument opisuje
+stan po integracji wersji `0.10.0`.
 
-Implementacja 0.9.0 jest gotowa lokalnie. Obejmuje zwalnianie rezerwacji przez
-statusy nieaktywne, fail-closed dla nieznanych statusów, jawnie zaufanych
-reviewerów, kontrakt opublikowanego locka oraz deterministyczny generator
-adopcji z pełnego SHA commita.
+## 1. Zweryfikowany stan
 
-Lokalnie przechodzą trzy zestawy regresyjne:
+Na chronionej gałęzi `main` znajduje się kontrakt `0.10.0`, obejmujący:
 
-- `tests/governance-scripts.test.sh`;
-- `tests/governance-validator.test.sh`;
-- `tests/adoption-lock.test.sh`.
+- lifecycle, w którym tylko `IN_PROGRESS` rezerwuje workstream i zakres;
+- bounded delivery z klasami `XS|S`, limitem 30 minut i budżetem plików;
+- immutable adoption lock generowany z pełnego SHA;
+- allowlistowane approval człowieka, Validator GitHub App lub podpisaną
+  atestację;
+- fail-closed walidację zewnętrznego approval evidence bez podążania za
+  symlinkiem;
+- advisory review przez `openrouter/z-ai/glm-5.2`, które nie jest trust root.
 
-Wersja nie jest jeszcze opublikowanym wydaniem. Zmiany 0.9.0 są w worktree,
-bieżący HEAD nie ma tagu, a zatem nie istnieje jeszcze finalny pełny SHA, który
-repozytoria docelowe mogą bezpiecznie wpisać do locka.
+PR-y #1-#5 zostały scalone. PR #5 przeniósł ticket 005 do `BLOCKED`, ponieważ
+jego implementacja jest gotowa, lecz pełne kryterium wymaga jeszcze publikacji
+immutable wydania i adopcji w repozytorium zależnym.
 
-## 2. Co pozostało
+Nie istnieje jeszcze tag `v0.10.0` ani odpowiadający mu GitHub Release. Sam
+commit na `main` nie jest finalnym `sourceRevision` dla produkcyjnej adopcji.
 
-### P0 — domknięcie i publikacja 0.9.0
+## 2. Status istniejących ticketów
 
-1. Przejrzeć cały diff 0.9.0, ze szczególnym uwzględnieniem listy plików
-   zarządzanych przez `create_adoption_lock.py`, semantyki statusów i granicy
-   `trusted-reviewers`.
-2. Otworzyć PR i uruchomić wymagany workflow GitHub na aktualnym HEAD.
-3. Skonfigurować chronioną listę zaufanych reviewerów oraz Ruleset/CODEOWNERS;
-   reviewer zatwierdzający nie może być autorem zmian.
-4. Po zielonym CI i zaufanym review scalić PR, utworzyć tag `v0.9.0` i wskazać
-   pełny 40-znakowy SHA opublikowanego commita.
-5. Z czystego checkoutu tagu ponownie uruchomić trzy zestawy testów i zachować
-   wynik jako dowód wydania.
+| Ticket | Stan | Znaczenie |
+| :--- | :--- | :--- |
+| `ticket-001` | DONE | Hub jest edytowalnym źródłem standardu w granicach ticketu. |
+| `ticket-002` | BLOCKED | Integracja `goal` jest zaimplementowana, ale czeka na opublikowany pełny SHA. |
+| `ticket-003` | DONE | Zaufane approval Validator App i signed attestation są wdrożone. |
+| `ticket-004` | DONE | Kanoniczny kontrakt 0.10.0 został scalony. |
+| `ticket-005` | BLOCKED | Uszczelnienie evidence jest scalone; czeka na release i adopcję `todo2code`. |
+| `ticket-006` | IN_PROGRESS | Synchronizacja roadmapy i kolejki dalszych prac. |
 
-Kryterium zakończenia: tag `v0.9.0` wskazuje commit z zielonym wymaganym CI, a
-generator potrafi utworzyć lock wskazujący dokładnie ten commit.
+`BLOCKED` zachowuje plan i dowody, lecz nie rezerwuje workstreamu ani ścieżek.
 
-### P1 — kontrolowany pilotaż adopcji
+## 3. Pozostałe prace
 
-1. Wybrać dwa repozytoria pilotażowe: jedno z pojedynczym workstreamem i jedno
-   z równoległą pracą wielu agentów.
-2. Uruchomić `create_adoption_lock.py` z SHA wydania, przejrzeć zachowany
-   manifest docelowy i dodać caller reusable workflow.
-3. W każdym pilocie przeprowadzić scenariusz pozytywny oraz próby regresji:
-   aktywny konflikt, nieznany status, approval spoza trusted reviewers, drift
-   pliku zarządzanego i zmiana poza dozwolonym zakresem.
-4. Potwierdzić, że `BACKLOG`, `PLAN` i `BLOCKED` zachowują dowody, ale nie
-   blokują nowego `IN_PROGRESS` w tym samym workstreamie.
-5. Zapisać wynik, czas obsługi i potrzebne odstępstwa. Problem wspólny dla obu
-   pilotów wraca do standardu; konfiguracja lokalna pozostaje w manifeście
-   repozytorium docelowego.
+### P0 — aktualna dokumentacja (`ticket-006`)
 
-Kryterium zakończenia: oba repozytoria przechodzą ścieżkę pozytywną i odrzucają
-wszystkie scenariusze negatywne bez ręcznego obchodzenia gate'a.
+Uzgodnić tę roadmapę, `TODO.md` i indeks ticketów z faktycznym stanem GitHub.
+Kryterium zakończenia: dokumenty nie przedstawiają 0.9.0 jako bieżącego
+wydania i wskazują jednoznaczną kolejność zależności.
 
-### P2 — utwardzenie narzędzi i CI
+### P1 — immutable release 0.10.0 (`ticket-007`)
 
-1. Dodać do generatora tryb `--check` lub `--dry-run`, który pokazuje drift i
-   plan upgrade bez zapisu. Lokalnie zaimplementowano `--check` oraz integrację
-   `goal governance adopt`; wymagają one publikacji i dowodu CI przed uznaniem
-   punktu za zakończony.
-2. Zastąpić ręcznie utrzymywaną mapę zarządzanych plików wersjonowanym
-   manifestem pakietu albo testem wymuszającym jej kompletność.
-3. Rozszerzyć CI o meta-walidację Draft 2020-12 i walidację przykładowych
-   manifestów/locków względem schematów, nie tylko kontrolę składni JSON.
-4. Dodać Windows CI dla wrapperów `.bat` i generatora Python; obecne fixture'y
-   wykonawcze pokrywają środowisko Linux.
-5. Dodać fixture upgrade między dwiema rzeczywistymi wersjami standardu,
-   obejmujący zachowanie lokalnego manifestu i czytelny raport konfliktów.
+1. Zweryfikować dokładny HEAD przeznaczony do publikacji.
+2. Uruchomić CI i trzy zestawy regresyjne z czystego checkoutu.
+3. Utworzyć chroniony tag `v0.10.0` i GitHub Release dla tego samego SHA.
+4. Zapisać pełny SHA oraz procedurę niedestrukcyjnego rollbacku.
 
-Kryterium zakończenia: drift można ocenić bez modyfikacji plików, lista pakietu
-nie może rozjechać się po dodaniu artefaktu, a Linux i Windows mają wymagane CI.
+Kryterium zakończenia: tag i Release wskazują identyczny, przetestowany commit,
+który generator może wpisać jako `publicationStatus: published`.
 
-### P3 — eksploatacja i utrzymanie
+### P2 — dokończenie integracji zależnych (`ticket-002`, `ticket-005`)
 
-1. Zastąpić historyczny raport do 0.5.0 bieżącym raportem operacyjnym albo
-   przenieść go jawnie do dokumentacji archiwalnej.
-2. Opisać procedurę upgrade, rollback do poprzedniego pełnego SHA oraz reakcję
-   na kompromitację zaufanego reviewera lub opublikowanej rewizji.
-3. Ustalić cykliczny przegląd diagnostyk, statusów i listy reviewerów oraz
-   właściciela decyzji o kolejnym wydaniu.
-4. Po pilotażu usunąć nieużywane reguły i uprościć kroki, które nie wykazały
-   wartości w dowodach adopcyjnych.
+Po publikacji należy wznowić istniejące tickety, nie tworzyć ich zamienników:
 
-Kryterium zakończenia: operator ma aktualny runbook publikacji, upgrade i
-rollback, a standard ma wskazanego właściciela oraz termin przeglądu.
+- potwierdzić `goal governance adopt --check` i adopcję pełnego SHA;
+- zaktualizować `semcod/todo2code` do opublikowanego SHA;
+- uzyskać świeżą atestację/review Validator App dla nowego HEAD;
+- oznaczyć AC ticketów 002 i 005 jako zakończone dopiero po dowodach z repozytoriów
+  docelowych.
 
-## 3. Kolejność wykonania
+### P3 — kontrolowane piloty (`ticket-008`, `ticket-009`)
 
-P0 jest blokadą dla wszystkich adopcji, ponieważ dopiero publikacja tworzy
-wiarygodny `sourceRevision`. P1 musi poprzedzić rozszerzanie standardu o nowe
-mechanizmy. P2 powinno wynikać z wyników pilotów; wyjątkiem są niezależne prace
-nad meta-walidacją schematów i Windows CI. P3 może rozpocząć się równolegle po
-publikacji, ale runbook rollback musi być gotowy przed adopcją produkcyjną.
+Najpierw wykonać pilot pojedynczego workstreamu, następnie pilot równoległych
+agentów. Tickety, logi i konfiguracja pilota pozostają w jego repozytorium;
+hub zapisuje wyłącznie wnioski dotyczące przenośnego standardu.
+
+Oba piloty muszą przejść ścieżkę pozytywną oraz odrzucić drift, nieznany status,
+obce approval, zmianę poza `allowedPaths`, konflikt zakresów i niejednoznaczny
+routing ticketu.
+
+### P4 — utwardzenie pakietu i CI (`ticket-010`–`ticket-012`)
+
+- `ticket-010`: wersjonowany manifest zarządzanych artefaktów, meta-walidacja
+  Draft 2020-12 i walidacja przykładów;
+- `ticket-011`: natywne Windows CI dla wrapperów `.bat` i generatora;
+- `ticket-012`: fixture upgrade/rollback pomiędzy dwoma rzeczywistymi,
+  opublikowanymi SHA.
+
+Każdy ticket pozostaje osobnym bounded-delivery slice i otrzymuje nowe
+zatwierdzenie po przejściu z `BACKLOG` do `IN_PROGRESS`.
+
+### P5 — eksploatacja Validator App (`ticket-013`)
+
+Przygotować runbook z diagramami obejmujący instalację App, repozytorium kodu,
+przepływ PR/evidence, GitHub Actions Secrets, OpenRouter, rotację i revocation,
+diagnostykę HTTP 401 oraz reakcję na kompromitację authority.
+
+Dokument ma podawać nazwy i miejsca konfiguracji sekretów, nigdy ich wartości.
+LLM pozostaje warstwą advisory; zaufanie wynika z deterministycznych testów,
+chronionej tożsamości App i evidence związanego z exact HEAD.
+
+## 4. Kolejność i zależności
 
 ```mermaid
-flowchart LR
-    P0[P0: publikacja 0.9.0] --> P1[P1: dwa piloty]
-    P1 --> P2[P2: utwardzenie]
-    P0 --> P3[P3: runbook i utrzymanie]
-    P2 --> GA[Szersza adopcja]
-    P3 --> GA
+flowchart TD
+    T006[ticket-006: aktualna roadmapa] --> T007[ticket-007: release v0.10.0]
+    T007 --> T002[ticket-002: dokończenie goal]
+    T007 --> T005[ticket-005: adopcja todo2code]
+    T002 --> T008[ticket-008: pilot pojedynczy]
+    T007 --> T008
+    T008 --> T009[ticket-009: pilot równoległy]
+    T007 --> T010[ticket-010: pakiet i schematy]
+    T007 --> T011[ticket-011: Windows CI]
+    T010 --> T012[ticket-012: upgrade i rollback]
+    T009 --> T013[ticket-013: runbook operacyjny]
+    T012 --> GA[szersza adopcja]
+    T013 --> GA
 ```
 
-## 4. Definicja gotowości do szerszej adopcji
+## 5. Definicja gotowości do szerszej adopcji
 
 Standard jest gotowy do szerszego wdrożenia dopiero wtedy, gdy:
 
-- wydanie ma tag, immutable SHA, zielone CI i zaufane current-head review;
-- dwa różne piloty dostarczyły pozytywne i negatywne dowody działania;
-- upgrade i rollback są udokumentowane i przećwiczone;
-- drift można sprawdzić bez zapisu;
-- wymagane kontrole działają na wspieranych systemach operacyjnych;
-- znany właściciel standardu zatwierdził wyniki pilotów.
+- `v0.10.0` ma immutable SHA, Release, zielone CI i exact-head approval;
+- `goal` i `todo2code` używają opublikowanego SHA bez ręcznego obejścia gate'a;
+- oba piloty dostarczyły pozytywne i negatywne dowody;
+- kompletność pakietu i schematy są meta-walidowane;
+- wymagane kontrole przechodzą na Linux i Windows;
+- upgrade oraz rollback między wydaniami są przetestowane;
+- operator ma aktualny runbook instalacji, sekretów, rotacji i incydentów.
 
-Do tego momentu 0.9.0 należy traktować jako release candidate do kontrolowanej
-adopcji, a nie jako automatyczny standard dla wszystkich repozytoriów.
+Do spełnienia tych warunków 0.10.0 jest kanonicznym kontraktem na `main`, ale
+nie powinien być automatycznie wdrażany produkcyjnie przez ruchomy branch.
