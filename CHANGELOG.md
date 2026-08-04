@@ -4,6 +4,9 @@
 
 ### Trusted Validator App approvals
 
+- Hardened external approval evidence reads with a no-follow regular-file
+  boundary, and stopped invalid binding/authority evidence before it can be
+  projected into the trusted approval gate.
 - Added a versioned approval-evidence contract binding merge authority to the
   repository, pull request, current HEAD, active ticket and actor.
 - Added a separate `trusted-validator-apps` allowlist and accepted only exact

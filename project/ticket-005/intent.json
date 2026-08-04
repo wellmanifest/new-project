@@ -1,0 +1,22 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-005",
+  "summary": "Harden external approval evidence validation",
+  "workstream": "governance",
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "project/ticket-005/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
