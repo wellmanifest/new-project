@@ -78,5 +78,18 @@
       "requiredForPaths": ["package.json", "pyproject.toml", "go.mod", "Cargo.toml", "pom.xml"]
     }
   },
+  "delivery": {
+    "requiredForImplementation": true,
+    "maxActiveMinutes": 30,
+    "checkpointMinutes": 25,
+    "allowedComplexityClasses": ["XS", "S"],
+    "maxImplementationFiles": 5,
+    "maxAffectedComponents": 2,
+    "maxPublicInterfaceChanges": 0,
+    "maxRuntimeDependencies": 0,
+    "targetBranches": ["main"],
+    "publicInterfacePaths": ["api/**", "sdk/**", "src/public/**"],
+    "dependencyManifestPaths": ["package.json", "pyproject.toml", "go.mod", "Cargo.toml", "pom.xml"]
+  },
   "stacks": ["docker"]
 }
