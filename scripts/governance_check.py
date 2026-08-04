@@ -689,26 +689,28 @@ def basic_manifest_valid(manifest: Any) -> bool:
     )
 
 
+def lock_standard_valid(standard: Any, expected_version: str) -> bool:
+    return isinstance(standard, dict) and (
+        set(standard) == {"id", "version", "sourceRepository", "sourceRevision", "publicationStatus"}
+        and standard.get("id") == "wellmanifest/new-project"
+        and standard.get("version") == expected_version
+        and standard.get("sourceRepository") == "wellmanifest/new-project"
+        and isinstance(standard.get("sourceRevision"), str)
+        and re.fullmatch(r"[0-9a-f]{40}", standard["sourceRevision"]) is not None
+        and standard.get("publicationStatus") == "published"
+    )
+
+
 def load_managed_lock(lock_path: Path, manifest: dict[str, Any]) -> dict[str, str]:
     lock = load_json(lock_path)
     managed = lock["managedFiles"]
-    standard = lock["standard"]
     if (
         lock.get("schema") != "new-project.lock/v1"
         or set(lock) != {"schema", "standard", "managedFiles"}
         or not isinstance(managed, dict)
     ):
         raise ValueError("unsupported lock schema")
-    if (
-        not isinstance(standard, dict)
-        or set(standard) != {"id", "version", "sourceRepository", "sourceRevision", "publicationStatus"}
-        or standard.get("id") != "wellmanifest/new-project"
-        or standard.get("version") != manifest["standard"]["version"]
-        or standard.get("sourceRepository") != "wellmanifest/new-project"
-        or not isinstance(standard.get("sourceRevision"), str)
-        or re.fullmatch(r"[0-9a-f]{40}", standard["sourceRevision"]) is None
-        or standard.get("publicationStatus") != "published"
-    ):
+    if not lock_standard_valid(lock["standard"], manifest["standard"]["version"]):
         raise ValueError("lock must identify the published immutable standard revision")
     if not all(
             isinstance(raw_path, str)
