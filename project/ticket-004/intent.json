@@ -1,0 +1,28 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-004",
+  "summary": "Reconcile canonical governance and cost-bounded review",
+  "workstream": "governance",
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "docs/GOVERNANCE_RECONCILIATION_0.10.md",
+    "governance/diagnostics.json",
+    "governance/intent.schema.json",
+    "governance/manifest.default.json",
+    "governance/manifest.schema.json",
+    "scripts/governance_check.py",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-004/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

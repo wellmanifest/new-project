@@ -43,7 +43,7 @@ root = pathlib.Path(sys.argv[1])
 lock = json.load(open(root / '.governance/manifest.lock.json', encoding='utf-8'))
 assert lock['standard']['sourceRevision'] == sys.argv[2]
 assert lock['standard']['publicationStatus'] == 'published'
-assert lock['standard']['version'] == '0.9.0'
+assert lock['standard']['version'] == '0.10.0'
 for path, expected in lock['managedFiles'].items():
     assert hashlib.sha256((root / path).read_bytes()).hexdigest() == expected
 PY
@@ -110,7 +110,7 @@ grep -q -- '--check and --upgrade are mutually exclusive' "$fixture/options.err"
 
 mismatch="$fixture/mismatch"
 mkdir -p "$mismatch/.governance"
-sed 's/"version": "0.9.0"/"version": "9.9.9"/' \
+sed 's/"version": "0.10.0"/"version": "9.9.9"/' \
   "$standard/governance/manifest.default.json" > "$mismatch/.governance/manifest.json"
 set +e
 python3 "$standard/scripts/create_adoption_lock.py" \

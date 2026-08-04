@@ -20,11 +20,14 @@ assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
 assert manifest['schema'] == schema['properties']['schema']['const']
-assert manifest['standard']['version'] == '0.9.0'
+assert manifest['standard']['version'] == '0.10.0'
 ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
 assert not set(ticket['activeStatuses']) & set(ticket['nonActiveStatuses'])
+assert manifest['delivery']['maxActiveMinutes'] == 30
+assert manifest['delivery']['checkpointMinutes'] == 25
+assert manifest['delivery']['maxImplementationFiles'] == 5
 assert 'github-app-review' in manifest['trustedApprovalSources']
 assert manifest['approvalEvidence']['schema'] == 'new-project.approval-evidence/v1'
 assert approval_schema['properties']['headSha']['pattern'] == '^[0-9a-f]{40}$'
@@ -42,6 +45,10 @@ assert not module.matches('src/nested/app.js', ['src/*'])
 assert module.patterns_may_overlap('future/**', 'future/*.js')
 assert not module.patterns_may_overlap('src/**/x.json', 'src/**/y.json')
 assert module.pattern_covered_by('src/**/*.js', 'src/**')
+assert module.pattern_covered_by('test/cli*.test.ts', 'test/cli*')
+assert module.pattern_covered_by('test/cli-smoke.test.ts', 'test/cli*')
+assert not module.pattern_covered_by('test/mcp*.test.ts', 'test/cli*')
+assert not module.pattern_covered_by('test/cli*.test.ts', 'test/*.spec.ts')
 PY
 python3 - "$repo_root/scripts/governance_check.py" "$repo_root/governance/diagnostics.json" <<'PY'
 import json
@@ -97,7 +104,37 @@ make_fixture() {
   "stacks": ["node", "docker"],
   "dependsOn": [],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "0000000000000000000000000000000000000000",
+    "targetBranch": "main",
+    "outcome": "Validate one bounded fixture change",
+    "nonGoals": ["No public API or dependency changes"],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the fixture change inside the application component",
+      "components": [{"name": "application", "paths": ["src/**"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the fixture file"
+    },
+    "runtimeDependencies": [],
+    "validation": [{
+      "criterion": "AC-01",
+      "commands": ["governance-check"],
+      "evidence": "The fixture gate passes"
+    }]
+  }
 }
 JSON
   printf '%s\n' '{"name":"fixture"}' > "$target/package.json"
@@ -127,7 +164,37 @@ add_active_ticket() {
   "stacks": ["node", "docker"],
   "dependsOn": $depends_on,
   "conflictsWith": $conflicts_with,
-  "integrationTicket": null
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "0000000000000000000000000000000000000000",
+    "targetBranch": "main",
+    "outcome": "Validate one parallel fixture change",
+    "nonGoals": ["No cross-workstream contract changes"],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the change inside its declared workstream component",
+      "components": [{"name": "$workstream", "paths": $allowed_paths}],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the fixture file"
+    },
+    "runtimeDependencies": [],
+    "validation": [{
+      "criterion": "AC-01",
+      "commands": ["governance-check"],
+      "evidence": "The parallel fixture gate passes"
+    }]
+  }
 }
 JSON
 }
@@ -143,12 +210,63 @@ run_check() {
 expect_code() {
   local expected="$1"
   shift
-  set +e
-  output="$($@ 2>&1)"
-  status=$?
-  set -e
+  local output status
+  if output="$("$@" 2>&1)"; then
+    status=0
+  else
+    status=$?
+  fi
   test "$status" -eq 1
   grep -q "$expected" <<<"$output"
+}
+
+mutate_delivery() {
+  local target="$1"
+  local action="$2"
+  python3 - "$target/project/ticket-002/intent.json" "$action" <<'PY'
+import json
+import sys
+
+path, action = sys.argv[1:]
+with open(path, encoding='utf-8') as handle:
+    intent = json.load(handle)
+delivery = intent.get('delivery')
+if action == 'missing':
+    intent.pop('delivery', None)
+elif action == 'thirty-minutes':
+    delivery['complexity'] = 'S'
+    delivery['estimatedMinutes'] = 30
+elif action == 'xs-over-time':
+    delivery['estimatedMinutes'] = 11
+elif action == 'two-files':
+    delivery['budgets']['maxImplementationFiles'] = 1
+elif action == 'ambiguous-component':
+    delivery['architecture']['components'].append({'name': 'duplicate-owner', 'paths': ['src/**']})
+elif action == 'over-policy-budget':
+    delivery['budgets']['maxImplementationFiles'] = 6
+else:
+    raise SystemExit(f'unknown mutation: {action}')
+with open(path, 'w', encoding='utf-8') as handle:
+    json.dump(intent, handle, indent=2)
+    handle.write('\n')
+PY
+}
+
+set_accepted_base() {
+  local target="$1"
+  local accepted_base="$2"
+  python3 - "$target/project/ticket-002/intent.json" "$accepted_base" <<'PY'
+import json
+import sys
+
+path, accepted_base = sys.argv[1:]
+with open(path, encoding='utf-8') as handle:
+    intent = json.load(handle)
+intent['delivery']['acceptedBaseSha'] = accepted_base
+with open(path, 'w', encoding='utf-8') as handle:
+    json.dump(intent, handle, indent=2)
+    handle.write('\n')
+PY
 }
 
 write_evidence() {
@@ -201,7 +319,7 @@ lock = {
   'schema': 'new-project.lock/v1',
   'standard': {
     'id': 'wellmanifest/new-project',
-    'version': '0.9.0',
+    'version': '0.10.0',
     'sourceRepository': 'wellmanifest/new-project',
     'sourceRevision': 'a' * 40,
     'publicationStatus': 'published',
@@ -229,7 +347,11 @@ dot_path="$fixture/dot-path"
 make_fixture "$dot_path"
 sed -i 's/"workstream": "application"/"workstream": "governance"/' "$dot_path/project/ticket-002/intent.json"
 sed -i 's#"allowedPaths": \["src/\*\*"\]#"allowedPaths": [".governance/**"]#' "$dot_path/project/ticket-002/intent.json"
-run_check "$dot_path" --changed-file .governance/manifest.json > "$fixture/dot-path.out"
+sed -i 's#"components": \[{"name": "application", "paths": \["src/\*\*"\]}\]#"components": [{"name": "governance", "paths": [".governance/**"]}]#' "$dot_path/project/ticket-002/intent.json"
+if ! run_check "$dot_path" --changed-file .governance/manifest.json > "$fixture/dot-path.out"; then
+  cat "$fixture/dot-path.out"
+  exit 1
+fi
 grep -q '^GOV-PASS:' "$fixture/dot-path.out"
 
 expect_code GOV-APPROVAL-001 run_check "$allowed" --changed-file src/app.js \
@@ -295,6 +417,44 @@ expect_code GOV-APPROVAL-003 run_check "$allowed" --changed-file src/app.js --en
   --expected-pull-request 13 --expected-head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 expect_code GOV-SCOPE-001 run_check "$allowed" --changed-file docs/outside.md
 
+thirty_minutes="$fixture/thirty-minutes"
+make_fixture "$thirty_minutes"
+mutate_delivery "$thirty_minutes" thirty-minutes
+run_check "$thirty_minutes" --changed-file src/app.js > "$fixture/thirty-minutes.out"
+grep -q '^GOV-PASS:' "$fixture/thirty-minutes.out"
+
+missing_delivery="$fixture/missing-delivery"
+make_fixture "$missing_delivery"
+mutate_delivery "$missing_delivery" missing
+expect_code GOV-DELIVERY-001 run_check "$missing_delivery" --changed-file src/app.js
+
+over_time="$fixture/over-time"
+make_fixture "$over_time"
+mutate_delivery "$over_time" xs-over-time
+expect_code GOV-DELIVERY-001 run_check "$over_time" --changed-file src/app.js
+
+checkpoint="$fixture/checkpoint"
+make_fixture "$checkpoint"
+run_check "$checkpoint" --changed-file src/app.js --elapsed-minutes 25 > "$fixture/checkpoint.out"
+grep -q 'GOV-DELIVERY-002 WARNING' "$fixture/checkpoint.out"
+grep -q '^GOV-PASS:' "$fixture/checkpoint.out"
+expect_code GOV-DELIVERY-001 run_check "$checkpoint" --changed-file src/app.js --elapsed-minutes 30
+
+file_budget="$fixture/file-budget"
+make_fixture "$file_budget"
+printf '%s\n' 'export const extra = true;' > "$file_budget/src/extra.js"
+expect_code GOV-BUDGET-001 run_check "$file_budget" --changed-file src/app.js --changed-file src/extra.js
+
+policy_budget="$fixture/policy-budget"
+make_fixture "$policy_budget"
+mutate_delivery "$policy_budget" over-policy-budget
+expect_code GOV-DELIVERY-001 run_check "$policy_budget" --changed-file src/app.js
+
+ambiguous_architecture="$fixture/ambiguous-architecture"
+make_fixture "$ambiguous_architecture"
+mutate_delivery "$ambiguous_architecture" ambiguous-component
+expect_code GOV-ARCHITECTURE-001 run_check "$ambiguous_architecture" --changed-file src/app.js
+
 single_segment_glob="$fixture/single-segment-glob"
 make_fixture "$single_segment_glob"
 sed -i 's#"allowedPaths": \["src/\*\*"\]#"allowedPaths": ["src/*"]#' "$single_segment_glob/project/ticket-002/intent.json"
@@ -302,6 +462,18 @@ expect_code GOV-SCOPE-001 run_check "$single_segment_glob" --changed-file src/ne
 
 expect_code GOV-DIFF-001 run_check "$allowed" --base definitely-not-a-commit
 expect_code GOV-SYNC-001 run_check "$allowed" --changed-file TODO.md --lock ../outside.lock
+
+stale_base="$fixture/stale-base"
+make_fixture "$stale_base"
+(
+  cd "$stale_base"
+  git init -q
+  git config user.email governance@example.invalid
+  git config user.name governance-fixture
+  git add .
+  git commit -qm 'fixture baseline'
+  expect_code GOV-BASE-001 run_check "$stale_base" --base HEAD --changed-file src/app.js
+)
 
 invalid_manifest="$fixture/invalid-manifest"
 make_fixture "$invalid_manifest"
@@ -356,6 +528,13 @@ sed -i 's/Status\*\*: IN_PROGRESS/Status**: BACKLOG/' "$backlog_release/project/
 add_active_ticket "$backlog_release" ticket-003 application '["src/**"]'
 run_check "$backlog_release" --changed-file src/app.js > "$fixture/backlog-release.out"
 grep -q '^GOV-PASS:' "$fixture/backlog-release.out"
+
+plan_release="$fixture/plan-release"
+make_fixture "$plan_release"
+sed -i 's/Status\*\*: IN_PROGRESS/Status**: PLAN/' "$plan_release/project/ticket-002/README.md"
+add_active_ticket "$plan_release" ticket-003 application '["src/**"]'
+run_check "$plan_release" --changed-file src/app.js > "$fixture/plan-release.out"
+grep -q '^GOV-PASS:' "$fixture/plan-release.out"
 
 blocked_release="$fixture/blocked-release"
 make_fixture "$blocked_release"
@@ -446,18 +625,28 @@ PY
 
 history_good="$fixture/history-good"
 make_fixture "$history_good"
+cp -R "$history_good/project/ticket-002" "$fixture/history-good-ticket"
+rm -rf "$history_good/project/ticket-002"
 (
   cd "$history_good"
   git init -q
   git config user.email governance@example.invalid
   git config user.name governance-fixture
   git add .
-  git commit -qm 'plan exists'
+  git commit -qm 'baseline without ticket'
   base="$(git rev-parse HEAD)"
+  git switch -qc ticket-002-work
+  cp -R "$fixture/history-good-ticket" project/ticket-002
+  set_accepted_base "$history_good" "$base"
+  git add project/ticket-002
+  git commit -qm 'plan exists'
   printf '%s\n' 'export const ok = 2;' > src/app.js
   git add src/app.js
   git commit -qm 'implementation after plan'
-  run_check "$history_good" --base "$base" > "$fixture/history-good.out"
+  if ! run_check "$history_good" --base "$base" > "$fixture/history-good.out"; then
+    cat "$fixture/history-good.out"
+    exit 1
+  fi
 )
 grep -q '^GOV-PASS:' "$fixture/history-good.out"
 
@@ -474,7 +663,9 @@ rm -f "$history_bad/src/app.js"
   git add .
   git commit -qm 'baseline without ticket'
   base="$(git rev-parse HEAD)"
+  git switch -qc ticket-002-work
   cp -R "$fixture/ticket-002.saved" project/ticket-002
+  set_accepted_base "$history_bad" "$base"
   printf '%s\n' 'export const late = true;' > src/app.js
   git add .
   git commit -qm 'ticket and implementation together'

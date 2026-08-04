@@ -1,0 +1,46 @@
+2026-08-04 planning evidence
+- `main=c0bb63e`: adoption/lifecycle source; only IN_PROGRESS reserves scope.
+- `bounded=1ae86a1`: delivery-budget source; old active-status semantics.
+- `todo2code` lock currently points to `1ae86a1` with publicationStatus=remote-branch.
+- Koru executable model currently `openrouter/google/gemini-3.1-pro-preview`.
+- No implementation or live OpenRouter request performed; WAIT_FOR_APPROVAL.
+
+2026-08-04 implementation and validation
+- human approval received; transitioned to IN_PROGRESS / EDIT
+- canonical contract version: 0.10.0
+- governance-validator.test.sh: PASS
+- governance-scripts.test.sh: PASS
+- adoption-lock.test.sh: PASS
+- Python compile, JSON parse, diff check: PASS
+- radon maximum function CC: 15
+- maximum AST function length: 53 lines
+- upstream PR: https://github.com/wellmanifest/new-project/pull/1
+- remote checks: 2 PASS
+- independent review: missing; BLOCKED / VALIDATION
+- live OpenRouter requests: 0
+
+2026-08-04 continuation evidence
+- origin/main advanced to c54694a through PR #2.
+- PR #2 published a distinct completed ticket-003.
+- reconciliation ticket renumbered to ticket-004 before main integration.
+- user requested continuation; state restored to IN_PROGRESS / EDIT.
+
+2026-08-04 main integration validation
+- merged source: origin/main@c54694a
+- governance-validator.test.sh: PASS
+- governance-scripts.test.sh: PASS
+- adoption-lock.test.sh: PASS
+- Python compile, JSON parse, shell syntax and diff check: PASS
+- maximum validator function CC: 15
+- maximum AST function length: 53 lines
+- live OpenRouter requests: 0
+- final external approval: pending fresh PR HEAD
+
+2026-08-04 Validator App remediation
+- reviewed head: b595fe2242038f83d1f41d2eeee95deabcf9437b
+- review state: CHANGES_REQUESTED
+- finding: broad shell fail-fast override in negative-test helper
+- remediation: command-local conditional exit-status capture
+- governance-validator.test.sh after remediation: PASS
+- live OpenRouter model: openrouter/z-ai/glm-5.2
+- fresh current-head review: pending

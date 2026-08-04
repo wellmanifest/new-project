@@ -17,6 +17,26 @@
 - Documented direct `validate-pr` migration for `validator-agent` and
   `todo2code`, using `openrouter/z-ai/glm-5.2` as the advisory Validator model.
 
+## [0.10.0] - 2026-08-04
+
+### Canonical lifecycle and bounded delivery
+
+- Reconciled the two divergent contracts previously identified as `0.9.0`:
+  queue-safe lifecycle and immutable adoption from `main`, plus bounded
+  delivery schemas and deterministic validation from the delivery branch.
+- Kept `IN_PROGRESS` as the only status reserving a workstream and scope;
+  `BACKLOG`, `PLAN` and `BLOCKED` remain validated but do not participate in
+  active conflict, dependency, ownership or overlap checks.
+- Added architecture-first `XS|S` slices, a 30-minute ceiling, a 25-minute
+  checkpoint, explicit file/component/interface/dependency budgets and
+  fail-closed base-SHA validation.
+- Preserved published-full-SHA lock provenance and the drift-safe adoption
+  generator. Existing targets change only through explicit reviewed upgrade.
+- Retained the bounded-complexity validator refactor and wildcard ownership
+  regression while adding fixtures for all three non-active lifecycle states.
+- Documented exact-SHA migration and rollback. LLM selection remains outside
+  deterministic governance and cannot approve or block the contract by itself.
+
 ## [0.9.0] - 2026-08-04
 
 ### Queue-safe governance and reviewer authority
