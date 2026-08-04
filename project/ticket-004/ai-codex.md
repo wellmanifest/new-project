@@ -58,9 +58,15 @@ zostanie zmieniony na `openrouter/z-ai/glm-5.2` bez płatnego wywołania.
 - Validator App requested changes on `b595fe2` because the new negative-test
   helper temporarily disabled shell fail-fast globally. Replaced it with
   command-local conditional status capture and returned to validation.
+- Validator runtime 0.6.5 restricted unsafe-marker scans to added lines,
+  handled missing OpenRouter content, and forwarded `reasoning_effort=none`
+  through a narrow LiteLLM allowlist. Its production run `30934029411`
+  approved exact PR head `346895b3205ce2ad6af19159f01a6c60b99ba5c8`.
+- The GLM 5.2 verdict remained advisory. Deterministic target checks, exact-head
+  stability, the App identity and ticket binding formed the approval root.
 
 ## Blockers
 
-- Independent review or signed attestation is required for the refreshed HEAD
-  of upstream PR #1.
-- Wykonywalny finalny lock `todo2code` zależy od połączenia upstreamu.
+- No implementation blockers remain in ticket-004.
+- The status-only closure commit still requires an independent exact-head
+  review before merge; the final `todo2code` lock depends on the merged SHA.
