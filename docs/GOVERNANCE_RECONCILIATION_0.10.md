@@ -31,8 +31,8 @@ edges, owned paths and concrete/pattern overlap remain fail-closed.
 ## Bounded delivery
 
 An implementation intent records one outcome, accepted base SHA, target
-branch, non-goals, `XS|S` complexity, no more than 30 active minutes and a
-checkpoint before the limit. Architecture, rollback and explicit budgets are
+branch, non-goals, `XS|S` complexity, and a strict timebox (XS ≤ 10 minutes,
+S ≤ 30 minutes) with a checkpoint before the limit. Architecture, rollback and explicit budgets are
 decided before `EDIT`. A stale base, unresolved architecture, extra outcome or
 budget overflow stops the slice; it does not silently broaden approval.
 
