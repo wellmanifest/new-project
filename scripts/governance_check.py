@@ -127,6 +127,156 @@ def relative_pattern(value: str) -> bool:
     )
 
 
+def branch_name(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and bool(value)
+        and not value.startswith("/")
+        and re.search(r"(?:\.\.|//|@\{|[~^:?*\[\\])", value) is None
+    )
+
+
+def delivery_policy_valid(value: Any) -> bool:
+    fields = {
+        "requiredForImplementation", "maxActiveMinutes", "checkpointMinutes",
+        "allowedComplexityClasses", "maxImplementationFiles",
+        "maxAffectedComponents", "maxPublicInterfaceChanges",
+        "maxRuntimeDependencies", "targetBranches", "publicInterfacePaths",
+        "dependencyManifestPaths",
+    }
+    if not isinstance(value, dict) or set(value) != fields:
+        return False
+    integer_limits = (
+        "maxActiveMinutes", "checkpointMinutes", "maxImplementationFiles",
+        "maxAffectedComponents", "maxPublicInterfaceChanges",
+        "maxRuntimeDependencies",
+    )
+    if not all(isinstance(value.get(name), int) and not isinstance(value[name], bool) for name in integer_limits):
+        return False
+    return (
+        isinstance(value.get("requiredForImplementation"), bool)
+        and 1 <= value["maxActiveMinutes"] <= 30
+        and 1 <= value["checkpointMinutes"] < value["maxActiveMinutes"]
+        and value["maxImplementationFiles"] >= 1
+        and value["maxAffectedComponents"] >= 1
+        and value["maxPublicInterfaceChanges"] >= 0
+        and value["maxRuntimeDependencies"] >= 0
+        and string_list(value.get("allowedComplexityClasses"), nonempty=True)
+        and set(value["allowedComplexityClasses"]) <= {"XS", "S"}
+        and string_list(value.get("targetBranches"), nonempty=True)
+        and all(branch_name(item) for item in value["targetBranches"])
+        and string_list(value.get("publicInterfacePaths"))
+        and all(relative_pattern(item) for item in value["publicInterfacePaths"])
+        and string_list(value.get("dependencyManifestPaths"))
+        and all(relative_pattern(item) for item in value["dependencyManifestPaths"])
+    )
+
+
+def delivery_intent_error(value: Any) -> str | None:
+    fields = {
+        "acceptedBaseSha", "targetBranch", "outcome", "nonGoals",
+        "complexity", "estimatedMinutes", "budgets", "architecture",
+        "runtimeDependencies", "validation",
+    }
+    if not isinstance(value, dict) or set(value) != fields:
+        return "delivery must contain exactly the bounded-delivery fields"
+    if not isinstance(value.get("acceptedBaseSha"), str) or re.fullmatch(r"[0-9a-f]{40}", value["acceptedBaseSha"]) is None:
+        return "delivery acceptedBaseSha must be a full lowercase commit SHA"
+    if not branch_name(value.get("targetBranch")):
+        return "delivery targetBranch is invalid"
+    if not isinstance(value.get("outcome"), str) or not value["outcome"].strip():
+        return "delivery outcome is blank"
+    if not string_list(value.get("nonGoals"), nonempty=True):
+        return "delivery nonGoals must be an explicit non-empty list"
+    if value.get("complexity") not in {"XS", "S"}:
+        return "delivery complexity must be XS or S"
+    if not isinstance(value.get("estimatedMinutes"), int) or isinstance(value["estimatedMinutes"], bool) or not 1 <= value["estimatedMinutes"] <= 30:
+        return "delivery estimatedMinutes must be between 1 and 30"
+
+    budgets = value.get("budgets")
+    budget_fields = {
+        "maxImplementationFiles", "maxAffectedComponents",
+        "maxPublicInterfaceChanges", "maxRuntimeDependencies",
+    }
+    if not isinstance(budgets, dict) or set(budgets) != budget_fields:
+        return "delivery budgets are incomplete"
+    if not all(isinstance(budgets.get(name), int) and not isinstance(budgets[name], bool) for name in budget_fields):
+        return "delivery budgets must be integers"
+    if budgets["maxImplementationFiles"] < 1 or budgets["maxAffectedComponents"] < 1:
+        return "delivery file and component budgets must be positive"
+    if budgets["maxPublicInterfaceChanges"] < 0 or budgets["maxRuntimeDependencies"] < 0:
+        return "delivery interface and dependency budgets cannot be negative"
+
+    architecture = value.get("architecture")
+    architecture_fields = {
+        "status", "decision", "components", "responsibilityChanges",
+        "interfaceChanges", "dataChanges", "ui", "rollback",
+    }
+    if not isinstance(architecture, dict) or set(architecture) != architecture_fields:
+        return "delivery architecture decision is incomplete"
+    if architecture.get("status") != "accepted":
+        return "delivery architecture status must be accepted before implementation"
+    if not isinstance(architecture.get("decision"), str) or not architecture["decision"].strip():
+        return "delivery architecture decision is blank"
+    if not isinstance(architecture.get("rollback"), str) or not architecture["rollback"].strip():
+        return "delivery rollback is blank"
+    if not isinstance(architecture.get("responsibilityChanges"), bool):
+        return "delivery responsibilityChanges must be boolean"
+    for name in ("interfaceChanges", "dataChanges"):
+        if not string_list(architecture.get(name)):
+            return f"delivery architecture {name} must be a unique string list"
+    components = architecture.get("components")
+    if not isinstance(components, list) or not components:
+        return "delivery architecture requires at least one component"
+    component_names: list[str] = []
+    for component in components:
+        if not isinstance(component, dict) or set(component) != {"name", "paths"}:
+            return "delivery component must contain name and paths"
+        if not isinstance(component.get("name"), str) or not component["name"].strip():
+            return "delivery component name is blank"
+        if not string_list(component.get("paths"), nonempty=True) or not all(relative_pattern(item) for item in component["paths"]):
+            return "delivery component paths must be repository-relative patterns"
+        component_names.append(component["name"])
+    if len(component_names) != len(set(component_names)):
+        return "delivery component names must be unique"
+
+    ui = architecture.get("ui")
+    if not isinstance(ui, dict) or set(ui) != {"impact", "states", "evidence"}:
+        return "delivery UI decision is incomplete"
+    if ui.get("impact") not in {"none", "single-state", "multi-state"}:
+        return "delivery UI impact is invalid"
+    if not string_list(ui.get("states")) or not set(ui["states"]) <= {"loading", "empty", "error", "success"}:
+        return "delivery UI states are invalid"
+    if not string_list(ui.get("evidence")):
+        return "delivery UI evidence must be a unique string list"
+    if ui["impact"] == "none" and (ui["states"] or ui["evidence"]):
+        return "delivery UI states/evidence must be empty when impact is none"
+    if ui["impact"] == "single-state" and (len(ui["states"]) != 1 or not ui["evidence"]):
+        return "single-state UI work requires one state and planned evidence"
+    if ui["impact"] == "multi-state" and (len(ui["states"]) < 2 or not ui["evidence"]):
+        return "multi-state UI work requires at least two states and planned evidence"
+
+    if not string_list(value.get("runtimeDependencies")):
+        return "delivery runtimeDependencies must be a unique string list"
+    validation = value.get("validation")
+    if not isinstance(validation, list) or not validation:
+        return "delivery validation must map at least one acceptance criterion"
+    criteria: list[str] = []
+    for item in validation:
+        if not isinstance(item, dict) or set(item) != {"criterion", "commands", "evidence"}:
+            return "delivery validation entry is incomplete"
+        if not isinstance(item.get("criterion"), str) or re.fullmatch(r"AC-[0-9]+", item["criterion"]) is None:
+            return "delivery validation criterion is invalid"
+        if not string_list(item.get("commands"), nonempty=True):
+            return "delivery validation commands cannot be empty"
+        if not isinstance(item.get("evidence"), str) or not item["evidence"].strip():
+            return "delivery validation evidence is blank"
+        criteria.append(item["criterion"])
+    if len(criteria) != len(set(criteria)):
+        return "delivery validation criteria must be unique"
+    return None
+
+
 def matches(path: str, patterns: Iterable[str]) -> bool:
     path_parts = path.replace("\\", "/").strip("/").split("/")
 
@@ -381,9 +531,10 @@ def basic_manifest_valid(manifest: Any) -> bool:
         return common_valid
     allowed_root_keys = {
         "$schema", "schema", "standard", "requiredFiles", "governancePaths",
-        "trustedApprovalSources", "ticket", "docker", "coordination", "stacks",
+        "trustedApprovalSources", "ticket", "docker", "coordination", "delivery", "stacks",
     }
     coordination = manifest.get("coordination")
+    delivery = manifest.get("delivery")
     return (
         set(manifest) <= allowed_root_keys
         and string_list(manifest.get("stacks", []))
@@ -412,6 +563,7 @@ def basic_manifest_valid(manifest: Any) -> bool:
         and string_list(coordination["integration"].get("requiredForPaths"))
         and all(relative_pattern(item) for item in coordination["integration"]["requiredForPaths"])
         and coordination["integration"]["workstream"] in coordination["workstreams"]
+        and (delivery is None or delivery_policy_valid(delivery))
     )
 
 
@@ -504,7 +656,8 @@ def validate_intent(path: Path, ticket_name: str) -> tuple[dict[str, Any] | None
     }:
         return None, "unsupported intent schema"
     expected = v2_fields if intent["schema"] == "new-project.intent/v2" else v1_fields
-    if set(intent) != expected:
+    allowed = [expected, expected | {"delivery"}] if intent["schema"] == "new-project.intent/v2" else [expected]
+    if set(intent) not in allowed:
         return None, f"intent must contain exactly the {intent['schema'].rsplit('/', 1)[-1]} fields"
     if intent.get("ticket") != ticket_name:
         return None, "intent schema or ticket identity differs"
@@ -532,6 +685,10 @@ def validate_intent(path: Path, ticket_name: str) -> tuple[dict[str, Any] | None
             return None, "intent integrationTicket must be null or a ticket ID"
         if integration == ticket_name:
             return None, "intent integrationTicket cannot reference its own ticket"
+        if "delivery" in intent:
+            error = delivery_intent_error(intent["delivery"])
+            if error:
+                return None, error
     return intent, None
 
 
@@ -878,6 +1035,194 @@ def check_changed_content(root: Path, changed: list[str], actor: str, trusted_hu
             )
 
 
+def check_delivery_gate(
+    root: Path,
+    manifest: dict[str, Any],
+    record: TicketRecord,
+    implementation: list[str],
+    base: str | None,
+    elapsed_minutes: int | None,
+    report: Report,
+) -> None:
+    policy = manifest.get("delivery")
+    if not isinstance(policy, dict) or not policy.get("requiredForImplementation"):
+        return
+    assert record.intent is not None
+    delivery = record.intent.get("delivery")
+    intent_path = rel(root, record.directory / manifest["ticket"]["intentFile"])
+    if not isinstance(delivery, dict):
+        report.add(
+            "GOV-DELIVERY-001",
+            f"Implementation ticket {record.directory.name} has no bounded delivery contract.",
+            "Return to WAIT_FOR_APPROVAL, declare one <=30-minute XS/S outcome with architecture and validation evidence, then obtain fresh approval.",
+            [intent_path],
+        )
+        return
+
+    complexity_limit = 10 if delivery["complexity"] == "XS" else policy["maxActiveMinutes"]
+    declared_limits = delivery["budgets"]
+    policy_limits = {
+        "maxImplementationFiles": policy["maxImplementationFiles"],
+        "maxAffectedComponents": policy["maxAffectedComponents"],
+        "maxPublicInterfaceChanges": policy["maxPublicInterfaceChanges"],
+        "maxRuntimeDependencies": policy["maxRuntimeDependencies"],
+    }
+    violations = {
+        name: {"declared": declared_limits[name], "policy": limit}
+        for name, limit in policy_limits.items()
+        if declared_limits[name] > limit
+    }
+    if (
+        delivery["complexity"] not in policy["allowedComplexityClasses"]
+        or delivery["estimatedMinutes"] > policy["maxActiveMinutes"]
+        or delivery["estimatedMinutes"] > complexity_limit
+        or violations
+    ):
+        report.add(
+            "GOV-DELIVERY-001",
+            f"Ticket {record.directory.name} exceeds the approved delivery class or policy budget.",
+            "Split the outcome into dependent XS/S slices; do not widen the current ticket or PR.",
+            [intent_path],
+            {
+                "complexity": delivery["complexity"],
+                "estimatedMinutes": delivery["estimatedMinutes"],
+                "maxActiveMinutes": policy["maxActiveMinutes"],
+                "budgetViolations": violations,
+            },
+        )
+
+    if elapsed_minutes is not None:
+        if elapsed_minutes >= policy["maxActiveMinutes"]:
+            report.add(
+                "GOV-DELIVERY-001",
+                f"Ticket {record.directory.name} reached its {policy['maxActiveMinutes']}-minute implementation timebox.",
+                "Stop implementation, preserve evidence and plan unfinished work as an explicit dependent slice.",
+                [intent_path], {"elapsedMinutes": elapsed_minutes},
+            )
+        elif elapsed_minutes >= policy["checkpointMinutes"]:
+            report.add(
+                "GOV-DELIVERY-002",
+                f"Ticket {record.directory.name} reached its delivery checkpoint.",
+                "Record completed and remaining scope now; stop at the hard timebox instead of expanding the diff.",
+                [intent_path], {"elapsedMinutes": elapsed_minutes, "stopAtMinutes": policy["maxActiveMinutes"]},
+                severity="warning",
+            )
+
+    if delivery["targetBranch"] not in policy["targetBranches"]:
+        report.add(
+            "GOV-BASE-001",
+            f"Ticket {record.directory.name} targets unapproved branch '{delivery['targetBranch']}'.",
+            "Choose a manifest-approved target branch and obtain fresh approval for its exact base SHA.",
+            [intent_path], {"allowedTargets": policy["targetBranches"]},
+        )
+
+    accepted_sha = delivery["acceptedBaseSha"]
+    observed_base = None
+    if base:
+        try:
+            observed_base = git_output(root, ["rev-parse", f"{base}^{{commit}}"]).decode().strip()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            report.add(
+                "GOV-BASE-001", "The supplied base revision cannot be resolved.",
+                "Fetch the complete target history and rerun against the exact accepted base SHA.",
+                [intent_path], {"suppliedBase": base, "acceptedBaseSha": accepted_sha},
+            )
+        if observed_base and observed_base != accepted_sha:
+            report.add(
+                "GOV-BASE-001", f"Ticket {record.directory.name} approval is bound to a stale or different base SHA.",
+                "Refresh the branch, update architecture/scope evidence and obtain fresh approval before continuing.",
+                [intent_path], {"acceptedBaseSha": accepted_sha, "observedBaseSha": observed_base},
+            )
+
+    target_refs = [
+        f"refs/remotes/origin/{delivery['targetBranch']}",
+        f"refs/heads/{delivery['targetBranch']}",
+    ]
+    for target_ref in target_refs:
+        try:
+            current_target = git_output(root, ["rev-parse", "--verify", f"{target_ref}^{{commit}}"]).decode().strip()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            continue
+        if current_target != accepted_sha:
+            report.add(
+                "GOV-BASE-001", f"Target branch '{delivery['targetBranch']}' moved after ticket approval.",
+                "Refresh from the target, re-run conflict and validation checks, then obtain fresh approval if intent or architecture changed.",
+                [intent_path], {"acceptedBaseSha": accepted_sha, "currentTargetSha": current_target, "targetRef": target_ref},
+            )
+        break
+
+    architecture = delivery["architecture"]
+    components = architecture["components"]
+    component_overflow = len(components) > min(
+        declared_limits["maxAffectedComponents"], policy["maxAffectedComponents"],
+    )
+    interface_overflow = len(architecture["interfaceChanges"]) > min(
+        declared_limits["maxPublicInterfaceChanges"], policy["maxPublicInterfaceChanges"],
+    )
+    dependency_overflow = len(delivery["runtimeDependencies"]) > min(
+        declared_limits["maxRuntimeDependencies"], policy["maxRuntimeDependencies"],
+    )
+    unmapped: list[str] = []
+    multiply_mapped: list[str] = []
+    touched_components: set[str] = set()
+    for path in implementation:
+        owners = [component["name"] for component in components if matches(path, component["paths"])]
+        if not owners:
+            unmapped.append(path)
+        elif len(owners) > 1:
+            multiply_mapped.append(path)
+        else:
+            touched_components.add(owners[0])
+    if component_overflow or unmapped or multiply_mapped:
+        report.add(
+            "GOV-ARCHITECTURE-001",
+            f"Ticket {record.directory.name} has unresolved or ambiguous component ownership.",
+            "Decide component ownership before EDIT; map every changed implementation path to exactly one approved component.",
+            [intent_path, *unmapped, *multiply_mapped],
+            {
+                "declaredComponents": [component["name"] for component in components],
+                "touchedComponents": sorted(touched_components),
+                "unmappedPaths": unmapped,
+                "multiplyMappedPaths": multiply_mapped,
+            },
+        )
+
+    implementation_limit = min(declared_limits["maxImplementationFiles"], policy["maxImplementationFiles"])
+    public_paths = [path for path in implementation if matches(path, policy["publicInterfacePaths"])]
+    dependency_paths = [path for path in implementation if path in policy["dependencyManifestPaths"]]
+    if (
+        len(implementation) > implementation_limit
+        or len(touched_components) > declared_limits["maxAffectedComponents"]
+        or interface_overflow
+        or dependency_overflow
+        or len(public_paths) > declared_limits["maxPublicInterfaceChanges"]
+    ):
+        report.add(
+            "GOV-BUDGET-001",
+            f"Actual diff for {record.directory.name} exceeds its approved complexity budget.",
+            "Stop and split the remaining outcome into an explicitly dependent ticket; do not enlarge the current PR.",
+            implementation,
+            {
+                "implementationFiles": len(implementation),
+                "implementationFileLimit": implementation_limit,
+                "touchedComponents": sorted(touched_components),
+                "publicInterfacePaths": public_paths,
+                "dependencyManifestPaths": dependency_paths,
+                "declaredRuntimeDependencies": delivery["runtimeDependencies"],
+            },
+        )
+
+    integration_workstream = manifest["coordination"]["integration"]["workstream"]
+    if (architecture["responsibilityChanges"] or architecture["dataChanges"]) and record.intent["workstream"] != integration_workstream:
+        report.add(
+            "GOV-ARCHITECTURE-001",
+            "Responsibility or persistent-data movement is not owned by an integration slice.",
+            "Create and approve a <=30-minute integration-workstream slice before changing component ownership or persistent data.",
+            [intent_path],
+            {"workstream": record.intent["workstream"], "requiredWorkstream": integration_workstream},
+        )
+
+
 def check_change_gate(
     root: Path,
     manifest: dict[str, Any],
@@ -888,6 +1233,7 @@ def check_change_gate(
     approval_source: str | None,
     approved_ticket: str | None,
     enforce_approval: bool,
+    elapsed_minutes: int | None,
     report: Report,
 ) -> None:
     governance_patterns = manifest["governancePaths"]
@@ -1001,6 +1347,8 @@ def check_change_gate(
                         "requiredWorkstream": integration["workstream"],
                     },
                 )
+        if intent is not None:
+            check_delivery_gate(root, manifest, selected, implementation, base, elapsed_minutes, report)
     if enforce_approval:
         trusted = set(manifest["trustedApprovalSources"])
         if approval_source not in trusted:
@@ -1074,6 +1422,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--enforce-approval", action="store_true")
     parser.add_argument("--approval-source")
     parser.add_argument("--approved-ticket")
+    parser.add_argument("--elapsed-minutes", type=int)
     parser.add_argument("--format", choices=["text", "json", "sarif"], default="text")
     parser.add_argument("--output")
     return parser.parse_args(argv)
@@ -1127,7 +1476,7 @@ def main(argv: list[str] | None = None) -> int:
         check_changed_content(root, changed, args.actor, args.trusted_human_change, report)
         check_change_gate(
             root, manifest, records, changed, args.base, args.head, args.approval_source,
-            args.approved_ticket, args.enforce_approval, report,
+            args.approved_ticket, args.enforce_approval, args.elapsed_minutes, report,
         )
 
     output_path = None

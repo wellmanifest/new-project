@@ -23,6 +23,9 @@ ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
 assert not set(ticket['activeStatuses']) & set(ticket['nonActiveStatuses'])
+assert manifest['delivery']['maxActiveMinutes'] == 30
+assert manifest['delivery']['checkpointMinutes'] == 25
+assert manifest['delivery']['maxImplementationFiles'] == 5
 PY
 python3 - "$repo_root/scripts/governance_check.py" <<'PY'
 import importlib.util
@@ -83,7 +86,37 @@ make_fixture() {
   "stacks": ["node", "docker"],
   "dependsOn": [],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "0000000000000000000000000000000000000000",
+    "targetBranch": "main",
+    "outcome": "Validate one bounded fixture change",
+    "nonGoals": ["No public API or dependency changes"],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the fixture change inside the application component",
+      "components": [{"name": "application", "paths": ["src/**"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the fixture file"
+    },
+    "runtimeDependencies": [],
+    "validation": [{
+      "criterion": "AC-01",
+      "commands": ["governance-check"],
+      "evidence": "The fixture gate passes"
+    }]
+  }
 }
 JSON
   printf '%s\n' '{"name":"fixture"}' > "$target/package.json"
@@ -113,7 +146,37 @@ add_active_ticket() {
   "stacks": ["node", "docker"],
   "dependsOn": $depends_on,
   "conflictsWith": $conflicts_with,
-  "integrationTicket": null
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "0000000000000000000000000000000000000000",
+    "targetBranch": "main",
+    "outcome": "Validate one parallel fixture change",
+    "nonGoals": ["No cross-workstream contract changes"],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the change inside its declared workstream component",
+      "components": [{"name": "$workstream", "paths": $allowed_paths}],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the fixture file"
+    },
+    "runtimeDependencies": [],
+    "validation": [{
+      "criterion": "AC-01",
+      "commands": ["governance-check"],
+      "evidence": "The parallel fixture gate passes"
+    }]
+  }
 }
 JSON
 }
@@ -135,6 +198,38 @@ expect_code() {
   set -e
   test "$status" -eq 1
   grep -q "$expected" <<<"$output"
+}
+
+mutate_delivery() {
+  local target="$1"
+  local action="$2"
+  python3 - "$target/project/ticket-002/intent.json" "$action" <<'PY'
+import json
+import sys
+
+path, action = sys.argv[1:]
+with open(path, encoding='utf-8') as handle:
+    intent = json.load(handle)
+delivery = intent.get('delivery')
+if action == 'missing':
+    intent.pop('delivery', None)
+elif action == 'thirty-minutes':
+    delivery['complexity'] = 'S'
+    delivery['estimatedMinutes'] = 30
+elif action == 'xs-over-time':
+    delivery['estimatedMinutes'] = 11
+elif action == 'two-files':
+    delivery['budgets']['maxImplementationFiles'] = 1
+elif action == 'ambiguous-component':
+    delivery['architecture']['components'].append({'name': 'duplicate-owner', 'paths': ['src/**']})
+elif action == 'over-policy-budget':
+    delivery['budgets']['maxImplementationFiles'] = 6
+else:
+    raise SystemExit(f'unknown mutation: {action}')
+with open(path, 'w', encoding='utf-8') as handle:
+    json.dump(intent, handle, indent=2)
+    handle.write('\n')
+PY
 }
 
 allowed="$fixture/allowed"
@@ -181,6 +276,44 @@ expect_code GOV-APPROVAL-002 run_check "$allowed" --changed-file src/app.js \
   --enforce-approval --approval-source github-review --approved-ticket ticket-999
 expect_code GOV-SCOPE-001 run_check "$allowed" --changed-file docs/outside.md
 
+thirty_minutes="$fixture/thirty-minutes"
+make_fixture "$thirty_minutes"
+mutate_delivery "$thirty_minutes" thirty-minutes
+run_check "$thirty_minutes" --changed-file src/app.js > "$fixture/thirty-minutes.out"
+grep -q '^GOV-PASS:' "$fixture/thirty-minutes.out"
+
+missing_delivery="$fixture/missing-delivery"
+make_fixture "$missing_delivery"
+mutate_delivery "$missing_delivery" missing
+expect_code GOV-DELIVERY-001 run_check "$missing_delivery" --changed-file src/app.js
+
+over_time="$fixture/over-time"
+make_fixture "$over_time"
+mutate_delivery "$over_time" xs-over-time
+expect_code GOV-DELIVERY-001 run_check "$over_time" --changed-file src/app.js
+
+checkpoint="$fixture/checkpoint"
+make_fixture "$checkpoint"
+run_check "$checkpoint" --changed-file src/app.js --elapsed-minutes 25 > "$fixture/checkpoint.out"
+grep -q 'GOV-DELIVERY-002 WARNING' "$fixture/checkpoint.out"
+grep -q '^GOV-PASS:' "$fixture/checkpoint.out"
+expect_code GOV-DELIVERY-001 run_check "$checkpoint" --changed-file src/app.js --elapsed-minutes 30
+
+file_budget="$fixture/file-budget"
+make_fixture "$file_budget"
+printf '%s\n' 'export const extra = true;' > "$file_budget/src/extra.js"
+expect_code GOV-BUDGET-001 run_check "$file_budget" --changed-file src/app.js --changed-file src/extra.js
+
+policy_budget="$fixture/policy-budget"
+make_fixture "$policy_budget"
+mutate_delivery "$policy_budget" over-policy-budget
+expect_code GOV-DELIVERY-001 run_check "$policy_budget" --changed-file src/app.js
+
+ambiguous_architecture="$fixture/ambiguous-architecture"
+make_fixture "$ambiguous_architecture"
+mutate_delivery "$ambiguous_architecture" ambiguous-component
+expect_code GOV-ARCHITECTURE-001 run_check "$ambiguous_architecture" --changed-file src/app.js
+
 single_segment_glob="$fixture/single-segment-glob"
 make_fixture "$single_segment_glob"
 sed -i 's#"allowedPaths": \["src/\*\*"\]#"allowedPaths": ["src/*"]#' "$single_segment_glob/project/ticket-002/intent.json"
@@ -188,6 +321,18 @@ expect_code GOV-SCOPE-001 run_check "$single_segment_glob" --changed-file src/ne
 
 expect_code GOV-DIFF-001 run_check "$allowed" --base definitely-not-a-commit
 expect_code GOV-SYNC-001 run_check "$allowed" --changed-file TODO.md --lock ../outside.lock
+
+stale_base="$fixture/stale-base"
+make_fixture "$stale_base"
+(
+  cd "$stale_base"
+  git init -q
+  git config user.email governance@example.invalid
+  git config user.name governance-fixture
+  git add .
+  git commit -qm 'fixture baseline'
+  expect_code GOV-BASE-001 run_check "$stale_base" --base HEAD --changed-file src/app.js
+)
 
 invalid_manifest="$fixture/invalid-manifest"
 make_fixture "$invalid_manifest"
