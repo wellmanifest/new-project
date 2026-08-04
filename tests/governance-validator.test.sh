@@ -18,7 +18,11 @@ assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
 assert manifest['schema'] == schema['properties']['schema']['const']
-assert manifest['standard']['version'] == '0.8.0'
+assert manifest['standard']['version'] == '0.9.0'
+ticket = manifest['ticket']
+assert ticket['activeStatuses'] == ['IN_PROGRESS']
+assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
+assert not set(ticket['activeStatuses']) & set(ticket['nonActiveStatuses'])
 PY
 python3 - "$repo_root/scripts/governance_check.py" <<'PY'
 import importlib.util
@@ -34,8 +38,25 @@ assert module.patterns_may_overlap('future/**', 'future/*.js')
 assert not module.patterns_may_overlap('src/**/x.json', 'src/**/y.json')
 assert module.pattern_covered_by('src/**/*.js', 'src/**')
 PY
+python3 - "$repo_root/scripts/governance_check.py" "$repo_root/governance/diagnostics.json" <<'PY'
+import json
+import re
+import sys
+
+source = open(sys.argv[1], encoding='utf-8').read()
+catalog = set(json.load(open(sys.argv[2], encoding='utf-8'))['codes'])
+emitted = set(re.findall(r'report\.add\(\s*["\'](GOV-[A-Z]+-[0-9]+)', source))
+assert emitted == catalog, (sorted(emitted - catalog), sorted(catalog - emitted))
+PY
 grep -q 'review.commit_id === head' "$repo_root/.github/workflows/governance.yml"
 grep -Fq '^[0-9a-f]{40}$' "$repo_root/.github/workflows/governance.yml"
+grep -q 'trustedReviewers.has(review.user.login)' "$repo_root/.github/workflows/governance.yml"
+grep -q 'trustedReviewers.size === 0' "$repo_root/.github/workflows/governance.yml"
+grep -q "process.env.TRUSTED_REVIEWERS" "$repo_root/.github/workflows/governance.yml"
+if grep -q "Set('\${{ inputs.trusted-reviewers }}'" "$repo_root/.github/workflows/governance.yml"; then
+  echo 'trusted-reviewers is interpolated into JavaScript source' >&2
+  exit 1
+fi
 
 make_fixture() {
   local target="$1"
@@ -118,9 +139,35 @@ expect_code() {
 
 allowed="$fixture/allowed"
 make_fixture "$allowed"
+python3 - "$allowed" <<'PY'
+import hashlib
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+lock = {
+  'schema': 'new-project.lock/v1',
+  'standard': {
+    'id': 'wellmanifest/new-project',
+    'version': '0.9.0',
+    'sourceRepository': 'wellmanifest/new-project',
+    'sourceRevision': 'a' * 40,
+    'publicationStatus': 'published',
+  },
+  'managedFiles': {
+    'README.md': hashlib.sha256((root / 'README.md').read_bytes()).hexdigest(),
+  },
+}
+(root / '.governance/manifest.lock.json').write_text(json.dumps(lock), encoding='utf-8')
+PY
 run_check "$allowed" --changed-file src/app.js --enforce-approval \
   --approval-source github-review --approved-ticket ticket-002 > "$fixture/pass.out"
 grep -q '^GOV-PASS:' "$fixture/pass.out"
+run_check "$allowed" --changed-file src/app.js --lock .governance/manifest.lock.json > "$fixture/published-lock.out"
+grep -q '^GOV-PASS:' "$fixture/published-lock.out"
+sed -i 's/"published"/"uncommitted"/' "$allowed/.governance/manifest.lock.json"
+expect_code GOV-SYNC-001 run_check "$allowed" --changed-file src/app.js --lock .governance/manifest.lock.json
 dot_path="$fixture/dot-path"
 make_fixture "$dot_path"
 sed -i 's/"workstream": "application"/"workstream": "governance"/' "$dot_path/project/ticket-002/intent.json"
@@ -152,6 +199,11 @@ make_fixture "$invalid_intent_path"
 sed -i 's#"allowedPaths": \["src/\*\*"\]#"allowedPaths": ["../outside/**"]#' "$invalid_intent_path/project/ticket-002/intent.json"
 expect_code GOV-INTENT-002 run_check "$invalid_intent_path" --changed-file TODO.md
 
+unknown_status="$fixture/unknown-status"
+make_fixture "$unknown_status"
+sed -i 's/Status\*\*: IN_PROGRESS/Status**: BACKLGO/' "$unknown_status/project/ticket-002/README.md"
+expect_code GOV-STATUS-001 run_check "$unknown_status" --changed-file TODO.md
+
 plan="$fixture/plan"
 make_fixture "$plan"
 sed -i 's/Workflow state\*\*: EDIT/Workflow state**: WAIT_FOR_APPROVAL/' "$plan/project/ticket-002/README.md"
@@ -179,6 +231,20 @@ printf '%s\n' 'export const client = true;' > "$parallel/sdk/client.js"
 add_active_ticket "$parallel" ticket-003 interfaces '["sdk/**"]'
 run_check "$parallel" --changed-file src/app.js > "$fixture/parallel.out"
 grep -q '^GOV-PASS:' "$fixture/parallel.out"
+
+backlog_release="$fixture/backlog-release"
+make_fixture "$backlog_release"
+sed -i 's/Status\*\*: IN_PROGRESS/Status**: BACKLOG/' "$backlog_release/project/ticket-002/README.md"
+add_active_ticket "$backlog_release" ticket-003 application '["src/**"]'
+run_check "$backlog_release" --changed-file src/app.js > "$fixture/backlog-release.out"
+grep -q '^GOV-PASS:' "$fixture/backlog-release.out"
+
+blocked_release="$fixture/blocked-release"
+make_fixture "$blocked_release"
+sed -i 's/Status\*\*: IN_PROGRESS/Status**: BLOCKED/' "$blocked_release/project/ticket-002/README.md"
+add_active_ticket "$blocked_release" ticket-003 application '["src/**"]'
+run_check "$blocked_release" --changed-file src/app.js > "$fixture/blocked-release.out"
+grep -q '^GOV-PASS:' "$fixture/blocked-release.out"
 
 same_workstream="$fixture/same-workstream"
 make_fixture "$same_workstream"

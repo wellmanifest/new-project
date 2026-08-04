@@ -10,6 +10,7 @@
     "GOV-TICKET-003": "An active ticket is malformed or missing a required governance file.",
     "GOV-TICKET-004": "Executable source, test or research content is stored in a ticket directory.",
     "GOV-TICKET-005": "Implementation paths do not resolve to exactly one active ticket.",
+    "GOV-STATUS-001": "A ticket status is missing or not declared by the governance manifest.",
     "GOV-INTENT-001": "Implementation changed before the ticket entered an implementation state.",
     "GOV-INTENT-002": "Ticket intent is missing or malformed.",
     "GOV-INTENT-003": "Ticket intent was not committed before the first implementation commit.",

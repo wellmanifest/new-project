@@ -3,7 +3,12 @@
 ## Repository Purpose
 This repository is the central **Governance and Onboarding Hub** for both Human contributors and Autonomous AI Agents.
 
-> ⚠️ **CRITICAL RULE**: This Governance Hub is a READ-ONLY policy repository. **DO NOT CREATE ANY TICKETS, TASK FILES, TODOs, OR LOGS IN THIS REPOSITORY.**
+> ⚠️ **CRITICAL RULE**: This Governance Hub is the maintained source of
+> the standard. It may be changed only inside the `wellmanifest/new-project`
+> repository and every multi-step maintenance change must be governed by
+> exactly one `project/ticket-{NNN}/` ticket with an approved `intent.json`.
+> Tickets, task files and logs belonging to target systems must never be stored
+> here.
 
 ## Primary Instructions & Policy Rules
 AI Agents interacting with this workspace MUST immediately read and adhere to the authoritative policy files:
@@ -13,7 +18,12 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
 
 ## Quick Execution Rules & Workflow Sequence
 - **Precedence**: `USER_REQUEST` > `FILESYSTEM` > `POLICY.md` > `CONTRIBUTING.md`.
-- **Governance Hub Scope**: NO tickets (`project/ticket-{NNN}`), task logs, or project files are created in `wellmanifest/new-project`.
+- **Governance Hub Maintenance**: changes to the standard use this repository's
+  own `project/ticket-{NNN}` lifecycle. Governance evidence and agent logs stay
+  in that ticket; implementation, tests and scripts stay in their normal
+  repository directories and must match the ticket's `allowedPaths`.
+- **Target Repository Isolation**: tickets and task evidence for System X are
+  created only in System X's repository, never in `wellmanifest/new-project`.
 - **Target Repository Execution**: When assigned a task to create System X, the agent:
   1. Reads policies & copies templates/scripts from `wellmanifest/new-project`.
   2. Switches completely to System X's target repository/folder.
@@ -36,3 +46,5 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
   9. **ROUTE UNKNOWN OWNERS EXPLICITLY**: use `unresolved:human` or `unresolved:agent`; never emit an empty required-response route or infer identity from a name.
   10. **RUN THE GATE**: `./project/governance-check.sh` must pass before stack tests and publication. Required governance decisions are deterministic; LLM findings are advisory.
   11. **COORDINATE PARALLEL WORK**: Serialize ticket-ID allocation before branching, then use separate branches/worktrees and explicit `dependsOn`/`conflictsWith`. Shared contracts are edited only by the manifest-declared integration workstream; `integrationTicket` records coordination but does not transfer path ownership. One agent implements; a second agent may review read-only or own a non-overlapping ticket.
+   12. **RELEASE WAITING RESERVATIONS**: Only `IN_PROGRESS` reserves a workstream and write scope. Use `BACKLOG`, `PLAN` or `BLOCKED` while waiting, and return to `IN_PROGRESS` before changing implementation files.
+   13. **VERIFY REVIEW AUTHORITY**: A current-head approval is trusted only when the reviewer login is in the target repository's explicit `trusted-reviewers` set protected by CODEOWNERS. Any other review remains advisory.

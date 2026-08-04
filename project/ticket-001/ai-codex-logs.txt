@@ -1,0 +1,11 @@
+[2026-08-04] $ policy structure check; read-only contradiction scan; git diff --check
+policy structure: PASS
+
+[2026-08-04] $ bash tests/governance-scripts.test.sh
+governance scripts: PASS
+
+[2026-08-04] $ bash tests/governance-validator.test.sh
+governance validator: PASS
+
+[2026-08-04] $ bash tests/adoption-lock.test.sh
+adoption lock: PASS

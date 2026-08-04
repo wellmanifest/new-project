@@ -93,9 +93,9 @@ if [[ ! "$WORKSTREAM" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
   exit 2
 fi
 
-is_closed_ticket() {
+is_active_ticket() {
   local readme="$1/README.md"
-  [[ -f "$readme" ]] && grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*(DONE|CANCELLED)([[:space:]]|$)' "$readme"
+  [[ -f "$readme" ]] && grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*IN_PROGRESS([[:space:]]|$)' "$readme"
 }
 
 highest=0
@@ -107,7 +107,7 @@ if [[ -d project ]]; then
     [[ "$number" =~ ^[0-9]+$ ]] || continue
     decimal=$((10#$number))
     (( decimal > highest )) && highest=$decimal
-    if ! is_closed_ticket "$dir"; then
+    if is_active_ticket "$dir"; then
       active_workstream="$(sed -nE 's/^[[:space:]]*"workstream"[[:space:]]*:[[:space:]]*"([a-z0-9-]+)".*/\1/p' "$dir/intent.json" 2>/dev/null | head -n 1)"
       if [[ -z "$active_workstream" || "$active_workstream" == "unresolved" || "$WORKSTREAM" == "unresolved" || "$active_workstream" == "$WORKSTREAM" ]]; then
         conflicting_ticket="$dir"

@@ -17,9 +17,12 @@ jobs:
           python3 -m json.tool governance/manifest.schema.json >/dev/null
           python3 -m json.tool governance/manifest.default.json >/dev/null
           python3 -m json.tool governance/intent.schema.json >/dev/null
+          python3 -m json.tool governance/lock.schema.json >/dev/null
           python3 -m json.tool governance/diagnostics.json >/dev/null
           python3 -m json.tool governance/stack-profiles.json >/dev/null
       - name: Test ticket governance scripts
         run: bash tests/governance-scripts.test.sh
       - name: Test deterministic governance validator
         run: bash tests/governance-validator.test.sh
+      - name: Test immutable adoption lock
+        run: bash tests/adoption-lock.test.sh

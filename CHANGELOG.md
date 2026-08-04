@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## [0.9.0] - 2026-08-04
+
+### Queue-safe governance and reviewer authority
+
+- Made `IN_PROGRESS` the only status that reserves a workstream and write
+  scope; `BACKLOG`, `PLAN` and `BLOCKED` preserve work without deadlocking the
+  implementation queue.
+- Added `GOV-STATUS-001` so missing or misspelled statuses fail closed instead
+  of silently behaving like an unreserved ticket.
+- Updated the ticket scaffolder and regression fixtures to prove that blocked
+  or deferred work releases its reservation while active overlap still fails.
+- Required reusable-workflow callers to provide explicit `trusted-reviewers`;
+  current-head approval from an arbitrary non-author no longer becomes trusted
+  governance evidence.
+- Documented that final adoption requires a published immutable
+  `sourceRevision`; an uncommitted digest lock is integrity evidence, not
+  reproducible publication provenance.
+- Added a Draft 2020-12 lock schema and made the validator reject null,
+  uncommitted, version-mismatched or otherwise non-reproducible lock provenance.
+- Added `scripts/create_adoption_lock.py`, which copies managed artifacts from
+  a full Git commit SHA, preserves a version-matched target manifest, refuses
+  unreviewed drift and atomically emits a published lock. CI exercises initial
+  adoption, reviewed upgrade, invalid revisions and mismatch rollback.
+- Added a post-0.9.0 roadmap covering release publication, controlled pilots,
+  cross-platform hardening, rollback operations and evidence required before
+  broader adoption.
+
 ## [0.8.0] - 2026-08-01
 
 ### Concurrent workstream governance

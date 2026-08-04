@@ -1,8 +1,18 @@
 # TODO Roadmap & Task Index
 
-[![Status: Active](https://img.shields.io/badge/Status-Active_Roadmap-blue.svg)](#)
+![Status: Active](https://img.shields.io/badge/Status-Active_Roadmap-blue.svg)
 
 > Centralna lista zadań i kamieni milowych dla repozytorium **Governance & Onboarding Hub**.
+> Etapy 1-4 poniżej są zakończonym planem historycznym. Aktywne zadania po
+> wersji 0.9.0, wraz z kolejnością i kryteriami odbioru, znajdują się w
+> [`docs/ROADMAP_AFTER_0.9.0.md`](docs/ROADMAP_AFTER_0.9.0.md).
+
+## Aktywne utrzymanie standardu
+
+- [x] [`ticket-001`](project/ticket-001/README.md) — ujednolicenie zasad
+  edytowalnego utrzymania `wellmanifest/new-project`.
+- [ ] [`ticket-002`](project/ticket-002/README.md) — integracja bezpiecznej
+  adopcji manifestu z `goal`.
 
 ---
 

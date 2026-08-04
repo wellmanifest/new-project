@@ -1,0 +1,23 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-001",
+  "summary": "Utrzymanie i rozwój standardu new-project",
+  "workstream": "governance",
+  "allowedPaths": [
+    "AGENTS.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "README.md",
+    "RAPORT.md",
+    "project/ticket-001/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

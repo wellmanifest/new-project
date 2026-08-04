@@ -6,10 +6,12 @@
 > **Podsumowanie zarządcze:** Niniejszy raport podsumowuje nową architekturę współpracy z autonomicznymi agentami AI oraz ludźmi w naszej organizacji. Opisuje zasady działania systemu, przetestowane symulacje oraz mechanizmy weryfikacji intencji biznesowych przed rozpoczęciem prac programistycznych.
 
 > **Nota wersji:** Treść poniżej opisuje historyczny stan do wersji 0.5.0.
-> Od wersji 0.8.0 bieżącym kontraktem są `POLICY.md`, `CONTRIBUTING.md`,
+> Od wersji 0.9.0 bieżącym kontraktem są `POLICY.md`, `CONTRIBUTING.md`,
 > manifest policy-as-code i `docs/GOVERNANCE_ENFORCEMENT.md`. `project.sh` /
 > `project.bat` uruchamia najpierw deterministyczny gate; opcjonalna analiza
-> działa wyłącznie w obrazie Docker przypiętym digestem SHA-256.
+> działa wyłącznie w obrazie Docker przypiętym digestem SHA-256. Tylko
+> `IN_PROGRESS` rezerwuje workstream; review jest zaufane wyłącznie dla
+> bieżącego HEAD i loginu z chronionej listy `trusted-reviewers`.
 
 ---
 
@@ -19,7 +21,7 @@ Na podstawie analizy wymagań oraz dobrych praktyk rynkowych (Cursor, Claude Cod
 
 ```mermaid
 flowchart TD
-    Hub[wellmanifest/new-project<br/>READ-ONLY Governance Hub] -->|1. Odczyt zasad & szablonów| Agent[Agent AI / Programista]
+    Hub[wellmanifest/new-project<br/>Maintained Governance Hub] -->|1. Odczyt zasad & szablonów| Agent[Agent AI / Programista]
     Agent -->|2. Przejście do osobnego repo| TargetRepo[Nowe Repozytorium Systemu X]
     TargetRepo -->|3. Bootstrap przed kodowaniem| PlanFiles[README.md, TODO.md, project/ticket-001/]
     PlanFiles -->|4. STOP: Weryfikacja intencji| Boss[Szef / Użytkownik]
@@ -28,8 +30,11 @@ flowchart TD
 
 ### 🏆 4 Filarowe Zasady Organizacji:
 
-1. **Bezwzględny Zakaz Śmiecenia w Hubie (`P-CORE-007`):**
-   Repozytorium `wellmanifest/new-project` pełni funkcję wyłącznie **READ-ONLY Governance Hub**. Nie tworzy się w nim żadnych ticketów, logów ani plików zadań.
+1. **Ticketowane Utrzymanie Huba (`P-CORE-007`):**
+   Repozytorium `wellmanifest/new-project` jest utrzymywanym źródłem standardu.
+   Jego własne zmiany są dozwolone wyłącznie w ramach ticketu
+   `project/ticket-{NNN}` w tym repozytorium. Tickety, logi i pliki zadań
+   systemów docelowych pozostają w repozytoriach tych systemów.
 2. **Każdy Nowy System w Osobnym Repozytorium (`P-CORE-006`):**
    Dla każdego nowego projektu (np. System X, Kalkulator) powstaje **osobne, dedykowane repozytorium na GitHubie**, z obowiązkowym środowiskiem **Docker** (`Dockerfile`, `compose.yml`).
 3. **Zasada „Dev Tools First” (Oszczędność Tokenów i Czasu):**
@@ -88,11 +93,13 @@ W ramach weryfikacji systemu przeprowadziliśmy 4 symulacje na różnych pozioma
 
 Wejdź i sprawdź, czy to, co miałeś w głowie, zostało wykonane poprawnie:
 
-- [x] **Repozytorium Zarządcze (`wellmanifest/new-project`)**: Jest czyste (READ-ONLY Hub), nie zawiera żadnych tymczasowych ticketów ani logów.
+- [x] **Repozytorium Zarządcze (`wellmanifest/new-project`)**: Utrzymanie
+  standardu jest audytowalne przez lokalne tickety; artefakty zadań systemów
+  docelowych nie trafiają do huba.
 - [x] **Zasada Osobnych Repozytoriów (`P-CORE-006`)**: Każdy nowy system powstaje w nowym repo na GitHubie.
 - [x] **Środowisko Docker (`C-DOCKER-003`)**: Kod i testy uruchamiane są wyłącznie w odizolowanym Dockerze.
 - [x] **Dev Tools (stan historyczny 0.5.0)**: W tej wersji skrypty
-  `project.sh` i `project.bat` automatyzowały analitykę. Od 0.8.0 obowiązuje
+   `project.sh` i `project.bat` automatyzowały analitykę. Od 0.9.0 obowiązuje
   opis z noty wersji powyżej: fail-closed gate i opcjonalny przypięty obraz.
 - [x] **Odbiór Planu (`P-CORE-008`)**: Agent zatrzymuje się po stworzeniu `project/ticket-001/README.md` oraz `TODO.md` i czeka na akceptację planu przed pisaniem kodu.
 

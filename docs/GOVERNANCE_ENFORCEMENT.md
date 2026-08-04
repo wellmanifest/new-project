@@ -1,6 +1,6 @@
 # Egzekwowanie `new-project`
 
-`new-project` 0.8.0 rozdziela trzy warstwy, których nie wolno scalać:
+`new-project` 0.9.0 rozdziela trzy warstwy, których nie wolno scalać:
 
 1. Markdown wyjaśnia zasady ludziom i agentom.
 2. Manifest, `intent.json` i walidator deterministycznie sprawdzają strukturę,
@@ -11,8 +11,22 @@
 ## Adopcja w repozytorium docelowym
 
 Skopiuj do `.governance/` zatwierdzony manifest, walidator, profile stacków oraz
-lock z SHA-256 zarządzanych plików. Skopiuj również wrappery
+lock z SHA-256 zarządzanych plików. `governance/lock.schema.json` definiuje
+publikowaną proweniencję locka i powinien być walidowany w procesie adopcji.
+Skopiuj również wrappery
 `project/governance-check.sh` i `project/governance-check.bat`.
+
+Preferowana adopcja używa pełnego SHA opublikowanego commita:
+
+```bash
+python3 /path/to/new-project/scripts/create_adoption_lock.py \
+  --target-root /path/to/target-repository \
+  --source-revision <FULL_PUBLISHED_SHA>
+```
+
+Skrypt czyta zarządzane pliki z obiektu Git, zachowuje istniejący dopasowany
+wersją manifest docelowy, atomowo zapisuje pliki i lock oraz odmawia driftu.
+Aktualizacja różniących się plików wymaga jawnego `--upgrade` po przeglądzie.
 
 Manifest deklaruje wymagane pliki, Docker, aktywne/zamknięte statusy ticketów,
 stany implementacyjne, ścieżki governance i profile technologiczne. Każdy nowy
@@ -20,6 +34,11 @@ ticket zawiera intent v2 z workstreamem, zakresem, zależnościami, konfliktami 
 opcjonalnym routingiem przez ticket integracyjny. Zamknięte tickety intent v1
 pozostają czytelne; aktywny ticket w manifeście v2 musi zostać jawnie
 zmigrowany i ponownie zatwierdzony.
+
+Tylko `IN_PROGRESS` oznacza aktywnego właściciela implementacji i rezerwuje
+workstream oraz `allowedPaths`. `BACKLOG`, `PLAN` i `BLOCKED` zachowują plan,
+zależności i dowody, ale nie blokują kolejki. Przed zmianą kodu taki ticket musi
+wrócić do `IN_PROGRESS` oraz stanu `EDIT`, `VALIDATION` lub `PUBLICATION`.
 
 ## Współpraca managera, developera i dwóch AI
 
@@ -70,6 +89,10 @@ Symulacja obowiązkowej zgody:
 Zgody nie zapisuje się jako sekret ani samodzielne twierdzenie agenta. W CI
 źródłem `github-review` jest API Pull Request po niezależnym review. Przy zmianie
 intencji lub diffu GitHub musi odrzucić stare approval.
+Reviewer musi dodatkowo należeć do jawnego wejścia `trusted-reviewers` reusable
+workflow. Lista loginów jest konfiguracją bezpieczeństwa repozytorium
+docelowego i musi być chroniona przez CODEOWNERS; sam fakt, że reviewer nie jest
+autorem PR, nie stanowi dowodu uprawnienia.
 
 ## CI i ochrona repozytorium
 
@@ -89,7 +112,13 @@ jobs:
       pull-requests: read
     with:
       standard-ref: <FULL_SHA>
+      trusted-reviewers: alice,bob
 ```
+
+    Adopcja wydania jest trwała dopiero, gdy lock zawiera opublikowany pełny
+    `sourceRevision` i `publicationStatus: published`. Hash lokalnego pliku wykrywa
+    zmianę, ale `sourceRevision: null` lub `publicationStatus: uncommitted` nie
+    pozwala odtworzyć źródła standardu i nie może być finalnym dowodem publikacji.
 
 W GitHub Rulesets ustaw:
 

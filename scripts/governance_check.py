@@ -15,8 +15,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
 
-RUNTIME_VERSION = "0.8.0"
-ACTIVE_DEFAULT = {"PLAN", "IN_PROGRESS", "BLOCKED"}
+RUNTIME_VERSION = "0.9.0"
+ACTIVE_DEFAULT = {"IN_PROGRESS"}
 EXECUTABLE_SUFFIXES = {
     ".bat", ".c", ".cc", ".cmd", ".cpp", ".go", ".java", ".js", ".jsx",
     ".mjs", ".php", ".ps1", ".py", ".rb", ".rs", ".sh", ".ts", ".tsx",
@@ -330,6 +330,16 @@ def basic_manifest_valid(manifest: Any) -> bool:
     standard = manifest.get("standard")
     ticket = manifest.get("ticket")
     docker = manifest.get("docker")
+    expected_ticket_fields = {
+        "root", "directoryPattern", "requiredFiles", "requiredAgentFiles",
+        "activeStatuses", "closedStatuses", "implementationStates", "intentFile",
+    }
+    if manifest.get("schema") == "new-project.governance/v2":
+        expected_ticket_fields.add("nonActiveStatuses")
+    status_groups = [
+        set(ticket.get(name, [])) if isinstance(ticket, dict) else set()
+        for name in ("activeStatuses", "nonActiveStatuses", "closedStatuses")
+    ]
     common_valid = (
         isinstance(standard, dict)
         and set(standard) == {"id", "version"}
@@ -343,17 +353,16 @@ def basic_manifest_valid(manifest: Any) -> bool:
         and string_list(manifest.get("trustedApprovalSources"), nonempty=True)
         and set(manifest["trustedApprovalSources"]) <= {"github-review", "signed-attestation"}
         and isinstance(ticket, dict)
-        and set(ticket) == {
-            "root", "directoryPattern", "requiredFiles", "requiredAgentFiles",
-            "activeStatuses", "closedStatuses", "implementationStates", "intentFile",
-        }
+        and set(ticket) == expected_ticket_fields
         and isinstance(ticket.get("root"), str) and bool(ticket["root"]) and relative_pattern(ticket["root"])
         and isinstance(ticket.get("directoryPattern"), str) and bool(ticket["directoryPattern"])
         and string_list(ticket.get("requiredFiles"))
         and string_list(ticket.get("requiredAgentFiles"))
         and all(relative_pattern(item) for item in [*ticket["requiredFiles"], *ticket["requiredAgentFiles"]])
         and string_list(ticket.get("activeStatuses"), nonempty=True)
+        and (manifest.get("schema") != "new-project.governance/v2" or string_list(ticket.get("nonActiveStatuses"), nonempty=True))
         and string_list(ticket.get("closedStatuses"), nonempty=True)
+        and all(left.isdisjoint(right) for index, left in enumerate(status_groups) for right in status_groups[index + 1:])
         and string_list(ticket.get("implementationStates"), nonempty=True)
         and isinstance(ticket.get("intentFile"), str) and bool(ticket["intentFile"]) and relative_pattern(ticket["intentFile"])
         and isinstance(docker, dict)
@@ -406,7 +415,7 @@ def basic_manifest_valid(manifest: Any) -> bool:
     )
 
 
-def check_lock(root: Path, lock_path: Path | None, report: Report) -> None:
+def check_lock(root: Path, lock_path: Path | None, manifest: dict[str, Any], report: Report) -> None:
     if lock_path is None:
         return
     if not lock_path.is_file():
@@ -419,8 +428,20 @@ def check_lock(root: Path, lock_path: Path | None, report: Report) -> None:
     try:
         lock = load_json(lock_path)
         managed = lock["managedFiles"]
-        if lock.get("schema") != "new-project.lock/v1" or not isinstance(managed, dict):
+        standard = lock["standard"]
+        if lock.get("schema") != "new-project.lock/v1" or set(lock) != {"schema", "standard", "managedFiles"} or not isinstance(managed, dict):
             raise ValueError("unsupported lock schema")
+        if (
+            not isinstance(standard, dict)
+            or set(standard) != {"id", "version", "sourceRepository", "sourceRevision", "publicationStatus"}
+            or standard.get("id") != "wellmanifest/new-project"
+            or standard.get("version") != manifest["standard"]["version"]
+            or standard.get("sourceRepository") != "wellmanifest/new-project"
+            or not isinstance(standard.get("sourceRevision"), str)
+            or re.fullmatch(r"[0-9a-f]{40}", standard["sourceRevision"]) is None
+            or standard.get("publicationStatus") != "published"
+        ):
+            raise ValueError("lock must identify the published immutable standard revision")
         if not all(
             isinstance(raw_path, str)
             and relative_pattern(raw_path)
@@ -544,7 +565,17 @@ def check_coordination(
         return
     config = manifest["ticket"]
     active_statuses = set(config.get("activeStatuses", ACTIVE_DEFAULT))
+    non_active_statuses = set(config.get("nonActiveStatuses", []))
     closed_statuses = set(config.get("closedStatuses", []))
+    allowed_statuses = active_statuses | non_active_statuses | closed_statuses
+    for record in records:
+        if record.status not in allowed_statuses:
+            report.add(
+                "GOV-STATUS-001", f"Ticket {record.directory.name} has unknown status '{record.status or 'MISSING'}'.",
+                "Use a status declared in activeStatuses, nonActiveStatuses or closedStatuses.",
+                [rel(root, record.directory / "README.md")],
+                {"ticket": record.directory.name, "status": record.status, "allowedStatuses": sorted(allowed_statuses)},
+            )
     active = [record for record in records if record.status in active_statuses]
     by_name = {record.directory.name: record for record in records}
     workstreams = coordination["workstreams"]
@@ -1086,7 +1117,7 @@ def main(argv: list[str] | None = None) -> int:
                 evidence={"base": args.base, "head": args.head},
             )
             changed = []
-        check_lock(root, lock_path, report)
+        check_lock(root, lock_path, manifest, report)
         check_required_files(root, manifest, report)
         check_stacks(root, manifest, profiles_path, report)
         directories = ticket_directories(root, manifest["ticket"])

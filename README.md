@@ -5,7 +5,11 @@
 
 Repozytorium `wellmanifest/new-project` stanowi wyłączne, oficjalne źródło polityk bezpieczeństwa, procedur pracy oraz uniwersalnych narzędzi automatyzujących dla ludzi oraz autonomicznych agentów AI.
 
-> **POLITYKA READ-ONLY (`P-CORE-007`):** Niniejsze repozytorium jest hubem zasad. Nie tworzy się w nim fizycznych ticketów, logów ani plików wykonawczych. Każdy nowy system (System X) jest tworzony i rozwijany w osobnym repozytorium.
+> **UTRZYMANIE HUBA (`P-CORE-007`):** Niniejsze repozytorium jest edytowalnym
+> źródłem standardu. Każda wieloetapowa zmiana standardu musi odbywać się w
+> `wellmanifest/new-project` i być przypisana do dokładnie jednego ticketu
+> `project/ticket-{NNN}` z zatwierdzonym `intent.json`. Tickety i logi dotyczące
+> nowego systemu (System X) powstają wyłącznie w jego osobnym repozytorium.
 
 ---
 
@@ -120,12 +124,33 @@ błędem.
 
 ### Deterministyczny governance gate
 
-Wersja 0.8.0 dodaje workstreamy, intent v2, graf zależności, konflikty,
+Wersja 0.9.0 dodaje zwalnianie rezerwacji przez `BACKLOG`, `PLAN` i `BLOCKED`,
+jawnie zaufanych reviewerów oraz fixture'y regresyjne dla kolejek workstreamów.
+Wersja 0.8.0 dodała workstreamy, intent v2, graf zależności, konflikty,
 integrację i bezkolizyjną pracę równoległą do manifestu policy-as-code, locka
 SHA-256, stabilnych diagnostyk `GOV-*` i reusable CI. Walidator blokuje
 implementację bez jednoznacznego ticketu, stanu `EDIT`, dozwolonego zakresu i —
 w trybie PR — zewnętrznej zgody. Szczegóły opisuje
 [`docs/GOVERNANCE_ENFORCEMENT.md`](docs/GOVERNANCE_ENFORCEMENT.md).
+Kontrakty adopcji są publikowane jako `governance/manifest.schema.json`,
+`governance/intent.schema.json` i `governance/lock.schema.json`.
+
+Opublikowaną rewizję adoptuje się bez ręcznego kopiowania i liczenia hashy:
+
+```bash
+python3 /path/to/new-project/scripts/create_adoption_lock.py \
+   --target-root /path/to/target-repository \
+   --source-revision <FULL_PUBLISHED_SHA>
+```
+
+Generator czyta artefakty bezpośrednio z obiektu Git, odmawia nadpisania
+różniących się plików i wymaga świadomego `--upgrade` przy aktualizacji.
+Istniejące projekty korzystające z `goal` mogą wykonać tę samą adopcję przez
+`goal governance adopt`; preflight, retrofit i upgrade opisuje
+[`docs/GOAL_ADOPTION.md`](docs/GOAL_ADOPTION.md).
+
+Bieżący stan prac, bramy publikacji, pilotażu i szerszej adopcji opisuje
+[`docs/ROADMAP_AFTER_0.9.0.md`](docs/ROADMAP_AFTER_0.9.0.md).
 
 ---
 
@@ -140,6 +165,8 @@ Przed rozpoczęciem edycji plików źródłowych w nowym systemie Agent AI **mus
 Dla kolejnych promptów i poprawek w ramach tego samego workstreamu i zakresu Agent AI **nie tworzy nowego ticketu**.
 * Agent wykorzystuje ponownie pasujący aktywny katalog `project/ticket-{NNN}/` i aktualizuje swój plik planu `ai-{PROVIDER}.md` oraz `TODO.md`.
 * Odrębny aktywny ticket jest dozwolony tylko w innym workstreamie, bez nakładania zakresu zapisu; każdy branch/PR musi należeć do dokładnie jednego ticketu.
+* Tylko status `IN_PROGRESS` jest aktywny. `BACKLOG`, `PLAN` i `BLOCKED`
+   zachowują kontekst, ale zwalniają rezerwację workstreamu i ścieżek.
 * **Agentowi zabrania się modyfikowania plików notatek człowieka (`user-{github_username}.md`)**.
 
 ---
@@ -159,7 +186,7 @@ W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejno�
 ---
 
 ### 6.2. System Ticketów (`project/ticket-{NNN}` w Docelowym Repozytorium)
-* **Wymóg zakładania**: Każde zadanie składające się z więcej niż 1 kroku lub wymagające użycia Agenta AI **musi** posiadać swój folder pod `project/ticket-{NNN}` **w repozytorium docelowym projektu**.
+* **Wymóg zakładania**: Każde zadanie składające się z więcej niż 1 kroku lub wymagające użycia Agenta AI **musi** posiadać swój folder pod `project/ticket-{NNN}` w repozytorium, którego dotyczy zmiana: w `wellmanifest/new-project` dla utrzymania standardu albo w repozytorium docelowym dla Systemu X.
 * **Indeks projektu (`project/TICKETS.md`)**: Służy jako menu nawigacyjne do ticketów z linkami do dokumentacji i uczestników; nie koliduje z artefaktami analizy w `project/README.md`.
 * **Mózg Agenta (`ai-{AGENT}.md`)**: Definiuje rozumienie intencji, plan, ryzyka i kryteria odbioru widziane przez danego agenta. Nie zastępuje polecenia ani decyzji człowieka; rozbieżności muszą pozostać widoczne.
 * **Pliki uczestników (`user-mateusz.md`, `user-tom.md`)**: Ręczne notatki człowieka wklejane przy każdym zleceniu jako stały kontekst.

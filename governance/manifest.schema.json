@@ -28,13 +28,14 @@
     "ticket": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["root", "directoryPattern", "requiredFiles", "requiredAgentFiles", "activeStatuses", "closedStatuses", "implementationStates", "intentFile"],
+      "required": ["root", "directoryPattern", "requiredFiles", "requiredAgentFiles", "activeStatuses", "nonActiveStatuses", "closedStatuses", "implementationStates", "intentFile"],
       "properties": {
         "root": { "$ref": "#/$defs/path" },
         "directoryPattern": { "type": "string", "minLength": 1 },
         "requiredFiles": { "type": "array", "items": { "$ref": "#/$defs/path" }, "uniqueItems": true },
         "requiredAgentFiles": { "type": "array", "items": { "$ref": "#/$defs/glob" }, "uniqueItems": true },
         "activeStatuses": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+        "nonActiveStatuses": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
         "closedStatuses": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
         "implementationStates": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
         "intentFile": { "$ref": "#/$defs/path" }

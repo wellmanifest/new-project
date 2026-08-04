@@ -1,0 +1,20 @@
+[2026-08-04] $ bash tests/adoption-lock.test.sh
+adoption lock: PASS
+
+[2026-08-04] $ hub regression suite
+governance scripts: PASS
+governance validator: PASS
+adoption lock: PASS
+
+[2026-08-04] $ python -m pytest tests/test_governance_cmd.py tests/test_cli_options.py -q
+25 passed
+
+[2026-08-04] $ python -m pytest tests/ -q
+470 passed, 2 skipped
+
+[2026-08-04] $ black check; flake8 E9,F63,F7,F82
+2 files would be left unchanged.
+flake8: PASS
+
+[2026-08-04] $ temporary published-fixture integration
+goal/new-project integration: PASS

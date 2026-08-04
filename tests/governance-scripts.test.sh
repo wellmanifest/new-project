@@ -78,6 +78,8 @@ assert intent['conflictsWith'] == []
 assert intent['integrationTicket'] is None
 PY
 
+sed -i 's/\*\*Status\*\*: PLAN/**Status**: IN_PROGRESS/' "$ticket/README.md"
+
 set +e
 (
   cd "$fixture"
@@ -90,16 +92,26 @@ test "$status" -eq 3
 grep -q "Active ticket conflicts with workstream 'application': project/ticket-001" "$fixture/second.err"
 test ! -d "$fixture/project/ticket-002"
 
+sed -i 's/\*\*Status\*\*: IN_PROGRESS/**Status**: BLOCKED/' "$ticket/README.md"
+(
+  cd "$fixture"
+  bash project/new-ticket.sh --title 'Replacement application ticket' --agent codex-2 \
+    --workstream application > replacement.out
+)
+test -d "$fixture/project/ticket-002"
+grep -q '"workstream": "application"' "$fixture/project/ticket-002/intent.json"
+
 (
   cd "$fixture"
   bash project/new-ticket.sh --title 'Parallel interface ticket' --agent codex-2 \
     --workstream interfaces > parallel.out
 )
-test -d "$fixture/project/ticket-002"
-grep -q '"workstream": "interfaces"' "$fixture/project/ticket-002/intent.json"
+test -d "$fixture/project/ticket-003"
+grep -q '"workstream": "interfaces"' "$fixture/project/ticket-003/intent.json"
 
-sed -i 's/\*\*Status\*\*: PLAN/**Status**: DONE/' "$ticket/README.md"
+sed -i 's/\*\*Status\*\*: BLOCKED/**Status**: DONE/' "$ticket/README.md"
 sed -i 's/\*\*Status\*\*: PLAN/**Status**: DONE/' "$fixture/project/ticket-002/README.md"
+sed -i 's/\*\*Status\*\*: PLAN/**Status**: DONE/' "$fixture/project/ticket-003/README.md"
 (
   cd "$fixture"
   bash project/new-ticket.sh --title 'Second ticket' --agent codex --workstream application > third.out
@@ -107,10 +119,11 @@ sed -i 's/\*\*Status\*\*: PLAN/**Status**: DONE/' "$fixture/project/ticket-002/R
   bash project/readme.sh > /dev/null
   cmp -s index.before project/TICKETS.md
 )
-test -d "$fixture/project/ticket-003"
+test -d "$fixture/project/ticket-004"
 grep -q 'ticket-001' "$fixture/project/TICKETS.md"
 grep -q 'ticket-002' "$fixture/project/TICKETS.md"
 grep -q 'ticket-003' "$fixture/project/TICKETS.md"
+grep -q 'ticket-004' "$fixture/project/TICKETS.md"
 
 set +e
 (

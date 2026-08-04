@@ -24,6 +24,12 @@ Before any multi-step implementation, an agent must:
    one active ticket. Shared contract paths are edited only by the declared
    integration workstream; `integrationTicket` coordinates work but does not
    transfer path ownership.
+10. Only `IN_PROGRESS` reserves a workstream and write scope. `BACKLOG`, `PLAN`
+   and `BLOCKED` retain evidence without blocking another implementation;
+   transition back to `IN_PROGRESS` before changing source or tests.
+11. Treat GitHub review as trusted only when it targets the current HEAD and
+   the reviewer login is in the protected reusable-workflow
+   `trusted-reviewers` input.
 
 Markdown approval is an audit note, not trusted merge authorization. Required
 merge approval comes from the repository's protected review/ruleset boundary.
