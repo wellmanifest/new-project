@@ -11,9 +11,9 @@
 
 - [ ] [`ticket-004`](project/ticket-004/README.md) — pogodzić dwa rozbieżne
   kontrakty 0.9.0 w kanoniczny 0.10.0, zachowując bounded delivery i zwalniając
-  rezerwacje dla `PLAN/BLOCKED`. Stan: `IN_PROGRESS / EDIT`; kolizję ID
-  usunięto jako `ticket-004`, połączono `main@c54694a`, a Validator App
-  zażądała ograniczenia helpera `set +e` przed ponownym review.
+  rezerwacje dla `PLAN/BLOCKED`. Stan: `BLOCKED / VALIDATION`; kolizję ID
+  usunięto jako `ticket-004`, połączono `main@c54694a`, a wskazany przez
+  Validator App helper naprawiono i przetestowano przed ponownym review.
   Zależny `todo2code` używa lokalnie `z-ai/glm-5.2`.
 
 - [x] [`ticket-001`](project/ticket-001/README.md) — ujednolicenie zasad

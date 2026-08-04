@@ -2,8 +2,8 @@
 
 - **ID**: ticket-004
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: BLOCKED
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-04
 
 ## Cel i Zakres
@@ -82,8 +82,9 @@ Gemini 3.1 Pro Preview na `z-ai/glm-5.2` zostanie wykonana w zależnym
 - Połączone regresje dla bounded delivery, lifecycle i approval evidence
   przechodzą; walidator zachowuje maksymalne CC=15 i długość funkcji 53 linie.
 - Pierwsze review Validator App dla zintegrowanego HEAD zażądało usunięcia
-  szerokiego `set +e` z helpera testowego. Ticket wrócił do
-  `IN_PROGRESS / EDIT` wyłącznie dla tej ograniczonej naprawy.
+  globalnego wyłączenia fail-fast z helpera testowego. Helper przechwytuje
+  teraz oczekiwany błąd wyłącznie w lokalnym warunku; świeże testy przechodzą,
+  a ticket ponownie oczekuje na review aktualnego HEAD.
 - `todo2code` ma lokalnie wykonywalny model `openrouter/z-ai/glm-5.2`; pełny
   `npm run verify` przeszedł 334/335 testów z jednym skipem JDK i bez LLM.
 

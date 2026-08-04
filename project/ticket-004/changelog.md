@@ -17,3 +17,5 @@
 - Integrated `main@c54694a`, preserving both bounded delivery and the trusted
   Validator App evidence contract; all governance/adoption suites pass and the
   validator remains within CC=15 and 53 lines per function.
+- Replaced the broad negative-test fail-fast override rejected by Validator App
+  with command-local conditional exit-status capture.

@@ -210,10 +210,12 @@ run_check() {
 expect_code() {
   local expected="$1"
   shift
-  set +e
-  output="$($@ 2>&1)"
-  status=$?
-  set -e
+  local output status
+  if output="$("$@" 2>&1)"; then
+    status=0
+  else
+    status=$?
+  fi
   test "$status" -eq 1
   grep -q "$expected" <<<"$output"
 }

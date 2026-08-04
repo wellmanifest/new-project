@@ -35,3 +35,12 @@
 - maximum AST function length: 53 lines
 - live OpenRouter requests: 0
 - final external approval: pending fresh PR HEAD
+
+2026-08-04 Validator App remediation
+- reviewed head: b595fe2242038f83d1f41d2eeee95deabcf9437b
+- review state: CHANGES_REQUESTED
+- finding: broad shell fail-fast override in negative-test helper
+- remediation: command-local conditional exit-status capture
+- governance-validator.test.sh after remediation: PASS
+- live OpenRouter model: openrouter/z-ai/glm-5.2
+- fresh current-head review: pending
