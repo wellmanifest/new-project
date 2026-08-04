@@ -2,8 +2,8 @@
 
 - **ID**: ticket-004
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: BLOCKED
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-04
 
 ## Cel i Zakres
@@ -77,10 +77,11 @@ Gemini 3.1 Pro Preview na `z-ai/glm-5.2` zostanie wykonana w zależnym
 - Python compile, JSON parse i `git diff --check`: PASS.
 - Radon: maksymalna złożoność funkcji CC=15; maksymalna długość funkcji 53
   linie w lokalnym audycie AST.
-- GitHub PR #1: zdalne checki `governance-standard-ci / test` były PASS dla
-  poprzedniego HEAD. Po połączeniu PR #2 z `main` wykryto kolizję niezależnie
-  przydzielonego identyfikatora `ticket-003`; ten kontrakt zachowano jako
-  `ticket-004`, a gałąź wymaga ponownej synchronizacji i walidacji.
+- Gałąź PR #1 została połączona z `main@c54694a`. Ukończony ticket zatwierdzania
+  aplikacją pozostał jako `ticket-003`, a kontrakt 0.10 jako `ticket-004`.
+- Połączone regresje dla bounded delivery, lifecycle i approval evidence
+  przechodzą; walidator zachowuje maksymalne CC=15 i długość funkcji 53 linie.
+- Nowy HEAD wymaga zdalnych checków oraz niezależnego review aplikacji.
 - `todo2code` ma lokalnie wykonywalny model `openrouter/z-ai/glm-5.2`; pełny
   `npm run verify` przeszedł 334/335 testów z jednym skipem JDK i bez LLM.
 

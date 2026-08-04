@@ -14,3 +14,6 @@
 - Renumbered the unpublished reconciliation ticket from `ticket-003` to
   `ticket-004` after `main` accepted an independent, completed ticket with the
   same ID; no implementation outcome or write scope was added.
+- Integrated `main@c54694a`, preserving both bounded delivery and the trusted
+  Validator App evidence contract; all governance/adoption suites pass and the
+  validator remains within CC=15 and 53 lines per function.

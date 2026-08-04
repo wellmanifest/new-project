@@ -24,3 +24,14 @@
 - PR #2 published a distinct completed ticket-003.
 - reconciliation ticket renumbered to ticket-004 before main integration.
 - user requested continuation; state restored to IN_PROGRESS / EDIT.
+
+2026-08-04 main integration validation
+- merged source: origin/main@c54694a
+- governance-validator.test.sh: PASS
+- governance-scripts.test.sh: PASS
+- adoption-lock.test.sh: PASS
+- Python compile, JSON parse, shell syntax and diff check: PASS
+- maximum validator function CC: 15
+- maximum AST function length: 53 lines
+- live OpenRouter requests: 0
+- final external approval: pending fresh PR HEAD

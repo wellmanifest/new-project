@@ -2,7 +2,7 @@
 
 - **Dokumentacja Zarządcza Hub**: [Governance Hub (`wellmanifest/new-project`)](https://github.com/wellmanifest/new-project)
 - **Status Projektu**: AKTYWNY
-- **Ostatnia Aktualizacja**: 2026-08-04T12:14:00Z
+- **Ostatnia Aktualizacja**: 2026-08-04T13:52:14Z
 
 ## Opis Katalogu
 
@@ -20,6 +20,7 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **ticket-001** | [`README.md`](./ticket-001/README.md) | [`preprompt.md`](./ticket-001/preprompt.md) | - |  [`ai-codex.md`](./ticket-001/ai-codex.md) |  [`ai-codex-logs.txt`](./ticket-001/ai-codex-logs.txt) | [`changelog.md`](./ticket-001/changelog.md) |
 | **ticket-002** | [`README.md`](./ticket-002/README.md) | [`preprompt.md`](./ticket-002/preprompt.md) | - |  [`ai-codex.md`](./ticket-002/ai-codex.md) |  [`ai-codex-logs.txt`](./ticket-002/ai-codex-logs.txt) | [`changelog.md`](./ticket-002/changelog.md) |
+| **ticket-003** | [`README.md`](./ticket-003/README.md) | [`preprompt.md`](./ticket-003/preprompt.md) | - |  [`ai-codex.md`](./ticket-003/ai-codex.md) |  [`ai-codex-logs.txt`](./ticket-003/ai-codex-logs.txt) | [`changelog.md`](./ticket-003/changelog.md) |
 | **ticket-004** | [`README.md`](./ticket-004/README.md) | [`preprompt.md`](./ticket-004/preprompt.md) | - |  [`ai-codex.md`](./ticket-004/ai-codex.md) |  [`ai-codex-logs.txt`](./ticket-004/ai-codex-logs.txt) | [`changelog.md`](./ticket-004/changelog.md) |
 <!-- AUTO:TICKET_INDEX:END -->
 

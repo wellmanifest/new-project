@@ -21,9 +21,34 @@
     "governancePaths": { "type": "array", "items": { "$ref": "#/$defs/glob" }, "uniqueItems": true },
     "trustedApprovalSources": {
       "type": "array",
-      "items": { "enum": ["github-review", "signed-attestation"] },
+      "items": { "enum": ["github-review", "github-app-review", "signed-attestation"] },
       "minItems": 1,
       "uniqueItems": true
+    },
+    "approvalEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "requiredBindings", "reviewVerificationMethod", "signedAttestationPredicateType"],
+      "properties": {
+        "schema": { "const": "new-project.approval-evidence/v1" },
+        "requiredBindings": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "repository" },
+            { "const": "pullRequest" },
+            { "const": "headSha" },
+            { "const": "ticket" },
+            { "const": "actor" }
+          ],
+          "items": false,
+          "minItems": 5,
+          "maxItems": 5
+        },
+        "reviewVerificationMethod": { "const": "github-api-allowlist" },
+        "signedAttestationPredicateType": {
+          "const": "https://wellmanifest.dev/attestations/validator/v1"
+        }
+      }
     },
     "ticket": {
       "type": "object",

@@ -51,6 +51,7 @@ test -x "$target/project/governance-check.sh"
 test -x "$target/project.sh"
 test -f "$target/project.bat"
 test -f "$target/AGENTS.md"
+test -f "$target/.governance/approval-evidence.schema.json"
 python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check \
   > "$fixture/current-check.out"

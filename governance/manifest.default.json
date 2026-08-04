@@ -23,8 +23,21 @@
   ],
   "trustedApprovalSources": [
     "github-review",
+    "github-app-review",
     "signed-attestation"
   ],
+  "approvalEvidence": {
+    "schema": "new-project.approval-evidence/v1",
+    "requiredBindings": [
+      "repository",
+      "pullRequest",
+      "headSha",
+      "ticket",
+      "actor"
+    ],
+    "reviewVerificationMethod": "github-api-allowlist",
+    "signedAttestationPredicateType": "https://wellmanifest.dev/attestations/validator/v1"
+  },
   "ticket": {
     "root": "project",
     "directoryPattern": "^ticket-[0-9]{3}$",

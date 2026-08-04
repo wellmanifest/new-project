@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [Unreleased]
+
+### Trusted Validator App approvals
+
+- Added a versioned approval-evidence contract binding merge authority to the
+  repository, pull request, current HEAD, active ticket and actor.
+- Added a separate `trusted-validator-apps` allowlist and accepted only exact
+  current-head reviews from configured GitHub App bot logins; arbitrary Bot
+  reviews remain untrusted.
+- Required signed attestations to be signature- and issuer-verified by a
+  protected resolver before ephemeral evidence is created outside the PR
+  checkout.
+- Added deterministic approval binding/authority diagnostics and positive and
+  negative regression fixtures.
+- Documented direct `validate-pr` migration for `validator-agent` and
+  `todo2code`, using `openrouter/z-ai/glm-5.2` as the advisory Validator model.
+
 ## [0.10.0] - 2026-08-04
 
 ### Canonical lifecycle and bounded delivery

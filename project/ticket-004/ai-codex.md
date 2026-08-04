@@ -48,6 +48,13 @@ zostanie zmieniony na `openrouter/z-ai/glm-5.2` bez płatnego wywołania.
   before integrating `origin/main`, preserving both independent audit trails.
 - The user's continuation resumed this same scope in `IN_PROGRESS / EDIT` so
   the branch can be reconciled, revalidated and reviewed for a fresh HEAD.
+- Integrated `main@c54694a` without dropping either capability. The combined
+  validator retains bounded delivery/lifecycle helpers and adds protected,
+  exact-binding approval evidence for human, GitHub App and attestation sources.
+- Refactored approval parsing into bounded helpers; all three governance suites
+  pass, maximum cyclomatic complexity remains 15 and maximum function length
+  remains 53 lines. Returned to `BLOCKED / VALIDATION` for fresh remote checks
+  and independent current-head approval.
 
 ## Blockers
 

@@ -127,6 +127,25 @@ def relative_pattern(value: str) -> bool:
     )
 
 
+def approval_evidence_config_valid(value: Any) -> bool:
+    if value is None:
+        return True
+    return (
+        isinstance(value, dict)
+        and set(value) == {
+            "schema", "requiredBindings", "reviewVerificationMethod",
+            "signedAttestationPredicateType",
+        }
+        and value.get("schema") == "new-project.approval-evidence/v1"
+        and value.get("requiredBindings") == [
+            "repository", "pullRequest", "headSha", "ticket", "actor",
+        ]
+        and value.get("reviewVerificationMethod") == "github-api-allowlist"
+        and value.get("signedAttestationPredicateType")
+        == "https://wellmanifest.dev/attestations/validator/v1"
+    )
+
+
 def branch_name(value: Any) -> bool:
     return (
         isinstance(value, str)
@@ -658,7 +677,10 @@ def common_manifest_policy_valid(manifest: dict[str, Any]) -> bool:
         and relative_pattern_list(manifest.get("requiredFiles"))
         and relative_pattern_list(manifest.get("governancePaths"))
         and string_list(approvals, nonempty=True)
-        and set(approvals) <= {"github-review", "signed-attestation"}
+        and set(approvals) <= {
+            "github-review", "github-app-review", "signed-attestation",
+        }
+        and approval_evidence_config_valid(manifest.get("approvalEvidence"))
         and ticket_policy_valid(manifest.get("ticket"))
         and docker_policy_valid(manifest.get("docker"))
     )
@@ -676,7 +698,8 @@ def basic_manifest_valid(manifest: Any) -> bool:
         return False
     allowed_root_keys = {
         "$schema", "schema", "standard", "requiredFiles", "governancePaths",
-        "trustedApprovalSources", "ticket", "docker", "coordination", "delivery", "stacks",
+        "trustedApprovalSources", "approvalEvidence", "ticket", "docker",
+        "coordination", "delivery", "stacks",
     }
     coordination = manifest.get("coordination")
     delivery = manifest.get("delivery")
@@ -1725,6 +1748,182 @@ def check_selected_ticket_intent(
             check_delivery_gate(root, manifest, selected, implementation, base, elapsed_minutes, report)
 
 
+def approval_subject_valid(evidence: Any) -> bool:
+    required = {
+        "schema", "source", "repository", "pullRequest", "headSha", "ticket",
+        "actor", "verification",
+    }
+    return (
+        isinstance(evidence, dict)
+        and set(evidence) == required
+        and evidence.get("schema") == "new-project.approval-evidence/v1"
+        and evidence.get("source") in {
+            "github-review", "github-app-review", "signed-attestation",
+        }
+        and isinstance(evidence.get("repository"), str)
+        and re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", evidence["repository"]) is not None
+        and isinstance(evidence.get("pullRequest"), int)
+        and not isinstance(evidence.get("pullRequest"), bool)
+        and evidence["pullRequest"] >= 1
+        and isinstance(evidence.get("headSha"), str)
+        and re.fullmatch(r"[0-9a-f]{40}", evidence["headSha"]) is not None
+        and isinstance(evidence.get("ticket"), str)
+        and re.fullmatch(r"ticket-[0-9]{3}", evidence["ticket"]) is not None
+    )
+
+
+def approval_actor_valid(actor: Any) -> bool:
+    return (
+        isinstance(actor, dict)
+        and set(actor) == {"login", "type"}
+        and isinstance(actor.get("login"), str)
+        and bool(actor["login"])
+        and actor.get("type") in {"User", "Bot", "Workflow"}
+    )
+
+
+def approval_verification_valid(verification: Any) -> bool:
+    return (
+        isinstance(verification, dict)
+        and {"method", "verified"} <= set(verification)
+        and set(verification) <= {"method", "verified", "issuer", "predicateType"}
+        and verification.get("method") in {
+            "github-api-allowlist", "github-attestation", "sigstore",
+        }
+        and verification.get("verified") is True
+    )
+
+
+def approval_authority_valid(
+    evidence: dict[str, Any],
+    manifest: dict[str, Any],
+) -> bool:
+    source = evidence["source"]
+    actor = evidence["actor"]
+    verification = evidence["verification"]
+    method = verification["method"]
+    if source == "github-review":
+        return actor["type"] == "User" and method == "github-api-allowlist"
+    if source == "github-app-review":
+        return (
+            actor["type"] == "Bot"
+            and actor["login"].endswith("[bot]")
+            and method == "github-api-allowlist"
+        )
+    approval_config = manifest.get("approvalEvidence") or {}
+    expected_predicate = approval_config.get(
+        "signedAttestationPredicateType",
+        "https://wellmanifest.dev/attestations/validator/v1",
+    )
+    return (
+        actor["type"] in {"Bot", "Workflow"}
+        and method in {"github-attestation", "sigstore"}
+        and isinstance(verification.get("issuer"), str)
+        and bool(verification["issuer"])
+        and verification.get("predicateType") == expected_predicate
+    )
+
+
+def approval_binding_mismatches(
+    evidence: dict[str, Any],
+    expected_repository: str | None,
+    expected_pull_request: int | None,
+    expected_head: str | None,
+) -> tuple[bool, dict[str, dict[str, Any]]]:
+    missing = (
+        expected_repository is None
+        or expected_pull_request is None
+        or expected_head is None
+        or re.fullmatch(r"[0-9a-f]{40}", expected_head or "") is None
+    )
+    expected = {
+        "repository": expected_repository,
+        "pullRequest": expected_pull_request,
+        "headSha": expected_head,
+    }
+    mismatches = {
+        name: {"evidence": evidence[name], "expected": value}
+        for name, value in expected.items()
+        if evidence[name] != value
+    }
+    return missing, mismatches
+
+
+def load_external_approval_evidence(
+    root: Path,
+    raw_path: str | None,
+    report: Report,
+) -> Any | None:
+    if not raw_path:
+        return None
+    path = Path(raw_path).expanduser().resolve()
+    if path.is_relative_to(root):
+        report.add(
+            "GOV-APPROVAL-003",
+            "Approval evidence is controlled by the pull-request checkout.",
+            "Create evidence outside the checkout from a protected workflow after API or signature verification.",
+            [rel(root, path)],
+        )
+        return None
+    try:
+        evidence = load_json(path)
+    except (OSError, json.JSONDecodeError) as error:
+        report.add(
+            "GOV-APPROVAL-003", f"Approval evidence is unreadable: {error}",
+            "Have the protected approval resolver create a valid v1 evidence document outside the checkout.",
+        )
+        return None
+    return evidence
+
+
+def approval_evidence(
+    root: Path,
+    raw_path: str | None,
+    manifest: dict[str, Any],
+    expected_repository: str | None,
+    expected_pull_request: int | None,
+    expected_head: str | None,
+    report: Report,
+) -> dict[str, Any] | None:
+    evidence = load_external_approval_evidence(root, raw_path, report)
+    if evidence is None:
+        return None
+    actor = evidence.get("actor") if isinstance(evidence, dict) else None
+    verification = evidence.get("verification") if isinstance(evidence, dict) else None
+    if not (
+        approval_subject_valid(evidence)
+        and approval_actor_valid(actor)
+        and approval_verification_valid(verification)
+    ):
+        report.add(
+            "GOV-APPROVAL-003", "Approval evidence does not conform to new-project.approval-evidence/v1.",
+            "Regenerate evidence with the protected resolver and the pinned approval-evidence schema.",
+        )
+        return None
+    missing, mismatches = approval_binding_mismatches(
+        evidence, expected_repository, expected_pull_request, expected_head,
+    )
+    if missing or mismatches:
+        report.add(
+            "GOV-APPROVAL-004",
+            "Approval evidence is not bound to the current repository, pull request and HEAD.",
+            "Pass the current protected event bindings and request a fresh approval for the exact HEAD.",
+            evidence={"missingExpectedBinding": missing, "mismatches": mismatches},
+        )
+    if not approval_authority_valid(evidence, manifest):
+        report.add(
+            "GOV-APPROVAL-005",
+            "Approval actor or verification method is not valid for the claimed source.",
+            "Use an allowlisted User, an allowlisted GitHub App bot login, or a signature-verified trusted attestation issuer.",
+            evidence={
+                "source": evidence["source"],
+                "actor": evidence["actor"],
+                "verification": evidence["verification"],
+            },
+        )
+    return evidence
+
+
 def check_change_approval(
     root: Path,
     manifest: dict[str, Any],
@@ -1750,6 +1949,36 @@ def check_change_approval(
         )
 
 
+def resolve_change_approval(
+    root: Path,
+    manifest: dict[str, Any],
+    selected: TicketRecord,
+    approval_source: str | None,
+    approved_ticket: str | None,
+    approval_evidence_path: str | None,
+    expected_repository: str | None,
+    expected_pull_request: int | None,
+    expected_head: str | None,
+    report: Report,
+) -> None:
+    supplied = approval_evidence(
+        root, approval_evidence_path, manifest, expected_repository,
+        expected_pull_request, expected_head, report,
+    )
+    if supplied is not None:
+        approval_source = supplied["source"]
+        approved_ticket = supplied["ticket"]
+    elif approval_source in {"github-app-review", "signed-attestation"}:
+        report.add(
+            "GOV-APPROVAL-003",
+            f"Approval source {approval_source} requires external v1 evidence.",
+            "Create bound evidence outside the checkout after allowlist or signature verification.",
+        )
+    check_change_approval(
+        root, manifest, selected, approval_source, approved_ticket, report,
+    )
+
+
 def check_change_gate(
     root: Path,
     manifest: dict[str, Any],
@@ -1759,23 +1988,32 @@ def check_change_gate(
     head: str,
     approval_source: str | None,
     approved_ticket: str | None,
+    approval_evidence_path: str | None,
+    expected_repository: str | None,
+    expected_pull_request: int | None,
+    expected_head: str | None,
     enforce_approval: bool,
     elapsed_minutes: int | None,
     report: Report,
-) -> None:
+) -> str | None:
     governance_patterns = manifest["governancePaths"]
     implementation = [path for path in changed if not matches(path, governance_patterns)]
     if not implementation:
-        return
+        return None
     config = manifest["ticket"]
     active = [record for record in records if record.status in set(config.get("activeStatuses", ACTIVE_DEFAULT))]
     selected = select_change_ticket(root, active, manifest.get("coordination"), implementation, report)
     if selected is None:
-        return
+        return None
     check_selected_ticket_state(root, config, selected, implementation, base, head, governance_patterns, report)
     check_selected_ticket_intent(root, manifest, records, selected, implementation, base, elapsed_minutes, report)
     if enforce_approval:
-        check_change_approval(root, manifest, selected, approval_source, approved_ticket, report)
+        resolve_change_approval(
+            root, manifest, selected, approval_source, approved_ticket,
+            approval_evidence_path, expected_repository, expected_pull_request,
+            expected_head, report,
+        )
+    return selected.directory.name
 
 
 def sarif(payload: dict[str, Any]) -> dict[str, Any]:
@@ -1834,6 +2072,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--enforce-approval", action="store_true")
     parser.add_argument("--approval-source")
     parser.add_argument("--approved-ticket")
+    parser.add_argument("--approval-evidence")
+    parser.add_argument("--expected-repository")
+    parser.add_argument("--expected-pull-request", type=int)
+    parser.add_argument("--expected-head")
+    parser.add_argument("--resolved-ticket-output")
     parser.add_argument("--elapsed-minutes", type=int)
     parser.add_argument("--format", choices=["text", "json", "sarif"], default="text")
     parser.add_argument("--output")
@@ -1889,7 +2132,7 @@ def run_governance_checks(
     root: Path,
     manifest: dict[str, Any],
     report: Report,
-) -> None:
+) -> str | None:
     lock_path = optional_repo_path(root, args.lock, "GOV-SYNC-001", "governance lock", report)
     profiles_path = optional_repo_path(root, args.stack_profiles, "GOV-MANIFEST-001", "stack-profile", report)
     changed = resolve_changed_paths(args, root, report)
@@ -1901,9 +2144,11 @@ def run_governance_checks(
     records = load_ticket_records(directories, manifest["ticket"])
     check_coordination(root, manifest, records, changed, report)
     check_changed_content(root, changed, args.actor, args.trusted_human_change, report)
-    check_change_gate(
+    return check_change_gate(
         root, manifest, records, changed, args.base, args.head, args.approval_source,
-        args.approved_ticket, args.enforce_approval, args.elapsed_minutes, report,
+        args.approved_ticket, args.approval_evidence, args.expected_repository,
+        args.expected_pull_request, args.expected_head, args.enforce_approval,
+        args.elapsed_minutes, report,
     )
 
 
@@ -1923,14 +2168,41 @@ def write_report(output_path: Path | None, output: str) -> None:
     output_path.write_text(output, encoding="utf-8")
 
 
+def write_resolved_ticket(
+    root: Path,
+    raw_path: str | None,
+    selected_ticket: str | None,
+    report: Report,
+) -> None:
+    if not raw_path or not selected_ticket or report.errors:
+        return
+    path = Path(raw_path).expanduser().resolve()
+    if path.is_relative_to(root):
+        report.add(
+            "GOV-PATH-001", "Resolved ticket output must be outside the repository checkout.",
+            "Write ephemeral approval context to runner.temp or another protected directory.",
+            [rel(root, path)],
+        )
+        return
+    try:
+        path.write_text(f"{selected_ticket}\n", encoding="utf-8")
+    except OSError as error:
+        report.add(
+            "GOV-PATH-001", f"Could not write resolved ticket output: {error}",
+            "Use a writable protected directory outside the checkout.",
+        )
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv or sys.argv[1:])
     root = Path(args.root).resolve()
     report = Report(root)
     manifest = load_manifest(root, args.manifest, report)
+    selected_ticket: str | None = None
 
     if manifest is not None:
-        run_governance_checks(args, root, manifest, report)
+        selected_ticket = run_governance_checks(args, root, manifest, report)
+    write_resolved_ticket(root, args.resolved_ticket_output, selected_ticket, report)
     output_path = optional_repo_path(root, args.output, "GOV-PATH-001", "report output", report)
     payload = report.payload()
     write_report(output_path, formatted_report(payload, args.format))

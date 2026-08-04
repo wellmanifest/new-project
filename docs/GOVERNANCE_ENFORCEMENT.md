@@ -76,7 +76,7 @@ Lokalna kontrola:
 ./project/governance-check.sh --actor agent
 ```
 
-Symulacja obowiązkowej zgody:
+Starsza symulacja review człowieka pozostaje kompatybilna lokalnie:
 
 ```bash
 ./project/governance-check.sh \
@@ -93,6 +93,34 @@ Reviewer musi dodatkowo należeć do jawnego wejścia `trusted-reviewers` reusab
 workflow. Lista loginów jest konfiguracją bezpieczeństwa repozytorium
 docelowego i musi być chroniona przez CODEOWNERS; sam fakt, że reviewer nie jest
 autorem PR, nie stanowi dowodu uprawnienia.
+
+### Approval evidence v1
+
+Chroniony workflow materializuje decyzję jako
+`new-project.approval-evidence/v1`. Dokument zawiera źródło, repozytorium,
+numer PR, dokładny 40-znakowy `headSha`, jeden ticket oraz aktora. Powstaje w
+`runner.temp`, poza checkoutem. Walidator odrzuca evidence znajdujące się w
+repozytorium, bo autor PR mógłby je sam zmienić.
+
+Źródła zaufania są rozłączne:
+
+- `github-review`: `actor.type=User`, dokładny login w `trusted-reviewers`,
+  review `APPROVED` dla bieżącego HEAD;
+- `github-app-review`: `actor.type=Bot`, dokładny login wraz z `[bot]` w
+  `trusted-validator-apps`, review `APPROVED` dla bieżącego HEAD;
+- `signed-attestation`: podpis i issuer zweryfikowane poza checkoutem, a
+  predicate type równy
+  `https://wellmanifest.dev/attestations/validator/v1`.
+
+Samo `user.type=Bot`, pole `verified: true` w pliku PR ani komentarz modelu nie
+stanowią zaufania. Dla atestacji chroniony krok Sigstore/GitHub Attestations
+najpierw weryfikuje podpis, issuer i subject, a dopiero potem tworzy ephemeral
+evidence. Schemat znajduje się w
+`governance/approval-evidence.schema.json`.
+Publikowany reusable workflow rozwiązuje bezpośrednio ścieżki GitHub review;
+repozytorium wybierające signed attestation musi dodać równoważny chroniony
+resolver podpisu i wywołać ten sam walidator z `--approval-evidence` oraz
+oczekiwanymi bindingami.
 
 ## CI i ochrona repozytorium
 
@@ -113,7 +141,13 @@ jobs:
     with:
       standard-ref: <FULL_SHA>
       trusted-reviewers: alice,bob
+      trusted-validator-apps: validator-agent[bot]
 ```
+
+Co najmniej jedna z dwóch list authority musi być niepusta. Nie wolno wpisywać
+loginów botów do `trusted-reviewers` ani loginów ludzi do
+`trusted-validator-apps`. Caller workflow, obie listy, `.governance/**` i
+CODEOWNERS muszą być chronione tak, aby PR nie mógł sam rozszerzyć allowlisty.
 
     Adopcja wydania jest trwała dopiero, gdy lock zawiera opublikowany pełny
     `sourceRevision` i `publicationStatus: published`. Hash lokalnego pliku wykrywa
@@ -130,6 +164,52 @@ W GitHub Rulesets ustaw:
 - zakaz bypassu dla botów/agentów i ograniczony bypass administracyjny;
 - ochronę `.github/workflows/**`, `.governance/**`, `AGENTS.md` oraz
   `project/ticket-*/user-*.md` przez CODEOWNERS.
+
+## Integracja `validator-agent` z istniejącym repozytorium
+
+Integrację wykonuje się w osobnych, zatwierdzonych ticketach obu repozytoriów.
+Nie należy rozszerzać istniejącego trybu repair o ukryte wyjątki. Validator
+powinien otrzymać jawny tryb `validate-pr` z wejściami:
+
+```text
+repository, pullRequest, headSha, ticket, correlationId
+```
+
+Tryb ten:
+
+1. pobiera wyłącznie wskazane repozytorium i dokładny `headSha`;
+2. sprawdza, że PR nadal wskazuje ten SHA i ticket jest aktywnym właścicielem
+   diffu;
+3. uruchamia governance gate oraz testy zadeklarowane przez ticket;
+4. nie wymaga Issue z innej kolejki, gałęzi `ticket/*` ani
+   `.ifuri/repair/TODO.md`;
+5. nie dodaje `VERSION`, `CHANGELOG.md` ani innych ścieżek poza
+   `intent.json.allowedPaths`;
+6. po sukcesie wystawia review dla dokładnego SHA jako dedykowana GitHub App
+   albo generuje podpisaną atestację z tymi samymi bindingami.
+
+Minimalny profil GitHub App to odczyt contents/metadata oraz zapis review Pull
+Requests; każde dodatkowe uprawnienie wymaga uzasadnienia. App musi być
+zainstalowana w repozytorium docelowym przed próbą review. Odpowiedź HTTP 401 z
+endpointu instalacji oznacza błąd uwierzytelnienia/JWT i nie dowodzi ani
+instalacji, ani jej braku — należy naprawić autoryzację App i dopiero potem
+zweryfikować instalację.
+
+Dla `semcod/todo2code` migracja polega na zastąpieniu lokalnej reguły
+„akceptuj dowolny niezależny `User`” przypiętym reusable workflow oraz wpisaniu
+dokładnego loginu Validator App do `trusted-validator-apps`. Nie należy zmieniać
+warunku na ogólne `User || Bot`. Workflow najpierw rozwiązuje jeden ticket
+właściwy dla diffu, więc inne równoległe tickety nie rozszerzają approval.
+
+Konfiguracja operacyjna Validatora używa:
+
+```text
+LLM_MODEL_VALIDATOR=openrouter/z-ai/glm-5.2
+```
+
+Gemini 3.1 Pro Preview nie jest używany w tej roli. Wybór modelu wpływa na koszt
+i jakość analizy, ale nie na authority: o wyniku merge nadal rozstrzygają
+deterministyczne testy, chroniona tożsamość i evidence.
 
 Hook lokalny jest tylko szybką informacją. Nie jest granicą bezpieczeństwa,
 ponieważ można go pominąć przez `--no-verify`.

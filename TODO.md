@@ -11,15 +11,17 @@
 
 - [ ] [`ticket-004`](project/ticket-004/README.md) — pogodzić dwa rozbieżne
   kontrakty 0.9.0 w kanoniczny 0.10.0, zachowując bounded delivery i zwalniając
-  rezerwacje dla `PLAN/BLOCKED`. Stan: `IN_PROGRESS / EDIT`; po kolizji ID z
-  ukończonym ticketem z PR #2 zadanie zachowano jako `ticket-004` i trwa
-  synchronizacja PR #1 z `main`. Zależny `todo2code` używa lokalnie
-  `z-ai/glm-5.2`.
+  rezerwacje dla `PLAN/BLOCKED`. Stan: `BLOCKED / VALIDATION`; kolizję ID
+  usunięto jako `ticket-004`, połączono `main@c54694a`, a pełne lokalne testy
+  przechodzą. Pozostały świeże checki i niezależne review aktualnego HEAD.
+  Zależny `todo2code` używa lokalnie `z-ai/glm-5.2`.
 
 - [x] [`ticket-001`](project/ticket-001/README.md) — ujednolicenie zasad
   edytowalnego utrzymania `wellmanifest/new-project`.
 - [ ] [`ticket-002`](project/ticket-002/README.md) — integracja bezpiecznej
   adopcji manifestu z `goal`.
+- [x] [`ticket-003`](project/ticket-003/README.md) — zaufana walidacja PR przez
+  allowlistowaną GitHub App lub zweryfikowaną atestację.
 
 ---
 

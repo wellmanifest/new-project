@@ -133,7 +133,11 @@ implementację bez jednoznacznego ticketu, stanu `EDIT`, dozwolonego zakresu i �
 w trybie PR — zewnętrznej zgody. Szczegóły opisuje
 [`docs/GOVERNANCE_ENFORCEMENT.md`](docs/GOVERNANCE_ENFORCEMENT.md).
 Kontrakty adopcji są publikowane jako `governance/manifest.schema.json`,
-`governance/intent.schema.json` i `governance/lock.schema.json`.
+`governance/intent.schema.json`, `governance/lock.schema.json` oraz
+`governance/approval-evidence.schema.json`. Approval człowieka, allowlistowanej
+Validator GitHub App albo zweryfikowanej atestacji jest przypięte do konkretnego
+repozytorium, PR, HEAD, ticketu i aktora; dowolny review typu Bot nie jest
+zaufany.
 
 Opublikowaną rewizję adoptuje się bez ręcznego kopiowania i liczenia hashy:
 
