@@ -11,8 +11,9 @@
 
 - [ ] [`ticket-003`](project/ticket-003/README.md) — pogodzić dwa rozbieżne
   kontrakty 0.9.0 w kanoniczny 0.10.0, zachowując bounded delivery i zwalniając
-  rezerwacje dla `PLAN/BLOCKED`. Stan: `PLAN / WAIT_FOR_APPROVAL`; zależna
-  adopcja `todo2code` zmieni Koru na `z-ai/glm-5.2`.
+  rezerwacje dla `PLAN/BLOCKED`. Stan: `IN_PROGRESS / EDIT`; plan oraz wyjątek
+  integracyjny zatwierdzono, a zależna adopcja `todo2code` zmieni Koru na
+  `z-ai/glm-5.2`.
 
 - [x] [`ticket-001`](project/ticket-001/README.md) — ujednolicenie zasad
   edytowalnego utrzymania `wellmanifest/new-project`.

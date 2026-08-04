@@ -2,8 +2,8 @@
 
 - **ID**: ticket-003
 - **Owner**: unresolved:human
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
 - **Utworzono**: 2026-08-04
 
 ## Cel i Zakres
@@ -40,7 +40,7 @@ Gemini 3.1 Pro Preview na `z-ai/glm-5.2` zostanie wykonana w zależnym
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Człowiek zatwierdza architekturę, integracyjny limit dziewięciu
+- [x] AC-01: Człowiek zatwierdza architekturę, integracyjny limit dziewięciu
       plików i zależną adopcję przed edycją kontraktu.
 - [ ] AC-02: Standard ma jedną wersję `0.10.0`, a dokumentacja wyjaśnia konflikt
       dwóch wariantów 0.9.0 i sposób migracji.

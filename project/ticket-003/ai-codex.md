@@ -20,7 +20,8 @@ zostanie zmieniony na `openrouter/z-ai/glm-5.2` bez płatnego wywołania.
 
 ## Execution plan
 
-1. Poczekać na zatwierdzenie planu i integracyjnego wyjątku plikowego.
+1. Zatwierdzenie planu i integracyjnego wyjątku plikowego otrzymano od
+   człowieka 2026-08-04; przejść do `IN_PROGRESS / EDIT`.
 2. Selektywnie przenieść bounded schema/validator/test na bazę `main`, zachowując
    jej lifecycle i generator adopcji.
 3. Nadać połączonemu kontraktowi wersję `0.10.0` i udokumentować migrację.
@@ -31,10 +32,10 @@ zostanie zmieniony na `openrouter/z-ai/glm-5.2` bez płatnego wywołania.
 
 ## Actual changes
 
-- None; waiting for approval.
+- Human approved AC-01 and dependent todo2code AC-36..AC-40; ticket entered
+  `IN_PROGRESS / EDIT` before contract implementation.
 
 ## Blockers
 
-- Human approval is required before implementation.
 - Nie istnieje jeszcze jeden kanoniczny SHA zawierający oba zestawy poprawek.
 - Wykonywalna aktualizacja `todo2code` zależy od zakończenia upstreamu.
