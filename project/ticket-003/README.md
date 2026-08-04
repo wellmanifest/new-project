@@ -17,7 +17,7 @@ konfliktach aktywnej implementacji.
 
 Zakres jest integracyjnym wyjątkiem od domyślnego budżetu pięciu plików,
 ponieważ schema, manifest, validator, katalog diagnostyk i fixture test stanowią
-jeden nierozdzielny publiczny kontrakt. Maksymalnie dziewięć plików poza
+jeden nierozdzielny publiczny kontrakt. Maksymalnie dziesięć plików poza
 ticketem, jedna zdolność, dwa komponenty, zero nowych zależności i maksymalnie
 30 minut aktywnej implementacji. Checkpoint następuje po 25 minutach; brak
 zielonych testów oznacza zatrzymanie i dekompozycję, nie poszerzenie zakresu.
@@ -40,8 +40,10 @@ Gemini 3.1 Pro Preview na `z-ai/glm-5.2` zostanie wykonana w zależnym
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [x] AC-01: Człowiek zatwierdza architekturę, integracyjny limit dziewięciu
-      plików i zależną adopcję przed edycją kontraktu.
+- [x] AC-01: Człowiek zatwierdza architekturę i integracyjny limit; podczas
+      implementacji lista została skorygowana z dziewięciu do dziesięciu
+      plików wyłącznie o istniejący fixture wersji locka wymagany przez AC-06,
+      bez nowego rezultatu, komponentu lub zależności.
 - [ ] AC-02: Standard ma jedną wersję `0.10.0`, a dokumentacja wyjaśnia konflikt
       dwóch wariantów 0.9.0 i sposób migracji.
 - [ ] AC-03: Manifest oraz schema zachowują bounded delivery i jednocześnie

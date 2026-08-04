@@ -18,7 +18,7 @@ assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
 assert manifest['schema'] == schema['properties']['schema']['const']
-assert manifest['standard']['version'] == '0.9.0'
+assert manifest['standard']['version'] == '0.10.0'
 ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
@@ -266,7 +266,7 @@ lock = {
   'schema': 'new-project.lock/v1',
   'standard': {
     'id': 'wellmanifest/new-project',
-    'version': '0.9.0',
+    'version': '0.10.0',
     'sourceRepository': 'wellmanifest/new-project',
     'sourceRevision': 'a' * 40,
     'publicationStatus': 'published',
@@ -408,6 +408,13 @@ sed -i 's/Status\*\*: IN_PROGRESS/Status**: BACKLOG/' "$backlog_release/project/
 add_active_ticket "$backlog_release" ticket-003 application '["src/**"]'
 run_check "$backlog_release" --changed-file src/app.js > "$fixture/backlog-release.out"
 grep -q '^GOV-PASS:' "$fixture/backlog-release.out"
+
+plan_release="$fixture/plan-release"
+make_fixture "$plan_release"
+sed -i 's/Status\*\*: IN_PROGRESS/Status**: PLAN/' "$plan_release/project/ticket-002/README.md"
+add_active_ticket "$plan_release" ticket-003 application '["src/**"]'
+run_check "$plan_release" --changed-file src/app.js > "$fixture/plan-release.out"
+grep -q '^GOV-PASS:' "$fixture/plan-release.out"
 
 blocked_release="$fixture/blocked-release"
 make_fixture "$blocked_release"

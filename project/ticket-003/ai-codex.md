@@ -34,6 +34,10 @@ zostanie zmieniony na `openrouter/z-ai/glm-5.2` bez płatnego wywołania.
 
 - Human approved AC-01 and dependent todo2code AC-36..AC-40; ticket entered
   `IN_PROGRESS / EDIT` before contract implementation.
+- The first 0.10 adoption-lock run exposed one stale version assertion in the
+  existing adoption fixture. Added that exact test path to `allowedPaths` as a
+  bounded correction required by AC-06; no outcome, component, dependency or
+  production surface was added.
 
 ## Blockers
 

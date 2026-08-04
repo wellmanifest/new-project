@@ -12,6 +12,7 @@
     "governance/manifest.default.json",
     "governance/manifest.schema.json",
     "scripts/governance_check.py",
+    "tests/adoption-lock.test.sh",
     "tests/governance-validator.test.sh",
     "project/ticket-003/**",
     "TODO.md",

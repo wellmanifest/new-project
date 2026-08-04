@@ -15,7 +15,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Iterable
 
-RUNTIME_VERSION = "0.9.0"
+RUNTIME_VERSION = "0.10.0"
 ACTIVE_DEFAULT = {"IN_PROGRESS"}
 EXECUTABLE_SUFFIXES = {
     ".bat", ".c", ".cc", ".cmd", ".cpp", ".go", ".java", ".js", ".jsx",
