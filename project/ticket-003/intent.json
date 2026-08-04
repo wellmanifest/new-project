@@ -1,0 +1,35 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-003",
+  "summary": "Zaufana walidacja PR przez agentów",
+  "workstream": "governance",
+  "allowedPaths": [
+    ".github/workflows/governance.yml",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "POLICY.md",
+    "README.md",
+    "TODO.md",
+    "docs/GOVERNANCE_ENFORCEMENT.md",
+    "governance/approval-evidence.schema.json",
+    "governance/diagnostics.json",
+    "governance/manifest.default.json",
+    "governance/manifest.schema.json",
+    "project/TICKETS.md",
+    "project/ticket-003/**",
+    "scripts/create_adoption_lock.py",
+    "scripts/governance_check.py",
+    "template/files/AGENTS.template.md",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-scripts.test.sh",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

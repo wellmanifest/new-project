@@ -19,7 +19,13 @@ on:
         type: string
       trusted-reviewers:
         description: Comma-separated GitHub user logins authorized to approve governance changes
-        required: true
+        required: false
+        default: ''
+        type: string
+      trusted-validator-apps:
+        description: Comma-separated exact GitHub App bot logins, including the [bot] suffix
+        required: false
+        default: ''
         type: string
 
 permissions:
@@ -35,6 +41,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Validate immutable standard reference
         shell: bash
         env:
@@ -51,50 +58,111 @@ jobs:
           ref: ${{ inputs.standard-ref }}
           path: .new-project-standard
           persist-credentials: false
-      - name: Resolve independent human approval
+      - name: Resolve ticket owning the pull request diff
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+          RESOLVED_TICKET_PATH: ${{ runner.temp }}/new-project-resolved-ticket.txt
+        run: |
+          python3 .new-project-standard/scripts/governance_check.py \
+            --root . \
+            --manifest "${{ inputs.manifest }}" \
+            --lock "${{ inputs.lock }}" \
+            --stack-profiles .new-project-standard/governance/stack-profiles.json \
+            --base "$BASE_SHA" \
+            --head "$EXPECTED_HEAD" \
+            --actor ci \
+            --resolved-ticket-output "$RESOLVED_TICKET_PATH" \
+            --format text
+      - name: Resolve trusted human or Validator App approval
         id: approval
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           TRUSTED_REVIEWERS: ${{ inputs.trusted-reviewers }}
+          TRUSTED_VALIDATOR_APPS: ${{ inputs.trusted-validator-apps }}
+          APPROVAL_EVIDENCE_PATH: ${{ runner.temp }}/new-project-approval-evidence.json
+          RESOLVED_TICKET_PATH: ${{ runner.temp }}/new-project-resolved-ticket.txt
         with:
           script: |
             const fs = require('fs');
-            const path = require('path');
             const reviews = await github.paginate(github.rest.pulls.listReviews, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: context.issue.number,
             });
+            const normalize = value => value.trim().toLowerCase();
+            const parseAuthorities = (raw, label) => {
+              const values = raw.split(',').map(normalize).filter(Boolean);
+              if (values.some(value => !/^[a-z0-9][a-z0-9-]*(?:\[bot\])?$/.test(value))) {
+                throw new Error(`${label} contains an invalid GitHub login`);
+              }
+              return new Set(values);
+            };
+            const trustedReviewers = parseAuthorities(
+              process.env.TRUSTED_REVIEWERS ?? '', 'trusted-reviewers');
+            const trustedValidatorApps = parseAuthorities(
+              process.env.TRUSTED_VALIDATOR_APPS ?? '', 'trusted-validator-apps');
+            if ([...trustedReviewers].some(login => login.endsWith('[bot]'))) {
+              throw new Error('trusted-reviewers must contain User logins, not Bot logins');
+            }
+            if ([...trustedValidatorApps].some(login => !login.endsWith('[bot]'))) {
+              throw new Error('trusted-validator-apps entries must include the [bot] suffix');
+            }
+            if (trustedReviewers.size + trustedValidatorApps.size === 0) {
+              throw new Error('configure at least one trusted reviewer or Validator App');
+            }
             const latest = new Map();
-            for (const review of reviews) latest.set(review.user.login, review);
-            const author = context.payload.pull_request.user.login;
+            for (const review of reviews) latest.set(normalize(review.user.login), review);
+            const author = normalize(context.payload.pull_request.user.login);
             const head = context.payload.pull_request.head.sha;
-            const trustedReviewers = new Set((process.env.TRUSTED_REVIEWERS ?? '')
-              .split(',').map(value => value.trim()).filter(Boolean));
-            if (trustedReviewers.size === 0) {
-              core.setFailed('trusted-reviewers must identify at least one authorized GitHub user');
+            const currentApprovals = [...latest.values()].filter(review =>
+              review.state === 'APPROVED' && review.commit_id === head
+              && normalize(review.user.login) !== author);
+            const humanApproval = currentApprovals.find(review =>
+              review.user.type === 'User'
+              && trustedReviewers.has(normalize(review.user.login)));
+            const appApproval = currentApprovals.find(review =>
+              review.user.type === 'Bot'
+              && trustedValidatorApps.has(normalize(review.user.login)));
+            const approved = humanApproval ?? appApproval;
+            const ticket = fs.existsSync(process.env.RESOLVED_TICKET_PATH)
+              ? fs.readFileSync(process.env.RESOLVED_TICKET_PATH, 'utf8').trim() : '';
+            if (ticket && !/^ticket-[0-9]{3}$/.test(ticket)) {
+              throw new Error('resolved ticket output is malformed');
+            }
+            if (!approved || !ticket) {
+              core.setOutput('source', 'none');
+              core.setOutput('ticket', ticket || 'none');
               return;
             }
-            const approved = [...latest.values()].some(review =>
-              review.state === 'APPROVED' && review.commit_id === head
-              && review.user.login !== author && review.user.type === 'User'
-              && trustedReviewers.has(review.user.login));
-            const ticketRoot = 'project';
-            const active = fs.readdirSync(ticketRoot, {withFileTypes: true})
-              .filter(item => item.isDirectory() && /^ticket-[0-9]{3}$/.test(item.name))
-              .filter(item => {
-                const readme = fs.readFileSync(path.join(ticketRoot, item.name, 'README.md'), 'utf8');
-                return /^-\s+\*\*Status\*\*:\s*IN_PROGRESS\s*$/mi.test(readme);
-              }).map(item => item.name);
-            core.setOutput('source', approved ? 'github-review' : 'none');
-            core.setOutput('ticket', active.length > 0 ? active.sort().join(',') : 'none');
+            const source = approved.user.type === 'Bot'
+              ? 'github-app-review' : 'github-review';
+            const evidence = {
+              schema: 'new-project.approval-evidence/v1',
+              source,
+              repository: `${context.repo.owner}/${context.repo.repo}`,
+              pullRequest: context.payload.pull_request.number,
+              headSha: head,
+              ticket,
+              actor: {login: approved.user.login, type: approved.user.type},
+              verification: {method: 'github-api-allowlist', verified: true},
+            };
+            fs.writeFileSync(process.env.APPROVAL_EVIDENCE_PATH, `${JSON.stringify(evidence)}\n`, {
+              encoding: 'utf8', mode: 0o600,
+            });
+            core.setOutput('source', source);
+            core.setOutput('ticket', ticket);
       - name: Validate policy, intent, scope and approval
         shell: bash
         env:
-          APPROVAL_SOURCE: ${{ steps.approval.outputs.source }}
-          APPROVED_TICKET: ${{ steps.approval.outputs.ticket }}
+          APPROVAL_EVIDENCE_PATH: ${{ runner.temp }}/new-project-approval-evidence.json
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          EXPECTED_REPOSITORY: ${{ github.repository }}
+          EXPECTED_PULL_REQUEST: ${{ github.event.pull_request.number }}
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
           args=(
             --root .
@@ -104,7 +172,14 @@ jobs:
             --actor ci
             --format text
           )
-          if [[ "${{ github.event_name }}" == pull_request ]]; then
-            args+=(--base "$BASE_SHA" --enforce-approval --approval-source "$APPROVAL_SOURCE" --approved-ticket "$APPROVED_TICKET")
+          if [[ "${{ github.event_name }}" == pull_request || "${{ github.event_name }}" == pull_request_review ]]; then
+            args+=(--base "$BASE_SHA" --enforce-approval \
+              --head "$EXPECTED_HEAD" \
+              --expected-repository "$EXPECTED_REPOSITORY" \
+              --expected-pull-request "$EXPECTED_PULL_REQUEST" \
+              --expected-head "$EXPECTED_HEAD")
+            if [[ -f "$APPROVAL_EVIDENCE_PATH" ]]; then
+              args+=(--approval-evidence "$APPROVAL_EVIDENCE_PATH")
+            fi
           fi
           python3 .new-project-standard/scripts/governance_check.py "${args[@]}"
