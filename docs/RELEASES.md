@@ -76,4 +76,10 @@ przesunięcie istniejącego tagu.
 
 ## Dowód wydania 0.10.0
 
-Pełny SHA, URL Release oraz wynik czystego testu zostaną wpisane po publikacji.
+- Tag: `v0.10.0`.
+- Pełny SHA: `62ffb0dac1dba9294aa825ca5cc0344fefb33b0d`.
+- Release: https://github.com/wellmanifest/new-project/releases/tag/v0.10.0
+- GitHub publication time: `2026-08-04T19:33:48Z`.
+- Tag type: annotated; peeled commit jest równy pełnemu SHA powyżej.
+- Czysty detached checkout: governance scripts, deterministic validator i
+  adoption lock — PASS; status drzewa pusty przed i po testach.
