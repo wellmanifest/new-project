@@ -1,0 +1,12 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-009",
+  "summary": "Pilotaż adopcji z równoległymi agentami",
+  "workstream": "integration",
+  "allowedPaths": ["docs/PILOT_PARALLEL_AGENTS.md", "TODO.md", "project/TICKETS.md", "project/ticket-009/**"],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": ["ticket-002", "ticket-007", "ticket-008"],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

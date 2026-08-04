@@ -1,0 +1,12 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-010",
+  "summary": "Manifest pakietu i meta-walidacja schematów",
+  "workstream": "governance",
+  "allowedPaths": ["governance/package-manifest.json", "scripts/create_adoption_lock.py", "tests/adoption-lock.test.sh", "tests/governance-validator.test.sh", ".github/workflows/ci.yml", "project/ticket-010/**", "TODO.md", "project/TICKETS.md"],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": ["ticket-007"],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

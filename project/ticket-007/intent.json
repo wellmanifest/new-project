@@ -1,0 +1,12 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-007",
+  "summary": "Publikacja immutable 0.10.0",
+  "workstream": "governance",
+  "allowedPaths": ["CHANGELOG.md", "docs/RELEASES.md", "TODO.md", "project/TICKETS.md", "project/ticket-007/**"],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["docker"],
+  "dependsOn": ["ticket-004"],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

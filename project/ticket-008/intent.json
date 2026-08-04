@@ -1,0 +1,12 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-008",
+  "summary": "Pilotaż adopcji w pojedynczym workstreamie",
+  "workstream": "integration",
+  "allowedPaths": ["docs/PILOT_SINGLE_WORKSTREAM.md", "TODO.md", "project/TICKETS.md", "project/ticket-008/**"],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": ["ticket-002", "ticket-007"],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

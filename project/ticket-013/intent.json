@@ -1,0 +1,12 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-013",
+  "summary": "Runbook Validator App i OpenRouter",
+  "workstream": "integration",
+  "allowedPaths": ["docs/VALIDATOR_AGENT_OPERATIONS.md", "docs/GOVERNANCE_ENFORCEMENT.md", "README.md", "TODO.md", "project/TICKETS.md", "project/ticket-013/**"],
+  "forbiddenPaths": ["project/ticket-*/user-*.md", ".env", "**/*.pem", "**/*secret*"],
+  "stacks": [],
+  "dependsOn": ["ticket-007", "ticket-009"],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

@@ -9,11 +9,36 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-005`](project/ticket-005/README.md) — uszczelnić projekcję
-  zewnętrznego dowodu aprobaty: fail-closed dla authority/binding oraz
-  bezpieczny odczyt bez podążania za symlinkiem. Stan:
-  `IN_PROGRESS / PUBLICATION`; testy lokalne przechodzą, oczekuje publikacji i
-  niezależnej aprobaty exact HEAD.
+- [ ] [`ticket-006`](project/ticket-006/README.md) — zsynchronizować roadmapę,
+  TODO i indeks z wersją 0.10.0 oraz utworzyć bounded backlog. Stan:
+  `IN_PROGRESS / PUBLICATION`; lokalne testy przechodzą, oczekuje PR i
+  niezależnego exact-head approval.
+
+- [ ] [`ticket-007`](project/ticket-007/README.md) — opublikować immutable
+  `v0.10.0`, GitHub Release i dowody z czystego checkoutu. Stan: `BACKLOG`.
+
+- [ ] [`ticket-008`](project/ticket-008/README.md) — pilot adopcji przez `goal`
+  w pojedynczym workstreamie. Stan: `BACKLOG`; zależy od 002 i 007.
+
+- [ ] [`ticket-009`](project/ticket-009/README.md) — pilot równoległych agentów
+  i exact-head Validator App. Stan: `BACKLOG`; zależy od 002, 007 i 008.
+
+- [ ] [`ticket-010`](project/ticket-010/README.md) — wersjonowany manifest
+  pakietu i meta-walidacja schematów. Stan: `BACKLOG`; zależy od 007.
+
+- [ ] [`ticket-011`](project/ticket-011/README.md) — natywne Windows CI dla
+  wrapperów i generatora. Stan: `BACKLOG`; zależy od 007.
+
+- [ ] [`ticket-012`](project/ticket-012/README.md) — test upgrade/rollback
+  między rzeczywistymi wydaniami. Stan: `BACKLOG`; zależy od 007 i 010.
+
+- [ ] [`ticket-013`](project/ticket-013/README.md) — runbook Validator App i
+  OpenRouter z diagramami, rotacją i diagnostyką. Stan: `BACKLOG`; zależy od
+  007 i 009.
+
+- [ ] [`ticket-005`](project/ticket-005/README.md) — implementacja uszczelnienia
+  evidence została scalona w PR #4. Stan: `BLOCKED / BLOCKED`; czeka na
+  immutable release 0.10.0 i adopcję jego SHA w `todo2code`.
 
 - [x] [`ticket-004`](project/ticket-004/README.md) — pogodzić dwa rozbieżne
   kontrakty 0.9.0 w kanoniczny 0.10.0, zachowując bounded delivery i zwalniając
@@ -25,7 +50,8 @@
 - [x] [`ticket-001`](project/ticket-001/README.md) — ujednolicenie zasad
   edytowalnego utrzymania `wellmanifest/new-project`.
 - [ ] [`ticket-002`](project/ticket-002/README.md) — integracja bezpiecznej
-  adopcji manifestu z `goal`.
+  adopcji manifestu z `goal`. Stan: `BLOCKED / BLOCKED`; implementacja lokalna
+  czeka na opublikowany pełny SHA standardu.
 - [x] [`ticket-003`](project/ticket-003/README.md) — zaufana walidacja PR przez
   allowlistowaną GitHub App lub zweryfikowaną atestację.
 
