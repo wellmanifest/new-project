@@ -17,6 +17,7 @@ MANAGED_SOURCES = {
     "template/files/AGENTS.template.md": "AGENTS.md",
     "project.sh": "project.sh",
     "project.bat": "project.bat",
+    "governance/approval-evidence.schema.json": ".governance/approval-evidence.schema.json",
     "governance/diagnostics.json": ".governance/diagnostics.json",
     "scripts/governance_check.py": ".governance/governance_check.py",
     "governance/intent.schema.json": ".governance/intent.schema.json",

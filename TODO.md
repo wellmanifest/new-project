@@ -13,6 +13,8 @@
   edytowalnego utrzymania `wellmanifest/new-project`.
 - [ ] [`ticket-002`](project/ticket-002/README.md) — integracja bezpiecznej
   adopcji manifestu z `goal`.
+- [x] [`ticket-003`](project/ticket-003/README.md) — zaufana walidacja PR przez
+  allowlistowaną GitHub App lub zweryfikowaną atestację.
 
 ---
 

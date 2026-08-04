@@ -8,12 +8,14 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-python3 - "$repo_root/governance/manifest.schema.json" "$repo_root/governance/manifest.default.json" <<'PY'
+python3 - "$repo_root/governance/manifest.schema.json" "$repo_root/governance/manifest.default.json" \
+  "$repo_root/governance/approval-evidence.schema.json" <<'PY'
 import json
 import sys
 
 schema = json.load(open(sys.argv[1], encoding='utf-8'))
 manifest = json.load(open(sys.argv[2], encoding='utf-8'))
+approval_schema = json.load(open(sys.argv[3], encoding='utf-8'))
 assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
@@ -23,6 +25,9 @@ ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
 assert not set(ticket['activeStatuses']) & set(ticket['nonActiveStatuses'])
+assert 'github-app-review' in manifest['trustedApprovalSources']
+assert manifest['approvalEvidence']['schema'] == 'new-project.approval-evidence/v1'
+assert approval_schema['properties']['headSha']['pattern'] == '^[0-9a-f]{40}$'
 PY
 python3 - "$repo_root/scripts/governance_check.py" <<'PY'
 import importlib.util
@@ -50,11 +55,20 @@ assert emitted == catalog, (sorted(emitted - catalog), sorted(catalog - emitted)
 PY
 grep -q 'review.commit_id === head' "$repo_root/.github/workflows/governance.yml"
 grep -Fq '^[0-9a-f]{40}$' "$repo_root/.github/workflows/governance.yml"
-grep -q 'trustedReviewers.has(review.user.login)' "$repo_root/.github/workflows/governance.yml"
-grep -q 'trustedReviewers.size === 0' "$repo_root/.github/workflows/governance.yml"
+grep -q 'trustedReviewers.has(normalize(review.user.login))' "$repo_root/.github/workflows/governance.yml"
+grep -q 'trustedValidatorApps.has(normalize(review.user.login))' "$repo_root/.github/workflows/governance.yml"
+grep -q 'trustedReviewers.size + trustedValidatorApps.size === 0' "$repo_root/.github/workflows/governance.yml"
 grep -q "process.env.TRUSTED_REVIEWERS" "$repo_root/.github/workflows/governance.yml"
+grep -q "process.env.TRUSTED_VALIDATOR_APPS" "$repo_root/.github/workflows/governance.yml"
+grep -q 'APPROVAL_EVIDENCE_PATH.*runner.temp' "$repo_root/.github/workflows/governance.yml"
+grep -q 'ref:.*github.event.pull_request.head.sha' "$repo_root/.github/workflows/governance.yml"
+grep -Fq "'/.new-project-standard/' >> .git/info/exclude" "$repo_root/.github/workflows/governance.yml"
 if grep -q "Set('\${{ inputs.trusted-reviewers }}'" "$repo_root/.github/workflows/governance.yml"; then
   echo 'trusted-reviewers is interpolated into JavaScript source' >&2
+  exit 1
+fi
+if grep -q "Set('\${{ inputs.trusted-validator-apps }}'" "$repo_root/.github/workflows/governance.yml"; then
+  echo 'trusted-validator-apps is interpolated into JavaScript source' >&2
   exit 1
 fi
 
@@ -137,6 +151,43 @@ expect_code() {
   grep -q "$expected" <<<"$output"
 }
 
+write_evidence() {
+  local path="$1"
+  local source="$2"
+  local actor_login="$3"
+  local actor_type="$4"
+  local method="$5"
+  local repository="${6:-example/fixture}"
+  local pull_request="${7:-13}"
+  local head_sha="${8:-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}"
+  local ticket="${9:-ticket-002}"
+  local verified="${10:-true}"
+  python3 - "$path" "$source" "$actor_login" "$actor_type" "$method" \
+    "$repository" "$pull_request" "$head_sha" "$ticket" "$verified" <<'PY'
+import json
+import pathlib
+import sys
+
+verification = {'method': sys.argv[5], 'verified': sys.argv[10] == 'true'}
+if sys.argv[2] == 'signed-attestation':
+    verification.update({
+        'issuer': 'https://token.actions.githubusercontent.com',
+        'predicateType': 'https://wellmanifest.dev/attestations/validator/v1',
+    })
+payload = {
+    'schema': 'new-project.approval-evidence/v1',
+    'source': sys.argv[2],
+    'repository': sys.argv[6],
+    'pullRequest': int(sys.argv[7]),
+    'headSha': sys.argv[8],
+    'ticket': sys.argv[9],
+    'actor': {'login': sys.argv[3], 'type': sys.argv[4]},
+    'verification': verification,
+}
+pathlib.Path(sys.argv[1]).write_text(json.dumps(payload), encoding='utf-8')
+PY
+}
+
 allowed="$fixture/allowed"
 make_fixture "$allowed"
 python3 - "$allowed" <<'PY'
@@ -164,6 +215,12 @@ PY
 run_check "$allowed" --changed-file src/app.js --enforce-approval \
   --approval-source github-review --approved-ticket ticket-002 > "$fixture/pass.out"
 grep -q '^GOV-PASS:' "$fixture/pass.out"
+resolved_ticket="$fixture/resolved-ticket.txt"
+run_check "$allowed" --changed-file src/app.js --resolved-ticket-output "$resolved_ticket" \
+  > "$fixture/resolved-ticket.out"
+grep -qx 'ticket-002' "$resolved_ticket"
+expect_code GOV-PATH-001 run_check "$allowed" --changed-file src/app.js \
+  --resolved-ticket-output "$allowed/.governance/resolved-ticket.txt"
 run_check "$allowed" --changed-file src/app.js --lock .governance/manifest.lock.json > "$fixture/published-lock.out"
 grep -q '^GOV-PASS:' "$fixture/published-lock.out"
 sed -i 's/"published"/"uncommitted"/' "$allowed/.governance/manifest.lock.json"
@@ -179,6 +236,63 @@ expect_code GOV-APPROVAL-001 run_check "$allowed" --changed-file src/app.js \
   --enforce-approval --approved-ticket ticket-002
 expect_code GOV-APPROVAL-002 run_check "$allowed" --changed-file src/app.js \
   --enforce-approval --approval-source github-review --approved-ticket ticket-999
+expect_code GOV-APPROVAL-003 run_check "$allowed" --changed-file src/app.js \
+  --enforce-approval --approval-source github-app-review --approved-ticket ticket-002
+
+app_evidence="$fixture/app-evidence.json"
+write_evidence "$app_evidence" github-app-review 'validator-agent[bot]' Bot github-api-allowlist
+run_check "$allowed" --changed-file src/app.js --enforce-approval \
+  --approval-evidence "$app_evidence" --expected-repository example/fixture \
+  --expected-pull-request 13 --expected-head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+  > "$fixture/app-approval.out"
+grep -q '^GOV-PASS:' "$fixture/app-approval.out"
+
+inside_evidence="$allowed/.governance/approval-evidence.json"
+write_evidence "$inside_evidence" github-app-review 'validator-agent[bot]' Bot github-api-allowlist
+expect_code GOV-APPROVAL-003 run_check "$allowed" --changed-file src/app.js --enforce-approval \
+  --approval-evidence "$inside_evidence" --expected-repository example/fixture \
+  --expected-pull-request 13 --expected-head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+stale_evidence="$fixture/stale-evidence.json"
+write_evidence "$stale_evidence" github-app-review 'validator-agent[bot]' Bot github-api-allowlist \
+  example/fixture 13 bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+expect_code GOV-APPROVAL-004 run_check "$allowed" --changed-file src/app.js --enforce-approval \
+  --approval-evidence "$stale_evidence" --expected-repository example/fixture \
+  --expected-pull-request 13 --expected-head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+wrong_target_evidence="$fixture/wrong-target-evidence.json"
+write_evidence "$wrong_target_evidence" github-app-review 'validator-agent[bot]' Bot \
+  github-api-allowlist other/repository 99
+expect_code GOV-APPROVAL-004 run_check "$allowed" --changed-file src/app.js --enforce-approval \
+  --approval-evidence "$wrong_target_evidence" --expected-repository example/fixture \
+  --expected-pull-request 13 --expected-head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+arbitrary_bot="$fixture/arbitrary-bot.json"
+write_evidence "$arbitrary_bot" github-app-review arbitrary-bot Bot github-api-allowlist
+expect_code GOV-APPROVAL-005 run_check "$allowed" --changed-file src/app.js --enforce-approval \
+  --approval-evidence "$arbitrary_bot" --expected-repository example/fixture \
+  --expected-pull-request 13 --expected-head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+wrong_type="$fixture/wrong-type.json"
+write_evidence "$wrong_type" github-app-review 'validator-agent[bot]' User github-api-allowlist
+expect_code GOV-APPROVAL-005 run_check "$allowed" --changed-file src/app.js --enforce-approval \
+  --approval-evidence "$wrong_type" --expected-repository example/fixture \
+  --expected-pull-request 13 --expected-head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+signed_evidence="$fixture/signed-evidence.json"
+write_evidence "$signed_evidence" signed-attestation validator-workflow Workflow sigstore
+run_check "$allowed" --changed-file src/app.js --enforce-approval \
+  --approval-evidence "$signed_evidence" --expected-repository example/fixture \
+  --expected-pull-request 13 --expected-head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+  > "$fixture/signed-approval.out"
+grep -q '^GOV-PASS:' "$fixture/signed-approval.out"
+
+unverified_evidence="$fixture/unverified-evidence.json"
+write_evidence "$unverified_evidence" signed-attestation validator-workflow Workflow sigstore \
+  example/fixture 13 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ticket-002 false
+expect_code GOV-APPROVAL-003 run_check "$allowed" --changed-file src/app.js --enforce-approval \
+  --approval-evidence "$unverified_evidence" --expected-repository example/fixture \
+  --expected-pull-request 13 --expected-head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 expect_code GOV-SCOPE-001 run_check "$allowed" --changed-file docs/outside.md
 
 single_segment_glob="$fixture/single-segment-glob"
@@ -231,6 +345,10 @@ printf '%s\n' 'export const client = true;' > "$parallel/sdk/client.js"
 add_active_ticket "$parallel" ticket-003 interfaces '["sdk/**"]'
 run_check "$parallel" --changed-file src/app.js > "$fixture/parallel.out"
 grep -q '^GOV-PASS:' "$fixture/parallel.out"
+parallel_resolved="$fixture/parallel-resolved.txt"
+run_check "$parallel" --changed-file src/app.js --resolved-ticket-output "$parallel_resolved" \
+  > "$fixture/parallel-resolved.out"
+grep -qx 'ticket-002' "$parallel_resolved"
 
 backlog_release="$fixture/backlog-release"
 make_fixture "$backlog_release"
