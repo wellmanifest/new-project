@@ -2,8 +2,8 @@
 
 - **ID**: ticket-004
 - **Owner**: unresolved:human
-- **Status**: BLOCKED
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-04
 
 ## Cel i Zakres
@@ -83,8 +83,10 @@ Gemini 3.1 Pro Preview na `z-ai/glm-5.2` zostanie wykonana w zależnym
   przechodzą; walidator zachowuje maksymalne CC=15 i długość funkcji 53 linie.
 - Pierwsze review Validator App dla zintegrowanego HEAD zażądało usunięcia
   globalnego wyłączenia fail-fast z helpera testowego. Helper przechwytuje
-  teraz oczekiwany błąd wyłącznie w lokalnym warunku; świeże testy przechodzą,
-  a ticket ponownie oczekuje na review aktualnego HEAD.
+  teraz oczekiwany błąd wyłącznie w lokalnym warunku; świeże testy przechodzą.
+- Validator App zatwierdziła dokładny HEAD `346895b3205ce2ad6af19159f01a6c60b99ba5c8`
+  jako `ticket-004` w runie `30934029411`; review objęło 13 fragmentów diffu.
+  Advisory verdict LLM nie był podstawą deterministycznego approval.
 - `todo2code` ma lokalnie wykonywalny model `openrouter/z-ai/glm-5.2`; pełny
   `npm run verify` przeszedł 334/335 testów z jednym skipem JDK i bez LLM.
 

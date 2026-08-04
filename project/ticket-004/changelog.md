@@ -19,3 +19,6 @@
   validator remains within CC=15 and 53 lines per function.
 - Replaced the broad negative-test fail-fast override rejected by Validator App
   with command-local conditional exit-status capture.
+- Recorded deterministic Validator App approval for exact head `346895b` after
+  hardening the external GLM 5.2 adapter; closed the completed ticket as
+  `DONE / DONE` before requesting final exact-head publication review.

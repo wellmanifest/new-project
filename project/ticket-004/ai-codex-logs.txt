@@ -44,3 +44,16 @@
 - governance-validator.test.sh after remediation: PASS
 - live OpenRouter model: openrouter/z-ai/glm-5.2
 - fresh current-head review: pending
+
+2026-08-04 final Validator evidence
+- validator runtime version: 0.6.5
+- validator runtime commit: 62d376149af21eea29b4ef1a5f545d9d2be8915c
+- validator run: https://github.com/subactor/validator-agent/actions/runs/30934029411
+- reviewed head: 346895b3205ce2ad6af19159f01a6c60b99ba5c8
+- review state: APPROVED
+- ticket binding: ticket-004
+- correlation id: new-project-pr-1-ticket-004-346895b
+- model: openrouter/z-ai/glm-5.2
+- reviewed diff chunks: 13
+- advisory verdict: REQUEST_CHANGES (not used as approval trust root)
+- deterministic checks and exact-head stability: PASS
