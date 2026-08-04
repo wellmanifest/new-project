@@ -38,7 +38,11 @@ dokładny zakres. Nie jest trusted merge evidence.
   aprobaty.
 - Dodano test symlinku i zachowano pozytywne przypadki GitHub App oraz signed
   attestation.
+- PR #4 został scalony po zielonym CI i current-head approval Validator App.
+- Ticket przeszedł do `BLOCKED`, ponieważ dalszy krok zależy od publikacji
+  immutable `v0.10.0` i zewnętrznej adopcji w `todo2code`.
 
 ## Blockers
 
-- Publikacja i niezależny review exact HEAD pozostają do wykonania.
+- Brakuje tagu/GitHub Release `v0.10.0` wskazującego pełny SHA.
+- `semcod/todo2code` nie może zakończyć produkcyjnej adopcji przed publikacją.

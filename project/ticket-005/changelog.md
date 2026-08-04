@@ -9,3 +9,6 @@
   read boundary with deterministic regression coverage.
 - Passed governance validator, governance scripts, adoption-lock, Python
   compile and diff checks.
+- Recorded merged PR #4 and exact-head Validator App approval.
+- Moved the ticket to `BLOCKED` while it waits for immutable 0.10.0 publication
+  and downstream adoption, releasing its active workstream reservation.
