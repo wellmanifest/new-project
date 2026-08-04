@@ -1,0 +1,6 @@
+2026-08-04 planning evidence
+- `main=c0bb63e`: adoption/lifecycle source; only IN_PROGRESS reserves scope.
+- `bounded=1ae86a1`: delivery-budget source; old active-status semantics.
+- `todo2code` lock currently points to `1ae86a1` with publicationStatus=remote-branch.
+- Koru executable model currently `openrouter/google/gemini-3.1-pro-preview`.
+- No implementation or live OpenRouter request performed; WAIT_FOR_APPROVAL.
