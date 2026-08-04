@@ -58,6 +58,9 @@ jobs:
           ref: ${{ inputs.standard-ref }}
           path: .new-project-standard
           persist-credentials: false
+      - name: Exclude workflow-owned standard checkout from target diff
+        shell: bash
+        run: printf '%s\n' '/.new-project-standard/' >> .git/info/exclude
       - name: Resolve ticket owning the pull request diff
         if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
         shell: bash

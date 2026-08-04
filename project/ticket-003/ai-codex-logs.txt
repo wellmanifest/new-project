@@ -14,3 +14,16 @@ python py_compile: PASS
 JSON Schema Draft 2020-12 validation: PASS
 workflow YAML parse: PASS
 git diff --check: PASS
+2026-08-04 FOLLOW-UP: REUSABLE WORKFLOW PUSH EVENT
+Observed target push run 30921256001: workflow-owned .new-project-standard/
+was classified as an untracked target change (GOV-SCOPE-001/GOV-WORKSTREAM-003).
+Fix: add only the workflow-owned checkout directory to .git/info/exclude after
+checkout. Tracked target paths remain visible; no repository .gitignore is changed.
+Transition: DONE -> IN_PROGRESS / VALIDATION for the matching integration scope.
+2026-08-04 FOLLOW-UP VALIDATION
+governance validator: PASS
+governance scripts: PASS
+adoption lock: PASS
+python py_compile: PASS
+git diff --check: PASS
+Transition: IN_PROGRESS / VALIDATION -> DONE.

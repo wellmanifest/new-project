@@ -62,6 +62,7 @@ grep -q "process.env.TRUSTED_REVIEWERS" "$repo_root/.github/workflows/governance
 grep -q "process.env.TRUSTED_VALIDATOR_APPS" "$repo_root/.github/workflows/governance.yml"
 grep -q 'APPROVAL_EVIDENCE_PATH.*runner.temp' "$repo_root/.github/workflows/governance.yml"
 grep -q 'ref:.*github.event.pull_request.head.sha' "$repo_root/.github/workflows/governance.yml"
+grep -Fq "'/.new-project-standard/' >> .git/info/exclude" "$repo_root/.github/workflows/governance.yml"
 if grep -q "Set('\${{ inputs.trusted-reviewers }}'" "$repo_root/.github/workflows/governance.yml"; then
   echo 'trusted-reviewers is interpolated into JavaScript source' >&2
   exit 1
