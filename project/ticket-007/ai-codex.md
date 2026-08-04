@@ -26,8 +26,11 @@ Wersja w drzewie to 0.10.0, lecz nie istnieje jeszcze immutable punkt wydania.
   rollbackiem.
 - Lokalne testy przygotowania, diff i kontrola tekstu przeszły; ticket jest w
   `PUBLICATION` i czeka na PR, CI oraz exact-head approval.
+- PR #8 otrzymał dwa zielone statusy CI, exact-head approval i został scalony.
+- Merge commit przetestowano z czystego detached checkoutu, następnie
+  opublikowano i zweryfikowano annotowany tag oraz GitHub Release `v0.10.0`.
+- Ticket zakończono jako `DONE`.
 
 ## Blockers
 
-- Brak blokad dla przygotowania release; publikacja nastąpi wyłącznie po
-  zielonym CI, exact-head approval i czystych testach merge commita.
+- Brak.

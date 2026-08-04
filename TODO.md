@@ -13,10 +13,10 @@
   TODO i indeks z wersją 0.10.0 oraz utworzono bounded backlog. Stan:
   `DONE / DONE`; PR #6 przeszedł CI, exact-head approval i został scalony.
 
-- [ ] [`ticket-007`](project/ticket-007/README.md) — opublikować immutable
-  `v0.10.0`, GitHub Release i dowody z czystego checkoutu. Stan:
-  `IN_PROGRESS / PUBLICATION`; przygotowanie lokalne przechodzi testy i czeka
-  na PR, exact-head approval oraz czysty test merge commita.
+- [x] [`ticket-007`](project/ticket-007/README.md) — opublikowano immutable
+  `v0.10.0` i GitHub Release dla pełnego SHA
+  `62ffb0dac1dba9294aa825ca5cc0344fefb33b0d`. Stan: `DONE / DONE`; PR #8,
+  exact-head approval i czyste testy zakończone.
 
 - [ ] [`ticket-008`](project/ticket-008/README.md) — pilot adopcji przez `goal`
   w pojedynczym workstreamie. Stan: `BACKLOG`; zależy od 002 i 007.

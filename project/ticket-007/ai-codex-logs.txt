@@ -2,3 +2,6 @@
 [2026-08-04T19:35:00Z] APPROVAL: user continued ticket-007 after ticket-006 completion.
 [2026-08-04T19:35:00Z] PREFLIGHT: v0.10.0 tag absent; GitHub Release absent; open pull requests absent; base main=27dedc348151e167d401afc37282c5d28b740eee.
 [2026-08-04T19:38:00Z] VALIDATION: governance scripts PASS; governance validator PASS; adoption lock PASS; git diff check PASS; forbidden text scan PASS.
+[2026-08-04T19:33:00Z] PR #8 merged as 62ffb0dac1dba9294aa825ca5cc0344fefb33b0d after exact-head Validator App approval.
+[2026-08-04T19:33:48Z] CLEAN RELEASE TEST: governance scripts PASS; governance validator PASS; adoption lock PASS; detached worktree clean before and after.
+[2026-08-04T19:33:48Z] PUBLICATION: annotated v0.10.0 peeled to 62ffb0dac1dba9294aa825ca5cc0344fefb33b0d; GitHub Release published and verified.

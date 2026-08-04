@@ -2,8 +2,8 @@
 
 - **ID**: ticket-007
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-04
 
 ## Cel i zakres
@@ -14,9 +14,9 @@ adopcji. Publikacja ma obejmować scalone uszczelnienie z PR #4.
 
 ## Kryteria odbioru
 
-- [ ] Tag `v0.10.0` i Release wskazują ten sam pełny SHA.
-- [ ] CI oraz trzy zestawy regresyjne przechodzą z czystego checkoutu.
-- [ ] Dowód publikacji nie zawiera sekretów ani ścieżek lokalnej maszyny.
+- [x] Tag `v0.10.0` i Release wskazują ten sam pełny SHA.
+- [x] CI oraz trzy zestawy regresyjne przechodzą z czystego checkoutu.
+- [x] Dowód publikacji nie zawiera sekretów ani ścieżek lokalnej maszyny.
 - [x] Udokumentowano rollback do poprzedniego opublikowanego SHA.
 
 ## Walidacja przygotowania
@@ -27,8 +27,17 @@ adopcji. Publikacja ma obejmować scalone uszczelnienie z PR #4.
 - `tests/adoption-lock.test.sh` — PASS.
 - Kontrola ścieżek lokalnych i unsafe markerów — PASS.
 
-Test czystego merge commita, tag i Release pozostają do wykonania po scaleniu
-PR przygotowującego wydanie.
+Test czystego merge commita, tag i Release wykonano po scaleniu PR
+przygotowującego wydanie.
+
+## Dowód publikacji
+
+- PR przygotowujący: #8, exact-head approval dla
+  `ed32136c7af9b24e9c0aac1cd0bb5a0a7488d6de`.
+- Release commit: `62ffb0dac1dba9294aa825ca5cc0344fefb33b0d`.
+- Annotowany tag: `v0.10.0`; peeled commit jest równy release commitowi.
+- GitHub Release: `https://github.com/wellmanifest/new-project/releases/tag/v0.10.0`.
+- Czysty detached checkout: trzy zestawy testów PASS, status pusty przed i po.
 
 ## Plan publikacji
 
