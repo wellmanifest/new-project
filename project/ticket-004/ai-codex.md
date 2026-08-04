@@ -55,6 +55,9 @@ zostanie zmieniony na `openrouter/z-ai/glm-5.2` bez płatnego wywołania.
   pass, maximum cyclomatic complexity remains 15 and maximum function length
   remains 53 lines. Returned to `BLOCKED / VALIDATION` for fresh remote checks
   and independent current-head approval.
+- Validator App requested changes on `b595fe2` because the new negative-test
+  helper temporarily disabled shell `errexit` with `set +e`. Resumed only to
+  replace that helper with command-local conditional status capture.
 
 ## Blockers
 
