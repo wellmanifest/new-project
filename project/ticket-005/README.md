@@ -2,8 +2,8 @@
 
 - **ID**: ticket-005
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: BLOCKED
+- **Workflow state**: BLOCKED
 - **Utworzono**: 2026-08-04
 
 ## Cel i zakres
@@ -55,6 +55,16 @@ emituje stabilne `GOV-APPROVAL-*` i działa fail-closed.
 - `bash tests/adoption-lock.test.sh` — PASS.
 - `python3 -m py_compile scripts/governance_check.py` — PASS.
 - `git diff --check` — PASS.
+- PR #4 został scalony do `main` jako
+  `9706e63d5f121323e9087d0db47a16acdbd276bb`; oba wymagane testy CI przeszły,
+  a Validator App zatwierdziła dokładny HEAD
+  `898041db4f66a6ab67ba656364c708cd7496817c`.
+
+## Blokada operacyjna
+
+Implementacja jest scalona, ale AC-05 czeka na opublikowany tag `v0.10.0` oraz
+adopcję jego pełnego SHA w `semcod/todo2code`. Status `BLOCKED` zachowuje dowody
+i zwalnia rezerwację workstreamu do czasu spełnienia tych warunków.
 
 ## Uczestnicy
 

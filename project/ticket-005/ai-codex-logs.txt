@@ -12,3 +12,5 @@ governance scripts: PASS
 
 2026-08-04T18:04:00Z $ bash tests/adoption-lock.test.sh
 adoption lock: PASS
+[2026-08-04T18:28:00Z] PR #4 merged at 9706e63d5f121323e9087d0db47a16acdbd276bb; CI PASS; Validator App approved exact head 898041db4f66a6ab67ba656364c708cd7496817c.
+[2026-08-04T18:28:00Z] STATUS: BLOCKED pending immutable v0.10.0 publication and downstream adoption.
