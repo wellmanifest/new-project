@@ -14,7 +14,9 @@
   `DONE / DONE`; PR #6 przeszedł CI, exact-head approval i został scalony.
 
 - [ ] [`ticket-007`](project/ticket-007/README.md) — opublikować immutable
-  `v0.10.0`, GitHub Release i dowody z czystego checkoutu. Stan: `BACKLOG`.
+  `v0.10.0`, GitHub Release i dowody z czystego checkoutu. Stan:
+  `IN_PROGRESS / PUBLICATION`; przygotowanie lokalne przechodzi testy i czeka
+  na PR, exact-head approval oraz czysty test merge commita.
 
 - [ ] [`ticket-008`](project/ticket-008/README.md) — pilot adopcji przez `goal`
   w pojedynczym workstreamie. Stan: `BACKLOG`; zależy od 002 i 007.

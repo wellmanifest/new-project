@@ -19,8 +19,15 @@ Wersja w drzewie to 0.10.0, lecz nie istnieje jeszcze immutable punkt wydania.
 
 ## Actual changes
 
-- Brak; ticket oczekuje w backlogu.
+- Użytkownik zatwierdził wykonanie poleceniem „kontynuuj”.
+- Zweryfikowano brak istniejącego tagu i GitHub Release `v0.10.0`.
+- Rozpoczęto przygotowanie przenośnego runbooka publikacji i rollbacku.
+- Dodano runbook z warunkami fail-closed, adopcją pełnego SHA i niedestrukcyjnym
+  rollbackiem.
+- Lokalne testy przygotowania, diff i kontrola tekstu przeszły; ticket jest w
+  `PUBLICATION` i czeka na PR, CI oraz exact-head approval.
 
 ## Blockers
 
-- Najpierw należy zatwierdzić kolejność z ticketu 006.
+- Brak blokad dla przygotowania release; publikacja nastąpi wyłącznie po
+  zielonym CI, exact-head approval i czystych testach merge commita.

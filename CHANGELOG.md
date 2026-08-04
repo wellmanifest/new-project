@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Release operations
+
+- Added a fail-closed publication and rollback runbook requiring exact-head
+  approval, a clean checkout of the merge commit, an immutable tag, a GitHub
+  Release and full-SHA downstream adoption.
+
 ### Trusted Validator App approvals
 
 - Hardened external approval evidence reads with a no-follow regular-file
