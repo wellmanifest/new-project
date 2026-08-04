@@ -2,8 +2,8 @@
 
 - **ID**: ticket-003
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: BLOCKED
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-04
 
 ## Cel i Zakres
@@ -44,20 +44,20 @@ Gemini 3.1 Pro Preview na `z-ai/glm-5.2` zostanie wykonana w zależnym
       implementacji lista została skorygowana z dziewięciu do dziesięciu
       plików wyłącznie o istniejący fixture wersji locka wymagany przez AC-06,
       bez nowego rezultatu, komponentu lub zależności.
-- [ ] AC-02: Standard ma jedną wersję `0.10.0`, a dokumentacja wyjaśnia konflikt
+- [x] AC-02: Standard ma jedną wersję `0.10.0`, a dokumentacja wyjaśnia konflikt
       dwóch wariantów 0.9.0 i sposób migracji.
-- [ ] AC-03: Manifest oraz schema zachowują bounded delivery i jednocześnie
+- [x] AC-03: Manifest oraz schema zachowują bounded delivery i jednocześnie
       klasyfikują wyłącznie `IN_PROGRESS` jako aktywną rezerwację.
-- [ ] AC-04: Validator nie zgłasza konfliktu, zależności, ownership ani overlap
+- [x] AC-04: Validator nie zgłasza konfliktu, zależności, ownership ani overlap
       dla ticketu pozostającego w `PLAN/BLOCKED`, lecz nadal blokuje te same
       naruszenia dla `IN_PROGRESS`.
-- [ ] AC-05: Fixture testy pokrywają oba stany, delivery budget, stale base i
+- [x] AC-05: Fixture testy pokrywają oba stany, delivery budget, stale base i
       przekroczenie zakresu bez LLM ani sieci.
-- [ ] AC-06: Generator adopcji może przypiąć pełny SHA nowego kontraktu bez
+- [x] AC-06: Generator adopcji może przypiąć pełny SHA nowego kontraktu bez
       nadpisania lokalnego manifestu i z aktualnymi hashami locka.
-- [ ] AC-07: Pełne testy governance, diff check i schema checks przechodzą;
+- [x] AC-07: Pełne testy governance, diff check i schema checks przechodzą;
       dokumentacja odróżnia fakty od historycznych danych.
-- [ ] AC-08: Zależny ticket-018 w `todo2code` używa `z-ai/glm-5.2`, nie Gemini
+- [x] AC-08: Zależny ticket-018 w `todo2code` używa `z-ai/glm-5.2`, nie Gemini
       3.1 Pro Preview, bez wykonywania kosztownego live benchmarku.
 
 ## Ryzyka i Uwagi
@@ -68,6 +68,19 @@ Gemini 3.1 Pro Preview na `z-ai/glm-5.2` zostanie wykonana w zależnym
 - Zmiana wersji unieważnia stare locki dopiero po jawnej adopcji pełnego SHA.
 - GLM jest wyborem kosztowym użytkownika; deterministyczne governance nie
   zależy od jego dostępności ani jakości.
+
+## Wynik walidacji
+
+- `tests/governance-validator.test.sh`: PASS.
+- `tests/governance-scripts.test.sh`: PASS.
+- `tests/adoption-lock.test.sh`: PASS.
+- Python compile, JSON parse i `git diff --check`: PASS.
+- Radon: maksymalna złożoność funkcji CC=15; maksymalna długość funkcji 53
+  linie w lokalnym audycie AST.
+- GitHub PR #1: dwa checki `governance-standard-ci / test` PASS; branch jest
+  mergeowalny, ale nie ma jeszcze niezależnego review.
+- `todo2code` ma lokalnie wykonywalny model `openrouter/z-ai/glm-5.2`; pełny
+  `npm run verify` przeszedł 334/335 testów z jednym skipem JDK i bez LLM.
 
 ## Uczestnicy
 

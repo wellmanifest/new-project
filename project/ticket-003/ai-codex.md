@@ -38,8 +38,13 @@ zostanie zmieniony na `openrouter/z-ai/glm-5.2` bez płatnego wywołania.
   existing adoption fixture. Added that exact test path to `allowedPaths` as a
   bounded correction required by AC-06; no outcome, component, dependency or
   production surface was added.
+- Reconciled lifecycle and bounded delivery, released version 0.10.0, retained
+  published-SHA lock validation and brought every validator function to CC 15
+  or less. All three upstream test suites pass.
+- Published PR #1. Both remote checks pass, but independent review is still
+  absent; transitioned to `BLOCKED / VALIDATION` without self-approval.
 
 ## Blockers
 
-- Nie istnieje jeszcze jeden kanoniczny SHA zawierający oba zestawy poprawek.
-- Wykonywalna aktualizacja `todo2code` zależy od zakończenia upstreamu.
+- Independent review or signed attestation is required for upstream PR #1.
+- Wykonywalny finalny lock `todo2code` zależy od połączenia upstreamu.
