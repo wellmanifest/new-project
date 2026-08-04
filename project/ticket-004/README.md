@@ -1,9 +1,9 @@
-# Ticket 003: Reconcile canonical governance and cost-bounded review
+# Ticket 004: Reconcile canonical governance and cost-bounded review
 
-- **ID**: ticket-003
+- **ID**: ticket-004
 - **Owner**: unresolved:human
-- **Status**: BLOCKED
-- **Workflow state**: VALIDATION
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
 - **Utworzono**: 2026-08-04
 
 ## Cel i Zakres
@@ -77,8 +77,10 @@ Gemini 3.1 Pro Preview na `z-ai/glm-5.2` zostanie wykonana w zależnym
 - Python compile, JSON parse i `git diff --check`: PASS.
 - Radon: maksymalna złożoność funkcji CC=15; maksymalna długość funkcji 53
   linie w lokalnym audycie AST.
-- GitHub PR #1: dwa checki `governance-standard-ci / test` PASS; branch jest
-  mergeowalny, ale nie ma jeszcze niezależnego review.
+- GitHub PR #1: zdalne checki `governance-standard-ci / test` były PASS dla
+  poprzedniego HEAD. Po połączeniu PR #2 z `main` wykryto kolizję niezależnie
+  przydzielonego identyfikatora `ticket-003`; ten kontrakt zachowano jako
+  `ticket-004`, a gałąź wymaga ponownej synchronizacji i walidacji.
 - `todo2code` ma lokalnie wykonywalny model `openrouter/z-ai/glm-5.2`; pełny
   `npm run verify` przeszedł 334/335 testów z jednym skipem JDK i bez LLM.
 
@@ -92,4 +94,4 @@ Gemini 3.1 Pro Preview na `z-ai/glm-5.2` zostanie wykonana w zależnym
 
 Ten katalog przechowuje governance, decyzje, logi i dowody. Kod wykonywalny,
 skrypty badawcze i testy należą do zwykłych katalogów źródłowych repozytorium,
-nie do `project/ticket-003/`.
+nie do `project/ticket-004/`.

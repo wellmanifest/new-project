@@ -18,3 +18,9 @@
 - remote checks: 2 PASS
 - independent review: missing; BLOCKED / VALIDATION
 - live OpenRouter requests: 0
+
+2026-08-04 continuation evidence
+- origin/main advanced to c54694a through PR #2.
+- PR #2 published a distinct completed ticket-003.
+- reconciliation ticket renumbered to ticket-004 before main integration.
+- user requested continuation; state restored to IN_PROGRESS / EDIT.

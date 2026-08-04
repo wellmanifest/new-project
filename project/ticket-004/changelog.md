@@ -1,4 +1,4 @@
-# Ticket Changelog (ticket-003)
+# Ticket Changelog (ticket-004)
 
 ## [0.1.0] - 2026-08-04
 
@@ -11,3 +11,6 @@
   maximum validator function complexity to CC 15.
 - Published PR #1 with green remote checks; moved to `BLOCKED / VALIDATION`
   pending independent review rather than self-approving.
+- Renumbered the unpublished reconciliation ticket from `ticket-003` to
+  `ticket-004` after `main` accepted an independent, completed ticket with the
+  same ID; no implementation outcome or write scope was added.

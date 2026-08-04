@@ -1,4 +1,4 @@
-# Preprompt & Wytyczne Techniczne (ticket-003)
+# Preprompt & Wytyczne Techniczne (ticket-004)
 
 - **Tytuł Zadania**: Reconcile canonical governance and cost-bounded review
 - **Utworzono**: 2026-08-04T12:53:07Z

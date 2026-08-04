@@ -1,6 +1,6 @@
 {
   "schema": "new-project.intent/v2",
-  "ticket": "ticket-003",
+  "ticket": "ticket-004",
   "summary": "Reconcile canonical governance and cost-bounded review",
   "workstream": "governance",
   "allowedPaths": [
@@ -14,7 +14,7 @@
     "scripts/governance_check.py",
     "tests/adoption-lock.test.sh",
     "tests/governance-validator.test.sh",
-    "project/ticket-003/**",
+    "project/ticket-004/**",
     "TODO.md",
     "project/TICKETS.md"
   ],

@@ -2,7 +2,7 @@
 participant-id: agent:codex
 participant: codex
 role: agent
-ticket: ticket-003
+ticket: ticket-004
 ---
 # Participant: codex (AI agent)
 
@@ -43,8 +43,14 @@ zostanie zmieniony na `openrouter/z-ai/glm-5.2` bez płatnego wywołania.
   or less. All three upstream test suites pass.
 - Published PR #1. Both remote checks pass, but independent review is still
   absent; transitioned to `BLOCKED / VALIDATION` without self-approval.
+- While review was pending, PR #2 merged a different task under `ticket-003`.
+  The reconciliation task was renumbered to the next free ID `ticket-004`
+  before integrating `origin/main`, preserving both independent audit trails.
+- The user's continuation resumed this same scope in `IN_PROGRESS / EDIT` so
+  the branch can be reconciled, revalidated and reviewed for a fresh HEAD.
 
 ## Blockers
 
-- Independent review or signed attestation is required for upstream PR #1.
+- Independent review or signed attestation is required for the refreshed HEAD
+  of upstream PR #1.
 - Wykonywalny finalny lock `todo2code` zależy od połączenia upstreamu.
