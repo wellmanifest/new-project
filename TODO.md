@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-005`](project/ticket-005/README.md) — uszczelnić projekcję
+  zewnętrznego dowodu aprobaty: fail-closed dla authority/binding oraz
+  bezpieczny odczyt bez podążania za symlinkiem. Stan:
+  `IN_PROGRESS / PUBLICATION`; testy lokalne przechodzą, oczekuje publikacji i
+  niezależnej aprobaty exact HEAD.
+
 - [x] [`ticket-004`](project/ticket-004/README.md) — pogodzić dwa rozbieżne
   kontrakty 0.9.0 w kanoniczny 0.10.0, zachowując bounded delivery i zwalniając
   rezerwacje dla `PLAN/BLOCKED`. Stan: `DONE / DONE`; kolizję ID

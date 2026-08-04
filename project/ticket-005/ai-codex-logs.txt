@@ -1,0 +1,14 @@
+2026-08-04T18:03:00Z $ bash tests/governance-validator.test.sh
+governance validator: PASS
+
+2026-08-04T18:04:00Z $ python3 -m py_compile scripts/governance_check.py
+exit: 0
+
+2026-08-04T18:04:00Z $ git diff --check
+exit: 0
+
+2026-08-04T18:04:00Z $ bash tests/governance-scripts.test.sh
+governance scripts: PASS
+
+2026-08-04T18:04:00Z $ bash tests/adoption-lock.test.sh
+adoption lock: PASS

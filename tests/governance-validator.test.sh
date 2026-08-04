@@ -220,6 +220,21 @@ expect_code() {
   grep -q "$expected" <<<"$output"
 }
 
+expect_codes() {
+  local expected_a="$1"
+  local expected_b="$2"
+  shift 2
+  local output status
+  if output="$("$@" 2>&1)"; then
+    status=0
+  else
+    status=$?
+  fi
+  test "$status" -eq 1
+  grep -q "$expected_a" <<<"$output"
+  grep -q "$expected_b" <<<"$output"
+}
+
 mutate_delivery() {
   local target="$1"
   local action="$2"
@@ -375,10 +390,22 @@ expect_code GOV-APPROVAL-003 run_check "$allowed" --changed-file src/app.js --en
   --approval-evidence "$inside_evidence" --expected-repository example/fixture \
   --expected-pull-request 13 --expected-head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
+symlink_evidence="$fixture/symlink-evidence.json"
+ln -s "$app_evidence" "$symlink_evidence"
+expect_code GOV-APPROVAL-003 run_check "$allowed" --changed-file src/app.js --enforce-approval \
+  --approval-evidence "$symlink_evidence" --expected-repository example/fixture \
+  --expected-pull-request 13 --expected-head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+directory_evidence="$fixture/evidence-directory"
+mkdir "$directory_evidence"
+expect_code GOV-APPROVAL-003 run_check "$allowed" --changed-file src/app.js --enforce-approval \
+  --approval-evidence "$directory_evidence" --expected-repository example/fixture \
+  --expected-pull-request 13 --expected-head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
 stale_evidence="$fixture/stale-evidence.json"
 write_evidence "$stale_evidence" github-app-review 'validator-agent[bot]' Bot github-api-allowlist \
   example/fixture 13 bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-expect_code GOV-APPROVAL-004 run_check "$allowed" --changed-file src/app.js --enforce-approval \
+expect_codes GOV-APPROVAL-004 GOV-APPROVAL-001 run_check "$allowed" --changed-file src/app.js --enforce-approval \
   --approval-evidence "$stale_evidence" --expected-repository example/fixture \
   --expected-pull-request 13 --expected-head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
@@ -391,7 +418,7 @@ expect_code GOV-APPROVAL-004 run_check "$allowed" --changed-file src/app.js --en
 
 arbitrary_bot="$fixture/arbitrary-bot.json"
 write_evidence "$arbitrary_bot" github-app-review arbitrary-bot Bot github-api-allowlist
-expect_code GOV-APPROVAL-005 run_check "$allowed" --changed-file src/app.js --enforce-approval \
+expect_codes GOV-APPROVAL-005 GOV-APPROVAL-001 run_check "$allowed" --changed-file src/app.js --enforce-approval \
   --approval-evidence "$arbitrary_bot" --expected-repository example/fixture \
   --expected-pull-request 13 --expected-head aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
