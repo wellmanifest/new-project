@@ -36,7 +36,7 @@ commit na `main` nie jest finalnym `sourceRevision` dla produkcyjnej adopcji.
 | `ticket-003` | DONE | Zaufane approval Validator App i signed attestation są wdrożone. |
 | `ticket-004` | DONE | Kanoniczny kontrakt 0.10.0 został scalony. |
 | `ticket-005` | BLOCKED | Uszczelnienie evidence jest scalone; czeka na release i adopcję `todo2code`. |
-| `ticket-006` | IN_PROGRESS | Synchronizacja roadmapy i kolejki dalszych prac. |
+| `ticket-006` | DONE | Roadmapa i kolejka dalszych prac zostały zsynchronizowane w PR #6. |
 
 `BLOCKED` zachowuje plan i dowody, lecz nie rezerwuje workstreamu ani ścieżek.
 

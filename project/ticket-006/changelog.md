@@ -8,3 +8,5 @@
 - Zastąpiono nieaktualny opis 0.9.0 roadmapą po integracji 0.10.0.
 - Dodano bounded backlog ticketów 007-013 i diagram zależności.
 - Uzgodniono `TODO.md` oraz indeks i zakończono lokalną walidację.
+- Zarejestrowano zielone CI, exact-head approval i merge PR #6; ticket
+  zakończono.

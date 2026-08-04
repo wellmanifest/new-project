@@ -2,8 +2,8 @@
 
 - **ID**: ticket-006
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-04
 
 ## Cel i zakres
@@ -28,6 +28,9 @@ opartą na jawnych zależnościach i utworzyć nieaktywne tickety backlogu.
 - `tests/governance-validator.test.sh` — PASS.
 - `tests/adoption-lock.test.sh` — PASS.
 - Kontrola niedozwolonych ścieżek lokalnych i unsafe markerów — PASS.
+- PR #6 otrzymał dwa zielone statusy CI, exact-head approval Validator App dla
+  `bc1deee9e7f21b79e32a7682a6d31f5e804781a6` i został scalony jako
+  `f3bccae884acff1ac2ca4e8f20f17b63e1ec2157`.
 
 ## Ryzyka i uwagi
 
