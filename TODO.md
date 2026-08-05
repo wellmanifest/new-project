@@ -9,6 +9,10 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-024`](project/ticket-024/README.md) — strategia
+  `extendable` w `package-manifest.json` dla pliku, który target musi
+  rozszerzyć. Stan: `PLAN / WAIT_FOR_APPROVAL`; klasyfikacja:
+  `FEATURE / P1 / requested`.
 - [x] [`ticket-022`](project/ticket-022/README.md) — kanoniczny Change
   Evaluation Contract oraz deterministyczny runtime TypeScript uruchamiany
   przez Bash. Stan: `DONE / DONE`; PR #31 scalony jako `166ebea` po Linux,
