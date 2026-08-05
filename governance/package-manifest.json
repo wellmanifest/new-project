@@ -11,6 +11,8 @@
     { "source": "governance/manifest.schema.json", "target": ".governance/manifest.schema.json", "strategy": "managed", "executable": false },
     { "source": "governance/package-manifest.json", "target": ".governance/package-manifest.json", "strategy": "managed", "executable": false },
     { "source": "governance/stack-profiles.json", "target": ".governance/stack-profiles.json", "strategy": "managed", "executable": false },
+    { "source": "governance/work-classification.dsl.json", "target": ".governance/work-classification.dsl.json", "strategy": "managed", "executable": false },
+    { "source": "governance/work-classification.schema.json", "target": ".governance/work-classification.schema.json", "strategy": "managed", "executable": false },
     { "source": "scripts/governance_check.py", "target": ".governance/governance_check.py", "strategy": "managed", "executable": false },
     { "source": "project/governance-check.sh", "target": "project/governance-check.sh", "strategy": "managed", "executable": true },
     { "source": "project/governance-check.bat", "target": "project/governance-check.bat", "strategy": "managed", "executable": false },
