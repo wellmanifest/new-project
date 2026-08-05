@@ -39,14 +39,18 @@ PY
 cat > "$fixture/violations.json" <<'JSON'
 {"schema":"new-project.branch-lifecycle-snapshot/v1","repository":"wellmanifest/example","defaultBranch":"main","deleteBranchOnMerge":false,"branches":["main","old-work"],"openPullRequests":[]}
 JSON
-set +e
-python3 "$validator" --snapshot "$fixture/violations.json" \
-  --expected-repository wellmanifest/example > "$fixture/violations.1.out"
-status=$?
-python3 "$validator" --snapshot "$fixture/violations.json" \
-  --expected-repository wellmanifest/example > "$fixture/violations.2.out"
-repeat_status=$?
-set -e
+if python3 "$validator" --snapshot "$fixture/violations.json" \
+  --expected-repository wellmanifest/example > "$fixture/violations.1.out"; then
+  status=0
+else
+  status=$?
+fi
+if python3 "$validator" --snapshot "$fixture/violations.json" \
+  --expected-repository wellmanifest/example > "$fixture/violations.2.out"; then
+  repeat_status=0
+else
+  repeat_status=$?
+fi
 test "$status" -eq 1
 test "$repeat_status" -eq 1
 cmp -s "$fixture/violations.1.out" "$fixture/violations.2.out"
@@ -58,11 +62,12 @@ grep -Fxq 'GOV-BRANCH-FAIL: failed (2 errors, 0 warnings)' "$fixture/violations.
 cat > "$fixture/missing-head.json" <<'JSON'
 {"schema":"new-project.branch-lifecycle-snapshot/v1","repository":"wellmanifest/example","defaultBranch":"main","deleteBranchOnMerge":true,"branches":["main"],"openPullRequests":[{"number":18,"headRepository":"wellmanifest/example","headRef":"ticket/018"}]}
 JSON
-set +e
-python3 "$validator" --snapshot "$fixture/missing-head.json" \
-  --expected-repository wellmanifest/example > "$fixture/missing-head.out"
-status=$?
-set -e
+if python3 "$validator" --snapshot "$fixture/missing-head.json" \
+  --expected-repository wellmanifest/example > "$fixture/missing-head.out"; then
+  status=0
+else
+  status=$?
+fi
 test "$status" -eq 1
 grep -q '^GOV-BRANCH-LIFECYCLE-003 ERROR:' "$fixture/missing-head.out"
 grep -Fq '"missingInternalHeads":["ticket/018"]' "$fixture/missing-head.out"
@@ -70,11 +75,12 @@ grep -Fq '"missingInternalHeads":["ticket/018"]' "$fixture/missing-head.out"
 cat > "$fixture/malformed.json" <<'JSON'
 {"schema":"new-project.branch-lifecycle-snapshot/v1","repository":"wellmanifest/example","defaultBranch":"main","deleteBranchOnMerge":true,"branches":["main"],"openPullRequests":[],"decision":"delete"}
 JSON
-set +e
-python3 "$validator" --snapshot "$fixture/malformed.json" \
-  --expected-repository wellmanifest/other > "$fixture/malformed.out"
-status=$?
-set -e
+if python3 "$validator" --snapshot "$fixture/malformed.json" \
+  --expected-repository wellmanifest/other > "$fixture/malformed.out"; then
+  status=0
+else
+  status=$?
+fi
 test "$status" -eq 1
 grep -q '^GOV-BRANCH-LIFECYCLE-003 ERROR:' "$fixture/malformed.out"
 grep -Fq 'snapshot fields are invalid' "$fixture/malformed.out"
