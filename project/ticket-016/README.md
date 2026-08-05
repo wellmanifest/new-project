@@ -2,8 +2,8 @@
 
 - **ID**: ticket-016
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-05
 
 ## Cel i zakres
@@ -39,3 +39,15 @@ exact-head merge approval.
 Każda nowa właściwość normatywna kontraktu wymaga pozytywnej asercji i
 negatywnej mutacji. Plan, implementacja, approval, release i adopcja pozostają
 osobnymi, kolejno zależnymi etapami.
+
+## Dowody zamknięcia
+
+- PR #17 (`feat(governance): enforce classified active intents`) scalony do `main`
+  jako `c02962b`.
+- `intent/v3` z wymaganym obiektem `classification` jest w
+  `governance/intent.schema.json`; kontrakt wymiarów w
+  `governance/work-classification.dsl.json` (`kind` BUG/FEATURE/SERVICE,
+  `priority` P0-P3, `origin` regression/requested/health) i jego schemat
+  `governance/work-classification.schema.json`.
+- Wszystkie pięć kryteriów odbioru było odhaczonych przed merge; zamknięcie
+  uzupełnia wyłącznie status i artefakty, nie zmienia zakresu.

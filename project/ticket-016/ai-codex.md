@@ -21,4 +21,7 @@ zarówno kanoniczny kontrakt, jak i klasyfikację aktywnej intencji.
 
 ## Actual changes
 
-- Brak; plan oczekuje na osobny commit implementacyjny.
+- Dodano `intent/v3`, deterministyczne wymaganie klasyfikacji aktywnych ticketów
+  i fail-closed walidację zarządzanego DSL.
+- PR #17 przeszedł testy oraz exact-head approval i został scalony jako
+  `c02962b`; ticket jest formalnie zamknięty.

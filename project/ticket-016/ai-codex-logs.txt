@@ -5,3 +5,10 @@
 2026-08-05 bash tests/governance-scripts.test.sh: PASS
 2026-08-05 bash tests/adoption-lock.test.sh: PASS
 2026-08-05 DSL semantic mutation cases: 9/9 rejected
+
+2026-08-05 close: weryfikacja przed przestawieniem statusu.
+  PR #17 -> merge c02962b na main: potwierdzone.
+  AC-01..AC-05: odhaczone przed merge, bez zmian.
+  intent/v3 + classification: obecne w governance/intent.schema.json.
+  work-classification.dsl.json + .schema.json: obecne.
+  Status IN_PROGRESS/PUBLICATION -> DONE/DONE.
