@@ -16,6 +16,21 @@ import sys
 from jsonschema import Draft202012Validator
 
 root = pathlib.Path(sys.argv[1])
+policy = (root / 'POLICY.md').read_text(encoding='utf-8')
+agents = (root / 'AGENTS.md').read_text(encoding='utf-8')
+agent_template = (root / 'template/files/AGENTS.template.md').read_text(encoding='utf-8')
+enforcement = (root / 'docs/GOVERNANCE_ENFORCEMENT.md').read_text(encoding='utf-8')
+for rule in ('P-BRANCH-001', 'P-BRANCH-002', 'P-BRANCH-003'):
+    assert f'RULE {rule} TYPE REQUIRED' in policy
+assert 'delete_branch_on_merge = true' in policy
+assert 'AUTOMATIC_DELETE_UNMERGED_HEAD_BRANCH' in policy
+assert 'REMOTE_BRANCHES = [DEFAULT_BRANCH]' in policy
+for instructions in (agents, agent_template):
+    assert 'delete_branch_on_merge=true' in instructions
+    assert 'closed without merge' in instructions.lower()
+assert 'open pull requests = 0' in enforcement
+assert 'remote branches = [default branch]' in enforcement
+assert 'Sam walidator jest read-only i nie usuwa branchy.' in enforcement
 schemas = {
     name: json.load(open(root / 'governance' / name, encoding='utf-8'))
     for name in (

@@ -1,0 +1,7 @@
+[2026-08-05T10:02:00Z] AUTHORIZATION: user approved ticket-017 and ticket-018; approval is interactive, not merge evidence.
+[2026-08-05T10:04:00Z] BASE: bound ticket-017 to origin/main@ed7b725b17c04e72e5a768d80c6fbff389611845 after ticket-016 closure.
+[2026-08-05T10:06:00Z] VALIDATION: jq empty project/ticket-017/intent.json -> PASS.
+[2026-08-05T10:06:00Z] VALIDATION: git diff --check -> PASS.
+[2026-08-05T10:06:00Z] TEST: bash tests/governance-scripts.test.sh -> PASS.
+[2026-08-05T10:06:00Z] TEST: bash tests/governance-validator.test.sh -> PASS.
+[2026-08-05T10:06:00Z] TEST: bash tests/adoption-lock.test.sh -> PASS.
