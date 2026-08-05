@@ -39,9 +39,9 @@
   OpenRouter z diagramami, rotacją i diagnostyką. Stan: `BACKLOG`; zależy od
   007 i 009.
 
-- [ ] [`ticket-014`](project/ticket-014/README.md) — kanoniczny DSL
+- [x] [`ticket-014`](project/ticket-014/README.md) — kanoniczny DSL
   `BUG > FEATURE > SERVICE`, osobny priorytet `P0–P3`, diff-aware CC i pakiet
-  adopcyjny. Stan: `IN_PROGRESS / VALIDATION`; zależy od zakończonego 010.
+  adopcyjny. Stan: `DONE / DONE`; PR #13 scalony jako `main@f7e0fd1`.
 
 - [ ] [`ticket-005`](project/ticket-005/README.md) — implementacja uszczelnienia
   evidence została scalona w PR #4. Stan: `BLOCKED / BLOCKED`; czeka na

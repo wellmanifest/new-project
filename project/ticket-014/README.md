@@ -2,8 +2,8 @@
 
 - **ID**: ticket-014
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-05
 
 ## Cel i zakres
@@ -55,3 +55,9 @@ zakres `intent.json`, ale nie zastępuje zaufanego merge approval.
 - `bash tests/adoption-lock.test.sh` — PASS
 - `bash tests/governance-scripts.test.sh` — PASS
 - JSON syntax, `git diff --check` i skan nowych obejść fail-fast — PASS
+
+## Stan publikacji
+
+PR #13 przeszedł chronione CI oraz approval Validator App dla dokładnego HEAD
+`a0e8c06e326a0b98b56987b25019042288fd217e` i został scalony do `main` jako
+`f7e0fd126344e3afa0bb83f2b7d1b2cb6a73b58b`.
