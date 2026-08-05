@@ -1,0 +1,28 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-026",
+  "summary": "Egzekwowalne pokrycie reguł CONTRIBUTING w runtime i CI huba",
+  "workstream": "integration",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-026/**",
+    "governance/rule-enforcement.schema.json",
+    "governance/rule-enforcement.json",
+    "governance/package-manifest.json",
+    "scripts/runtime.sh",
+    "tests/governance-scripts.test.sh",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["typescript"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

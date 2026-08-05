@@ -1,0 +1,41 @@
+2026-08-05 $ extract RULE C-* identifiers from CONTRIBUTING.md
+TOTAL 87 UNIQUE 87
+CONCURRENCY 3
+ENV 1
+CONTEXT 2
+TICKET 20
+DOCKER 6
+TOOLS 7
+DOCS 1
+START 3
+ANALYSIS 4
+PLAN 4
+APPROVAL 3
+DELEGATION 4
+EDIT 5
+VALIDATION 7
+EVALUATION 10
+CI 3
+PUBLISH 4
+
+2026-08-05 $ bash scripts/runtime.sh policy --policy CONTRIBUTING.md
+valid: true
+ruleIds: C-EVALUATION-001..C-EVALUATION-010
+diagnostics: []
+
+2026-08-05 $ governance_check.py --base main --head PR_34_HEAD --actor ci
+GOV-BOOT-001 ERROR: Required target-repository files are missing. [Dockerfile]
+GOV-DOCKER-001 ERROR: Required Dockerfile or Compose declaration is missing.
+GOV-MANIFEST-001 ERROR: Target adoption work-classification contract is absent.
+GOV-STACK-001 ERROR: Declared target stack 'docker' has no marker.
+GOV-TICKET-001 ERROR: Implementation paths changed without an active ticket.
+  evidence: [.github/workflows/ci.yml]
+GOV-FAIL: failed (5 errors, 0 warnings)
+exit: 1
+
+Interpretation: GOV-TICKET-001 confirms the PR diff is not governed by its PLAN
+ticket. The other four diagnostics prove that manifest.default.json models a
+target adoption and cannot serve as the hub self-governance profile.
+
+2026-08-05 $ gh variable list --repo subactor/validator-agent
+LLM_MODEL_VALIDATOR openrouter/z-ai/glm-5.2

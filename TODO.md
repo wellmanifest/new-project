@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-026`](project/ticket-026/README.md) — jawny rejestr pokrycia
+  wszystkich reguł `C-*` przez runtime, chronione CI albo decyzję człowieka.
+  Stan: `PLAN / WAIT_FOR_APPROVAL`; blokowany przez nakładające się prace
+  ticketów 023 i 025. Klasyfikacja: `BUG / P1 / regression`.
+
 - [x] [`ticket-022`](project/ticket-022/README.md) — kanoniczny Change
   Evaluation Contract oraz deterministyczny runtime TypeScript uruchamiany
   przez Bash. Stan: `DONE / DONE`; PR #31 scalony jako `166ebea` po Linux,
