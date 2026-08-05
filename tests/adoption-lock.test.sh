@@ -142,13 +142,12 @@ PY
 git -C "$missing" add governance/package-manifest.json
 git -C "$missing" commit -qm 'test: declare missing artifact'
 missing_revision="$(git -C "$missing" rev-parse HEAD)"
-set +e
-python3 "$missing/scripts/create_adoption_lock.py" \
+if python3 "$missing/scripts/create_adoption_lock.py" \
   --target-root "$fixture/missing-target" --source-revision "$missing_revision" \
-  > /dev/null 2> "$fixture/missing-artifact.err"
-status=$?
-set -e
-test "$status" -ne 0
+  > /dev/null 2> "$fixture/missing-artifact.err"; then
+  echo 'expected missing package source to be rejected' >&2
+  exit 1
+fi
 grep -q 'package source is missing' "$fixture/missing-artifact.err"
 
 duplicate="$fixture/duplicate-standard"
@@ -167,13 +166,12 @@ PY
 git -C "$duplicate" add governance/package-manifest.json
 git -C "$duplicate" commit -qm 'test: declare duplicate target'
 duplicate_revision="$(git -C "$duplicate" rev-parse HEAD)"
-set +e
-python3 "$duplicate/scripts/create_adoption_lock.py" \
+if python3 "$duplicate/scripts/create_adoption_lock.py" \
   --target-root "$fixture/duplicate-target" --source-revision "$duplicate_revision" \
-  > /dev/null 2> "$fixture/duplicate-artifact.err"
-status=$?
-set -e
-test "$status" -ne 0
+  > /dev/null 2> "$fixture/duplicate-artifact.err"; then
+  echo 'expected duplicate package target to be rejected' >&2
+  exit 1
+fi
 grep -q 'duplicate package target' "$fixture/duplicate-artifact.err"
 
 echo 'adoption lock: PASS'

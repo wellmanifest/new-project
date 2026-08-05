@@ -13,3 +13,6 @@
 - Pełna lokalna regresja obejmująca `governance-scripts`,
   `governance-validator`, `adoption-lock`, kontrolę JSON i `git diff --check`
   zakończyła się wynikiem PASS.
+- Po deterministycznym odrzuceniu PR usunięto dwa nowe przypadki wyłączania
+  trybu fail-fast z negatywnych testów; oczekiwany błąd jest teraz wyrażony
+  bezpiecznym warunkiem `if`.

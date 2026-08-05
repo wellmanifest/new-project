@@ -8,3 +8,13 @@ governance validator: PASS
 adoption lock: PASS
 python3 -m json.tool governance/package-manifest.json: PASS
 git diff --check: PASS
+2026-08-05 validator-agent exact-head 5bae0f8c6a51eb1d646fe2bd6fc43f0ab6e37a4d: CHANGES_REQUESTED
+Validation rejected: patch contained an unsafe fail-fast bypass.
+Remediation: replaced both newly added bypasses with fail-fast if guards.
+2026-08-05 post-remediation local CI contract
+governance scripts: PASS
+governance validator: PASS
+adoption lock: PASS
+python3 -m json.tool governance/package-manifest.json: PASS
+git diff --check: PASS
+added-line unsafe-shortcut scan: PASS
