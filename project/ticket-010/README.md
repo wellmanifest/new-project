@@ -2,8 +2,8 @@
 
 - **ID**: ticket-010
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-04
 
 ## Cel i zakres
@@ -20,8 +20,9 @@ pakietu oraz walidować schematy Draft 2020-12 i przykładowe dokumenty w CI.
 
 ## Stan publikacji
 
-Implementacja jest gotowa do walidacji i publikacji. Status `DONE` wymaga
-zaufanego approval powiązanego z dokładnym SHA brancha/PR.
+PR #10 przeszedł chronione CI oraz approval Validator App dla dokładnego HEAD
+`9f52b2c6654d5035f70cc4616c3c4c5601dcc281` i został scalony do `main` jako
+`956f3505d329aca4934da9857f5a060f0a62dc60`.
 
 ## Walidacja
 
