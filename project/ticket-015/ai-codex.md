@@ -41,8 +41,12 @@ Potrzebny jest release 0.11.0, którego pełny SHA stanie się bazą migracji
 - Dotknięty negatywny scenariusz wersji nie wyłącza już `errexit`;
   oczekiwaną porażkę sprawdza jawna instrukcja warunkowa.
 - Trzy wymagane zestawy regresyjne przeszły przed merge.
+- PR #15 uzyskał exact-head approval Validator App dla `1a8705a`, został
+  scalony, a merge SHA `cc9b04673bbd85cb4e35fb683d288ef34be1485f`
+  przeszedł trzy testy w czystym detached checkoutcie.
+- Utworzono nowy annotowany tag i GitHub Release `v0.11.0`; tag wskazuje
+  dokładnie przetestowany merge SHA.
 
 ## Blockers
 
-- Publikacja taga wymaga merge po niezależnym exact-head approval i ponownej
-  walidacji merge SHA w czystym checkoutcie.
+- Brak. Adopcje repozytoriów docelowych pozostają osobnymi ticketami.

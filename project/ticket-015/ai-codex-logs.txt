@@ -9,6 +9,28 @@ bash tests/governance-scripts.test.sh: governance scripts: PASS
 bash tests/governance-validator.test.sh: governance validator: PASS
 bash tests/adoption-lock.test.sh: adoption lock: PASS
 git diff --check: PASS
+2026-08-05 exact-head Validator App approval
+head=1a8705ab3977b3fa52be9c6489d61de963d300b5
+model=openrouter/z-ai/glm-5.2
+review=APPROVED
+2026-08-05 PR #15 merge
+merge=cc9b04673bbd85cb4e35fb683d288ef34be1485f
+2026-08-05 clean detached release validation
+bash tests/governance-scripts.test.sh: governance scripts: PASS
+bash tests/governance-validator.test.sh: governance validator: PASS
+bash tests/adoption-lock.test.sh: adoption lock: PASS
+git status --porcelain before tests: CLEAN
+git status --porcelain after tests: CLEAN
+2026-08-05 publication verification
+tag=v0.11.0
+tag-type=annotated
+tag-object=9f206c03def7976f20e15c4e04b7a7dd7d49c9ab
+peeled-commit=cc9b04673bbd85cb4e35fb683d288ef34be1485f
+release=https://github.com/wellmanifest/new-project/releases/tag/v0.11.0
+published-at=2026-08-05T09:01:47Z
+2026-08-05 closure validation
+git diff --check: PASS
+tests: NOT RUN; closure diff contains governance evidence and roadmap status only.
 git ls-remote --tags origin refs/tags/v0.11.0 refs/tags/v0.11.0^{}: ABSENT
 gh release view v0.11.0 --repo wellmanifest/new-project: release not found
 2026-08-05 validator-agent exact-head cebda42a35dc812d9c0996dd4a9c7593a9ad0a23: CHANGES_REQUESTED
