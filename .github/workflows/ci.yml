@@ -37,8 +37,24 @@ jobs:
         run: bash tests/governance-validator.test.sh
       - name: Test deterministic branch lifecycle validator
         run: bash tests/branch-lifecycle.test.sh
+      - name: Test governance environment runtime
+        run: bash tests/governance-env.test.sh
       - name: Test immutable adoption lock
         run: bash tests/adoption-lock.test.sh
+      # Every tests/*.test.sh must be listed above. The list is hand-written, so
+      # this refuses to pass when a suite exists that no step runs - which is how
+      # governance-env.test.sh went unexecuted after ticket 020 added it.
+      - name: Assert every test suite is wired into this workflow
+        run: |
+          set -euo pipefail
+          missing=0
+          for suite in tests/*.test.sh; do
+            if ! grep -Fq "bash $suite" .github/workflows/ci.yml; then
+              echo "CI does not run $suite" >&2
+              missing=1
+            fi
+          done
+          test "$missing" -eq 0
 
   windows-governance:
     runs-on: windows-latest
