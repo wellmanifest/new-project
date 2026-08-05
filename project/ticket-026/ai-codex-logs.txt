@@ -39,3 +39,16 @@ target adoption and cannot serve as the hub self-governance profile.
 
 2026-08-05 $ gh variable list --repo subactor/validator-agent
 LLM_MODEL_VALIDATOR openrouter/z-ai/glm-5.2
+
+2026-08-05 $ GitHub reviews for wellmanifest/new-project PR #34
+actor: ifuri-validator-agent[bot]
+type: Bot
+state: APPROVED
+commit: b23c42c02a11819b72cd7cecd96e4392758d6b8b
+model: openrouter/z-ai/glm-5.2
+LLM verdict: advisory APPROVE
+
+The exact head approved by Validator App is the same head rejected locally by
+the deterministic governance validator with GOV-TICKET-001. Therefore the
+protected approval path does not currently execute an equivalent hub-specific
+change gate.

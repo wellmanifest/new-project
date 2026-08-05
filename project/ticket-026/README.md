@@ -32,6 +32,10 @@ jako `protected` albo `human`, a luki semantyczne pozostają widoczne jako
 - CI huba uruchamia testy jednostkowe, ale nie waliduje własnego diffu
   kontraktem ticketu. Audyt PR #34 wykazał `GOV-TICKET-001` dla zmiany
   `.github/workflows/ci.yml` przy ticketcie pozostającym w `PLAN`.
+- Ten sam exact head PR #34 otrzymał approval od allowlistowanej Validator App.
+  Jej komentarz poprawnie oznacza wynik GLM 5.2 jako advisory, lecz ścieżka
+  approval nie uruchomiła równoważnego gate self-governance huba. To luka w
+  deterministycznym trust root, a nie błąd wyboru modelu LLM.
 - `governance/manifest.default.json` jest manifestem targetu, więc nie może być
   bezpośrednio użyty jako profil self-governance huba bez fałszywych błędów
   Docker/adoption. Dedykowany profil huba jest osobnym, zależnym wycinkiem.
@@ -70,7 +74,8 @@ jako `protected` albo `human`, a luki semantyczne pozostają widoczne jako
 1. Domknąć semantykę `C-EVALUATION-006..010`: project direction, LLM
    provenance, Contribution Ledger, `merge_group`, atestację i status check.
 2. Dodać osobny manifest self-governance huba i obowiązkową walidację diffu w
-   `ci.yml`, aby przypadek wykryty na PR #34 nie mógł mieć zielonego CI.
+   `ci.yml` oraz Validator App, aby przypadek wykryty na PR #34 nie mógł mieć
+   zielonego CI ani zaufanego exact-head approval.
 3. Dopiero potem rozszerzyć zamknięty orchestrator o Docker, GitHub API i
    chronione adaptery; runtime lokalny nie może udawać trust rootu.
 

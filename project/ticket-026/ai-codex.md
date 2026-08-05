@@ -31,6 +31,9 @@ chronionego CI i decyzji człowieka.
   runtime i niepełna semantyka `C-EVALUATION-001..010`.
 - Potwierdzono niezależnym uruchomieniem walidatora, że PR #34 jest odrzucany
   jako `GOV-TICKET-001`, mimo zielonych testów obecnego CI.
+- Potwierdzono, że ten sam exact head PR #34 otrzymał Validator App approval;
+  luka znajduje się w deterministycznej orkiestracji self-governance, nie w
+  advisory modelu `openrouter/z-ai/glm-5.2`.
 - Utworzono wyłącznie plan i machine-readable intent; nie zmieniono
   implementacji.
 
