@@ -1,0 +1,85 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-014",
+  "summary": "Kanoniczna klasyfikacja pracy BUG, FEATURE, SERVICE",
+  "workstream": "governance",
+  "allowedPaths": [
+    "POLICY.md",
+    "governance/work-classification.dsl.json",
+    "governance/work-classification.schema.json",
+    "governance/package-manifest.json",
+    "tests/governance-validator.test.sh",
+    "project/ticket-014/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env",
+    "**/*.pem",
+    "**/*secret*"
+  ],
+  "stacks": ["python"],
+  "dependsOn": ["ticket-010"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d14244a7f69b9f1d2a42f10a752faecc44032920",
+    "targetBranch": "main",
+    "outcome": "One versioned DSL deterministically classifies and orders BUG, FEATURE and SERVICE work across adopters",
+    "nonGoals": [
+      "No todo2code or goal runtime changes in this repository ticket",
+      "No migration of historical closed ticket intents",
+      "No LLM-based trust decision"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Publish a schema-validated JSON DSL and keep dependency order ahead of kind and urgency ranking",
+      "components": [
+        {
+          "name": "classification-contract",
+          "paths": [
+            "governance/work-classification.dsl.json",
+            "governance/work-classification.schema.json",
+            "POLICY.md"
+          ]
+        },
+        {
+          "name": "adoption-validation",
+          "paths": [
+            "governance/package-manifest.json",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [],
+      "dataChanges": [
+        "The adoption package gains a versioned work-classification DSL and schema"
+      ],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert ticket-014 and keep consumers on their previous immutable standard revision"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "Positive and negative DSL/schema cases pass"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "The version-bound adoption package contains both classification artifacts"
+      }
+    ]
+  }
+}
