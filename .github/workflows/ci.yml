@@ -27,6 +27,8 @@ jobs:
         run: bash tests/governance-scripts.test.sh
       - name: Test deterministic governance validator
         run: bash tests/governance-validator.test.sh
+      - name: Test deterministic branch lifecycle validator
+        run: bash tests/branch-lifecycle.test.sh
       - name: Test immutable adoption lock
         run: bash tests/adoption-lock.test.sh
 

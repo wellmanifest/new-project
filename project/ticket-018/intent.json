@@ -1,0 +1,92 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-018",
+  "summary": "Deterministyczny audyt lifecycle branchy GitHub",
+  "workstream": "governance",
+  "allowedPaths": [
+    "scripts/branch_lifecycle_check.py",
+    ".github/workflows/governance.yml",
+    "tests/branch-lifecycle.test.sh",
+    ".github/workflows/ci.yml",
+    "project/ticket-018/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env",
+    "**/*.pem",
+    "**/*secret*"
+  ],
+  "stacks": ["python"],
+  "dependsOn": ["ticket-017"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "delivery": {
+    "acceptedBaseSha": "b45ce0733b3f9ee53c86864f5b86e815b4c786f4",
+    "targetBranch": "main",
+    "outcome": "Protected CI deterministically blocks disabled merge cleanup and branches not owned by an open pull request",
+    "nonGoals": [
+      "No automatic deletion of a branch",
+      "No network access from the deterministic validator",
+      "No todo2code or LLM dependency in the required gate"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Acquire current GitHub facts in the protected workflow and validate a strict snapshot with a network-free standard-library runtime",
+      "components": [
+        {
+          "name": "github-evidence-acquisition",
+          "paths": [".github/workflows/governance.yml"]
+        },
+        {
+          "name": "deterministic-lifecycle-validator",
+          "paths": [
+            "scripts/branch_lifecycle_check.py",
+            "tests/branch-lifecycle.test.sh",
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert ticket-018 while retaining ticket-017 guidance and GitHub native automatic branch deletion"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/branch-lifecycle.test.sh"],
+        "evidence": "Strict positive and negative snapshots produce stable reports without network or mutation"
+      },
+      {
+        "criterion": "AC-06",
+        "commands": [
+          "bash tests/governance-scripts.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "bash tests/adoption-lock.test.sh"
+        ],
+        "evidence": "Existing governance and adoption regressions remain green"
+      }
+    ]
+  }
+}

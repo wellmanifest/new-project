@@ -60,6 +60,10 @@
 - [x] [`ticket-021`](project/ticket-021/README.md) — intent/v3, ref-aware allocation,
   clone-wide reservation i ochrona przed wieloma writerami w jednym worktree.
 
+- [x] [`ticket-018`](project/ticket-018/README.md) — deterministyczny audyt
+  ustawienia auto-delete i własności branchy przez otwarte PR-y. Stan:
+  `DONE / DONE`; PR #24 przeszedł Linux/Windows CI, exact-head approval i merge.
+
 - [ ] [`ticket-005`](project/ticket-005/README.md) — implementacja uszczelnienia
   evidence została scalona w PR #4. Stan: `BLOCKED / BLOCKED`; czeka na
   immutable release 0.10.0 i adopcję jego SHA w `todo2code`.
