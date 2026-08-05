@@ -2,7 +2,7 @@
 
 ```dsl
 DOCUMENT CONTRIBUTING
-VERSION 8
+VERSION 9
 LANGUAGE PL
 MODE PROCEDURAL
 PURPOSE "proces pracy nad repozytorium"
@@ -19,6 +19,9 @@ egzekwowanie realizuje walidator i manifest policy-as-code.
 DOCUMENT <NAME>                 # nazwa kontraktu
 VERSION <INTEGER>               # wersja dokumentu DSL
 MODE <STRICT|PROCEDURAL>        # sposób interpretacji
+ENV_FILE <RELATIVE_PATH> <OPTIONAL|REQUIRED>
+VARIABLE <NAME> TYPE <STRING|INTEGER|NUMBER|BOOLEAN|URL|PATH> FROM ENV [REQUIRED|DEFAULT <VALUE>]
+SECRET <NAME> TYPE <STRING|INTEGER|NUMBER|BOOLEAN|URL|PATH> FROM ENV REQUIRED REDACT
 # <COMMENT>                     # komentarz objaśniający bez skutku normatywnego
 
 RULE <STABLE_ID> [TYPE <TYPE>]  # początek reguły ze stabilnym identyfikatorem
@@ -49,6 +52,15 @@ Semantyka:
    użytkownika i bieżące pliki mają pierwszeństwo. Historia Git służy do
    odtworzenia kontekstu i kolejności, lecz sama nie może nadpisać aktualnego
    kontraktu ani stanowić zgody.
+7. Runtime rozwiązuje tylko zmienne jawnie zadeklarowane przez `VARIABLE` lub
+   `SECRET`; pozostałe wpisy `.env` nie są przekazywane do procesu potomnego.
+8. Precedencja wartości wynosi: środowisko procesu, zadeklarowany `ENV_FILE`,
+   wartość `DEFAULT`. Pusta wartość nie spełnia deklaracji `REQUIRED`.
+9. `ENV_FILE` musi być ścieżką względną pozostającą w katalogu kontraktu.
+   Interpolacja, wykonywanie poleceń i automatyczne rozwijanie `$NAME` w `.env`
+   są zabronione.
+10. Wartości `SECRET` istnieją tylko w pamięci procesu i muszą być redagowane
+    w raportach oraz diagnostyce.
 
 ## IZOLACJA WSPÓŁBIEŻNEJ PRACY
 
@@ -78,6 +90,33 @@ DO WAIT_FOR_ACTIVE_WRITER_OR_REQUEST_HUMAN_DECISION
 FORBID AUTO_STAGE_AUTO_COMMIT_OR_AUTO_RENAME_UNKNOWN_CHANGES
 ASSERT FOREIGN_WORK_PRESERVED
 NEXT PLAN OR BLOCKED
+```
+
+## ŚRODOWISKO RUNTIME DSL
+
+```dsl
+ENV_FILE ".env" OPTIONAL
+VARIABLE DEFAULT_AGENT TYPE STRING FROM ENV DEFAULT "antigravity"
+
+RULE C-ENV-001 TYPE REQUIRED
+WHEN DECLARED_ENVIRONMENT_VARIABLE_USED
+DO RESOLVE_ENVIRONMENT_WITH "python3 scripts/governance_env.py check"
+DO REQUIRE ONLY_DECLARED_VARIABLES_EXPORTED
+ASSERT SECRET_VALUES_REDACTED
+NEXT ANALYSIS OR BLOCKED
+```
+
+Sprawdzenie kontraktu nie modyfikuje środowiska bieżącej powłoki:
+
+```bash
+python3 scripts/governance_env.py check
+```
+
+Polecenie wymagające zadeklarowanych wartości należy uruchomić bezpośrednio
+przez runtime, bez `source .env` i bez `eval`:
+
+```bash
+python3 scripts/governance_env.py run -- command arg1 arg2
 ```
 
 ## SCOPE
