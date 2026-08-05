@@ -2,8 +2,8 @@
 
 - **ID**: ticket-015
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-05
 
 ## Cel i zakres
@@ -14,12 +14,11 @@ zamiast przypisywać nowe semantyki do istniejącego tagu `v0.10.0`.
 ## Kryteria odbioru
 
 - [x] AC-01: `VERSION`, manifest domyślny, changelog i testy wskazują 0.11.0.
-- [ ] AC-02: Trzy zestawy regresyjne przechodzą przed merge; walidacja po
-  merge pozostaje wymagana.
-- [ ] AC-03: Annotowany tag `v0.11.0` i GitHub Release wskazują ten sam pełny
+- [x] AC-02: Trzy zestawy regresyjne przeszły przed i po merge.
+- [x] AC-03: Annotowany tag `v0.11.0` i GitHub Release wskazują ten sam pełny
   SHA z chronionego `main`.
-- [ ] AC-04: Czysty detached checkout release SHA przechodzi pełny kontrakt CI.
-- [ ] AC-05: Istniejące tagi nie są przesuwane ani nadpisywane.
+- [x] AC-04: Czysty detached checkout release SHA przechodzi pełny kontrakt CI.
+- [x] AC-05: Istniejące tagi nie zostały przesunięte ani nadpisane.
 
 ## Ryzyka i mitygacje
 
@@ -45,3 +44,13 @@ sesji, a nie zaufany dowód merge.
 - `governance validator: PASS`
 - `adoption lock: PASS`
 - `v0.11.0`: brak istniejącego taga i GitHub Release w chwili kontroli.
+
+## Dowody publikacji
+
+- PR przygotowujący: `#15`, exact-head approval dla
+  `1a8705ab3977b3fa52be9c6489d61de963d300b5`.
+- Merge/release SHA: `cc9b04673bbd85cb4e35fb683d288ef34be1485f`.
+- Annotowany tag: `v0.11.0`; peeled commit jest równy release SHA.
+- GitHub Release: https://github.com/wellmanifest/new-project/releases/tag/v0.11.0
+- Czysty detached checkout release SHA: trzy zestawy regresyjne `PASS`, status
+  drzewa czysty przed i po testach.

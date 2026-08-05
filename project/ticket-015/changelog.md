@@ -7,3 +7,6 @@
 - Ujednolicono wersję standardu, manifestu, changelogu i testów jako 0.11.0.
 - Usunięto wyłączanie `errexit` z dotkniętego scenariusza mismatch i
   potwierdzono trzy zestawy regresyjne przed merge.
+- PR #15 scalono po exact-head approval; merge SHA przeszedł czystą walidację.
+- Opublikowano immutable annotowany tag i GitHub Release `v0.11.0` wskazujące
+  `cc9b04673bbd85cb4e35fb683d288ef34be1485f`.
