@@ -10,7 +10,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "13c2f8e21a243fbbd6ea243b173305b0368a9729",
+    "acceptedBaseSha": "c02962bd26c7dabb7e3cf85ad382758f95a012ea",
     "targetBranch": "main",
     "outcome": "Windows entrypoints are exercised on a protected windows-latest CI runner",
     "nonGoals": ["No Unix entrypoint behavior changes", "No Docker runtime changes"],
