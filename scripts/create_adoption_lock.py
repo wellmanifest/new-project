@@ -13,32 +13,51 @@ import subprocess
 import tempfile
 
 
-MANAGED_SOURCES = {
-    "template/files/AGENTS.template.md": "AGENTS.md",
-    "project.sh": "project.sh",
-    "project.bat": "project.bat",
-    "governance/approval-evidence.schema.json": ".governance/approval-evidence.schema.json",
-    "governance/diagnostics.json": ".governance/diagnostics.json",
-    "scripts/governance_check.py": ".governance/governance_check.py",
-    "governance/intent.schema.json": ".governance/intent.schema.json",
-    "governance/lock.schema.json": ".governance/lock.schema.json",
-    "governance/manifest.schema.json": ".governance/manifest.schema.json",
-    "governance/stack-profiles.json": ".governance/stack-profiles.json",
-    "project/governance-check.sh": "project/governance-check.sh",
-    "project/governance-check.bat": "project/governance-check.bat",
-    "project/new-ticket.sh": "project/new-ticket.sh",
-    "project/readme.sh": "project/readme.sh",
-}
-EXECUTABLE_TARGETS = {
-    "project.sh",
-    "project/governance-check.sh",
-    "project/new-ticket.sh",
-    "project/readme.sh",
-}
+PACKAGE_MANIFEST = "governance/package-manifest.json"
 
 
 def git_bytes(root: Path, revision: str, source: str) -> bytes:
     return subprocess.check_output(["git", "show", f"{revision}:{source}"], cwd=root)
+
+
+def package_files(root: Path, revision: str) -> list[dict[str, object]]:
+    try:
+        document = json.loads(git_bytes(root, revision, PACKAGE_MANIFEST))
+    except json.JSONDecodeError as error:
+        raise SystemExit(f"package manifest is not valid JSON: {error}") from error
+    if set(document) != {"schema", "files"} or document["schema"] != "new-project.package-manifest/v1":
+        raise SystemExit("package manifest must use new-project.package-manifest/v1")
+    files = document["files"]
+    if not isinstance(files, list) or not files:
+        raise SystemExit("package manifest files must be a non-empty array")
+    sources: set[str] = set()
+    targets: set[str] = set()
+    for index, item in enumerate(files):
+        if not isinstance(item, dict) or set(item) != {"source", "target", "strategy", "executable"}:
+            raise SystemExit(f"package manifest file {index} has invalid fields")
+        source = item["source"]
+        target = item["target"]
+        strategy = item["strategy"]
+        executable = item["executable"]
+        if not isinstance(source, str) or not isinstance(target, str):
+            raise SystemExit(f"package manifest file {index} paths must be strings")
+        if any(Path(path).is_absolute() or ".." in Path(path).parts for path in (source, target)):
+            raise SystemExit(f"package manifest file {index} paths must be repository-relative")
+        if strategy not in {"managed", "seed"} or not isinstance(executable, bool):
+            raise SystemExit(f"package manifest file {index} has invalid strategy or executable flag")
+        if source in sources:
+            raise SystemExit(f"duplicate package source: {source}")
+        if target in targets:
+            raise SystemExit(f"duplicate package target: {target}")
+        sources.add(source)
+        targets.add(target)
+        try:
+            git_bytes(root, revision, source)
+        except subprocess.CalledProcessError as error:
+            raise SystemExit(f"package source is missing at {revision}: {source}") from error
+    if PACKAGE_MANIFEST not in sources:
+        raise SystemExit(f"package manifest must manage itself: {PACKAGE_MANIFEST}")
+    return files
 
 
 def atomic_write(path: Path, content: bytes, mode: int | None = None) -> None:
@@ -62,11 +81,11 @@ def lock_content(
     revision: str,
     version: str,
     payloads: dict[str, bytes],
+    managed_targets: set[str],
 ) -> bytes:
     """Build the lock from expected payloads without requiring prior writes."""
-    managed_targets = sorted({*MANAGED_SOURCES.values(), ".governance/manifest.json"})
     managed_hashes: dict[str, str] = {}
-    for target in managed_targets:
+    for target in sorted(managed_targets):
         content = payloads.get(target)
         if content is None:
             content = (target_root / target).read_bytes()
@@ -90,6 +109,7 @@ def planned_changes(
     target_root: Path,
     payloads: dict[str, bytes],
     expected_lock: bytes,
+    executable_targets: set[str],
 ) -> list[tuple[str, str]]:
     """Return deterministic (action, path) entries for adoption drift."""
     changes: list[tuple[str, str]] = []
@@ -99,7 +119,7 @@ def planned_changes(
             changes.append(("CREATE", target))
         elif path.read_bytes() != content:
             changes.append(("UPDATE", target))
-        elif target in EXECUTABLE_TARGETS and not os.access(path, os.X_OK):
+        elif target in executable_targets and not os.access(path, os.X_OK):
             changes.append(("CHMOD", target))
 
     lock_target = ".governance/manifest.lock.json"
@@ -138,15 +158,17 @@ def main() -> int:
         stderr=subprocess.DEVNULL,
     )
 
-    payloads = {
-        target: git_bytes(standard_root, args.source_revision, source)
-        for source, target in MANAGED_SOURCES.items()
+    files = package_files(standard_root, args.source_revision)
+    managed_targets = {str(item["target"]) for item in files}
+    executable_targets = {
+        str(item["target"]) for item in files if item["executable"]
     }
+    payloads: dict[str, bytes] = {}
+    for item in files:
+        target = str(item["target"])
+        if item["strategy"] == "managed" or not (target_root / target).exists():
+            payloads[target] = git_bytes(standard_root, args.source_revision, str(item["source"]))
     manifest_path = target_root / ".governance/manifest.json"
-    if not manifest_path.exists():
-        payloads[".governance/manifest.json"] = git_bytes(
-            standard_root, args.source_revision, "governance/manifest.default.json"
-        )
 
     manifest_content = (
         manifest_path.read_bytes()
@@ -166,8 +188,9 @@ def main() -> int:
         args.source_revision,
         version,
         payloads,
+        managed_targets,
     )
-    changes = planned_changes(target_root, payloads, expected_lock)
+    changes = planned_changes(target_root, payloads, expected_lock, executable_targets)
 
     if args.check:
         if not changes:
@@ -188,8 +211,8 @@ def main() -> int:
     for target, content in sorted(payloads.items()):
         path = target_root / target
         if not path.exists() or path.read_bytes() != content:
-            atomic_write(path, content, 0o755 if target in EXECUTABLE_TARGETS else None)
-        elif target in EXECUTABLE_TARGETS and not os.access(path, os.X_OK):
+            atomic_write(path, content, 0o755 if target in executable_targets else None)
+        elif target in executable_targets and not os.access(path, os.X_OK):
             os.chmod(path, 0o755)
     atomic_write(
         target_root / ".governance/manifest.lock.json",

@@ -52,6 +52,7 @@ test -x "$target/project.sh"
 test -f "$target/project.bat"
 test -f "$target/AGENTS.md"
 test -f "$target/.governance/approval-evidence.schema.json"
+test -f "$target/.governance/package-manifest.json"
 python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check \
   > "$fixture/current-check.out"
@@ -121,5 +122,56 @@ test "$status" -ne 0
 grep -q 'target manifest version must equal' "$fixture/mismatch.err"
 test ! -e "$mismatch/project/governance-check.sh"
 test ! -e "$mismatch/.governance/manifest.lock.json"
+
+missing="$fixture/missing-standard"
+cp -R "$standard" "$missing"
+python3 - "$missing/governance/package-manifest.json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+document = json.load(open(path, encoding='utf-8'))
+document['files'].append({
+    'source': 'governance/not-published.json',
+    'target': '.governance/not-published.json',
+    'strategy': 'managed',
+    'executable': False,
+})
+open(path, 'w', encoding='utf-8').write(json.dumps(document, indent=2) + '\n')
+PY
+git -C "$missing" add governance/package-manifest.json
+git -C "$missing" commit -qm 'test: declare missing artifact'
+missing_revision="$(git -C "$missing" rev-parse HEAD)"
+if python3 "$missing/scripts/create_adoption_lock.py" \
+  --target-root "$fixture/missing-target" --source-revision "$missing_revision" \
+  > /dev/null 2> "$fixture/missing-artifact.err"; then
+  echo 'expected missing package source to be rejected' >&2
+  exit 1
+fi
+grep -q 'package source is missing' "$fixture/missing-artifact.err"
+
+duplicate="$fixture/duplicate-standard"
+cp -R "$standard" "$duplicate"
+python3 - "$duplicate/governance/package-manifest.json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+document = json.load(open(path, encoding='utf-8'))
+extra = dict(document['files'][0])
+extra['source'] = 'VERSION'
+document['files'].append(extra)
+open(path, 'w', encoding='utf-8').write(json.dumps(document, indent=2) + '\n')
+PY
+git -C "$duplicate" add governance/package-manifest.json
+git -C "$duplicate" commit -qm 'test: declare duplicate target'
+duplicate_revision="$(git -C "$duplicate" rev-parse HEAD)"
+if python3 "$duplicate/scripts/create_adoption_lock.py" \
+  --target-root "$fixture/duplicate-target" --source-revision "$duplicate_revision" \
+  > /dev/null 2> "$fixture/duplicate-artifact.err"; then
+  echo 'expected duplicate package target to be rejected' >&2
+  exit 1
+fi
+grep -q 'duplicate package target' "$fixture/duplicate-artifact.err"
 
 echo 'adoption lock: PASS'
