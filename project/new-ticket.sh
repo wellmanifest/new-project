@@ -9,6 +9,14 @@ AGENT="antigravity"
 WORKSTREAM=""
 FORCE_NEW=false
 
+# Work classification for intent/v3. The defaults are the contract's own answer
+# for an unclassified new ticket: rule W-CLASS-006 (work-request / maintenance)
+# assigns SERVICE and health, and priorityDerivation.serviceDefault is P2.
+# Declare --kind/--priority/--origin when the ticket is a defect or new behavior.
+KIND="SERVICE"
+PRIORITY="P2"
+ORIGIN="health"
+
 usage() {
   cat <<'EOF'
 Usage: ./project/new-ticket.sh [options]
@@ -17,8 +25,16 @@ Usage: ./project/new-ticket.sh [options]
   -a, --agent ID         Agent provider/id used for ai-{ID}.md
   -w, --workstream ID    Required workstream declared in the governance manifest
   -u, --users IDS        Compatibility input only; human files are not created
+  -k, --kind KIND        Work kind; default SERVICE
+  -p, --priority P       Work priority; default P2
+  -o, --origin ORIGIN    Work origin; default health
       --force-new        Create a new ticket despite an unfinished ticket
   -h, --help             Show this help
+
+Accepted classification values are read from the work classification contract,
+not hardcoded here. The defaults are that contract's own answer for an
+unclassified new ticket (rule W-CLASS-006 plus the service priority default);
+declare the three explicitly for a defect or new behavior.
 
 Only a human may authorize --force-new. Human-owned user-*.md files must be
 created and written by that human or by a trusted intake boundary.
@@ -53,6 +69,21 @@ while [[ $# -gt 0 ]]; do
     -w|--workstream)
       require_value "$@"
       WORKSTREAM="$2"
+      shift 2
+      ;;
+    -k|--kind)
+      require_value "$@"
+      KIND="$2"
+      shift 2
+      ;;
+    -p|--priority)
+      require_value "$@"
+      PRIORITY="$2"
+      shift 2
+      ;;
+    -o|--origin)
+      require_value "$@"
+      ORIGIN="$2"
       shift 2
       ;;
     --force-new)
@@ -97,6 +128,42 @@ is_active_ticket() {
   local readme="$1/README.md"
   [[ -f "$readme" ]] && grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*IN_PROGRESS([[:space:]]|$)' "$readme"
 }
+
+# The dimension vocabularies live in the work classification contract, which is
+# shipped to targets as .governance/ and kept at governance/ in the hub. Reading
+# them keeps this script from drifting away from the contract it must satisfy.
+classification_dsl() {
+  local candidate
+  for candidate in .governance/work-classification.dsl.json governance/work-classification.dsl.json; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+require_classification_value() {
+  local dimension="$1" value="$2" dsl
+  if ! dsl="$(classification_dsl)"; then
+    echo "GOV-CLASS-000: work classification contract not found; cannot validate --$dimension." >&2
+    echo "  remediation: restore .governance/work-classification.dsl.json from the pinned package." >&2
+    exit 1
+  fi
+  local allowed
+  allowed="$(python3 -c 'import json,sys
+data = json.load(open(sys.argv[1]))
+print("\n".join(data["dimensions"][sys.argv[2]]))' "$dsl" "$dimension")"
+  if ! printf '%s\n' "$allowed" | grep -Fxq -- "$value"; then
+    echo "GOV-CLASS-001: '$value' is not a declared $dimension in $dsl." >&2
+    echo "  accepted: $(printf '%s' "$allowed" | tr '\n' ' ')" >&2
+    exit 1
+  fi
+}
+
+require_classification_value kind "$KIND"
+require_classification_value priority "$PRIORITY"
+require_classification_value origin "$ORIGIN"
 
 highest=0
 conflicting_ticket=""
@@ -175,6 +242,9 @@ render_json_template() {
     -e "s|{YYYY-MM-DD}|$(escape_sed "$(json_escape "$date_only")")|g" \
     -e "s|{PROVIDER}|$(escape_sed "$(json_escape "$AGENT")")|g" \
     -e "s|{WORKSTREAM}|$(escape_sed "$(json_escape "$WORKSTREAM")")|g" \
+    -e "s|{KIND}|$(escape_sed "$(json_escape "$KIND")")|g" \
+    -e "s|{PRIORITY}|$(escape_sed "$(json_escape "$PRIORITY")")|g" \
+    -e "s|{ORIGIN}|$(escape_sed "$(json_escape "$ORIGIN")")|g" \
     "$source" > "$target"
 }
 
@@ -225,10 +295,15 @@ if [[ -f template/files/intent.template.json ]]; then
 else
   cat > "$ticket_dir/intent.json" <<EOF
 {
-  "schema": "new-project.intent/v2",
+  "schema": "new-project.intent/v3",
   "ticket": "$ticket_id",
   "summary": "$(json_escape "$TITLE")",
   "workstream": "$WORKSTREAM",
+  "classification": {
+    "kind": "$KIND",
+    "priority": "$PRIORITY",
+    "origin": "$ORIGIN"
+  },
   "allowedPaths": ["project/$ticket_id/**", "TODO.md", "project/TICKETS.md"],
   "forbiddenPaths": ["project/ticket-*/user-*.md"],
   "stacks": [],
