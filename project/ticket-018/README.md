@@ -3,7 +3,7 @@
 - **ID**: ticket-018
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-05
 
 ## Cel i zakres

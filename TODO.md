@@ -60,7 +60,7 @@
 
 - [ ] [`ticket-018`](project/ticket-018/README.md) — deterministyczny audyt
   ustawienia auto-delete i własności branchy przez otwarte PR-y. Stan:
-  `IN_PROGRESS / EDIT`; zakres zatwierdzony, ticket 017 formalnie zakończony.
+  `IN_PROGRESS / VALIDATION`; implementacja i lokalny pełny kontrakt przechodzą.
 
 - [ ] [`ticket-005`](project/ticket-005/README.md) — implementacja uszczelnienia
   evidence została scalona w PR #4. Stan: `BLOCKED / BLOCKED`; czeka na
