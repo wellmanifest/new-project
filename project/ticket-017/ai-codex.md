@@ -31,6 +31,8 @@ zamknięciu PR-a, bo mogłoby to zniszczyć jedyną referencję do pracy.
 - Zsynchronizowano źródłowy i adoptowany `AGENTS.md` oraz runbook GitHub.
 - Dodano deterministyczne asercje chroniące regułę przed dryfem dokumentacji.
 - Wszystkie trzy zestawy regresyjne huba przeszły.
+- PR #20 przeszedł CI i exact-head approval aplikacji, został scalony jako
+  `d3240c0`, a branch implementacyjny usunięto; ticket jest formalnie zamknięty.
 
 ## Blockers
 
