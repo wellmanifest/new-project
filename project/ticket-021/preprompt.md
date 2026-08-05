@@ -1,4 +1,4 @@
-# Preprompt & Wytyczne Techniczne (ticket-018)
+# Preprompt & Wytyczne Techniczne (ticket-021)
 
 - **Tytuł Zadania**: Scaffolder emituje intent v3 z klasyfikacja
 - **Utworzono**: 2026-08-05T10:11:00Z

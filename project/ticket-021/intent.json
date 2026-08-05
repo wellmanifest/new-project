@@ -1,6 +1,6 @@
 {
   "schema": "new-project.intent/v3",
-  "ticket": "ticket-018",
+  "ticket": "ticket-021",
   "summary": "Scaffolder emituje intent v3 z klasyfikacja",
   "workstream": "governance",
   "classification": {
@@ -9,14 +9,19 @@
     "origin": "regression"
   },
   "allowedPaths": [
-    "project/ticket-018/**",
+    "project/ticket-021/**",
+    "CONTRIBUTING.md",
+    "project/new-ticket.sh",
+    "project/readme.sh",
+    "template/files/intent.template.json",
+    "tests/governance-scripts.test.sh",
     "TODO.md",
     "project/TICKETS.md"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
   ],
-  "stacks": [],
+  "stacks": ["bash"],
   "dependsOn": [],
   "conflictsWith": [],
   "integrationTicket": null

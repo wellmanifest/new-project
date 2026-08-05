@@ -1,0 +1,29 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-020",
+  "summary": "Runtime zmiennych srodowiskowych dla governance DSL",
+  "workstream": "integration",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-020/**",
+    "CONTRIBUTING.md",
+    "scripts/governance_env.py",
+    "tests/governance-env.test.sh",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env",
+    "**/*.pem",
+    "**/*secret*"
+  ],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

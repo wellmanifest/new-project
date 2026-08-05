@@ -1,10 +1,10 @@
 ---
-participant-id: agent:claude
-participant: claude
+participant-id: agent:codex
+participant: codex
 role: agent
-ticket: ticket-018
+ticket: ticket-019
 ---
-# Participant: claude (AI agent)
+# Participant: codex (AI agent)
 
 ## Understanding
 

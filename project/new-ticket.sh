@@ -165,8 +165,58 @@ require_classification_value kind "$KIND"
 require_classification_value priority "$PRIORITY"
 require_classification_value origin "$ORIGIN"
 
+# Serialize allocation across every worktree sharing this clone. The high-water
+# mark reserves a number even before its ticket is committed and therefore
+# remains visible when another worktree cannot see the new directory.
+allocation_lock=""
+allocation_state=""
+release_allocation_lock() {
+  if [[ -n "$allocation_lock" ]]; then
+    rmdir "$allocation_lock" 2>/dev/null || true
+  fi
+}
+if git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"; then
+  allocation_lock="$git_common_dir/new-project-ticket-allocation.lock"
+  allocation_state="$git_common_dir/new-project-ticket-high-water"
+  if ! mkdir "$allocation_lock" 2>/dev/null; then
+    echo "GOV-TICKET-LOCK-001: another ticket allocation is active in this clone." >&2
+    echo "  remediation: wait for it to finish; remove a stale lock only after confirming no allocator is running." >&2
+    exit 4
+  fi
+  trap release_allocation_lock EXIT INT TERM
+fi
+
+# A ticket number taken on a branch is invisible on disk in another worktree.
+# Consult every local and fetched remote branch known to this clone.
+refs_highest() {
+  local highest_ref=0 ref number decimal
+  while read -r ref; do
+    [[ -n "$ref" ]] || continue
+    while read -r number; do
+      decimal=$((10#$number))
+      (( decimal > highest_ref )) && highest_ref=$decimal
+    done < <(
+      git ls-tree -d -r --name-only "$ref" -- project 2>/dev/null \
+        | sed -nE 's|^project/ticket-([0-9]+)$|\1|p'
+    )
+  done < <(git for-each-ref --format='%(refname)' refs/heads refs/remotes 2>/dev/null)
+  printf '%s' "$highest_ref"
+}
+
 highest=0
 conflicting_ticket=""
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  highest="$(refs_highest)"
+  if [[ -n "$allocation_state" && -f "$allocation_state" ]]; then
+    read -r reserved_highest < "$allocation_state"
+    if [[ ! "$reserved_highest" =~ ^[0-9]+$ ]]; then
+      echo "GOV-TICKET-LOCK-002: ticket allocation state is invalid." >&2
+      exit 4
+    fi
+    reserved_decimal=$((10#$reserved_highest))
+    (( reserved_decimal > highest )) && highest=$reserved_decimal
+  fi
+fi
 if [[ -d project ]]; then
   for dir in project/ticket-*; do
     [[ -d "$dir" ]] || continue
@@ -198,7 +248,15 @@ date_only="${timestamp%%T*}"
 agent_file="ai-$AGENT.md"
 agent_log="ai-$AGENT-logs.txt"
 
-mkdir -p "$ticket_dir"
+if ! mkdir "$ticket_dir" 2>/dev/null; then
+  echo "GOV-TICKET-LOCK-003: ticket directory already exists: $ticket_dir" >&2
+  exit 4
+fi
+if [[ -n "$allocation_state" ]]; then
+  allocation_state_tmp="$allocation_state.$$"
+  printf '%s\n' "$next_num" > "$allocation_state_tmp"
+  mv "$allocation_state_tmp" "$allocation_state"
+fi
 
 escape_sed() {
   local value="$1"

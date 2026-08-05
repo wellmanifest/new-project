@@ -203,4 +203,61 @@ grep -q 'GOV-CLASS-000' "$fixture/nocontract.err"
 test "$(count_tickets)" -eq "$tickets_before"
 mv "$fixture/work-classification.dsl.json.bak" "$fixture/.governance/work-classification.dsl.json"
 
+# Allocation must skip an id already claimed on a branch the clone knows about,
+# and the index must not reference tickets git does not track. Both are exercised
+# in a throwaway repository so the fixture stays independent of this checkout.
+race="$(mktemp -d "${TMPDIR:-/tmp}/new-project-race-test.XXXXXX")"
+trap 'rm -rf "$fixture" "$race"' EXIT INT TERM
+
+git -C "$race" init -q origin.git --bare
+git -C "$race" clone -q origin.git upstream
+mkdir -p "$race/upstream/project/ticket-007"
+printf '# Ticket 007\n' > "$race/upstream/project/ticket-007/README.md"
+git -C "$race/upstream" -c user.email=t@e -c user.name=t add -A
+git -C "$race/upstream" -c user.email=t@e -c user.name=t commit -qm init
+git -C "$race/upstream" push -q origin HEAD:main
+# A second worker claims 008 on a branch and pushes it without merging.
+mkdir -p "$race/upstream/project/ticket-008"
+printf '# Ticket 008\n' > "$race/upstream/project/ticket-008/README.md"
+git -C "$race/upstream" -c user.email=t@e -c user.name=t add -A
+git -C "$race/upstream" -c user.email=t@e -c user.name=t commit -qm claim
+git -C "$race/upstream" push -q origin HEAD:refs/heads/ticket/008-other
+
+git -C "$race" clone -q origin.git mine
+mkdir -p "$race/mine/project" "$race/mine/template" "$race/mine/.governance"
+cp "$repo_root/project/new-ticket.sh" "$race/mine/project/new-ticket.sh"
+cp "$repo_root/project/readme.sh" "$race/mine/project/readme.sh"
+cp -R "$repo_root/template/files" "$race/mine/template/files"
+cp "$repo_root/governance/work-classification.dsl.json" "$race/mine/.governance/work-classification.dsl.json"
+git -C "$race/mine" fetch -q origin '+refs/heads/*:refs/remotes/origin/*'
+
+(
+  cd "$race/mine"
+  bash project/new-ticket.sh --title 'Must not reuse 008' --workstream application > alloc.out 2>&1
+)
+# 008 exists only on an unmerged remote branch, so disk alone would have picked it.
+test ! -d "$race/mine/project/ticket-008"
+test -d "$race/mine/project/ticket-009"
+
+# ticket-009 is untracked in that clone, so the index must leave it out.
+(
+  cd "$race/mine"
+  bash project/readme.sh > index.out 2> index.err
+)
+grep -q 'skipping untracked project/ticket-009' "$race/mine/index.err"
+if grep -q 'ticket-009' "$race/mine/project/TICKETS.md"; then
+  echo 'Index referenced an untracked ticket' >&2
+  exit 1
+fi
+
+# The shared high-water mark must keep 009 reserved after its uncommitted
+# directory disappears, which models allocation from another linked worktree.
+rm -rf "$race/mine/project/ticket-009"
+(
+  cd "$race/mine"
+  bash project/new-ticket.sh --title 'Must not recycle 009' --workstream integration > reserve.out 2>&1
+)
+test -d "$race/mine/project/ticket-010"
+test ! -d "$race/mine/project/ticket-009"
+
 echo 'governance scripts: PASS'
