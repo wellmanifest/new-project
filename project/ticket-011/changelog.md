@@ -8,3 +8,9 @@
 - Dodano job `windows-governance` na `windows-latest`.
 - Dodano test PowerShell uruchamiany w katalogu zawierającym spacje.
 - Utwardzono propagację kodów wyjścia i diagnostykę braku Pythona w wrapperach `.bat`.
+
+## [0.2.0] - 2026-08-05
+
+- Zrekoncyliowano status ticketu z faktycznie scalonym PR #11.
+- Zapisano exact-head approval, zielone checki Linux/Windows i wymaganie
+  `windows-governance` w aktywnym rulesecie `main`.

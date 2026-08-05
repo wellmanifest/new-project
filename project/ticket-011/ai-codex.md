@@ -19,8 +19,11 @@ Obecne testy nie są dowodem natywnej zgodności wrapperów z Windows.
 
 ## Actual changes
 
-- Brak; ticket oczekuje w backlogu.
+- Dodano job `windows-governance` na natywnym runnerze `windows-latest`.
+- Dodano test PowerShell wrapperów i generatora w ścieżce zawierającej spacje.
+- Utwardzono propagację błędów wrapperów `.bat`.
+- PR #11 został scalony po zielonym CI i exact-head approval aplikacji.
 
 ## Blockers
 
-- Wymaga opublikowanej bazy 0.10.0.
+- Brak; implementacja i wymagany status Windows są aktywne.
