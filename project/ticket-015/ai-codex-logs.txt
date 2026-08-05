@@ -1,0 +1,25 @@
+2026-08-05T08:48:00Z PLAN: no release files changed; waiting for approval.
+2026-08-05 ticket-015 plan validation
+python3 -m json.tool project/ticket-015/intent.json: PASS
+2026-08-05 APPROVAL: user requested continuation; transitioned to IN_PROGRESS / EDIT.
+2026-08-05 ticket-015 pre-merge validation
+python3 -m json.tool governance/manifest.default.json: PASS
+python3 -m json.tool project/ticket-015/intent.json: PASS
+bash tests/governance-scripts.test.sh: governance scripts: PASS
+bash tests/governance-validator.test.sh: governance validator: PASS
+bash tests/adoption-lock.test.sh: adoption lock: PASS
+git diff --check: PASS
+git ls-remote --tags origin refs/tags/v0.11.0 refs/tags/v0.11.0^{}: ABSENT
+gh release view v0.11.0 --repo wellmanifest/new-project: release not found
+2026-08-05 validator-agent exact-head cebda42a35dc812d9c0996dd4a9c7593a9ad0a23: CHANGES_REQUESTED
+Reason: unsafe-shortcut detector matched a literal command name added to the
+ticket explanation; the executable scenario itself already used a safe conditional.
+2026-08-05 ticket-015 corrected-head validation
+added-line unsafe-shortcut scan: PASS
+bash tests/governance-scripts.test.sh: governance scripts: PASS
+bash tests/governance-validator.test.sh: governance validator: PASS
+bash tests/adoption-lock.test.sh: adoption lock: PASS
+git diff --check: PASS
+Draft 2020-12 intent validation: PASS
+governance validator: PASS
+git diff --check: PASS
