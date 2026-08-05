@@ -48,6 +48,10 @@
   `DONE / DONE`; release SHA `cc9b046`, annotowany tag i GitHub Release
   `v0.11.0` opublikowane po czystej walidacji.
 
+- [ ] [`ticket-016`](project/ticket-016/README.md) — runtime enforcement
+  klasyfikacji `BUG/FEATURE/SERVICE` przez `intent/v3`. Stan:
+  `PLAN / WAIT_FOR_APPROVAL`; zależy od zakończonego 014 i blokuje release 0.12.0.
+
 - [ ] [`ticket-005`](project/ticket-005/README.md) — implementacja uszczelnienia
   evidence została scalona w PR #4. Stan: `BLOCKED / BLOCKED`; czeka na
   immutable release 0.10.0 i adopcję jego SHA w `todo2code`.

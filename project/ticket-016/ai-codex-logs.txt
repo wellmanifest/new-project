@@ -1,0 +1,2 @@
+2026-08-05 ticket-016 PLAN: no implementation files changed
+2026-08-05 interactive approval recorded; implementation starts after plan commit

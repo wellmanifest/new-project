@@ -1,0 +1,59 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-016",
+  "summary": "Deterministyczne egzekwowanie klasyfikacji pracy",
+  "workstream": "governance",
+  "allowedPaths": [
+    "governance/intent.schema.json",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "project/ticket-016/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env",
+    "**/*.pem",
+    "**/*secret*"
+  ],
+  "stacks": ["python"],
+  "dependsOn": ["ticket-014"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "64fd0374d4f2854dac19f83f926115fb43572a6f",
+    "targetBranch": "main",
+    "outcome": "Active tickets are deterministically classified by the managed DSL before implementation",
+    "nonGoals": [
+      "No downstream todo2code or goal scheduling implementation",
+      "No rewrite of historical closed ticket intents",
+      "No LLM-based classification trust decision"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Introduce intent/v3 for classified active work while retaining read compatibility for archived v1/v2 intents",
+      "components": [
+        {"name": "intent-contract", "paths": ["governance/intent.schema.json"]},
+        {"name": "governance-runtime", "paths": ["scripts/governance_check.py", "tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert intent/v3 enforcement and keep consumers pinned to the previous release SHA"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Positive v3 and negative v1/v2/classification cases pass"}
+    ]
+  }
+}
