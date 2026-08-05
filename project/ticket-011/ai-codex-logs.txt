@@ -1,1 +1,3 @@
 [2026-08-04T18:21:36Z] BACKLOG: native Windows validation not configured.
+2026-08-05 ticket-011 implementation: Windows governance CI and batch exit propagation
+2026-08-05 local execution deferred: test requires windows-latest; exact-head result will come from PR CI
