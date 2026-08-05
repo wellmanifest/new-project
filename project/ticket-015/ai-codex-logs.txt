@@ -1,0 +1,6 @@
+2026-08-05T08:48:00Z PLAN: no release files changed; waiting for approval.
+2026-08-05 ticket-015 plan validation
+python3 -m json.tool project/ticket-015/intent.json: PASS
+Draft 2020-12 intent validation: PASS
+governance validator: PASS
+git diff --check: PASS

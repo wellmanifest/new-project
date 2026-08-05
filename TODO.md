@@ -43,6 +43,10 @@
   `BUG > FEATURE > SERVICE`, osobny priorytet `P0–P3`, diff-aware CC i pakiet
   adopcyjny. Stan: `DONE / DONE`; PR #13 scalony jako `main@f7e0fd1`.
 
+- [ ] [`ticket-015`](project/ticket-015/README.md) — immutable wydanie 0.11.0
+  zawierające manifest pakietu i DSL klasyfikacji. Stan:
+  `PLAN / WAIT_FOR_APPROVAL`; zależy od zakończonego 014.
+
 - [ ] [`ticket-005`](project/ticket-005/README.md) — implementacja uszczelnienia
   evidence została scalona w PR #4. Stan: `BLOCKED / BLOCKED`; czeka na
   immutable release 0.10.0 i adopcję jego SHA w `todo2code`.

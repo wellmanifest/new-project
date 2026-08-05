@@ -1,0 +1,70 @@
+{
+  "schema": "new-project.intent/v2",
+  "ticket": "ticket-015",
+  "summary": "Publikacja immutable 0.11.0",
+  "workstream": "governance",
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-015/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env",
+    "**/*.pem",
+    "**/*secret*"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": ["ticket-014"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "64fd0374d4f2854dac19f83f926115fb43572a6f",
+    "targetBranch": "main",
+    "outcome": "Publish one immutable 0.11.0 commit and use its full SHA as the only downstream adoption source",
+    "nonGoals": [
+      "No downstream repository adoption in this ticket",
+      "No feature implementation beyond release metadata consistency",
+      "No retagging or force update"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Create a new immutable minor release rather than changing the meaning of v0.10.0",
+      "components": [
+        {"name": "release-metadata", "paths": ["VERSION", "CHANGELOG.md", "governance/manifest.default.json"]},
+        {"name": "release-validation", "paths": ["tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": ["The published standard version advances from 0.10.0 to 0.11.0"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Keep adopters pinned to their previous immutable SHA; never move v0.11.0"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/governance-validator.test.sh", "bash tests/adoption-lock.test.sh"],
+        "evidence": "All version assertions and package adoption fixtures use 0.11.0"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["bash tests/governance-scripts.test.sh"],
+        "evidence": "The clean release checkout passes the hub script contract"
+      }
+    ]
+  }
+}
