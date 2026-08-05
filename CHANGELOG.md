@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-08-05
+
+### Canonical work classification
+
+- Added a versioned, schema-validated DSL with independent `kind`, `priority`
+  and `origin` axes and deterministic
+  `dependencies -> kind -> priority -> stableId` ordering.
+- Standardized ready-work kind order as `BUG`, `FEATURE`, `SERVICE`, while
+  preserving `P0` through `P3` as an independent urgency axis.
+- Classified baseline-to-head complexity increases and new threshold crossings
+  as `BUG/regression`, and pre-existing non-increased debt as
+  `SERVICE/health`; LLM classification remains advisory.
+
 ### Release operations
 
 - Added a fail-closed publication and rollback runbook requiring exact-head

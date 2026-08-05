@@ -45,7 +45,7 @@
 
 - [ ] [`ticket-015`](project/ticket-015/README.md) — immutable wydanie 0.11.0
   zawierające manifest pakietu i DSL klasyfikacji. Stan:
-  `PLAN / WAIT_FOR_APPROVAL`; zależy od zakończonego 014.
+  `IN_PROGRESS / EDIT`; zależy od zakończonego 014.
 
 - [ ] [`ticket-005`](project/ticket-005/README.md) — implementacja uszczelnienia
   evidence została scalona w PR #4. Stan: `BLOCKED / BLOCKED`; czeka na

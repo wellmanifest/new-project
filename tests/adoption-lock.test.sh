@@ -43,7 +43,7 @@ root = pathlib.Path(sys.argv[1])
 lock = json.load(open(root / '.governance/manifest.lock.json', encoding='utf-8'))
 assert lock['standard']['sourceRevision'] == sys.argv[2]
 assert lock['standard']['publicationStatus'] == 'published'
-assert lock['standard']['version'] == '0.10.0'
+assert lock['standard']['version'] == '0.11.0'
 for path, expected in lock['managedFiles'].items():
     assert hashlib.sha256((root / path).read_bytes()).hexdigest() == expected
 PY
@@ -111,14 +111,14 @@ grep -q -- '--check and --upgrade are mutually exclusive' "$fixture/options.err"
 
 mismatch="$fixture/mismatch"
 mkdir -p "$mismatch/.governance"
-sed 's/"version": "0.10.0"/"version": "9.9.9"/' \
+sed 's/"version": "0.11.0"/"version": "9.9.9"/' \
   "$standard/governance/manifest.default.json" > "$mismatch/.governance/manifest.json"
-set +e
-python3 "$standard/scripts/create_adoption_lock.py" \
-  --target-root "$mismatch" --source-revision "$revision" --upgrade > /dev/null 2> "$fixture/mismatch.err"
-status=$?
-set -e
-test "$status" -ne 0
+if python3 "$standard/scripts/create_adoption_lock.py" \
+  --target-root "$mismatch" --source-revision "$revision" --upgrade \
+  > /dev/null 2> "$fixture/mismatch.err"; then
+  echo "expected version mismatch to fail" >&2
+  exit 1
+fi
 grep -q 'target manifest version must equal' "$fixture/mismatch.err"
 test ! -e "$mismatch/project/governance-check.sh"
 test ! -e "$mismatch/.governance/manifest.lock.json"

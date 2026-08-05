@@ -34,8 +34,15 @@ Potrzebny jest release 0.11.0, którego pełny SHA stanie się bazą migracji
 
 ## Actual changes
 
-- Brak zmian implementacyjnych; plan oczekuje na zatwierdzenie.
+- Użytkownik zatwierdził kontynuację wcześniej przedstawionego zakresu.
+- Ticket przeszedł do `IN_PROGRESS / EDIT`.
+- Wersja standardu, manifestu i asercji testowych została podniesiona do
+  `0.11.0`; bieżące zmiany przeniesiono do sekcji wydania 0.11.0.
+- Dotknięty negatywny scenariusz wersji nie wyłącza już `errexit` przez
+  `set +e`; oczekiwaną porażkę sprawdza jawna instrukcja warunkowa.
+- Trzy wymagane zestawy regresyjne przeszły przed merge.
 
 ## Blockers
 
-- Wymagane jest jawne zatwierdzenie `ticket-015`.
+- Publikacja taga wymaga merge po niezależnym exact-head approval i ponownej
+  walidacji merge SHA w czystym checkoutcie.

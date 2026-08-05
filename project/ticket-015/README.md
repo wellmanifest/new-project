@@ -2,8 +2,8 @@
 
 - **ID**: ticket-015
 - **Owner**: unresolved:human
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
 - **Utworzono**: 2026-08-05
 
 ## Cel i zakres
@@ -13,8 +13,9 @@ zamiast przypisywać nowe semantyki do istniejącego tagu `v0.10.0`.
 
 ## Kryteria odbioru
 
-- [ ] AC-01: `VERSION`, manifest domyślny, changelog i testy wskazują 0.11.0.
-- [ ] AC-02: Trzy zestawy regresyjne przechodzą przed i po merge.
+- [x] AC-01: `VERSION`, manifest domyślny, changelog i testy wskazują 0.11.0.
+- [ ] AC-02: Trzy zestawy regresyjne przechodzą przed merge; walidacja po
+  merge pozostaje wymagana.
 - [ ] AC-03: Annotowany tag `v0.11.0` i GitHub Release wskazują ten sam pełny
   SHA z chronionego `main`.
 - [ ] AC-04: Czysty detached checkout release SHA przechodzi pełny kontrakt CI.
@@ -31,3 +32,16 @@ zamiast przypisywać nowe semantyki do istniejącego tagu `v0.10.0`.
 
 - Human participant: unresolved; plik `user-*` nie został utworzony.
 - Agent participant: [`ai-codex.md`](ai-codex.md)
+
+## Autoryzacja sesji
+
+Użytkownik poleceniem „kontynuuj” 2026-08-05 zatwierdził wcześniej
+przedstawiony plan ticketu 015. Jest to zgoda na implementację w bieżącej
+sesji, a nie zaufany dowód merge.
+
+## Dowody przed merge
+
+- `governance scripts: PASS`
+- `governance validator: PASS`
+- `adoption lock: PASS`
+- `v0.11.0`: brak istniejącego taga i GitHub Release w chwili kontroli.
