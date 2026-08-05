@@ -10,3 +10,4 @@
   runtime with deterministic JSON/Markdown reporting.
 - Added immutable-package routing and required CI coverage for exact Git/hash,
   scope, evidence, approval and hard-gate failures.
+- PR #31 passed exact-head validation and merged to `main`; ticket completed.

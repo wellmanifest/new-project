@@ -44,6 +44,8 @@ semantic evidence against the same schema.
 - Added both artifacts to immutable adoption and moved adversarial coverage
   into the existing required governance CI test.
 - All hub test contracts pass.
+- PR #31 passed Linux and Windows CI, received exact-head Validator App
+  approval and merged as `166ebeaa45903822329645328f61317131821935`.
 
 ## Blockers
 

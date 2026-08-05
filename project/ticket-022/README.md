@@ -2,8 +2,8 @@
 
 - **ID**: ticket-022
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-05
 - **Klasyfikacja**: `FEATURE / P1 / requested`
 
@@ -55,6 +55,14 @@ ale nie zaufany dowód merge.
 - `bash tests/branch-lifecycle.test.sh` — PASS.
 - `python3 -m json.tool governance/change-evaluation.schema.json` — PASS.
 - `bash -n scripts/runtime.sh` oraz `git diff --check` — PASS.
+
+## Dowody publikacji
+
+- PR: `wellmanifest/new-project#31`.
+- Zatwierdzony exact head: `4df48df54e30b25220a190c34af71643f40d2fcf`.
+- Validator: `ifuri-validator-agent[bot]`, model doradczy
+  `openrouter/z-ai/glm-5.2`.
+- Merge commit: `166ebeaa45903822329645328f61317131821935`.
 
 ## Uczestnicy
 
