@@ -8,5 +8,40 @@
   "stacks": ["python"],
   "dependsOn": ["ticket-007"],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "13c2f8e21a243fbbd6ea243b173305b0368a9729",
+    "targetBranch": "main",
+    "outcome": "Adoption package contents come from one revision-bound manifest and JSON contracts are meta-validated",
+    "nonGoals": [
+      "No governance runtime behavior changes outside package adoption",
+      "No new runtime dependency"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Load all adoption artifacts from a versioned package manifest stored in the source revision",
+      "components": [
+        {"name": "adoption-package", "paths": ["governance/package-manifest.json", "scripts/create_adoption_lock.py"]},
+        {"name": "contract-validation", "paths": ["tests/adoption-lock.test.sh", "tests/governance-validator.test.sh", ".github/workflows/ci.yml"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert this ticket commit to restore the embedded artifact mapping"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/adoption-lock.test.sh"], "evidence": "Package-driven adoption and negative artifact cases pass"},
+      {"criterion": "AC-02", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Draft 2020-12 schemas and representative documents validate"}
+    ]
+  }
 }

@@ -8,6 +8,64 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+python3 - "$repo_root" <<'PY'
+import json
+import pathlib
+import sys
+
+from jsonschema import Draft202012Validator
+
+root = pathlib.Path(sys.argv[1])
+schemas = {
+    name: json.load(open(root / 'governance' / name, encoding='utf-8'))
+    for name in (
+        'approval-evidence.schema.json',
+        'intent.schema.json',
+        'lock.schema.json',
+        'manifest.schema.json',
+    )
+}
+for schema in schemas.values():
+    Draft202012Validator.check_schema(schema)
+
+Draft202012Validator(schemas['manifest.schema.json']).validate(
+    json.load(open(root / 'governance/manifest.default.json', encoding='utf-8'))
+)
+intent_validator = Draft202012Validator(schemas['intent.schema.json'])
+for intent_path in sorted((root / 'project').glob('ticket-*/intent.json')):
+    intent_validator.validate(json.load(open(intent_path, encoding='utf-8')))
+Draft202012Validator(schemas['lock.schema.json']).validate({
+    'schema': 'new-project.lock/v1',
+    'standard': {
+        'id': 'wellmanifest/new-project',
+        'version': '0.10.0',
+        'sourceRepository': 'wellmanifest/new-project',
+        'sourceRevision': '0' * 40,
+        'publicationStatus': 'published',
+    },
+    'managedFiles': {'AGENTS.md': '0' * 64},
+})
+Draft202012Validator(schemas['approval-evidence.schema.json']).validate({
+    'schema': 'new-project.approval-evidence/v1',
+    'source': 'github-app-review',
+    'repository': 'wellmanifest/new-project',
+    'pullRequest': 1,
+    'headSha': '0' * 40,
+    'ticket': 'ticket-010',
+    'actor': {'login': 'validator[bot]', 'type': 'Bot'},
+    'verification': {'method': 'github-api-allowlist', 'verified': True},
+})
+
+package = json.load(open(root / 'governance/package-manifest.json', encoding='utf-8'))
+assert package['schema'] == 'new-project.package-manifest/v1'
+assert package['files']
+assert len({item['source'] for item in package['files']}) == len(package['files'])
+assert len({item['target'] for item in package['files']}) == len(package['files'])
+assert 'governance/package-manifest.json' in {item['source'] for item in package['files']}
+for item in package['files']:
+    assert (root / item['source']).is_file(), item['source']
+PY
+
 python3 - "$repo_root/governance/manifest.schema.json" "$repo_root/governance/manifest.default.json" \
   "$repo_root/governance/approval-evidence.schema.json" <<'PY'
 import json
