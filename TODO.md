@@ -49,6 +49,7 @@
   `v0.11.0` opublikowane po czystej walidacji.
 
 - [x] [`ticket-016`](project/ticket-016/README.md) — runtime enforcement
+- [ ] [`ticket-017`](project/ticket-017/README.md) — strategia rozszerzalna w package-manifest
   klasyfikacji `BUG/FEATURE/SERVICE` przez `intent/v3`. Stan:
   `DONE / DONE`; PR #17 scalony do `main` jako `c02962b` po aktualnym approval
   i zielonych testach.
