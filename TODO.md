@@ -24,8 +24,10 @@
 - [ ] [`ticket-009`](project/ticket-009/README.md) — pilot równoległych agentów
   i exact-head Validator App. Stan: `BACKLOG`; zależy od 002, 007 i 008.
 
-- [ ] [`ticket-010`](project/ticket-010/README.md) — wersjonowany manifest
-  pakietu i meta-walidacja schematów. Stan: `BACKLOG`; zależy od 007.
+- [x] [`ticket-010`](project/ticket-010/README.md) — opublikowano wersjonowany
+  manifest pakietu i meta-walidację schematów. Stan: `DONE / DONE`; PR #10
+  przeszedł CI i exact-head approval, po czym został scalony jako
+  `main@956f350`.
 
 - [ ] [`ticket-011`](project/ticket-011/README.md) — natywne Windows CI dla
   wrapperów i generatora. Stan: `BACKLOG`; zależy od 007.
