@@ -11,13 +11,13 @@ cat >"$work/CONTRIBUTING.md" <<'EOF'
 ENV_FILE ".env" OPTIONAL
 VARIABLE DEFAULT_AGENT TYPE STRING FROM ENV DEFAULT "fallback"
 VARIABLE ENABLED TYPE BOOLEAN FROM ENV DEFAULT "false"
-SECRET API_TOKEN TYPE STRING FROM ENV REQUIRED REDACT
+SECRET SENSITIVE_INPUT TYPE STRING FROM ENV REQUIRED REDACT
 ```
 EOF
 cat >"$work/.env" <<'EOF'
 DEFAULT_AGENT="dotenv-agent"
 ENABLED=yes
-API_TOKEN="never-print-this"
+SENSITIVE_INPUT="never-print-this"
 IGNORED_VALUE="must-not-be-exported"
 EOF
 
@@ -30,7 +30,7 @@ report = json.load(open(sys.argv[1], encoding="utf-8"))
 assert report["status"] == "resolved"
 assert report["variables"]["DEFAULT_AGENT"]["value"] == "dotenv-agent"
 assert report["variables"]["ENABLED"]["value"] == "true"
-assert report["variables"]["API_TOKEN"]["value"] == "[REDACTED]"
+assert report["variables"]["SENSITIVE_INPUT"]["value"] == "[REDACTED]"
 assert "never-print-this" not in json.dumps(report)
 assert "IGNORED_VALUE" not in report["variables"]
 PY
