@@ -34,13 +34,11 @@ cp -R "$repo_root/template/files" "$fixture/template/files"
 cp "$repo_root/governance/work-classification.dsl.json" "$fixture/.governance/work-classification.dsl.json"
 printf '%s\n' '# Analysis-owned project README' > "$fixture/project/README.md"
 
-set +e
+status=0
 (
   cd "$fixture"
   bash project/new-ticket.sh --title 'Missing workstream' > missing-workstream.out 2> missing-workstream.err
-)
-status=$?
-set -e
+) || status=$?
 test "$status" -eq 2
 grep -q 'Workstream is required' "$fixture/missing-workstream.err"
 test ! -d "$fixture/project/ticket-001"
@@ -87,14 +85,12 @@ PY
 
 sed -i 's/\*\*Status\*\*: PLAN/**Status**: IN_PROGRESS/' "$ticket/README.md"
 
-set +e
+status=0
 (
   cd "$fixture"
   bash project/new-ticket.sh --title 'Must reuse active ticket' --agent codex --workstream application \
     > second.out 2> second.err
-)
-status=$?
-set -e
+) || status=$?
 test "$status" -eq 3
 grep -q "Active ticket conflicts with workstream 'application': project/ticket-001" "$fixture/second.err"
 test ! -d "$fixture/project/ticket-002"
@@ -132,13 +128,11 @@ grep -q 'ticket-002' "$fixture/project/TICKETS.md"
 grep -q 'ticket-003' "$fixture/project/TICKETS.md"
 grep -q 'ticket-004' "$fixture/project/TICKETS.md"
 
-set +e
+status=0
 (
   cd "$fixture"
   T2C_TICKET_INDEX_FILE='../outside.md' bash project/readme.sh > /dev/null 2> traversal.err
-)
-status=$?
-set -e
+) || status=$?
 test "$status" -eq 2
 test ! -e "$fixture/../outside.md"
 
@@ -173,15 +167,13 @@ count_tickets() {
 tickets_before="$(count_tickets)"
 
 for mutation in '--kind NOPE' '--priority P9' '--origin invented'; do
-  set +e
+  status=0
   (
     cd "$fixture"
     # shellcheck disable=SC2086
     bash project/new-ticket.sh --title 'Rejected classification' --workstream interfaces $mutation \
       > mutation.out 2> mutation.err
-  )
-  status=$?
-  set -e
+  ) || status=$?
   test "$status" -eq 1
   grep -q 'GOV-CLASS-001' "$fixture/mutation.err"
   test "$(count_tickets)" -eq "$tickets_before"
@@ -190,14 +182,12 @@ done
 # Without the contract there is nothing to validate against, and guessing would
 # defeat the point; the scaffolder must say so rather than emit an unchecked value.
 mv "$fixture/.governance/work-classification.dsl.json" "$fixture/work-classification.dsl.json.bak"
-set +e
+status=0
 (
   cd "$fixture"
   bash project/new-ticket.sh --title 'No contract' --workstream interfaces \
     > nocontract.out 2> nocontract.err
-)
-status=$?
-set -e
+) || status=$?
 test "$status" -eq 1
 grep -q 'GOV-CLASS-000' "$fixture/nocontract.err"
 test "$(count_tickets)" -eq "$tickets_before"
