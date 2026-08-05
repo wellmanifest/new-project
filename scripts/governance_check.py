@@ -97,6 +97,118 @@ def load_json(path: Path) -> Any:
         return json.load(handle)
 
 
+def work_classification_error(value: Any) -> str | None:
+    fields = {"$schema", "schema", "dimensions", "ordering", "priorityDerivation", "evaluation", "rules"}
+    if not isinstance(value, dict) or set(value) != fields:
+        return "work classification contract fields are invalid"
+    if value.get("$schema") != "./work-classification.schema.json":
+        return "work classification schema reference drifted"
+    if value.get("schema") != "new-project.work-classification/v1":
+        return "unsupported work classification schema"
+    if value.get("dimensions") != {
+        "kind": ["BUG", "FEATURE", "SERVICE"],
+        "priority": ["P0", "P1", "P2", "P3"],
+        "origin": ["regression", "requested", "health"],
+    }:
+        return "work classification dimensions or order drifted"
+    ordering = value.get("ordering")
+    if ordering != {
+        "precedence": ["dependencies", "kind", "priority", "stableId"],
+        "kindOrder": ["BUG", "FEATURE", "SERVICE"],
+        "priorityOrder": ["P0", "P1", "P2", "P3"],
+        "dependencyPolicy": "topological-before-ranking",
+        "stableIdPolicy": "lexicographic",
+    }:
+        return "work classification precedence drifted"
+    if value.get("priorityDerivation") != {
+        "impact": {"critical": "P0", "high": "P1", "medium": "P2", "low": "P3"},
+        "declaredPolicy": "require-valid-priority",
+        "serviceDefault": "P2",
+    }:
+        return "work classification priority derivation drifted"
+    evaluation = value.get("evaluation")
+    if not isinstance(evaluation, dict) or evaluation != {
+        "mode": "first-match", "unmatchedPolicy": "reject", "llmRole": "advisory-only",
+    }:
+        return "work classification evaluation policy drifted"
+    rules = value.get("rules")
+    if not isinstance(rules, list) or len(rules) != 7:
+        return "work classification must contain exactly seven rules"
+    identifiers = [rule.get("id") for rule in rules if isinstance(rule, dict)]
+    expected_identifiers = [f"W-CLASS-{index:03d}" for index in range(1, 8)]
+    if identifiers != expected_identifiers:
+        return "work classification rule identifiers or first-match order drifted"
+    for rule in rules:
+        if set(rule) != {"id", "when", "assign", "prioritySource"}:
+            return "work classification rule fields are invalid"
+        when = rule.get("when")
+        assignment = rule.get("assign")
+        if not isinstance(when, dict) or not isinstance(assignment, dict):
+            return "work classification rule condition or assignment is invalid"
+        signal = when.get("signal")
+        expected_when_fields = {
+            "defect": [{"signal", "impact"}],
+            "cyclomatic-complexity": [
+                {"signal", "baseline", "delta"},
+                {"signal", "baseline", "threshold"},
+            ],
+            "work-request": [{"signal", "request"}],
+        }.get(signal)
+        if expected_when_fields is None or set(when) not in expected_when_fields:
+            return f"work classification rule {rule['id']} mixes incompatible signal fields"
+        expected_assignment: tuple[str, str] | None = None
+        expected_priority_source: str | None = None
+        if signal == "defect" and when.get("impact") in {"outage-or-security", "functional"}:
+            expected_assignment = ("BUG", "regression")
+            expected_priority_source = "impact"
+        elif signal == "cyclomatic-complexity":
+            if when.get("baseline") == "measured" and (
+                when.get("delta") == "increased" or when.get("threshold") == "crossed"
+            ):
+                expected_assignment = ("BUG", "regression")
+                expected_priority_source = "impact"
+            elif when == {
+                "signal": "cyclomatic-complexity",
+                "baseline": "pre-existing",
+                "delta": "not-increased",
+            }:
+                expected_assignment = ("SERVICE", "health")
+                expected_priority_source = "service-default"
+        elif signal == "work-request" and when.get("request") == "new-behavior":
+            expected_assignment = ("FEATURE", "requested")
+            expected_priority_source = "declared"
+        elif signal == "work-request" and when.get("request") == "maintenance":
+            expected_assignment = ("SERVICE", "health")
+            expected_priority_source = "service-default"
+        if expected_assignment is None:
+            return f"work classification rule {rule['id']} has invalid condition values"
+        if set(assignment) != {"kind", "origin"} or (
+            assignment.get("kind"), assignment.get("origin")
+        ) != expected_assignment:
+            return f"work classification rule {rule['id']} has an invalid assignment"
+        if rule.get("prioritySource") != expected_priority_source:
+            return f"work classification rule {rule['id']} has an invalid priority source"
+    return None
+
+
+def load_work_classification(root: Path, report: Report) -> dict[str, Any] | None:
+    path = root / ".governance/work-classification.dsl.json"
+    try:
+        value = load_json(path)
+        error = work_classification_error(value)
+        if error:
+            raise ValueError(error)
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        report.add(
+            "GOV-MANIFEST-001",
+            f"Work classification contract is invalid: {error}",
+            "Restore the managed work-classification DSL from the pinned standard release.",
+            [".governance/work-classification.dsl.json"],
+        )
+        return None
+    return value
+
+
 def rel(root: Path, path: Path) -> str:
     return path.relative_to(root).as_posix()
 
@@ -852,15 +964,29 @@ def intent_v2_error(intent: dict[str, Any], ticket_name: str) -> str | None:
     return delivery_intent_error(intent["delivery"]) if "delivery" in intent else None
 
 
+def intent_classification_error(value: Any) -> str | None:
+    if not isinstance(value, dict) or set(value) != {"kind", "priority", "origin"}:
+        return "intent classification must contain kind, priority and origin"
+    if value.get("kind") not in {"BUG", "FEATURE", "SERVICE"}:
+        return "intent classification kind is invalid"
+    if value.get("priority") not in {"P0", "P1", "P2", "P3"}:
+        return "intent classification priority is invalid"
+    if value.get("origin") not in {"regression", "requested", "health"}:
+        return "intent classification origin is invalid"
+    return None
+
+
 def intent_fields_error(intent: Any) -> str | None:
     v1_fields = {"schema", "ticket", "summary", "allowedPaths", "forbiddenPaths", "stacks"}
     v2_fields = v1_fields | {"workstream", "dependsOn", "conflictsWith", "integrationTicket"}
     if not isinstance(intent, dict) or intent.get("schema") not in {
-        "new-project.intent/v1", "new-project.intent/v2",
+        "new-project.intent/v1", "new-project.intent/v2", "new-project.intent/v3",
     }:
         return "unsupported intent schema"
-    expected = v2_fields if intent["schema"] == "new-project.intent/v2" else v1_fields
-    allowed = [expected, expected | {"delivery"}] if intent["schema"] == "new-project.intent/v2" else [expected]
+    expected = v1_fields if intent["schema"] == "new-project.intent/v1" else v2_fields
+    if intent["schema"] == "new-project.intent/v3":
+        expected |= {"classification"}
+    allowed = [expected] if intent["schema"] == "new-project.intent/v1" else [expected, expected | {"delivery"}]
     if set(intent) not in allowed:
         return f"intent must contain exactly the {intent['schema'].rsplit('/', 1)[-1]} fields"
     return None
@@ -878,8 +1004,12 @@ def validate_intent(path: Path, ticket_name: str) -> tuple[dict[str, Any] | None
     error = intent_common_error(intent, ticket_name)
     if error:
         return None, error
-    if intent["schema"] == "new-project.intent/v2":
+    if intent["schema"] in {"new-project.intent/v2", "new-project.intent/v3"}:
         error = intent_v2_error(intent, ticket_name)
+        if error:
+            return None, error
+    if intent["schema"] == "new-project.intent/v3":
+        error = intent_classification_error(intent.get("classification"))
         if error:
             return None, error
     return intent, None
@@ -916,14 +1046,14 @@ def valid_active_tickets(
         if record.intent_error:
             report.add(
                 "GOV-INTENT-002", f"Ticket intent is invalid: {record.intent_error}",
-                "Create a valid new-project.intent/v2 file before implementation.", [intent_path],
+                "Create a valid new-project.intent/v3 file before implementation.", [intent_path],
             )
             continue
         assert record.intent is not None
-        if record.intent["schema"] != "new-project.intent/v2":
+        if record.intent["schema"] != "new-project.intent/v3":
             report.add(
-                "GOV-INTENT-002", f"Active ticket {record.directory.name} still uses intent v1.",
-                "Migrate the active ticket explicitly to intent v2; archived closed v1 tickets remain readable.", [intent_path],
+                "GOV-INTENT-002", f"Active ticket {record.directory.name} lacks deterministic intent/v3 classification.",
+                "Migrate the active ticket to intent/v3 and declare kind, priority and origin; archived v1/v2 tickets remain readable.", [intent_path],
             )
             continue
         workstream = record.intent["workstream"]
@@ -965,7 +1095,7 @@ def dependency_graph(
 ) -> dict[str, list[str]]:
     graph: dict[str, list[str]] = {}
     for record in records:
-        if record.intent and record.intent.get("schema") == "new-project.intent/v2":
+        if record.intent and record.intent.get("schema") in {"new-project.intent/v2", "new-project.intent/v3"}:
             graph[record.directory.name] = list(record.intent["dependsOn"])
             if record.directory.name in record.intent["dependsOn"] or record.directory.name in record.intent["conflictsWith"]:
                 report.add(
@@ -1014,7 +1144,7 @@ def integration_reference_valid(record: TicketRecord | None, required_workstream
     return bool(
         record is not None
         and record.intent is not None
-        and record.intent.get("schema") == "new-project.intent/v2"
+        and record.intent.get("schema") in {"new-project.intent/v2", "new-project.intent/v3"}
         and record.intent.get("workstream") == required_workstream
         and record.status != "CANCELLED"
     )
@@ -1600,7 +1730,7 @@ def check_delivery_gate(
 def ticket_owns_implementation(record: TicketRecord, implementation: list[str]) -> bool:
     return bool(
         record.intent is not None
-        and record.intent.get("schema") == "new-project.intent/v2"
+        and record.intent.get("schema") in {"new-project.intent/v2", "new-project.intent/v3"}
         and all(
             matches(path, record.intent["allowedPaths"])
             and not matches(path, record.intent["forbiddenPaths"])
@@ -1743,7 +1873,7 @@ def check_selected_ticket_intent(
                 {"ticket": directory.name, "allowedPaths": intent["allowedPaths"]},
             )
         coordination = manifest.get("coordination")
-        if isinstance(coordination, dict) and intent.get("schema") == "new-project.intent/v2":
+        if isinstance(coordination, dict) and intent.get("schema") in {"new-project.intent/v2", "new-project.intent/v3"}:
             check_workstream_change_scope(records, coordination, selected, implementation, report)
         if intent is not None:
             check_delivery_gate(root, manifest, selected, implementation, base, elapsed_minutes, report)
@@ -2168,6 +2298,7 @@ def run_governance_checks(
     lock_path = optional_repo_path(root, args.lock, "GOV-SYNC-001", "governance lock", report)
     profiles_path = optional_repo_path(root, args.stack_profiles, "GOV-MANIFEST-001", "stack-profile", report)
     changed = resolve_changed_paths(args, root, report)
+    load_work_classification(root, report)
     check_lock(root, lock_path, manifest, report)
     check_required_files(root, manifest, report)
     check_stacks(root, manifest, profiles_path, report)

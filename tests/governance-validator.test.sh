@@ -189,6 +189,7 @@ make_fixture() {
   cp "$repo_root/scripts/governance_check.py" "$target/.governance/governance_check.py"
   cp "$repo_root/governance/manifest.default.json" "$target/.governance/manifest.json"
   cp "$repo_root/governance/stack-profiles.json" "$target/.governance/stack-profiles.json"
+  cp "$repo_root/governance/work-classification.dsl.json" "$target/.governance/work-classification.dsl.json"
   touch "$target/README.md" "$target/CHANGELOG.md" "$target/TODO.md" "$target/AGENTS.md"
   touch "$target/Dockerfile" "$target/compose.yml" "$target/project/TICKETS.md"
   touch "$target/project/new-ticket.sh" "$target/project/readme.sh"
@@ -199,7 +200,7 @@ make_fixture() {
   touch "$target/project/ticket-002/ai-codex.md" "$target/project/ticket-002/ai-codex-logs.txt"
   cat > "$target/project/ticket-002/intent.json" <<'JSON'
 {
-  "schema": "new-project.intent/v2",
+  "schema": "new-project.intent/v3",
   "ticket": "ticket-002",
   "summary": "Fixture implementation",
   "workstream": "application",
@@ -209,6 +210,7 @@ make_fixture() {
   "dependsOn": [],
   "conflictsWith": [],
   "integrationTicket": null,
+  "classification": {"kind": "FEATURE", "priority": "P2", "origin": "requested"},
   "delivery": {
     "acceptedBaseSha": "0000000000000000000000000000000000000000",
     "targetBranch": "main",
@@ -259,7 +261,7 @@ add_active_ticket() {
   touch "$target/project/$ticket/ai-codex.md" "$target/project/$ticket/ai-codex-logs.txt"
   cat > "$target/project/$ticket/intent.json" <<JSON
 {
-  "schema": "new-project.intent/v2",
+  "schema": "new-project.intent/v3",
   "ticket": "$ticket",
   "summary": "Parallel fixture",
   "workstream": "$workstream",
@@ -269,6 +271,7 @@ add_active_ticket() {
   "dependsOn": $depends_on,
   "conflictsWith": $conflicts_with,
   "integrationTicket": null,
+  "classification": {"kind": "SERVICE", "priority": "P2", "origin": "health"},
   "delivery": {
     "acceptedBaseSha": "0000000000000000000000000000000000000000",
     "targetBranch": "main",
@@ -802,5 +805,56 @@ rm -f "$history_bad/src/app.js"
   git commit -qm 'ticket and implementation together'
   expect_code GOV-INTENT-003 run_check "$history_bad" --base "$base"
 )
+
+legacy_active="$fixture/legacy-active"
+make_fixture "$legacy_active"
+sed -i 's#"schema": "new-project.intent/v3"#"schema": "new-project.intent/v2"#' "$legacy_active/project/ticket-002/intent.json"
+sed -i '/"classification":/d' "$legacy_active/project/ticket-002/intent.json"
+expect_code GOV-INTENT-002 run_check "$legacy_active" --changed-file src/app.js
+
+invalid_classification="$fixture/invalid-classification"
+make_fixture "$invalid_classification"
+sed -i 's/"kind": "FEATURE"/"kind": "UNKNOWN"/' "$invalid_classification/project/ticket-002/intent.json"
+expect_code GOV-INTENT-002 run_check "$invalid_classification" --changed-file src/app.js
+
+assert_classification_drift() {
+  local mutation="$1"
+  local target="$fixture/classification-drift-$mutation"
+  make_fixture "$target"
+  python3 - "$target/.governance/work-classification.dsl.json" "$mutation" <<'PY'
+import json
+import sys
+
+path, mutation = sys.argv[1:]
+value = json.load(open(path, encoding='utf-8'))
+if mutation == 'schema-ref':
+    value['$schema'] = './other.schema.json'
+elif mutation == 'kind-order':
+    value['ordering']['kindOrder'] = ['FEATURE', 'BUG', 'SERVICE']
+elif mutation == 'priority-order':
+    value['ordering']['priorityOrder'] = ['P1', 'P0', 'P2', 'P3']
+elif mutation == 'derivation':
+    value['priorityDerivation']['impact']['high'] = 'P3'
+elif mutation == 'rule-order':
+    value['rules'][0], value['rules'][1] = value['rules'][1], value['rules'][0]
+elif mutation == 'mixed-condition':
+    value['rules'][0]['when']['request'] = 'new-behavior'
+elif mutation == 'condition-value':
+    value['rules'][0]['when']['impact'] = 'cosmetic'
+elif mutation == 'assignment':
+    value['rules'][4]['assign'] = {'kind': 'BUG', 'origin': 'regression'}
+elif mutation == 'priority-source':
+    value['rules'][5]['prioritySource'] = 'declared'
+else:
+    raise AssertionError(mutation)
+open(path, 'w', encoding='utf-8').write(json.dumps(value, indent=2) + '\n')
+PY
+  expect_code GOV-MANIFEST-001 run_check "$target" --changed-file TODO.md
+}
+
+for mutation in schema-ref kind-order priority-order derivation rule-order \
+  mixed-condition condition-value assignment priority-source; do
+  assert_classification_drift "$mutation"
+done
 
 echo 'governance validator: PASS'
