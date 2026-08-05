@@ -44,6 +44,8 @@ jobs:
       # Every tests/*.test.sh must be listed above. The list is hand-written, so
       # this refuses to pass when a suite exists that no step runs - which is how
       # governance-env.test.sh went unexecuted after ticket 020 added it.
+      - name: Test rule-enforcement traceability
+        run: bash tests/rule-enforcement.test.sh
       - name: Assert every test suite is wired into this workflow
         run: |
           set -euo pipefail
