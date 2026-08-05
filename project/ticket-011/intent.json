@@ -8,5 +8,36 @@
   "stacks": [],
   "dependsOn": ["ticket-007"],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "13c2f8e21a243fbbd6ea243b173305b0368a9729",
+    "targetBranch": "main",
+    "outcome": "Windows entrypoints are exercised on a protected windows-latest CI runner",
+    "nonGoals": ["No Unix entrypoint behavior changes", "No Docker runtime changes"],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Exercise the existing Windows wrappers in a path-with-spaces fixture on windows-latest",
+      "components": [
+        {"name": "windows-entrypoints", "paths": ["project.bat", "project/governance-check.bat"]},
+        {"name": "windows-ci", "paths": ["tests/windows-governance.test.ps1", ".github/workflows/ci.yml"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the ticket commit and remove the windows-governance job"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["pwsh ./tests/windows-governance.test.ps1 -SourceRevision <HEAD_SHA>"], "evidence": "The windows-governance job passes for the exact PR head"}
+    ]
+  }
 }
