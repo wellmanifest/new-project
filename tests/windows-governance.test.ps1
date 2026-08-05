@@ -38,3 +38,5 @@ try {
 finally {
     Remove-Item -Recurse -Force $fixtureRoot -ErrorAction SilentlyContinue
 }
+
+exit 0
