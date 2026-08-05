@@ -7,7 +7,6 @@
     "scripts/branch_lifecycle_check.py",
     ".github/workflows/governance.yml",
     "tests/branch-lifecycle.test.sh",
-    "governance/diagnostics.json",
     ".github/workflows/ci.yml",
     "project/ticket-018/**",
     "TODO.md",
@@ -58,16 +57,13 @@
           "paths": [
             "scripts/branch_lifecycle_check.py",
             "tests/branch-lifecycle.test.sh",
-            "governance/diagnostics.json",
             ".github/workflows/ci.yml"
           ]
         }
       ],
       "responsibilityChanges": false,
       "interfaceChanges": [],
-      "dataChanges": [
-        "The protected workflow creates an ephemeral versioned GitHub branch-state snapshot"
-      ],
+      "dataChanges": [],
       "ui": {
         "impact": "none",
         "states": [],

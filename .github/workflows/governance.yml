@@ -61,6 +61,55 @@ jobs:
       - name: Exclude workflow-owned standard checkout from target diff
         shell: bash
         run: printf '%s\n' '/.new-project-standard/' >> .git/info/exclude
+      - name: Acquire GitHub branch lifecycle snapshot
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          BRANCH_LIFECYCLE_SNAPSHOT: ${{ runner.temp }}/new-project-branch-lifecycle.json
+        with:
+          script: |
+            const fs = require('fs');
+            const repository = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const branches = await github.paginate(github.rest.repos.listBranches, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+            const pulls = await github.paginate(github.rest.pulls.list, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const snapshot = {
+              schema: 'new-project.branch-lifecycle-snapshot/v1',
+              repository: `${context.repo.owner}/${context.repo.repo}`,
+              defaultBranch: repository.data.default_branch,
+              deleteBranchOnMerge: repository.data.delete_branch_on_merge,
+              branches: branches.map(branch => branch.name).sort(),
+              openPullRequests: pulls.map(pull => ({
+                number: pull.number,
+                headRepository: pull.head.repo?.full_name ?? null,
+                headRef: pull.head.ref,
+              })).sort((left, right) => left.number - right.number),
+            };
+            fs.writeFileSync(
+              process.env.BRANCH_LIFECYCLE_SNAPSHOT,
+              `${JSON.stringify(snapshot)}\n`,
+              {encoding: 'utf8', mode: 0o600},
+            );
+      - name: Validate GitHub branch lifecycle
+        shell: bash
+        env:
+          BRANCH_LIFECYCLE_SNAPSHOT: ${{ runner.temp }}/new-project-branch-lifecycle.json
+          EXPECTED_REPOSITORY: ${{ github.repository }}
+        run: |
+          python3 .new-project-standard/scripts/branch_lifecycle_check.py \
+            --snapshot "$BRANCH_LIFECYCLE_SNAPSHOT" \
+            --expected-repository "$EXPECTED_REPOSITORY" \
+            --format text
       - name: Resolve ticket owning the pull request diff
         if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
         shell: bash

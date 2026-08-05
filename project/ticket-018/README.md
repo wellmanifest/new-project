@@ -16,18 +16,19 @@ są headem żadnego otwartego PR-a.
 
 ## Kryteria odbioru
 
-- [ ] AC-01: Walidator przyjmuje wyłącznie wersjonowany, ściśle walidowany
+- [x] AC-01: Walidator przyjmuje wyłącznie wersjonowany, ściśle walidowany
   snapshot i nie wykonuje połączeń sieciowych ani mutacji Git/GitHub.
-- [ ] AC-02: `delete_branch_on_merge=false` emituje stabilny blocking
+- [x] AC-02: `delete_branch_on_merge=false` emituje stabilny blocking
   diagnostic z remediacją.
-- [ ] AC-03: Branch inny niż default branch i wewnętrzne heady otwartych PR-ów
+- [x] AC-03: Branch inny niż default branch i wewnętrzne heady otwartych PR-ów
   jest raportowany jako osierocony; przy zerowej liczbie PR-ów dozwolony jest
   wyłącznie default branch.
-- [ ] AC-04: Forkowe heady PR-ów nie są błędnie wymagane w repozytorium bazowym,
+- [x] AC-04: Forkowe heady PR-ów nie są błędnie wymagane w repozytorium bazowym,
   a brak wewnętrznego heada jest odrzucany jako sprzeczny snapshot.
-- [ ] AC-05: Reusable workflow zbiera fakty przez GitHub API, uruchamia
-  walidator dla `push`, `pull_request`, `pull_request_review` i wywołań ręcznych.
-- [ ] AC-06: Pozytywne i negatywne fixture przechodzą w CI bez `todo2code`, LLM
+- [x] AC-05: Reusable workflow zbiera fakty przez GitHub API i uruchamia
+  walidator przy każdym wywołaniu przez chroniony caller obsługujący `push`,
+  `pull_request`, `pull_request_review` i wywołania ręczne.
+- [x] AC-06: Pozytywne i negatywne fixture przechodzą w CI bez `todo2code`, LLM
   ani zewnętrznej biblioteki runtime.
 
 ## Ryzyka i mitygacje
@@ -46,6 +47,17 @@ są headem żadnego otwartego PR-a.
 Użytkownik zatwierdził `ticket-018` 2026-08-05 razem z ticketem 017. Zależność
 017 została formalnie zamknięta w PR #21 jako `b45ce07`, dlatego ticket może
 przejść do `EDIT`. Zgoda interaktywna nie zastępuje exact-head merge approval.
+
+## Walidacja
+
+- `bash tests/governance-scripts.test.sh` — PASS.
+- `bash tests/governance-validator.test.sh` — PASS.
+- `bash tests/branch-lifecycle.test.sh` — PASS.
+- `bash tests/adoption-lock.test.sh` — PASS.
+- Kompilacja Python, parsowanie obu workflow YAML, walidacja JSON i
+  `git diff --check` — PASS.
+- Lokalny PowerShell jest niedostępny; istniejący test Windows pozostaje
+  wymaganym jobem CI na `windows-latest`.
 
 ## Uczestnicy
 

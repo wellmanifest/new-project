@@ -22,12 +22,21 @@ oraz deterministyczny walidator zamkniętego snapshotu.
    branchy i otwartych PR-ów przez przypięty `actions/github-script`.
 3. Dodać pozytywne, negatywne, forkowe i malformed fixture w
    `tests/branch-lifecycle.test.sh`.
-4. Zarejestrować diagnostics w `governance/diagnostics.json`.
+4. Utrzymać zamknięty katalog kodów w module bez naruszania centralnego
+   rejestru należącego wyłącznie do `governance_check.py`.
 5. Podłączyć test do `.github/workflows/ci.yml` i uruchomić pełny kontrakt huba.
 
 ## Actual changes
 
-- None; approved architecture is entering implementation.
+- Dodano ścisły `branch-lifecycle-snapshot/v1` i deterministyczny raport z
+  kodami `GOV-BRANCH-LIFECYCLE-001..003`.
+- Reusable workflow pobiera read-only metadata repozytorium, branche i otwarte
+  PR-y, po czym przekazuje ephemeral snapshot do walidatora bez sieci.
+- Fixture pokrywają stan spoczynku, wewnętrzny i forkowy PR, wyłączone
+  auto-delete, branch osierocony, brak heada oraz nieznane pola.
+- Test 018 jest częścią Linux CI; wszystkie lokalnie dostępne zestawy przeszły.
+- Centralny `diagnostics.json` pozostał bez zmian, ponieważ jego meta-kontrakt
+  obejmuje wyłącznie kody emitowane przez `governance_check.py`.
 
 ## Blockers
 
