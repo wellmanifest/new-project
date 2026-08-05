@@ -35,10 +35,11 @@ assert "never-print-this" not in json.dumps(report)
 assert "IGNORED_VALUE" not in report["variables"]
 PY
 
-DEFAULT_AGENT="process-agent" python3 "$runtime" --contract "$work/CONTRIBUTING.md" run -- \
-  python3 -c 'import os; print(os.environ["DEFAULT_AGENT"], os.environ["ENABLED"], "IGNORED_VALUE" in os.environ)' \
+UNDECLARED_PROCESS="must-not-be-exported" DEFAULT_AGENT="process-agent" \
+  python3 "$runtime" --contract "$work/CONTRIBUTING.md" run -- \
+  python3 -c 'import os; print(os.environ["DEFAULT_AGENT"], os.environ["ENABLED"], "IGNORED_VALUE" in os.environ, "UNDECLARED_PROCESS" in os.environ)' \
   >"$work/child.txt"
-grep -Fxq 'process-agent true False' "$work/child.txt"
+grep -Fxq 'process-agent true False False' "$work/child.txt"
 
 mkdir "$work/missing"
 cat >"$work/missing/CONTRIBUTING.md" <<'EOF'

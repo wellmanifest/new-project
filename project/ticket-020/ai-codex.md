@@ -24,6 +24,8 @@ runtime without shell evaluation or secret disclosure.
 - Extended the governance DSL with allowlisted environment declarations.
 - Added a dependency-free runtime with redacted `check` and shell-free `run` modes.
 - Added positive and negative coverage for precedence, secrets and path confinement.
+- Review removed inherited undeclared process variables from the child environment
+  and added a regression assertion for that trust boundary.
 - All targeted governance tests pass.
 
 ## Blockers

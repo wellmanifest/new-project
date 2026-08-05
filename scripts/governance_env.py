@@ -244,8 +244,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             child = child[1:]
         if not child:
             raise ContractError("run requires a command after --")
-        environment = os.environ.copy()
-        environment.update({item.spec.name: item.value for item in resolved})
+        # The contract is an allowlist, not an overlay. Copying the parent
+        # environment here would silently expose undeclared credentials to the
+        # child even though dotenv parsing itself is restricted.
+        environment = {item.spec.name: item.value for item in resolved}
         return subprocess.run(child, env=environment, check=False).returncode
     except (ContractError, OSError) as exc:
         print(f"GOV-ENV-001: {exc}", file=sys.stderr)

@@ -7,3 +7,5 @@
 - Approved implementation of the governance environment runtime started.
 - Added deterministic `.env` resolution and secret redaction.
 - Added runtime regression coverage; ticket acceptance criteria completed.
+- Removed inherited undeclared process variables from child commands and added
+  a regression assertion for that trust boundary.
