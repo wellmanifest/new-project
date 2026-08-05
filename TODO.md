@@ -57,6 +57,8 @@
   krótkotrwałych branchy ticketowych po merge/close. Stan: `DONE / DONE`; PR
   #20 scalono jako `d3240c0` po zielonym CI i exact-head approval, a branch
   implementacyjny został usunięty.
+- [x] [`ticket-021`](project/ticket-021/README.md) — intent/v3, ref-aware allocation,
+  clone-wide reservation i ochrona przed wieloma writerami w jednym worktree.
 
 - [x] [`ticket-018`](project/ticket-018/README.md) — deterministyczny audyt
   ustawienia auto-delete i własności branchy przez otwarte PR-y. Stan:
