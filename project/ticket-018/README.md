@@ -2,8 +2,8 @@
 
 - **ID**: ticket-018
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-05
 
 ## Cel i zakres
@@ -58,6 +58,14 @@ przejść do `EDIT`. Zgoda interaktywna nie zastępuje exact-head merge approval
   `git diff --check` — PASS.
 - Lokalny PowerShell jest niedostępny; istniejący test Windows pozostaje
   wymaganym jobem CI na `windows-latest`.
+
+## Dowód publikacji
+
+- PR: `wellmanifest/new-project#24`.
+- Approved head: `c57f203b8d2a4c4e25beefa0ccfebe215a3b45cd`.
+- Validator: `ifuri-validator-agent[bot]`, model advisory
+  `openrouter/z-ai/glm-5.2`.
+- Merge commit: `89ddf4262291ad533eab2aa5513d33575925b972`.
 
 ## Uczestnicy
 
