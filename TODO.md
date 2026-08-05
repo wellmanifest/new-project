@@ -53,10 +53,10 @@
   `DONE / DONE`; PR #17 scalony do `main` jako `c02962b` po aktualnym approval
   i zielonych testach.
 
-- [ ] [`ticket-017`](project/ticket-017/README.md) — domknięcie lifecycle
-  krótkotrwałych branchy ticketowych po merge/close. Stan:
-  `IN_PROGRESS / PUBLICATION`; implementacja i trzy zestawy testów zakończone,
-  oczekuje na chroniony PR oraz exact-head approval.
+- [x] [`ticket-017`](project/ticket-017/README.md) — domknięcie lifecycle
+  krótkotrwałych branchy ticketowych po merge/close. Stan: `DONE / DONE`; PR
+  #20 scalono jako `d3240c0` po zielonym CI i exact-head approval, a branch
+  implementacyjny został usunięty.
 
 - [ ] [`ticket-005`](project/ticket-005/README.md) — implementacja uszczelnienia
   evidence została scalona w PR #4. Stan: `BLOCKED / BLOCKED`; czeka na

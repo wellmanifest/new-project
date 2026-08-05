@@ -9,3 +9,10 @@
 - Added normative branch lifecycle rules, synchronized source/adoption agent
   instructions and documented the quiescent repository invariant.
 - Added deterministic regression assertions; all hub test suites pass.
+
+## Zamknięcie 2026-08-05
+
+- PR #20 scalono do `main` jako `d3240c0` po zielonym CI i niezależnym
+  zatwierdzeniu Validator App dla dokładnego HEAD `3688ce0`.
+- Potwierdzono usunięcie zdalnego brancha implementacyjnego; status ticketu
+  przestawiono z `IN_PROGRESS / PUBLICATION` na `DONE / DONE`.

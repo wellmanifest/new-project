@@ -2,8 +2,8 @@
 
 - **ID**: ticket-017
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-05
 
 ## Cel i zakres
@@ -49,6 +49,15 @@ niezależnego exact-head merge approval.
 - `bash tests/governance-validator.test.sh` — PASS.
 - `bash tests/adoption-lock.test.sh` — PASS.
 - `git diff --check` i walidacja JSON — PASS.
+
+## Dowody zamknięcia
+
+- PR #20 (`feat(governance): define ticket branch lifecycle`) scalono do
+  `main` jako `d3240c0` po zielonym CI i niezależnym zatwierdzeniu Validator
+  App dla dokładnego HEAD `3688ce0`.
+- Zdalny branch `ticket/017-branch-lifecycle` został usunięty po merge.
+- Wszystkie kryteria AC-01–AC-05 były spełnione przed merge; zamknięcie
+  aktualizuje wyłącznie artefakty lifecycle ticketu.
 
 ## Uczestnicy
 
