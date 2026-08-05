@@ -24,10 +24,14 @@ grep -Fq "@sha256:[a-f0-9]{64}$" "$repo_root/project.bat"
 test -f "$repo_root/template/files/human-participant.template.md"
 test -f "$repo_root/template/files/agent-participant.template.md"
 
-mkdir -p "$fixture/project" "$fixture/template"
+mkdir -p "$fixture/project" "$fixture/template" "$fixture/.governance"
 cp "$repo_root/project/new-ticket.sh" "$fixture/project/new-ticket.sh"
 cp "$repo_root/project/readme.sh" "$fixture/project/readme.sh"
 cp -R "$repo_root/template/files" "$fixture/template/files"
+# A real adopted target always carries the work classification contract, because
+# the package manifest ships it. The scaffolder reads the accepted dimension
+# values from it instead of hardcoding them, so the fixture must mirror that.
+cp "$repo_root/governance/work-classification.dsl.json" "$fixture/.governance/work-classification.dsl.json"
 printf '%s\n' '# Analysis-owned project README' > "$fixture/project/README.md"
 
 set +e
@@ -68,10 +72,13 @@ python3 - "$ticket/intent.json" <<'PY'
 import json
 import sys
 intent = json.load(open(sys.argv[1], encoding='utf-8'))
-assert intent['schema'] == 'new-project.intent/v2'
+assert intent['schema'] == 'new-project.intent/v3'
 assert intent['ticket'] == 'ticket-001'
 assert intent['summary'] == 'Validate "A&B" / routes'
 assert intent['workstream'] == 'application'
+# An unclassified scaffold takes the contract's own answer: W-CLASS-006
+# (work-request / maintenance) plus priorityDerivation.serviceDefault.
+assert intent['classification'] == {'kind': 'SERVICE', 'priority': 'P2', 'origin': 'health'}
 assert intent['allowedPaths'] == ['project/ticket-001/**', 'TODO.md', 'project/TICKETS.md']
 assert intent['dependsOn'] == []
 assert intent['conflictsWith'] == []
@@ -155,5 +162,45 @@ if (!analysis.issues.some((item) => item.responseRequiredRole === 'human'
 }
 NODE
 fi
+
+# Classification is a normative property, so it needs a positive assertion above
+# and negative mutations here: a value outside the contract must be refused, and
+# refusal must not leave a half-created ticket behind. The count is taken rather
+# than a fixed name, because earlier cases have already created several tickets.
+count_tickets() {
+  find "$fixture/project" -maxdepth 1 -type d -name 'ticket-*' | wc -l
+}
+tickets_before="$(count_tickets)"
+
+for mutation in '--kind NOPE' '--priority P9' '--origin invented'; do
+  set +e
+  (
+    cd "$fixture"
+    # shellcheck disable=SC2086
+    bash project/new-ticket.sh --title 'Rejected classification' --workstream interfaces $mutation \
+      > mutation.out 2> mutation.err
+  )
+  status=$?
+  set -e
+  test "$status" -eq 1
+  grep -q 'GOV-CLASS-001' "$fixture/mutation.err"
+  test "$(count_tickets)" -eq "$tickets_before"
+done
+
+# Without the contract there is nothing to validate against, and guessing would
+# defeat the point; the scaffolder must say so rather than emit an unchecked value.
+mv "$fixture/.governance/work-classification.dsl.json" "$fixture/work-classification.dsl.json.bak"
+set +e
+(
+  cd "$fixture"
+  bash project/new-ticket.sh --title 'No contract' --workstream interfaces \
+    > nocontract.out 2> nocontract.err
+)
+status=$?
+set -e
+test "$status" -eq 1
+grep -q 'GOV-CLASS-000' "$fixture/nocontract.err"
+test "$(count_tickets)" -eq "$tickets_before"
+mv "$fixture/work-classification.dsl.json.bak" "$fixture/.governance/work-classification.dsl.json"
 
 echo 'governance scripts: PASS'

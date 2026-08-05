@@ -54,6 +54,7 @@
   i zielonych testach.
 
 - [x] [`ticket-017`](project/ticket-017/README.md) — domknięcie lifecycle
+- [ ] [`ticket-018`](project/ticket-018/README.md) — scaffolder emituje intent v3
   krótkotrwałych branchy ticketowych po merge/close. Stan: `DONE / DONE`; PR
   #20 scalono jako `d3240c0` po zielonym CI i exact-head approval, a branch
   implementacyjny został usunięty.

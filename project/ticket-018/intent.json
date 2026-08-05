@@ -1,15 +1,15 @@
 {
   "schema": "new-project.intent/v3",
-  "ticket": "{TICKET_ID}",
-  "summary": "{SHORT_TITLE}",
-  "workstream": "{WORKSTREAM}",
+  "ticket": "ticket-018",
+  "summary": "Scaffolder emituje intent v3 z klasyfikacja",
+  "workstream": "governance",
   "classification": {
-    "kind": "{KIND}",
-    "priority": "{PRIORITY}",
-    "origin": "{ORIGIN}"
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
   },
   "allowedPaths": [
-    "project/{TICKET_ID}/**",
+    "project/ticket-018/**",
     "TODO.md",
     "project/TICKETS.md"
   ],
