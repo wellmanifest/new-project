@@ -1,0 +1,58 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-017",
+  "summary": "Lifecycle i sprzątanie branchy ticketowych",
+  "workstream": "governance",
+  "allowedPaths": [
+    "POLICY.md",
+    "AGENTS.md",
+    "template/files/AGENTS.template.md",
+    "docs/GOVERNANCE_ENFORCEMENT.md",
+    "tests/governance-validator.test.sh",
+    "project/ticket-017/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env",
+    "**/*.pem",
+    "**/*secret*"
+  ],
+  "stacks": ["python"],
+  "dependsOn": ["ticket-016"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "classification": {"kind": "FEATURE", "priority": "P2", "origin": "requested"},
+  "delivery": {
+    "acceptedBaseSha": "ed7b725b17c04e72e5a768d80c6fbff389611845",
+    "targetBranch": "main",
+    "outcome": "Ticket branches are temporary review isolation and repositories return to only their default branch when no pull request is open",
+    "nonGoals": [
+      "No deletion of unmerged branches without an explicit owner decision",
+      "No replacement of pull requests with direct pushes",
+      "No LLM-based lifecycle or merge decision"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {"maxImplementationFiles": 5, "maxAffectedComponents": 2, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Specify branch cleanup as the terminal phase of the existing one-ticket one-PR lifecycle and preserve unmerged work unless its owner explicitly discards it",
+      "components": [
+        {"name": "normative-policy", "paths": ["POLICY.md", "AGENTS.md"]},
+        {"name": "adoption-and-evidence", "paths": ["template/files/AGENTS.template.md", "docs/GOVERNANCE_ENFORCEMENT.md", "tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": ["The governance contract gains an explicit terminal branch-cleanup state"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert ticket-017 while retaining existing branch isolation and protected pull-request rules"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-04", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Lifecycle markers are required across policy, source instructions and the managed adoption template"},
+      {"criterion": "AC-05", "commands": ["bash tests/governance-scripts.test.sh", "bash tests/adoption-lock.test.sh"], "evidence": "Existing governance and immutable adoption behavior remains green"}
+    ]
+  }
+}

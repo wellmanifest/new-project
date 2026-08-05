@@ -161,9 +161,30 @@ W GitHub Rulesets ustaw:
 - wymagany CODEOWNER i co najmniej jedna niezależna akceptacja;
 - odrzucanie starych zgód po nowym pushu;
 - wymagany merge queue z ponownym wykonaniem statusów po aktualizacji bazy;
+- `delete_branch_on_merge=true`, aby zmergowany head branch znikał
+  automatycznie;
 - zakaz bypassu dla botów/agentów i ograniczony bypass administracyjny;
 - ochronę `.github/workflows/**`, `.governance/**`, `AGENTS.md` oraz
   `project/ticket-*/user-*.md` przez CODEOWNERS.
+
+### Lifecycle brancha ticketowego
+
+Branch/worktree jest izolacją na czas aktywnego ticketu i PR-a, a nie trwałym
+archiwum. Po merge GitHub usuwa head branch przez
+`delete_branch_on_merge=true`. Zamknięcie PR-a bez merge nie jest zgodą na
+utratę pracy: branch pozostaje do chwili jawnej decyzji właściciela o jego
+odrzuceniu.
+
+Stan spoczynku repozytorium jest jednoznaczny:
+
+```text
+open pull requests = 0
+remote branches = [default branch]
+```
+
+Branch inny niż default branch musi być headem otwartego PR-a. Odstępstwo jest
+osieroconym branchem i wymaga decyzji: przywrócić PR, zintegrować pracę albo
+jawnie ją odrzucić. Sam walidator jest read-only i nie usuwa branchy.
 
 ## Integracja `validator-agent` z istniejącym repozytorium
 
