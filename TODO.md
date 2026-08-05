@@ -58,9 +58,9 @@
   #20 scalono jako `d3240c0` po zielonym CI i exact-head approval, a branch
   implementacyjny został usunięty.
 
-- [ ] [`ticket-018`](project/ticket-018/README.md) — deterministyczny audyt
+- [x] [`ticket-018`](project/ticket-018/README.md) — deterministyczny audyt
   ustawienia auto-delete i własności branchy przez otwarte PR-y. Stan:
-  `IN_PROGRESS / VALIDATION`; implementacja i lokalny pełny kontrakt przechodzą.
+  `DONE / DONE`; PR #24 przeszedł Linux/Windows CI, exact-head approval i merge.
 
 - [ ] [`ticket-005`](project/ticket-005/README.md) — implementacja uszczelnienia
   evidence została scalona w PR #4. Stan: `BLOCKED / BLOCKED`; czeka na

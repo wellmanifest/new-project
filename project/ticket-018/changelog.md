@@ -11,3 +11,5 @@
   acquisition and positive/negative CI fixtures.
 - Kept lifecycle diagnostics module-local after the full suite proved that the
   central catalog is intentionally exhaustive for `governance_check.py` only.
+- Replaced new `set +e` test shortcuts with fail-closed conditional status
+  capture, passed Linux/Windows CI and merged exact-head-approved PR #24.

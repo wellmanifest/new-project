@@ -4,4 +4,9 @@
 [2026-08-05T10:21:00Z] TEST: branch lifecycle positive and negative fixtures -> PASS.
 [2026-08-05T10:22:00Z] REGRESSION: central diagnostics catalog rejected foreign emitter codes; architecture narrowed to module-local codes.
 [2026-08-05T10:23:00Z] TEST: governance-scripts, governance-validator, branch-lifecycle, adoption-lock, JSON, YAML and Python compile -> PASS.
+[2026-08-05T10:28:00Z] HARDENING: removed new set +e validation shortcuts; conditional status capture keeps fail-closed shell mode.
+[2026-08-05T10:32:00Z] CI: Linux test and windows-governance -> PASS.
+[2026-08-05T10:33:00Z] APPROVAL: ifuri-validator-agent approved exact c57f203b8d2a4c4e25beefa0ccfebe215a3b45cd with GLM 5.2 advisory.
+[2026-08-05T10:34:00Z] MERGE: PR #24 -> 89ddf4262291ad533eab2aa5513d33575925b972.
+[2026-08-05T10:34:00Z] TRANSITION: VALIDATION -> DONE.
 [2026-08-05T10:24:00Z] SELF-CHECK: corrected ephemeral snapshot metadata to dataChanges=[]; source hub still lacks an adoptive self-governance profile and reports baseline errors.
