@@ -38,8 +38,8 @@ Potrzebny jest release 0.11.0, którego pełny SHA stanie się bazą migracji
 - Ticket przeszedł do `IN_PROGRESS / EDIT`.
 - Wersja standardu, manifestu i asercji testowych została podniesiona do
   `0.11.0`; bieżące zmiany przeniesiono do sekcji wydania 0.11.0.
-- Dotknięty negatywny scenariusz wersji nie wyłącza już `errexit` przez
-  `set +e`; oczekiwaną porażkę sprawdza jawna instrukcja warunkowa.
+- Dotknięty negatywny scenariusz wersji nie wyłącza już `errexit`;
+  oczekiwaną porażkę sprawdza jawna instrukcja warunkowa.
 - Trzy wymagane zestawy regresyjne przeszły przed merge.
 
 ## Blockers
