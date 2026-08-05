@@ -29,8 +29,9 @@
   przeszedł CI i exact-head approval, po czym został scalony jako
   `main@956f350`.
 
-- [ ] [`ticket-011`](project/ticket-011/README.md) — natywne Windows CI dla
-  wrapperów i generatora. Stan: `BACKLOG`; zależy od 007.
+- [x] [`ticket-011`](project/ticket-011/README.md) — natywne Windows CI dla
+  wrapperów i generatora. Stan: `DONE / DONE`; PR #11 przeszedł Linux/Windows
+  CI i exact-head approval, a ruleset `main` wymaga `windows-governance`.
 
 - [ ] [`ticket-012`](project/ticket-012/README.md) — test upgrade/rollback
   między rzeczywistymi wydaniami. Stan: `BACKLOG`; zależy od 007 i 010.
