@@ -149,10 +149,20 @@ loginów botów do `trusted-reviewers` ani loginów ludzi do
 `trusted-validator-apps`. Caller workflow, obie listy, `.governance/**` i
 CODEOWNERS muszą być chronione tak, aby PR nie mógł sam rozszerzyć allowlisty.
 
-    Adopcja wydania jest trwała dopiero, gdy lock zawiera opublikowany pełny
-    `sourceRevision` i `publicationStatus: published`. Hash lokalnego pliku wykrywa
-    zmianę, ale `sourceRevision: null` lub `publicationStatus: uncommitted` nie
-    pozwala odtworzyć źródła standardu i nie może być finalnym dowodem publikacji.
+Adopcja wydania jest trwała dopiero, gdy lock zawiera opublikowany pełny
+`sourceRevision` i `publicationStatus: published`. Hash lokalnego pliku wykrywa
+zmianę, ale `sourceRevision: null` lub `publicationStatus: uncommitted` nie
+pozwala odtworzyć źródła standardu i nie może być finalnym dowodem publikacji.
+
+W samym repozytorium `new-project` CI powinno działać na ścieżce:
+
+- `push` tylko na `main`,
+- `pull_request` tylko do `main`,
+- `merge_group` dla `main`,
+- `concurrency` z `cancel-in-progress: true`.
+
+To daje przewidywalny łańcuch walidacji: governance + testy wykonują się dla
+kanonicznych stanów decyzji, bez dublowania się analiz na gałęziach roboczych.
 
 W GitHub Rulesets ustaw:
 
@@ -166,6 +176,60 @@ W GitHub Rulesets ustaw:
 - zakaz bypassu dla botów/agentów i ograniczony bypass administracyjny;
 - ochronę `.github/workflows/**`, `.governance/**`, `AGENTS.md` oraz
   `project/ticket-*/user-*.md` przez CODEOWNERS.
+- dodaj ochronę `.github/workflows/governance.yml` i `.github/workflows/ci.yml`
+  w CODEOWNERS oraz wymagaj zgodności wartości `standard-ref`, `trusted-reviewers`
+  i `trusted-validator-apps` z zatwierdzonymi wartościami.
+
+## Mapowanie required checks dla repozytorium docelowego
+
+Dla każdego repo, które przyjmuje nowy standard, wymagane są następujące checki:
+
+1. `governance / enforce` (z reusable workflow `governance.yml`)
+2. `governance-standard-ci / test`
+3. `governance-standard-ci / windows-governance`
+
+Dodatkowo, jeżeli repozytorium używa `todo2code` do oceny zmiany, dodaj:
+
+4. `todo2code/change-evaluation`
+
+Minimalny fragment Rulesetu:
+
+```hcl
+required_status_checks {
+  strict = true
+  contexts = [
+    "governance / enforce",
+    "governance-standard-ci / test",
+    "governance-standard-ci / windows-governance",
+    "todo2code/change-evaluation", # only if workflow is enabled
+  ]
+}
+required_pull_request_reviews {
+  required_approving_review_count = 1
+  require_code_owner_reviews      = true
+  require_last_push_approval      = true
+  dismiss_stale_reviews           = true
+}
+enforce_admins = true
+allows_deletions = false
+allows_force_pushes = false
+```
+
+Włącz merge queue dla chronionej gałęzi:
+
+1. `required_approving_review_count >= 1`
+2. ponowne uruchomienie wszystkich required checks przy każdej zmianie `base`
+3. tylko po pozytywnym `governance / enforce`
+
+Bez tej kolejności:
+- 2 równoległe PR-y mogą przejść lokalne testy niezależnie,
+- a po merge jednym z nich zmienić kontekst, którego drugi nie sprawdził ponownie.
+
+W praktyce:
+
+- ustaw merge queue tylko na `main`,
+- nie dodawaj ścieżki workflow `push` poza `main` (w `new-project` już to mamy),
+- pozostaw `delete_branch_on_merge=true`.
 
 ### Lifecycle brancha ticketowego
 

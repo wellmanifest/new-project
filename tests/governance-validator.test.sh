@@ -872,4 +872,21 @@ for mutation in schema-ref kind-order priority-order derivation rule-order \
   assert_classification_drift "$mutation"
 done
 
+python3 - "$repo_root/.github/workflows/ci.yml" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+
+assert "  push:\n    branches:\n      - main\n" in text
+assert "  pull_request:\n    branches:\n      - main\n" in text
+assert "  merge_group:\n    branches:\n      - main\n" in text
+assert (
+    "concurrency:\n"
+    "  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}\n"
+    "  cancel-in-progress: true\n" in text
+)
+PY
+
 echo 'governance validator: PASS'

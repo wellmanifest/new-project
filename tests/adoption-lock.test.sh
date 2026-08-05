@@ -20,12 +20,14 @@ git -C "$standard" add .
 git -C "$standard" commit -qm 'test: publish standard fixture'
 revision="$(git -C "$standard" rev-parse HEAD)"
 
-set +e
-python3 "$standard/scripts/create_adoption_lock.py" \
+if python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check \
   > "$fixture/initial-check.out" 2> "$fixture/initial-check.err"
-status=$?
-set -e
+then
+  status=0
+else
+  status=$?
+fi
 test "$status" -eq 1
 grep -q '^CREATE .governance/manifest.json$' "$fixture/initial-check.out"
 grep -q '^CREATE .governance/manifest.lock.json$' "$fixture/initial-check.out"
@@ -59,20 +61,24 @@ python3 "$standard/scripts/create_adoption_lock.py" \
 grep -q '^up-to-date wellmanifest/new-project ' "$fixture/current-check.out"
 
 printf '\n# drift\n' >> "$target/project/governance-check.sh"
-set +e
-python3 "$standard/scripts/create_adoption_lock.py" \
+if python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check \
   > "$fixture/drift-check.out" 2> "$fixture/drift-check.err"
-status=$?
-set -e
+then
+  status=0
+else
+  status=$?
+fi
 test "$status" -eq 1
 grep -q '^UPDATE project/governance-check.sh$' "$fixture/drift-check.out"
 grep -q '# drift' "$target/project/governance-check.sh"
-set +e
-python3 "$standard/scripts/create_adoption_lock.py" \
+if python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" > /dev/null 2> "$fixture/drift.err"
-status=$?
-set -e
+then
+  status=0
+else
+  status=$?
+fi
 test "$status" -ne 0
 grep -q 'rerun with --upgrade' "$fixture/drift.err"
 python3 "$standard/scripts/create_adoption_lock.py" \
@@ -80,32 +86,38 @@ python3 "$standard/scripts/create_adoption_lock.py" \
 ! grep -q '# drift' "$target/project/governance-check.sh"
 
 chmod -x "$target/project/governance-check.sh"
-set +e
-python3 "$standard/scripts/create_adoption_lock.py" \
+if python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check \
   > "$fixture/mode-check.out"
-status=$?
-set -e
+then
+  status=0
+else
+  status=$?
+fi
 test "$status" -eq 1
 grep -q '^CHMOD project/governance-check.sh$' "$fixture/mode-check.out"
 python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" > /dev/null
 test -x "$target/project/governance-check.sh"
 
-set +e
-python3 "$standard/scripts/create_adoption_lock.py" \
+if python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision deadbeef > /dev/null 2> "$fixture/revision.err"
-status=$?
-set -e
+then
+  status=0
+else
+  status=$?
+fi
 test "$status" -eq 2
 grep -q 'full lowercase 40-character commit SHA' "$fixture/revision.err"
 
-set +e
-python3 "$standard/scripts/create_adoption_lock.py" \
+if python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check --upgrade \
   > /dev/null 2> "$fixture/options.err"
-status=$?
-set -e
+then
+  status=0
+else
+  status=$?
+fi
 test "$status" -eq 2
 grep -q -- '--check and --upgrade are mutually exclusive' "$fixture/options.err"
 
