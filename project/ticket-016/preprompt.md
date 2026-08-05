@@ -5,4 +5,4 @@
   `classification.origin` dla aktywnej implementacji.
 - Ładuj zarządzany `.governance/work-classification.dsl.json` fail-closed.
 - Nie dodawaj zależności runtime ani klasyfikacji opartej na LLM.
-- Release 0.11.0 pozostaje zablokowany do zakończenia tego ticketu.
+- Release 0.12.0 pozostaje zablokowany do zakończenia tego ticketu.

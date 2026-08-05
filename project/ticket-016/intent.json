@@ -1,5 +1,5 @@
 {
-  "schema": "new-project.intent/v2",
+  "schema": "new-project.intent/v3",
   "ticket": "ticket-016",
   "summary": "Deterministyczne egzekwowanie klasyfikacji pracy",
   "workstream": "governance",
@@ -21,6 +21,7 @@
   "dependsOn": ["ticket-014"],
   "conflictsWith": [],
   "integrationTicket": null,
+  "classification": {"kind": "FEATURE", "priority": "P1", "origin": "requested"},
   "delivery": {
     "acceptedBaseSha": "64fd0374d4f2854dac19f83f926115fb43572a6f",
     "targetBranch": "main",

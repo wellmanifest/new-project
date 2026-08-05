@@ -1,2 +1,7 @@
 2026-08-05 ticket-016 PLAN: no implementation files changed
 2026-08-05 interactive approval recorded; implementation starts after plan commit
+2026-08-05 implementation: intent/v3 classification and managed DSL runtime enforcement
+2026-08-05 bash tests/governance-validator.test.sh: PASS
+2026-08-05 bash tests/governance-scripts.test.sh: PASS
+2026-08-05 bash tests/adoption-lock.test.sh: PASS
+2026-08-05 DSL semantic mutation cases: 9/9 rejected

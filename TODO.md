@@ -50,7 +50,7 @@
 
 - [ ] [`ticket-016`](project/ticket-016/README.md) — runtime enforcement
   klasyfikacji `BUG/FEATURE/SERVICE` przez `intent/v3`. Stan:
-  `PLAN / WAIT_FOR_APPROVAL`; zależy od zakończonego 014 i blokuje release 0.12.0.
+  `IN_PROGRESS / PUBLICATION`; zależy od zakończonego 014 i blokuje release 0.12.0.
 
 - [ ] [`ticket-005`](project/ticket-005/README.md) — implementacja uszczelnienia
   evidence została scalona w PR #4. Stan: `BLOCKED / BLOCKED`; czeka na
