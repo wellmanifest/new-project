@@ -1,0 +1,3 @@
+No implementation commands were run. Ticket-019 is superseded by ticket-018:
+PR #24, approved head c57f203b8d2a4c4e25beefa0ccfebe215a3b45cd,
+merge commit 89ddf4262291ad533eab2aa5513d33575925b972.
