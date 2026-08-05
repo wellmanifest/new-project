@@ -1,9 +1,0 @@
-
-$ bash tests/governance-env.test.sh
-governance environment runtime tests passed
-
-$ bash tests/governance-scripts.test.sh
-governance scripts: PASS
-
-$ bash tests/governance-validator.test.sh
-governance validator: PASS
