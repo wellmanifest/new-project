@@ -19,8 +19,15 @@ Generator i schematy potrzebują jednego, testowalnego kontraktu kompletności.
 
 ## Actual changes
 
-- Brak; ticket oczekuje w backlogu.
+- Dodano `governance/package-manifest.json` jako wersjonowane źródło listy
+  zarządzanych artefaktów.
+- Generator adopcji pobiera manifest oraz wskazane artefakty z tego samego,
+  pełnego SHA źródłowego.
+- Testy odrzucają brakujące źródła, zduplikowane cele i niepoprawne kontrakty,
+  a CI wykonuje meta-walidację Draft 2020-12.
+- Pełny lokalny kontrakt CI zakończył się wynikiem PASS 2026-08-05.
 
 ## Blockers
 
-- Wymaga opublikowanej bazy 0.10.0.
+- Brak blockerów implementacyjnych. Publikacja nadal wymaga chronionego CI i
+  zaufanego approval dla dokładnego HEAD PR.

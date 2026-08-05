@@ -10,3 +10,6 @@
 - Dodano negatywne przypadki brakującego źródła i zduplikowanego celu.
 - Dodano meta-walidację Draft 2020-12 i walidację przykładowych dokumentów.
 - Testy `adoption-lock` i `governance-validator` zakończyły się wynikiem PASS.
+- Pełna lokalna regresja obejmująca `governance-scripts`,
+  `governance-validator`, `adoption-lock`, kontrolę JSON i `git diff --check`
+  zakończyła się wynikiem PASS.
