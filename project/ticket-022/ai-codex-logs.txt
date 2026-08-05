@@ -25,3 +25,15 @@ PASS
 
 $ shellcheck scripts/runtime.sh tests/governance-scripts.test.sh
 NOT RUN: shellcheck is unavailable in the declared local hub environment.
+
+$ gh pr checks 31 --repo wellmanifest/new-project
+test: PASS
+windows-governance: PASS
+
+$ validator-agent direct-pr --repository wellmanifest/new-project --pull-request 31
+expected head: 4df48df54e30b25220a190c34af71643f40d2fcf
+review: APPROVED by ifuri-validator-agent[bot]
+model: openrouter/z-ai/glm-5.2 (advisory only)
+
+$ gh pr merge 31 --repo wellmanifest/new-project --merge --delete-branch
+merge commit: 166ebeaa45903822329645328f61317131821935

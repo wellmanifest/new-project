@@ -9,9 +9,10 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-022`](project/ticket-022/README.md) — kanoniczny Change
+- [x] [`ticket-022`](project/ticket-022/README.md) — kanoniczny Change
   Evaluation Contract oraz deterministyczny runtime TypeScript uruchamiany
-  przez Bash. Stan: `IN_PROGRESS / VALIDATION`; klasyfikacja:
+  przez Bash. Stan: `DONE / DONE`; PR #31 scalony jako `166ebea` po Linux,
+  Windows i exact-head Validator App approval. Klasyfikacja:
   `FEATURE / P1 / requested`.
 
 - [x] [`ticket-006`](project/ticket-006/README.md) — zsynchronizowano roadmapę,
