@@ -1,0 +1,68 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-022",
+  "summary": "Canonical change evaluation runtime",
+  "workstream": "integration",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-022/**",
+    "CONTRIBUTING.md",
+    "scripts/runtime.sh",
+    "governance/change-evaluation.schema.json",
+    "governance/package-manifest.json",
+    "tests/governance-scripts.test.sh",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env",
+    "**/*.pem",
+    "**/*secret*"
+  ],
+  "stacks": ["typescript"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b7a591da050476fff6f774e0c7ab7d29dfcffcb7",
+    "targetBranch": "main",
+    "outcome": "Publish one deterministic exact-change evaluation contract and dependency-free runtime",
+    "nonGoals": [
+      "No second independent work-ranking DSL",
+      "No LLM-derived required merge decision",
+      "No semantic-diff extraction or hosted approval resolver in this slice"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use a Bash entrypoint with an embedded dependency-free TypeScript-compatible Node runtime and a versioned JSON Schema",
+      "components": [
+        {"name": "change-evaluation-contract", "paths": ["CONTRIBUTING.md", "governance/**"]},
+        {"name": "change-evaluation-runtime", "paths": ["scripts/runtime.sh", "tests/change-evaluation-runtime.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": ["Adds the t2c.change-evaluation/v1 report schema"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the ticket-scoped commit; existing governance validation remains unchanged"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-03", "commands": ["bash tests/governance-scripts.test.sh"], "evidence": "Exact bindings and negative cases are deterministic"},
+      {"criterion": "AC-02", "commands": ["bash tests/governance-scripts.test.sh"], "evidence": "Existing policy checks remain green"},
+      {"criterion": "AC-07", "commands": ["bash tests/adoption-lock.test.sh"], "evidence": "Runtime and schema are distributed by the immutable package"}
+    ]
+  }
+}
