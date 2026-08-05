@@ -1,0 +1,27 @@
+$ bash tests/governance-scripts.test.sh
+warning: You appear to have cloned an empty repository.
+governance scripts: PASS
+
+$ bash tests/governance-validator.test.sh
+governance validator: PASS
+
+$ bash tests/governance-env.test.sh
+governance environment runtime tests passed
+
+$ bash tests/adoption-lock.test.sh
+adoption lock: PASS
+
+$ bash tests/branch-lifecycle.test.sh
+branch lifecycle validator: PASS
+
+$ python3 -m json.tool governance/change-evaluation.schema.json
+PASS
+
+$ bash -n scripts/runtime.sh
+PASS
+
+$ git diff --check
+PASS
+
+$ shellcheck scripts/runtime.sh tests/governance-scripts.test.sh
+NOT RUN: shellcheck is unavailable in the declared local hub environment.

@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-022`](project/ticket-022/README.md) — kanoniczny Change
+  Evaluation Contract oraz deterministyczny runtime TypeScript uruchamiany
+  przez Bash. Stan: `IN_PROGRESS / VALIDATION`; klasyfikacja:
+  `FEATURE / P1 / requested`.
+
 - [x] [`ticket-006`](project/ticket-006/README.md) — zsynchronizowano roadmapę,
   TODO i indeks z wersją 0.10.0 oraz utworzono bounded backlog. Stan:
   `DONE / DONE`; PR #6 przeszedł CI, exact-head approval i został scalony.
