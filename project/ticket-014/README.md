@@ -2,8 +2,8 @@
 
 - **ID**: ticket-014
 - **Owner**: unresolved:human
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-05
 
 ## Cel i zakres
@@ -15,14 +15,14 @@ zachować zależności jako nadrzędne ograniczenie wykonania.
 
 ## Kryteria odbioru
 
-- [ ] AC-01: Kanoniczny dokument `new-project.work-classification/v1` i jego
+- [x] AC-01: Kanoniczny dokument `new-project.work-classification/v1` i jego
   schemat są walidowane deterministycznie.
-- [ ] AC-02: Kolejność jest jednoznaczna: zależności, rodzaj pracy, priorytet,
+- [x] AC-02: Kolejność jest jednoznaczna: zależności, rodzaj pracy, priorytet,
   stabilny identyfikator.
-- [ ] AC-03: Reguły CC rozróżniają regresję (`BUG`) od istniejącego długu
+- [x] AC-03: Reguły CC rozróżniają regresję (`BUG`) od istniejącego długu
   technicznego (`SERVICE`) i nie wymagają LLM.
-- [ ] AC-04: Artefakty klasyfikacji należą do wersjonowanego pakietu adopcji.
-- [ ] AC-05: Testy odrzucają nieznany rodzaj, nieznany priorytet, duplikaty
+- [x] AC-04: Artefakty klasyfikacji należą do wersjonowanego pakietu adopcji.
+- [x] AC-05: Testy odrzucają nieznany rodzaj, nieznany priorytet, duplikaty
   kolejności oraz niepełną regułę CC.
 
 ## Ryzyka i mitygacje
@@ -43,3 +43,15 @@ zachować zależności jako nadrzędne ograniczenie wykonania.
 
 Ten katalog przechowuje plan, decyzje i dowody. Implementacja DSL i testy
 pozostają w zwykłych katalogach repozytorium.
+
+## Zatwierdzenie interaktywne
+
+Użytkownik zatwierdził `ticket-014` 2026-08-05. Zatwierdzenie pozwala wykonać
+zakres `intent.json`, ale nie zastępuje zaufanego merge approval.
+
+## Walidacja
+
+- `bash tests/governance-validator.test.sh` — PASS
+- `bash tests/adoption-lock.test.sh` — PASS
+- `bash tests/governance-scripts.test.sh` — PASS
+- JSON syntax, `git diff --check` i skan nowych obejść fail-fast — PASS

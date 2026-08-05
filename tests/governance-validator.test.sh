@@ -23,6 +23,7 @@ schemas = {
         'intent.schema.json',
         'lock.schema.json',
         'manifest.schema.json',
+        'work-classification.schema.json',
     )
 }
 for schema in schemas.values():
@@ -56,12 +57,57 @@ Draft202012Validator(schemas['approval-evidence.schema.json']).validate({
     'verification': {'method': 'github-api-allowlist', 'verified': True},
 })
 
+classification = json.load(open(
+    root / 'governance/work-classification.dsl.json', encoding='utf-8'
+))
+classification_validator = Draft202012Validator(
+    schemas['work-classification.schema.json']
+)
+classification_validator.validate(classification)
+assert classification['dimensions'] == {
+    'kind': ['BUG', 'FEATURE', 'SERVICE'],
+    'priority': ['P0', 'P1', 'P2', 'P3'],
+    'origin': ['regression', 'requested', 'health'],
+}
+assert classification['ordering']['precedence'] == [
+    'dependencies', 'kind', 'priority', 'stableId',
+]
+assert classification['priorityDerivation']['impact'] == {
+    'critical': 'P0', 'high': 'P1', 'medium': 'P2', 'low': 'P3',
+}
+assert classification['priorityDerivation']['serviceDefault'] == 'P2'
+rules = {rule['id']: rule for rule in classification['rules']}
+assert len(rules) == len(classification['rules'])
+assert rules['W-CLASS-002']['assign'] == {
+    'kind': 'BUG', 'origin': 'regression',
+}
+assert rules['W-CLASS-003']['when']['threshold'] == 'crossed'
+assert rules['W-CLASS-004']['assign'] == {
+    'kind': 'SERVICE', 'origin': 'health',
+}
+
+def rejected(mutator):
+    candidate = json.loads(json.dumps(classification))
+    mutator(candidate)
+    assert not classification_validator.is_valid(candidate)
+
+rejected(lambda value: value['dimensions']['kind'].__setitem__(0, 'UNKNOWN'))
+rejected(lambda value: value['dimensions']['priority'].__setitem__(0, 'PX'))
+rejected(lambda value: value['ordering']['kindOrder'].__setitem__(1, 'BUG'))
+rejected(lambda value: value['priorityDerivation']['impact'].__setitem__('high', 'P3'))
+rejected(lambda value: value['rules'][1]['when'].pop('baseline'))
+rejected(lambda value: value['rules'][1].pop('assign'))
+
 package = json.load(open(root / 'governance/package-manifest.json', encoding='utf-8'))
 assert package['schema'] == 'new-project.package-manifest/v1'
 assert package['files']
 assert len({item['source'] for item in package['files']}) == len(package['files'])
 assert len({item['target'] for item in package['files']}) == len(package['files'])
 assert 'governance/package-manifest.json' in {item['source'] for item in package['files']}
+assert {
+    'governance/work-classification.dsl.json',
+    'governance/work-classification.schema.json',
+} <= {item['source'] for item in package['files']}
 for item in package['files']:
     assert (root / item['source']).is_file(), item['source']
 PY

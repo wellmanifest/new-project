@@ -57,8 +57,16 @@ Reguły CC:
 
 ## Actual changes
 
-- Brak zmian implementacyjnych; plan oczekuje na zatwierdzenie.
+- Dodano wersjonowany `new-project.work-classification/v1` jako JSON DSL oraz
+  ścisły schemat Draft 2020-12.
+- Zdefiniowano niezależne wymiary `kind`, `priority`, `origin`, deterministyczną
+  mapę wpływu na `P0–P3` i comparator respektujący zależności.
+- Dodano diff-aware reguły CC, jawne odrzucanie braku klasyfikacji oraz
+  advisory-only rolę LLM.
+- Oba artefakty dodano do wersjonowanego pakietu adopcji.
+- Testy pozytywne i negatywne oraz pełna regresja huba przechodzą.
 
 ## Blockers
 
-- Wymagane jest jawne zatwierdzenie planu i `intent.json`.
+- Brak blockerów implementacyjnych. Merge nadal wymaga zaufanego approval dla
+  dokładnego HEAD PR.

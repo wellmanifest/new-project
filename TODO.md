@@ -41,7 +41,7 @@
 
 - [ ] [`ticket-014`](project/ticket-014/README.md) — kanoniczny DSL
   `BUG > FEATURE > SERVICE`, osobny priorytet `P0–P3`, diff-aware CC i pakiet
-  adopcyjny. Stan: `PLAN / WAIT_FOR_APPROVAL`; zależy od zakończonego 010.
+  adopcyjny. Stan: `IN_PROGRESS / VALIDATION`; zależy od zakończonego 010.
 
 - [ ] [`ticket-005`](project/ticket-005/README.md) — implementacja uszczelnienia
   evidence została scalona w PR #4. Stan: `BLOCKED / BLOCKED`; czeka na
