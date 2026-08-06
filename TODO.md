@@ -9,11 +9,15 @@
 
 ## Aktywne utrzymanie standardu
 
+- [x] [`ticket-032`](project/ticket-032/README.md) — validator emituje DECISION DSL (PR validator #13).
+- [x] [`ticket-033`](project/ticket-033/README.md) — required checks z pliku head (PR validator #13).
+- [ ] [`ticket-034`](project/ticket-034/README.md) — rozszerzyć mapowanie rule-enforcement (PLAN).
+- [x] [`ticket-027`](project/ticket-027/README.md) — rule-enforcement traceability. `DONE` (PR #37).
 - [x] [`ticket-025`](project/ticket-025/README.md) — CI runs governance-env suite + completeness guard (PR #34).
-- [ ] [`ticket-030`](project/ticket-030/README.md) — jedno źródło nazw
+- [x] [`ticket-030`](project/ticket-030/README.md) — single source required check names. `DONE` (PR #42).
   wymaganych checków (`governance/required-checks.json`) + bramka vs
   `ci.yml`. Stan: `IN_PROGRESS / VALIDATION` (impl on PR).
-- [ ] [`ticket-031`](project/ticket-031/README.md) — przeliczalny log decyzji
+- [x] [`ticket-031`](project/ticket-031/README.md) — recomputable decision log contract. `DONE` (PR #44).
   (`C-DECISION-*`, schema, replay). Stan: `PLAN` → implementacja po 030.
 - [ ] [`ticket-024`](project/ticket-024/README.md) — strategia
   `extendable` w `package-manifest.json` dla pliku, który target musi

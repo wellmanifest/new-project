@@ -2,8 +2,8 @@
 
 - **ID**: ticket-025
 - **Owner**: unresolved:human
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-05
 
 ## Cel i zakres

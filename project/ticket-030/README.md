@@ -2,8 +2,8 @@
 
 - **ID**: ticket-030
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-06
 
 ## Cel i Zakres

@@ -1,0 +1,26 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-033",
+  "summary": "Load required checks from target required-checks.json",
+  "workstream": "infrastructure",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-033/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "docs/GOVERNANCE_ENFORCEMENT.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-030"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

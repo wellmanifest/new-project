@@ -223,7 +223,7 @@ Kontrakt: `CONTRIBUTING.md` (`DOCUMENT DECISION_LOG`, reguły `C-DECISION-001`�
 
 | Kto emituje | Kiedy | Gdzie |
 |---|---|---|
-| `ifuri-validator-agent` (validator-agent) | po deterministycznej bramce checków / unsafe, przed lub wraz z review | `project/{ticket}/decisions.md` (append fence `dsl`) oraz ewent. raport runu |
+| `ifuri-validator-agent` (validator-agent) | po deterministycznej bramce checków / unsafe, przed lub wraz z review | `project/{ticket}/decisions.md` (append fence `dsl`) `decision_dsl` w raporcie runu + fence w body review |
 | `repair-agent` | gdy zainstalowany i mutuje kod | ten sam plik decyzji ticketu naprawy; na `wellmanifest` dziś nie zainstalowany |
 | Agent lokalny (Claude/Codex/…) | gdy decyzja zmienia stan repo poza samym scaffoldem | ten sam kontrakt; **nie** zastępuje review App |
 
