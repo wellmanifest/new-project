@@ -215,6 +215,26 @@ lista zakresu rozjeżdża się z rzeczywistością i Validator może wystawić z
 APPROVE dla zestawu, którego ruleset i tak nie wpuści — albo odwrotnie, nie
 sprawdzić checku, który jest wymagany.
 
+## Log decyzji autonomicznych
+
+Kontrakt: `CONTRIBUTING.md` (`DOCUMENT DECISION_LOG`, reguły `C-DECISION-001`–
+`004`), schema `governance/decision-record.schema.json`, runtime
+`scripts/decision_record.py`, kody `GOV-DECISION-001`…`004`.
+
+| Kto emituje | Kiedy | Gdzie |
+|---|---|---|
+| `ifuri-validator-agent` (validator-agent) | po deterministycznej bramce checków / unsafe, przed lub wraz z review | `project/{ticket}/decisions.md` (append fence `dsl`) oraz ewent. raport runu |
+| `repair-agent` | gdy zainstalowany i mutuje kod | ten sam plik decyzji ticketu naprawy; na `wellmanifest` dziś nie zainstalowany |
+| Agent lokalny (Claude/Codex/…) | gdy decyzja zmienia stan repo poza samym scaffoldem | ten sam kontrakt; **nie** zastępuje review App |
+
+Wpis **wyprowadza się** z `t2c.change-evaluation/v1` gdy ocena istnieje
+(`scripts/decision_record.py` helper `from_change_evaluation`). Pole `ADVISORY`
+może nieść werdykt LLM; `VERDICT AUTHORITY` musi pozostać `DETERMINISTIC`.
+Odtworzenie: `python3 scripts/decision_record.py validate-dsl PATH`.
+
+Surowy `ai-{PROVIDER}-logs.txt` pozostaje logiem EXEC/STDOUT (NOTATION_STANDARDS)
+i **nie** jest logiem decyzji.
+
 ## Integracja `validator-agent` z istniejącym repozytorium
 
 Integrację wykonuje się w osobnych, zatwierdzonych ticketach obu repozytoriów.
