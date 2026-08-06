@@ -7,9 +7,11 @@ work="$(mktemp -d "${TMPDIR:-/tmp}/new-project-rule-enforcement.XXXXXX")"
 trap 'rm -rf "$work"' EXIT INT TERM
 
 # The live contract must hold: no mapping may name a code the validator does not
-# define, and no mapping may survive the rule it describes.
-python3 "$repo_root/scripts/audit_rule_enforcement.py" --root "$repo_root" > "$work/live.txt"
+# define, no mapping may survive the rule it describes, and after ticket-034 every
+# rule has either a GOV-* claim or an explicit manual reason (no silent gaps).
+python3 "$repo_root/scripts/audit_rule_enforcement.py" --root "$repo_root" --require-complete > "$work/live.txt"
 grep -Eq '^rule-enforcement: [0-9]+ rules' "$work/live.txt"
+grep -Eq '0 unmapped, 0 codes unclaimed' "$work/live.txt"
 
 # Negative cases run against a copy so the checkout is never mutated.
 cp -R "$repo_root/governance" "$repo_root/scripts" "$repo_root/POLICY.md" "$repo_root/CONTRIBUTING.md" "$work/"
