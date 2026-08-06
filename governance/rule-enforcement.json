@@ -1,11 +1,651 @@
 {
   "schema": "new-project.rule-enforcement/v1",
-  "note": "Maps a normative RULE to the deterministic GOV-* codes that enforce it. Both sides are derived by scripts/audit_rule_enforcement.py: rules from POLICY.md and CONTRIBUTING.md, codes from scripts/governance_check.py. Only this association is written by hand. A rule that no mechanism can enforce is declared enforcement: manual with a reason, so the gap is visible rather than absent.",
+  "note": "Maps a normative RULE to the deterministic GOV-* codes that enforce it. Both sides are derived by scripts/audit_rule_enforcement.py: rules from POLICY.md and CONTRIBUTING.md, codes from scripts/governance_check.py. Only this association is written by hand. A rule that no mechanism can enforce is declared enforcement: manual with a reason, so the gap is visible rather than absent. Ticket-034 filled the initial complete map; manual entries are candidates for future GOV-* codes.",
   "rules": {
-    "P-CORE-014": {
+    "C-ANALYSIS-001": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Optional analysis image steps are advisory until CI pin is configured."
+    },
+    "C-ANALYSIS-002": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Optional analysis image steps are advisory until CI pin is configured."
+    },
+    "C-ANALYSIS-003": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Optional analysis image steps are advisory until CI pin is configured."
+    },
+    "C-ANALYSIS-004": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Optional analysis image steps are advisory until CI pin is configured."
+    },
+    "C-APPROVAL-001": {
       "codes": [
-        "GOV-SCOPE-001",
+        "GOV-APPROVAL-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-APPROVAL-002": {
+      "codes": [
+        "GOV-APPROVAL-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-APPROVAL-003": {
+      "codes": [
+        "GOV-APPROVAL-003",
+        "GOV-APPROVAL-004",
+        "GOV-APPROVAL-005"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-CI-001": {
+      "codes": [
+        "GOV-APPROVAL-001",
+        "GOV-BASE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-CI-002": {
+      "codes": [
+        "GOV-STACK-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-CI-003": {
+      "codes": [
+        "GOV-MANIFEST-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-CONCURRENCY-001": {
+      "codes": [
+        "GOV-WORKSTREAM-004"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-CONCURRENCY-002": {
+      "codes": [
+        "GOV-TICKET-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-CONCURRENCY-003": {
+      "codes": [
+        "GOV-WORKSTREAM-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-CONTEXT-001": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Context loading order is agent procedure."
+    },
+    "C-CONTEXT-002": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Context refresh is agent procedure."
+    },
+    "C-DECISION-001": {
+      "codes": [
+        "GOV-TICKET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-DECISION-002": {
+      "codes": [
+        "GOV-INTENT-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-DECISION-003": {
+      "codes": [
+        "GOV-APPROVAL-005"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-DECISION-004": {
+      "codes": [
+        "GOV-APPROVAL-004"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-DELEGATION-001": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Human/agent delegation boundaries are enforced socially and by OWNER rules partially via GOV-OWNER-001."
+    },
+    "C-DELEGATION-002": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Human/agent delegation boundaries are session procedure."
+    },
+    "C-DELEGATION-003": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Human/agent delegation boundaries are session procedure."
+    },
+    "C-DELEGATION-004": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Human/agent delegation boundaries are session procedure."
+    },
+    "C-DOCKER-001": {
+      "codes": [
+        "GOV-DOCKER-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-DOCKER-002": {
+      "codes": [
+        "GOV-DOCKER-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-DOCKER-003": {
+      "codes": [
+        "GOV-DOCKER-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-DOCKER-004": {
+      "codes": [
+        "GOV-DOCKER-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-DOCKER-005": {
+      "codes": [
+        "GOV-DOCKER-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-DOCKER-006": {
+      "codes": [
+        "GOV-DOCKER-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-DOCS-001": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Prose documentation hygiene is review practice; path locality uses GOV-PATH-001 elsewhere."
+    },
+    "C-EDIT-001": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Interactive edit safety is agent procedure between commits."
+    },
+    "C-EDIT-002": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Interactive edit safety is agent procedure between commits."
+    },
+    "C-EDIT-003": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Interactive edit safety is agent procedure between commits."
+    },
+    "C-EDIT-004": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Interactive edit safety is agent procedure between commits."
+    },
+    "C-EDIT-005": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Interactive edit safety is agent procedure between commits."
+    },
+    "C-ENV-001": {
+      "codes": [
+        "GOV-SECRET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-EVALUATION-001": {
+      "codes": [
+        "GOV-INTENT-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-EVALUATION-002": {
+      "codes": [
+        "GOV-SCOPE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-EVALUATION-003": {
+      "codes": [
+        "GOV-BUDGET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-EVALUATION-004": {
+      "codes": [
+        "GOV-DELIVERY-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-EVALUATION-005": {
+      "codes": [
+        "GOV-DELIVERY-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-EVALUATION-006": {
+      "codes": [
+        "GOV-BASE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-EVALUATION-007": {
+      "codes": [
+        "GOV-ARCHITECTURE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-EVALUATION-008": {
+      "codes": [
+        "GOV-APPROVAL-003"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-EVALUATION-009": {
+      "codes": [
+        "GOV-APPROVAL-004"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-EVALUATION-010": {
+      "codes": [
+        "GOV-APPROVAL-005"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-PLAN-001": {
+      "codes": [
+        "GOV-INTENT-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-PLAN-002": {
+      "codes": [
+        "GOV-INTENT-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-PLAN-003": {
+      "codes": [
+        "GOV-SCOPE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-PLAN-004": {
+      "codes": [
+        "GOV-DELIVERY-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-PUBLISH-001": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Skip-commit when not requested is agent publish procedure."
+    },
+    "C-PUBLISH-002": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Commit message quality is review practice."
+    },
+    "C-PUBLISH-003": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "PR-required publication is branch protection / operator procedure."
+    },
+    "C-PUBLISH-004": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Direct-push exceptions require human emergency process outside this validator."
+    },
+    "C-START-001": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Session bootstrap is operator procedure; not a repo-state gate."
+    },
+    "C-START-002": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Reading human notes is agent procedure outside deterministic CI."
+    },
+    "C-START-003": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Tool selection at session start is not encoded as GOV-* codes."
+    },
+    "C-TICKET-001": {
+      "codes": [
+        "GOV-TICKET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-002": {
+      "codes": [
+        "GOV-TICKET-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-003": {
+      "codes": [
+        "GOV-TICKET-003"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-004": {
+      "codes": [
+        "GOV-TICKET-004"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-005": {
+      "codes": [
+        "GOV-TICKET-005"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-006": {
+      "codes": [
+        "GOV-STATUS-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-007": {
+      "codes": [
+        "GOV-INTENT-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-008": {
+      "codes": [
+        "GOV-TICKET-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-009": {
+      "codes": [
+        "GOV-WORKSTREAM-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-010": {
+      "codes": [
+        "GOV-WORKSTREAM-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-011": {
+      "codes": [
+        "GOV-WORKSTREAM-003"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-012": {
+      "codes": [
+        "GOV-WORKSTREAM-004"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-013": {
+      "codes": [
+        "GOV-DEPENDENCY-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-014": {
+      "codes": [
+        "GOV-DEPENDENCY-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-015": {
+      "codes": [
         "GOV-CONFLICT-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-016": {
+      "codes": [
+        "GOV-INTEGRATION-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-017": {
+      "codes": [
+        "GOV-SCOPE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-018": {
+      "codes": [
+        "GOV-DELIVERY-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-019": {
+      "codes": [
+        "GOV-DELIVERY-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TICKET-020": {
+      "codes": [
+        "GOV-ARCHITECTURE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-TOOLS-001": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Tool allowlist for interactive agents is runtime policy, not governance_check."
+    },
+    "C-TOOLS-002": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Tool allowlist for interactive agents is runtime policy, not governance_check."
+    },
+    "C-TOOLS-003": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Tool allowlist for interactive agents is runtime policy, not governance_check."
+    },
+    "C-TOOLS-004": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Tool allowlist for interactive agents is runtime policy, not governance_check."
+    },
+    "C-TOOLS-005": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Tool allowlist for interactive agents is runtime policy, not governance_check."
+    },
+    "C-TOOLS-006": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Tool allowlist for interactive agents is runtime policy, not governance_check."
+    },
+    "C-TOOLS-007": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Tool allowlist for interactive agents is runtime policy, not governance_check."
+    },
+    "C-VALIDATION-001": {
+      "codes": [
+        "GOV-INTENT-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-VALIDATION-002": {
+      "codes": [
+        "GOV-SCOPE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-VALIDATION-003": {
+      "codes": [
+        "GOV-APPROVAL-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-VALIDATION-004": {
+      "codes": [
+        "GOV-SECRET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-VALIDATION-005": {
+      "codes": [
+        "GOV-PATH-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-VALIDATION-006": {
+      "codes": [
+        "GOV-BUDGET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-VALIDATION-007": {
+      "codes": [
+        "GOV-ARCHITECTURE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-AGENT-001": {
+      "codes": [
+        "GOV-OWNER-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-AGENT-002": {
+      "codes": [
+        "GOV-TICKET-005"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-AGENT-003": {
+      "codes": [
+        "GOV-SCOPE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-AGENT-004": {
+      "codes": [
+        "GOV-INTENT-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-AGENT-005": {
+      "codes": [
+        "GOV-APPROVAL-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-AGENT-006": {
+      "codes": [
+        "GOV-SECRET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-AGENT-007": {
+      "codes": [
+        "GOV-PATH-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-BLOCK-001": {
+      "codes": [
+        "GOV-TICKET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-BLOCK-002": {
+      "codes": [
+        "GOV-SCOPE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-BLOCK-003": {
+      "codes": [
+        "GOV-SECRET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-BLOCK-004": {
+      "codes": [
+        "GOV-APPROVAL-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-BRANCH-001": {
+      "codes": [
+        "GOV-BASE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-BRANCH-002": {
+      "codes": [
+        "GOV-BASE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-BRANCH-003": {
+      "codes": [
+        "GOV-BASE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-001": {
+      "codes": [
+        "GOV-MANIFEST-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-002": {
+      "codes": [
+        "GOV-SYNC-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-003": {
+      "codes": [
+        "GOV-BOOT-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-004": {
+      "codes": [
+        "GOV-TICKET-001",
+        "GOV-TICKET-002",
+        "GOV-TICKET-005"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-005": {
+      "codes": [
+        "GOV-TICKET-003"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-006": {
+      "codes": [
+        "GOV-TICKET-004"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-007": {
+      "codes": [
+        "GOV-STATUS-001"
       ],
       "enforcement": "deterministic"
     },
@@ -13,6 +653,225 @@
       "codes": [],
       "enforcement": "manual",
       "reason": "Plan approval is a human decision; no artifact proves it was read."
+    },
+    "P-CORE-009": {
+      "codes": [
+        "GOV-TICKET-002",
+        "GOV-WORKSTREAM-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-010": {
+      "codes": [
+        "GOV-SCOPE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-011": {
+      "codes": [
+        "GOV-INTENT-001",
+        "GOV-INTENT-002",
+        "GOV-INTENT-003"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-012": {
+      "codes": [
+        "GOV-APPROVAL-001",
+        "GOV-APPROVAL-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-013": {
+      "codes": [
+        "GOV-APPROVAL-003",
+        "GOV-APPROVAL-004",
+        "GOV-APPROVAL-005"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-014": {
+      "codes": [
+        "GOV-CONFLICT-001",
+        "GOV-SCOPE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-015": {
+      "codes": [
+        "GOV-APPROVAL-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-016": {
+      "codes": [
+        "GOV-APPROVAL-005"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-017": {
+      "codes": [
+        "GOV-DOCKER-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-018": {
+      "codes": [
+        "GOV-STACK-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-019": {
+      "codes": [
+        "GOV-WORKSTREAM-001",
+        "GOV-WORKSTREAM-003"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-020": {
+      "codes": [
+        "GOV-WORKSTREAM-004"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-021": {
+      "codes": [
+        "GOV-DEPENDENCY-001",
+        "GOV-DEPENDENCY-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-DOCS-001": {
+      "codes": [
+        "GOV-PATH-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-SEC-001": {
+      "codes": [
+        "GOV-SECRET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-SEC-002": {
+      "codes": [
+        "GOV-SECRET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-SEC-003": {
+      "codes": [
+        "GOV-SECRET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-SEC-004": {
+      "codes": [
+        "GOV-PATH-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-SEC-005": {
+      "codes": [
+        "GOV-OWNER-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-SEC-006": {
+      "codes": [
+        "GOV-OWNER-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-SOURCE-001": {
+      "codes": [
+        "GOV-MANIFEST-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-SOURCE-002": {
+      "codes": [
+        "GOV-SYNC-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-SOURCE-003": {
+      "codes": [
+        "GOV-DIFF-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-TOOL-001": {
+      "codes": [
+        "GOV-SECRET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-TOOL-002": {
+      "codes": [
+        "GOV-PATH-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-TOOL-003": {
+      "codes": [
+        "GOV-SECRET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-TOOL-004": {
+      "codes": [
+        "GOV-PATH-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-TOOL-005": {
+      "codes": [
+        "GOV-SECRET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-TOOL-006": {
+      "codes": [
+        "GOV-PATH-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-TOOL-007": {
+      "codes": [
+        "GOV-SECRET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-TOOL-008": {
+      "codes": [
+        "GOV-PATH-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-WORK-001": {
+      "codes": [
+        "GOV-TICKET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-WORK-002": {
+      "codes": [
+        "GOV-TICKET-005"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-WORK-003": {
+      "codes": [
+        "GOV-INTEGRATION-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-WORK-004": {
+      "codes": [
+        "GOV-ARCHITECTURE-001"
+      ],
+      "enforcement": "deterministic"
     }
   }
 }

@@ -14,8 +14,7 @@
     "project/TICKETS.md",
     "governance/rule-enforcement.json",
     "scripts/audit_rule_enforcement.py",
-    "tests/rule-enforcement.test.sh",
-    "docs/**"
+    "tests/rule-enforcement.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -25,5 +24,6 @@
     "ticket-027"
   ],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": null,
+  "status_note": "implementation"
 }

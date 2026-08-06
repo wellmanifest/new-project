@@ -11,7 +11,7 @@
 
 - [x] [`ticket-032`](project/ticket-032/README.md) — validator emituje DECISION DSL (PR validator #13).
 - [x] [`ticket-033`](project/ticket-033/README.md) — required checks z pliku head (PR validator #13).
-- [ ] [`ticket-034`](project/ticket-034/README.md) — rozszerzyć mapowanie rule-enforcement (PLAN).
+- [x] [`ticket-034`](project/ticket-034/README.md) — kompletne mapowanie rule-enforcement (148/37, 0 luk).
 - [x] [`ticket-027`](project/ticket-027/README.md) — rule-enforcement traceability. `DONE` (PR #37).
 - [x] [`ticket-025`](project/ticket-025/README.md) — CI runs governance-env suite + completeness guard (PR #34).
 - [x] [`ticket-030`](project/ticket-030/README.md) — single source required check names. `DONE` (PR #42).
