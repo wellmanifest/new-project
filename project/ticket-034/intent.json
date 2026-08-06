@@ -24,6 +24,5 @@
     "ticket-027"
   ],
   "conflictsWith": [],
-  "integrationTicket": null,
-  "status_note": "implementation"
+  "integrationTicket": null
 }

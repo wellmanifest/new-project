@@ -91,25 +91,25 @@
     },
     "C-DECISION-001": {
       "codes": [
-        "GOV-TICKET-001"
+        "GOV-DECISION-001"
       ],
       "enforcement": "deterministic"
     },
     "C-DECISION-002": {
       "codes": [
-        "GOV-INTENT-002"
+        "GOV-DECISION-002"
       ],
       "enforcement": "deterministic"
     },
     "C-DECISION-003": {
       "codes": [
-        "GOV-APPROVAL-005"
+        "GOV-DECISION-003"
       ],
       "enforcement": "deterministic"
     },
     "C-DECISION-004": {
       "codes": [
-        "GOV-APPROVAL-004"
+        "GOV-DECISION-004"
       ],
       "enforcement": "deterministic"
     },

@@ -1,0 +1,22 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-035",
+  "summary": "Gate decision logs with GOV-DECISION codes in governance_check",
+  "workstream": "governance",
+  "classification": {"kind": "FEATURE", "priority": "P1", "origin": "requested"},
+  "allowedPaths": [
+    "project/ticket-035/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/governance_check.py",
+    "governance/rule-enforcement.json",
+    "project/ticket-032/**",
+    "project/ticket-033/**",
+    "project/ticket-034/**"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": ["ticket-031", "ticket-034"],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
