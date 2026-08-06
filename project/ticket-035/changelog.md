@@ -1,1 +1,2 @@
 - 2026-08-06: GOV-DECISION gate in governance_check
+- 2026-08-06: fill agent participant + preprompt (were stub-only)
