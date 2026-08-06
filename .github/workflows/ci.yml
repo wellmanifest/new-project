@@ -24,10 +24,13 @@ jobs:
           python3 -m json.tool governance/stack-profiles.json >/dev/null
           python3 -m json.tool governance/package-manifest.json >/dev/null
           python3 -m json.tool governance/required-checks.json >/dev/null
+          python3 -m json.tool governance/decision-record.schema.json >/dev/null
       - name: Assert required check names match workflow jobs
         run: python3 scripts/check_required_checks.py
       - name: Test required-checks gate
         run: bash tests/required-checks.test.sh
+      - name: Test decision-record replay and append-only
+        run: bash tests/decision-record.test.sh
       - name: Test ticket governance scripts
         run: bash tests/governance-scripts.test.sh
       - name: Test deterministic governance validator

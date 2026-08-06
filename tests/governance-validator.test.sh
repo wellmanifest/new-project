@@ -169,14 +169,19 @@ assert module.pattern_covered_by('test/cli-smoke.test.ts', 'test/cli*')
 assert not module.pattern_covered_by('test/mcp*.test.ts', 'test/cli*')
 assert not module.pattern_covered_by('test/cli*.test.ts', 'test/*.spec.ts')
 PY
-python3 - "$repo_root/scripts/governance_check.py" "$repo_root/governance/diagnostics.json" <<'PY'
+python3 - "$repo_root/scripts/governance_check.py" \
+  "$repo_root/scripts/decision_record.py" \
+  "$repo_root/governance/diagnostics.json" <<'PY'
 import json
 import re
 import sys
 
-source = open(sys.argv[1], encoding='utf-8').read()
-catalog = set(json.load(open(sys.argv[2], encoding='utf-8'))['codes'])
-emitted = set(re.findall(r'report\.add\(\s*["\'](GOV-[A-Z]+-[0-9]+)', source))
+check_src = open(sys.argv[1], encoding='utf-8').read()
+decision_src = open(sys.argv[2], encoding='utf-8').read()
+catalog = set(json.load(open(sys.argv[3], encoding='utf-8'))['codes'])
+emitted = set(re.findall(r'report\.add\(\s*["\'](GOV-[A-Z]+-[0-9]+)', check_src))
+# Decision-record gate emits stable codes as GOV-DECISION-* string prefixes.
+emitted |= set(re.findall(r'["\'](GOV-[A-Z]+-[0-9]+)', decision_src))
 assert emitted == catalog, (sorted(emitted - catalog), sorted(catalog - emitted))
 PY
 grep -q 'review.commit_id === head' "$repo_root/.github/workflows/governance.yml"
