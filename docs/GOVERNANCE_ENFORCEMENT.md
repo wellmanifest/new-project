@@ -186,6 +186,35 @@ Branch inny niż default branch musi być headem otwartego PR-a. Odstępstwo jes
 osieroconym branchem i wymaga decyzji: przywrócić PR, zintegrować pracę albo
 jawnie ją odrzucić. Sam walidator jest read-only i nie usuwa branchy.
 
+## Jedno źródło nazw wymaganych checków
+
+Nazwy checków wymaganych na `main` dla tego repozytorium mają **jedno źródło**:
+
+```text
+governance/required-checks.json  →  field requiredCheckNames
+```
+
+Obecna wartość: `test`, `windows-governance`.
+
+Bramka `scripts/check_required_checks.py` (CI: job `test`) porównuje to źródło z
+jobami top-level w `.github/workflows/ci.yml` i failuje, gdy brakuje nazwy po
+którejkolwiek stronie. Circular governance checks ignorowane przez zewnętrznego
+Validatora (`governance / enforce` i warianty) są zapisane w tym samym pliku w
+`circularGovernanceChecksIgnoredByValidator` i **nie** są jobami workflow hubu.
+
+### Konsumenci zewnętrzni
+
+| konsument | jak ma czytać ten sam zestaw |
+|---|---|
+| GitHub Ruleset `main-governance-protection` | ręcznie utrzymać `requiredCheckNames` (brak odczytu rulesetu z CI bez admin API) |
+| `subactor/validator-agent` | `DIRECT_PR_REQUIRED_CHECKS` oraz `DIRECT_PR_SCAN_CONFIG["wellmanifest/new-project"].required_checks` **muszą** być równe `requiredCheckNames`; skrypt `bin/dispatch-direct-pr.sh` też |
+| Dokumentacja / agenci | wskazują na `governance/required-checks.json`, nie na skopiowaną listę w prozie |
+
+Hardcoding podzbioru (np. tylko `test`) jest defektem tej samej klasy co ticket-025:
+lista zakresu rozjeżdża się z rzeczywistością i Validator może wystawić zaufane
+APPROVE dla zestawu, którego ruleset i tak nie wpuści — albo odwrotnie, nie
+sprawdzić checku, który jest wymagany.
+
 ## Integracja `validator-agent` z istniejącym repozytorium
 
 Integrację wykonuje się w osobnych, zatwierdzonych ticketach obu repozytoriów.
