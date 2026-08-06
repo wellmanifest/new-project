@@ -9,8 +9,9 @@
 
 ## Aktywne utrzymanie standardu
 
-- [x] [`ticket-032`](project/ticket-032/README.md) — validator emituje DECISION DSL (PR validator #13).
-- [x] [`ticket-033`](project/ticket-033/README.md) — required checks z pliku head (PR validator #13).
+- [x] [`ticket-035`](project/ticket-035/README.md) — GOV-DECISION gate w governance_check.
+- [x] [`ticket-032`](project/ticket-032/README.md) — DECISION DSL + append decisions.md (validator #13/#14).
+- [x] [`ticket-033`](project/ticket-033/README.md) — required checks z pliku head (validator #13). DONE.
 - [x] [`ticket-034`](project/ticket-034/README.md) — kompletne mapowanie rule-enforcement (148/37, 0 luk).
 - [x] [`ticket-027`](project/ticket-027/README.md) — rule-enforcement traceability. `DONE` (PR #37).
 - [x] [`ticket-025`](project/ticket-025/README.md) — CI runs governance-env suite + completeness guard (PR #34).

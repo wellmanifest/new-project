@@ -1451,6 +1451,59 @@ def check_changed_file(root: Path, raw: str, report: Report) -> None:
             "GOV-PATH-001", f"Machine-local absolute path detected in governed artifact: {raw}",
             "Replace it with a repository-relative path before publication.", [raw],
         )
+    if fnmatch.fnmatchcase(raw, "project/ticket-*/decisions.md"):
+        check_decision_log_file(root, raw, text, report)
+
+
+def check_decision_log_file(root: Path, raw: str, text: str, report: Report) -> None:
+    """Validate recomputable decision records (C-DECISION / ticket-031)."""
+    scripts_dir = Path(__file__).resolve().parent
+    if str(scripts_dir) not in sys.path:
+        sys.path.insert(0, str(scripts_dir))
+    try:
+        from decision_record import parse_dsl_record, split_decision_blocks, validate_record
+    except ImportError:
+        report.add(
+            "GOV-DECISION-002",
+            f"Cannot import decision_record helper while validating {raw}.",
+            "Keep scripts/decision_record.py next to governance_check.py.",
+            [raw],
+        )
+        return
+    blocks = split_decision_blocks(text)
+    if not blocks:
+        report.add(
+            "GOV-DECISION-001",
+            f"Decision log {raw} has no DECISION records.",
+            "Append a fenced ```dsl DECISION record or remove the empty log.",
+            [raw],
+        )
+        return
+    for block in blocks:
+        try:
+            record = parse_dsl_record(block)
+        except ValueError as error:
+            report.add(
+                "GOV-DECISION-002",
+                f"Decision record in {raw} is not parseable: {error}",
+                "Store deterministic INPUT lines and a complete DECISION shape.",
+                [raw],
+            )
+            continue
+        for error in validate_record(record):
+            code = "GOV-DECISION-002"
+            if "GOV-DECISION-003" in error or "ADVISORY" in error:
+                code = "GOV-DECISION-003"
+            elif "GOV-DECISION-004" in error or "replayed verdict" in error:
+                code = "GOV-DECISION-004"
+            elif "GOV-DECISION-001" in error:
+                code = "GOV-DECISION-001"
+            report.add(
+                code,
+                f"Decision record in {raw}: {error}",
+                "Fix the record so INPUT + APPLIED_RULE recompute VERDICT with DETERMINISTIC authority.",
+                [raw],
+            )
 
 
 def check_changed_content(root: Path, changed: list[str], actor: str, trusted_human_change: bool, report: Report) -> None:
