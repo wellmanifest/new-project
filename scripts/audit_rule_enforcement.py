@@ -33,7 +33,7 @@ VALIDATOR_PATH = Path("scripts/governance_check.py")
 
 DSL_BLOCK = re.compile(r"```(?:dsl|bash)\n(.*?)```", re.S)
 RULE_HEADER = re.compile(r"^RULE\s+([A-Za-z0-9_.:-]+)(?:\s+TYPE\s+(\S+))?\s*$", re.MULTILINE)
-GOV_CODE = re.compile(r'"(GOV-[A-Z0-9-]+)"')
+GOV_CODE = re.compile(r'"(GOV-[A-Z]+-[0-9]{3})"')
 
 
 def _wellm_rules(block: str) -> list[dict[str, Any]] | None:
