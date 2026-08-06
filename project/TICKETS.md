@@ -50,6 +50,7 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-032** | [`README.md`](./ticket-032/README.md) | [`preprompt.md`](./ticket-032/preprompt.md) | - |  [`ai-grok.md`](./ticket-032/ai-grok.md) |  [`ai-grok-logs.txt`](./ticket-032/ai-grok-logs.txt) | [`changelog.md`](./ticket-032/changelog.md) |
 | **ticket-033** | [`README.md`](./ticket-033/README.md) | [`preprompt.md`](./ticket-033/preprompt.md) | - |  [`ai-grok.md`](./ticket-033/ai-grok.md) |  [`ai-grok-logs.txt`](./ticket-033/ai-grok-logs.txt) | [`changelog.md`](./ticket-033/changelog.md) |
 | **ticket-034** | [`README.md`](./ticket-034/README.md) | [`preprompt.md`](./ticket-034/preprompt.md) | - |  [`ai-grok.md`](./ticket-034/ai-grok.md) |  [`ai-grok-logs.txt`](./ticket-034/ai-grok-logs.txt) | [`changelog.md`](./ticket-034/changelog.md) |
+| **ticket-035** | [`README.md`](./ticket-035/README.md) | [`preprompt.md`](./ticket-035/preprompt.md) | - |  [`ai-grok.md`](./ticket-035/ai-grok.md) |  [`ai-grok-logs.txt`](./ticket-035/ai-grok-logs.txt) | [`changelog.md`](./ticket-035/changelog.md) |
 <!-- AUTO:TICKET_INDEX:END -->
 
 ---
