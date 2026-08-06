@@ -11,7 +11,13 @@
   "allowedPaths": [
     "project/ticket-030/**",
     "TODO.md",
-    "project/TICKETS.md"
+    "project/TICKETS.md",
+    "governance/required-checks.json",
+    "governance/package-manifest.json",
+    "scripts/check_required_checks.py",
+    "tests/required-checks.test.sh",
+    ".github/workflows/ci.yml",
+    "docs/GOVERNANCE_ENFORCEMENT.md"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"

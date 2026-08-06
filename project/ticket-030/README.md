@@ -2,8 +2,8 @@
 
 - **ID**: ticket-030
 - **Owner**: unresolved:human
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-06
 
 ## Cel i Zakres
@@ -31,14 +31,14 @@ rozjazd. Poza zakresem pozostaje zmiana samego zestawu checków.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Nazwy wymaganych checków mają jedno źródło w repozytorium,
+- [x] AC-01: Nazwy wymaganych checków mają jedno źródło w repozytorium,
   wskazane wprost w `docs/GOVERNANCE_ENFORCEMENT.md`.
-- [ ] AC-02: Bramka porównuje to źródło z zestawem checków faktycznie
+- [x] AC-02: Bramka porównuje to źródło z zestawem checków faktycznie
   publikowanych przez `.github/workflows/ci.yml` i failuje, nazywając check,
   którego brakuje po którejkolwiek stronie.
-- [ ] AC-03: Test mutacyjny: usunięcie jednego joba z `ci.yml` jest wykrywane
+- [x] AC-03: Test mutacyjny: usunięcie jednego joba z `ci.yml` jest wykrywane
   po nazwie; przywrócenie przywraca zielony wynik.
-- [ ] AC-04: Dokumentacja mówi wprost, że konsument zewnętrzny — na przykład
+- [x] AC-04: Dokumentacja mówi wprost, że konsument zewnętrzny — na przykład
   `validator-agent` — czyta ten sam zestaw, i wskazuje gdzie.
 
 ## Ryzyka i Uwagi

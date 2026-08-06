@@ -7,6 +7,8 @@
     { "source": "governance/approval-evidence.schema.json", "target": ".governance/approval-evidence.schema.json", "strategy": "managed", "executable": false },
     { "source": "governance/change-evaluation.schema.json", "target": ".governance/change-evaluation.schema.json", "strategy": "managed", "executable": false },
     { "source": "governance/diagnostics.json", "target": ".governance/diagnostics.json", "strategy": "managed", "executable": false },
+    { "source": "governance/required-checks.json", "target": ".governance/required-checks.json", "strategy": "managed", "executable": false },
+    { "source": "scripts/check_required_checks.py", "target": ".governance/check_required_checks.py", "strategy": "managed", "executable": false },
     { "source": "governance/intent.schema.json", "target": ".governance/intent.schema.json", "strategy": "managed", "executable": false },
     { "source": "governance/lock.schema.json", "target": ".governance/lock.schema.json", "strategy": "managed", "executable": false },
     { "source": "governance/manifest.schema.json", "target": ".governance/manifest.schema.json", "strategy": "managed", "executable": false },

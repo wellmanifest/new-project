@@ -4,3 +4,4 @@
 
 - Initial governance scaffold created.
 - No human participant identity or content was generated.
+- 2026-08-06: implement single source requiredCheckNames + gate + tests (AC-01..04)
