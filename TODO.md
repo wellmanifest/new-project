@@ -9,6 +9,7 @@
 
 ## Aktywne utrzymanie standardu
 
+- [x] [`ticket-025`](project/ticket-025/README.md) — CI runs governance-env suite + completeness guard (PR #34).
 - [ ] [`ticket-030`](project/ticket-030/README.md) — jedno źródło nazw
   wymaganych checków (`governance/required-checks.json`) + bramka vs
   `ci.yml`. Stan: `IN_PROGRESS / VALIDATION` (impl on PR).
