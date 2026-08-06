@@ -2,8 +2,8 @@
 
 - **ID**: ticket-031
 - **Owner**: unresolved:human
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-06
 
 ## Cel i Zakres
@@ -116,18 +116,18 @@ wyprowadza `VERDICT` bez czytania `ADVISORY`. Jeśli nie wyprowadzi tego samego
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Kontrakt `DECISION_LOG` jest zapisany w `CONTRIBUTING.md` w blokach
+- [x] AC-01: Kontrakt `DECISION_LOG` jest zapisany w `CONTRIBUTING.md` w blokach
   `dsl`, w numeracji `C-DECISION-*`, z legendą spójną z istniejącą.
-- [ ] AC-02: `governance/decision-record.schema.json` opisuje ten sam wpis
+- [x] AC-02: `governance/decision-record.schema.json` opisuje ten sam wpis
   maszynowo; forma DSL i forma JSON są wzajemnie wyprowadzalne.
-- [ ] AC-03: Nowe kody w `governance/diagnostics.json` dla braku logu,
+- [x] AC-03: Nowe kody w `governance/diagnostics.json` dla braku logu,
   wpisu nieprzeliczalnego i rozjazdu przy odtworzeniu.
-- [ ] AC-04: Bramka w `tests/` odtwarza `INPUT` wobec `APPLIED_RULE` i failuje,
+- [x] AC-04: Bramka w `tests/` odtwarza `INPUT` wobec `APPLIED_RULE` i failuje,
   gdy odtworzony werdykt różni się od zapisanego; test niesie przypadek
   pozytywny, przypadek rozjazdu i przypadek `ADVISORY` podanego jako werdykt.
-- [ ] AC-05: Log jest append-only — test wykrywa modyfikację wcześniejszego
+- [x] AC-05: Log jest append-only — test wykrywa modyfikację wcześniejszego
   wpisu, nie tylko jego usunięcie.
-- [ ] AC-06: `docs/GOVERNANCE_ENFORCEMENT.md` opisuje, gdzie log powstaje przy
+- [x] AC-06: `docs/GOVERNANCE_ENFORCEMENT.md` opisuje, gdzie log powstaje przy
   naprawie, a gdzie przy walidacji, i który agent jest jego autorem.
 
 ## Ryzyka i Uwagi

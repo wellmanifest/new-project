@@ -11,13 +11,22 @@
   "allowedPaths": [
     "project/ticket-031/**",
     "TODO.md",
-    "project/TICKETS.md"
+    "project/TICKETS.md",
+    "CONTRIBUTING.md",
+    "governance/decision-record.schema.json",
+    "governance/diagnostics.json",
+    "governance/package-manifest.json",
+    "scripts/decision_record.py",
+    "tests/decision-record.test.sh",
+    "tests/governance-validator.test.sh",
+    ".github/workflows/ci.yml",
+    "docs/GOVERNANCE_ENFORCEMENT.md"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
   ],
   "stacks": [],
-  "dependsOn": [],
+  "dependsOn": ["ticket-028"],
   "conflictsWith": [],
   "integrationTicket": null
 }
