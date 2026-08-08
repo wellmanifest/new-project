@@ -43,7 +43,12 @@ on `repository.data.delete_branch_on_merge`.
   The strict snapshot schema and offline validator are unchanged. The focused
   regression and full Linux CI command contract pass, so the ticket is in
   `VALIDATION` pending protected Linux/Windows and exact-head review.
+- PR #62 passed protected Linux and Windows checks. Trusted Validator App
+  approved exact head `2a0001a7ddde314d3af5a7d23553869d01f70bb6`, which merged as
+  `main@b01cae0f47bb311d1e795600af49e0ba436e175d`.
 
 ## Blockers
 
-- None.
+- AC-04 needs immutable v0.13.2 publication and a downstream protected run.
+  Ticket-042 is `BLOCKED` and releases its workstream reservation while that
+  separately governed publication proceeds.

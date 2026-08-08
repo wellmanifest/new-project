@@ -2,8 +2,8 @@
 
 - **ID**: ticket-042
 - **Owner**: agent:codex
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: BLOCKED
+- **Workflow state**: BLOCKED
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -22,11 +22,11 @@ regression so releases cannot silently return to the optional REST property.
 
 ## Kryteria odbioru
 
-- [ ] AC-01: The protected workflow always writes a boolean
+- [x] AC-01: The protected workflow always writes a boolean
   `deleteBranchOnMerge` obtained from the typed GraphQL repository field.
-- [ ] AC-02: Missing or malformed lifecycle facts remain rejected by the
+- [x] AC-02: Missing or malformed lifecycle facts remain rejected by the
   unchanged deterministic validator.
-- [ ] AC-03: Branch-lifecycle, governance, adoption, Linux, Windows and Docker
+- [x] AC-03: Branch-lifecycle, governance, adoption, Linux, Windows and Docker
   contracts pass.
 - [ ] AC-04: A clean downstream protected run no longer reports a missing
   `deleteBranchOnMerge` field.
@@ -44,6 +44,12 @@ regression so releases cannot silently return to the optional REST property.
 - The standard source repository has no Dockerfile or compose definition; its
   authoritative runtime contract is the Linux/Windows CI matrix. Downstream
   todo2code Docker smoke already passes for the adopting payload.
+- Protected PR #62 passed `test` and `windows-governance`; trusted Validator
+  App approved exact head `2a0001a7ddde314d3af5a7d23553869d01f70bb6`.
+  The PR merged as `main@b01cae0f47bb311d1e795600af49e0ba436e175d`.
+- AC-04 requires an immutable release and downstream protected execution. The
+  ticket is `BLOCKED` without reserving the governance workstream until the
+  release ticket publishes v0.13.2 and todo2code adopts it.
 
 ## Ryzyka i uwagi
 
