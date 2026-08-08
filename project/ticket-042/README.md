@@ -3,7 +3,7 @@
 - **ID**: ticket-042
 - **Owner**: agent:codex
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -30,6 +30,20 @@ regression so releases cannot silently return to the optional REST property.
   contracts pass.
 - [ ] AC-04: A clean downstream protected run no longer reports a missing
   `deleteBranchOnMerge` field.
+
+## Validation evidence
+
+- Implementation commit: `7f836f055976887a8701e635efa9747ab43acfb8`.
+- `bash tests/branch-lifecycle.test.sh`: PASS, including the new GraphQL
+  acquisition regression and unchanged strict malformed-snapshot cases.
+- Full Linux CI command contract: PASS across JSON, required checks, decision
+  replay, governance scripts/validator/environment, lifecycle, adoption lock
+  and rule-enforcement suites.
+- Local PowerShell is unavailable; the protected `windows-governance` job
+  remains required before merge.
+- The standard source repository has no Dockerfile or compose definition; its
+  authoritative runtime contract is the Linux/Windows CI matrix. Downstream
+  todo2code Docker smoke already passes for the adopting payload.
 
 ## Ryzyka i uwagi
 

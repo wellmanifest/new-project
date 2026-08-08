@@ -14,3 +14,17 @@ diagit_remote_wellmanifest=repositories=5 extra_branch=ticket/042-branch-snapsho
 diagit_remote_semcod=repositories=76 open_pr=todo2code#70 extra_branch=ticket/050-root-path-ownership-plan
 diagit_dirty_development_runtime=protobuf_generation_mismatch; foreign changes preserved
 workflow_transition=PLAN / WAIT_FOR_APPROVAL -> IN_PROGRESS / EDIT
+implementation_commit=7f836f055976887a8701e635efa9747ab43acfb8
+branch_lifecycle_test=PASS
+governance_scripts_test=PASS
+governance_validator_test=PASS
+governance_environment_test=PASS
+adoption_lock_test=PASS
+required_checks_test=PASS
+decision_record_test=PASS
+rule_enforcement_test=PASS
+json_contracts=PASS
+windows_local=SKIP pwsh unavailable; protected job required
+docker_upstream=NOT_APPLICABLE no Dockerfile or compose contract
+docker_downstream_todo2code=PASS from ticket-050 validation
+workflow_transition=EDIT -> VALIDATION

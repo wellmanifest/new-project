@@ -12,7 +12,8 @@
 - [ ] [`ticket-042`](project/ticket-042/README.md) — naprawa regresji P0 w
   chronionym snapshotcie lifecycle: typed GraphQL ma dostarczać rzeczywisty
   boolean `deleteBranchOnMerge` bez osłabiania deterministycznego walidatora.
-  Stan: `IN_PROGRESS / EDIT` po jawnym zatwierdzeniu; klasyfikacja:
+  Stan: `IN_PROGRESS / VALIDATION`; pełny lokalny kontrakt Linux przechodzi,
+  a exact-head Linux/Windows i protected review oczekują na PR. Klasyfikacja:
   `BUG / P0 / regression`.
 
 - [x] [`ticket-041`](project/ticket-041/README.md) — opublikowano

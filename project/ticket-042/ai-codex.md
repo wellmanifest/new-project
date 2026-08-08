@@ -39,6 +39,10 @@ on `repository.data.delete_branch_on_merge`.
   clean committed runtime confirmed the active ticket branches and PR #70.
 - The ticket transitioned to `IN_PROGRESS / EDIT`; workflow implementation is
   now authorized within `intent.json`.
+- Implemented typed GraphQL acquisition at `7f836f055976887a8701e635efa9747ab43acfb8`.
+  The strict snapshot schema and offline validator are unchanged. The focused
+  regression and full Linux CI command contract pass, so the ticket is in
+  `VALIDATION` pending protected Linux/Windows and exact-head review.
 
 ## Blockers
 
