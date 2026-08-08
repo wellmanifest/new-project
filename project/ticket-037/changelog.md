@@ -1,0 +1,11 @@
+# Ticket Changelog (ticket-037)
+
+## [0.1.0] - 2026-08-08
+
+- Initial governance scaffold created.
+- No human participant identity or content was generated.
+
+## [0.2.0] - 2026-08-08
+
+- Defined immutable `0.12.0` metadata, validation and publication boundaries.
+- Bound the release to completed ticket-036 and a clean protected-main SHA.

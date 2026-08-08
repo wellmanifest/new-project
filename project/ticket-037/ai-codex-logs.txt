@@ -1,0 +1,13 @@
+2026-08-08 plan preflight
+base=c575afaa80126f2117ae6a1edd50f852c766a73c
+dependency ticket-036: DONE
+classification=SERVICE/P2/health
+target release=0.12.0
+implementation files changed: 0
+workflow state=PLAN / WAIT_FOR_APPROVAL
+ticket-037 intent schema: PASS
+git diff --check: PASS
+bash tests/governance-validator.test.sh: governance validator: PASS
+v0.12.0 tag: ABSENT
+v0.12.0 GitHub Release: ABSENT
+implementation tests: NOT RUN; no implementation files changed
