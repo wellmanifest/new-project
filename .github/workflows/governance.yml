@@ -72,6 +72,16 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
             });
+            const repositorySettings = await github.graphql(`
+              query($owner: String!, $repo: String!) {
+                repository(owner: $owner, name: $repo) {
+                  deleteBranchOnMerge
+                }
+              }
+            `, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
             const branches = await github.paginate(github.rest.repos.listBranches, {
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -87,7 +97,7 @@ jobs:
               schema: 'new-project.branch-lifecycle-snapshot/v1',
               repository: `${context.repo.owner}/${context.repo.repo}`,
               defaultBranch: repository.data.default_branch,
-              deleteBranchOnMerge: repository.data.delete_branch_on_merge,
+              deleteBranchOnMerge: repositorySettings.repository.deleteBranchOnMerge,
               branches: branches.map(branch => branch.name).sort(),
               openPullRequests: pulls.map(pull => ({
                 number: pull.number,
