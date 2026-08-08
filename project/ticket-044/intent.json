@@ -1,0 +1,97 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-044",
+  "summary": "Publish extendable target manifest contract",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "tests/governance-validator.test.sh",
+    "tests/adoption-lock.test.sh",
+    "project/ticket-044/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "governance/package-manifest.json",
+    "scripts/**",
+    ".github/**",
+    "package.json",
+    "pyproject.toml",
+    ".env",
+    "**/*.pem",
+    "**/*secret*"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": ["ticket-024"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a70b5b84f6005353426cd4ddb80d7086c671c364",
+    "targetBranch": "main",
+    "outcome": "Publish immutable new-project v0.14.0 containing the validated extendable target-manifest contract for exact-SHA downstream adoption",
+    "nonGoals": [
+      "No additional adoption, validator or schema behavior change",
+      "No downstream repository mutation",
+      "No authority, approval, AQL, secret, dependency, Docker or runtime-evolution change",
+      "No moving tag, overwritten release or prerelease"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Publish the already merged extendable manifest interface as immutable minor release v0.14.0",
+      "components": [
+        {
+          "name": "release-metadata",
+          "paths": ["VERSION", "CHANGELOG.md", "governance/manifest.default.json"]
+        },
+        {
+          "name": "release-validation",
+          "paths": ["tests/governance-validator.test.sh", "tests/adoption-lock.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": ["The published standard version advances from 0.13.2 to 0.14.0"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Keep adopters pinned to v0.13.2 or another prior immutable SHA; never move or delete v0.14.0 after publication"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/governance-validator.test.sh", "bash tests/adoption-lock.test.sh"],
+        "evidence": "Current metadata agrees on 0.14.0 while historical regression versions remain exact"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["full Linux CI contract", "protected windows-governance check", "independent exact-head review"],
+        "evidence": "Both supported environments and independent review pass before publication"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["clean detached merge validation"],
+        "evidence": "The exact merge/release SHA passes the full Linux contract outside the delivery worktree"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["git ls-remote --tags origin", "gh release view v0.14.0"],
+        "evidence": "A previously absent annotated tag and release bind the validated merge SHA"
+      }
+    ]
+  }
+}

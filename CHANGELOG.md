@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-08-09
+
+### Extendable target manifest contract
+
+- Added the bounded `extendable` package strategy for the target-owned
+  `.governance/manifest.json`, while keeping exact standard-owned fields in
+  the managed `.governance/manifest.base.json` projection.
+- Preserve downstream project-specific workstreams across deterministic
+  adoption upgrades without adding the extendable target to the managed lock.
+- Fail closed when the accepted managed base has drifted, and migrate legacy
+  seed installations through a revision-bound three-way merge.
+- Validate the public adoption contract through Linux, Windows, exact-head
+  independent review and a real customized todo2code manifest smoke test.
+
 ## [0.13.2] - 2026-08-08
 
 ### Protected branch lifecycle acquisition
