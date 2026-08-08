@@ -100,8 +100,15 @@ for forbidden in ("import requests", "import urllib", "import socket", "import s
 PY
 
 grep -Fq "new-project.branch-lifecycle-snapshot/v1" "$repo_root/.github/workflows/governance.yml"
-grep -Fq 'deleteBranchOnMerge: repository.data.delete_branch_on_merge' \
+grep -Fq 'const repositorySettings = await github.graphql' \
   "$repo_root/.github/workflows/governance.yml"
+grep -Fq 'deleteBranchOnMerge: repositorySettings.repository.deleteBranchOnMerge' \
+  "$repo_root/.github/workflows/governance.yml"
+if grep -Fq 'repository.data.delete_branch_on_merge' \
+  "$repo_root/.github/workflows/governance.yml"; then
+  echo 'branch lifecycle snapshot relies on optional REST repository metadata' >&2
+  exit 1
+fi
 grep -Fq 'bash tests/branch-lifecycle.test.sh' "$repo_root/.github/workflows/ci.yml"
 
 echo 'branch lifecycle validator: PASS'

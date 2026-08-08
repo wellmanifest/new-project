@@ -1,0 +1,65 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-042",
+  "summary": "Preserve deleteBranchOnMerge in protected lifecycle snapshot",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P0",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    ".github/workflows/governance.yml",
+    "tests/branch-lifecycle.test.sh",
+    "project/ticket-042/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "scripts/branch_lifecycle_check.py",
+    "governance/**",
+    "VERSION",
+    "CHANGELOG.md"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d86a473dd31b967fcd714117ecc4d595b925abe3",
+    "targetBranch": "main",
+    "outcome": "Protected lifecycle acquisition always supplies the strict validator with the real typed deleteBranchOnMerge boolean",
+    "nonGoals": [
+      "No inferred default for missing GitHub facts",
+      "No deterministic validator or snapshot schema weakening",
+      "No release publication or downstream adoption in this ticket"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Replace the optional REST response property with GitHub's typed GraphQL Repository.deleteBranchOnMerge fact at the protected acquisition boundary",
+      "components": [
+        {"name": "github-evidence-acquisition", "paths": [".github/workflows/governance.yml", "tests/branch-lifecycle.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the acquisition change while retaining the strict validator; do not publish a release that lacks downstream protected evidence"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/branch-lifecycle.test.sh"], "evidence": "Static workflow regression requires typed GraphQL acquisition and strict snapshot fixtures remain green"},
+      {"criterion": "AC-03", "commands": ["full Linux CI contract", "protected windows-governance check", "Docker test contract"], "evidence": "Supported environments and container contract pass on exact PR head"},
+      {"criterion": "AC-04", "commands": ["downstream protected governance run"], "evidence": "A clean target run captures a boolean and proceeds past branch lifecycle validation"}
+    ]
+  }
+}
