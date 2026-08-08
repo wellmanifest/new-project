@@ -19,3 +19,10 @@
 - Added a regression that requires GraphQL acquisition and rejects renewed
   reliance on the optional REST property.
 - Passed the focused and full Linux contracts; advanced to `VALIDATION`.
+
+## [0.4.0] - 2026-08-08
+
+- Recorded protected Linux, Windows and exact-head Validator approval for PR
+  #62 and merge `b01cae0`.
+- Marked AC-01 through AC-03 complete and moved to `BLOCKED / BLOCKED` pending
+  immutable release and downstream protected AC-04 evidence.
