@@ -1,0 +1,70 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-038",
+  "summary": "Provenance-bound atomic standard adoption",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "governance/intent.schema.json",
+    "governance/diagnostics.json",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "docs/GOVERNANCE_ENFORCEMENT.md",
+    "project/ticket-038/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "8574d6f222189df60d6fd64457c05984a89c3dc8",
+    "targetBranch": "main",
+    "outcome": "A target can declare one provenance-bound atomic standard adoption whose verified managed payload is excluded from ordinary file-budget and workstream accounting while every target-local path remains governed normally",
+    "nonGoals": [
+      "No increase of the default implementation-file budget",
+      "No transfer of ordinary path ownership between workstreams",
+      "No extendable package strategy from ticket-024",
+      "No version bump, tag, release or downstream adoption in this ticket",
+      "No repository-authored merge authorization"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Declare standardAdoption in intent/v3 and derive a fail-closed managed payload from base/head locks, package strategies and content hashes, allowing head-only managed targets only when absent at base, before applying unchanged ordinary ticket gates to the remaining target-local diff",
+      "components": [
+        {"name": "adoption-contract", "paths": ["governance/intent.schema.json", "governance/diagnostics.json", "docs/GOVERNANCE_ENFORCEMENT.md"]},
+        {"name": "adoption-enforcement", "paths": ["scripts/governance_check.py", "tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["intent/v3 gains the optional delivery.standardAdoption contract"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert ticket-038 before publishing its dependent immutable release; never rewrite an existing release tag"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Intent schema accepts only the bounded standardAdoption shape and full distinct revisions"},
+      {"criterion": "AC-02", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "A fixture with more than five verified managed replacements passes while its local diff remains bounded"},
+      {"criterion": "AC-03", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Seed manifest, lock and local files remain subject to ordinary scope, ownership and budgets"},
+      {"criterion": "AC-04", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Malformed provenance, hashes, strategies and unlisted paths fail closed; a new head-managed path requires base absence and head-lock integrity"},
+      {"criterion": "AC-05", "commands": ["bash tests/governance-validator.test.sh", "bash tests/approval-contract.test.sh"], "evidence": "Active-ticket, EDIT, intent scope and protected approval gates remain mandatory"},
+      {"criterion": "AC-06", "commands": ["bash tests/governance-scripts.test.sh"], "evidence": "Documentation and the complete deterministic governance contract remain synchronized"}
+    ]
+  }
+}
