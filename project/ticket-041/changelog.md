@@ -7,6 +7,11 @@
 - Bounded the release to five metadata/test files and exact-SHA publication;
   downstream adoption remains outside this ticket.
 
+## [0.2.0] - 2026-08-08
+
+- Recorded explicit approval of immutable v0.13.1 publication and transitioned
+  to `IN_PROGRESS / EDIT` before release-file changes.
+
 ## [0.1.0] - 2026-08-08
 
 - Initial governance scaffold created.

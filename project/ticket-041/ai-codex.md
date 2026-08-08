@@ -26,9 +26,9 @@ version is patch release 0.13.1 rather than a minor release.
 
 ## Actual changes
 
-- None; waiting for approval.
+- User approved immutable v0.13.1 publication on 2026-08-08. Ticket is in
+  `IN_PROGRESS / EDIT`; release files have not yet changed.
 
 ## Blockers
 
-- Human approval of immutable v0.13.1 publication is required before editing
-  release files.
+- None.

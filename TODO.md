@@ -11,7 +11,7 @@
 
 - [ ] [`ticket-041`](project/ticket-041/README.md) — opublikować
   behavior-preserving repair z ticketu 040 jako immutable patch `v0.13.1` dla
-  downstream exact-SHA adoption. Stan: `PLAN / WAIT_FOR_APPROVAL`;
+  downstream exact-SHA adoption. Stan: `IN_PROGRESS / EDIT`;
   klasyfikacja: `SERVICE / P1 / health`.
 - [x] [`ticket-040`](project/ticket-040/README.md) — obniżono pięć
   pre-existing punktów złożoności w zarządzanych źródłach Pythona bez

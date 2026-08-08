@@ -2,8 +2,8 @@
 
 - **ID**: ticket-041
 - **Owner**: unresolved:human
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
 - **Utworzono**: 2026-08-08
 
 ## Cel i Zakres
@@ -49,6 +49,11 @@ checkoutcie. Todo2code przypnie pełny SHA wydania, nigdy tag ani branch.
 - Human participant: unresolved; `user-*` is created only by its human owner
   or a trusted intake boundary.
 - Agent participant: `ai-codex.md`
+
+## Zatwierdzenie
+
+Użytkownik zatwierdził publikację immutable `v0.13.1` 2026-08-08. Ticket
+przeszedł do `IN_PROGRESS / EDIT` przed zmianą plików wydania.
 
 ## Granica katalogu
 
