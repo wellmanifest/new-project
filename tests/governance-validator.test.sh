@@ -50,6 +50,23 @@ Draft202012Validator(schemas['manifest.schema.json']).validate(
 intent_validator = Draft202012Validator(schemas['intent.schema.json'])
 for intent_path in sorted((root / 'project').glob('ticket-*/intent.json')):
     intent_validator.validate(json.load(open(intent_path, encoding='utf-8')))
+adoption_intent = json.load(open(
+    root / 'project/ticket-038/intent.json', encoding='utf-8'
+))
+adoption_intent['delivery']['standardAdoption'] = {
+    'sourceRepository': 'wellmanifest/new-project',
+    'fromRevision': 'a' * 40,
+    'toRevision': 'b' * 40,
+}
+intent_validator.validate(adoption_intent)
+for field, invalid in (
+    ('sourceRepository', 'other/project'),
+    ('fromRevision', 'main'),
+    ('toRevision', 'v0.13.0'),
+):
+    candidate = json.loads(json.dumps(adoption_intent))
+    candidate['delivery']['standardAdoption'][field] = invalid
+    assert not intent_validator.is_valid(candidate), (field, invalid)
 Draft202012Validator(schemas['lock.schema.json']).validate({
     'schema': 'new-project.lock/v1',
     'standard': {
@@ -171,6 +188,16 @@ assert module.pattern_covered_by('test/cli*.test.ts', 'test/cli*')
 assert module.pattern_covered_by('test/cli-smoke.test.ts', 'test/cli*')
 assert not module.pattern_covered_by('test/mcp*.test.ts', 'test/cli*')
 assert not module.pattern_covered_by('test/cli*.test.ts', 'test/*.spec.ts')
+assert module.standard_adoption_error({
+    'sourceRepository': 'wellmanifest/new-project',
+    'fromRevision': 'a' * 40,
+    'toRevision': 'b' * 40,
+}) is None
+assert module.standard_adoption_error({
+    'sourceRepository': 'wellmanifest/new-project',
+    'fromRevision': 'a' * 40,
+    'toRevision': 'a' * 40,
+}) == 'delivery standardAdoption revisions must differ'
 PY
 python3 - "$repo_root/scripts/governance_check.py" \
   "$repo_root/scripts/decision_record.py" \
@@ -498,6 +525,171 @@ if ! run_check "$dot_path" --changed-file .governance/manifest.json > "$fixture/
   exit 1
 fi
 grep -q '^GOV-PASS:' "$fixture/dot-path.out"
+
+atomic_adoption="$fixture/atomic-adoption"
+make_fixture "$atomic_adoption"
+python3 - "$atomic_adoption" <<'PY'
+import hashlib
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+intent_path = root / 'project/ticket-002/intent.json'
+intent = json.load(open(intent_path, encoding='utf-8'))
+intent['workstream'] = 'governance'
+intent['allowedPaths'] = [
+    '.governance/manifest.json',
+    '.governance/manifest.lock.json',
+]
+intent['delivery']['budgets']['maxImplementationFiles'] = 2
+intent['delivery']['architecture']['components'] = [{
+    'name': 'target-adoption',
+    'paths': [
+        '.governance/manifest.json',
+        '.governance/manifest.lock.json',
+    ],
+}]
+intent_path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+
+package = {
+    'schema': 'new-project.package-manifest/v1',
+    'files': [
+        {'source': 'template/files/AGENTS.template.md', 'target': 'AGENTS.md', 'strategy': 'managed', 'executable': False},
+        {'source': 'governance/package-manifest.json', 'target': '.governance/package-manifest.json', 'strategy': 'managed', 'executable': False},
+        {'source': 'governance/manifest.default.json', 'target': '.governance/manifest.json', 'strategy': 'seed', 'executable': False},
+    ],
+}
+package_path = root / '.governance/package-manifest.json'
+package_path.write_text(json.dumps(package, indent=2) + '\n', encoding='utf-8')
+
+def write_lock(revision, version):
+    targets = [item['target'] for item in package['files']]
+    lock = {
+        'schema': 'new-project.lock/v1',
+        'standard': {
+            'id': 'wellmanifest/new-project',
+            'version': version,
+            'sourceRepository': 'wellmanifest/new-project',
+            'sourceRevision': revision,
+            'publicationStatus': 'published',
+        },
+        'managedFiles': {
+            target: hashlib.sha256((root / target).read_bytes()).hexdigest()
+            for target in targets
+        },
+    }
+    (root / '.governance/manifest.lock.json').write_text(
+        json.dumps(lock, indent=2) + '\n', encoding='utf-8'
+    )
+
+write_lock('a' * 40, '0.12.0')
+PY
+git -C "$atomic_adoption" init -q
+git -C "$atomic_adoption" config user.email governance@example.invalid
+git -C "$atomic_adoption" config user.name governance-fixture
+git -C "$atomic_adoption" add .
+git -C "$atomic_adoption" commit -qm 'atomic adoption base'
+atomic_base="$(git -C "$atomic_adoption" rev-parse HEAD)"
+git -C "$atomic_adoption" switch -qc ticket-002-adoption
+python3 - "$atomic_adoption" "$atomic_base" <<'PY'
+import hashlib
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+base = sys.argv[2]
+intent_path = root / 'project/ticket-002/intent.json'
+intent = json.load(open(intent_path, encoding='utf-8'))
+intent['delivery']['acceptedBaseSha'] = base
+intent['delivery']['standardAdoption'] = {
+    'sourceRepository': 'wellmanifest/new-project',
+    'fromRevision': 'a' * 40,
+    'toRevision': 'b' * 40,
+}
+intent_path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+
+manifest_path = root / '.governance/manifest.json'
+manifest = json.load(open(manifest_path, encoding='utf-8'))
+manifest['standard']['version'] = '0.13.0'
+manifest_path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+(root / 'AGENTS.md').write_text('managed agents v2\n', encoding='utf-8')
+(root / 'scripts').mkdir(exist_ok=True)
+new_targets = ['scripts/runtime.sh', *[f'src/standard-{index}.js' for index in range(1, 7)]]
+for target in new_targets:
+    path = root / target
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f'managed {target}\n', encoding='utf-8')
+
+package_path = root / '.governance/package-manifest.json'
+package = json.load(open(package_path, encoding='utf-8'))
+for target in new_targets:
+    package['files'].append({
+        'source': f'published/{target}',
+        'target': target,
+        'strategy': 'managed',
+        'executable': target.endswith('.sh'),
+    })
+package_path.write_text(json.dumps(package, indent=2) + '\n', encoding='utf-8')
+lock = {
+    'schema': 'new-project.lock/v1',
+    'standard': {
+        'id': 'wellmanifest/new-project',
+        'version': '0.13.0',
+        'sourceRepository': 'wellmanifest/new-project',
+        'sourceRevision': 'b' * 40,
+        'publicationStatus': 'published',
+    },
+    'managedFiles': {
+        item['target']: hashlib.sha256((root / item['target']).read_bytes()).hexdigest()
+        for item in package['files']
+    },
+}
+(root / '.governance/manifest.lock.json').write_text(
+    json.dumps(lock, indent=2) + '\n', encoding='utf-8'
+)
+PY
+git -C "$atomic_adoption" add .
+git -C "$atomic_adoption" commit -qm 'atomic managed upgrade'
+if ! run_check "$atomic_adoption" --base "$atomic_base" > "$fixture/atomic-adoption.out"; then
+  cat "$fixture/atomic-adoption.out"
+  exit 1
+fi
+grep -q '^GOV-PASS:' "$fixture/atomic-adoption.out"
+
+atomic_bad_hash="$fixture/atomic-adoption-bad-hash"
+cp -R "$atomic_adoption" "$atomic_bad_hash"
+printf '%s\n' 'tampered managed payload' > "$atomic_bad_hash/AGENTS.md"
+git -C "$atomic_bad_hash" add AGENTS.md
+git -C "$atomic_bad_hash" commit -qm 'tamper managed payload'
+expect_code GOV-SYNC-001 run_check "$atomic_bad_hash" --base "$atomic_base"
+
+atomic_wrong_revision="$fixture/atomic-adoption-wrong-revision"
+cp -R "$atomic_adoption" "$atomic_wrong_revision"
+sed -i "s/\"toRevision\": \"b\{40\}\"/\"toRevision\": \"c$(printf 'c%.0s' {1..39})\"/" \
+  "$atomic_wrong_revision/project/ticket-002/intent.json"
+git -C "$atomic_wrong_revision" add project/ticket-002/intent.json
+git -C "$atomic_wrong_revision" commit -qm 'bind wrong target revision'
+expect_code GOV-SYNC-001 run_check "$atomic_wrong_revision" --base "$atomic_base"
+
+atomic_seed_budget="$fixture/atomic-adoption-seed-budget"
+cp -R "$atomic_adoption" "$atomic_seed_budget"
+sed -i 's/"maxImplementationFiles": 2/"maxImplementationFiles": 1/' \
+  "$atomic_seed_budget/project/ticket-002/intent.json"
+git -C "$atomic_seed_budget" add project/ticket-002/intent.json
+git -C "$atomic_seed_budget" commit -qm 'understate local adoption budget'
+expect_code GOV-BUDGET-001 run_check "$atomic_seed_budget" --base "$atomic_base"
+
+atomic_unlisted="$fixture/atomic-adoption-unlisted"
+cp -R "$atomic_adoption" "$atomic_unlisted"
+printf '%s\n' 'not in the package contract' > "$atomic_unlisted/scripts/arbitrary.sh"
+git -C "$atomic_unlisted" add scripts/arbitrary.sh
+git -C "$atomic_unlisted" commit -qm 'add unlisted local path'
+expect_code GOV-SCOPE-001 run_check "$atomic_unlisted" --base "$atomic_base"
+
+expect_code GOV-APPROVAL-001 run_check "$atomic_adoption" --base "$atomic_base" \
+  --enforce-approval
 
 expect_code GOV-APPROVAL-001 run_check "$allowed" --changed-file src/app.js \
   --enforce-approval --approved-ticket ticket-002

@@ -1,0 +1,39 @@
+2026-08-08 ticket allocation
+Successfully scaffolded project/ticket-038 for 'Provenance-bound atomic standard adoption'.
+
+2026-08-08 read-only downstream evidence
+new-project 0.12.0 managed replacements: 15
+todo2code implementation-file limit: 5
+cross-workstream managed path: scripts/runtime.sh (integration)
+new managed targets since 0.11.0: 6
+result: plan only; no upstream implementation file changed
+
+2026-08-08 upstream Linux CI contract
+required-checks tests: PASS
+decision-record tests: PASS
+governance scripts: PASS
+governance validator: PASS
+branch lifecycle validator: PASS
+governance environment runtime tests passed
+adoption lock: PASS
+rule enforcement traceability: PASS
+
+2026-08-08 approval transition
+user approved ticket-038 plan
+workflow: PLAN / WAIT_FOR_APPROVAL -> IN_PROGRESS / EDIT
+
+2026-08-08 focused implementation validation
+governance validator: PASS
+rule enforcement traceability: PASS
+
+2026-08-08 full Linux hub contract after implementation
+required-checks tests: PASS
+decision-record tests: PASS
+governance scripts: PASS
+governance validator: PASS
+branch lifecycle validator: PASS
+governance environment runtime tests passed
+adoption lock: PASS
+rule enforcement traceability: PASS
+implementation paths: 4 / 5
+workflow: EDIT -> VALIDATION

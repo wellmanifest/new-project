@@ -28,6 +28,44 @@ Skrypt czyta zarządzane pliki z obiektu Git, zachowuje istniejący dopasowany
 wersją manifest docelowy, atomowo zapisuje pliki i lock oraz odmawia driftu.
 Aktualizacja różniących się plików wymaga jawnego `--upgrade` po przeglądzie.
 
+### Atomowa aktualizacja zarządzanego pakietu
+
+Gdy upgrade jednego opublikowanego pakietu zmienia więcej plików niż zwykły
+budżet ticketu albo przecina ich normalne workstreamy, aktywny intent v3 może
+zadeklarować transakcję:
+
+```json
+{
+  "delivery": {
+    "standardAdoption": {
+      "sourceRepository": "wellmanifest/new-project",
+      "fromRevision": "<40-znakowy SHA obecnego wydania>",
+      "toRevision": "<40-znakowy SHA nowego wydania>"
+    }
+  }
+}
+```
+
+Wyjątek nie powiększa ticketu i nie przenosi zwykłej własności. Walidator
+odejmuje z normalnego rozliczenia tylko zmienione targety ze strategią
+`managed`, dla których package manifesty, locki i hashe base/head tworzą
+spójny kontrakt. Nowy target musi być nieobecny w bazie oraz występować jako
+`managed` i zgadzać się z hashem head locka. Aktualizowany target musi mieć
+ciągłość `managed` i poprawny hash po obu stronach.
+
+Seed manifest, `.governance/manifest.lock.json`, changelog i każda ścieżka
+spoza tak wyliczonego zbioru pozostają zwykłym diffem. Nadal muszą rozwiązać
+się do jednego aktywnego ticketu, jego `allowedPaths`, workstreamu i budżetu.
+Brak base, zmienionego locka, pełnych różnych SHA albo jakakolwiek niespójność
+emituje istniejący kod synchronizacji `GOV-SYNC-001` i nie przyznaje wyjątku.
+
+Transakcję przygotowuje się przez `goal governance adopt --check`, przegląda
+pełny plan zmian i dopiero potem wykonuje jawny upgrade. Lock i intent należą
+do checkoutu PR, więc są dowodem strukturalnym, a nie merge authorization.
+Protected review/attestation związane z repozytorium, PR-em, current HEAD,
+ticketem i aktorem pozostaje obowiązkowe dokładnie tak samo jak dla każdego
+innego implementation diffu.
+
 Manifest deklaruje wymagane pliki, Docker, aktywne/zamknięte statusy ticketów,
 stany implementacyjne, ścieżki governance i profile technologiczne. Każdy nowy
 ticket zawiera intent v2 z workstreamem, zakresem, zależnościami, konfliktami i

@@ -430,13 +430,29 @@ def delivery_validation_error(validation: Any) -> str | None:
     return "delivery validation criteria must be unique" if len(criteria) != len(set(criteria)) else None
 
 
+def standard_adoption_error(value: Any) -> str | None:
+    fields = {"sourceRepository", "fromRevision", "toRevision"}
+    if not isinstance(value, dict) or set(value) != fields:
+        return "delivery standardAdoption fields are invalid"
+    if value.get("sourceRepository") != "wellmanifest/new-project":
+        return "delivery standardAdoption sourceRepository is invalid"
+    revisions = [value.get("fromRevision"), value.get("toRevision")]
+    if any(not isinstance(item, str) or re.fullmatch(r"[0-9a-f]{40}", item) is None for item in revisions):
+        return "delivery standardAdoption revisions must be full lowercase commit SHAs"
+    if revisions[0] == revisions[1]:
+        return "delivery standardAdoption revisions must differ"
+    return None
+
+
 def delivery_intent_error(value: Any) -> str | None:
-    fields = {
+    required_fields = {
         "acceptedBaseSha", "targetBranch", "outcome", "nonGoals",
         "complexity", "estimatedMinutes", "budgets", "architecture",
         "runtimeDependencies", "validation",
     }
-    if not isinstance(value, dict) or set(value) != fields:
+    if not isinstance(value, dict) or set(value) not in {
+        frozenset(required_fields), frozenset({*required_fields, "standardAdoption"}),
+    }:
         return "delivery must contain exactly the bounded-delivery fields"
     error = delivery_header_error(value) or delivery_budgets_error(value.get("budgets"))
     if error:
@@ -446,6 +462,10 @@ def delivery_intent_error(value: Any) -> str | None:
         return error
     if not string_list(value.get("runtimeDependencies")):
         return "delivery runtimeDependencies must be a unique string list"
+    if "standardAdoption" in value:
+        error = standard_adoption_error(value["standardAdoption"])
+        if error:
+            return error
     return delivery_validation_error(value.get("validation"))
 
 
@@ -2194,6 +2214,158 @@ def resolve_change_approval(
     )
 
 
+def git_revision_file(root: Path, revision: str, raw_path: str) -> bytes | None:
+    try:
+        return git_output(root, ["show", f"{revision}:{raw_path}"])
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+
+def package_strategies(content: bytes) -> dict[str, str]:
+    document = json.loads(content)
+    if not isinstance(document, dict) or set(document) != {"schema", "files"}:
+        raise ValueError("package manifest fields are invalid")
+    if document.get("schema") != "new-project.package-manifest/v1" or not isinstance(document.get("files"), list):
+        raise ValueError("package manifest schema is invalid")
+    strategies: dict[str, str] = {}
+    sources: set[str] = set()
+    for item in document["files"]:
+        if not isinstance(item, dict) or set(item) != {"source", "target", "strategy", "executable"}:
+            raise ValueError("package manifest entry fields are invalid")
+        source, target = item.get("source"), item.get("target")
+        if (
+            not isinstance(source, str)
+            or not isinstance(target, str)
+            or not relative_pattern(source)
+            or not relative_pattern(target)
+            or item.get("strategy") not in {"managed", "seed"}
+            or not isinstance(item.get("executable"), bool)
+        ):
+            raise ValueError("package manifest entry is invalid")
+        if source in sources or target in strategies:
+            raise ValueError("package manifest paths must be unique")
+        sources.add(source)
+        strategies[target] = item["strategy"]
+    if not strategies:
+        raise ValueError("package manifest is empty")
+    return strategies
+
+
+def adoption_lock(content: bytes, expected_revision: str) -> dict[str, str]:
+    document = json.loads(content)
+    if not isinstance(document, dict) or set(document) != {"schema", "standard", "managedFiles"}:
+        raise ValueError("adoption lock fields are invalid")
+    standard, managed = document.get("standard"), document.get("managedFiles")
+    if (
+        document.get("schema") != "new-project.lock/v1"
+        or not isinstance(standard, dict)
+        or set(standard) != {"id", "version", "sourceRepository", "sourceRevision", "publicationStatus"}
+        or standard.get("id") != "wellmanifest/new-project"
+        or standard.get("sourceRepository") != "wellmanifest/new-project"
+        or standard.get("sourceRevision") != expected_revision
+        or standard.get("publicationStatus") != "published"
+        or not isinstance(standard.get("version"), str)
+        or re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", standard["version"]) is None
+        or not isinstance(managed, dict)
+    ):
+        raise ValueError("adoption lock standard binding is invalid")
+    if not all(
+        isinstance(path, str)
+        and relative_pattern(path)
+        and isinstance(digest, str)
+        and re.fullmatch(r"[a-f0-9]{64}", digest) is not None
+        for path, digest in managed.items()
+    ):
+        raise ValueError("adoption lock managed hashes are invalid")
+    return managed
+
+
+def content_digest(content: bytes) -> str:
+    return hashlib.sha256(content).hexdigest()
+
+
+def atomic_standard_adoption_paths(
+    root: Path,
+    base: str | None,
+    changed: list[str],
+    active: list[TicketRecord],
+    report: Report,
+) -> set[str]:
+    records = [
+        record for record in active
+        if record.intent is not None
+        and isinstance(record.intent.get("delivery"), dict)
+        and "standardAdoption" in record.intent["delivery"]
+    ]
+    if not records:
+        return set()
+    evidence_paths = [".governance/manifest.lock.json", ".governance/package-manifest.json"]
+    if len(records) != 1:
+        report.add(
+            "GOV-SYNC-001",
+            "Atomic standard adoption must resolve to exactly one active ticket.",
+            "Keep one approved adoption ticket active and serialize every other adoption.",
+            [rel(root, record.directory / "intent.json") for record in records],
+        )
+        return set()
+    record = records[0]
+    assert record.intent is not None
+    adoption = record.intent["delivery"]["standardAdoption"]
+    error = standard_adoption_error(adoption)
+    if error or base is None or ".governance/manifest.lock.json" not in changed:
+        report.add(
+            "GOV-SYNC-001",
+            f"Atomic standard adoption preconditions are invalid: {error or 'base and changed lock are required'}.",
+            "Declare distinct immutable revisions, compare against the approved Git base and regenerate the complete lock through Goal.",
+            evidence_paths,
+        )
+        return set()
+    try:
+        base_package_content = git_revision_file(root, base, ".governance/package-manifest.json")
+        base_lock_content = git_revision_file(root, base, ".governance/manifest.lock.json")
+        if base_package_content is None or base_lock_content is None:
+            raise ValueError("base package manifest or lock is missing")
+        head_package_path = safe_repo_path(root, ".governance/package-manifest.json")
+        head_lock_path = safe_repo_path(root, ".governance/manifest.lock.json")
+        if not head_package_path.is_file() or not head_lock_path.is_file():
+            raise ValueError("head package manifest or lock is missing")
+        base_strategies = package_strategies(base_package_content)
+        head_strategies = package_strategies(head_package_path.read_bytes())
+        base_hashes = adoption_lock(base_lock_content, adoption["fromRevision"])
+        head_hashes = adoption_lock(head_lock_path.read_bytes(), adoption["toRevision"])
+        if set(base_hashes) != set(base_strategies) or set(head_hashes) != set(head_strategies):
+            raise ValueError("package targets and lock targets differ")
+
+        exempt: set[str] = set()
+        for raw_path in changed:
+            if head_strategies.get(raw_path) != "managed":
+                continue
+            head_path = safe_repo_path(root, raw_path)
+            if not head_path.is_file() or content_digest(head_path.read_bytes()) != head_hashes[raw_path]:
+                raise ValueError(f"head managed hash differs: {raw_path}")
+            base_content = git_revision_file(root, base, raw_path)
+            if raw_path in base_strategies:
+                if base_strategies[raw_path] != "managed" or base_content is None:
+                    raise ValueError(f"managed strategy continuity differs: {raw_path}")
+                if content_digest(base_content) != base_hashes[raw_path]:
+                    raise ValueError(f"base managed hash differs: {raw_path}")
+            elif base_content is not None:
+                raise ValueError(f"new managed target already existed at base: {raw_path}")
+            exempt.add(raw_path)
+        if not exempt:
+            raise ValueError("no changed managed payload was verified")
+        return exempt
+    except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
+        report.add(
+            "GOV-SYNC-001",
+            f"Atomic standard adoption is inconsistent: {error}.",
+            "Restore the base, install the complete published managed set through Goal and regenerate its lock before review.",
+            evidence_paths,
+            {"ticket": record.directory.name, "base": base},
+        )
+        return set()
+
+
 def check_change_gate(
     root: Path,
     manifest: dict[str, Any],
@@ -2212,11 +2384,15 @@ def check_change_gate(
     report: Report,
 ) -> str | None:
     governance_patterns = manifest["governancePaths"]
-    implementation = [path for path in changed if not matches(path, governance_patterns)]
-    if not implementation:
-        return None
     config = manifest["ticket"]
     active = [record for record in records if record.status in set(config.get("activeStatuses", ACTIVE_DEFAULT))]
+    adoption_paths = atomic_standard_adoption_paths(root, base, changed, active, report)
+    implementation = [
+        path for path in changed
+        if not matches(path, governance_patterns) and path not in adoption_paths
+    ]
+    if not implementation:
+        return None
     selected = select_change_ticket(root, active, manifest.get("coordination"), implementation, report)
     if selected is None:
         return None
