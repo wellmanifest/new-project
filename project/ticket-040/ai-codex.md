@@ -27,9 +27,9 @@ publish a new immutable release afterward.
 
 ## Actual changes
 
-- None; waiting for approval.
+- User approved the exact four-file scope on 2026-08-08. The ticket is in
+  `IN_PROGRESS / EDIT`; implementation has not yet changed a source or test.
 
 ## Blockers
 
-- Human approval of this exact four-file, behavior-preserving scope is required
-  before implementation.
+- None.

@@ -2,8 +2,8 @@
 
 - **ID**: ticket-040
 - **Owner**: unresolved:human
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
 - **Utworzono**: 2026-08-08
 
 ## Cel i Zakres
@@ -58,6 +58,12 @@ ticket after this change is merged; tags and version files are out of scope.
 - Human participant: unresolved; `user-*` is created only by its human owner
   or a trusted intake boundary.
 - Agent participant: `ai-codex.md`
+
+## Zatwierdzenie
+
+Użytkownik zatwierdził dokładny czteroplikowy, behavior-preserving zakres
+2026-08-08. Ticket przeszedł do `IN_PROGRESS / EDIT` przed zmianą źródeł lub
+testów.
 
 ## Granica katalogu
 
