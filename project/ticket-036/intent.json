@@ -1,0 +1,70 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-036",
+  "summary": "Own root release and environment contracts",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "governance/manifest.default.json",
+    "tests/governance-validator.test.sh",
+    "tests/adoption-lock.test.sh",
+    "project/ticket-036/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env",
+    "VERSION",
+    "CHANGELOG.md",
+    "scripts/**",
+    "**/*.pem",
+    "**/*secret*"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e46c754f154668758c3b7ccd67104bdcbb2e90b0",
+    "targetBranch": "main",
+    "outcome": "The default standard assigns CHANGELOG.md and .env.example to governance and rejects claims from every other workstream",
+    "nonGoals": [
+      "No validator runtime or glob-matching change",
+      "No target-repository migration",
+      "No version bump, changelog entry, tag or GitHub Release in this ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Assign both exact root contracts to the existing governance workstream and verify ownership at the default-manifest, enforcement and adoption boundaries",
+      "components": [
+        {"name": "default-ownership-contract", "paths": ["governance/manifest.default.json"]},
+        {"name": "ownership-regressions", "paths": ["tests/governance-validator.test.sh", "tests/adoption-lock.test.sh"]}
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": ["Fresh adopters recognize governance as the sole owner of CHANGELOG.md and .env.example"],
+      "dataChanges": ["The default workstream map gains two exact owned paths"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert ticket-036 before publishing a dependent immutable release; existing immutable tags remain unchanged"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-02", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Schema and workstream validation pass"},
+      {"criterion": "AC-03", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Governance-owned positive fixtures pass"},
+      {"criterion": "AC-04", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Foreign workstream fixtures emit GOV-WORKSTREAM-003"},
+      {"criterion": "AC-05", "commands": ["bash tests/adoption-lock.test.sh"], "evidence": "Fresh adoption contains both exact ownership paths"}
+    ]
+  }
+}

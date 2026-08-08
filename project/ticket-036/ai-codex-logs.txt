@@ -1,0 +1,13 @@
+2026-08-08 plan preflight
+base=e46c754f154668758c3b7ccd67104bdcbb2e90b0
+classification=FEATURE/P1/requested
+matching unfinished ticket: none; ticket-024 concerns extendable wrappers
+selected owner=governance
+implementation files changed: 0
+workflow state=PLAN / WAIT_FOR_APPROVAL
+initial intent schema validation: FAIL (architecture.status must be accepted)
+correction: architecture decision is accepted by the v3 contract; workflow remains WAIT_FOR_APPROVAL
+ticket-036 intent schema: PASS
+git diff --check: PASS
+bash tests/governance-validator.test.sh: governance validator: PASS
+implementation tests: NOT RUN; no implementation files changed
