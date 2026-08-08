@@ -3,7 +3,7 @@
 - **ID**: ticket-041
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-08
 
 ## Cel i Zakres
@@ -21,9 +21,9 @@ checkoutcie. Todo2code przypnie pełny SHA wydania, nigdy tag ani branch.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: `VERSION`, domyślny manifest i aktywne asercje bieżącej wersji
+- [x] AC-01: `VERSION`, domyślny manifest i aktywne asercje bieżącej wersji
   wskazują `0.13.1`; historyczne wersje bazowe regresji pozostają niezmienione.
-- [ ] AC-02: `CHANGELOG.md` opisuje behavior-preserving redukcję złożoności i
+- [x] AC-02: `CHANGELOG.md` opisuje behavior-preserving redukcję złożoności i
   brak zmiany kontraktu adopcji.
 - [ ] AC-03: Pełny Linux CI contract i chroniony Windows check przechodzą dla
   dokładnego HEAD PR.
@@ -43,6 +43,17 @@ checkoutcie. Todo2code przypnie pełny SHA wydania, nigdy tag ani branch.
   publikować dopiero po merge, ponownym czystym teście i sprawdzeniu braku tagu.
 - Poza zakresem: dalszy refaktor, zmiana schematu/walidatora, zależności,
   downstream adoption, moving tag, force-update lub prerelease.
+
+## Dowody walidacji przed publikacją
+
+- Release preparation commit:
+  `d998367e7a8de068d532372b5cf9d7b87d645278`.
+- `VERSION`, manifest domyślny, lock-adoption assertion i bieżące asercje
+  walidatora wskazują `0.13.1`; historyczny fixture pozostaje
+  `0.12.0 → 0.13.0`.
+- Pełny skonfigurowany Linux CI contract przechodzi lokalnie.
+- Windows, exact-head Validator, czysty merge checkout, tag i Release pozostają
+  obowiązkowymi kolejnymi bramkami.
 
 ## Uczestnicy
 

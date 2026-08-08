@@ -8,3 +8,9 @@ implementation changes: NOT STARTED
 workflow state: PLAN / WAIT_FOR_APPROVAL
 2026-08-08 APPROVAL: user approved immutable v0.13.1 publication
 transition: PLAN / WAIT_FOR_APPROVAL -> IN_PROGRESS / EDIT
+release_preparation_commit=d998367e7a8de068d532372b5cf9d7b87d645278
+release_files=5
+current_version_assertions=0.13.1
+historical_atomic_fixture=0.12.0->0.13.0 preserved
+complete_linux_ci_contract=PASS
+workflow transition: EDIT -> VALIDATION

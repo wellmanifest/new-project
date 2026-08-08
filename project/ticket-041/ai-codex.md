@@ -26,8 +26,10 @@ version is patch release 0.13.1 rather than a minor release.
 
 ## Actual changes
 
-- User approved immutable v0.13.1 publication on 2026-08-08. Ticket is in
-  `IN_PROGRESS / EDIT`; release files have not yet changed.
+- Advanced exactly five release metadata/test files to current version 0.13.1,
+  preserving the historical 0.12.0 → 0.13.0 atomic-adoption fixture.
+- Full configured Linux CI contract passes. Ticket is in
+  `IN_PROGRESS / VALIDATION` pending protected Windows and exact-head review.
 
 ## Blockers
 

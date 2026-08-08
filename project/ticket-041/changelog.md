@@ -12,6 +12,14 @@
 - Recorded explicit approval of immutable v0.13.1 publication and transitioned
   to `IN_PROGRESS / EDIT` before release-file changes.
 
+## [0.3.0] - 2026-08-08
+
+- Prepared v0.13.1 in exactly five release metadata/test files.
+- Preserved historical atomic-adoption version pairs and passed the complete
+  configured Linux CI contract.
+- Transitioned to `IN_PROGRESS / VALIDATION` for protected Windows and
+  exact-head review.
+
 ## [0.1.0] - 2026-08-08
 
 - Initial governance scaffold created.
