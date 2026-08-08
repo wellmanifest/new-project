@@ -7,3 +7,9 @@
 2026-08-09T01:18:02+02:00 RELEASE_METADATA VERSION, default manifest, changelog and active assertions advanced to 0.14.0.
 2026-08-09T01:20:00+02:00 TEST Local Linux contract passed all eight suites, required-check completeness and diff checks.
 2026-08-09T01:20:01+02:00 VALIDATION Ticket transitioned to IN_PROGRESS / VALIDATION; protected checks remain required.
+2026-08-09T01:27:00+02:00 PROTECTED_CHECKS PR 69 exact head fe2882a passed test and windows-governance.
+2026-08-09T01:27:01+02:00 VALIDATOR Run 31282846839 approved exact head fe2882a with deterministic decision D-044-1933.
+2026-08-09T01:28:40+02:00 MERGE PR 69 merged as a22eb47ca0e7c06ac927d1c0d843eabb798bfadd.
+2026-08-09T01:29:30+02:00 CLEAN_TEST Full Linux contract passed in clean detached checkout of a22eb47.
+2026-08-09T01:29:46+02:00 RELEASE Annotated v0.14.0 and published GitHub Release bind exact merge SHA; no force update.
+2026-08-09T01:29:47+02:00 DONE Ticket closed DONE / DONE; downstream ownership remains ticket-062.

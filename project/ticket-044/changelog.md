@@ -14,3 +14,11 @@
 - Advanced the five bounded release files to 0.14.0 while preserving
   historical version fixtures.
 - Passed the full local Linux contract and advanced to `VALIDATION`.
+
+## [0.3.0] - 2026-08-09
+
+- Recorded green Linux, Windows and deterministic exact-head approval for PR
+  #69 and clean detached validation of merge SHA `a22eb47`.
+- Published immutable annotated tag and GitHub Release `v0.14.0` at that exact
+  SHA without moving or overwriting any tag.
+- Completed all acceptance criteria and closed as `DONE / DONE`.
