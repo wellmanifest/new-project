@@ -62,10 +62,14 @@ mieć realny, ograniczony i jednoznacznie należący diff.
 - Zaktualizowano dokumentację granicy zaufania i przepływu Goal.
 - Pełny kontrakt Linux huba przechodzi; cztery pliki implementacyjne mieszczą
   się w zatwierdzonym limicie pięciu. Ticket przeszedł do `VALIDATION`.
+- Chronione joby Linux i Windows przeszły dla dokładnego HEAD `f1728df`; ten
+  sam SHA zatwierdził `ifuri-validator-agent`, a PR #54 został scalony jako
+  `main@1aa2600`. Gałąź implementacyjna została usunięta i ticket przeszedł do
+  `DONE`.
 
 ## Blockers
 
 - Docelowe `toRevision` dla todo2code będzie znane dopiero po osobnym,
   zatwierdzonym wydaniu; ticket 050 pozostaje w PLAN.
-- Chronione Linux/Windows CI i exact-head approval zostaną rozstrzygnięte po
-  publikacji PR-a.
+- Brak dla ticketu 038. Publikacja nowej immutable wersji i adopcja todo2code
+  są osobnymi zależnymi zadaniami.
