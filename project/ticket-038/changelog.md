@@ -13,3 +13,6 @@
   documentation.
 - Full Linux hub contract passes; implementation uses four of five budgeted
   standard paths and moved to `VALIDATION`.
+- Protected Linux/Windows checks and exact-head Validator App approval passed
+  for `f1728df`; PR #54 merged as `main@1aa2600`, its remote branch was deleted
+  and the ticket closed as `DONE`.

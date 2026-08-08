@@ -2,8 +2,8 @@
 
 - **ID**: ticket-038
 - **Owner**: agent:codex
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -90,8 +90,13 @@ przeszedł do `IN_PROGRESS / EDIT`; implementacja pozostaje ograniczona przez
 `intent.json` do pięciu zadeklarowanych ścieżek standardu.
 
 Implementacja wykorzystała cztery ścieżki standardu i przeszła pełny kontrakt
-Linux huba. Ticket jest w `VALIDATION`; merge nadal wymaga Linux, Windows oraz
-chronionej aprobaty exact-head.
+Linux huba przed chronioną walidacją.
+
+PR #54 przeszedł Linux, Windows oraz Validator App na dokładnym HEAD
+`f1728df97afc778251e161956c78e304a3dde9c8` i został scalony jako
+`main@1aa2600f79fc12813bd2bba46b126fd971834b2e`. Zdalna gałąź implementacyjna
+została usunięta; ticket jest zakończony. Publikacja immutable wydania pozostaje
+osobnym, zależnym zadaniem.
 
 ## Granica katalogu
 
