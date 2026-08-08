@@ -26,3 +26,8 @@
   #62 and merge `b01cae0`.
 - Marked AC-01 through AC-03 complete and moved to `BLOCKED / BLOCKED` pending
   immutable release and downstream protected AC-04 evidence.
+
+## [0.5.0] - 2026-08-08
+
+- Recorded immutable v0.13.2 and successful downstream protected validation.
+- Marked AC-04 complete and closed the ticket as `DONE / DONE`.

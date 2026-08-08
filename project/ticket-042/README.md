@@ -2,8 +2,8 @@
 
 - **ID**: ticket-042
 - **Owner**: agent:codex
-- **Status**: BLOCKED
-- **Workflow state**: BLOCKED
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -28,7 +28,7 @@ regression so releases cannot silently return to the optional REST property.
   unchanged deterministic validator.
 - [x] AC-03: Branch-lifecycle, governance, adoption, Linux, Windows and Docker
   contracts pass.
-- [ ] AC-04: A clean downstream protected run no longer reports a missing
+- [x] AC-04: A clean downstream protected run no longer reports a missing
   `deleteBranchOnMerge` field.
 
 ## Validation evidence
@@ -47,9 +47,14 @@ regression so releases cannot silently return to the optional REST property.
 - Protected PR #62 passed `test` and `windows-governance`; trusted Validator
   App approved exact head `2a0001a7ddde314d3af5a7d23553869d01f70bb6`.
   The PR merged as `main@b01cae0f47bb311d1e795600af49e0ba436e175d`.
-- AC-04 requires an immutable release and downstream protected execution. The
-  ticket is `BLOCKED` without reserving the governance workstream until the
-  release ticket publishes v0.13.2 and todo2code adopts it.
+- Annotated release `v0.13.2` peels to exact release commit
+  `85631ea24d127f1f4797d2a67f3524a63cbbc95a`.
+- Downstream todo2code PR #70 passed the protected governance job against that
+  immutable revision at exact head
+  `fee491aac475ecbe6ce843d5fdbba25471c1db0e` and merged as
+  `f60d3cc317995bc618fea1c25d9c4ec9bf09bc30`.
+- Downstream ticket-050 closure merged to todo2code main as
+  `11dff0d5d4dd28a72a2274c5e4f0ec4d9c21a459`; AC-04 is satisfied.
 
 ## Ryzyka i uwagi
 

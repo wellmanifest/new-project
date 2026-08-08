@@ -15,13 +15,13 @@
   Linux przechodzą, protected Linux/Windows i exact-head review oczekują na PR.
   Klasyfikacja: `SERVICE / P0 / regression`.
 
-- [ ] [`ticket-042`](project/ticket-042/README.md) — naprawa regresji P0 w
+- [x] [`ticket-042`](project/ticket-042/README.md) — naprawiono regresję P0 w
   chronionym snapshotcie lifecycle: typed GraphQL ma dostarczać rzeczywisty
   boolean `deleteBranchOnMerge` bez osłabiania deterministycznego walidatora.
-  PR #62 przeszedł Linux, Windows i exact-head Validator i został scalony jako
-  `main@b01cae0`. Stan: `BLOCKED / BLOCKED` bez rezerwacji workstreamu do czasu
-  immutable v0.13.2 i downstream protected evidence. Klasyfikacja:
-  `BUG / P0 / regression`.
+  PR #62 przeszedł Linux, Windows i exact-head Validator; wydanie v0.13.2
+  wskazuje `85631ea`, a downstream todo2code PR #70 przeszedł chronioną
+  walidację i został scalony jako `f60d3cc`. Stan: `DONE / DONE`;
+  klasyfikacja: `BUG / P0 / regression`.
 
 - [x] [`ticket-041`](project/ticket-041/README.md) — opublikowano
   behavior-preserving repair z ticketu 040 jako immutable patch `v0.13.1` dla

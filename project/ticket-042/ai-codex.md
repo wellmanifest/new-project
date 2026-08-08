@@ -49,6 +49,7 @@ on `repository.data.delete_branch_on_merge`.
 
 ## Blockers
 
-- AC-04 needs immutable v0.13.2 publication and a downstream protected run.
-  Ticket-042 is `BLOCKED` and releases its workstream reservation while that
-  separately governed publication proceeds.
+- None. Release v0.13.2 points to `85631ea24d127f1f4797d2a67f3524a63cbbc95a`.
+  Downstream todo2code PR #70 passed protected governance on exact head
+  `fee491aac475ecbe6ce843d5fdbba25471c1db0e`, merged as `f60d3cc`, and its
+  ticket-050 closure reached main at `11dff0d`. Ticket-042 is `DONE / DONE`.
