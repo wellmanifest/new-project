@@ -98,4 +98,28 @@ assert rec["inputs"] == rec2["inputs"]
 print("round-trip OK")
 PY
 
+echo "== parser diagnostics remain exact =="
+$PY - <<PY
+import sys
+from pathlib import Path
+sys.path.insert(0, "scripts")
+from decision_record import parse_dsl_record
+
+good = Path("$good").read_text()
+try:
+    parse_dsl_record(good + "\nUNKNOWN value\n")
+except ValueError as error:
+    assert str(error) == "unrecognized decision-record line: UNKNOWN value"
+else:
+    raise AssertionError("unknown line was accepted")
+
+try:
+    parse_dsl_record("DECISION D-031-0007")
+except ValueError as error:
+    assert str(error) == "decision record missing fields: ['ticket', 'headSha', 'correlationId', 'actor', 'appliedRule', 'verdict', 'verdictAuthority', 'rejected']"
+else:
+    raise AssertionError("missing fields were accepted")
+print("parser diagnostics OK")
+PY
+
 echo "decision-record tests: PASS"
