@@ -1,0 +1,72 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-041",
+  "summary": "Publish managed complexity repair",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "tests/governance-validator.test.sh",
+    "tests/adoption-lock.test.sh",
+    "project/ticket-041/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env",
+    "scripts/**",
+    "governance/package-manifest.json",
+    "**/*.pem",
+    "**/*secret*"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": ["ticket-040"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6d394fc9f800a11af7bdfc613c29489332bef903",
+    "targetBranch": "main",
+    "outcome": "Publish immutable new-project 0.13.1 containing ticket-040's review-compatible managed Python refactor for exact-SHA downstream adoption",
+    "nonGoals": [
+      "No validator, schema, decision-record or adoption behavior change beyond completed ticket-040",
+      "No dependency or review-threshold change",
+      "No downstream repository adoption",
+      "No moving tag, force update, prerelease or release overwrite"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Publish ticket-040 as immutable patch release 0.13.1 because behavior and public contracts are unchanged",
+      "components": [
+        {"name": "release-metadata", "paths": ["VERSION", "CHANGELOG.md", "governance/manifest.default.json"]},
+        {"name": "release-validation", "paths": ["tests/governance-validator.test.sh", "tests/adoption-lock.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": ["The published standard version advances from 0.13.0 to 0.13.1"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Keep adopters pinned to v0.13.0 or another prior immutable SHA; never move or delete v0.13.1 after publication"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/governance-validator.test.sh", "bash tests/adoption-lock.test.sh"], "evidence": "Current metadata agrees on 0.13.1 while historical regression versions remain exact"},
+      {"criterion": "AC-03", "commands": ["full Linux CI contract", "protected windows-governance check"], "evidence": "Both supported environments pass on exact PR head"},
+      {"criterion": "AC-04", "commands": ["full Linux CI contract in clean detached merge checkout", "pinned Vallm 0.1.94 deterministic scan"], "evidence": "Release commit is reproducibly green and review-compatible before tagging"},
+      {"criterion": "AC-06", "commands": ["git ls-remote --tags origin", "gh release view v0.13.1"], "evidence": "Publication creates a previously absent tag and release without mutation"}
+    ]
+  }
+}
