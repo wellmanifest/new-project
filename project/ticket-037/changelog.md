@@ -9,3 +9,7 @@
 
 - Defined immutable `0.12.0` metadata, validation and publication boundaries.
 - Bound the release to completed ticket-036 and a clean protected-main SHA.
+
+## [0.3.0] - 2026-08-08
+
+- Recorded interactive approval and transitioned to `IN_PROGRESS / EDIT`.

@@ -2,8 +2,8 @@
 
 - **ID**: ticket-037
 - **Owner**: unresolved:human
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -57,3 +57,9 @@ odłączonym checkoutcie.
 Ten katalog przechowuje governance, decyzje, logi i dowody. Kod wykonywalny,
 skrypty badawcze i testy należą do zwykłych katalogów źródłowych repozytorium,
 nie do `project/ticket-037/`.
+
+## Zatwierdzenie interaktywne
+
+Użytkownik odpowiedzią „tak” 2026-08-08 zatwierdził implementację i publikację
+immutable `v0.12.0` zgodnie z `intent.json`. Zgoda sesyjna nie zastępuje
+exact-head merge approval.

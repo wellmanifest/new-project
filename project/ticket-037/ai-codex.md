@@ -25,9 +25,9 @@ manifest, changelog, tests, tag, GitHub Release and full source SHA agree.
 
 ## Actual changes
 
-- None; waiting for approval.
+- User approved implementation and publication on 2026-08-08; ticket moved to
+  `IN_PROGRESS / EDIT` before release-file changes.
 
 ## Blockers
 
-- Human approval is required before implementation.
 - Downstream adoption remains in todo2code ticket-050.

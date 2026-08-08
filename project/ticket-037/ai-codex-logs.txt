@@ -11,3 +11,5 @@ bash tests/governance-validator.test.sh: governance validator: PASS
 v0.12.0 tag: ABSENT
 v0.12.0 GitHub Release: ABSENT
 implementation tests: NOT RUN; no implementation files changed
+2026-08-08 APPROVAL: user approved implementation and immutable v0.12.0 publication
+transition: PLAN / WAIT_FOR_APPROVAL -> IN_PROGRESS / EDIT
