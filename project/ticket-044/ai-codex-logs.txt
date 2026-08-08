@@ -1,0 +1,4 @@
+2026-08-09T00:47:11+02:00 PLAN Ticket-024 is merged and closed as main@a70b5b84f6005353426cd4ddb80d7086c671c364.
+2026-08-09T00:47:12+02:00 CLASSIFICATION Minor v0.14.0 required by new public extendable strategy and managed base artifact.
+2026-08-09T00:47:13+02:00 BOUNDARY Five release files only; no downstream, authority, AQL, secret, dependency, Docker or runtime-evolution mutation.
+2026-08-09T00:47:14+02:00 WAIT_FOR_APPROVAL No release metadata, tag or GitHub Release changed.
