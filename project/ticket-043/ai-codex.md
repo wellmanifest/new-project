@@ -30,8 +30,14 @@ policy accepts only immutable full-SHA standard revisions.
 - Transitioned to `IN_PROGRESS / EDIT` before release metadata changes.
 - Prepared v0.13.2 at `d8fb5f952416a12ce358c64f27c2d77fa149e9f6`.
   All release metadata agrees and the complete local Linux contract passes.
-  The ticket is in `VALIDATION` pending protected Linux/Windows and exact-head
-  review.
+- Protected PR #64 passed Linux and Windows; the trusted Validator App approved
+  exact head `b1d63fb5d60fdcdcb391ab0dc500b16e4df54f61`.
+- The clean release commit `85631ea24d127f1f4797d2a67f3524a63cbbc95a`
+  passed the full Linux contract and is bound by annotated tag and published
+  GitHub Release `v0.13.2`.
+- todo2code PR #70 adopted that exact SHA, passed protected governance and
+  merged as `f60d3cc317995bc618fea1c25d9c4ec9bf09bc30`. Ticket-043 is
+  `DONE / DONE`.
 
 ## Blockers
 

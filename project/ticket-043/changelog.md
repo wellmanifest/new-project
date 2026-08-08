@@ -17,3 +17,11 @@
 - Advanced release metadata and assertions from 0.13.1 to 0.13.2.
 - Added the protected lifecycle acquisition release note.
 - Passed the full local Linux contract and advanced to `VALIDATION`.
+
+## [0.4.0] - 2026-08-08
+
+- Recorded protected Linux, Windows and exact-head Validator approval for PR
+  #64 and the clean release-commit validation.
+- Recorded immutable annotated tag/GitHub Release v0.13.2 and successful
+  downstream exact-SHA adoption.
+- Marked all acceptance criteria complete and closed as `DONE / DONE`.
