@@ -1,0 +1,65 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-043",
+  "summary": "Publish protected lifecycle acquisition fix",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P0",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "tests/governance-validator.test.sh",
+    "tests/adoption-lock.test.sh",
+    "project/ticket-043/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "968152d33b9efaa004fa1ad14099d5edf8e826a2",
+    "targetBranch": "main",
+    "outcome": "Publish immutable new-project v0.13.2 containing ticket-042's protected lifecycle acquisition repair for exact-SHA downstream adoption",
+    "nonGoals": [
+      "No additional workflow, validator or schema behavior change",
+      "No downstream repository mutation",
+      "No moving tag, overwritten release or prerelease"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Publish the already merged acquisition repair as immutable patch v0.13.2",
+      "components": [
+        {"name": "release-metadata", "paths": ["VERSION", "CHANGELOG.md", "governance/manifest.default.json"]},
+        {"name": "release-validation", "paths": ["tests/governance-validator.test.sh", "tests/adoption-lock.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": ["The published standard version advances from 0.13.1 to 0.13.2"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Keep adopters pinned to v0.13.1 or another prior immutable SHA; never move or delete v0.13.2 after publication"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/governance-validator.test.sh", "bash tests/adoption-lock.test.sh"], "evidence": "Current metadata agrees on 0.13.2 while historical regression versions remain exact"},
+      {"criterion": "AC-02", "commands": ["full Linux CI contract", "protected windows-governance check", "clean detached merge validation"], "evidence": "Both supported environments pass before publication"},
+      {"criterion": "AC-03", "commands": ["git ls-remote --tags origin", "gh release view v0.13.2"], "evidence": "A previously absent annotated tag and release bind the validated merge SHA"}
+    ]
+  }
+}

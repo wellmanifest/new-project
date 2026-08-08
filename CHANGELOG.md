@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-08-08
+
+### Protected branch lifecycle acquisition
+
+- Acquire `deleteBranchOnMerge` through GitHub's typed GraphQL Repository
+  field instead of relying on an optional property in the restricted REST
+  repository response.
+- Preserve the strict `new-project.branch-lifecycle-snapshot/v1` schema and
+  unchanged fail-closed deterministic validator; missing or malformed facts
+  remain blocking.
+- Add a workflow regression that requires GraphQL acquisition and rejects
+  renewed reliance on `repository.data.delete_branch_on_merge`.
+- Validate the repair through the full Linux and Windows governance contracts,
+  exact-head Validator review and a real downstream protected failure capture.
+
 ## [0.13.1] - 2026-08-08
 
 ### Review-compatible managed Python

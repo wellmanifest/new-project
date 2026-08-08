@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-043`](project/ticket-043/README.md) — publikacja naprawy z
+  ticketu 042 jako immutable patch v0.13.2 dla downstream exact-SHA adoption.
+  Stan: `IN_PROGRESS / VALIDATION`; metadata 0.13.2 i pełny lokalny kontrakt
+  Linux przechodzą, protected Linux/Windows i exact-head review oczekują na PR.
+  Klasyfikacja: `SERVICE / P0 / regression`.
+
 - [ ] [`ticket-042`](project/ticket-042/README.md) — naprawa regresji P0 w
   chronionym snapshotcie lifecycle: typed GraphQL ma dostarczać rzeczywisty
   boolean `deleteBranchOnMerge` bez osłabiania deterministycznego walidatora.
