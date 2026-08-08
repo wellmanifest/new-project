@@ -2,8 +2,8 @@
 
 - **ID**: ticket-037
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -22,13 +22,13 @@ odłączonym checkoutcie.
   wskazują `0.12.0`.
 - [x] AC-02: `CHANGELOG.md` zamyka `Unreleased` jako `0.12.0` i opisuje dokładną
   własność `CHANGELOG.md` oraz `.env.example`.
-- [ ] AC-03: Pełny Linux CI contract przeszedł lokalnie; chroniony Windows
-  check oraz dokładny HEAD PR pozostają do potwierdzenia.
-- [ ] AC-04: Annotowany tag `v0.12.0` i GitHub Release wskazują ten sam pełny
+- [x] AC-03: Pełny Linux CI contract oraz chroniony Windows check przeszły dla
+  dokładnego HEAD PR.
+- [x] AC-04: Annotowany tag `v0.12.0` i GitHub Release wskazują ten sam pełny
   SHA z chronionego `main`.
-- [ ] AC-05: Czysty detached checkout merge SHA przechodzi pełny Linux CI
+- [x] AC-05: Czysty detached checkout merge SHA przechodzi pełny Linux CI
   contract przed utworzeniem taga.
-- [ ] AC-06: Żaden istniejący tag ani Release nie jest przesunięty, nadpisany
+- [x] AC-06: Żaden istniejący tag ani Release nie jest przesunięty, nadpisany
   lub usunięty.
 
 ## Ryzyka i mitygacje
@@ -63,3 +63,15 @@ nie do `project/ticket-037/`.
 Użytkownik odpowiedzią „tak” 2026-08-08 zatwierdził implementację i publikację
 immutable `v0.12.0` zgodnie z `intent.json`. Zgoda sesyjna nie zastępuje
 exact-head merge approval.
+
+## Dowody publikacji
+
+- PR #52: exact-head Validator App APPROVED dla
+  `19988e76df6f01864e4b5967119a301db18e4823`.
+- Chronione checki `test` i `windows-governance`: PASS.
+- Merge/release SHA: `7be2e266dfebfe91de1b78abf30ac8e518453216`.
+- Czysty detached checkout merge SHA: pełny Linux CI contract PASS; status
+  drzewa czysty przed i po testach.
+- Annotowany tag `v0.12.0`: peeled commit równy merge/release SHA.
+- GitHub Release: https://github.com/wellmanifest/new-project/releases/tag/v0.12.0
+- Release jest opublikowany, nie jest draftem ani prerelease’em.
