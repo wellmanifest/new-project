@@ -32,8 +32,14 @@ manifest, changelog, tests, tag, GitHub Release and full source SHA agree.
 - Focused version/adoption tests and the complete Linux CI contract pass.
 - Ticket moved to `VALIDATION`; protected Windows, review, merge checkout and
   publication evidence remain pending.
+- Protected Linux/Windows checks and exact-head Validator approval passed for
+  PR #52; it merged as `main@7be2e26`.
+- The exact merge SHA passed the full Linux contract in a clean detached
+  checkout before publication.
+- Published annotated `v0.12.0` and a non-draft, non-prerelease GitHub Release;
+  both resolve to the exact merge SHA.
+- Ticket transitioned to `DONE`.
 
 ## Blockers
 
-- Downstream adoption remains in todo2code ticket-050.
-- Protected PR validation, clean merge-SHA validation and publication remain.
+- None. Downstream adoption remains separate todo2code ticket-050 scope.
