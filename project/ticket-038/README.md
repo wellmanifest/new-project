@@ -2,8 +2,8 @@
 
 - **ID**: ticket-038
 - **Owner**: agent:codex
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -78,6 +78,12 @@ protected exact-head review lub zweryfikowana atestacja pozostają wymagane.
 - Przenoszenie zwykłej własności ścieżek między workstreamami.
 - Uznawanie repozytorium-kontrolowanego Markdown/locka za merge approval.
 - Publikacja wersji, tagu lub GitHub Release; wykona ją osobny ticket po merge.
+
+## Decyzja wykonawcza
+
+Użytkownik zatwierdził kompletny plan ticketu 038 dnia 2026-08-08. Ticket
+przeszedł do `IN_PROGRESS / EDIT`; implementacja pozostaje ograniczona przez
+`intent.json` do pięciu zadeklarowanych ścieżek standardu.
 
 ## Granica katalogu
 

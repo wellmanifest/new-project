@@ -7,3 +7,4 @@
 - Recorded the approved creation of a separate atomic-adoption ticket.
 - Bounded the plan to five implementation paths and retained ordinary
   ownership, budget and protected approval for every target-local change.
+- Recorded explicit plan approval and transition to `IN_PROGRESS / EDIT`.

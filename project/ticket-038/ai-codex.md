@@ -47,9 +47,10 @@ mieć realny, ograniczony i jednoznacznie należący diff.
   pięciu i przekroczenie granicy governance/integration; sześć targetów jest
   nowych względem package manifestu 0.11.0.
 - Nie zmieniono kodu, schematów, testów ani dokumentacji standardu.
+- Użytkownik zatwierdził kompletny plan 2026-08-08; ticket przeszedł do
+  `IN_PROGRESS / EDIT` przed pierwszą zmianą implementacyjną.
 
 ## Blockers
 
-- Human approval of this completed plan is required before implementation.
 - Docelowe `toRevision` dla todo2code będzie znane dopiero po osobnym,
   zatwierdzonym wydaniu; ticket 050 pozostaje w PLAN.
