@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-08-08
+
+### Review-compatible managed Python
+
+- Refactored the managed governance validator and Decision DSL parser into
+  smaller behavior-preserving helpers, keeping every touched or extracted
+  function at cyclomatic complexity 15 or below.
+- Preserved classification, package, adoption-lock, managed-hash and Decision
+  DSL diagnostics and public behavior, with additional exact parser-diagnostic
+  regression coverage.
+- Passed the full Linux and Windows governance contracts, exact-head Validator
+  review and the pinned downstream Vallm 0.1.94 deterministic scan without
+  suppressing paths or increasing review thresholds.
+- Kept the v0.13.0 provenance-bound atomic-adoption contract unchanged; this
+  patch release only makes its managed Python payload review-compatible for
+  downstream exact-SHA adoption.
+
 ## [0.13.0] - 2026-08-08
 
 ### Provenance-bound atomic standard adoption

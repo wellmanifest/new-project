@@ -62,7 +62,7 @@ intent_validator.validate(adoption_intent)
 for field, invalid in (
     ('sourceRepository', 'other/project'),
     ('fromRevision', 'main'),
-    ('toRevision', 'v0.13.0'),
+    ('toRevision', 'v0.13.1'),
 ):
     candidate = json.loads(json.dumps(adoption_intent))
     candidate['delivery']['standardAdoption'][field] = invalid
@@ -71,7 +71,7 @@ Draft202012Validator(schemas['lock.schema.json']).validate({
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.13.0',
+        'version': '0.13.1',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'published',
@@ -156,7 +156,7 @@ assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
 assert manifest['schema'] == schema['properties']['schema']['const']
-assert manifest['standard']['version'] == '0.13.0'
+assert manifest['standard']['version'] == '0.13.1'
 ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
@@ -491,7 +491,7 @@ lock = {
   'schema': 'new-project.lock/v1',
   'standard': {
     'id': 'wellmanifest/new-project',
-    'version': '0.13.0',
+    'version': '0.13.1',
     'sourceRepository': 'wellmanifest/new-project',
     'sourceRevision': 'a' * 40,
     'publicationStatus': 'published',
