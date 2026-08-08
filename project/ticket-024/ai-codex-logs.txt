@@ -13,3 +13,7 @@
 2026-08-09T00:36:02+02:00 PASS full Linux CI contract: 8 suites plus required-check wiring completeness.
 2026-08-09T00:36:03+02:00 PASS real todo2code manifest smoke: 8 workstreams preserved, base locked, target unlocked, idempotent check.
 2026-08-09T00:36:04+02:00 VALIDATION Windows and exact-head protected review remain external PR gates; no release or downstream adoption performed.
+2026-08-09T00:38:35+02:00 PASS PR #67 Linux test and windows-governance on exact head 3d7ac45bb4359db96dba2825c3654fdb47c5b483.
+2026-08-09T00:42:00+02:00 APPROVED ifuri-validator-agent decision D-024-5198; deterministic authority approved despite advisory LLM REQUEST_CHANGES.
+2026-08-09T00:42:33+02:00 MERGED PR #67 as main@2fbf23fb3abc6c62f04b22b012f6138922fd05a4; remote implementation branch deleted.
+2026-08-09T00:43:00+02:00 DONE Ticket closed; immutable release and downstream adoption remain separate.

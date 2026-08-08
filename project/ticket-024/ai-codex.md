@@ -44,5 +44,7 @@ the protected lock. The existing ticket-024 is the correct owner for a bounded
 
 ## Blockers
 
-- Protected Windows/exact-head review and a separate immutable release remain
-  independent later gates. Downstream adoption is not authorized here.
+- None for ticket-024. PR #67 passed Linux, Windows and independent exact-head
+  validation, then merged as `main@2fbf23f`.
+- Immutable release and downstream adoption remain separate unauthorized work,
+  not blockers hidden inside this completed ticket.

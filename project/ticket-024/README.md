@@ -2,8 +2,8 @@
 
 - **ID**: ticket-024
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-05
 
 ## Cel i zakres
@@ -167,4 +167,18 @@ wydanie, migrację downstream lub zmianę authority.
   wyłączyła `manifest.json` z locka i zakończyła kolejny `--check` jako
   `up-to-date`.
 - Windows i exact-head Validator pozostają wymaganymi chronionymi checkami PR;
-  nie były wykonywane lokalnie.
+  oba zakończyły się PASS na dokładnym HEAD implementacji.
+
+## Publikacja implementacji
+
+- PR [#67](https://github.com/wellmanifest/new-project/pull/67) przeszedł
+  `test` i `windows-governance` na dokładnym HEAD
+  `3d7ac45bb4359db96dba2825c3654fdb47c5b483`.
+- Niezależny `ifuri-validator-agent` wystawił exact-head `APPROVED` z decyzją
+  `D-024-5198`. OpenRouter/GLM zwrócił doradcze `REQUEST_CHANGES` dotyczące
+  zduplikowanych rekordów checków; deterministyczny evaluator zweryfikował
+  wymagany zbiór i nie wykonał żadnego polecenia modelu.
+- Chroniony merge utworzył `main@2fbf23fb3abc6c62f04b22b012f6138922fd05a4`,
+  a zdalna gałąź implementacyjna została usunięta.
+- Podniesienie wersji, tag, GitHub Release i migracja todo2code pozostają
+  osobnymi, zależnymi operacjami; ticket 024 nie nadaje im authority.

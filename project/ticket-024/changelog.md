@@ -8,8 +8,9 @@
   preserves target workstreams and owned paths.
 - Added fail-closed runtime synchronization and positive/negative adoption
   regressions, including a todo2code-shaped ownership case.
-- Full Linux governance contract passes; release and downstream adoption are
-  intentionally separate.
+- PR #67 passed Linux, Windows and independent exact-head validation and was
+  merged as `main@2fbf23f`.
+- Immutable release and downstream adoption are intentionally separate.
 
 ## [0.1.0] - 2026-08-05
 
