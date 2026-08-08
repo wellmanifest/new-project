@@ -41,9 +41,13 @@ import sys
 
 root = pathlib.Path(sys.argv[1])
 lock = json.load(open(root / '.governance/manifest.lock.json', encoding='utf-8'))
+manifest = json.load(open(root / '.governance/manifest.json', encoding='utf-8'))
 assert lock['standard']['sourceRevision'] == sys.argv[2]
 assert lock['standard']['publicationStatus'] == 'published'
 assert lock['standard']['version'] == '0.11.0'
+governance_paths = manifest['coordination']['workstreams']['governance']['ownedPaths']
+assert 'CHANGELOG.md' in governance_paths
+assert '.env.example' in governance_paths
 for path, expected in lock['managedFiles'].items():
     assert hashlib.sha256((root / path).read_bytes()).hexdigest() == expected
 PY

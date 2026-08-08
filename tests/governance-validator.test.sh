@@ -150,6 +150,9 @@ assert manifest['delivery']['maxImplementationFiles'] == 5
 assert 'github-app-review' in manifest['trustedApprovalSources']
 assert manifest['approvalEvidence']['schema'] == 'new-project.approval-evidence/v1'
 assert approval_schema['properties']['headSha']['pattern'] == '^[0-9a-f]{40}$'
+governance_paths = manifest['coordination']['workstreams']['governance']['ownedPaths']
+assert 'CHANGELOG.md' in governance_paths
+assert '.env.example' in governance_paths
 PY
 python3 - "$repo_root/scripts/governance_check.py" <<'PY'
 import importlib.util
@@ -722,6 +725,57 @@ planned_unowned="$fixture/planned-unowned"
 make_fixture "$planned_unowned"
 sed -i 's#"allowedPaths": \["src/\*\*"\]#"allowedPaths": ["sdk/**"]#' "$planned_unowned/project/ticket-002/intent.json"
 expect_code GOV-WORKSTREAM-003 run_check "$planned_unowned" --changed-file TODO.md
+
+governance_root_contracts="$fixture/governance-root-contracts"
+make_fixture "$governance_root_contracts"
+touch "$governance_root_contracts/.env.example"
+python3 - "$governance_root_contracts/project/ticket-002/intent.json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+with open(path, encoding='utf-8') as handle:
+    intent = json.load(handle)
+intent['workstream'] = 'governance'
+intent['allowedPaths'] = ['CHANGELOG.md', '.env.example']
+intent['delivery']['architecture']['components'] = [{
+    'name': 'root-contracts',
+    'paths': ['CHANGELOG.md', '.env.example'],
+}]
+with open(path, 'w', encoding='utf-8') as handle:
+    json.dump(intent, handle, indent=2)
+    handle.write('\n')
+PY
+run_check "$governance_root_contracts" --changed-file CHANGELOG.md \
+  > "$fixture/governance-changelog.out"
+grep -q '^GOV-PASS:' "$fixture/governance-changelog.out"
+run_check "$governance_root_contracts" --changed-file .env.example \
+  > "$fixture/governance-env-example.out"
+grep -q '^GOV-PASS:' "$fixture/governance-env-example.out"
+
+foreign_root_contracts="$fixture/foreign-root-contracts"
+make_fixture "$foreign_root_contracts"
+touch "$foreign_root_contracts/.env.example"
+python3 - "$foreign_root_contracts/project/ticket-002/intent.json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+with open(path, encoding='utf-8') as handle:
+    intent = json.load(handle)
+intent['allowedPaths'] = ['CHANGELOG.md', '.env.example']
+intent['delivery']['architecture']['components'] = [{
+    'name': 'invalid-root-contract-claim',
+    'paths': ['CHANGELOG.md', '.env.example'],
+}]
+with open(path, 'w', encoding='utf-8') as handle:
+    json.dump(intent, handle, indent=2)
+    handle.write('\n')
+PY
+expect_code GOV-WORKSTREAM-003 run_check "$foreign_root_contracts" \
+  --changed-file CHANGELOG.md
+expect_code GOV-WORKSTREAM-003 run_check "$foreign_root_contracts" \
+  --changed-file .env.example
 
 dependency_cycle="$fixture/dependency-cycle"
 make_fixture "$dependency_cycle"
