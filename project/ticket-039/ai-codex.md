@@ -31,7 +31,9 @@ opcjonalnym rozszerzeniem publicznego intent/v3, właściwą wersją jest `0.13.
 
 - Ticket 038 zakończono na `main@31dd391`; release metadata nie zostały jeszcze
   zmienione.
+- Użytkownik zatwierdził implementację i publikację `v0.13.0`; ticket przeszedł
+  do `IN_PROGRESS / EDIT` przed pierwszą zmianą release metadata.
 
 ## Blockers
 
-- Human approval of immutable `v0.13.0` publication is required before edits.
+- Brak przed implementacją; chronione checki i review pozostają wymagane.

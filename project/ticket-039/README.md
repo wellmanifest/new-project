@@ -2,8 +2,8 @@
 
 - **ID**: ticket-039
 - **Owner**: agent:codex
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -47,6 +47,12 @@ odłączonym checkoutcie. Todo2code przypnie ten pełny SHA, nie tag ani branch.
 - Brak dalszej zmiany schematu lub algorytmu z ticketu 038.
 - Brak adopcji w todo2code; wykona ją ticket-050 po opublikowaniu pełnego SHA.
 - Brak tagów ruchomych, force-update lub prerelease.
+
+## Zatwierdzenie interaktywne
+
+Użytkownik odpowiedzią „tak” 2026-08-08 zatwierdził implementację i publikację
+immutable `v0.13.0` zgodnie z `intent.json`. Zgoda sesyjna nie zastępuje
+exact-head merge approval.
 
 ## Uczestnicy
 

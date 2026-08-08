@@ -7,3 +7,7 @@ ticket-038: DONE
 planned version: 0.13.0
 implementation files: 5 maximum
 result: plan only; no release metadata changed
+
+2026-08-08 approval transition
+user approved implementation and immutable v0.13.0 publication
+workflow: PLAN / WAIT_FOR_APPROVAL -> IN_PROGRESS / EDIT
