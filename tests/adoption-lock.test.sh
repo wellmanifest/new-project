@@ -44,7 +44,7 @@ lock = json.load(open(root / '.governance/manifest.lock.json', encoding='utf-8')
 manifest = json.load(open(root / '.governance/manifest.json', encoding='utf-8'))
 assert lock['standard']['sourceRevision'] == sys.argv[2]
 assert lock['standard']['publicationStatus'] == 'published'
-assert lock['standard']['version'] == '0.11.0'
+assert lock['standard']['version'] == '0.12.0'
 governance_paths = manifest['coordination']['workstreams']['governance']['ownedPaths']
 assert 'CHANGELOG.md' in governance_paths
 assert '.env.example' in governance_paths
@@ -115,7 +115,7 @@ grep -q -- '--check and --upgrade are mutually exclusive' "$fixture/options.err"
 
 mismatch="$fixture/mismatch"
 mkdir -p "$mismatch/.governance"
-sed 's/"version": "0.11.0"/"version": "9.9.9"/' \
+sed 's/"version": "0.12.0"/"version": "9.9.9"/' \
   "$standard/governance/manifest.default.json" > "$mismatch/.governance/manifest.json"
 if python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$mismatch" --source-revision "$revision" --upgrade \

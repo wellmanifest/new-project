@@ -16,7 +16,7 @@
   `DONE / DONE`; klasyfikacja: `FEATURE / P1 / requested`.
 - [ ] [`ticket-037`](project/ticket-037/README.md) — opublikować własność z
   ticketu 036 jako immutable `0.12.0`, zweryfikować czysty merge SHA i utworzyć
-  nowy annotowany tag oraz GitHub Release. Stan: `IN_PROGRESS / EDIT`;
+  nowy annotowany tag oraz GitHub Release. Stan: `IN_PROGRESS / VALIDATION`;
   klasyfikacja: `SERVICE / P2 / health`.
 - [x] [`ticket-035`](project/ticket-035/README.md) — GOV-DECISION gate w governance_check.
 - [x] [`ticket-032`](project/ticket-032/README.md) — DECISION DSL + append decisions.md (validator #13/#14).

@@ -13,3 +13,9 @@
 ## [0.3.0] - 2026-08-08
 
 - Recorded interactive approval and transitioned to `IN_PROGRESS / EDIT`.
+
+## [0.4.0] - 2026-08-08
+
+- Advanced the five bounded release files to `0.12.0`.
+- Added the root-governance-contract release notes.
+- Passed focused validation and the full Linux CI contract.

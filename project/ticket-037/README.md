@@ -3,7 +3,7 @@
 - **ID**: ticket-037
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -18,12 +18,12 @@ odłączonym checkoutcie.
 
 ## Kryteria odbioru
 
-- [ ] AC-01: `VERSION`, domyślny manifest i wszystkie aktywne asercje wersji
+- [x] AC-01: `VERSION`, domyślny manifest i wszystkie aktywne asercje wersji
   wskazują `0.12.0`.
-- [ ] AC-02: `CHANGELOG.md` zamyka `Unreleased` jako `0.12.0` i opisuje dokładną
+- [x] AC-02: `CHANGELOG.md` zamyka `Unreleased` jako `0.12.0` i opisuje dokładną
   własność `CHANGELOG.md` oraz `.env.example`.
-- [ ] AC-03: Pełny Linux CI contract i chroniony Windows check przechodzą dla
-  dokładnego HEAD PR.
+- [ ] AC-03: Pełny Linux CI contract przeszedł lokalnie; chroniony Windows
+  check oraz dokładny HEAD PR pozostają do potwierdzenia.
 - [ ] AC-04: Annotowany tag `v0.12.0` i GitHub Release wskazują ten sam pełny
   SHA z chronionego `main`.
 - [ ] AC-05: Czysty detached checkout merge SHA przechodzi pełny Linux CI

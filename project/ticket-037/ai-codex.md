@@ -27,7 +27,13 @@ manifest, changelog, tests, tag, GitHub Release and full source SHA agree.
 
 - User approved implementation and publication on 2026-08-08; ticket moved to
   `IN_PROGRESS / EDIT` before release-file changes.
+- Updated the five approved release files from 0.11.0 to 0.12.0.
+- Closed the release changelog with the root ownership and adoption behavior.
+- Focused version/adoption tests and the complete Linux CI contract pass.
+- Ticket moved to `VALIDATION`; protected Windows, review, merge checkout and
+  publication evidence remain pending.
 
 ## Blockers
 
 - Downstream adoption remains in todo2code ticket-050.
+- Protected PR validation, clean merge-SHA validation and publication remain.

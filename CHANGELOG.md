@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-08-08
+
+### Root governance contracts
+
+- Assigned the exact root paths `CHANGELOG.md` and `.env.example` to the
+  default `governance` workstream, making release evidence and the reviewed,
+  non-secret environment surface explicitly publishable.
+- Added positive fixtures proving governance tickets may change either path
+  and negative fixtures requiring `GOV-WORKSTREAM-003` when another
+  workstream claims them.
+- Extended immutable-adoption coverage to verify that freshly seeded target
+  manifests contain both ownership declarations.
+- Preserved customized target manifests as explicit reviewed adoption
+  decisions; the standard does not silently overwrite target-specific
+  workstream maps.
+
 ## [0.11.0] - 2026-08-05
 
 ### Canonical work classification
