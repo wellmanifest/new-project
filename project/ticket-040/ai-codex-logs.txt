@@ -25,3 +25,8 @@ complete_linux_ci_contract=PASS
 windows_local=NOT_RUN pwsh unavailable; required protected CI pending
 docker_upstream=NOT_APPLICABLE no Dockerfile/compose contract in hub
 workflow transition: EDIT -> VALIDATION
+protected_linux=PASS head=1eed9158119ca5be2106497275ab96c12602ebda
+protected_windows=PASS head=1eed9158119ca5be2106497275ab96c12602ebda
+validator_app=APPROVED exact_head=1eed9158119ca5be2106497275ab96c12602ebda
+pr=58 merged_main=efec2cf9ebb29b16308c312d1bf3c5dbb01c94f6
+workflow transition: VALIDATION -> DONE

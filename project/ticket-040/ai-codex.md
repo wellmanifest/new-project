@@ -33,7 +33,8 @@ publish a new immutable release afterward.
   parser-diagnostic regressions.
 - Lizard reports zero functions over CC 15; pinned Vallm reports 2/2 pass with
   zero deterministic findings. All configured Linux tests pass.
-- Ticket is in `IN_PROGRESS / VALIDATION`; protected Windows CI remains.
+- Protected Linux and Windows passed, Validator approved exact head `1eed915`,
+  and PR #58 merged as `main@efec2cf`. Ticket is `DONE`.
 
 ## Blockers
 

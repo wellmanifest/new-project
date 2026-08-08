@@ -2,8 +2,8 @@
 
 - **ID**: ticket-040
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-08
 
 ## Cel i Zakres
@@ -38,7 +38,7 @@ ticket after this change is merged; tags and version files are out of scope.
   canonical round trips and exact fail-closed diagnostics.
 - [x] AC-04: Atomic-adoption package/lock/hash verification preserves all
   positive and negative v0.13.0 regression cases.
-- [ ] AC-05: The complete Linux and Windows governance contracts pass with no
+- [x] AC-05: The complete Linux and Windows governance contracts pass with no
   dependency, schema or public-interface change. The hub has no Dockerfile or
   compose contract; downstream Docker already passes and must pass again after
   the dependent release adoption.
@@ -85,3 +85,6 @@ nie do `project/ticket-040/`.
   suites.
 - Local PowerShell is unavailable; the required Windows contract remains for
   protected CI before merge.
+- Protected Linux and Windows checks passed on exact head
+  `1eed9158119ca5be2106497275ab96c12602ebda`; Validator App approved that same
+  head and PR #58 merged as `main@efec2cf9ebb29b16308c312d1bf3c5dbb01c94f6`.
