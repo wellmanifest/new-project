@@ -1,0 +1,6 @@
+2026-08-08 release planning
+accepted_base=968152d33b9efaa004fa1ad14099d5edf8e826a2
+included_repair_merge=b01cae0f47bb311d1e795600af49e0ba436e175d
+target_release=v0.13.2
+workflow_state=PLAN / WAIT_FOR_APPROVAL
+implementation_changes=NONE
