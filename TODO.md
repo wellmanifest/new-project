@@ -9,11 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-043`](project/ticket-043/README.md) — publikacja naprawy z
+- [x] [`ticket-043`](project/ticket-043/README.md) — opublikowano naprawę z
   ticketu 042 jako immutable patch v0.13.2 dla downstream exact-SHA adoption.
-  Stan: `IN_PROGRESS / VALIDATION`; metadata 0.13.2 i pełny lokalny kontrakt
-  Linux przechodzą, protected Linux/Windows i exact-head review oczekują na PR.
-  Klasyfikacja: `SERVICE / P0 / regression`.
+  PR #64 przeszedł Linux, Windows i exact-head Validator; annotowany tag oraz
+  GitHub Release wskazują `85631ea`, a downstream todo2code PR #70 przeszedł
+  chronioną adopcję. Stan: `DONE / DONE`; klasyfikacja:
+  `SERVICE / P0 / regression`.
 
 - [x] [`ticket-042`](project/ticket-042/README.md) — naprawiono regresję P0 w
   chronionym snapshotcie lifecycle: typed GraphQL ma dostarczać rzeczywisty
