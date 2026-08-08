@@ -34,8 +34,12 @@ on `repository.data.delete_branch_on_merge`.
 
 ## Actual changes
 
-- None; waiting for explicit approval.
+- The user explicitly approved implementation on 2026-08-08.
+- Diagit audited the local fleet and both relevant GitHub organizations. Its
+  clean committed runtime confirmed the active ticket branches and PR #70.
+- The ticket transitioned to `IN_PROGRESS / EDIT`; workflow implementation is
+  now authorized within `intent.json`.
 
 ## Blockers
 
-- P-CORE-008 requires approval before workflow or test implementation changes.
+- None.

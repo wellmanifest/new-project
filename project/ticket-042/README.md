@@ -2,8 +2,8 @@
 
 - **ID**: ticket-042
 - **Owner**: agent:codex
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -39,6 +39,12 @@ regression so releases cannot silently return to the optional REST property.
   fails closed.
 - Publishing an immutable patch release and downstream adoption will be a
   separate governed release ticket after this repair merges.
+
+The user explicitly approved implementation on 2026-08-08 and requested that
+diagit be used during delivery. Diagit clean release code audited both
+organizations successfully and confirmed only the two active ticket branches
+and todo2code PR #70; its main development worktree remains untouched because
+it contains unrelated in-progress changes.
 
 ## Uczestnicy
 
