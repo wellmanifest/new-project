@@ -10,3 +10,7 @@
 - Defined exact governance ownership for the two root contracts.
 - Bounded implementation to the default manifest and two regression suites.
 - Separated immutable release publication into a dependent follow-up ticket.
+
+## [0.3.0] - 2026-08-08
+
+- Recorded interactive approval and transitioned to `IN_PROGRESS / EDIT`.

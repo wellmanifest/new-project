@@ -11,7 +11,7 @@
 
 - [ ] [`ticket-036`](project/ticket-036/README.md) — przypisać dokładne ścieżki
   `CHANGELOG.md` i `.env.example` do domyślnego workstreamu governance oraz
-  dodać regresje własności i adopcji. Stan: `PLAN / WAIT_FOR_APPROVAL`;
+  dodać regresje własności i adopcji. Stan: `IN_PROGRESS / EDIT`;
   klasyfikacja: `FEATURE / P1 / requested`.
 - [x] [`ticket-035`](project/ticket-035/README.md) — GOV-DECISION gate w governance_check.
 - [x] [`ticket-032`](project/ticket-032/README.md) — DECISION DSL + append decisions.md (validator #13/#14).

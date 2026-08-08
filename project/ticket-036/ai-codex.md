@@ -31,9 +31,9 @@ ownership of `.env` or unrelated root files.
 
 ## Actual changes
 
-- None; waiting for approval.
+- User approval received on 2026-08-08; ticket transitioned to
+  `IN_PROGRESS / EDIT` before implementation.
 
 ## Blockers
 
-- Human approval is required before implementation.
 - Version publication and downstream adoption remain later governed tickets.

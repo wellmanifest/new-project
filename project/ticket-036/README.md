@@ -2,8 +2,8 @@
 
 - **ID**: ticket-036
 - **Owner**: unresolved:human
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -57,3 +57,9 @@ wydania podniesie wersję, przetestuje czysty checkout i opublikuje nowy tag.
 Ten katalog przechowuje governance, decyzje, logi i dowody. Kod wykonywalny,
 skrypty badawcze i testy należą do zwykłych katalogów źródłowych repozytorium,
 nie do `project/ticket-036/`.
+
+## Zatwierdzenie interaktywne
+
+Użytkownik poleceniem „kontynuuj” 2026-08-08 zatwierdził przedstawiony plan i
+`intent.json`. Zgoda obejmuje implementację ticketu 036, ale nie jest zaufanym
+dowodem merge.
