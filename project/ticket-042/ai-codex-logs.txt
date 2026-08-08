@@ -35,3 +35,13 @@ windows_governance=PASS
 validator_app=APPROVED exact_head
 merge_commit=b01cae0f47bb311d1e795600af49e0ba436e175d
 workflow_transition=VALIDATION -> BLOCKED pending immutable release and downstream AC-04
+2026-08-08 downstream completion evidence
+release=v0.13.2
+release_commit=85631ea24d127f1f4797d2a67f3524a63cbbc95a
+downstream_repository=semcod/todo2code
+downstream_pr=70
+downstream_head=fee491aac475ecbe6ce843d5fdbba25471c1db0e
+downstream_protected_governance=PASS
+downstream_merge=f60d3cc317995bc618fea1c25d9c4ec9bf09bc30
+downstream_ticket_closure=11dff0d5d4dd28a72a2274c5e4f0ec4d9c21a459
+workflow_transition=BLOCKED -> DONE
