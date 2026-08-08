@@ -2,8 +2,8 @@
 
 - **ID**: ticket-024
 - **Owner**: unresolved:human
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-05
 
 ## Cel i zakres
@@ -72,11 +72,14 @@ Po audycie działającej adopcji wybieramy dla pierwszej implementacji
       deterministic validation
 ```
 
-`manifest.base.json` zawiera dokładny dokument opublikowany przez standard.
-`manifest.json` musi rekursywnie zachować wszystkie wartości bazy, ale może
-dodawać własne klucze i elementy tablic, w tym targetowe workstreamy i
-`ownedPaths`. Upgrade wykonuje deterministyczny merge względem poprzedniej
-bazy: aktualizuje część standardu i zachowuje wyłącznie legalne dodatki targetu.
+`manifest.base.json` zawiera kanoniczną, deterministyczną projekcję wartości
+należących do standardu. Pola opisujące konkretny projekt — przede wszystkim
+mapa workstreamów, targetowe ścieżki integracji i publicznych interfejsów — nie
+są fałszywie uznawane za uniwersalną politykę standardu. `manifest.json` musi
+rekursywnie zachować projekcję bazy, ale może dodawać własne klucze i elementy
+tablic, w tym targetowe workstreamy i `ownedPaths`. Upgrade wykonuje
+deterministyczny merge względem poprzedniej bazy: aktualizuje część standardu i
+zachowuje wyłącznie legalne dodatki targetu.
 
 Lock wiąże bazę, a nie cały dokument rozszerzalny. Usunięcie albo podmiana
 wymagania standardu nadal generuje `GOV-SYNC-001`. Targetowa zmiana nadal
@@ -98,17 +101,17 @@ wersji standardu; nie modyfikuje repozytorium downstream bezpośrednio.
 
 ## Kryteria odbioru
 
-- [ ] AC-01: `package-manifest.json` wyraża strategię `extendable` dla JSON i
+- [x] AC-01: `package-manifest.json` wyraża strategię `extendable` dla JSON i
   odrzuca nieobsługiwany lub niepoprawny wpis.
-- [ ] AC-02: `--upgrade` aktualizuje zarządzaną bazę i zachowuje targetowe
+- [x] AC-02: `--upgrade` aktualizuje zarządzaną bazę i zachowuje targetowe
   workstreamy oraz `ownedPaths`.
-- [ ] AC-03: `--check` nie raportuje driftu dla legalnego dodatku targetu, a
+- [x] AC-03: `--check` nie raportuje driftu dla legalnego dodatku targetu, a
   lock nie hashuje całego dokumentu rozszerzalnego.
-- [ ] AC-04: Zarządzana baza pozostaje dokładnie hash-bound i zgodna z
+- [x] AC-04: Zarządzana baza pozostaje dokładnie hash-bound i zgodna z
   opublikowanym source revision.
-- [ ] AC-05: Usunięta lub zmieniona wartość bazy w targetowym manifeście
+- [x] AC-05: Usunięta lub zmieniona wartość bazy w targetowym manifeście
   zatrzymuje walidację stabilnym `GOV-SYNC-001`.
-- [ ] AC-06: Fixture o kształcie todo2code może przypisać
+- [x] AC-06: Fixture o kształcie todo2code może przypisać
   `test/python-runtime.test.ts` do workstreamu bez edycji locka i bez ominięcia
   zwykłych bramek ticketu, authority oraz approval.
 
@@ -118,8 +121,9 @@ wersji standardu; nie modyfikuje repozytorium downstream bezpośrednio.
   jawny, przejrzany `--upgrade`. Migracja nie może być cicha.
 - Target nie może nadpisać scalaru ani usunąć elementu opublikowanego przez
   standard. Merge i walidacja muszą używać tego samego kanonicznego algorytmu.
-- `manifest.base.json` pozostaje identyczny z opublikowanym źródłem i jest
-  objęty lockiem, więc elastyczność targetu nie osłabia proweniencji standardu.
+- `manifest.base.json` jest kanonicznie wyliczany z opublikowanego źródła i
+  objęty lockiem, więc tę samą projekcję można odtworzyć, a elastyczność targetu
+  nie osłabia proweniencji standardu.
 
 ## Poza zakresem
 
@@ -138,7 +142,29 @@ wersji standardu; nie modyfikuje repozytorium downstream bezpośrednio.
 
 ## Decyzja wykonawcza
 
-Rozszerzony plan jest przygotowany po wykryciu rzeczywistego blokera w
-`semcod/todo2code`. Ticket pozostaje `PLAN / WAIT_FOR_APPROVAL`; zatwierdzenie
-ticketów downstream 059–063 nie jest automatycznie zgodą na zmianę standardu
-governance w tym repozytorium.
+Rozszerzony plan powstał po wykryciu rzeczywistego blokera w
+`semcod/todo2code`. Użytkownik zatwierdził dokładny plan ticketu 024 oraz
+przejście do `EDIT` 2026-08-09. Zgoda obejmuje pięć ścieżek implementacyjnych
+zadeklarowanych w `intent.json`; nie jest zaufanym dowodem merge ani zgodą na
+wydanie, migrację downstream lub zmianę authority.
+
+## Implementacja i walidacja
+
+- `package-manifest/v1` akceptuje `extendable` wyłącznie dla targetowego
+  manifestu JSON i wymaga odpowiadającej mu zarządzanej bazy z tego samego
+  źródła.
+- Adopcja rozpoznaje legacy lock z zasianym manifestem, odtwarza poprzednią
+  bazę z przypiętej rewizji i wykonuje deterministyczny merge bez utraty
+  targetowych workstreamów.
+- Nowy lock zawiera wyłącznie pliki `managed`; rozszerzalny manifest przechodzi
+  normalny scope, ownership, budżet i approval targetu.
+- Runtime waliduje hash bazy oraz rekursywną zgodność targetu; naruszenie daje
+  stabilny `GOV-SYNC-001`.
+- Pełny kontrakt Linux CI: PASS — required checks, decision replay,
+  governance scripts, validator, branch lifecycle, governance environment,
+  adoption lock, rule-enforcement oraz kompletność listy suite’ów.
+- Regresja na rzeczywistym manifeście todo2code zachowała osiem workstreamów,
+  wyłączyła `manifest.json` z locka i zakończyła kolejny `--check` jako
+  `up-to-date`.
+- Windows i exact-head Validator pozostają wymaganymi chronionymi checkami PR;
+  nie były wykonywane lokalnie.

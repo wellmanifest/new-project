@@ -17,7 +17,7 @@ the protected lock. The existing ticket-024 is the correct owner for a bounded
 ## Execution plan
 
 1. Add an `extendable` JSON entry for the target manifest and a separately
-   managed standard base to the package manifest.
+   managed canonical projection of the standard base to the package manifest.
 2. Implement one deterministic structural extension/three-way merge algorithm
    in the adoption tool, preserving target-only object keys and array items.
 3. Make governance synchronization verify both the base hash and recursive
@@ -29,9 +29,20 @@ the protected lock. The existing ticket-024 is the correct owner for a bounded
 
 ## Actual changes
 
-- Planning and delivery contract only.
-- No implementation change before explicit ticket-024 approval.
+- Planning and delivery contract accepted by the human on 2026-08-09.
+- Ticket entered `IN_PROGRESS / EDIT` within the five declared implementation
+  paths.
+- The real todo2code manifest proved that project workstreams cannot inherit
+  the default map without ownership overlap. The implementation therefore
+  projects only standard-owned values into the managed base and keeps
+  project-specific coordination fields in the extendable target.
+- Implemented the bounded package, adoption, synchronization and regression
+  changes in exactly five declared implementation paths.
+- Focused adoption and validator suites pass, as does the complete Linux CI
+  contract. A real todo2code manifest migration smoke preserves all eight
+  workstreams and reaches an idempotent `up-to-date` check.
 
 ## Blockers
 
-- Explicit approval of this expanded ticket-024 plan is required before EDIT.
+- Protected Windows/exact-head review and a separate immutable release remain
+  independent later gates. Downstream adoption is not authorized here.

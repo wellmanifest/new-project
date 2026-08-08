@@ -133,7 +133,6 @@ rejected(lambda value: value['rules'][1].pop('assign'))
 package = json.load(open(root / 'governance/package-manifest.json', encoding='utf-8'))
 assert package['schema'] == 'new-project.package-manifest/v1'
 assert package['files']
-assert len({item['source'] for item in package['files']}) == len(package['files'])
 assert len({item['target'] for item in package['files']}) == len(package['files'])
 assert 'governance/package-manifest.json' in {item['source'] for item in package['files']}
 assert {
@@ -142,6 +141,18 @@ assert {
 } <= {item['source'] for item in package['files']}
 for item in package['files']:
     assert (root / item['source']).is_file(), item['source']
+extendable = [item for item in package['files'] if item['strategy'] == 'extendable']
+assert extendable == [{
+    'source': 'governance/manifest.default.json',
+    'target': '.governance/manifest.json',
+    'strategy': 'extendable',
+    'executable': False,
+}]
+assert any(
+    item['target'] == '.governance/manifest.base.json'
+    and item['strategy'] == 'managed'
+    for item in package['files']
+)
 PY
 
 python3 - "$repo_root/governance/manifest.schema.json" "$repo_root/governance/manifest.default.json" \
@@ -515,6 +526,69 @@ run_check "$allowed" --changed-file src/app.js --lock .governance/manifest.lock.
 grep -q '^GOV-PASS:' "$fixture/published-lock.out"
 sed -i 's/"published"/"uncommitted"/' "$allowed/.governance/manifest.lock.json"
 expect_code GOV-SYNC-001 run_check "$allowed" --changed-file src/app.js --lock .governance/manifest.lock.json
+
+extendable_sync="$fixture/extendable-sync"
+make_fixture "$extendable_sync"
+cp "$repo_root/governance/package-manifest.json" \
+  "$extendable_sync/.governance/package-manifest.json"
+python3 - "$extendable_sync" "$repo_root/scripts/create_adoption_lock.py" <<'PY'
+import hashlib
+import importlib.util
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+spec = importlib.util.spec_from_file_location('adoption', sys.argv[2])
+adoption = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(adoption)
+manifest_path = root / '.governance/manifest.json'
+manifest = json.load(open(manifest_path, encoding='utf-8'))
+manifest['coordination']['workstreams']['application']['ownedPaths'] = [
+    'src/**', 'app/**', 'lib/**', 'tests/**',
+]
+manifest['coordination']['workstreams']['sdk'] = {
+    'ownedPaths': ['sdk/**', 'test/sdk*', 'test/python-runtime.test.ts'],
+}
+manifest_path.write_text(
+    json.dumps(manifest, indent=2, sort_keys=True) + '\n', encoding='utf-8'
+)
+base_path = root / '.governance/manifest.base.json'
+base_path.write_bytes(adoption.manifest_projection(manifest_path.read_bytes()))
+package_path = root / '.governance/package-manifest.json'
+lock = {
+    'schema': 'new-project.lock/v1',
+    'standard': {
+        'id': 'wellmanifest/new-project',
+        'version': '0.13.2',
+        'sourceRepository': 'wellmanifest/new-project',
+        'sourceRevision': 'a' * 40,
+        'publicationStatus': 'published',
+    },
+    'managedFiles': {
+        '.governance/manifest.base.json': hashlib.sha256(base_path.read_bytes()).hexdigest(),
+        '.governance/package-manifest.json': hashlib.sha256(package_path.read_bytes()).hexdigest(),
+    },
+}
+(root / '.governance/manifest.lock.json').write_text(
+    json.dumps(lock, indent=2) + '\n', encoding='utf-8'
+)
+PY
+run_check "$extendable_sync" --changed-file src/app.js \
+  --lock .governance/manifest.lock.json > "$fixture/extendable-sync.out"
+grep -q '^GOV-PASS:' "$fixture/extendable-sync.out"
+python3 - "$extendable_sync/.governance/manifest.json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+manifest = json.load(open(path, encoding='utf-8'))
+manifest['delivery']['checkpointMinutes'] = 24
+open(path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2) + '\n')
+PY
+expect_code GOV-SYNC-001 run_check "$extendable_sync" --changed-file src/app.js \
+  --lock .governance/manifest.lock.json
+
 dot_path="$fixture/dot-path"
 make_fixture "$dot_path"
 sed -i 's/"workstream": "application"/"workstream": "governance"/' "$dot_path/project/ticket-002/intent.json"
@@ -648,7 +722,7 @@ lock = {
     },
     'managedFiles': {
         item['target']: hashlib.sha256((root / item['target']).read_bytes()).hexdigest()
-        for item in package['files']
+        for item in package['files'] if item['strategy'] == 'managed'
     },
 }
 (root / '.governance/manifest.lock.json').write_text(
