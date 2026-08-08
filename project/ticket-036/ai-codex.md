@@ -38,9 +38,11 @@ ownership of `.env` or unrelated root files.
   fixtures bound to `GOV-WORKSTREAM-003`.
 - Extended fresh-adoption verification to inspect both ownership entries.
 - The full Linux CI contract passes; ticket transitioned to `VALIDATION`.
+- Protected Linux and Windows checks passed on exact head `367f588`; Validator
+  App approved that head and PR #50 merged as `main@450a362`.
+- The implementation branch was deleted and ticket-036 transitioned to `DONE`.
 
 ## Blockers
 
-- Version publication and downstream adoption remain later governed tickets.
-- Local Windows validation is not available on the Linux host; the protected
-  PR check remains required.
+- None. Version publication and downstream adoption remain later governed
+  tickets rather than unfinished ticket-036 scope.

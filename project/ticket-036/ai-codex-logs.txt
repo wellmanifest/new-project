@@ -37,3 +37,13 @@ bash tests/governance-validator.test.sh: governance validator: PASS
 docker client/server: 29.1.3 / 29.1.3
 changed-path allowlist check: PASS
 added-line secret-pattern scan: PASS
+2026-08-08 protected publication
+PR=wellmanifest/new-project#50
+head=367f588c2fda5404e7da2ae6db641a47159f956b
+test check: PASS
+windows-governance check: PASS
+Validator App review: APPROVED on exact head
+validator-agent run=31257316617 result=success model=openrouter/z-ai/glm-5.2
+merge=450a36272f2552bb92df99c4f49c00f3618260e9
+remote implementation branch: DELETED
+transition: VALIDATION -> DONE

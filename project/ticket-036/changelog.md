@@ -20,3 +20,8 @@
 - Added exact governance ownership for `CHANGELOG.md` and `.env.example`.
 - Added enforcement regressions for correct and foreign workstreams.
 - Added fresh-adoption assertions and passed the complete Linux CI contract.
+
+## [0.5.0] - 2026-08-08
+
+- Recorded exact-head Validator approval and protected Linux/Windows checks.
+- Recorded PR #50 merge and completed ticket-036.

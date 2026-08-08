@@ -2,8 +2,8 @@
 
 - **ID**: ticket-036
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -73,3 +73,12 @@ dowodem merge.
 - Składnia JSON i `git diff --check`: PASS.
 - Windows pozostaje wymaganym chronionym checkiem PR i nie był uruchamiany
   lokalnie na hoście Linux.
+
+## Publikacja
+
+- PR #50: scalony do chronionego `main` jako
+  `450a36272f2552bb92df99c4f49c00f3618260e9`.
+- Exact-head Validator App: APPROVED dla
+  `367f588c2fda5404e7da2ae6db641a47159f956b`.
+- Chronione checki `test` i `windows-governance`: PASS.
+- Branch implementacyjny został usunięty po merge.

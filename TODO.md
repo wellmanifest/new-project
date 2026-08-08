@@ -9,10 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-036`](project/ticket-036/README.md) — przypisać dokładne ścieżki
+- [x] [`ticket-036`](project/ticket-036/README.md) — przypisano dokładne ścieżki
   `CHANGELOG.md` i `.env.example` do domyślnego workstreamu governance oraz
-  dodać regresje własności i adopcji. Stan: `IN_PROGRESS / VALIDATION`;
-  klasyfikacja: `FEATURE / P1 / requested`.
+  dodano regresje własności i adopcji. PR #50 przeszedł Linux, Windows i
+  exact-head Validator App, po czym został scalony jako `main@450a362`. Stan:
+  `DONE / DONE`; klasyfikacja: `FEATURE / P1 / requested`.
 - [x] [`ticket-035`](project/ticket-035/README.md) — GOV-DECISION gate w governance_check.
 - [x] [`ticket-032`](project/ticket-032/README.md) — DECISION DSL + append decisions.md (validator #13/#14).
 - [x] [`ticket-033`](project/ticket-033/README.md) — required checks z pliku head (validator #13). DONE.
