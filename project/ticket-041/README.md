@@ -2,8 +2,8 @@
 
 - **ID**: ticket-041
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-08
 
 ## Cel i Zakres
@@ -25,13 +25,13 @@ checkoutcie. Todo2code przypnie pełny SHA wydania, nigdy tag ani branch.
   wskazują `0.13.1`; historyczne wersje bazowe regresji pozostają niezmienione.
 - [x] AC-02: `CHANGELOG.md` opisuje behavior-preserving redukcję złożoności i
   brak zmiany kontraktu adopcji.
-- [ ] AC-03: Pełny Linux CI contract i chroniony Windows check przechodzą dla
+- [x] AC-03: Pełny Linux CI contract i chroniony Windows check przechodzą dla
   dokładnego HEAD PR.
-- [ ] AC-04: Czysty detached checkout merge SHA przechodzi pełny Linux contract
+- [x] AC-04: Czysty detached checkout merge SHA przechodzi pełny Linux contract
   i pinned Vallm 0.1.94 scan przed publikacją.
-- [ ] AC-05: Nowy annotowany tag `v0.13.1` i opublikowany GitHub Release
+- [x] AC-05: Nowy annotowany tag `v0.13.1` i opublikowany GitHub Release
   wskazują ten sam chroniony merge SHA.
-- [ ] AC-06: `v0.13.0` i wszystkie wcześniejsze tagi/Release pozostają
+- [x] AC-06: `v0.13.0` i wszystkie wcześniejsze tagi/Release pozostają
   niezmienione; publikacja zatrzymuje się, jeśli `v0.13.1` już istnieje.
 
 ## Ryzyka i Uwagi
@@ -54,6 +54,18 @@ checkoutcie. Todo2code przypnie pełny SHA wydania, nigdy tag ani branch.
 - Pełny skonfigurowany Linux CI contract przechodzi lokalnie.
 - Windows, exact-head Validator, czysty merge checkout, tag i Release pozostają
   obowiązkowymi kolejnymi bramkami.
+
+## Dowody publikacji
+
+- PR #60: Linux i Windows PASS; Validator App APPROVED dla exact head
+  `3fb1009a6e38a604431ca24199feaeeb51e8750c`.
+- Merge/release SHA: `7979cfe76797a4da6925be49496ff2462e78b3f7`.
+- Czysty detached checkout merge SHA: pełny Linux contract PASS, Vallm 0.1.94
+  2/2 PASS z zero findings; drzewo czyste.
+- Annotowany tag `v0.13.1`: obiekt
+  `1b9032b52d644169b2929a1a6507ebc5f384bd4a`, peeled commit równy release SHA.
+- GitHub Release: https://github.com/wellmanifest/new-project/releases/tag/v0.13.1
+  — opublikowany, nie draft i nie prerelease, wskazuje dokładny release SHA.
 
 ## Uczestnicy
 
