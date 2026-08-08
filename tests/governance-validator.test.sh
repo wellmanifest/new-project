@@ -71,7 +71,7 @@ Draft202012Validator(schemas['lock.schema.json']).validate({
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.12.0',
+        'version': '0.13.0',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'published',
@@ -156,7 +156,7 @@ assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
 assert manifest['schema'] == schema['properties']['schema']['const']
-assert manifest['standard']['version'] == '0.12.0'
+assert manifest['standard']['version'] == '0.13.0'
 ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
@@ -491,7 +491,7 @@ lock = {
   'schema': 'new-project.lock/v1',
   'standard': {
     'id': 'wellmanifest/new-project',
-    'version': '0.12.0',
+    'version': '0.13.0',
     'sourceRepository': 'wellmanifest/new-project',
     'sourceRevision': 'a' * 40,
     'publicationStatus': 'published',
@@ -551,6 +551,11 @@ intent['delivery']['architecture']['components'] = [{
     ],
 }]
 intent_path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+
+manifest_path = root / '.governance/manifest.json'
+manifest = json.load(open(manifest_path, encoding='utf-8'))
+manifest['standard']['version'] = '0.12.0'
+manifest_path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
 
 package = {
     'schema': 'new-project.package-manifest/v1',

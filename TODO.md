@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-039`](project/ticket-039/README.md) — przygotowano publikację
+  atomowego kontraktu adopcji jako immutable `v0.13.0`, z czystym merge
+  checkoutem, annotowanym tagiem, GitHub Release i pełnym SHA dla todo2code.
+  Pięć plików wydania i pełny Linux contract przechodzą; stan:
+  `IN_PROGRESS / VALIDATION`, oczekuje Windows, exact-head review i publikacji.
+  Klasyfikacja: `SERVICE / P2 / health`.
 - [x] [`ticket-038`](project/ticket-038/README.md) — wdrożono jawny,
   provenance-bound kontrakt atomowej adopcji, który rozlicza wyłącznie
   zweryfikowany zbiór `managed`, pozostawiając seed, lock i target-local diff

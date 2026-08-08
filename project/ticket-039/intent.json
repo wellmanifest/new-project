@@ -1,0 +1,71 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-039",
+  "summary": "Publish atomic adoption contract as v0.13.0",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "tests/governance-validator.test.sh",
+    "tests/adoption-lock.test.sh",
+    "project/ticket-039/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env",
+    "scripts/**",
+    "governance/package-manifest.json",
+    "**/*.pem",
+    "**/*secret*"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": ["ticket-038"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "31dd391d762f55796a530e3b346d66a82c90e04c",
+    "targetBranch": "main",
+    "outcome": "Publish immutable new-project 0.13.0 and expose its full protected-main SHA for todo2code atomic adoption",
+    "nonGoals": [
+      "No validator or intent semantics beyond completed ticket-038",
+      "No downstream repository adoption",
+      "No moving tag, force update, prerelease or release overwrite"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Publish ticket-038 as immutable minor release 0.13.0 while preserving v0.12.0 and its role as the base of upgrade regressions",
+      "components": [
+        {"name": "release-metadata", "paths": ["VERSION", "CHANGELOG.md", "governance/manifest.default.json"]},
+        {"name": "release-validation", "paths": ["tests/governance-validator.test.sh", "tests/adoption-lock.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": ["The published standard version advances from 0.12.0 to 0.13.0"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Keep adopters pinned to their prior immutable SHA; never move or delete v0.13.0 after publication"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/governance-validator.test.sh", "bash tests/adoption-lock.test.sh"], "evidence": "Current metadata agrees on 0.13.0 while the regression base remains 0.12.0"},
+      {"criterion": "AC-03", "commands": ["full Linux CI contract", "protected windows-governance check"], "evidence": "Both supported environments pass on exact PR head"},
+      {"criterion": "AC-04", "commands": ["full Linux CI contract in clean detached merge checkout"], "evidence": "Release commit is reproducibly green before tagging"},
+      {"criterion": "AC-06", "commands": ["git ls-remote --tags origin", "gh release view v0.13.0"], "evidence": "Publication creates a previously absent tag and release without mutation"}
+    ]
+  }
+}

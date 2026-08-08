@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-08-08
+
+### Provenance-bound atomic standard adoption
+
+- Added the optional intent/v3 `delivery.standardAdoption` contract, binding
+  one upgrade to `wellmanifest/new-project` and distinct full source revision
+  SHAs.
+- Deterministically account for a complete, hash-bound `managed` payload as an
+  atomic standard transaction, including new managed targets that are absent
+  at the approved base.
+- Keep the seed manifest, adoption lock, changelog and every other target-local
+  path under the ordinary active-ticket, scope, workstream, delivery-budget and
+  protected exact-head approval gates.
+- Fail closed with `GOV-SYNC-001` when base/head locks, package strategies,
+  source revisions or content hashes are inconsistent.
+- Added positive multi-workstream upgrade coverage and negative hash, revision,
+  seed-budget, unlisted-path and missing-approval regressions, plus the Goal
+  adoption trust-boundary documentation.
+
 ## [0.12.0] - 2026-08-08
 
 ### Root governance contracts
