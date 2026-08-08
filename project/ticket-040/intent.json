@@ -1,0 +1,69 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-040",
+  "summary": "Reduce managed Python complexity for downstream review",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "scripts/governance_check.py",
+    "scripts/decision_record.py",
+    "tests/governance-validator.test.sh",
+    "tests/decision-record.test.sh",
+    "project/ticket-040/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "cdb3661462e68966ecb195a8479899c49eccc8ea",
+    "targetBranch": "main",
+    "outcome": "Behavior-preserving helper extraction removes all five deterministic downstream Koru complexity blockers from the managed Python sources without weakening validation",
+    "nonGoals": [
+      "No suppression, exclusion or threshold increase in downstream review",
+      "No governance behavior, diagnostic code, schema or public-interface change",
+      "No dependency or tool-version change",
+      "No VERSION, CHANGELOG, tag, release or downstream adoption in this ticket",
+      "No repository-authored merge authorization"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extract cohesive validation and parsing branches into small pure helpers while preserving function inputs, outputs, call order and fail-closed behavior",
+      "components": [
+        {"name": "governance-validator", "paths": ["scripts/governance_check.py", "tests/governance-validator.test.sh"]},
+        {"name": "decision-record", "paths": ["scripts/decision_record.py", "tests/decision-record.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the refactor commit before publishing its dependent immutable release; never rewrite an existing release tag"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["pinned Vallm 0.1.94 batch scan of scripts/governance_check.py and scripts/decision_record.py"], "evidence": "No deterministic complexity finding remains in either managed source"},
+      {"criterion": "AC-02", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Classification fixtures and stable diagnostics pass"},
+      {"criterion": "AC-03", "commands": ["bash tests/decision-record.test.sh"], "evidence": "Decision DSL fixtures and canonical round trips pass"},
+      {"criterion": "AC-04", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Atomic-adoption positive and fail-closed negative fixtures pass"},
+      {"criterion": "AC-05", "commands": ["all Linux commands declared in .github/workflows/ci.yml", "pwsh -File tests/windows-governance.test.ps1 -SourceRevision <HEAD>", "dependent todo2code make docker-smoke after immutable release adoption"], "evidence": "Configured upstream Linux and Windows contracts pass; downstream Docker passes after adoption"},
+      {"criterion": "AC-06", "commands": ["pinned downstream Koru 0.1.444 / Vallm 0.1.94 review"], "evidence": "Commit-bound report has gateVerdict pass and zero deterministic findings"}
+    ]
+  }
+}

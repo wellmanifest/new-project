@@ -1,0 +1,27 @@
+2026-08-08 planning evidence
+downstream_repository=semcod/todo2code
+downstream_pr=70
+downstream_head=aa8594fd00fff6b82c2addd7d73709079b10415f
+koru_run=31262565588
+koru=0.1.444
+vallm=0.1.94
+model=openrouter/z-ai/glm-5.2
+deterministic_findings=5
+governance_check.py: work_classification_error CC=37; package_strategies CC=17; adoption_lock CC=18; atomic_standard_adoption_paths CC=28
+decision_record.py: parse_dsl_record CC=21
+downstream functional validation: governance PASS; Goal idempotent PASS; make verify PASS; docker smoke PASS
+implementation changes: NOT STARTED
+workflow state: PLAN / WAIT_FOR_APPROVAL
+2026-08-08 APPROVAL: user approved exact ticket-040 plan
+transition: PLAN / WAIT_FOR_APPROVAL -> IN_PROGRESS / EDIT
+implementation_commit=70ed004fda3d5da6e2dc456bb87f579907ef5b60
+python_compile=PASS
+decision-record.test.sh=PASS
+governance-validator.test.sh=PASS
+lizard=1.23.0 threshold=15 warnings=0
+post_refactor_cc=work_classification_error:10 package_strategies:9 adoption_lock:10 atomic_standard_adoption_paths:8 parse_dsl_record:5
+vallm=0.1.94 files=2 passed=2 deterministic_findings=0
+complete_linux_ci_contract=PASS
+windows_local=NOT_RUN pwsh unavailable; required protected CI pending
+docker_upstream=NOT_APPLICABLE no Dockerfile/compose contract in hub
+workflow transition: EDIT -> VALIDATION
