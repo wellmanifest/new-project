@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-042`](project/ticket-042/README.md) — naprawa regresji P0 w
+  chronionym snapshotcie lifecycle: typed GraphQL ma dostarczać rzeczywisty
+  boolean `deleteBranchOnMerge` bez osłabiania deterministycznego walidatora.
+  Stan: `PLAN / WAIT_FOR_APPROVAL`; klasyfikacja: `BUG / P0 / regression`.
+
 - [x] [`ticket-041`](project/ticket-041/README.md) — opublikowano
   behavior-preserving repair z ticketu 040 jako immutable patch `v0.13.1` dla
   downstream exact-SHA adoption. Linux, Windows, exact-head Validator, czysty

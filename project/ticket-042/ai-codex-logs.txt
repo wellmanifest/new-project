@@ -1,0 +1,10 @@
+2026-08-08 downstream protected evidence
+repository=semcod/todo2code
+pull_request=70
+head=07094d4546dca86e780fc3c7f63273849d23ffb8
+standard_ref=7979cfe76797a4da6925be49496ff2462e78b3f7
+failure=GOV-BRANCH-LIFECYCLE-003
+reason=snapshot fields invalid; missing deleteBranchOnMerge
+repository_setting_via_authenticated_api=true
+workflow_state=PLAN / WAIT_FOR_APPROVAL
+implementation_changes=NONE
