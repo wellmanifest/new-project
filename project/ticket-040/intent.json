@@ -62,7 +62,7 @@
       {"criterion": "AC-02", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Classification fixtures and stable diagnostics pass"},
       {"criterion": "AC-03", "commands": ["bash tests/decision-record.test.sh"], "evidence": "Decision DSL fixtures and canonical round trips pass"},
       {"criterion": "AC-04", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Atomic-adoption positive and fail-closed negative fixtures pass"},
-      {"criterion": "AC-05", "commands": ["bash tests/governance-scripts.test.sh", "pwsh -File tests/windows-governance.test.ps1", "docker build --check .", "docker build -t new-project-ticket040 ."], "evidence": "Complete Linux, Windows and Docker contracts pass"},
+      {"criterion": "AC-05", "commands": ["all Linux commands declared in .github/workflows/ci.yml", "pwsh -File tests/windows-governance.test.ps1 -SourceRevision <HEAD>", "dependent todo2code make docker-smoke after immutable release adoption"], "evidence": "Configured upstream Linux and Windows contracts pass; downstream Docker passes after adoption"},
       {"criterion": "AC-06", "commands": ["pinned downstream Koru 0.1.444 / Vallm 0.1.94 review"], "evidence": "Commit-bound report has gateVerdict pass and zero deterministic findings"}
     ]
   }

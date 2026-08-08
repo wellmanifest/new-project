@@ -12,6 +12,16 @@
 - Recorded explicit user approval and transitioned to `IN_PROGRESS / EDIT`
   before implementation.
 
+## [0.3.0] - 2026-08-08
+
+- Reduced the five reported functions to CC 10, 9, 10, 8 and 5 while keeping
+  every new helper at or below 15.
+- Added exact Decision DSL parser-diagnostic regressions; all focused and full
+  Linux suites pass.
+- Pinned Vallm 0.1.94 reports both managed sources clear of deterministic
+  findings; transitioned to `IN_PROGRESS / VALIDATION` for protected Windows
+  and exact-head review.
+
 ## [0.1.0] - 2026-08-08
 
 - Initial governance scaffold created.

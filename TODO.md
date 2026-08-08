@@ -12,7 +12,7 @@
 - [ ] [`ticket-040`](project/ticket-040/README.md) — obniżyć pięć
   pre-existing punktów złożoności w zarządzanych źródłach Pythona bez
   wyłączania downstream review ani zmiany zachowania. Stan:
-  `IN_PROGRESS / EDIT`; klasyfikacja: `SERVICE / P1 / health`.
+  `IN_PROGRESS / VALIDATION`; klasyfikacja: `SERVICE / P1 / health`.
 - [x] [`ticket-039`](project/ticket-039/README.md) — opublikowano atomowy
   kontrakt adopcji jako immutable `v0.13.0`. PR #56 przeszedł Linux, Windows i
   exact-head Validator; czysty merge `12158ef` przeszedł pełny Linux contract,

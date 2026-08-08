@@ -3,7 +3,7 @@
 - **ID**: ticket-040
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-08
 
 ## Cel i Zakres
@@ -30,17 +30,19 @@ ticket after this change is merged; tags and version files are out of scope.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: The five named functions no longer exceed cyclomatic complexity
+- [x] AC-01: The five named functions no longer exceed cyclomatic complexity
   15, and no extracted helper exceeds 15 under Vallm 0.1.94's lizard rule.
-- [ ] AC-02: Classification validation returns the same stable messages and
+- [x] AC-02: Classification validation returns the same stable messages and
   accepts/rejects the same valid and malformed contracts.
-- [ ] AC-03: Decision DSL parsing preserves required fields, JSON values,
+- [x] AC-03: Decision DSL parsing preserves required fields, JSON values,
   canonical round trips and exact fail-closed diagnostics.
-- [ ] AC-04: Atomic-adoption package/lock/hash verification preserves all
+- [x] AC-04: Atomic-adoption package/lock/hash verification preserves all
   positive and negative v0.13.0 regression cases.
-- [ ] AC-05: The complete Linux governance contract, Windows governance test
-  and Docker checks pass with no dependency, schema or public-interface change.
-- [ ] AC-06: A downstream-style pinned Koru/Vallm scan of the two managed
+- [ ] AC-05: The complete Linux and Windows governance contracts pass with no
+  dependency, schema or public-interface change. The hub has no Dockerfile or
+  compose contract; downstream Docker already passes and must pass again after
+  the dependent release adoption.
+- [x] AC-06: A downstream-style pinned Koru/Vallm scan of the two managed
   Python sources has zero deterministic findings; semantic findings remain
   advisory.
 
@@ -70,3 +72,16 @@ testów.
 Ten katalog przechowuje governance, decyzje, logi i dowody. Kod wykonywalny,
 skrypty badawcze i testy należą do zwykłych katalogów źródłowych repozytorium,
 nie do `project/ticket-040/`.
+
+## Dowody walidacji
+
+- Refactor commit: `70ed004fda3d5da6e2dc456bb87f579907ef5b60`.
+- Lizard 1.23.0 with threshold 15 reports zero exceeded functions across both
+  files; the five original functions now have CC 10, 9, 10, 8 and 5.
+- Pinned Vallm 0.1.94 with the same parser normalization as protected Koru
+  reports 2/2 files passed and zero deterministic findings.
+- All configured Linux CI commands pass, including decision-record,
+  governance, atomic-adoption, branch lifecycle, environment and traceability
+  suites.
+- Local PowerShell is unavailable; the required Windows contract remains for
+  protected CI before merge.

@@ -27,8 +27,13 @@ publish a new immutable release afterward.
 
 ## Actual changes
 
-- User approved the exact four-file scope on 2026-08-08. The ticket is in
-  `IN_PROGRESS / EDIT`; implementation has not yet changed a source or test.
+- Extracted small classification, package, lock and atomic-adoption helpers
+  without changing public entry points or diagnostics.
+- Extracted Decision DSL body, line and required-field helpers and added exact
+  parser-diagnostic regressions.
+- Lizard reports zero functions over CC 15; pinned Vallm reports 2/2 pass with
+  zero deterministic findings. All configured Linux tests pass.
+- Ticket is in `IN_PROGRESS / VALIDATION`; protected Windows CI remains.
 
 ## Blockers
 
