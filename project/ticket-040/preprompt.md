@@ -11,7 +11,8 @@
 
 ## Podlinkowane Zasoby i Dokumentacja Specyfikacji
 - Dokumentacja Zarządcza Hub: https://github.com/wellmanifest/new-project
-- Specyfikacja modułu: {Wpisz odnośnik do dokumentacji technicznej lub pliku}
+- Specyfikacja modułu: `scripts/governance_check.py`,
+  `scripts/decision_record.py`, downstream Koru run `31262565588`
 
 ## Dyrektywy Wykonawcze dla Agenta AI
 - Odczytaj niniejsze wytyczne techniczne oraz istniejące, human-owned notatki

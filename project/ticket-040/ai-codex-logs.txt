@@ -1,0 +1,14 @@
+2026-08-08 planning evidence
+downstream_repository=semcod/todo2code
+downstream_pr=70
+downstream_head=aa8594fd00fff6b82c2addd7d73709079b10415f
+koru_run=31262565588
+koru=0.1.444
+vallm=0.1.94
+model=openrouter/z-ai/glm-5.2
+deterministic_findings=5
+governance_check.py: work_classification_error CC=37; package_strategies CC=17; adoption_lock CC=18; atomic_standard_adoption_paths CC=28
+decision_record.py: parse_dsl_record CC=21
+downstream functional validation: governance PASS; Goal idempotent PASS; make verify PASS; docker smoke PASS
+implementation changes: NOT STARTED
+workflow state: PLAN / WAIT_FOR_APPROVAL
