@@ -28,6 +28,10 @@ policy accepts only immutable full-SHA standard revisions.
 - The user's existing explicit authorization covers the separately governed
   immutable publication step recorded by this exact intent.
 - Transitioned to `IN_PROGRESS / EDIT` before release metadata changes.
+- Prepared v0.13.2 at `d8fb5f952416a12ce358c64f27c2d77fa149e9f6`.
+  All release metadata agrees and the complete local Linux contract passes.
+  The ticket is in `VALIDATION` pending protected Linux/Windows and exact-head
+  review.
 
 ## Blockers
 

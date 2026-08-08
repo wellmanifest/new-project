@@ -6,3 +6,14 @@ workflow_state=PLAN / WAIT_FOR_APPROVAL
 implementation_changes=NONE
 2026-08-08 APPROVAL: reused explicit approval of ticket-042 plan step 6, separate immutable release
 workflow_transition=PLAN / WAIT_FOR_APPROVAL -> IN_PROGRESS / EDIT
+release_preparation_commit=d8fb5f952416a12ce358c64f27c2d77fa149e9f6
+release_version=0.13.2
+required_checks_test=PASS
+decision_record_test=PASS
+governance_scripts_test=PASS
+governance_validator_test=PASS
+branch_lifecycle_test=PASS
+governance_environment_test=PASS
+adoption_lock_test=PASS
+rule_enforcement_test=PASS
+workflow_transition=EDIT -> VALIDATION

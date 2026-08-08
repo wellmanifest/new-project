@@ -11,3 +11,9 @@
 - Bound the user's approved separate publication step to this exact intent.
 - Transitioned from `PLAN / WAIT_FOR_APPROVAL` to `IN_PROGRESS / EDIT` before
   changing release metadata.
+
+## [0.3.0] - 2026-08-08
+
+- Advanced release metadata and assertions from 0.13.1 to 0.13.2.
+- Added the protected lifecycle acquisition release note.
+- Passed the full local Linux contract and advanced to `VALIDATION`.
