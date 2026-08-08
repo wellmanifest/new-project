@@ -1,7 +1,7 @@
 {
   "schema": "new-project.intent/v3",
   "ticket": "ticket-024",
-  "summary": "Strategia package-manifest dla pliku ktory target musi rozszerzyc",
+  "summary": "Rozszerzalny target manifest z zarzadzana baza standardu",
   "workstream": "governance",
   "classification": {
     "kind": "FEATURE",
@@ -9,15 +9,115 @@
     "origin": "requested"
   },
   "allowedPaths": [
+    "governance/package-manifest.json",
+    "scripts/create_adoption_lock.py",
+    "scripts/governance_check.py",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
     "project/ticket-024/**",
     "TODO.md",
     "project/TICKETS.md"
   ],
   "forbiddenPaths": [
-    "project/ticket-*/user-*.md"
+    "project/ticket-*/user-*.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/lock.schema.json",
+    "package.json",
+    "pyproject.toml",
+    ".env",
+    "**/*.pem",
+    "**/*secret*"
   ],
-  "stacks": [],
+  "stacks": ["docker"],
   "dependsOn": [],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "04ce988aff234884ef75d3223f48d81002fb11eb",
+    "targetBranch": "main",
+    "outcome": "An adopted target can extend its governance manifest while the standard-owned base remains hash-bound, upgrades preserve target additions and validation fails closed when standard requirements are altered or removed",
+    "nonGoals": [
+      "No direct migration of semcod/todo2code or any other target repository",
+      "No executable-script extendable adapter for project.sh or project.bat",
+      "No authority, approval, AQL, secret, dependency or runtime-evolution change",
+      "No version bump, changelog entry, tag or release in this ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Represent the standard manifest as a managed base plus an extendable target JSON document; use deterministic three-way structural merge during adoption and validate that the target recursively preserves every standard-owned value",
+      "components": [
+        {
+          "name": "adoption-engine",
+          "paths": [
+            "governance/package-manifest.json",
+            "scripts/create_adoption_lock.py",
+            "tests/adoption-lock.test.sh"
+          ]
+        },
+        {
+          "name": "synchronization-validator",
+          "paths": [
+            "scripts/governance_check.py",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "new-project.package-manifest/v1 accepts the extendable strategy for structurally merged JSON targets"
+      ],
+      "dataChanges": [
+        "Fresh adoption materializes .governance/manifest.base.json as a managed artifact while .governance/manifest.json remains the target-owned extension"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert ticket-024 before publishing its dependent immutable release; existing releases and target locks remain unchanged"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "Package validation accepts extendable JSON entries and rejects malformed or unsupported entries"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "Initial adoption and upgrade preserve target-only workstreams and owned paths while updating the managed base"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "Unchanged local extensions do not produce adoption drift and the lock excludes the extendable target document"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "The standard base remains hash-bound and the target manifest must recursively preserve all base requirements"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "Removed or altered standard values produce stable fail-closed synchronization diagnostics"
+      },
+      {
+        "criterion": "AC-06",
+        "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-validator.test.sh"],
+        "evidence": "A todo2code-shaped fixture can add ownership for test/python-runtime.test.ts without editing the lock or weakening approval gates"
+      }
+    ]
+  }
 }

@@ -68,8 +68,11 @@
 - [x] [`ticket-031`](project/ticket-031/README.md) — recomputable decision log contract. `DONE` (PR #44).
   (`C-DECISION-*`, schema, replay). Stan: `PLAN` → implementacja po 030.
 - [ ] [`ticket-024`](project/ticket-024/README.md) — strategia
-  `extendable` w `package-manifest.json` dla pliku, który target musi
-  rozszerzyć. Stan: `PLAN / WAIT_FOR_APPROVAL`; klasyfikacja:
+  `extendable` w `package-manifest.json`: zarządzana baza JSON i targetowy
+  manifest rozszerzany bez ręcznej edycji locka. Potwierdzony downstream:
+  własność `test/python-runtime.test.ts` w `semcod/todo2code`. Stan:
+  `IN_PROGRESS / VALIDATION`; pełny kontrakt Linux PASS, oczekuje chronionych
+  checków PR. Klasyfikacja:
   `FEATURE / P1 / requested`.
 - [x] [`ticket-022`](project/ticket-022/README.md) — kanoniczny Change
   Evaluation Contract oraz deterministyczny runtime TypeScript uruchamiany
