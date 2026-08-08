@@ -12,8 +12,9 @@
 - [ ] [`ticket-038`](project/ticket-038/README.md) — zaplanowano jawny,
   provenance-bound kontrakt atomowej adopcji, który rozlicza wyłącznie
   zweryfikowany zbiór `managed`, pozostawiając seed, lock i target-local diff
-  pod zwykłym budżetem, ownership i protected approval. Plan zatwierdzono;
-  stan: `IN_PROGRESS / EDIT`; klasyfikacja: `FEATURE / P1 / requested`.
+  pod zwykłym budżetem, ownership i protected approval. Implementacja i pełny
+  kontrakt Linux przechodzą; stan: `IN_PROGRESS / VALIDATION`, oczekuje na
+  chronione CI i exact-head review. Klasyfikacja: `FEATURE / P1 / requested`.
 - [x] [`ticket-036`](project/ticket-036/README.md) — przypisano dokładne ścieżki
   `CHANGELOG.md` i `.env.example` do domyślnego workstreamu governance oraz
   dodano regresje własności i adopcji. PR #50 przeszedł Linux, Windows i

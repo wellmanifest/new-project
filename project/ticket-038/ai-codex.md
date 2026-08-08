@@ -49,8 +49,23 @@ mieć realny, ograniczony i jednoznacznie należący diff.
 - Nie zmieniono kodu, schematów, testów ani dokumentacji standardu.
 - Użytkownik zatwierdził kompletny plan 2026-08-08; ticket przeszedł do
   `IN_PROGRESS / EDIT` przed pierwszą zmianą implementacyjną.
+- Niespójność transakcji korzysta z istniejącego `GOV-SYNC-001`; nowy kod
+  wymagałby szóstego pliku traceability i przekroczył zatwierdzony budżet bez
+  dodania odmiennej remediacji.
+- Dodano opcjonalny, ścisły `delivery.standardAdoption` do intent/v3.
+- Walidator wylicza hash-bound zbiór `managed` dla aktualizacji i nowych
+  targetów, a następnie stosuje niezmienione zwykłe bramki do pozostałego
+  target-local diffu.
+- Regresja przeprowadza upgrade dziewięciu plików `managed` przecinających
+  workstreamy przy budżecie dwóch plików lokalnych; negatywne przypadki
+  obejmują hash, SHA, seed budget, unlisted scope i brak approval.
+- Zaktualizowano dokumentację granicy zaufania i przepływu Goal.
+- Pełny kontrakt Linux huba przechodzi; cztery pliki implementacyjne mieszczą
+  się w zatwierdzonym limicie pięciu. Ticket przeszedł do `VALIDATION`.
 
 ## Blockers
 
 - Docelowe `toRevision` dla todo2code będzie znane dopiero po osobnym,
   zatwierdzonym wydaniu; ticket 050 pozostaje w PLAN.
+- Chronione Linux/Windows CI i exact-head approval zostaną rozstrzygnięte po
+  publikacji PR-a.

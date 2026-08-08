@@ -3,7 +3,7 @@
 - **ID**: ticket-038
 - **Owner**: agent:codex
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -36,22 +36,26 @@ protected exact-head review lub zweryfikowana atestacja pozostają wymagane.
 
 ## Kryteria odbioru
 
-- [ ] AC-01: Intent v3 opcjonalnie i ściśle deklaruje
+- [x] AC-01: Intent v3 opcjonalnie i ściśle deklaruje
   `delivery.standardAdoption` z repozytorium oraz pełnymi, różnymi SHA
   `fromRevision` i `toRevision`.
-- [ ] AC-02: Poprawna zmiana pełnego zbioru `managed` jest rozliczana jako
+- [x] AC-02: Poprawna zmiana pełnego zbioru `managed` jest rozliczana jako
   jedna atomowa adopcja i nie zużywa zwykłego budżetu plików ani nie przejmuje
   normalnej własności workstreamów.
-- [ ] AC-03: Lock, seed manifest i wszystkie target-local pliki pozostają w
+- [x] AC-03: Lock, seed manifest i wszystkie target-local pliki pozostają w
   zwykłym diffie, muszą należeć do ticketu/workstreamu i mieszczą się w jego
   budżecie.
-- [ ] AC-04: Brak deklaracji, błędne SHA/repozytorium, niezgodny hash, ścieżka
+- [x] AC-04: Brak deklaracji, błędne SHA/repozytorium, niezgodny hash, ścieżka
   `seed`, arbitralna ścieżka nieujęta jako head `managed` lub niezgodne package
   manifesty fail-closed bez wyjątku budżetowego/własnościowego.
-- [ ] AC-05: Transakcja nie omija aktywnego ticketu, stanu EDIT, allowedPaths
+- [x] AC-05: Transakcja nie omija aktywnego ticketu, stanu EDIT, allowedPaths
   dla target-local diffu ani chronionej aprobaty current-head.
-- [ ] AC-06: Dokumentacja wyjaśnia granicę zaufania, wymagany upgrade przez
+- [x] AC-06: Dokumentacja wyjaśnia granicę zaufania, wymagany upgrade przez
   Goal i zakaz używania transakcji jako ogólnego mechanizmu powiększania PR.
+
+Niespójność adopcji używa istniejącego `GOV-SYNC-001`. Osobny kod wymagałby
+zmiany szóstego pliku traceability bez nowej semantyki naprawczej; ponowne
+użycie kodu synchronizacji utrzymuje zatwierdzony limit pięciu plików.
 
 ## Ryzyka i uwagi
 
@@ -84,6 +88,10 @@ protected exact-head review lub zweryfikowana atestacja pozostają wymagane.
 Użytkownik zatwierdził kompletny plan ticketu 038 dnia 2026-08-08. Ticket
 przeszedł do `IN_PROGRESS / EDIT`; implementacja pozostaje ograniczona przez
 `intent.json` do pięciu zadeklarowanych ścieżek standardu.
+
+Implementacja wykorzystała cztery ścieżki standardu i przeszła pełny kontrakt
+Linux huba. Ticket jest w `VALIDATION`; merge nadal wymaga Linux, Windows oraz
+chronionej aprobaty exact-head.
 
 ## Granica katalogu
 
