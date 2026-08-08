@@ -33,7 +33,14 @@ opcjonalnym rozszerzeniem publicznego intent/v3, właściwą wersją jest `0.13.
   zmienione.
 - Użytkownik zatwierdził implementację i publikację `v0.13.0`; ticket przeszedł
   do `IN_PROGRESS / EDIT` przed pierwszą zmianą release metadata.
+- Pięć zatwierdzonych plików wydania wskazuje bieżącą wersję `0.13.0`, przy
+  zachowaniu `0.12.0` jako bazowej strony regresji upgrade.
+- Changelog opisuje publiczny kontrakt, hash-bound managed payload i zachowane
+  zwykłe bramki target-local.
+- Focused version/adoption tests oraz pełny Linux CI contract przechodzą;
+  ticket przeszedł do `VALIDATION`.
 
 ## Blockers
 
-- Brak przed implementacją; chronione checki i review pozostają wymagane.
+- Chronione Windows, exact-head review, merge checkout i publikacja pozostają
+  wymagane.

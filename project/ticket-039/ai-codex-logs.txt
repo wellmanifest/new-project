@@ -11,3 +11,20 @@ result: plan only; no release metadata changed
 2026-08-08 approval transition
 user approved implementation and immutable v0.13.0 publication
 workflow: PLAN / WAIT_FOR_APPROVAL -> IN_PROGRESS / EDIT
+
+2026-08-08 focused release validation
+governance validator: PASS
+adoption lock: PASS
+rule enforcement traceability: PASS
+implementation paths: 5 / 5
+
+2026-08-08 full Linux hub contract
+required-checks tests: PASS
+decision-record tests: PASS
+governance scripts: PASS
+governance validator: PASS
+branch lifecycle validator: PASS
+governance environment runtime tests passed
+adoption lock: PASS
+rule enforcement traceability: PASS
+workflow: EDIT -> VALIDATION

@@ -3,7 +3,7 @@
 - **ID**: ticket-039
 - **Owner**: agent:codex
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -20,9 +20,9 @@ odłączonym checkoutcie. Todo2code przypnie ten pełny SHA, nie tag ani branch.
 
 ## Kryteria odbioru
 
-- [ ] AC-01: `VERSION`, domyślny manifest i aktywne asercje bieżącej wersji
+- [x] AC-01: `VERSION`, domyślny manifest i aktywne asercje bieżącej wersji
   wskazują `0.13.0`; bazowa strona regresji upgrade pozostaje `0.12.0`.
-- [ ] AC-02: `CHANGELOG.md` zamyka `Unreleased` jako `0.13.0` i opisuje
+- [x] AC-02: `CHANGELOG.md` zamyka `Unreleased` jako `0.13.0` i opisuje
   standardAdoption, hash-bound managed set oraz zachowane zwykłe bramki.
 - [ ] AC-03: Pełny Linux CI contract oraz chroniony Windows check przechodzą
   dla dokładnego HEAD PR.
