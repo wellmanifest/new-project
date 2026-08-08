@@ -8,12 +8,21 @@ ticket: ticket-041
 
 ## Understanding
 
-To be completed after reading the ticket preprompt and available human-owned
-input.
+Ticket 040 is merged, closed and fully validated. Todo2code cannot consume that
+repair until it exists in a new published immutable standard revision. Because
+the refactor changes no behavior, schema or public interface, the correct next
+version is patch release 0.13.1 rather than a minor release.
 
 ## Execution plan
 
-1. Validate the ticket scope and acceptance evidence before implementation.
+1. After approval, transition to `IN_PROGRESS / EDIT` in a separate commit.
+2. Advance only current release metadata and assertions to 0.13.1.
+3. Run focused and complete Linux validation, then protected Windows and
+   exact-head Validator review.
+4. Merge; validate the exact merge SHA in a clean detached checkout and repeat
+   the pinned deterministic Vallm scan.
+5. Confirm `v0.13.1` is absent, create an annotated tag and GitHub Release at
+   that exact SHA, then close the ticket separately.
 
 ## Actual changes
 
@@ -21,4 +30,5 @@ input.
 
 ## Blockers
 
-- Human approval is required before implementation.
+- Human approval of immutable v0.13.1 publication is required before editing
+  release files.

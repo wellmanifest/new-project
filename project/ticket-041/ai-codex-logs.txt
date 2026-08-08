@@ -1,0 +1,8 @@
+2026-08-08 planning evidence
+dependency_ticket=ticket-040 DONE
+dependency_merge=6d394fc9f800a11af7bdfc613c29489332bef903
+current_release=0.13.0
+proposed_release=0.13.1
+release_kind=patch; behavior/schema/interface unchanged
+implementation changes: NOT STARTED
+workflow state: PLAN / WAIT_FOR_APPROVAL
