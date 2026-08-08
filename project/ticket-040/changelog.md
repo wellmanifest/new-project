@@ -22,6 +22,13 @@
   findings; transitioned to `IN_PROGRESS / VALIDATION` for protected Windows
   and exact-head review.
 
+## [0.4.0] - 2026-08-08
+
+- Protected Linux and Windows checks passed on exact head `1eed915`.
+- Validator App approved the same head; PR #58 merged as
+  `main@efec2cf9ebb29b16308c312d1bf3c5dbb01c94f6`.
+- Closed the ticket as `DONE / DONE`.
+
 ## [0.1.0] - 2026-08-08
 
 - Initial governance scaffold created.
