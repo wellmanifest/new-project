@@ -1,9 +1,9 @@
 # Ticket 044: Publish extendable target manifest contract
 
 - **ID**: ticket-044
-- **Owner**: unresolved:human
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Owner**: agent:codex
+- **Status**: IN_PROGRESS
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-08
 
 ## Cel i Zakres
@@ -23,7 +23,7 @@ dla osobnego downstream ticketu 062.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: `VERSION`, `manifest.default.json`, bieżące asercje testowe i
+- [x] AC-01: `VERSION`, `manifest.default.json`, bieżące asercje testowe i
   `CHANGELOG.md` jednoznacznie wskazują `0.14.0`; historyczne fixture’y
   wcześniejszych wydań pozostają przypięte.
 - [ ] AC-02: Pełny kontrakt Linux, chroniony `windows-governance` i niezależny
@@ -46,12 +46,22 @@ dla osobnego downstream ticketu 062.
   zależności, Dockera i mechanizmu runtime evolution.
 - Brak migracji repozytoriów downstream w tym ticketcie.
 
-## Bramka zatwierdzenia
+## Zatwierdzenie
 
-Ticket jest `PLAN / WAIT_FOR_APPROVAL`. Zgoda na implementację ticketu 024 nie
-jest automatycznie zgodą na podniesienie wersji, utworzenie taga lub GitHub
-Release. Przed zmianą pięciu plików wydania wymagana jest osobna, jawna zgoda
-na ten plan.
+Użytkownik zatwierdził ten bezpośrednio poprzedzający plan poleceniem
+`kontynuuj` 2026-08-09. Ticket przeszedł do `IN_PROGRESS / EDIT` przed zmianą
+pięciu plików wydania. Publikacja pozostaje związana z pełną walidacją i
+dokładnym merge SHA opisanymi w kryteriach odbioru.
+
+## Dowody walidacji
+
+- `VERSION`, domyślny manifest i aktywne asercje wskazują `0.14.0`;
+  syntetyczny następny upgrade używa `0.14.1`, a historyczne fixture'y
+  zachowują własne wersje.
+- Pełny lokalny kontrakt Linux przeszedł 2026-08-09: osiem zestawów testów,
+  kontrola required checks, kompletność suite'ów w CI oraz `git diff --check`.
+- Ticket pozostaje otwarty do czasu chronionego Linux/Windows, niezależnego
+  exact-head review, czystego testu merge SHA i publikacji immutable release.
 
 ## Uczestnicy
 

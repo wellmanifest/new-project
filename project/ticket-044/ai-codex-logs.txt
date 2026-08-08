@@ -2,3 +2,8 @@
 2026-08-09T00:47:12+02:00 CLASSIFICATION Minor v0.14.0 required by new public extendable strategy and managed base artifact.
 2026-08-09T00:47:13+02:00 BOUNDARY Five release files only; no downstream, authority, AQL, secret, dependency, Docker or runtime-evolution mutation.
 2026-08-09T00:47:14+02:00 WAIT_FOR_APPROVAL No release metadata, tag or GitHub Release changed.
+2026-08-09T01:18:00+02:00 APPROVED User continued the immediately preceding bounded ticket-044 release plan.
+2026-08-09T01:18:01+02:00 EDIT Ticket transitioned to IN_PROGRESS / EDIT before five release files changed.
+2026-08-09T01:18:02+02:00 RELEASE_METADATA VERSION, default manifest, changelog and active assertions advanced to 0.14.0.
+2026-08-09T01:20:00+02:00 TEST Local Linux contract passed all eight suites, required-check completeness and diff checks.
+2026-08-09T01:20:01+02:00 VALIDATION Ticket transitioned to IN_PROGRESS / VALIDATION; protected checks remain required.

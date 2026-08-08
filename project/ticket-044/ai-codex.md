@@ -16,7 +16,8 @@ authority chain.
 
 ## Execution plan
 
-1. Wait for explicit approval of this release ticket.
+1. Record the user's approval and enter `IN_PROGRESS / EDIT` before release
+   metadata changes.
 2. Advance exactly five declared release files from `0.13.2` to `0.14.0`,
    updating only current-version assertions and preserving historical fixtures.
 3. Run the full Linux contract, open a protected PR and obtain Windows plus
@@ -30,8 +31,15 @@ authority chain.
 
 ## Actual changes
 
-- Planning only; no version, changelog, test, tag or release mutation.
+- Recorded the user's `kontynuuj` approval for the immediately preceding
+  bounded release plan.
+- Advanced exactly the five declared release files to the v0.14.0 contract,
+  preserving historical fixtures and using v0.14.1 for the synthetic next
+  upgrade.
+- Passed the full local Linux contract and transitioned to
+  `IN_PROGRESS / VALIDATION`.
 
 ## Blockers
 
-- Explicit approval of ticket-044 is required before EDIT or publication.
+- Publication remains gated on full Linux, protected Windows, independent
+  exact-head review and a clean detached merge validation.

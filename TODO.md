@@ -12,7 +12,7 @@
 - [ ] [`ticket-044`](project/ticket-044/README.md) — opublikować scalony
   kontrakt `extendable` jako immutable minor `v0.14.0`, po pełnym Linux,
   Windows, exact-head Validator i czystym detached merge teście. Stan:
-  `PLAN / WAIT_FOR_APPROVAL`; klasyfikacja: `SERVICE / P1 / requested`.
+  `IN_PROGRESS / VALIDATION`; klasyfikacja: `SERVICE / P1 / requested`.
 
 - [x] [`ticket-043`](project/ticket-043/README.md) — opublikowano naprawę z
   ticketu 042 jako immutable patch v0.13.2 dla downstream exact-SHA adoption.
