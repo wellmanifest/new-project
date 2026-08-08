@@ -9,9 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-041`](project/ticket-041/README.md) — opublikować
+- [x] [`ticket-041`](project/ticket-041/README.md) — opublikowano
   behavior-preserving repair z ticketu 040 jako immutable patch `v0.13.1` dla
-  downstream exact-SHA adoption. Stan: `IN_PROGRESS / VALIDATION`;
+  downstream exact-SHA adoption. Linux, Windows, exact-head Validator, czysty
+  merge checkout i Vallm przeszły; Release wskazuje `7979cfe`. Stan:
+  `DONE / DONE`;
   klasyfikacja: `SERVICE / P1 / health`.
 - [x] [`ticket-040`](project/ticket-040/README.md) — obniżono pięć
   pre-existing punktów złożoności w zarządzanych źródłach Pythona bez

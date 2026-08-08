@@ -29,7 +29,8 @@ version is patch release 0.13.1 rather than a minor release.
 - Advanced exactly five release metadata/test files to current version 0.13.1,
   preserving the historical 0.12.0 → 0.13.0 atomic-adoption fixture.
 - Full configured Linux CI contract passes. Ticket is in
-  `IN_PROGRESS / VALIDATION` pending protected Windows and exact-head review.
+  `DONE`: protected Windows and exact-head review passed, merge SHA `7979cfe`
+  passed clean Linux/Vallm validation and immutable v0.13.1 is published.
 
 ## Blockers
 

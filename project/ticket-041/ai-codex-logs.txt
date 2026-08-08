@@ -14,3 +14,13 @@ current_version_assertions=0.13.1
 historical_atomic_fixture=0.12.0->0.13.0 preserved
 complete_linux_ci_contract=PASS
 workflow transition: EDIT -> VALIDATION
+protected_linux=PASS head=3fb1009a6e38a604431ca24199feaeeb51e8750c
+protected_windows=PASS head=3fb1009a6e38a604431ca24199feaeeb51e8750c
+validator_app=APPROVED exact_head=3fb1009a6e38a604431ca24199feaeeb51e8750c
+pr=60 release_sha=7979cfe76797a4da6925be49496ff2462e78b3f7
+clean_detached_linux=PASS
+clean_detached_vallm=2/2 PASS zero findings
+tag_object=1b9032b52d644169b2929a1a6507ebc5f384bd4a
+tag_peeled=7979cfe76797a4da6925be49496ff2462e78b3f7
+github_release=https://github.com/wellmanifest/new-project/releases/tag/v0.13.1
+workflow transition: VALIDATION -> DONE

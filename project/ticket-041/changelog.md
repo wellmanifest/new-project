@@ -20,6 +20,14 @@
 - Transitioned to `IN_PROGRESS / VALIDATION` for protected Windows and
   exact-head review.
 
+## [0.4.0] - 2026-08-08
+
+- Protected Linux, Windows and exact-head Validator passed; PR #60 merged as
+  release SHA `7979cfe76797a4da6925be49496ff2462e78b3f7`.
+- Clean detached Linux and pinned Vallm validation passed.
+- Published annotated tag and GitHub Release v0.13.1 at the exact merge SHA;
+  closed as `DONE / DONE`.
+
 ## [0.1.0] - 2026-08-08
 
 - Initial governance scaffold created.
