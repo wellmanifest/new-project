@@ -33,7 +33,14 @@ ownership of `.env` or unrelated root files.
 
 - User approval received on 2026-08-08; ticket transitioned to
   `IN_PROGRESS / EDIT` before implementation.
+- Added the two exact paths to the default governance workstream.
+- Added positive governance-owner fixtures and foreign-owner rejection
+  fixtures bound to `GOV-WORKSTREAM-003`.
+- Extended fresh-adoption verification to inspect both ownership entries.
+- The full Linux CI contract passes; ticket transitioned to `VALIDATION`.
 
 ## Blockers
 
 - Version publication and downstream adoption remain later governed tickets.
+- Local Windows validation is not available on the Linux host; the protected
+  PR check remains required.

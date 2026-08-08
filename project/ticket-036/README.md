@@ -3,7 +3,7 @@
 - **ID**: ticket-036
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -18,15 +18,15 @@ wydania podniesie wersję, przetestuje czysty checkout i opublikuje nowy tag.
 
 ## Kryteria odbioru
 
-- [ ] AC-01: `governance/manifest.default.json` przypisuje dokładnie
+- [x] AC-01: `governance/manifest.default.json` przypisuje dokładnie
   `CHANGELOG.md` i `.env.example` do workstreamu `governance`.
-- [ ] AC-02: Manifest pozostaje zgodny ze schematem, a deklaracje workstreamów
+- [x] AC-02: Manifest pozostaje zgodny ze schematem, a deklaracje workstreamów
   pozostają bez niejednoznacznego nakładania.
-- [ ] AC-03: Fixture aktywnego ticketu governance może legalnie zadeklarować i
+- [x] AC-03: Fixture aktywnego ticketu governance może legalnie zadeklarować i
   zmienić każdy z dwóch kontraktów.
-- [ ] AC-04: Fixture innego workstreamu deklarującego którykolwiek kontrakt
+- [x] AC-04: Fixture innego workstreamu deklarującego którykolwiek kontrakt
   kończy się stabilnym `GOV-WORKSTREAM-003`.
-- [ ] AC-05: Test adopcji potwierdza, że świeży target otrzymuje oba wpisy w
+- [x] AC-05: Test adopcji potwierdza, że świeży target otrzymuje oba wpisy w
   zasianym manifeście.
 
 ## Ryzyka i mitygacje
@@ -63,3 +63,13 @@ nie do `project/ticket-036/`.
 Użytkownik poleceniem „kontynuuj” 2026-08-08 zatwierdził przedstawiony plan i
 `intent.json`. Zgoda obejmuje implementację ticketu 036, ale nie jest zaufanym
 dowodem merge.
+
+## Walidacja
+
+- Pełny kontrakt Linux CI huba: PASS.
+- `governance-validator.test.sh`: PASS, w tym pozytywne i negatywne fixture'y
+  nowych ścieżek.
+- `adoption-lock.test.sh`: PASS, w tym asercje zasianego manifestu.
+- Składnia JSON i `git diff --check`: PASS.
+- Windows pozostaje wymaganym chronionym checkiem PR i nie był uruchamiany
+  lokalnie na hoście Linux.

@@ -14,3 +14,9 @@
 ## [0.3.0] - 2026-08-08
 
 - Recorded interactive approval and transitioned to `IN_PROGRESS / EDIT`.
+
+## [0.4.0] - 2026-08-08
+
+- Added exact governance ownership for `CHANGELOG.md` and `.env.example`.
+- Added enforcement regressions for correct and foreign workstreams.
+- Added fresh-adoption assertions and passed the complete Linux CI contract.

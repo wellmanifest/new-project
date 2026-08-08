@@ -83,7 +83,7 @@
       "application": { "ownedPaths": ["src/**", "app/**", "lib/**", "test/**", "tests/**"] },
       "interfaces": { "ownedPaths": ["api/**", "sdk/**", "clients/**"] },
       "infrastructure": { "ownedPaths": ["Dockerfile*", "compose*.yml", "compose*.yaml", "infra/**", ".github/**"] },
-      "governance": { "ownedPaths": [".governance/**", "AGENTS.md", "README.md", "TODO.md", "project/**"] },
+      "governance": { "ownedPaths": [".governance/**", "AGENTS.md", "README.md", "TODO.md", "CHANGELOG.md", ".env.example", "project/**"] },
       "integration": { "ownedPaths": ["package.json", "pyproject.toml", "go.mod", "Cargo.toml", "pom.xml", "docs/**"] }
     },
     "integration": {
