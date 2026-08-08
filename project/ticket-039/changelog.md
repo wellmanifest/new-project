@@ -11,3 +11,8 @@
   explicit 0.12.0-to-0.13.0 regression fixture.
 - Focused adoption/version checks and the full Linux hub contract pass; moved
   to `VALIDATION`.
+- Protected Linux/Windows and exact-head Validator passed; PR #56 merged as
+  `main@12158ef`.
+- The clean detached merge checkout passed the full Linux contract before an
+  annotated `v0.13.0` tag and public GitHub Release were published for that
+  exact SHA; ticket closed as `DONE`.

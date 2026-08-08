@@ -28,3 +28,20 @@ governance environment runtime tests passed
 adoption lock: PASS
 rule enforcement traceability: PASS
 workflow: EDIT -> VALIDATION
+
+2026-08-08 protected release completion
+PR: https://github.com/wellmanifest/new-project/pull/56
+head: a5c40a5e51a06e74bb2e9678811633f19c4e039c
+test: PASS
+windows-governance: PASS
+validator run: 31261976472
+validator review: APPROVED exact head
+merge/release SHA: 12158ef0c009428deddceebb1049ddc3cb898eb3
+clean detached merge checkout: full Linux contract PASS
+tag object: ecdf676ef8289b4996f0c0b2cec417228af5eb52
+tag peeled commit: 12158ef0c009428deddceebb1049ddc3cb898eb3
+release: https://github.com/wellmanifest/new-project/releases/tag/v0.13.0
+release draft: false
+release prerelease: false
+remote implementation branch: deleted
+workflow: VALIDATION -> DONE

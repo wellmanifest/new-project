@@ -39,8 +39,13 @@ opcjonalnym rozszerzeniem publicznego intent/v3, właściwą wersją jest `0.13.
   zwykłe bramki target-local.
 - Focused version/adoption tests oraz pełny Linux CI contract przechodzą;
   ticket przeszedł do `VALIDATION`.
+- Protected Linux/Windows oraz exact-head Validator przeszły dla `a5c40a5`;
+  PR #56 scalono jako `main@12158ef`.
+- Pełny Linux contract przeszedł ponownie w czystym detached checkout merge
+  SHA przed publikacją.
+- Opublikowano annotowany `v0.13.0` i publiczny GitHub Release; oba wskazują
+  dokładnie `12158ef`. Ticket przeszedł do `DONE`.
 
 ## Blockers
 
-- Chronione Windows, exact-head review, merge checkout i publikacja pozostają
-  wymagane.
+- Brak. Downstream adoption pozostaje todo2code ticket-050.
