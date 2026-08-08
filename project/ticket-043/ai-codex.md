@@ -25,9 +25,10 @@ policy accepts only immutable full-SHA standard revisions.
 
 ## Actual changes
 
-- None; planning only.
+- The user's existing explicit authorization covers the separately governed
+  immutable publication step recorded by this exact intent.
+- Transitioned to `IN_PROGRESS / EDIT` before release metadata changes.
 
 ## Blockers
 
-- The user's 2026-08-08 approval explicitly covered this separate immutable
-  publication step. It will be recorded in a distinct transition before edits.
+- None.

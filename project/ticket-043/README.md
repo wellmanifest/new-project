@@ -2,8 +2,8 @@
 
 - **ID**: ticket-043
 - **Owner**: agent:codex
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
 - **Utworzono**: 2026-08-08
 
 ## Cel i zakres
@@ -17,6 +17,9 @@ The user approved the complete ticket-042 plan on 2026-08-08, including its
 explicit final step to publish a separate immutable release before downstream
 adoption. This ticket records that already-granted publication scope; it does
 not broaden the implementation repair.
+
+That approval is now applied to this exact bounded release intent. The ticket
+transitioned to `IN_PROGRESS / EDIT` before any release metadata changed.
 
 ## Kryteria odbioru
 

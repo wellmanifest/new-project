@@ -4,3 +4,5 @@ included_repair_merge=b01cae0f47bb311d1e795600af49e0ba436e175d
 target_release=v0.13.2
 workflow_state=PLAN / WAIT_FOR_APPROVAL
 implementation_changes=NONE
+2026-08-08 APPROVAL: reused explicit approval of ticket-042 plan step 6, separate immutable release
+workflow_transition=PLAN / WAIT_FOR_APPROVAL -> IN_PROGRESS / EDIT

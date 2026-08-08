@@ -11,7 +11,8 @@
 
 - [ ] [`ticket-043`](project/ticket-043/README.md) — publikacja naprawy z
   ticketu 042 jako immutable patch v0.13.2 dla downstream exact-SHA adoption.
-  Stan: `PLAN / WAIT_FOR_APPROVAL`; klasyfikacja: `SERVICE / P0 / regression`.
+  Stan: `IN_PROGRESS / EDIT` na podstawie zatwierdzonego planu publikacji;
+  klasyfikacja: `SERVICE / P0 / regression`.
 
 - [ ] [`ticket-042`](project/ticket-042/README.md) — naprawa regresji P0 w
   chronionym snapshotcie lifecycle: typed GraphQL ma dostarczać rzeczywisty
