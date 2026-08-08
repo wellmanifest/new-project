@@ -2,8 +2,8 @@
 
 - **ID**: ticket-044
 - **Owner**: agent:codex
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-08
 
 ## Cel i Zakres
@@ -26,13 +26,13 @@ dla osobnego downstream ticketu 062.
 - [x] AC-01: `VERSION`, `manifest.default.json`, bieżące asercje testowe i
   `CHANGELOG.md` jednoznacznie wskazują `0.14.0`; historyczne fixture’y
   wcześniejszych wydań pozostają przypięte.
-- [ ] AC-02: Pełny kontrakt Linux, chroniony `windows-governance` i niezależny
+- [x] AC-02: Pełny kontrakt Linux, chroniony `windows-governance` i niezależny
   exact-head Validator przechodzą przed merge.
-- [ ] AC-03: Pełny kontrakt Linux przechodzi ponownie w czystym detached
+- [x] AC-03: Pełny kontrakt Linux przechodzi ponownie w czystym detached
   checkout merge/release SHA.
-- [ ] AC-04: Nowy annotowany tag `v0.14.0` i opublikowany, nie-draftowy,
+- [x] AC-04: Nowy annotowany tag `v0.14.0` i opublikowany, nie-draftowy,
   nie-prerelease GitHub Release wskazują dokładnie zwalidowany merge SHA.
-- [ ] AC-05: Nie istnieje force-update ani przesunięcie wcześniejszego taga;
+- [x] AC-05: Nie istnieje force-update ani przesunięcie wcześniejszego taga;
   downstream otrzymuje pełny SHA, nie branch lub ruchomą nazwę.
 
 ## Ryzyka i Uwagi
@@ -60,8 +60,18 @@ dokładnym merge SHA opisanymi w kryteriach odbioru.
   zachowują własne wersje.
 - Pełny lokalny kontrakt Linux przeszedł 2026-08-09: osiem zestawów testów,
   kontrola required checks, kompletność suite'ów w CI oraz `git diff --check`.
-- Ticket pozostaje otwarty do czasu chronionego Linux/Windows, niezależnego
-  exact-head review, czystego testu merge SHA i publikacji immutable release.
+- Przed publikacją ticket pozostawał otwarty do czasu chronionego
+  Linux/Windows, niezależnego exact-head review i czystego testu merge SHA.
+- PR #69 przeszedł oba wymagane checki (`test`, `windows-governance`) i został
+  zatwierdzony dla dokładnego HEAD
+  `fe2882aae7fc466f04683ad27f8e127330039749` przez deterministyczny Validator
+  (`D-044-1933`, run `31282846839`).
+- PR #69 został scalony jako
+  `a22eb47ca0e7c06ac927d1c0d843eabb798bfadd`; pełny kontrakt Linux przeszedł
+  ponownie w czystym detached checkout tego SHA.
+- Nowy annotowany tag `v0.14.0` peeluje dokładnie do `a22eb47`; opublikowany
+  GitHub Release jest nie-draftowy i nie jest prerelease'em. Nie wykonano
+  force-update, przesunięcia ani usunięcia żadnego taga.
 
 ## Uczestnicy
 

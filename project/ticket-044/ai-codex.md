@@ -38,8 +38,13 @@ authority chain.
   upgrade.
 - Passed the full local Linux contract and transitioned to
   `IN_PROGRESS / VALIDATION`.
+- Protected PR #69 passed Linux, Windows and deterministic exact-head review,
+  then merged as `a22eb47ca0e7c06ac927d1c0d843eabb798bfadd`.
+- Re-ran the full Linux contract in a clean detached checkout of the merge SHA
+  and published a new annotated `v0.14.0` tag and non-draft GitHub Release
+  bound to that exact commit.
 
 ## Blockers
 
-- Publication remains gated on full Linux, protected Windows, independent
-  exact-head review and a clean detached merge validation.
+- None for ticket-044. Downstream exact-SHA adoption belongs to todo2code
+  ticket-062.
