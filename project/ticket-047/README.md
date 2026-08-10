@@ -2,8 +2,8 @@
 
 - **ID**: ticket-047
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-10
 
 ## Cel i Zakres
@@ -27,10 +27,10 @@ immutable patch `v0.14.1`, związany z dokładnym przetestowanym merge SHA.
   alokację ID.
 - [x] AC-03: `VERSION`, manifest, changelog i aktywne asercje wskazują `0.14.1`;
   syntetyczny następny upgrade używa `0.14.2`, a historyczne fixture’y zostają.
-- [ ] AC-04: Pełny Linux contract, Windows i exact-head Validator App są
+- [x] AC-04: Pełny Linux contract, Windows i exact-head Validator App są
   zielone przed merge.
-- [ ] AC-05: Pełny Linux contract przechodzi ponownie na czystym merge SHA.
-- [ ] AC-06: Nowy annotowany `v0.14.1` i opublikowany GitHub Release wskazują
+- [x] AC-05: Pełny Linux contract przechodzi ponownie na czystym merge SHA.
+- [x] AC-06: Nowy annotowany `v0.14.1` i opublikowany GitHub Release wskazują
   dokładnie zwalidowany merge SHA; wcześniejsze tagi nie są przesuwane.
 
 ## Ryzyka i Uwagi
@@ -51,10 +51,17 @@ bez osobnego potwierdzenia; nie stanowi trusted merge approval.
 
 ## Stan
 
-`IN_PROGRESS / VALIDATION`. Dziesięć zadeklarowanych plików implementacji jest
-gotowych, a pełny lokalny Linux contract i `git diff --check` przechodzą.
-Pozostały protected Linux/Windows, exact-head Validator, clean merge retest oraz
-publikacja immutable taga i Release.
+`DONE / DONE`. PR #75 przeszedł Linux, Windows i exact-head Validator App dla
+`d7ab953`, po czym został scalony jako `main@63a3d56`. Pełny Linux contract
+przeszedł ponownie w czystym detached checkout. Annotowany `v0.14.1` peeluje
+dokładnie do `63a3d56`, a opublikowany GitHub Release nie jest draftem ani
+prerelease'em. Wcześniejsze tagi nie zostały zmienione.
+
+Goal 2.1.289 dostarczył oba PR-y w trybie `pull-request`, lecz jego wymagany
+`direct-main --force-publish` na czystym merge SHA zatrzymał się przed delivery
+na „No changes to commit”. Aby nie tworzyć nowego, niezatwierdzonego SHA,
+immutable tag i Release opublikowano kontrolowanym fallbackiem na już
+zwalidowanym merge; defekt Goal został przekazany do jego backlogu.
 
 ## Uczestnicy
 

@@ -9,9 +9,10 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-047`](project/ticket-047/README.md) — ujednolicić autonomiczny
+- [x] [`ticket-047`](project/ticket-047/README.md) — ujednolicono autonomiczny
   stan generowanych ticketów i opublikować pełną naprawę jako immutable
-  `v0.14.1`. Stan: `IN_PROGRESS / VALIDATION`; klasyfikacja:
+  `v0.14.1` wskazujące `main@63a3d56`. PR #75 przeszedł Linux, Windows i
+  exact-head Validator; clean merge retest przeszedł. Stan: `DONE / DONE`; klasyfikacja:
   `SERVICE / P1 / requested`; zależy od `ticket-046`.
 
 - [x] [`ticket-046`](project/ticket-046/README.md) — zmigrowano hash-locked legacy

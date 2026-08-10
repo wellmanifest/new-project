@@ -36,6 +36,12 @@ and publishes the full compatible repair.
 - Advanced current release metadata and assertions to 0.14.1, using 0.14.2 only
   for the synthetic next upgrade and preserving historical fixtures.
 - Passed the complete maintained Linux contract and `git diff --check`.
+- Published candidate PR #75 through Goal; Linux, Windows and the independent
+  Validator App approved exact HEAD `d7ab953`, merged as `63a3d56`.
+- Re-ran the full Linux contract in a clean detached merge checkout.
+- Probed Goal direct-main release on the clean SHA; it stopped at no staged
+  changes, so an annotated v0.14.1 tag and GitHub Release were created by the
+  controlled fallback without changing the validated release SHA.
 
 ## Authorization boundary
 
