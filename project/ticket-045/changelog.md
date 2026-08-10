@@ -15,3 +15,6 @@
   2.1.289 pull-request delivery capability before publication.
 - Corrected the normative full-workflow command to put root `-a` before the
   explicit `push` subcommand and its `--ticket` option.
+- Published PR #71 through Goal 2.1.289 without release side effects, passed
+  Linux/Windows and exact-head Validator App approval, merged the protected PR
+  and closed the ticket.
