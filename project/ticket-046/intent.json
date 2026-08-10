@@ -1,0 +1,121 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-046",
+  "summary": "Migrate locked manifests and authorize bounded autonomy",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "POLICY.md",
+    "scripts/create_adoption_lock.py",
+    "template/files/AGENTS.template.md",
+    "tests/adoption-lock.test.sh",
+    "project/ticket-046/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "dc0171f302c04816f87ad92f46d3723d71d00e18",
+    "targetBranch": "main",
+    "outcome": "Migrate a hash-locked legacy target manifest safely and let an explicit execution or autonomous user request authorize bounded implementation without a redundant confirmation prompt",
+    "nonGoals": [
+      "No Goal runtime change",
+      "No downstream repository mutation in this ticket",
+      "No new dependency, schema version or target-owned field",
+      "No destructive or out-of-scope authority, secret handling, force push or agent self-approval",
+      "No VERSION, tag, GitHub Release or immutable standard publication"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the exact legacy target manifest authenticated by its installed lock hash as the previous structural merge base; treat an explicit execution or autonomous user request as bounded session authorization while preserving separate hard-safety and trusted-merge boundaries",
+      "components": [
+        {
+          "name": "adoption-engine",
+          "paths": ["scripts/create_adoption_lock.py", "tests/adoption-lock.test.sh"]
+        },
+        {
+          "name": "autonomous-execution-contract",
+          "paths": ["POLICY.md", "CONTRIBUTING.md", "AGENTS.md", "template/files/AGENTS.template.md", "tests/adoption-lock.test.sh"]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        "Legacy managed target manifests can migrate into the extendable manifest contract",
+        "An explicit execution or autonomous request authorizes bounded implementation without a second confirmation"
+      ],
+      "dataChanges": [
+        "Successful legacy upgrade creates the managed .governance/manifest.base.json artifact"
+      ],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert ticket-046 before its separate immutable patch release; existing v0.14.0 remains unchanged"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "Only legacy content authenticated by its installed lock hash is used as the migration base"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "Legacy migration adds current requirements, preserves target ownership and creates manifest.base.json"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "A hash-mismatched legacy target fails without partial adoption writes"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "Fresh and existing extendable upgrades preserve their declared ownership boundaries"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["full Linux hub test contract", "git diff --check"],
+        "evidence": "Goal-shaped regression and every maintained Linux suite pass"
+      },
+      {
+        "criterion": "AC-06",
+        "commands": ["protected GitHub Linux/Windows CI", "exact-head Validator App review"],
+        "evidence": "Published PR head passes both required checks and independent approval"
+      },
+      {
+        "criterion": "AC-07",
+        "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-scripts.test.sh"],
+        "evidence": "An explicit execution or autonomous request creates bounded session authorization without a second prompt"
+      },
+      {
+        "criterion": "AC-08",
+        "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-scripts.test.sh"],
+        "evidence": "Hard safety authority and exact-head merge approval remain separate from session execution authorization"
+      },
+      {
+        "criterion": "AC-09",
+        "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-scripts.test.sh"],
+        "evidence": "Hub and managed agent contracts expose the same bounded autonomy semantics"
+      }
+    ]
+  }
+}

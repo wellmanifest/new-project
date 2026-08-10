@@ -1,0 +1,35 @@
+[2026-08-10 analysis]
+Goal-adopted-standard=0.11.0
+requested-standard=0.14.0
+result=FAIL
+diagnostic=target manifest violates its installed managed base
+path=$/approvalEvidence
+
+[2026-08-10 root-cause]
+legacy-manifest-hash=VERIFIED_BY_EXISTING_LOCK
+legacy-base-selected=historical-standard-default
+required-safe-base=verified-legacy-target-projection
+implementation-files-changed=0
+
+[2026-08-10 authorization]
+ticket=ticket-046
+user-execution-request=explicit
+autonomous-mode-request=explicit
+session-execution-authorization=GRANTED_WITHIN_INTENT
+destructive-or-out-of-scope-authority=NOT_GRANTED
+trusted-merge-self-approval=FORBIDDEN
+
+[2026-08-10 validation]
+focused-adoption-lock=PASS
+goal-shaped-legacy-upgrade=PASS
+tampered-legacy-hash=FAIL_CLOSED_EXPECTED
+full-linux-hub-contract=PASS
+git-diff-check=PASS
+publication-evidence=PENDING
+
+[2026-08-10 publication-dry-run]
+goal-version=2.1.289
+delivery-mode=pull-request
+registry-publish=DISABLED
+version-bump=NONE
+result=PASS

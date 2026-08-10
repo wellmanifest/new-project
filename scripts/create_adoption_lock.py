@@ -165,8 +165,8 @@ def merge_projection(previous: object, current: object, target: object, path: st
     return json.loads(json.dumps(current))
 
 
-def existing_manifest_base(standard_root: Path, target_root: Path) -> bytes | None:
-    """Load a trusted installed base or derive it from a legacy pinned seed."""
+def existing_manifest_base(target_root: Path) -> bytes | None:
+    """Load a trusted installed base or authenticated legacy target projection."""
     base_path = target_root / MANIFEST_BASE_TARGET
     lock_path = target_root / ".governance/manifest.lock.json"
     if not lock_path.is_file():
@@ -189,10 +189,7 @@ def existing_manifest_base(standard_root: Path, target_root: Path) -> bytes | No
     revision = standard.get("sourceRevision") if isinstance(standard, dict) else None
     if expected != actual or not isinstance(revision, str) or re.fullmatch(r"[0-9a-f]{40}", revision) is None:
         return None
-    try:
-        return manifest_projection(git_bytes(standard_root, revision, MANIFEST_SOURCE))
-    except subprocess.CalledProcessError as error:
-        raise SystemExit("legacy manifest base revision is unavailable") from error
+    return manifest_projection(manifest_path.read_bytes())
 
 
 def atomic_write(path: Path, content: bytes, mode: int | None = None) -> None:
@@ -300,7 +297,7 @@ def main() -> int:
     executable_targets = {
         str(item["target"]) for item in files if item["executable"]
     }
-    previous_base = existing_manifest_base(standard_root, target_root)
+    previous_base = existing_manifest_base(target_root)
     payloads: dict[str, bytes] = {}
     for item in files:
         target = str(item["target"])

@@ -36,11 +36,16 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
      - Human participant file `user-{github_username}.md` is created only by that human or a trusted intake boundary. An agent never creates or edits it on the human's behalf.
      - AI Agent Brain `ai-{PROVIDER}.md` (AI's understanding of the task, intent, scope, risks & Acceptance Criteria) uses explicit participant metadata and typed sections.
      - Dedicated log file `ai-{PROVIDER}-logs.txt`.
-  5. **STOP & WAIT FOR USER REVIEW (`P-CORE-008`)**: Presents the initialized plan to the user for review & approval before writing any code:
+  5. **RECORD BOUNDED AUTHORIZATION (`P-CORE-008`)**: Presents the initialized plan as an auditable scope before writing code:
      - **Understanding View (`project/ticket-{NNN}/ai-{PROVIDER}.md`)**: User checks if AI correctly understood the task, intent, and acceptance criteria.
      - **Task Checklist View (`TODO.md`)**: User checks if AI's step-by-step task breakdown and checklist are appropriate.
-  6. **EXECUTE AFTER APPROVAL**: Upon user approval, executes `./project.sh` (or `project.bat`) in System X's repository to run the deterministic governance gate. Optional analysis then runs only through a digest-pinned Docker image. The agent works EXCLUSIVELY in System X's repository.
-     - Chat/Markdown approval authorizes the interactive session but is not trusted merge evidence. CI requires an independent allowlisted human review, allowlisted Validator GitHub App review, or verified signed attestation.
+     - A request that already tells the agent to execute or work autonomously creates `SESSION_EXECUTION_AUTHORIZATION`; proceed within the recorded intent without a second confirmation.
+  6. **EXECUTE WITHIN AUTHORIZATION**: With session execution authorization, executes `./project.sh` (or `project.bat`) in System X's repository to run the deterministic governance gate. Optional analysis then runs only through a digest-pinned Docker image. The agent works EXCLUSIVELY in System X's repository.
+     - Ask for new authority only for destructive action, secret access, new external coordination, or material objective expansion.
+     - Chat/Markdown approval authorizes the interactive session but is not
+       trusted merge approval. CI requires an independent allowlisted human
+       review, allowlisted Validator GitHub App review, or verified signed
+       attestation.
   7. **CONTINUE MATCHING ACTIVE TICKET (`P-CORE-009` / `C-TICKET-008`)**: Re-use the active ticket when workstream and scope match. A separate active ticket is allowed only for a declared different workstream with no write-scope overlap. Each branch/PR must resolve to exactly one ticket. Update only the agent-owned `ai-{PROVIDER}.md` and project TODO; NEVER modify human-owned `user-{github_username}.md` files.
   8. **KEEP IMPLEMENTATION OUTSIDE THE TICKET**: `project/ticket-{NNN}/` contains governance, decisions, logs and captured evidence. Executable source, tests and research scripts belong in their normal repository directories.
   9. **ROUTE UNKNOWN OWNERS EXPLICITLY**: use `unresolved:human` or `unresolved:agent`; never emit an empty required-response route or infer identity from a name.
