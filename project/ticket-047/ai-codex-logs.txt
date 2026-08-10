@@ -8,3 +8,13 @@ expected-status=IN_PROGRESS
 expected-workflow=EDIT
 session-execution-authorization=GRANTED_WITHIN_INTENT
 trusted-merge-self-approval=FORBIDDEN
+
+[2026-08-10 validation]
+generated-template-status=IN_PROGRESS/EDIT
+generated-fallback-status=IN_PROGRESS/EDIT
+scaffolder-regressions=PASS
+current-version=0.14.1
+synthetic-next-version=0.14.2
+full-linux-hub-contract=PASS
+git-diff-check=PASS
+protected-publication=PENDING

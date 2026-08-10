@@ -17,6 +17,11 @@
 - Odczytaj niniejsze wytyczne techniczne oraz istniejące, human-owned notatki
   z `user-{github_username}.md`. Nie twórz ani nie modyfikuj ich za człowieka.
 - Na tej podstawie zbuduj specyfikację wykonawczą w pliku `ai-{PROVIDER}.md` (rozumienie intencji, zakres prac, koncepcja, Kryteria Odbioru).
-- Przed pisaniem kodu przedstaw plan w `ai-{PROVIDER}.md` oraz w `TODO.md` do weryfikacji człowieka (`P-CORE-008`).
+- Przed pisaniem kodu zapisz plan w `ai-{PROVIDER}.md`, `TODO.md` i
+  `intent.json`. Polecenie zlecające wykonanie lub tryb autonomiczny tworzy
+  `SESSION_EXECUTION_AUTHORIZATION`; realizuj zapisany zakres bez ponownego
+  pytania o tę samą zgodę (`P-CORE-008`).
+- Osobnej władzy wymagają destrukcja, sekrety, nowa koordynacja zewnętrzna,
+  materialnie nowy cel oraz trusted merge approval.
 - Kod wykonywalny, testy i skrypty badawcze zapisuj poza katalogiem ticketu;
   ticket przechowuje wyłącznie governance, decyzje, logi i dowody.

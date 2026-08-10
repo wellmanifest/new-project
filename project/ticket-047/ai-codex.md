@@ -29,7 +29,13 @@ and publishes the full compatible repair.
 
 ## Actual changes
 
-- Recorded the discovered generator inconsistency and bounded release plan.
+- Aligned the three hub templates and managed downstream fallback on
+  `IN_PROGRESS / EDIT` plus bounded `SESSION_EXECUTION_AUTHORIZATION`.
+- Added template and fallback regressions while retaining workstream collision,
+  identity ownership, classification and ticket-ID allocation coverage.
+- Advanced current release metadata and assertions to 0.14.1, using 0.14.2 only
+  for the synthetic next upgrade and preserving historical fixtures.
+- Passed the complete maintained Linux contract and `git diff --check`.
 
 ## Authorization boundary
 

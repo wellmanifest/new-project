@@ -314,8 +314,8 @@ else
 
 - **ID**: $ticket_id
 - **Owner**: unresolved:human
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
 - **Created**: $date_only
 
 ## Goal and scope
@@ -345,6 +345,10 @@ else
 
 Keep executable implementation outside this governance/evidence directory.
 Read a human-owned user-*.md file only when one exists.
+The request to execute this work creates SESSION_EXECUTION_AUTHORIZATION;
+proceed within the recorded intent without a redundant confirmation prompt.
+Require new authority for destructive action, secrets, external coordination,
+material objective expansion and trusted merge approval.
 EOF
 fi
 
@@ -394,11 +398,14 @@ To be completed after reading human-owned input and the ticket preprompt.
 
 ## Actual changes
 
-- None; waiting for approval.
+- Initialized the bounded ticket and recorded SESSION_EXECUTION_AUTHORIZATION
+  from the request to execute this work.
 
 ## Blockers
 
-- Human approval is required before implementation.
+- None inside the recorded intent; proceed without a second confirmation.
+- New authority remains required for destructive action, secret access, new
+  external coordination, material objective expansion and trusted merge.
 EOF
 fi
 

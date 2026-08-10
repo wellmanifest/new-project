@@ -44,7 +44,7 @@ lock = json.load(open(root / '.governance/manifest.lock.json', encoding='utf-8')
 manifest = json.load(open(root / '.governance/manifest.json', encoding='utf-8'))
 assert lock['standard']['sourceRevision'] == sys.argv[2]
 assert lock['standard']['publicationStatus'] == 'published'
-assert lock['standard']['version'] == '0.14.0'
+assert lock['standard']['version'] == '0.14.1'
 assert '.governance/manifest.base.json' in lock['managedFiles']
 assert '.governance/manifest.json' not in lock['managedFiles']
 assert (root / '.governance/manifest.base.json').is_file()
@@ -148,7 +148,7 @@ grep -q -- '--check and --upgrade are mutually exclusive' "$fixture/options.err"
 
 mismatch="$fixture/mismatch"
 mkdir -p "$mismatch/.governance"
-sed 's/"version": "0.14.0"/"version": "9.9.9"/' \
+sed 's/"version": "0.14.1"/"version": "9.9.9"/' \
   "$standard/governance/manifest.default.json" > "$mismatch/.governance/manifest.json"
 if python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$mismatch" --source-revision "$revision" --upgrade \
@@ -373,9 +373,9 @@ import json
 import sys
 
 version_path, manifest_path = sys.argv[1:]
-open(version_path, 'w', encoding='utf-8').write('0.14.1\n')
+open(version_path, 'w', encoding='utf-8').write('0.14.2\n')
 manifest = json.load(open(manifest_path, encoding='utf-8'))
-manifest['standard']['version'] = '0.14.1'
+manifest['standard']['version'] = '0.14.2'
 manifest['requiredFiles'].append('SECURITY.md')
 open(manifest_path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2) + '\n')
 PY
@@ -396,7 +396,7 @@ root = pathlib.Path(sys.argv[1])
 manifest = json.load(open(root / '.governance/manifest.json', encoding='utf-8'))
 base = json.load(open(root / '.governance/manifest.base.json', encoding='utf-8'))
 lock = json.load(open(root / '.governance/manifest.lock.json', encoding='utf-8'))
-assert manifest['standard']['version'] == '0.14.1'
+assert manifest['standard']['version'] == '0.14.2'
 assert 'SECURITY.md' in manifest['requiredFiles']
 assert manifest['coordination']['workstreams']['sdk']['ownedPaths'][-1] == 'test/python-runtime.test.ts'
 assert 'coordination' in base and 'workstreams' not in base['coordination']
@@ -408,7 +408,7 @@ PY
 python3 "$upgrade_standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$upgrade_revision" --check \
   > "$fixture/upgraded-check.out"
-grep -q '^up-to-date wellmanifest/new-project 0.14.1 ' "$fixture/upgraded-check.out"
+grep -q '^up-to-date wellmanifest/new-project 0.14.2 ' "$fixture/upgraded-check.out"
 
 python3 - "$repo_root" <<'PY'
 import pathlib

@@ -3,7 +3,7 @@
 - **ID**: ticket-047
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-10
 
 ## Cel i Zakres
@@ -19,13 +19,13 @@ immutable patch `v0.14.1`, związany z dokładnym przetestowanym merge SHA.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Template’y i fallback `new-ticket.sh` tworzą ticket w
+- [x] AC-01: Template’y i fallback `new-ticket.sh` tworzą ticket w
   `IN_PROGRESS / EDIT`, zapisują bounded session authorization i nie emitują
   bezwarunkowego wymagania świeżej zgody.
-- [ ] AC-02: Regresje scaffoldera wymagają tej semantyki i nadal zachowują
+- [x] AC-02: Regresje scaffoldera wymagają tej semantyki i nadal zachowują
   blokady kolizji workstreamów, ownership human files oraz deterministyczną
   alokację ID.
-- [ ] AC-03: `VERSION`, manifest, changelog i aktywne asercje wskazują `0.14.1`;
+- [x] AC-03: `VERSION`, manifest, changelog i aktywne asercje wskazują `0.14.1`;
   syntetyczny następny upgrade używa `0.14.2`, a historyczne fixture’y zostają.
 - [ ] AC-04: Pełny Linux contract, Windows i exact-head Validator App są
   zielone przed merge.
@@ -48,6 +48,13 @@ immutable patch `v0.14.1`, związany z dokładnym przetestowanym merge SHA.
 Bieżące polecenie użytkownika zleca kontynuację, test, publikację i tryb
 autonomiczny. Stanowi bounded `SESSION_EXECUTION_AUTHORIZATION` dla tego intentu
 bez osobnego potwierdzenia; nie stanowi trusted merge approval.
+
+## Stan
+
+`IN_PROGRESS / VALIDATION`. Dziesięć zadeklarowanych plików implementacji jest
+gotowych, a pełny lokalny Linux contract i `git diff --check` przechodzą.
+Pozostały protected Linux/Windows, exact-head Validator, clean merge retest oraz
+publikacja immutable taga i Release.
 
 ## Uczestnicy
 
