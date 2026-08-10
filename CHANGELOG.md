@@ -4,6 +4,11 @@
 
 ## [0.14.1] - 2026-08-10
 
+### Other
+- Update project/ticket-047/ai-codex-logs.txt
+
+## [0.14.1] - 2026-08-10
+
 ### Bounded autonomous execution and safe legacy migration
 
 - Treat an explicit request to execute or work autonomously as bounded session

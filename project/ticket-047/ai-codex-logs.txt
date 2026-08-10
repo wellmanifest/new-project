@@ -18,3 +18,9 @@ synthetic-next-version=0.14.2
 full-linux-hub-contract=PASS
 git-diff-check=PASS
 protected-publication=PENDING
+
+[2026-08-10 publication]
+goal-version=2.1.289
+delivery-mode=pull-request
+registry-publish=DISABLED_BEFORE_MERGE
+requested-version=0.14.1
