@@ -14,7 +14,68 @@ Wydanie można opublikować wyłącznie, gdy:
 - tag o wybranej nazwie jeszcze nie istnieje lokalnie ani na GitHub;
 - release notes nie zawierają sekretów ani ścieżek konkretnej maszyny.
 
-## Procedura
+## Zarządzana publikacja przez Goal
+
+Nowe repozytorium, które włącza zarządzaną publikację, deklaruje ją jawnie w
+`goal.yaml`:
+
+```yaml
+governance:
+  delivery:
+    require_goal_a: true
+    default_mode: pull-request
+    allowed_modes: [pull-request, publish-only, direct-main]
+    remote: origin
+    base_branch: main
+    require_clean_governance: true
+```
+
+Przed pierwszym skutkiem ubocznym należy sprawdzić rzeczywistą zdolność
+wybranego pliku wykonywalnego Goal. Sam numer wersji nie wystarcza:
+
+```bash
+goal --help | grep -F -- '--delivery-mode'
+goal governance verify-delivery --delivery-mode pull-request
+```
+
+Publikacja implementacji kończy się na branchu i PR. Nie publikuje pakietu,
+taga ani Release:
+
+```bash
+goal --delivery-mode pull-request --no-publish -a push --ticket ticket-NNN
+```
+
+Opcja `--ticket` należy do podkomendy `goal push`, dlatego występuje po słowie
+`push`; rootowa opcja `-a` nadal włącza pełny workflow. Zmianę wiążą z jednym
+ticketem również governance intent, nazwa brancha i PR wskazujący current HEAD.
+
+Po trusted merge, ponownym teście czystego merge SHA i sprawdzeniu, że docelowa
+wersja lub tag jeszcze nie istnieją, osobny ticket wydania wybiera dokładnie
+jeden skutek:
+
+```bash
+# Tylko skonfigurowany registry, bez Git push/tag/PR:
+goal -a --delivery-mode publish-only --force-publish
+
+# Skonfigurowany immutable Git/tag/GitHub Release z czystego origin/main:
+goal -a --delivery-mode direct-main --force-publish
+```
+
+`--force-publish` oznacza wyłącznie, że zatwierdzone źródło jest już
+commitowane. Nie omija testów, governance, kontroli istniejącego taga,
+exact-head approval ani ochrony gałęzi. Lokalny pre-push hook oraz
+`.governance/delivery-events.jsonl` są dowodem pomocniczym, nie trust rootem.
+Po wykonaniu należy zweryfikować stan PR, registry, taga i GitHub Release przez
+ich zdalne API.
+
+Brak `goal.yaml`, brak `--delivery-mode`, niedozwolony tryb albo niezielona
+bramka zatrzymują publikację. Nie wolno wtedy przechodzić na surowe `git push`,
+`twine`, `npm publish`, `cargo publish` lub `gh release create` jako obejście.
+
+## Historyczna procedura ręczna wydania 0.10.0
+
+Poniższy zapis zachowuje odtwarzalny dowód sposobu publikacji `v0.10.0`.
+Nie jest procedurą dla nowych wydań po adopcji zarządzanego Goal.
 
 Po scaleniu PR przygotowującego release zapisz pełny SHA:
 

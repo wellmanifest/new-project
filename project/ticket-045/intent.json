@@ -1,0 +1,103 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-045",
+  "summary": "Govern publishing through Goal full workflow",
+  "workstream": "integration",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-045/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CONTRIBUTING.md",
+    "docs/RELEASES.md",
+    "governance/rule-enforcement.json",
+    "tests/rule-enforcement.test.sh",
+    "tests/governance-scripts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "POLICY.md",
+    "AGENTS.md",
+    "goal.yaml",
+    "scripts/**",
+    ".github/**",
+    "VERSION",
+    "**/*.pem",
+    "**/*secret*"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f4e1fd60bb5e13d1cc2d9c94d291ef542f36d0bc",
+    "targetBranch": "main",
+    "outcome": "Require governed Goal full-workflow delivery without allowing implementation publication to bypass pull-request review",
+    "nonGoals": [
+      "No new Goal runtime implementation",
+      "No downstream repository migration",
+      "No package, registry, tag or GitHub Release publication in this ticket",
+      "No weakening of branch protection, exact-head approval or server-side required checks",
+      "No claim that historical releases were created through Goal"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Layer Goal delivery modes below the existing PR and trusted-review contract, with a feature probe and phase-specific side-effect limits",
+      "components": [
+        {
+          "name": "publication-contract",
+          "paths": ["CONTRIBUTING.md", "docs/RELEASES.md"]
+        },
+        {
+          "name": "publication-conformance",
+          "paths": ["governance/rule-enforcement.json", "tests/rule-enforcement.test.sh", "tests/governance-scripts.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert ticket-045 before any dependent release; existing immutable releases and downstream pins remain unchanged"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/governance-scripts.test.sh"],
+        "evidence": "Publication classes and required Goal full-workflow invocation are asserted"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/governance-scripts.test.sh"],
+        "evidence": "Implementation delivery is PR-only and premature release side effects are forbidden"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/rule-enforcement.test.sh"],
+        "evidence": "Feature-probe semantics are present and mapped"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["documentation review", "git diff --check"],
+        "evidence": "The runbook separates the new procedure from immutable historical evidence"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["full Linux hub test contract", "git diff --check"],
+        "evidence": "Every stable rule is mapped and the exact ticket diff passes the maintained hub contract"
+      }
+    ]
+  }
+}

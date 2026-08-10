@@ -1,0 +1,79 @@
+[2026-08-09 plan] goal --version
+Goal 2.1.284
+
+[2026-08-09 plan] system goal --help capability probe
+delivery-mode=ABSENT
+
+[2026-08-09 plan] repository .venv/bin/goal --help capability probe
+delivery-mode=PRESENT(direct-main,publish-only,pull-request)
+
+[2026-08-09 plan] repository and remote state
+BASE_SHA=f4e1fd60bb5e13d1cc2d9c94d291ef542f36d0bc
+OPEN_PULL_REQUESTS=0
+TICKET_BRANCH=ticket/045-govern-goal-publication
+IMPLEMENTATION_FILES_PLANNED=5
+IMPLEMENTATION_FILES_CHANGED=0
+
+[2026-08-09 approval] user continuation
+TICKET=ticket-045
+TRANSITION=WAIT_FOR_APPROVAL->EDIT
+AUTHORITY=interactive-session-only
+TRUSTED_MERGE_APPROVAL=false
+
+[2026-08-09 focused validation] first run
+AssertionError: implementation rule test expected lowercase publish-only while the DSL symbol is PUBLISH_ONLY
+governance scripts: PASS
+policy parser: PASS
+
+[2026-08-09 focused validation] corrected exact DSL assertion
+governed Goal publication contract: PASS
+rule enforcement traceability: PASS
+governance scripts: PASS
+
+[2026-08-09 full Linux hub contract]
+required-checks gate OK: source=governance/required-checks.json required=['test', 'windows-governance'] published=['test', 'windows-governance']
+required-checks tests: PASS
+decision-record tests: PASS
+governance scripts: PASS
+governance validator: PASS
+branch lifecycle validator: PASS
+governance environment runtime tests passed
+adoption lock: PASS
+governed Goal publication contract: PASS
+rule enforcement traceability: PASS
+FULL_LINUX_HUB_CONTRACT=PASS
+DOCKER_SERVER=29.1.3
+GIT_DIFF_CHECK=PASS
+WINDOWS=NOT_RUN(local Linux host)
+TRUSTED_EXACT_HEAD_REVIEW=NOT_RUN(no PR publication in ticket scope)
+
+[2026-08-10 independent validation] host-only attempt
+jsonschema=ABSENT
+governance-scripts=FAILED(ModuleNotFoundError: jsonschema)
+governance-validator=FAILED(ModuleNotFoundError: jsonschema)
+RESULT=REJECTED_AS_INCOMPLETE
+
+[2026-08-10 independent validation] CI-equivalent fail-fast rerun
+ENVIRONMENT=uv run --no-project --with jsonschema==4.25.1
+SHELL=set -euo pipefail
+required-checks tests: PASS
+decision-record tests: PASS
+governance scripts: PASS
+governance validator: PASS
+branch lifecycle validator: PASS
+governance environment runtime tests passed
+adoption lock: PASS
+governed Goal publication contract: PASS
+rule enforcement traceability: PASS
+CI_SUITE_WIRING=PASS
+GIT_DIFF_CHECK=PASS
+
+[2026-08-10 publication preflight]
+goal, version 2.1.289
+delivery-mode=PRESENT(direct-main,publish-only,pull-request)
+resolved-mode=pull-request
+require_goal_a=true
+serverEnforcementRequired=true
+root-goal-ticket-option=ABSENT
+goal-push-ticket-option=PRESENT
+normative-command=goal --delivery-mode pull-request --no-publish -a push --ticket ticket-NNN

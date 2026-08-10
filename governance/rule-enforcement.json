@@ -309,6 +309,26 @@
       "enforcement": "manual",
       "reason": "Direct-push exceptions require human emergency process outside this validator."
     },
+    "C-PUBLISH-005": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Goal configuration and runtime capability are verified by Goal before delivery; the hub records the cross-tool obligation."
+    },
+    "C-PUBLISH-006": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Goal pull-request delivery and protected GitHub branch policy enforce the implementation publication boundary."
+    },
+    "C-PUBLISH-007": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Registry, tag and release side effects are external release-ticket operations after protected merge validation."
+    },
+    "C-PUBLISH-008": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Goal writes local audit evidence while remote APIs and protected workflows provide authoritative publication state."
+    },
     "C-START-001": {
       "codes": [],
       "enforcement": "manual",
