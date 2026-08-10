@@ -9,10 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-046`](project/ticket-046/README.md) — migrować hash-locked legacy
+- [x] [`ticket-046`](project/ticket-046/README.md) — zmigrowano hash-locked legacy
   target manifest jako właściwą bazę kontraktu `extendable` oraz przyjmować
   jawne zlecenie wykonania/autonomii jako bounded session authorization bez
-  ponownego pytania. Stan: `IN_PROGRESS / VALIDATION`; klasyfikacja:
+  ponownego pytania. PR #73 przeszedł Linux, Windows i exact-head Validator,
+  a następnie został scalony jako `main@cc898c1`. Stan: `DONE / DONE`; klasyfikacja:
   `BUG / P1 / regression`.
 
 - [x] [`ticket-045`](project/ticket-045/README.md) — ustanowiono zarządzaną

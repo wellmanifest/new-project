@@ -48,6 +48,8 @@ merge authority outside that derivation.
 - Preserved separate authority for destructive/out-of-scope actions and the
   external exact-head trusted merge contract.
 - Passed the focused regression and full maintained Linux hub contract.
+- Published through Goal 2.1.289 as PR #73; Linux, Windows and the independent
+  Validator App approved exact HEAD `20a450b`, merged as `main@cc898c1`.
 
 ## Authorization boundary
 
