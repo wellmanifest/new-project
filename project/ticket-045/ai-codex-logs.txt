@@ -77,3 +77,21 @@ serverEnforcementRequired=true
 root-goal-ticket-option=ABSENT
 goal-push-ticket-option=PRESENT
 normative-command=goal --delivery-mode pull-request --no-publish -a push --ticket ticket-NNN
+
+[2026-08-10 Goal publication]
+goal-version=2.1.289
+version-decision=no-release -> 0.14.0
+commit=ac7c8eae7aea3eb0d31bf1109cc4638f74499b80
+pull-request=https://github.com/wellmanifest/new-project/pull/71
+registry-publish=SKIPPED
+release-tag=SKIPPED
+
+[2026-08-10 protected validation and merge]
+test=PASS
+windows-governance=PASS
+validator-run=31366900864
+validator-result=approved
+validator-review-head=ac7c8eae7aea3eb0d31bf1109cc4638f74499b80
+validator-review-state=APPROVED
+merge-commit=38fe787beb9eb46ec2d8efaa01400a3ace61d431
+remote-ticket-branch=DELETED

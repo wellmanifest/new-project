@@ -51,13 +51,15 @@ standard must require a capability probe in addition to any version pin.
 - Corrected the planned command after the probe proved `--ticket` must follow
   the explicit `push` subcommand while root `-a` still enables the full
   workflow; intent/branch/PR provide additional ticket binding.
+- Published through Goal 2.1.289 as PR #71 with `no-release -> 0.14.0` and no
+  registry/tag side effect.
+- Verified Linux and Windows required checks plus the independent exact-head
+  Validator App approval, then merged as `main@38fe787` and removed the remote
+  branch.
 
 ## Blockers
 
-- Publishing this ticket or a dependent immutable release is outside the
-  current plan and requires the existing PR/release gates.
-- Windows and trusted exact-head validation are available only after a PR is
-  published; they are not claimed locally.
+- None. A future immutable standard release remains a separate ticket.
 
 ## Acceptance evidence plan
 
@@ -72,6 +74,7 @@ standard must require a capability probe in addition to any version pin.
 - Eight Linux test suites: PASS.
 - Rule count/mapping completeness: PASS.
 - Docker Engine: available, server 29.1.3.
-- Windows/exact-head protected evidence: not run locally.
+- Windows/exact-head protected evidence: PASS on PR #71.
 - Publication is authorized by the user's 2026-08-10 instruction and will use
   Goal 2.1.289 in `pull-request --no-publish` mode.
+- Merge commit: `38fe787beb9eb46ec2d8efaa01400a3ace61d431`.

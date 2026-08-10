@@ -2,8 +2,8 @@
 
 - **ID**: ticket-045
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-09
 
 ## Cel i zakres
@@ -54,9 +54,9 @@ downstream.
 
 ## Stan
 
-Użytkownik zatwierdził kontynuację 2026-08-09. Ticket przeszedł do
-`IN_PROGRESS / VALIDATION`; interaktywna zgoda nie zastępuje niezależnego,
-exact-head approval wymaganego przed merge.
+Użytkownik zatwierdził kontynuację 2026-08-09 i publikację 2026-08-10. Ticket
+został opublikowany przez Goal 2.1.289 w trybie `pull-request --no-publish`,
+przeszedł niezależny exact-head Validator App review i został scalony.
 
 ## Dowody walidacji
 
@@ -75,7 +75,14 @@ exact-head approval wymaganego przed merge.
   `jsonschema` przypiętej w CI.
 - `git diff --check`: PASS.
 - Docker Engine 29.1.3: dostępny.
-- Windows i chroniony exact-head review pozostają zadaniem CI po publikacji PR.
+- GitHub Linux `test` i `windows-governance`: PASS na exact head
+  `ac7c8eae7aea3eb0d31bf1109cc4638f74499b80`.
+- Validator Agent run `31366900864`: PASS; review aplikacji
+  `ifuri-validator-agent` ma stan `APPROVED` i wskazuje ten sam exact head.
+- PR #71 został scalony do `main` jako
+  `38fe787beb9eb46ec2d8efaa01400a3ace61d431`; branch zdalny usunięto.
+- Goal zachował `no-release -> 0.14.0`: nie utworzył taga, GitHub Release ani
+  publikacji rejestru.
 
 ## Uczestnicy
 

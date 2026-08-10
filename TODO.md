@@ -9,11 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-045`](project/ticket-045/README.md) — ustanowić zarządzaną
+- [x] [`ticket-045`](project/ticket-045/README.md) — ustanowiono zarządzaną
   publikację przez `goal -a` z jawnym trybem dostawy, feature probe oraz
-  separacją publikacji implementacji od registry/release. Stan:
-  `IN_PROGRESS / VALIDATION`; Linux hub contract PASS, oczekuje na ewentualną
-  publikację PR oraz Windows/exact-head evidence. Klasyfikacja:
+  separacją publikacji implementacji od registry/release. PR #71 przeszedł
+  Linux, Windows i exact-head Validator App, po czym został scalony jako
+  `main@38fe787`. Stan: `DONE / DONE`; klasyfikacja:
   `FEATURE / P1 / requested`.
 
 - [x] [`ticket-044`](project/ticket-044/README.md) — opublikowano scalony
