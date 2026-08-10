@@ -29,3 +29,24 @@ requested-version=0.14.1
 duplicate-changelog-heading=REMOVED
 unrequested-readme-license=REMOVED
 next-delivery-flags=--no-version-sync,--no-changelog
+
+[2026-08-10 protected-publication]
+pull-request=https://github.com/wellmanifest/new-project/pull/75
+head=d7ab95361a08e7adccbf290c652485d53911e3e9
+linux-test=PASS
+windows-governance=PASS
+validator-actor=ifuri-validator-agent[bot]
+validator-state=APPROVED
+validator-head=d7ab95361a08e7adccbf290c652485d53911e3e9
+merge=63a3d56b648da0d338be7cf28cbf9045adbb3e5e
+clean-detached-linux-contract=PASS
+
+[2026-08-10 immutable-release]
+goal-direct-main-force-publish=NO_OP_NO_CHANGES_TO_COMMIT
+release-fallback=CONTROLLED_EXACT_VALIDATED_MERGE
+tag=v0.14.1
+tag-object=69e4a17fb115171684b037080b3d9ba1378509cc
+tag-peel=63a3d56b648da0d338be7cf28cbf9045adbb3e5e
+github-release=https://github.com/wellmanifest/new-project/releases/tag/v0.14.1
+release-draft=false
+release-prerelease=false
