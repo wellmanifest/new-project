@@ -1,0 +1,20 @@
+[2026-08-10 analysis]
+Goal-adopted-standard=0.11.0
+requested-standard=0.14.0
+result=FAIL
+diagnostic=target manifest violates its installed managed base
+path=$/approvalEvidence
+
+[2026-08-10 root-cause]
+legacy-manifest-hash=VERIFIED_BY_EXISTING_LOCK
+legacy-base-selected=historical-standard-default
+required-safe-base=verified-legacy-target-projection
+implementation-files-changed=0
+
+[2026-08-10 authorization]
+ticket=ticket-046
+user-execution-request=explicit
+autonomous-mode-request=explicit
+session-execution-authorization=GRANTED_WITHIN_INTENT
+destructive-or-out-of-scope-authority=NOT_GRANTED
+trusted-merge-self-approval=FORBIDDEN
