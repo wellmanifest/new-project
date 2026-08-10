@@ -26,3 +26,10 @@ tampered-legacy-hash=FAIL_CLOSED_EXPECTED
 full-linux-hub-contract=PASS
 git-diff-check=PASS
 publication-evidence=PENDING
+
+[2026-08-10 publication-dry-run]
+goal-version=2.1.289
+delivery-mode=pull-request
+registry-publish=DISABLED
+version-bump=NONE
+result=PASS
