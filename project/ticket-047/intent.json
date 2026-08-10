@@ -1,0 +1,116 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-047",
+  "summary": "Complete and publish bounded autonomy migration fix",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "project/new-ticket.sh",
+    "template/files/ticket.template.md",
+    "template/files/preprompt.template.md",
+    "template/files/agent-participant.template.md",
+    "tests/governance-scripts.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/adoption-lock.test.sh",
+    "project/ticket-047/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".github/**",
+    "package.json",
+    "pyproject.toml",
+    ".env",
+    "**/*.pem",
+    "**/*secret*"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": ["ticket-046"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c0bb0e5a6677dc2c206ceddb0c78e2b6b3a29678",
+    "targetBranch": "main",
+    "outcome": "Publish immutable v0.14.1 with the safe legacy migration and a scaffolder that consistently starts explicitly requested work in bounded autonomous mode",
+    "nonGoals": [
+      "No weakening of destructive, secret, scope-expansion or trusted merge authority",
+      "No downstream repository mutation",
+      "No runtime dependency or schema version change",
+      "No moving tag, overwritten release or prerelease"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Make bounded autonomous execution the consistent generated-ticket default in both templates and managed fallback, then publish the complete backward-compatible repair as patch v0.14.1",
+      "components": [
+        {
+          "name": "ticket-scaffolder",
+          "paths": ["project/new-ticket.sh", "template/files/ticket.template.md", "template/files/preprompt.template.md", "template/files/agent-participant.template.md", "tests/governance-scripts.test.sh"]
+        },
+        {
+          "name": "release-metadata",
+          "paths": ["VERSION", "CHANGELOG.md", "governance/manifest.default.json"]
+        },
+        {
+          "name": "release-validation",
+          "paths": ["tests/governance-validator.test.sh", "tests/adoption-lock.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Generated tickets start in bounded IN_PROGRESS / EDIT when new-ticket.sh is invoked for explicitly requested work"
+      ],
+      "dataChanges": ["The published standard version advances from 0.14.0 to 0.14.1"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Keep adopters pinned to v0.14.0 or an earlier immutable SHA; never move or delete v0.14.1 after publication"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/governance-scripts.test.sh"],
+        "evidence": "Generated template and fallback tickets expose bounded autonomous execution without an unconditional approval pause"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/governance-scripts.test.sh"],
+        "evidence": "Scaffolder lifecycle, ownership, collision and allocation regressions pass"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/governance-validator.test.sh", "bash tests/adoption-lock.test.sh"],
+        "evidence": "Current metadata agrees on 0.14.1 and the synthetic next upgrade is 0.14.2"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["full Linux CI contract", "protected windows-governance", "exact-head Validator App review"],
+        "evidence": "Both supported environments and independent review pass before merge"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["clean detached merge validation"],
+        "evidence": "The exact merge/release SHA passes the full Linux contract outside the delivery checkout"
+      },
+      {
+        "criterion": "AC-06",
+        "commands": ["git ls-remote --tags origin", "gh release view v0.14.1"],
+        "evidence": "A previously absent annotated tag and release bind the validated merge SHA"
+      }
+    ]
+  }
+}
