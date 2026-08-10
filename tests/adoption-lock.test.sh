@@ -259,6 +259,113 @@ if python3 "$missing_base/scripts/create_adoption_lock.py" \
 fi
 grep -q 'requires a managed base from the same source' "$fixture/missing-base.err"
 
+legacy_standard="$fixture/legacy-standard"
+legacy_target="$fixture/legacy-target"
+legacy_tampered="$fixture/legacy-tampered"
+cp -R "$standard" "$legacy_standard"
+python3 - "$legacy_standard" <<'PY'
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+(root / 'VERSION').write_text('0.11.0\n', encoding='utf-8')
+manifest_path = root / 'governance/manifest.default.json'
+manifest = json.load(open(manifest_path, encoding='utf-8'))
+manifest['standard']['version'] = '0.11.0'
+manifest_path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+package_path = root / 'governance/package-manifest.json'
+package = json.load(open(package_path, encoding='utf-8'))
+package['files'] = [
+    item for item in package['files']
+    if item['target'] != '.governance/manifest.base.json'
+]
+entry = next(
+    item for item in package['files']
+    if item['target'] == '.governance/manifest.json'
+)
+entry['strategy'] = 'managed'
+package_path.write_text(json.dumps(package, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$legacy_standard" add VERSION governance/manifest.default.json governance/package-manifest.json
+git -C "$legacy_standard" commit -qm 'test: publish legacy managed manifest'
+
+mkdir -p "$legacy_target/.governance"
+python3 - "$legacy_standard" "$legacy_target" <<'PY'
+import hashlib
+import json
+import pathlib
+import sys
+
+standard, target = map(pathlib.Path, sys.argv[1:])
+manifest = json.load(open(standard / 'governance/manifest.default.json', encoding='utf-8'))
+manifest.pop('approvalEvidence')
+manifest['coordination']['workstreams']['goal-release'] = {
+    'ownedPaths': ['integration/**', 'uv.lock'],
+}
+content = (json.dumps(manifest, indent=2, sort_keys=True) + '\n').encode()
+(target / '.governance/manifest.json').write_bytes(content)
+lock = {
+    'schema': 'new-project.lock/v1',
+    'standard': {
+        'id': 'wellmanifest/new-project',
+        'version': '0.11.0',
+        'sourceRepository': 'wellmanifest/new-project',
+        # Deliberately unavailable but structurally valid. Integrity comes from
+        # the exact managedFiles hash, not a reconstructed pristine default.
+        'sourceRevision': '0' * 40,
+        'publicationStatus': 'published',
+    },
+    'managedFiles': {
+        '.governance/manifest.json': hashlib.sha256(content).hexdigest(),
+    },
+}
+(target / '.governance/manifest.lock.json').write_text(
+    json.dumps(lock, indent=2, sort_keys=True) + '\n', encoding='utf-8'
+)
+PY
+cp -R "$legacy_target" "$legacy_tampered"
+printf ' ' >> "$legacy_tampered/.governance/manifest.json"
+
+cp "$standard/VERSION" "$legacy_standard/VERSION"
+cp "$standard/governance/manifest.default.json" "$legacy_standard/governance/manifest.default.json"
+cp "$standard/governance/package-manifest.json" "$legacy_standard/governance/package-manifest.json"
+git -C "$legacy_standard" add VERSION governance/manifest.default.json governance/package-manifest.json
+git -C "$legacy_standard" commit -qm 'test: publish extendable migration target'
+legacy_upgrade_revision="$(git -C "$legacy_standard" rev-parse HEAD)"
+
+python3 "$legacy_standard/scripts/create_adoption_lock.py" \
+  --target-root "$legacy_target" --source-revision "$legacy_upgrade_revision" --upgrade \
+  > "$fixture/legacy-upgrade.out"
+python3 - "$legacy_target" "$legacy_upgrade_revision" <<'PY'
+import hashlib
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+manifest = json.load(open(root / '.governance/manifest.json', encoding='utf-8'))
+lock = json.load(open(root / '.governance/manifest.lock.json', encoding='utf-8'))
+assert 'approvalEvidence' in manifest
+assert manifest['coordination']['workstreams']['goal-release']['ownedPaths'] == [
+    'integration/**', 'uv.lock'
+]
+assert (root / '.governance/manifest.base.json').is_file()
+assert lock['standard']['sourceRevision'] == sys.argv[2]
+assert '.governance/manifest.json' not in lock['managedFiles']
+base = root / '.governance/manifest.base.json'
+assert lock['managedFiles'][str(base.relative_to(root))] == hashlib.sha256(base.read_bytes()).hexdigest()
+PY
+
+if python3 "$legacy_standard/scripts/create_adoption_lock.py" \
+  --target-root "$legacy_tampered" --source-revision "$legacy_upgrade_revision" --upgrade \
+  > /dev/null 2> "$fixture/legacy-tampered.err"; then
+  echo 'expected hash-mismatched legacy manifest to fail closed' >&2
+  exit 1
+fi
+grep -Eq 'target manifest (does not extend|violates)' "$fixture/legacy-tampered.err"
+test ! -e "$legacy_tampered/.governance/manifest.base.json"
+
 upgrade_standard="$fixture/upgrade-standard"
 cp -R "$standard" "$upgrade_standard"
 python3 - "$upgrade_standard/VERSION" "$upgrade_standard/governance/manifest.default.json" <<'PY'
@@ -302,5 +409,42 @@ python3 "$upgrade_standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$upgrade_revision" --check \
   > "$fixture/upgraded-check.out"
 grep -q '^up-to-date wellmanifest/new-project 0.14.1 ' "$fixture/upgraded-check.out"
+
+python3 - "$repo_root" <<'PY'
+import pathlib
+import re
+import sys
+
+root = pathlib.Path(sys.argv[1])
+policy = (root / 'POLICY.md').read_text(encoding='utf-8')
+contributing = (root / 'CONTRIBUTING.md').read_text(encoding='utf-8')
+hub_agents = (root / 'AGENTS.md').read_text(encoding='utf-8')
+target_agents = (root / 'template/files/AGENTS.template.md').read_text(encoding='utf-8')
+
+def rule(document: str, rule_id: str) -> str:
+    match = re.search(rf'RULE {rule_id}\b(.*?)(?=\nRULE |\n```)', document, re.S)
+    assert match, rule_id
+    return match.group(0)
+
+core = rule(policy, 'P-CORE-008')
+assert 'SESSION_EXECUTION_AUTHORIZATION' in core
+assert 'USER_REQUEST_AUTHORIZES_EXECUTION_OR_AUTONOMOUS_MODE' in core
+assert 'REQUIRE_SEPARATE_AUTHORITY' in core
+assert 'WAIT_FOR_APPROVAL' not in core
+assert 'EXTERNAL_TRUSTED_APPROVAL' in rule(policy, 'P-CORE-015')
+
+approval = rule(contributing, 'C-APPROVAL-002')
+assert 'USER_REQUEST_AUTHORIZES_EXECUTION_OR_AUTONOMOUS_MODE' in approval
+assert 'SEPARATE_CONFIRMATION_NOT_REQUIRED' in approval
+assert 'TRUSTED_MERGE_APPROVAL' in approval
+assert 'MATERIAL_OBJECTIVE_EXPANSION' in rule(contributing, 'C-APPROVAL-003')
+
+for agents in (hub_agents, target_agents):
+    assert 'SESSION_EXECUTION_AUTHORIZATION' in agents
+    assert 'without a second confirmation' in agents
+    assert 'trusted merge approval' in agents.lower()
+assert 'STOP & WAIT FOR USER REVIEW' not in hub_agents
+assert 'Stop in `WAIT_FOR_APPROVAL`' not in target_agents
+PY
 
 echo 'adoption lock: PASS'

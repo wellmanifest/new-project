@@ -18,3 +18,11 @@ autonomous-mode-request=explicit
 session-execution-authorization=GRANTED_WITHIN_INTENT
 destructive-or-out-of-scope-authority=NOT_GRANTED
 trusted-merge-self-approval=FORBIDDEN
+
+[2026-08-10 validation]
+focused-adoption-lock=PASS
+goal-shaped-legacy-upgrade=PASS
+tampered-legacy-hash=FAIL_CLOSED_EXPECTED
+full-linux-hub-contract=PASS
+git-diff-check=PASS
+publication-evidence=PENDING

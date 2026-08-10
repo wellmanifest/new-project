@@ -3,7 +3,7 @@
 - **ID**: ticket-046
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-10
 
 ## Cel i zakres
@@ -25,26 +25,26 @@ standardu i migracja błędnie kończy się komunikatem o brakującym
 
 ## Kryteria odbioru
 
-- [ ] AC-01: Legacy manifest jest bazą migracji wyłącznie wtedy, gdy istniejący
+- [x] AC-01: Legacy manifest jest bazą migracji wyłącznie wtedy, gdy istniejący
   lock zawiera jego hash i hash zgadza się z dokładną zawartością pliku.
-- [ ] AC-02: Migracja dodaje nowe standard-owned wymagania, zachowuje
+- [x] AC-02: Migracja dodaje nowe standard-owned wymagania, zachowuje
   target-owned workstreamy/ścieżki i tworzy zarządzany `manifest.base.json`.
-- [ ] AC-03: Zmieniony lub niezgodny z lockiem legacy manifest nadal kończy się
+- [x] AC-03: Zmieniony lub niezgodny z lockiem legacy manifest nadal kończy się
   fail-closed bez zapisu częściowej adopcji.
-- [ ] AC-04: Fresh adoption i istniejące upgrade'y `extendable` zachowują
+- [x] AC-04: Fresh adoption i istniejące upgrade'y `extendable` zachowują
   dotychczasowe zachowanie.
-- [ ] AC-05: Regresja o kształcie Goal 0.11.0→0.14.x przechodzi, a pełny Linux
+- [x] AC-05: Regresja o kształcie Goal 0.11.0→0.14.x przechodzi, a pełny Linux
   hub contract i `git diff --check` są zielone.
 - [ ] AC-06: Implementacja zostaje opublikowana jako pojedynczy PR, przechodzi
   Windows i niezależny exact-head Validator App review; immutable patch release
   pozostaje osobnym ticketem.
-- [ ] AC-07: Polecenie zlecające wykonanie lub tryb autonomiczny tworzy
+- [x] AC-07: Polecenie zlecające wykonanie lub tryb autonomiczny tworzy
   `SESSION_EXECUTION_AUTHORIZATION`; agent zapisuje plan i może przejść do
   implementacji bez osobnego pytania o tę samą zgodę.
-- [ ] AC-08: Brak autoryzacji dla destrukcji, sekretów, nowej koordynacji
+- [x] AC-08: Brak autoryzacji dla destrukcji, sekretów, nowej koordynacji
   zewnętrznej albo materialnie nowego celu nadal zatrzymuje pracę, a agent nie
   może uznać własnej zgody za trusted merge evidence.
-- [ ] AC-09: Reguły huba i zarządzany downstream `AGENTS.md` opisują tę samą
+- [x] AC-09: Reguły huba i zarządzany downstream `AGENTS.md` opisują tę samą
   semantykę autonomii bez sprzecznego bezwarunkowego `STOP & WAIT`.
 
 ## Ryzyka i uwagi
@@ -60,9 +60,11 @@ standardu i migracja błędnie kończy się komunikatem o brakującym
 
 ## Stan
 
-`IN_PROGRESS / EDIT`. Użytkownik jawnie zatwierdził `ticket-046` i polecił
+`IN_PROGRESS / VALIDATION`. Użytkownik jawnie zatwierdził `ticket-046` i polecił
 wyłączenie powtórnej bramki zgody na rzecz autonomicznej realizacji. Zgoda
 sesyjna obejmuje opisany bounded scope, ale nie zastępuje trusted merge review.
+Focused regression i pełny Linux hub contract przeszły; pozostały protected
+CI i exact-head Validator App dla opublikowanego PR.
 
 ## Uczestnicy
 

@@ -72,14 +72,24 @@
     "runtimeDependencies": [],
     "validation": [
       {
-        "criterion": "AC-01/AC-03",
+        "criterion": "AC-01",
         "commands": ["bash tests/adoption-lock.test.sh"],
-        "evidence": "Locked legacy content is accepted and hash mismatch fails closed"
+        "evidence": "Only legacy content authenticated by its installed lock hash is used as the migration base"
       },
       {
-        "criterion": "AC-02/AC-04",
+        "criterion": "AC-02",
         "commands": ["bash tests/adoption-lock.test.sh"],
-        "evidence": "Legacy, fresh and extendable upgrades preserve their declared ownership boundaries"
+        "evidence": "Legacy migration adds current requirements, preserves target ownership and creates manifest.base.json"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "A hash-mismatched legacy target fails without partial adoption writes"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "Fresh and existing extendable upgrades preserve their declared ownership boundaries"
       },
       {
         "criterion": "AC-05",
@@ -92,9 +102,19 @@
         "evidence": "Published PR head passes both required checks and independent approval"
       },
       {
-        "criterion": "AC-07/AC-08/AC-09",
+        "criterion": "AC-07",
         "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-scripts.test.sh"],
-        "evidence": "Hub and managed agent contracts permit bounded autonomous execution while preserving hard safety and exact-head merge approval"
+        "evidence": "An explicit execution or autonomous request creates bounded session authorization without a second prompt"
+      },
+      {
+        "criterion": "AC-08",
+        "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-scripts.test.sh"],
+        "evidence": "Hard safety authority and exact-head merge approval remain separate from session execution authorization"
+      },
+      {
+        "criterion": "AC-09",
+        "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-scripts.test.sh"],
+        "evidence": "Hub and managed agent contracts expose the same bounded autonomy semantics"
       }
     ]
   }

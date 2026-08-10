@@ -12,7 +12,7 @@
 - [ ] [`ticket-046`](project/ticket-046/README.md) — migrować hash-locked legacy
   target manifest jako właściwą bazę kontraktu `extendable` oraz przyjmować
   jawne zlecenie wykonania/autonomii jako bounded session authorization bez
-  ponownego pytania. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  ponownego pytania. Stan: `IN_PROGRESS / VALIDATION`; klasyfikacja:
   `BUG / P1 / regression`.
 
 - [x] [`ticket-045`](project/ticket-045/README.md) — ustanowiono zarządzaną

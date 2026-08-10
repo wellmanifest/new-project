@@ -39,8 +39,15 @@ merge authority outside that derivation.
 ## Actual changes
 
 - Reproduced the failure without modifying target repositories.
-- Recorded the user's explicit authorization for ticket-046 and autonomous
-  execution; implementation files remain unchanged at this planning commit.
+- Made the authenticated installed legacy target projection the previous base;
+  historical pristine defaults are no longer reconstructed.
+- Added a Goal-shaped unavailable-revision migration and tampered-hash negative
+  fixture while retaining fresh and extendable upgrade coverage.
+- Replaced unconditional confirmation pauses with bounded session execution
+  authorization in hub policy, procedure and both agent instruction surfaces.
+- Preserved separate authority for destructive/out-of-scope actions and the
+  external exact-head trusted merge contract.
+- Passed the focused regression and full maintained Linux hub contract.
 
 ## Authorization boundary
 

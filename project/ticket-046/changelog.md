@@ -8,3 +8,8 @@
   safety boundary, bounded machine intent and validation plan.
 - Expanded the same governance workstream with the user's explicit bounded
   autonomy request and recorded session authorization boundaries.
+- Migrated legacy manifests from their exact lock-authenticated target
+  projection instead of an unavailable or mismatched historical default.
+- Aligned hub and managed agent instructions on bounded autonomous execution.
+- Added Goal-shaped positive migration, hash-tamper and policy semantic
+  regressions; the complete Linux hub contract passes.
