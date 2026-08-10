@@ -43,3 +43,8 @@ validator-actor=ifuri-validator-agent[bot]
 validator-state=APPROVED
 validator-head=20a450b8be9ed9b410c190d2bf898400917be47a
 merge=cc898c11a1d45d9099b79d9e4d60c06c775567bd
+
+[2026-08-10 closure-delivery-retry]
+first-result=BLOCKED_BEFORE_PUSH_BY_STALE_LOCAL_MERGED_BRANCH
+cleanup=COMPLETED
+unpublished-implementation-loss=NONE
