@@ -33,3 +33,13 @@ delivery-mode=pull-request
 registry-publish=DISABLED
 version-bump=NONE
 result=PASS
+
+[2026-08-10 protected-publication]
+pull-request=https://github.com/wellmanifest/new-project/pull/73
+head=20a450b8be9ed9b410c190d2bf898400917be47a
+linux-test=PASS
+windows-governance=PASS
+validator-actor=ifuri-validator-agent[bot]
+validator-state=APPROVED
+validator-head=20a450b8be9ed9b410c190d2bf898400917be47a
+merge=cc898c11a1d45d9099b79d9e4d60c06c775567bd

@@ -2,8 +2,8 @@
 
 - **ID**: ticket-046
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-10
 
 ## Cel i zakres
@@ -35,7 +35,7 @@ standardu i migracja błędnie kończy się komunikatem o brakującym
   dotychczasowe zachowanie.
 - [x] AC-05: Regresja o kształcie Goal 0.11.0→0.14.x przechodzi, a pełny Linux
   hub contract i `git diff --check` są zielone.
-- [ ] AC-06: Implementacja zostaje opublikowana jako pojedynczy PR, przechodzi
+- [x] AC-06: Implementacja zostaje opublikowana jako pojedynczy PR, przechodzi
   Windows i niezależny exact-head Validator App review; immutable patch release
   pozostaje osobnym ticketem.
 - [x] AC-07: Polecenie zlecające wykonanie lub tryb autonomiczny tworzy
@@ -60,11 +60,12 @@ standardu i migracja błędnie kończy się komunikatem o brakującym
 
 ## Stan
 
-`IN_PROGRESS / VALIDATION`. Użytkownik jawnie zatwierdził `ticket-046` i polecił
+`DONE / DONE`. Użytkownik jawnie zatwierdził `ticket-046` i polecił
 wyłączenie powtórnej bramki zgody na rzecz autonomicznej realizacji. Zgoda
 sesyjna obejmuje opisany bounded scope, ale nie zastępuje trusted merge review.
-Focused regression i pełny Linux hub contract przeszły; pozostały protected
-CI i exact-head Validator App dla opublikowanego PR.
+PR #73 przeszedł pełny Linux/Windows CI i exact-head review
+`ifuri-validator-agent[bot]` dla `20a450b`, po czym został scalony jako
+`main@cc898c1`. Patch release pozostaje osobnym ticketem.
 
 ## Uczestnicy
 
