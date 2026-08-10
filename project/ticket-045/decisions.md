@@ -1,0 +1,33 @@
+# Decision log
+
+```dsl
+DECISION D-045-0001
+TICKET ticket-045
+HEAD_SHA f4e1fd60bb5e13d1cc2d9c94d291ef542f36d0bc
+CORRELATION_ID new-project-ticket-045-goal-capability-probe
+ACTOR agent:codex
+APPLIED_RULE P-TOOL-001
+INPUT installed_goal_version = "2.1.284"
+INPUT installed_goal_delivery_mode_help = false
+INPUT repository_goal_version = "2.1.284"
+INPUT repository_goal_delivery_mode_help = true
+INPUT expected_verdict_from_rule = "REQUIRE_FEATURE_PROBE"
+VERDICT REQUIRE_FEATURE_PROBE AUTHORITY DETERMINISTIC
+REJECTED REQUIRE_VERSION_ONLY BECAUSE SAME_VERSION_HAS_DIFFERENT_OBSERVED_CAPABILITIES
+ASSERT TOOL_STATUS = VERIFIED_BY_INVOCATION
+```
+
+```dsl
+DECISION D-045-0002
+TICKET ticket-045
+HEAD_SHA f4e1fd60bb5e13d1cc2d9c94d291ef542f36d0bc
+CORRELATION_ID new-project-ticket-045-interactive-approval
+ACTOR agent:codex
+APPLIED_RULE C-APPROVAL-002
+INPUT explicit_interactive_approval = true
+INPUT approved_ticket = "ticket-045"
+INPUT expected_verdict_from_rule = "ENTER_EDIT"
+VERDICT ENTER_EDIT AUTHORITY DETERMINISTIC
+REJECTED WAIT_FOR_APPROVAL BECAUSE USER_REQUESTED_CONTINUATION
+ASSERT INTERACTIVE_APPROVAL_IS_NOT_TRUSTED_MERGE_EVIDENCE
+```

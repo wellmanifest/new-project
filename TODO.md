@@ -9,6 +9,13 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-045`](project/ticket-045/README.md) — ustanowić zarządzaną
+  publikację przez `goal -a` z jawnym trybem dostawy, feature probe oraz
+  separacją publikacji implementacji od registry/release. Stan:
+  `IN_PROGRESS / VALIDATION`; Linux hub contract PASS, oczekuje na ewentualną
+  publikację PR oraz Windows/exact-head evidence. Klasyfikacja:
+  `FEATURE / P1 / requested`.
+
 - [x] [`ticket-044`](project/ticket-044/README.md) — opublikowano scalony
   kontrakt `extendable` jako immutable minor `v0.14.0`, po pełnym Linux,
   Windows, exact-head Validator i czystym detached merge teście. Stan:
