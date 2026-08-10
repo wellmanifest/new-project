@@ -2,8 +2,8 @@
 
 - **ID**: {TICKET_ID}
 - **Owner**: {OWNER_NAME}
-- **Status**: PLAN
-- **Workflow state**: WAIT_FOR_APPROVAL
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
 - **Utworzono**: {YYYY-MM-DD}
 
 ## Cel i Zakres

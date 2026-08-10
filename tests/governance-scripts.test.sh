@@ -59,6 +59,15 @@ test -f "$ticket/changelog.md"
 test ! -e "$ticket/user-alice.md"
 grep -q 'unresolved:human' "$ticket/README.md"
 grep -q 'participant-id: agent:codex' "$ticket/ai-codex.md"
+grep -q '^\- \*\*Status\*\*: IN_PROGRESS$' "$ticket/README.md"
+grep -q '^\- \*\*Workflow state\*\*: EDIT$' "$ticket/README.md"
+grep -q 'SESSION_EXECUTION_AUTHORIZATION' "$ticket/preprompt.md"
+grep -q 'without a second confirmation' "$ticket/ai-codex.md"
+if grep -Eq 'WAIT_FOR_APPROVAL|waiting for approval|Human approval is required before implementation' \
+  "$ticket/README.md" "$ticket/preprompt.md" "$ticket/ai-codex.md"; then
+  echo 'Generated ticket restored the redundant approval pause' >&2
+  exit 1
+fi
 grep -q 'did not create user-\* files' "$fixture/first.err"
 grep -qx '# Analysis-owned project README' "$fixture/project/README.md"
 grep -q 'ticket-001' "$fixture/project/TICKETS.md"
@@ -82,8 +91,6 @@ assert intent['dependsOn'] == []
 assert intent['conflictsWith'] == []
 assert intent['integrationTicket'] is None
 PY
-
-sed -i 's/\*\*Status\*\*: PLAN/**Status**: IN_PROGRESS/' "$ticket/README.md"
 
 status=0
 (
@@ -113,8 +120,8 @@ test -d "$fixture/project/ticket-003"
 grep -q '"workstream": "interfaces"' "$fixture/project/ticket-003/intent.json"
 
 sed -i 's/\*\*Status\*\*: BLOCKED/**Status**: DONE/' "$ticket/README.md"
-sed -i 's/\*\*Status\*\*: PLAN/**Status**: DONE/' "$fixture/project/ticket-002/README.md"
-sed -i 's/\*\*Status\*\*: PLAN/**Status**: DONE/' "$fixture/project/ticket-003/README.md"
+sed -i 's/\*\*Status\*\*: IN_PROGRESS/**Status**: DONE/' "$fixture/project/ticket-002/README.md"
+sed -i 's/\*\*Status\*\*: IN_PROGRESS/**Status**: DONE/' "$fixture/project/ticket-003/README.md"
 (
   cd "$fixture"
   bash project/new-ticket.sh --title 'Second ticket' --agent codex --workstream application > third.out
@@ -127,6 +134,23 @@ grep -q 'ticket-001' "$fixture/project/TICKETS.md"
 grep -q 'ticket-002' "$fixture/project/TICKETS.md"
 grep -q 'ticket-003' "$fixture/project/TICKETS.md"
 grep -q 'ticket-004' "$fixture/project/TICKETS.md"
+
+# Adopted targets receive new-ticket.sh but not the hub-only authoring
+# templates. Its built-in fallback must expose the same autonomous default.
+fallback="$fixture/fallback"
+mkdir -p "$fallback/project" "$fallback/.governance"
+cp "$repo_root/project/new-ticket.sh" "$fallback/project/new-ticket.sh"
+cp "$repo_root/governance/work-classification.dsl.json" \
+  "$fallback/.governance/work-classification.dsl.json"
+(
+  cd "$fallback"
+  bash project/new-ticket.sh --title 'Fallback autonomous ticket' \
+    --agent codex --workstream application > fallback.out
+)
+grep -q '^\- \*\*Status\*\*: IN_PROGRESS$' "$fallback/project/ticket-001/README.md"
+grep -q '^\- \*\*Workflow state\*\*: EDIT$' "$fallback/project/ticket-001/README.md"
+grep -q 'SESSION_EXECUTION_AUTHORIZATION' "$fallback/project/ticket-001/preprompt.md"
+grep -q 'without a second confirmation' "$fallback/project/ticket-001/ai-codex.md"
 
 status=0
 (

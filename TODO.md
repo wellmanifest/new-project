@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-047`](project/ticket-047/README.md) — ujednolicić autonomiczny
+  stan generowanych ticketów i opublikować pełną naprawę jako immutable
+  `v0.14.1`. Stan: `IN_PROGRESS / VALIDATION`; klasyfikacja:
+  `SERVICE / P1 / requested`; zależy od `ticket-046`.
+
 - [x] [`ticket-046`](project/ticket-046/README.md) — zmigrowano hash-locked legacy
   target manifest jako właściwą bazę kontraktu `extendable` oraz przyjmować
   jawne zlecenie wykonania/autonomii jako bounded session authorization bez

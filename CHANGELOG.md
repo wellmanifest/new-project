@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-08-10
+
+### Bounded autonomous execution and safe legacy migration
+
+- Treat an explicit request to execute or work autonomously as bounded session
+  authorization, eliminating a redundant confirmation pause while retaining
+  separate authority for destructive actions, secrets, material scope growth
+  and trusted exact-head merge approval.
+- Generate new tickets consistently in `IN_PROGRESS / EDIT` with the same
+  authorization language in hub templates and the managed downstream fallback.
+- Migrate a legacy target manifest from the exact content authenticated by its
+  installed lock hash instead of reconstructing a possibly unavailable or
+  mismatched pristine historical default.
+- Preserve target-owned manifest extensions, add current managed requirements
+  during upgrade and fail closed on a tampered legacy manifest.
+- Validate the patch through Goal-shaped migration, generator fallback, Linux,
+  Windows and independent exact-head Validator App regressions.
+
 ## [0.14.0] - 2026-08-09
 
 ### Extendable target manifest contract
