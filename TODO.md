@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-063`](project/ticket-063/README.md) — domknąć lokalny lifecycle
+  worktree/klonów oraz instalować rzeczywisty zdalny enforcement w pakiecie
+  adopcyjnym. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  `BUG / P1 / regression`.
+
 - [x] [`ticket-059`](project/ticket-059/README.md) — rootowy Compose jest
   markerem stosu Docker, a nested Dockerfiles nadal są wyliczane jawnie i
   kontrolowane. Pełny Linux contract przechodzi; pilot `mcp` nie ma już

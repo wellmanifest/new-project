@@ -1,0 +1,5 @@
+[2026-08-12] Confirmed the DSL covers remote branches but not local workspaces.
+[2026-08-12] Confirmed the adoption package omits live remote lifecycle CI.
+[2026-08-12] Audited 26 pilot/validation paths; no product-code delta found.
+[2026-08-12] Removed 19 linked worktrees and trashed 7 clean pilot clones.
+
