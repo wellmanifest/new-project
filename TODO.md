@@ -15,10 +15,25 @@
   Stan: `DONE / DONE`; klasyfikacja:
   `BUG / P1 / requested`; zależy od lokalnego `ticket-052`.
 
+- [x] [`ticket-053`](project/ticket-053/README.md) — usunięto 17 błędów Ruffa
+  wprowadzanych przez zarządzany payload Pythona w żywej adopcji `code2docs`,
+  zachowując semantykę validatora i poprawne tryby wykonywalne. Stan:
+  `DONE / DONE`; klasyfikacja: `BUG / P1 / regression`.
+
 - [x] [`ticket-052`](project/ticket-052/README.md) — pełne SHA-256 digesty są
   egzekwowane dla Dockerfile `FROM` i Compose `image:` w targetach z Docker
   opt-in.
   Stan: `DONE / DONE`; focused, traceability i full Linux contract przechodzą.
+
+- [x] [`ticket-051`](project/ticket-051/README.md) — Docker jest opt-in w
+  domyślnym manifeście, a ownership zarządzanych launcherów i `goal.yaml` jest
+  kompletny. Stan: `DONE / DONE`; focused i full Linux contract przechodzą,
+  bez external delivery.
+
+- [x] [`ticket-049`](project/ticket-049/README.md) — obsłużono pierwszą,
+  provenance-bound adopcję managed package bez bazowego locka, nie wyłączając
+  z ownershipu plików targetu zastępowanych podczas bootstrapu. Stan:
+  `DONE / DONE`; pełny Linux contract przechodzi, bez external delivery.
 
 - [x] [`ticket-047`](project/ticket-047/README.md) — ujednolicono autonomiczny
   stan generowanych ticketów i opublikować pełną naprawę jako immutable

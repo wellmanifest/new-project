@@ -12,9 +12,10 @@ import re
 import stat
 import subprocess
 import sys
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 RUNTIME_VERSION = "0.10.0"
 ACTIVE_DEFAULT = {"IN_PROGRESS"}
@@ -139,9 +140,10 @@ def work_classification_header_error(value: Any) -> str | None:
 
 
 def complexity_rule_assignment(when: dict[str, Any]) -> tuple[tuple[str, str] | None, str | None]:
-    if when.get("baseline") == "measured":
-        if when.get("delta") == "increased" or when.get("threshold") == "crossed":
-            return ("BUG", "regression"), "impact"
+    if when.get("baseline") == "measured" and (
+        when.get("delta") == "increased" or when.get("threshold") == "crossed"
+    ):
+        return ("BUG", "regression"), "impact"
     if when == {
         "signal": "cyclomatic-complexity",
         "baseline": "pre-existing",
@@ -459,10 +461,16 @@ def standard_adoption_error(value: Any) -> str | None:
         return "delivery standardAdoption fields are invalid"
     if value.get("sourceRepository") != "wellmanifest/new-project":
         return "delivery standardAdoption sourceRepository is invalid"
-    revisions = [value.get("fromRevision"), value.get("toRevision")]
-    if any(not isinstance(item, str) or re.fullmatch(r"[0-9a-f]{40}", item) is None for item in revisions):
+    from_revision = value.get("fromRevision")
+    to_revision = value.get("toRevision")
+    if from_revision is not None and (
+        not isinstance(from_revision, str)
+        or re.fullmatch(r"[0-9a-f]{40}", from_revision) is None
+    ):
         return "delivery standardAdoption revisions must be full lowercase commit SHAs"
-    if revisions[0] == revisions[1]:
+    if not isinstance(to_revision, str) or re.fullmatch(r"[0-9a-f]{40}", to_revision) is None:
+        return "delivery standardAdoption revisions must be full lowercase commit SHAs"
+    if from_revision == to_revision:
         return "delivery standardAdoption revisions must differ"
     return None
 
@@ -550,11 +558,13 @@ def segments_may_overlap(first: str, second: str) -> bool:
         return False
     first_suffix = segment_literal_suffix(first)
     second_suffix = segment_literal_suffix(second)
-    if first_suffix and second_suffix and not (
-        first_suffix.endswith(second_suffix) or second_suffix.endswith(first_suffix)
-    ):
-        return False
-    return True
+    return not (
+        first_suffix
+        and second_suffix
+        and not (
+            first_suffix.endswith(second_suffix) or second_suffix.endswith(first_suffix)
+        )
+    )
 
 
 def patterns_may_overlap(first: str, second: str) -> bool:
@@ -575,8 +585,6 @@ def patterns_may_overlap(first: str, second: str) -> bool:
             result = remaining_are_globstars(second_parts, second_index)
         elif second_index == len(second_parts):
             result = remaining_are_globstars(first_parts, first_index)
-        elif first_parts[first_index] == "**" and second_parts[second_index] == "**":
-            result = visit(first_index + 1, second_index) or visit(first_index, second_index + 1)
         elif first_parts[first_index] == "**":
             result = visit(first_index + 1, second_index) or visit(first_index, second_index + 1)
         elif second_parts[second_index] == "**":
@@ -634,13 +642,13 @@ def pattern_covered_by(pattern: str, owner_pattern: str) -> bool:
 
 def git_output(root: Path, args: list[str]) -> bytes:
     return subprocess.run(
-        ["git", *args], cwd=root, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        ["git", *args], cwd=root, check=True, capture_output=True,
     ).stdout
 
 
 def changed_paths(root: Path, base: str | None, head: str, explicit: list[str]) -> list[str]:
     if explicit:
-        normalized = sorted(set(path.replace("\\", "/").removeprefix("./") for path in explicit if path))
+        normalized = sorted({path.replace("\\", "/").removeprefix("./") for path in explicit if path})
         for path in normalized:
             safe_repo_path(root, path)
         return normalized
@@ -652,7 +660,7 @@ def changed_paths(root: Path, base: str | None, head: str, explicit: list[str]) 
             tracked = git_output(root, ["diff", "--name-only", "-z", "HEAD"])
             untracked = git_output(root, ["ls-files", "--others", "--exclude-standard", "-z"])
             paths = (tracked + untracked).decode("utf-8", "surrogateescape").split("\0")
-        return sorted(set(path for path in paths if path))
+        return sorted({path for path in paths if path})
     except (subprocess.CalledProcessError, FileNotFoundError) as error:
         raise RuntimeError("Git could not determine the changed-path set") from error
 
@@ -967,7 +975,7 @@ def check_lock(
         return
     try:
         strategies = package_strategies(package_path.read_bytes())
-    except (OSError, ValueError, json.JSONDecodeError) as error:
+    except (OSError, TypeError, ValueError, json.JSONDecodeError) as error:
         report.add(
             "GOV-SYNC-001", f"Governance package manifest is invalid: {error}",
             "Restore the pinned package manifest through an explicit standard upgrade.",
@@ -1130,7 +1138,7 @@ def repository_files(root: Path, changed: list[str]) -> list[str]:
         files = raw.decode("utf-8", "surrogateescape").split("\0")
     except (subprocess.CalledProcessError, FileNotFoundError):
         files = [rel(root, path) for path in root.rglob("*") if path.is_file() and ".git" not in path.parts]
-    return sorted(set([*files, *changed]) - {""})
+    return sorted({*files, *changed} - {""})
 
 
 def valid_active_tickets(
@@ -1329,7 +1337,7 @@ def check_workstream_claims(
             report.add(
                 "GOV-WORKSTREAM-003", f"Ticket {record.directory.name} claims paths outside workstream '{record.intent['workstream']}'.",
                 "Narrow allowedPaths or route the paths to their owning workstream/integration ticket and obtain fresh approval.",
-                sorted(set([*unowned_patterns, *unowned_claims]))[:20],
+                sorted({*unowned_patterns, *unowned_claims})[:20],
                 {
                     "ticket": record.directory.name,
                     "workstream": record.intent["workstream"],
@@ -1536,8 +1544,8 @@ def check_stacks(root: Path, manifest: dict[str, Any], profiles_path: Path | Non
     try:
         profiles = load_json(profiles_path)["profiles"]
         if not isinstance(profiles, dict):
-            raise ValueError("profiles must be an object")
-    except (OSError, KeyError, ValueError, json.JSONDecodeError):
+            raise TypeError("profiles must be an object")
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
         report.add("GOV-MANIFEST-001", "Stack profile catalog is unreadable.", "Restore the pinned stack profile catalog.", [])
         return
     for stack in stacks:
@@ -2361,13 +2369,13 @@ def package_entry(item: Any) -> tuple[str, str, str]:
         raise ValueError("package manifest entry fields are invalid")
     source, target = item.get("source"), item.get("target")
     if not isinstance(source, str) or not isinstance(target, str):
-        raise ValueError("package manifest entry is invalid")
+        raise TypeError("package manifest entry is invalid")
     if not relative_pattern(source) or not relative_pattern(target):
         raise ValueError("package manifest entry is invalid")
     if item.get("strategy") not in {"managed", "seed", "extendable"}:
         raise ValueError("package manifest entry is invalid")
     if not isinstance(item.get("executable"), bool):
-        raise ValueError("package manifest entry is invalid")
+        raise TypeError("package manifest entry is invalid")
     if item.get("strategy") == "extendable" and (
         source != "governance/manifest.default.json"
         or target != ".governance/manifest.json"
@@ -2385,7 +2393,7 @@ def package_strategies(content: bytes) -> dict[str, str]:
         raise ValueError("package manifest schema is invalid")
     strategies: dict[str, str] = {}
     for item in document["files"]:
-        source, target, strategy = package_entry(item)
+        _source, target, strategy = package_entry(item)
         if target in strategies:
             raise ValueError("package manifest targets must be unique")
         strategies[target] = strategy
@@ -2447,19 +2455,26 @@ def standard_adoption_records(active: list[TicketRecord]) -> list[TicketRecord]:
 def load_standard_adoption_evidence(
     root: Path,
     base: str,
-    adoption: dict[str, str],
-) -> tuple[dict[str, str], dict[str, str], dict[str, str], dict[str, str]]:
+    adoption: dict[str, Any],
+) -> tuple[dict[str, str], dict[str, str], dict[str, str], dict[str, str], bool]:
     base_package_content = git_revision_file(root, base, ".governance/package-manifest.json")
     base_lock_content = git_revision_file(root, base, ".governance/manifest.lock.json")
-    if base_package_content is None or base_lock_content is None:
-        raise ValueError("base package manifest or lock is missing")
     head_package_path = safe_repo_path(root, ".governance/package-manifest.json")
     head_lock_path = safe_repo_path(root, ".governance/manifest.lock.json")
     if not head_package_path.is_file() or not head_lock_path.is_file():
         raise ValueError("head package manifest or lock is missing")
-    base_strategies = package_strategies(base_package_content)
+    initial = adoption["fromRevision"] is None
+    if initial:
+        if base_package_content is not None or base_lock_content is not None:
+            raise ValueError("initial adoption base already contains a package manifest or lock")
+        base_strategies: dict[str, str] = {}
+        base_hashes: dict[str, str] = {}
+    else:
+        if base_package_content is None or base_lock_content is None:
+            raise ValueError("upgrade base package manifest or lock is missing")
+        base_strategies = package_strategies(base_package_content)
+        base_hashes = adoption_lock(base_lock_content, adoption["fromRevision"])
     head_strategies = package_strategies(head_package_path.read_bytes())
-    base_hashes = adoption_lock(base_lock_content, adoption["fromRevision"])
     head_hashes = adoption_lock(head_lock_path.read_bytes(), adoption["toRevision"])
     base_managed = {path for path, strategy in base_strategies.items() if strategy == "managed"}
     head_managed = {path for path, strategy in head_strategies.items() if strategy == "managed"}
@@ -2467,7 +2482,7 @@ def load_standard_adoption_evidence(
         raise ValueError("base package targets and lock targets differ")
     if set(head_hashes) != head_managed:
         raise ValueError("package targets and lock targets differ")
-    return base_strategies, head_strategies, base_hashes, head_hashes
+    return base_strategies, head_strategies, base_hashes, head_hashes, initial
 
 
 def verify_changed_managed_paths(
@@ -2478,6 +2493,7 @@ def verify_changed_managed_paths(
     head_strategies: dict[str, str],
     base_hashes: dict[str, str],
     head_hashes: dict[str, str],
+    initial: bool,
 ) -> set[str]:
     exempt: set[str] = set()
     for raw_path in changed:
@@ -2493,6 +2509,10 @@ def verify_changed_managed_paths(
             if content_digest(base_content) != base_hashes[raw_path]:
                 raise ValueError(f"base managed hash differs: {raw_path}")
         elif base_content is not None:
+            if initial:
+                # Installing the standard does not erase target ownership.
+                # A replaced path remains an ordinary implementation change.
+                continue
             raise ValueError(f"new managed target already existed at base: {raw_path}")
         exempt.add(raw_path)
     if not exempt:
@@ -2527,14 +2547,14 @@ def atomic_standard_adoption_paths(
         report.add(
             "GOV-SYNC-001",
             f"Atomic standard adoption preconditions are invalid: {error or 'base and changed lock are required'}.",
-            "Declare distinct immutable revisions, compare against the approved Git base and regenerate the complete lock through Goal.",
+            "Declare null-to-SHA bootstrap or distinct immutable upgrade revisions, compare against the approved Git base and regenerate the complete lock through Goal.",
             evidence_paths,
         )
         return set()
     try:
         evidence = load_standard_adoption_evidence(root, base, adoption)
         return verify_changed_managed_paths(root, base, changed, *evidence)
-    except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
+    except (OSError, TypeError, ValueError, KeyError, json.JSONDecodeError) as error:
         report.add(
             "GOV-SYNC-001",
             f"Atomic standard adoption is inconsistent: {error}.",

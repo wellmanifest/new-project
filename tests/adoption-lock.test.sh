@@ -42,12 +42,15 @@ import sys
 root = pathlib.Path(sys.argv[1])
 lock = json.load(open(root / '.governance/manifest.lock.json', encoding='utf-8'))
 manifest = json.load(open(root / '.governance/manifest.json', encoding='utf-8'))
+base = json.load(open(root / '.governance/manifest.base.json', encoding='utf-8'))
 assert lock['standard']['sourceRevision'] == sys.argv[2]
 assert lock['standard']['publicationStatus'] == 'published'
 assert lock['standard']['version'] == '0.14.1'
 assert '.governance/manifest.base.json' in lock['managedFiles']
 assert '.governance/manifest.json' not in lock['managedFiles']
 assert (root / '.governance/manifest.base.json').is_file()
+assert manifest['docker']['required'] is False
+assert 'required' not in base['docker']
 governance_paths = manifest['coordination']['workstreams']['governance']['ownedPaths']
 assert 'CHANGELOG.md' in governance_paths
 assert '.env.example' in governance_paths
@@ -63,10 +66,16 @@ manifest = json.load(open(path, encoding='utf-8'))
 manifest['coordination']['workstreams']['sdk'] = {
     'ownedPaths': ['sdk/**', 'test/sdk*', 'test/python-runtime.test.ts'],
 }
+manifest['requiredFiles'].append('Dockerfile')
+manifest['docker']['required'] = True
+manifest['stacks'].append('docker')
 open(path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2, sort_keys=True) + '\n')
 PY
 test -x "$target/project/governance-check.sh"
 test -x "$target/project.sh"
+test -x "$target/.governance/check_required_checks.py"
+test -x "$target/.governance/decision_record.py"
+test -x "$target/.governance/governance_check.py"
 test -f "$target/project.bat"
 test -f "$target/AGENTS.md"
 test -f "$target/.governance/approval-evidence.schema.json"
@@ -75,6 +84,17 @@ python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check \
   > "$fixture/current-check.out"
 grep -q '^up-to-date wellmanifest/new-project ' "$fixture/current-check.out"
+python3 - "$target/.governance/manifest.json" "$target/.governance/manifest.base.json" <<'PY'
+import json
+import sys
+
+manifest = json.load(open(sys.argv[1], encoding='utf-8'))
+base = json.load(open(sys.argv[2], encoding='utf-8'))
+assert 'Dockerfile' in manifest['requiredFiles']
+assert manifest['docker']['required'] is True
+assert 'docker' in manifest['stacks']
+assert 'required' not in base['docker']
+PY
 
 tampered_manifest="$fixture/tampered-manifest"
 cp -R "$target" "$tampered_manifest"
@@ -115,6 +135,15 @@ grep -q 'rerun with --upgrade' "$fixture/drift.err"
 python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --upgrade > /dev/null
 ! grep -q '# drift' "$target/project/governance-check.sh"
+python3 - "$target/.governance/manifest.json" <<'PY'
+import json
+import sys
+
+manifest = json.load(open(sys.argv[1], encoding='utf-8'))
+assert 'Dockerfile' in manifest['requiredFiles']
+assert manifest['docker']['required'] is True
+assert 'docker' in manifest['stacks']
+PY
 
 chmod -x "$target/project/governance-check.sh"
 set +e
