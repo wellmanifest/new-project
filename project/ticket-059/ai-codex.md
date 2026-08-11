@@ -32,9 +32,20 @@ relaxing content validation.
 - Verified the target has root `docker-compose.yml`, eight nested Dockerfiles
   and no root `Dockerfile`, while the published profile recognizes only the
   latter two root names.
+- Added four conventional Compose root names to the Docker profile and `.yaml`
+  variants to the default manifest.
+- Added positive compose-root/nested-Dockerfile and negative nested-only
+  fixtures; focused and complete Linux contracts pass on `e5d67c0`.
+- Exercised the exact SHA on a fresh `mcp` clone. Package adoption is
+  idempotent, preserves target automation and no longer emits
+  `GOV-STACK-001`.
+- Confirmed the next gate is the accurate `GOV-DOCKER-002` for ten existing
+  mutable image references. Left the downstream ticket blocked rather than
+  fabricate digests or hide Docker.
+- Completed the bounded standard repair locally without external delivery.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- None inside the recorded intent.
 - New authority is still required for destructive action, secret access, new
   external coordination, material objective expansion and trusted merge.
