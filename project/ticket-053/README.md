@@ -2,8 +2,8 @@
 
 - **ID**: ticket-053
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-11
 
 ## Cel i Zakres
@@ -20,17 +20,32 @@ governance, diagnostyki, schematów ani publicznego zachowania walidatora.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: `scripts/decision_record.py` i `scripts/governance_check.py`
+- [x] AC-01: `scripts/decision_record.py` i `scripts/governance_check.py`
   przechodzą konfigurację Ruffa `code2docs` bez naruszeń i bez wyciszeń.
-- [ ] AC-02: trzy zarządzane skrypty `.governance/*.py` są deklarowane jako
+- [x] AC-02: trzy zarządzane skrypty `.governance/*.py` są deklarowane jako
   executable, a test adopcji potwierdza tryb w repo docelowym.
-- [ ] AC-03: pełny kontrakt Linux, testy validatora, decision record i adopcji
+- [x] AC-03: pełny kontrakt Linux, testy validatora, decision record i adopcji
   przechodzą bez zmiany oczekiwanych kodów `GOV-*`; fixture testujący
   `GOV-DOCKER-002` jawnie włącza opcjonalną politykę Docker.
-- [ ] AC-04: złożony kandydat po ponownej adopcji w `code2docs` nie zwiększa
+- [x] AC-04: złożony kandydat po ponownej adopcji w `code2docs` nie zwiększa
   baseline Ruffa 514 i zachowuje 161 przechodzących testów produktu.
-- [ ] AC-05: zmiana pozostaje lokalna; bez push, PR, merge, tagu, release ani
+- [x] AC-05: zmiana pozostaje lokalna; bez push, PR, merge, tagu, release ani
   publikacji pakietu.
+
+## Wynik walidacji
+
+- Trzy zarządzane źródła przechodzą przypięty Ruff 0.16.0 z konfiguracją
+  rzeczywistego `code2docs`: zero błędów, bez `noqa` i bez wykluczeń.
+- Pełne osiem zestawów testów Linux przechodzi, w tym validator, adoption lock,
+  decision record, branch lifecycle i rule-enforcement traceability.
+- Test adopcji potwierdza tryb executable wszystkich trzech plików Pythona.
+- Złożony kandydat `44f4685fefa1b657dcef32e06625e66daf78eb31`
+  przechodzi pełny kontrakt. W `code2docs` przywraca baseline Ruffa 514, daje
+  `GOV-PASS`, idempotencję Goal i 161 przechodzących testów produktu.
+- Docker Engine 29.1.3 jest dostępny, lecz hub nie ma Dockerfile ani Compose;
+  build/runtime Docker nie ma zastosowania do tego ticketu.
+- Nie wykonano natywnego testu Windows ani żadnej publikacji zewnętrznej;
+  zmiana nie dotyka entrypointów Windows.
 
 ## Ryzyka i Uwagi
 

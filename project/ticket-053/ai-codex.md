@@ -36,9 +36,15 @@ into a stack-lint regression even though the deterministic gate reports
 - During combined validation, found that the Docker-reference fixture did not
   opt into ticket 051's default-off Docker policy and therefore could not
   exercise ticket 052's diagnostics.
+- Simplified fourteen Ruff-reported constructs without changing validator
+  rules or stable diagnostics.
+- Marked all three managed shebang Python targets executable and extended the
+  adoption-mode assertions.
+- Made the Docker-reference fixture explicitly opt into Docker enforcement.
+- Rebuilt the combined candidate and verified exact downstream adoption,
+  baseline Ruff and all 161 product tests.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
-- New authority is still required for destructive action, secret access, new
-  external coordination, material objective expansion and trusted merge.
+- None for the completed local implementation and validation scope.
+- External publication and trusted merge approval remain unauthorized.
