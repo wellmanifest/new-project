@@ -72,7 +72,7 @@
   "docker": {
     "required": false,
     "dockerfiles": ["Dockerfile", "Dockerfile.e2e"],
-    "composeFiles": ["compose.yml", "docker-compose.yml", "compose.e2e.yml"]
+    "composeFiles": ["compose.yml", "compose.yaml", "docker-compose.yml", "docker-compose.yaml", "compose.e2e.yml"]
   },
   "coordination": {
     "mode": "workstreams",
