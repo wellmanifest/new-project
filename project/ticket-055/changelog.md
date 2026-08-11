@@ -13,3 +13,6 @@
   retained explicit-base and malformed-adoption controls.
 - Passed the focused validator and complete Linux CI contract; moved the ticket
   to `IN_PROGRESS / VALIDATION` pending downstream pilot revalidation.
+- Integrated candidate `ebc274a` and passed repaired no-argument governance,
+  explicit-base control, idempotence and product baselines in isolated `codot`.
+- Marked the ticket `DONE / DONE`; no push, merge, tag or publication occurred.

@@ -2,8 +2,8 @@
 
 - **ID**: ticket-055
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-11
 
 ## Cel i Zakres
@@ -26,7 +26,7 @@ zgaduje bazy dla zwykłych ticketów i nie zmienia procesu publikacji.
   zarządzany walidator bez jawnego `--base` i obejmuje zmieniony lock.
 - [x] AC-04: Jawny `--base` zachowuje dotychczasowe pierwszeństwo, a błędna lub
   niejednoznaczna adopcja nadal kończy się fail-closed `GOV-SYNC-001`.
-- [ ] AC-05: Test walidatora i pełny kontrakt Linux przechodzą; poprawka zostaje
+- [x] AC-05: Test walidatora i pełny kontrakt Linux przechodzą; poprawka zostaje
   ponownie sprawdzona przez `./project.sh` w izolowanym pilocie `semcod/codot`.
 
 ## Ryzyka i Uwagi
@@ -43,7 +43,10 @@ zgaduje bazy dla zwykłych ticketów i nie zmienia procesu publikacji.
   bazy w historii `base -> plan -> initial adoption`.
 - Wszystkie osiem zestawów Linux CI, kontrakty JSON, kontrola kompletności CI
   i `ruff check scripts/governance_check.py` przechodzą.
-- Pozostaje ponowne przypięcie i uruchomienie pakietu w izolowanym `codot`.
+- Izolowany `semcod/codot` przypięty do kandydata `ebc274a` przechodzi przez
+  `./project.sh` bez `--base`, jawny Goal i idempotentny preflight. Python,
+  skupiony Go i Compose zachowują baseline; pełny Go ma ten sam wcześniejszy
+  błąd kompilacji. Oryginalny checkout i kod produktu pozostały niezmienione.
 
 ## Autoryzacja
 

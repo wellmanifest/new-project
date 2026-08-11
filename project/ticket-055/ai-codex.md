@@ -40,10 +40,15 @@ recorded in the active ticket.
 - Extended the existing initial-adoption fixture, whose history already has
   separate base, plan and payload commits, with a no-argument validation pass.
 - Passed the focused regression, all eight Linux CI suites, JSON contracts, CI
-  completeness and Ruff. Downstream `codot` revalidation remains open.
+  completeness and Ruff.
+- Integrated the tested commits into candidate `ebc274a`, adopted that exact
+  SHA in isolated `semcod/codot` and obtained `GOV-PASS` from no-argument and
+  explicit-base paths plus an up-to-date adoption preflight.
+- Repeated downstream Python, Go and Compose baselines and confirmed the final
+  diff contains governance paths only. The ticket is complete locally.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- None inside the recorded intent.
 - New authority is still required for destructive action, secret access, new
   external coordination, material objective expansion and trusted merge.
