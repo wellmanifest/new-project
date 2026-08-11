@@ -18,11 +18,12 @@ pilot exposed managed root launchers with no matching owned path.
 
 1. Remove Dockerfile from default required files, set Docker enforcement false
    and clear the default stack list.
-2. Add managed root launchers, runtime script and Goal config to governance
+2. Make only `docker.required` target-owned in the adoption projection so a
+   target can opt in while the remaining Docker contract stays managed.
+3. Add managed root launchers, runtime script and Goal config to governance
    ownership.
-3. Strengthen manifest regressions and document target-level Docker opt-in.
-4. Run the focused validator and full Linux contract.
-5. Stop before versioning or external delivery.
+4. Strengthen manifest/adoption regressions and document target-level opt-in.
+5. Run focused suites and the full Linux contract; stop before delivery.
 
 ## Actual changes
 
@@ -33,6 +34,9 @@ pilot exposed managed root launchers with no matching owned path.
   governance correctness.
 - Confirmed `project.sh`, `project.bat`, `scripts/runtime.sh` and `goal.yaml`
   are absent from every current workstream ownership pattern.
+- Confirmed an unmanaged `false` scalar would block target opt-in; amended the
+  plan to remove only `docker.required` from the managed manifest projection
+  and test preservation through upgrade.
 
 ## Blockers
 

@@ -23,7 +23,8 @@ workstreamu.
 - [x] AC-01: Polecenie użytkownika, aby poprawiać komplikacje znalezione na
   `glon`, stanowi bounded `SESSION_EXECUTION_AUTHORIZATION` dla tej zmiany.
 - [ ] AC-02: Domyślny manifest nie wymaga Dockerfile/Compose i ma pustą listę
-  stacków; schemat nadal pozwala targetowi włączyć Docker.
+  stacków; projekcja managed base pozostawia `docker.required` targetowi, więc
+  target może rzeczywiście włączyć Docker bez naruszenia locka.
 - [ ] AC-03: Wszystkie entrypointy zarządzane poza katalogiem `project/` oraz
   `goal.yaml` mają jednoznacznego właściciela w workstreamie governance.
 - [ ] AC-04: Regresje manifestu wymagają portable default i kompletnego
@@ -39,6 +40,9 @@ workstreamu.
 - Docker pozostaje w schema, stack profiles i walidatorze. Target wymagający
   kontenera dodaje `Dockerfile` do `requiredFiles`, ustawia `docker.required`
   oraz deklaruje stack `docker` we własnym rozszerzonym manifeście.
+- `docker.required` musi zostać usunięte z projekcji managed base. Bez tego
+  ogólny kontrakt scalarów poprawnie odrzucałby zmianę `false` na `true`, a
+  deklarowany opt-in byłby pozorny. Pozostałe pola `docker` zostają zarządzane.
 - Pilot `glon` pokazał koszt obowiązkowego defaultu: dwa nowe pliki, osobny
   workstream/ticket, duplikację wersji zależności oraz trzy testy wymagające
   dodatkowej semantyki zapisu w kontenerze.

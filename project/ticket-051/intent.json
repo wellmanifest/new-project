@@ -10,7 +10,9 @@
   },
   "allowedPaths": [
     "governance/manifest.default.json",
+    "scripts/create_adoption_lock.py",
     "tests/governance-validator.test.sh",
+    "tests/adoption-lock.test.sh",
     "docs/GOVERNANCE_ENFORCEMENT.md",
     "project/ticket-051/**",
     "TODO.md",
@@ -22,7 +24,8 @@
     "governance/manifest.schema.json",
     "governance/intent.schema.json",
     "governance/package-manifest.json",
-    "scripts/**",
+    "scripts/governance_check.py",
+    "scripts/runtime.sh",
     "VERSION",
     "CHANGELOG.md",
     "package.json",
@@ -42,9 +45,9 @@
       "No downstream mutation, push, pull request, merge or publication"
     ],
     "complexity": "XS",
-    "estimatedMinutes": 15,
+    "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 3,
+      "maxImplementationFiles": 5,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
@@ -55,7 +58,12 @@
       "components": [
         {
           "name": "portable-default-manifest",
-          "paths": ["governance/manifest.default.json", "tests/governance-validator.test.sh"]
+          "paths": [
+            "governance/manifest.default.json",
+            "scripts/create_adoption_lock.py",
+            "tests/governance-validator.test.sh",
+            "tests/adoption-lock.test.sh"
+          ]
         },
         {
           "name": "adoption-guidance",
@@ -74,8 +82,8 @@
     "validation": [
       {
         "criterion": "AC-02",
-        "commands": ["bash tests/governance-validator.test.sh"],
-        "evidence": "Schema-valid default has no Docker required file, false docker.required and no declared stacks"
+        "commands": ["bash tests/governance-validator.test.sh", "bash tests/adoption-lock.test.sh"],
+        "evidence": "Schema-valid default is stack-neutral and adoption preserves a target's explicit Docker opt-in without weakening other managed values"
       },
       {
         "criterion": "AC-03",

@@ -6,3 +6,5 @@
 - No human participant identity or content was generated.
 - Bounded a portable-default and ownership-completeness improvement from the
   live `glon` pilot findings.
+- Expanded the plan to make the Docker opt-in real under the extendable
+  manifest contract while retaining all other managed Docker settings.

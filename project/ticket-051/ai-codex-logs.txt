@@ -2,3 +2,4 @@
 2026-08-11 base: authoritative origin/main=3549d21a5a31fea87b2dd4da37d8e8bd793f20f6
 2026-08-11 reproduction: mandatory Docker created a second ticket/workstream and container-only write configuration before governance could pass
 2026-08-11 ownership gap: project.sh, project.bat, scripts/runtime.sh and goal.yaml match no default workstream
+2026-08-11 plan amendment: docker.required must be target-owned in the managed projection or false-to-true opt-in is rejected
