@@ -1,0 +1,4 @@
+2026-08-12 hillm baseline 2b311ef: 81 passed, 7 skipped; Ruff has 77 pre-existing findings; tree clean.
+2026-08-12 candidate 44026dc preflight: UPDATE project.sh plus 25 CREATE, missing project/TICKETS.md; no writes.
+2026-08-12 collision: hillm project.sh sha256 cd1791c0... and 139 lines; standard wrapper 38 lines.
+2026-08-12 provenance: ticket-024 documents the same unresolved managed-wrapper blocker in another downstream repository.
