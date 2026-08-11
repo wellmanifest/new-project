@@ -186,7 +186,13 @@ def evaluate(workspace_root: Path, allowed: set[Path]) -> list[Finding]:
                     "primary": str(primary.path),
                 },
             ))
-    return sorted(findings)
+    return sorted(
+        findings,
+        key=lambda item: (
+            item.code,
+            json.dumps(item.evidence, ensure_ascii=False, sort_keys=True),
+        ),
+    )
 
 
 def report_payload(findings: list[Finding]) -> dict[str, Any]:

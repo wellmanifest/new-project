@@ -15,6 +15,7 @@
     "governance/package-manifest.json",
     "tests/workspace-lifecycle.test.sh",
     "tests/branch-lifecycle.test.sh",
+    "tests/adoption-lock.test.sh",
     ".github/workflows/ci.yml",
     "project/ticket-063/**",
     "TODO.md",
@@ -34,8 +35,8 @@
       "No claim that GitHub Actions can inspect a developer filesystem",
       "No publication of the combined standard candidate"
     ],
-    "complexity": "M",
-    "estimatedMinutes": 90,
+    "complexity": "S",
+    "estimatedMinutes": 30,
     "budgets": {
       "maxImplementationFiles": 10,
       "maxAffectedComponents": 3,
@@ -64,4 +65,3 @@
     ]
   }
 }
-

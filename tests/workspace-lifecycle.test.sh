@@ -13,6 +13,7 @@ validator="$repo_root/scripts/workspace_lifecycle_check.py"
 workspace="$fixture/workspace"
 primary="$workspace/sample"
 linked="$workspace/sample-worktree"
+linked_two="$workspace/sample-worktree-two"
 duplicate="$workspace/sample-pilot"
 mkdir -p "$workspace"
 git init --quiet --initial-branch=main "$primary"
@@ -23,6 +24,7 @@ git -C "$primary" add README.md
 git -C "$primary" commit --quiet -m initial
 git -C "$primary" remote add origin git@github.com:example/sample.git
 git -C "$primary" worktree add --quiet -b ticket/001 "$linked"
+git -C "$primary" worktree add --quiet -b ticket/002 "$linked_two"
 git clone --quiet "$primary" "$duplicate"
 printf '%s\n' dirty > "$linked/untracked.txt"
 
@@ -40,22 +42,31 @@ import sys
 report = json.load(open(sys.argv[1], encoding="utf-8"))
 assert report["schema"] == "new-project.workspace-lifecycle-report/v1"
 assert report["status"] == "failed"
-assert report["summary"] == {"errors": 2, "warnings": 0, "findings": 2}
-by_code = {finding["code"]: finding for finding in report["findings"]}
-assert set(by_code) == {
+assert report["summary"] == {"errors": 3, "warnings": 0, "findings": 3}
+assert {finding["code"] for finding in report["findings"]} == {
     "GOV-WORKSPACE-LIFECYCLE-001",
     "GOV-WORKSPACE-LIFECYCLE-002",
 }
-assert by_code["GOV-WORKSPACE-LIFECYCLE-001"]["evidence"]["path"] == sys.argv[2]
-assert by_code["GOV-WORKSPACE-LIFECYCLE-001"]["evidence"]["dirty"] is True
-assert by_code["GOV-WORKSPACE-LIFECYCLE-002"]["evidence"]["path"] == sys.argv[3]
+linked = [
+    finding for finding in report["findings"]
+    if finding["code"] == "GOV-WORKSPACE-LIFECYCLE-001"
+]
+duplicate = next(
+    finding for finding in report["findings"]
+    if finding["code"] == "GOV-WORKSPACE-LIFECYCLE-002"
+)
+assert len(linked) == 2
+dirty = next(item for item in linked if item["evidence"]["path"] == sys.argv[2])
+assert dirty["evidence"]["dirty"] is True
+assert duplicate["evidence"]["path"] == sys.argv[3]
 PY
 
 python3 "$validator" --workspace-root "$workspace" \
-  --allow "$linked" --allow "$duplicate" > "$fixture/allowed.out"
+  --allow "$linked" --allow "$linked_two" --allow "$duplicate" > "$fixture/allowed.out"
 grep -Fxq 'GOV-WORKSPACE-PASS: passed (0 errors, 0 warnings)' "$fixture/allowed.out"
 
 git -C "$primary" worktree remove --force "$linked"
+git -C "$primary" worktree remove --force "$linked_two"
 rm -rf "$duplicate"
 python3 "$validator" --workspace-root "$workspace" > "$fixture/clean.out"
 grep -Fxq 'GOV-WORKSPACE-PASS: passed (0 errors, 0 warnings)' "$fixture/clean.out"
@@ -69,4 +80,3 @@ test "$status" -eq 1
 grep -q '^GOV-WORKSPACE-LIFECYCLE-003 ERROR:' "$fixture/missing.out"
 
 echo 'workspace lifecycle validator: PASS'
-

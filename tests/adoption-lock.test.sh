@@ -11,6 +11,8 @@ mkdir -p "$standard" "$target"
 cp -R "$repo_root/governance" "$repo_root/project" "$repo_root/scripts" "$standard/"
 mkdir -p "$standard/template/files"
 cp "$repo_root/template/files/AGENTS.template.md" "$standard/template/files/AGENTS.template.md"
+cp "$repo_root/template/files/new-project-governance.workflow.yml" \
+  "$standard/template/files/new-project-governance.workflow.yml"
 cp "$repo_root/project.sh" "$repo_root/project.bat" "$standard/"
 cp "$repo_root/VERSION" "$standard/VERSION"
 git -C "$standard" init -q
