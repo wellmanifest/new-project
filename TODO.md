@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-057`](project/ticket-057/README.md) — przypisać obowiązkowy
+  root `VERSION` do workstreamu `integration` także dla profilu stackless i
+  utrwalić dodatnią oraz ujemną granicę własności w walidatorze. Stan:
+  `IN_PROGRESS / EDIT`; klasyfikacja: `BUG / P1 / regression`.
+
 - [x] [`ticket-056`](project/ticket-056/README.md) — raportować podczas
   adopcji brakujące pliki bazowe należące do targetu po uwzględnieniu całego
   planu instalacji. Raport ma być deterministyczny i informacyjny, bez

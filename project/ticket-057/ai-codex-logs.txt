@@ -1,0 +1,3 @@
+2026-08-12 godot pilot: required VERSION failed GOV-WORKSTREAM-003 because stacks=[] leaves it outside every default ownedPaths list.
+2026-08-12 boundary: VERSION remains target-owned; adoption must report absence but must not create or mutate it.
+2026-08-12 design: exact VERSION ownership belongs to integration; application remains a negative control.

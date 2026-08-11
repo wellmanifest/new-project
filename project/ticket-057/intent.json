@@ -1,0 +1,83 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-057",
+  "summary": "Own VERSION in stackless repositories",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "governance/manifest.default.json",
+    "tests/governance-validator.test.sh",
+    "project/ticket-057/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "365ba23dc36bebaf2dc5cd3d1787d5069e306547",
+    "targetBranch": "main",
+    "outcome": "A stackless repository can assign VERSION changes to the integration workstream while foreign workstreams remain rejected",
+    "nonGoals": [
+      "No creation or mutation of target-owned VERSION files during adoption",
+      "No change to requiredFiles, stack detection, schemas, dependencies or package version",
+      "No Goal-side policy duplication, downstream product mutation or external delivery"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Treat the required root VERSION carrier as integration-owned in the stackless default manifest and lock that ownership boundary with positive and negative validator fixtures",
+      "components": [
+        {
+          "name": "default-workstream-ownership",
+          "paths": ["governance/manifest.default.json", "tests/governance-validator.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        "coordination.workstreams.integration.ownedPaths includes VERSION"
+      ],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert this ticket; stackless VERSION changes again remain unowned"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "A stackless integration ticket changing VERSION reaches GOV-PASS"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "An application ticket claiming VERSION is rejected with GOV-WORKSTREAM-003"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["all commands from the Linux CI test job", "ruff check scripts/governance_check.py"],
+        "evidence": "Focused and complete standard contracts retain the baseline"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["isolated Goal adoption pilot on godot"],
+        "evidence": "The exact candidate governs a real stackless repository without an unowned VERSION failure"
+      }
+    ]
+  }
+}
