@@ -73,6 +73,14 @@ opcjonalnym routingiem przez ticket integracyjny. Zamknięte tickety intent v1
 pozostają czytelne; aktywny ticket w manifeście v2 musi zostać jawnie
 zmigrowany i ponownie zatwierdzony.
 
+Target z `docker.required=true` musi używać immutable external images. Każdy
+nie-`scratch` Dockerfile `FROM` i każdy scalar Compose `image:` ma postać
+`name@sha256:<64 lowercase hex>`. Flagi `FROM --platform=...` i alias `AS` są
+dozwolone; serwis Compose korzystający tylko z lokalnego `build:` nie musi
+deklarować `image:`. Tagi, `latest`, `${IMAGE}` i skrócone/uppercase digesty
+kończą się `GOV-DOCKER-002`. Kontrola działa offline i nie rozwiązuje tagów
+przez registry.
+
 Tylko `IN_PROGRESS` oznacza aktywnego właściciela implementacji i rezerwuje
 workstream oraz `allowedPaths`. `BACKLOG`, `PLAN` i `BLOCKED` zachowują plan,
 zależności i dowody, ale nie blokują kolejki. Przed zmianą kodu taki ticket musi
