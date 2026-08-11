@@ -28,23 +28,29 @@ Skrypt czyta zarządzane pliki z obiektu Git, zachowuje istniejący dopasowany
 wersją manifest docelowy, atomowo zapisuje pliki i lock oraz odmawia driftu.
 Aktualizacja różniących się plików wymaga jawnego `--upgrade` po przeglądzie.
 
-### Atomowa aktualizacja zarządzanego pakietu
+### Atomowa pierwsza adopcja lub aktualizacja zarządzanego pakietu
 
-Gdy upgrade jednego opublikowanego pakietu zmienia więcej plików niż zwykły
-budżet ticketu albo przecina ich normalne workstreamy, aktywny intent v3 może
-zadeklarować transakcję:
+Gdy pierwsza adopcja albo upgrade jednego opublikowanego pakietu zmienia więcej
+plików niż zwykły budżet ticketu lub przecina ich normalne workstreamy, aktywny
+intent v3 może zadeklarować transakcję. Bootstrap używa `null`, upgrade — SHA
+poprzedniego wydania:
 
 ```json
 {
   "delivery": {
     "standardAdoption": {
       "sourceRepository": "wellmanifest/new-project",
-      "fromRevision": "<40-znakowy SHA obecnego wydania>",
+      "fromRevision": null,
       "toRevision": "<40-znakowy SHA nowego wydania>"
     }
   }
 }
 ```
+
+`fromRevision: null` jest dozwolone tylko wtedy, gdy zaakceptowana baza Git nie
+zawiera jeszcze `.governance/package-manifest.json` ani
+`.governance/manifest.lock.json`. Dla upgrade należy podać pełny SHA wydania
+związanego z bazowym lockiem.
 
 Wyjątek nie powiększa ticketu i nie przenosi zwykłej własności. Walidator
 odejmuje z normalnego rozliczenia tylko zmienione targety ze strategią
@@ -52,6 +58,11 @@ odejmuje z normalnego rozliczenia tylko zmienione targety ze strategią
 spójny kontrakt. Nowy target musi być nieobecny w bazie oraz występować jako
 `managed` i zgadzać się z hashem head locka. Aktualizowany target musi mieć
 ciągłość `managed` i poprawny hash po obu stronach.
+
+Podczas bootstrapu target `managed`, który istniał już w bazie, nie otrzymuje
+wyjątku. Jego zastąpienie pozostaje zwykłą zmianą i musi należeć do
+`allowedPaths`, workstreamu oraz budżetu ticketu. Zapobiega to przejęciu
+istniejącego skryptu lub konfiguracji pod pozorem instalacji standardu.
 
 Seed manifest, `.governance/manifest.lock.json`, changelog i każda ścieżka
 spoza tak wyliczonego zbioru pozostają zwykłym diffem. Nadal muszą rozwiązać
