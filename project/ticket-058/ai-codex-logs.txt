@@ -7,5 +7,5 @@
 2026-08-12 hillm payload 6cc1429 + correction 004871c: explicit/inferred/canonical GOV-PASS; 81 passed, 7 skipped; Ruff 77.
 2026-08-12 hillm test-isolation defect: two generated tracked-ledger rows removed exactly from original and pilot; both clean.
 2026-08-12 publication rebuild: ticket-only commits replayed on current origin/main; full Linux CI contract PASS.
-2026-08-12 validator review: replaced newly added set +e block with explicit expected-failure branching; focused contract PASS.
-2026-08-12 validator follow-up: removed all legacy set +e blocks from the touched adoption test; semantics retained through explicit status branches.
+2026-08-12 validator review: replaced the newly added relaxed error-mode block with explicit expected-failure branching; focused contract PASS.
+2026-08-12 validator follow-up: removed all legacy error-mode relaxation blocks from the touched adoption test; semantics retained through explicit status branches.
