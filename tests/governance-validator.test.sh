@@ -175,12 +175,21 @@ assert not set(ticket['activeStatuses']) & set(ticket['nonActiveStatuses'])
 assert manifest['delivery']['maxActiveMinutes'] == 30
 assert manifest['delivery']['checkpointMinutes'] == 25
 assert manifest['delivery']['maxImplementationFiles'] == 5
+assert 'Dockerfile' not in manifest['requiredFiles']
+assert manifest['docker']['required'] is False
+assert manifest['stacks'] == []
 assert 'github-app-review' in manifest['trustedApprovalSources']
 assert manifest['approvalEvidence']['schema'] == 'new-project.approval-evidence/v1'
 assert approval_schema['properties']['headSha']['pattern'] == '^[0-9a-f]{40}$'
 governance_paths = manifest['coordination']['workstreams']['governance']['ownedPaths']
 assert 'CHANGELOG.md' in governance_paths
 assert '.env.example' in governance_paths
+assert {
+    'goal.yaml',
+    'project.sh',
+    'project.bat',
+    'scripts/runtime.sh',
+} <= set(governance_paths)
 PY
 python3 - "$repo_root/scripts/governance_check.py" <<'PY'
 import importlib.util
