@@ -67,6 +67,9 @@ open(path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2, sort_keys
 PY
 test -x "$target/project/governance-check.sh"
 test -x "$target/project.sh"
+test -x "$target/.governance/check_required_checks.py"
+test -x "$target/.governance/decision_record.py"
+test -x "$target/.governance/governance_check.py"
 test -f "$target/project.bat"
 test -f "$target/AGENTS.md"
 test -f "$target/.governance/approval-evidence.schema.json"
