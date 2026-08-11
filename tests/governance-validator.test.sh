@@ -554,6 +554,21 @@ expect_code GOV-DOCKER-002 run_check "$compose_latest" --changed-file src/app.js
 run_check "$compose_latest" --changed-file src/app.js > "$fixture/compose-latest.out" || true
 grep -Fq 'compose.yml:3' "$fixture/compose-latest.out"
 
+compose_build_tag="$fixture/compose-build-tag"
+cp -R "$docker_references" "$compose_build_tag"
+cat > "$compose_build_tag/compose.yml" <<'YAML'
+services:
+  local:
+    image: local/code2logic:latest
+    build: .
+YAML
+expect_code GOV-DOCKER-002 run_check "$compose_build_tag" --changed-file src/app.js
+run_check "$compose_build_tag" --changed-file src/app.js \
+  > "$fixture/compose-build-tag.out" || true
+grep -Fq 'compose.yml:3' "$fixture/compose-build-tag.out"
+grep -Fq 'for a local-only Compose build, omit image' \
+  "$fixture/compose-build-tag.out"
+
 docker_variable="$fixture/docker-variable"
 cp -R "$docker_references" "$docker_variable"
 printf '%s\n' 'FROM ${BASE_IMAGE} AS runtime' > "$docker_variable/Dockerfile"

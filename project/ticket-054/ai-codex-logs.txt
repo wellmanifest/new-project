@@ -1,0 +1,15 @@
+2026-08-11 authorization: user directed sequential live-code testing and fixes
+2026-08-11 base dependency: ticket-052 at ed3c577f6abb9cc4c26bed6e218ea6177ccda3cf
+2026-08-11 reproduction: code2logic gate reports six mutable references
+2026-08-11 source check: Docker docs say build plus image pulls first by default; image may be omitted with build
+2026-08-11 rejected design: partial YAML parser added about 100 lines and unnecessary policy complexity
+2026-08-11 final design: keep strict digest rule; clarify remove-image remediation for local-only build
+2026-08-11 implementation: one validator line plus 15 regression-test lines
+2026-08-11 focused governance-validator: PASS
+2026-08-11 full Linux contract: 8/8 suites PASS
+2026-08-11 combined candidate: 4ee2b3854c8651935d93dbbc144858befe75a8cc
+2026-08-11 combined downstream Ruff 0.16.0: PASS
+2026-08-11 code2logic Goal upgrade and idempotence: PASS
+2026-08-11 code2logic governance: expected GOV-DOCKER-002 retains all six references
+2026-08-11 delivery: local only; no push, PR, merge, tag, release or publication
+governance validator: PASS

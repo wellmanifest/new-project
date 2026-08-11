@@ -1531,7 +1531,7 @@ def check_docker_image_references(root: Path, manifest: dict[str, Any], report: 
         report.add(
             "GOV-DOCKER-002",
             "Docker image references are not pinned to immutable SHA-256 digests.",
-            "Replace every non-scratch FROM and Compose image value with name@sha256:<64 lowercase hex>.",
+            "Pin external images as name@sha256:<64 lowercase hex>; for a local-only Compose build, omit image so no mutable tag can be pulled.",
             [f"{path}:{line_number}" for path, line_number, _ in invalid],
             {"references": [reference for _, _, reference in invalid]},
         )

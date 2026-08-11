@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-054",
+  "summary": "Clarify strict Compose build image guidance",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "project/ticket-054/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": ["ticket-052"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ed3c577f6abb9cc4c26bed6e218ea6177ccda3cf",
+    "targetBranch": "main",
+    "outcome": "Keep Compose image pinning fail-closed while making local-build remediation precise and tested",
+    "nonGoals": [
+      "No exemption for build services, remote images or Dockerfile FROM",
+      "No YAML parser, runtime dependency or new policy branch",
+      "No push, pull request, merge, tag, release or package publication"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Retain the dependency-free image scan, clarify that local-only builds omit image, and add a fail-closed build-plus-image regression",
+      "components": [
+        {
+          "name": "docker-reference-policy",
+          "paths": ["scripts/governance_check.py", "tests/governance-validator.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the local implementation commit; no external state is changed"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "Existing local build without image passes"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "Build plus mutable image remains GOV-DOCKER-002"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["full Linux governance contract"],
+        "evidence": "All existing deterministic tests pass without dependencies"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["Goal upgrade and exact-head check in semcod/code2logic pilot"],
+        "evidence": "All six unsafe live references remain reported"
+      }
+    ]
+  }
+}
