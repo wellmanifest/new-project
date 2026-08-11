@@ -9,6 +9,13 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-056`](project/ticket-056/README.md) — raportować podczas
+  adopcji brakujące pliki bazowe należące do targetu po uwzględnieniu całego
+  planu instalacji. Raport ma być deterministyczny i informacyjny, bez
+  tworzenia plików, zmiany semantyki kodów wyjścia ani przejmowania własności
+  nad targetem. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  `BUG / P1 / regression`.
+
 - [x] [`ticket-055`](project/ticket-055/README.md) — naprawiono domyślne
   wyznaczanie bazy dla wielocommitowej adopcji: przypięty walidator ma użyć
   `delivery.acceptedBaseSha` z jednego aktywnego ticketu adopcyjnego, zachowując

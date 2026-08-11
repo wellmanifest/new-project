@@ -1,0 +1,84 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-056",
+  "summary": "Report missing target prerequisites during adoption",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/create_adoption_lock.py",
+    "tests/adoption-lock.test.sh",
+    "docs/GOAL_ADOPTION.md",
+    "project/ticket-056/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "33b4ddf3610fc1786e819a8a7c551f7def804906",
+    "targetBranch": "main",
+    "outcome": "Goal adoption reports target-owned required files still missing after its complete managed installation plan without creating them or changing package drift semantics",
+    "nonGoals": [
+      "No automatic creation or modification of target-owned prerequisite files",
+      "No stack-profile, manifest, schema, dependency, version or release change",
+      "No Goal-side policy duplication, downstream product mutation or external delivery"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Compute missing target prerequisites from the target manifest against existing files plus planned adoption payloads, then emit informational deterministic lines while retaining existing adoption and drift behavior",
+      "components": [
+        {
+          "name": "goal-adoption-package",
+          "paths": ["scripts/create_adoption_lock.py", "tests/adoption-lock.test.sh", "docs/GOAL_ADOPTION.md"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Adoption stdout may include MISSING target prerequisite <path> informational lines"
+      ],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert this ticket; adoption returns to reporting managed drift only"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "An empty target reports only required files absent after the complete payload plan and remains unwritten in check mode"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "Managed files are excluded and creating the target-owned fixture removes its warning"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "Package up-to-date and drift exit codes remain zero and one respectively despite informational prerequisite lines"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["all commands from the Linux CI test job", "ruff check scripts/create_adoption_lock.py", "isolated Goal adoption pilot"],
+        "evidence": "Focused/full contracts and downstream integration retain baseline while exposing the new report"
+      }
+    ]
+  }
+}
