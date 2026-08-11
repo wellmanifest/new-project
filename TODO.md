@@ -9,10 +9,10 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-054`](project/ticket-054/README.md) — dopuścić mutowalny
-  `image:` wyłącznie jako lokalny tag wynikowy usługi deklarującej
-  `build:` oraz `pull_policy: build`; zachować fail-closed dla pozostałych
-  obrazów. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+- [ ] [`ticket-054`](project/ticket-054/README.md) — doprecyzować, że lokalny
+  build pomija `image:`, natomiast `build:` z mutowalnym `image:` nadal może
+  wykonać pull i pozostaje fail-closed; bez parsera YAML i nowego wyjątku.
+  Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
   `BUG / P1 / requested`; zależy od lokalnego `ticket-052`.
 
 - [x] [`ticket-052`](project/ticket-052/README.md) — pełne SHA-256 digesty są

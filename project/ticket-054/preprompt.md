@@ -1,6 +1,6 @@
 # Preprompt & Wytyczne Techniczne (ticket-054)
 
-- **Tytuł Zadania**: Allow only explicit build-only Compose output tags
+- **Tytuł Zadania**: Clarify strict Compose build image guidance
 - **Utworzono**: 2026-08-11T19:22:13Z
 
 ## Wymagania i Ograniczenia Techniczne

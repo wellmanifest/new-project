@@ -4,6 +4,8 @@
 
 - Initial governance scaffold created.
 - No human participant identity or content was generated.
-- Scoped a fail-closed Compose exception to services declaring both `build:`
-  and `pull_policy: build`.
+- Confirmed from the Compose specification that `build:` plus `image:` may
+  still pull, while a local-only build may omit `image:`.
+- Rejected a partial YAML-parser exemption and narrowed the change to strict
+  regression coverage plus actionable remediation.
 - Recorded the live code2logic reproduction and dependency on ticket 052.

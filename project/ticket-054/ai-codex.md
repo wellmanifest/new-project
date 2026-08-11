@@ -8,23 +8,24 @@ ticket: ticket-054
 
 ## Understanding
 
-Live adoption in `semcod/code2logic` exposed two Compose `image:` values that
-name local build outputs. Exempting every service with `build:` would be
-unsafe, because Compose can still pull its `image:` according to pull policy.
-The precise safe contract is a direct service-level `build:` paired with
-`pull_policy: build`; every other mutable reference remains blocked.
+Live adoption in `semcod/code2logic` exposed two Compose `image:` values next
+to local `build:` declarations. Official Docker documentation confirms that
+Compose tries to pull such an image first when pull policy is absent, while a
+local build may omit `image:` entirely. The strict finding is therefore
+correct; the useful fix is clearer remediation and regression coverage, not a
+partial YAML parser or a new policy exemption.
 
 ## Execution plan
 
 1. Commit this bounded plan before implementation.
 2. Base the implementation on ticket 052's immutable-image rule.
-3. Add a small indentation-aware, dependency-free parser for direct Compose
-   service keys and exempt only explicit build-only services.
-4. Add passing and fail-closed regressions for pull-policy combinations.
+3. Keep the digest rule strict and improve its remediation for local builds.
+4. Add a regression that `build:` plus mutable `image:` remains fail-closed;
+   retain the existing passing build-without-image fixture.
 5. Run focused and complete Linux contracts, then integrate the commit into
    the combined downstream candidate.
 6. Upgrade the isolated code2logic pilot through Goal and confirm all six
-   current mutable references remain visible.
+   current mutable references remain visible with clearer guidance.
 7. Record evidence and stop before external delivery.
 
 ## Actual changes
@@ -33,6 +34,9 @@ The precise safe contract is a direct service-level `build:` paired with
   from the request to execute this work.
 - Reproduced the live ambiguity in code2logic: two local build output tags,
   three Dockerfile bases and one external Compose image are all mutable.
+- Rejected an initially passing but roughly 100-line partial YAML parser after
+  checking the official Compose pull/build semantics; it was unnecessary
+  complexity and would have weakened a correct fail-closed result.
 
 ## Blockers
 
