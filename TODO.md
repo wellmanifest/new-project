@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-053`](project/ticket-053/README.md) — usunąć 17 błędów Ruffa
+  wprowadzanych przez zarządzany payload Pythona w żywej adopcji `code2docs`,
+  zachowując semantykę validatora i poprawne tryby wykonywalne. Stan:
+  `IN_PROGRESS / EDIT`; klasyfikacja: `BUG / P1 / regression`.
+
 - [x] [`ticket-047`](project/ticket-047/README.md) — ujednolicono autonomiczny
   stan generowanych ticketów i opublikować pełną naprawę jako immutable
   `v0.14.1` wskazujące `main@63a3d56`. PR #75 przeszedł Linux, Windows i

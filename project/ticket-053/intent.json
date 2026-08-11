@@ -1,0 +1,87 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-053",
+  "summary": "Keep managed Python lint-neutral downstream",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/decision_record.py",
+    "scripts/governance_check.py",
+    "governance/package-manifest.json",
+    "tests/adoption-lock.test.sh",
+    "project/ticket-053/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3549d21a5a31fea87b2dd4da37d8e8bd793f20f6",
+    "targetBranch": "main",
+    "outcome": "Keep the standard-managed Python payload lint-neutral in downstream Python repositories",
+    "nonGoals": [
+      "No governance rule, diagnostic, schema or public behavior change",
+      "No new runtime or development dependency",
+      "No push, pull request, merge, tag, release or package publication"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use behavior-preserving Python simplifications and align adopted modes with existing executable shebang scripts",
+      "components": [
+        {
+          "name": "managed-python-sources",
+          "paths": ["scripts/decision_record.py", "scripts/governance_check.py"]
+        },
+        {
+          "name": "adoption-package",
+          "paths": ["governance/package-manifest.json", "tests/adoption-lock.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert this ticket's local implementation commits; no external state is changed"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["code2docs locked Ruff against the three managed Python sources"],
+        "evidence": "Zero managed-source findings without noqa or target exclusions"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "Adopted .governance Python scripts retain executable mode"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["full Linux governance contract and Docker build/test"],
+        "evidence": "All existing deterministic tests pass"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["repeat clean code2docs adoption, Ruff and frozen uv tests"],
+        "evidence": "Ruff returns to baseline 514 and product tests remain 161 passing"
+      }
+    ]
+  }
+}
