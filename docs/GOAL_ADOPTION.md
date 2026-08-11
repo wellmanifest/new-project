@@ -39,8 +39,16 @@ goal governance adopt \
 `goal` pobiera dokładnie wskazany commit domyślnego repozytorium
 `wellmanifest/new-project`, sprawdza, czy checkout ma żądany SHA, a następnie
 uruchamia `create_adoption_lock.py`. Generator instaluje zarządzane kontrakty,
-docelowy `AGENTS.md`, rootowe wrappery `project.sh` / `project.bat`, skrypty
-ticketów i lock z hashami SHA-256.
+docelowy `AGENTS.md`, skrypty ticketów i lock z hashami SHA-256. Rootowe
+`project.sh` / `project.bat` są tylko seedami zgodności: powstają, gdy ścieżka
+jest wolna, lecz istniejąca automatyzacja targetu pozostaje nietknięta i nie
+trafia do `managedFiles`. Kanoniczne, zarządzane bramy to
+`project/governance-check.sh` oraz `project/governance-check.bat`.
+
+Preflight nie powinien raportować `UPDATE` ani `CHMOD` dla istniejących
+rootowych seedów. Jeśli taki wpis wystąpi dla starszej rewizji standardu, nie
+używaj `--upgrade` do zastąpienia automatyzacji targetu; wybierz rewizję z
+kontraktem seed albo zatrzymaj adopcję do przeglądu.
 
 ## Dokończenie bootstrapu lokalnego
 

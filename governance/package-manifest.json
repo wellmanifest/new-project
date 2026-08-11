@@ -2,8 +2,8 @@
   "schema": "new-project.package-manifest/v1",
   "files": [
     { "source": "template/files/AGENTS.template.md", "target": "AGENTS.md", "strategy": "managed", "executable": false },
-    { "source": "project.sh", "target": "project.sh", "strategy": "managed", "executable": true },
-    { "source": "project.bat", "target": "project.bat", "strategy": "managed", "executable": false },
+    { "source": "project.sh", "target": "project.sh", "strategy": "seed", "executable": true },
+    { "source": "project.bat", "target": "project.bat", "strategy": "seed", "executable": false },
     { "source": "governance/approval-evidence.schema.json", "target": ".governance/approval-evidence.schema.json", "strategy": "managed", "executable": false },
     { "source": "governance/change-evaluation.schema.json", "target": ".governance/change-evaluation.schema.json", "strategy": "managed", "executable": false },
     { "source": "governance/diagnostics.json", "target": ".governance/diagnostics.json", "strategy": "managed", "executable": false },

@@ -27,7 +27,10 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
 - **Target Repository Execution**: When assigned a task to create System X, the agent:
   1. Reads policies & copies templates/scripts from `wellmanifest/new-project`.
   2. Switches completely to System X's target repository/folder.
-  3. Copies `project.sh` & `project.bat` to System X's repository.
+  3. Adopts the package through Goal. Root `project.sh` / `project.bat` are
+     target-owned seed aliases: create them only when absent and never replace
+     established target automation. The canonical managed gates are
+     `project/governance-check.sh` and `project/governance-check.bat`.
   4. In System X's repository, BEFORE writing any code, initializes:
      - Root `README.md`, `VERSION`, `CHANGELOG.md`, `TODO.md`, `Dockerfile`, `compose.yml`.
      - Scaffolds `project/ticket-{NNN}/` containing `preprompt.md` (technical directives and resource links) and `changelog.md`.
@@ -40,7 +43,12 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
      - **Understanding View (`project/ticket-{NNN}/ai-{PROVIDER}.md`)**: User checks if AI correctly understood the task, intent, and acceptance criteria.
      - **Task Checklist View (`TODO.md`)**: User checks if AI's step-by-step task breakdown and checklist are appropriate.
      - A request that already tells the agent to execute or work autonomously creates `SESSION_EXECUTION_AUTHORIZATION`; proceed within the recorded intent without a second confirmation.
-  6. **EXECUTE WITHIN AUTHORIZATION**: With session execution authorization, executes `./project.sh` (or `project.bat`) in System X's repository to run the deterministic governance gate. Optional analysis then runs only through a digest-pinned Docker image. The agent works EXCLUSIVELY in System X's repository.
+  6. **EXECUTE WITHIN AUTHORIZATION**: With session execution authorization,
+     executes the managed `./project/governance-check.sh` (or
+     `project\governance-check.bat`) in System X's repository. It never assumes
+     a target-owned root seed contains the gate. Optional analysis then runs
+     only through a digest-pinned Docker image. The agent works EXCLUSIVELY in
+     System X's repository.
      - Ask for new authority only for destructive action, secret access, new external coordination, or material objective expansion.
      - Chat/Markdown approval authorizes the interactive session but is not
        trusted merge approval. CI requires an independent allowlisted human

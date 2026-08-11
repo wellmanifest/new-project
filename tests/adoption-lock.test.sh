@@ -20,6 +20,44 @@ git -C "$standard" add .
 git -C "$standard" commit -qm 'test: publish standard fixture'
 revision="$(git -C "$standard" rev-parse HEAD)"
 
+collision_target="$fixture/collision-target"
+mkdir -p "$collision_target"
+printf '%s\n' '#!/usr/bin/env bash' 'echo target automation' > "$collision_target/project.sh"
+printf '%s\r\n' '@echo off' 'echo target automation' > "$collision_target/project.bat"
+chmod 740 "$collision_target/project.sh"
+collision_sh_hash="$(sha256sum "$collision_target/project.sh" | cut -d' ' -f1)"
+collision_bat_hash="$(sha256sum "$collision_target/project.bat" | cut -d' ' -f1)"
+collision_sh_mode="$(stat -c '%a' "$collision_target/project.sh")"
+set +e
+python3 "$standard/scripts/create_adoption_lock.py" \
+  --target-root "$collision_target" --source-revision "$revision" --check \
+  > "$fixture/collision-check.out" 2> "$fixture/collision-check.err"
+status=$?
+set -e
+test "$status" -eq 1
+! grep -Eq '^(UPDATE|CHMOD) project\.sh$' "$fixture/collision-check.out"
+! grep -Eq '^(UPDATE|CHMOD) project\.bat$' "$fixture/collision-check.out"
+python3 "$standard/scripts/create_adoption_lock.py" \
+  --target-root "$collision_target" --source-revision "$revision" \
+  > "$fixture/collision-adopt.out"
+test "$(sha256sum "$collision_target/project.sh" | cut -d' ' -f1)" = "$collision_sh_hash"
+test "$(sha256sum "$collision_target/project.bat" | cut -d' ' -f1)" = "$collision_bat_hash"
+test "$(stat -c '%a' "$collision_target/project.sh")" = "$collision_sh_mode"
+python3 - "$collision_target/.governance/manifest.lock.json" <<'PY'
+import json
+import sys
+
+managed = json.load(open(sys.argv[1], encoding='utf-8'))['managedFiles']
+assert 'project.sh' not in managed
+assert 'project.bat' not in managed
+assert 'project/governance-check.sh' in managed
+assert 'project/governance-check.bat' in managed
+PY
+python3 "$standard/scripts/create_adoption_lock.py" \
+  --target-root "$collision_target" --source-revision "$revision" --check \
+  > "$fixture/collision-current.out"
+grep -q '^up-to-date wellmanifest/new-project ' "$fixture/collision-current.out"
+
 set +e
 python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check \
@@ -67,6 +105,10 @@ assert lock['standard']['publicationStatus'] == 'published'
 assert lock['standard']['version'] == '0.14.1'
 assert '.governance/manifest.base.json' in lock['managedFiles']
 assert '.governance/manifest.json' not in lock['managedFiles']
+assert 'project.sh' not in lock['managedFiles']
+assert 'project.bat' not in lock['managedFiles']
+assert 'project/governance-check.sh' in lock['managedFiles']
+assert 'project/governance-check.bat' in lock['managedFiles']
 assert (root / '.governance/manifest.base.json').is_file()
 assert manifest['docker']['required'] is False
 assert 'required' not in base['docker']
@@ -101,6 +143,8 @@ test -f "$target/project.bat"
 test -f "$target/AGENTS.md"
 test -f "$target/.governance/approval-evidence.schema.json"
 test -f "$target/.governance/package-manifest.json"
+printf '%s\n' '# target-owned seed extension' >> "$target/project.sh"
+printf '%s\r\n' 'REM target-owned seed extension' >> "$target/project.bat"
 python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check \
   > "$fixture/current-check.out"
@@ -163,6 +207,8 @@ grep -q 'rerun with --upgrade' "$fixture/drift.err"
 python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --upgrade > /dev/null
 ! grep -q '# drift' "$target/project/governance-check.sh"
+grep -q 'target-owned seed extension' "$target/project.sh"
+grep -q 'target-owned seed extension' "$target/project.bat"
 python3 - "$target/.governance/manifest.json" <<'PY'
 import json
 import sys
