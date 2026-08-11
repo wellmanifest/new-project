@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-055`](project/ticket-055/README.md) — naprawić domyślne
+  wyznaczanie bazy dla wielocommitowej adopcji: przypięty walidator ma użyć
+  `delivery.acceptedBaseSha` z jednego aktywnego ticketu adopcyjnego, zachowując
+  pierwszeństwo jawnego `--base`. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  `BUG / P1 / regression`.
+
 - [x] [`ticket-054`](project/ticket-054/README.md) — doprecyzowano, że lokalny
   build pomija `image:`, natomiast `build:` z mutowalnym `image:` nadal może
   wykonać pull i pozostaje fail-closed; bez parsera YAML i nowego wyjątku.
