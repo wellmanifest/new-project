@@ -9,6 +9,13 @@
 
 ## Aktywne utrzymanie standardu
 
+- [x] [`ticket-057`](project/ticket-057/README.md) — przypisano obowiązkowy
+  root `VERSION` do workstreamu `integration` także dla profilu stackless;
+  dodatnia i ujemna granica własności, pełny Linux contract oraz Ruff
+  przechodzą, a exact-SHA pilot `godot` uzyskał `GOV-PASS` bez Dockera i
+  stosu językowego. Stan: `DONE / DONE`; klasyfikacja:
+  `BUG / P1 / regression`; bez publikacji.
+
 - [x] [`ticket-056`](project/ticket-056/README.md) — raportować podczas
   adopcji brakujące pliki bazowe należące do targetu po uwzględnieniu całego
   planu instalacji. Raport ma być deterministyczny i informacyjny, bez

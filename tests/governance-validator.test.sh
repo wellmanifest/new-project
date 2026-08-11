@@ -185,8 +185,12 @@ assert 'github-app-review' in manifest['trustedApprovalSources']
 assert manifest['approvalEvidence']['schema'] == 'new-project.approval-evidence/v1'
 assert approval_schema['properties']['headSha']['pattern'] == '^[0-9a-f]{40}$'
 governance_paths = manifest['coordination']['workstreams']['governance']['ownedPaths']
+integration_paths = manifest['coordination']['workstreams']['integration']['ownedPaths']
 assert 'CHANGELOG.md' in governance_paths
 assert '.env.example' in governance_paths
+assert 'VERSION' in integration_paths
+assert 'VERSION' not in governance_paths
+assert 'VERSION' not in manifest['coordination']['workstreams']['application']['ownedPaths']
 assert {
     'goal.yaml',
     'project.sh',
@@ -401,6 +405,35 @@ run_check() {
   python3 "$target/.governance/governance_check.py" \
     --root "$target" --manifest .governance/manifest.json \
     --stack-profiles .governance/stack-profiles.json "$@"
+}
+
+configure_version_ticket() {
+  local target="$1"
+  local workstream="$2"
+  python3 - "$target/.governance/manifest.json" \
+    "$target/project/ticket-002/intent.json" "$workstream" <<'PY'
+import json
+import pathlib
+import sys
+
+manifest_path = pathlib.Path(sys.argv[1])
+intent_path = pathlib.Path(sys.argv[2])
+workstream = sys.argv[3]
+manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+assert manifest['stacks'] == []
+intent = json.loads(intent_path.read_text(encoding='utf-8'))
+intent['workstream'] = workstream
+intent['allowedPaths'] = ['VERSION']
+intent['stacks'] = []
+intent['delivery']['architecture']['decision'] = (
+    'Keep the version carrier inside its declared workstream'
+)
+intent['delivery']['architecture']['components'] = [{
+    'name': 'version-carrier',
+    'paths': ['VERSION'],
+}]
+intent_path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
 }
 
 expect_code() {
@@ -1320,6 +1353,19 @@ expect_code GOV-WORKSTREAM-003 run_check "$foreign_root_contracts" \
   --changed-file CHANGELOG.md
 expect_code GOV-WORKSTREAM-003 run_check "$foreign_root_contracts" \
   --changed-file .env.example
+
+stackless_version="$fixture/stackless-version"
+make_fixture "$stackless_version"
+configure_version_ticket "$stackless_version" integration
+run_check "$stackless_version" --changed-file VERSION \
+  > "$fixture/stackless-version.out"
+grep -q '^GOV-PASS:' "$fixture/stackless-version.out"
+
+foreign_version="$fixture/foreign-version"
+make_fixture "$foreign_version"
+configure_version_ticket "$foreign_version" application
+expect_code GOV-WORKSTREAM-003 run_check "$foreign_version" \
+  --changed-file VERSION
 
 dependency_cycle="$fixture/dependency-cycle"
 make_fixture "$dependency_cycle"
