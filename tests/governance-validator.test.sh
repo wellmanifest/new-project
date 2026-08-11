@@ -59,6 +59,9 @@ adoption_intent['delivery']['standardAdoption'] = {
     'toRevision': 'b' * 40,
 }
 intent_validator.validate(adoption_intent)
+bootstrap_intent = json.loads(json.dumps(adoption_intent))
+bootstrap_intent['delivery']['standardAdoption']['fromRevision'] = None
+intent_validator.validate(bootstrap_intent)
 for field, invalid in (
     ('sourceRepository', 'other/project'),
     ('fromRevision', 'main'),
@@ -202,6 +205,11 @@ assert not module.pattern_covered_by('test/cli*.test.ts', 'test/*.spec.ts')
 assert module.standard_adoption_error({
     'sourceRepository': 'wellmanifest/new-project',
     'fromRevision': 'a' * 40,
+    'toRevision': 'b' * 40,
+}) is None
+assert module.standard_adoption_error({
+    'sourceRepository': 'wellmanifest/new-project',
+    'fromRevision': None,
     'toRevision': 'b' * 40,
 }) is None
 assert module.standard_adoption_error({
@@ -599,6 +607,179 @@ if ! run_check "$dot_path" --changed-file .governance/manifest.json > "$fixture/
   exit 1
 fi
 grep -q '^GOV-PASS:' "$fixture/dot-path.out"
+
+initial_adoption="$fixture/initial-adoption"
+make_fixture "$initial_adoption"
+rm -rf "$initial_adoption/.governance" \
+  "$initial_adoption/project/ticket-001" \
+  "$initial_adoption/project/ticket-002"
+printf '%s\n' 'target-owned agents before adoption' > "$initial_adoption/AGENTS.md"
+git -C "$initial_adoption" init -q
+git -C "$initial_adoption" config user.email governance@example.invalid
+git -C "$initial_adoption" config user.name governance-fixture
+git -C "$initial_adoption" add .
+git -C "$initial_adoption" commit -qm 'initial adoption base'
+initial_base="$(git -C "$initial_adoption" rev-parse HEAD)"
+git -C "$initial_adoption" switch -qc ticket-002-initial-adoption
+mkdir -p "$initial_adoption/.governance" "$initial_adoption/project/ticket-002"
+cp "$repo_root/scripts/governance_check.py" "$initial_adoption/.governance/governance_check.py"
+cp "$repo_root/governance/manifest.default.json" "$initial_adoption/.governance/manifest.json"
+cp "$repo_root/governance/stack-profiles.json" "$initial_adoption/.governance/stack-profiles.json"
+cp "$repo_root/governance/work-classification.dsl.json" \
+  "$initial_adoption/.governance/work-classification.dsl.json"
+printf '%s\n' 'managed agents after adoption' > "$initial_adoption/AGENTS.md"
+touch "$initial_adoption/project/ticket-002/preprompt.md" \
+  "$initial_adoption/project/ticket-002/changelog.md" \
+  "$initial_adoption/project/ticket-002/ai-codex.md" \
+  "$initial_adoption/project/ticket-002/ai-codex-logs.txt"
+printf '%s\n' '# Ticket 002' '- **Status**: IN_PROGRESS' \
+  '- **Workflow state**: EDIT' > "$initial_adoption/project/ticket-002/README.md"
+python3 - "$initial_adoption" "$initial_base" <<'PY'
+import hashlib
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+base = sys.argv[2]
+package = {
+    'schema': 'new-project.package-manifest/v1',
+    'files': [
+        {'source': 'template/files/AGENTS.template.md', 'target': 'AGENTS.md', 'strategy': 'managed', 'executable': False},
+        {'source': 'governance/package-manifest.json', 'target': '.governance/package-manifest.json', 'strategy': 'managed', 'executable': False},
+        {'source': 'scripts/governance_check.py', 'target': '.governance/governance_check.py', 'strategy': 'managed', 'executable': False},
+        {'source': 'governance/stack-profiles.json', 'target': '.governance/stack-profiles.json', 'strategy': 'managed', 'executable': False},
+        {'source': 'governance/work-classification.dsl.json', 'target': '.governance/work-classification.dsl.json', 'strategy': 'managed', 'executable': False},
+        {'source': 'governance/manifest.default.json', 'target': '.governance/manifest.json', 'strategy': 'seed', 'executable': False},
+    ],
+}
+package_path = root / '.governance/package-manifest.json'
+package_path.write_text(json.dumps(package, indent=2) + '\n', encoding='utf-8')
+lock = {
+    'schema': 'new-project.lock/v1',
+    'standard': {
+        'id': 'wellmanifest/new-project',
+        'version': '0.14.1',
+        'sourceRepository': 'wellmanifest/new-project',
+        'sourceRevision': 'b' * 40,
+        'publicationStatus': 'published',
+    },
+    'managedFiles': {
+        target: hashlib.sha256((root / target).read_bytes()).hexdigest()
+        for target in (
+            'AGENTS.md',
+            '.governance/package-manifest.json',
+            '.governance/governance_check.py',
+            '.governance/stack-profiles.json',
+            '.governance/work-classification.dsl.json',
+        )
+    },
+}
+(root / '.governance/manifest.lock.json').write_text(
+    json.dumps(lock, indent=2) + '\n', encoding='utf-8'
+)
+intent = {
+    'schema': 'new-project.intent/v3',
+    'ticket': 'ticket-002',
+    'summary': 'Initial managed adoption fixture',
+    'workstream': 'governance',
+    'allowedPaths': [
+        'AGENTS.md',
+        '.governance/manifest.json',
+        '.governance/manifest.lock.json',
+    ],
+    'forbiddenPaths': ['project/ticket-*/user-*.md'],
+    'stacks': ['docker'],
+    'dependsOn': [],
+    'conflictsWith': [],
+    'integrationTicket': None,
+    'classification': {'kind': 'SERVICE', 'priority': 'P1', 'origin': 'requested'},
+    'delivery': {
+        'acceptedBaseSha': base,
+        'targetBranch': 'main',
+        'outcome': 'Install a verified managed package without hiding replaced target content',
+        'nonGoals': ['No application change'],
+        'complexity': 'XS',
+        'estimatedMinutes': 10,
+        'standardAdoption': {
+            'sourceRepository': 'wellmanifest/new-project',
+            'fromRevision': None,
+            'toRevision': 'b' * 40,
+        },
+        'budgets': {
+            'maxImplementationFiles': 3,
+            'maxAffectedComponents': 1,
+            'maxPublicInterfaceChanges': 0,
+            'maxRuntimeDependencies': 0,
+        },
+        'architecture': {
+            'status': 'accepted',
+            'decision': 'Keep the replaced target file in ordinary governance',
+            'components': [{
+                'name': 'target-adoption',
+                'paths': [
+                    'AGENTS.md',
+                    '.governance/manifest.json',
+                    '.governance/manifest.lock.json',
+                ],
+            }],
+            'responsibilityChanges': False,
+            'interfaceChanges': [],
+            'dataChanges': [],
+            'ui': {'impact': 'none', 'states': [], 'evidence': []},
+            'rollback': 'Revert the adoption',
+        },
+        'runtimeDependencies': [],
+        'validation': [{
+            'criterion': 'AC-01',
+            'commands': ['governance-check'],
+            'evidence': 'The initial adoption fixture passes',
+        }],
+    },
+}
+(root / 'project/ticket-002/intent.json').write_text(
+    json.dumps(intent, indent=2) + '\n', encoding='utf-8'
+)
+PY
+git -C "$initial_adoption" add project/ticket-002
+git -C "$initial_adoption" commit -qm 'plan initial managed adoption'
+git -C "$initial_adoption" add .
+git -C "$initial_adoption" commit -qm 'initial managed adoption'
+if ! run_check "$initial_adoption" --base "$initial_base" \
+  > "$fixture/initial-adoption.out"; then
+  cat "$fixture/initial-adoption.out"
+  exit 1
+fi
+grep -q '^GOV-PASS:' "$fixture/initial-adoption.out"
+
+initial_hidden_target="$fixture/initial-adoption-hidden-target"
+cp -R "$initial_adoption" "$initial_hidden_target"
+python3 - "$initial_hidden_target/project/ticket-002/intent.json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+intent = json.load(open(path, encoding='utf-8'))
+intent['allowedPaths'] = ['.governance/**']
+intent['delivery']['architecture']['components'][0]['paths'] = ['.governance/**']
+open(path, 'w', encoding='utf-8').write(json.dumps(intent, indent=2) + '\n')
+PY
+git -C "$initial_hidden_target" add project/ticket-002/intent.json
+git -C "$initial_hidden_target" commit -qm 'try to hide replaced target content'
+expect_code GOV-SCOPE-001 run_check "$initial_hidden_target" --base "$initial_base"
+
+initial_existing_lock="$fixture/initial-adoption-existing-lock"
+cp -R "$initial_adoption" "$initial_existing_lock"
+initial_head="$(git -C "$initial_existing_lock" rev-parse HEAD)"
+git -C "$initial_existing_lock" switch -q --detach "$initial_base"
+mkdir -p "$initial_existing_lock/.governance"
+printf '%s\n' '{}' > "$initial_existing_lock/.governance/package-manifest.json"
+printf '%s\n' '{}' > "$initial_existing_lock/.governance/manifest.lock.json"
+git -C "$initial_existing_lock" add .governance
+git -C "$initial_existing_lock" commit -qm 'base already has adoption evidence'
+initial_bad_base="$(git -C "$initial_existing_lock" rev-parse HEAD)"
+git -C "$initial_existing_lock" switch -q --detach "$initial_head"
+expect_code GOV-SYNC-001 run_check "$initial_existing_lock" --base "$initial_bad_base"
 
 atomic_adoption="$fixture/atomic-adoption"
 make_fixture "$atomic_adoption"
