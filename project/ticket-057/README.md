@@ -2,8 +2,8 @@
 
 - **ID**: ticket-057
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-11
 
 ## Cel i Zakres
@@ -21,14 +21,14 @@ pakietu ani Goal.
 ## Kryteria Odbioru (Acceptance Criteria)
 - [x] AC-01: Polecenie użytkownika stanowi bounded
   `SESSION_EXECUTION_AUTHORIZATION` dla lokalnej implementacji i testów.
-- [ ] AC-02: Stackless manifest przypisuje dokładną ścieżkę `VERSION` do
+- [x] AC-02: Stackless manifest przypisuje dokładną ścieżkę `VERSION` do
   workstreamu `integration`.
-- [ ] AC-03: Ticket `integration` ograniczony do `VERSION` przechodzi
+- [x] AC-03: Ticket `integration` ograniczony do `VERSION` przechodzi
   walidację, a ticket `application` z tym samym zakresem otrzymuje
   `GOV-WORKSTREAM-003`.
-- [ ] AC-04: Focused governance validator, pełny Linux contract i Ruff
+- [x] AC-04: Focused governance validator, pełny Linux contract i Ruff
   przechodzą bez regresji.
-- [ ] AC-05: Powtórzony pilot `godot` przez exact-SHA standardu osiąga
+- [x] AC-05: Powtórzony pilot `godot` przez exact-SHA standardu osiąga
   `GOV-PASS` bez wyłączania reguł własności.
 
 ## Ryzyka i Uwagi
@@ -37,6 +37,22 @@ pakietu ani Goal.
 - Regresja musi użyć bazowego manifestu ze `stacks: []`, aby profil językowy
   nie maskował błędu.
 - Nie wykonujemy push, PR, merge, tagowania ani publikacji.
+
+## Dowody walidacji
+
+- `bash tests/governance-validator.test.sh` przechodzi dla exact drzewa
+  implementacji `8a65c3d`: `integration` może zmienić `VERSION`, a
+  `application` otrzymuje `GOV-WORKSTREAM-003`.
+- Wszystkie polecenia linuxowego joba CI przechodzą: osiem zestawów testów,
+  kontrakty JSON, required-check wiring oraz kontrola kompletności suite.
+- `ruff check scripts/governance_check.py` i `git diff --check` przechodzą.
+- Świeży pilot `godot` z target-owned prerequisites na zaakceptowanej bazie
+  przyjął exact rewizję `8a65c3d` przez Goal; commit payloadu `dd758ad`
+  uzyskał `GOV-PASS` dla jawnej bazy, inferred base i zarządzanego wrappera.
+- Pilot zachował `stacks: []`, `docker.required=false` i brak `Dockerfile`;
+  `git fsck --full` oraz smoke test śledzonego HTML także przechodzą.
+- Nie dodano zależności, nie zmieniono schematu ani runtime walidatora; zmiana
+  powierzchni implementacyjnej to manifest i jego focused regression.
 
 ## Autoryzacja
 

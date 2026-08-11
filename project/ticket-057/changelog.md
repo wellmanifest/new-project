@@ -8,3 +8,10 @@
   the default manifest plus its focused validator test.
 - Assigned release metadata responsibility to `integration` while preserving
   rejection for foreign workstreams and target ownership during adoption.
+- Added exact `VERSION` integration ownership and stackless positive/negative
+  validator fixtures in implementation commit `8a65c3d`.
+- Passed focused and complete Linux CI contracts plus Ruff, then marked the
+  bounded ticket `DONE / DONE` without external delivery.
+- Repeated the stackless `godot` adoption through Goal at exact revision
+  `8a65c3d`; explicit/inferred governance, wrapper, Git integrity and HTML
+  smoke checks passed without adding Docker or a language stack.

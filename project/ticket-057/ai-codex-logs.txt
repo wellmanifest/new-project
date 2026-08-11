@@ -1,3 +1,7 @@
 2026-08-12 godot pilot: required VERSION failed GOV-WORKSTREAM-003 because stacks=[] leaves it outside every default ownedPaths list.
 2026-08-12 boundary: VERSION remains target-owned; adoption must report absence but must not create or mutate it.
 2026-08-12 design: exact VERSION ownership belongs to integration; application remains a negative control.
+2026-08-12 implementation 8a65c3d: manifest plus validator regression only; focused and complete Linux contracts PASS.
+2026-08-12 static quality: required-check wiring, suite completeness, Ruff and git diff checks PASS; no external delivery.
+2026-08-12 godot v2 dd758ad: exact-SHA adoption idempotent; explicit Goal, inferred Goal and managed wrapper GOV-PASS.
+2026-08-12 godot v2: stacks=[] and docker.required=false retained; git fsck and 1-document HTML smoke PASS.

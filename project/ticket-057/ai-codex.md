@@ -33,9 +33,23 @@ claim it.
   it to the default `stacks: []` manifest rather than Goal or the target repo.
 - Confirmed `VERSION` is required globally and absent from every default
   `ownedPaths` list; language-specific behavior cannot repair stackless repos.
+- Added exact `VERSION` ownership to the default integration workstream without
+  widening application or governance ownership.
+- Added static manifest assertions and dynamic stackless fixtures proving the
+  positive integration path and the foreign-application rejection.
+- Passed the focused validator, all commands from the Linux CI job, suite
+  wiring completeness, Ruff and diff checks on implementation commit
+  `8a65c3d`.
+- Exercised exact revision `8a65c3d` through global Goal on a fresh `godot`
+  clone with prerequisites on its accepted base. Preflight was read-only,
+  adoption was idempotent, and payload commit `dd758ad` passed explicit-base,
+  inferred-base and managed-wrapper governance checks.
+- Confirmed the pilot stayed stackless and Docker-free, and passed Git object
+  integrity plus its one-document HTML smoke test.
+- Completed the bounded standard repair locally without external delivery.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- None inside the recorded intent.
 - New authority is still required for destructive action, secret access, new
   external coordination, material objective expansion and trusted merge.
