@@ -37,9 +37,17 @@ pilot exposed managed root launchers with no matching owned path.
 - Confirmed an unmanaged `false` scalar would block target opt-in; amended the
   plan to remove only `docker.required` from the managed manifest projection
   and test preservation through upgrade.
+- Made the default manifest stack-neutral and added complete governance
+  ownership for Goal configuration and every managed root launcher.
+- Made only `docker.required` target-owned in the projected managed base;
+  required paths and stack lists remain additive extensions, while all Docker
+  file-name settings stay managed.
+- Added regressions proving a target can opt in and retain that choice through
+  adoption check/upgrade.
+- Passed focused validator/adoption suites and the complete Linux CI contract.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- None; the bounded local objective is complete.
 - New authority is still required for destructive action, secret access, new
   external coordination, material objective expansion and trusted merge.

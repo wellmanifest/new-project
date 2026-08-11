@@ -9,9 +9,10 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-051`](project/ticket-051/README.md) — uczynić Docker opt-in w
-  domyślnym manifeście i domknąć ownership zarządzanych launcherów oraz
-  `goal.yaml`. Stan: `IN_PROGRESS / EDIT`; reprodukcja: pilot `glon`.
+- [x] [`ticket-051`](project/ticket-051/README.md) — Docker jest opt-in w
+  domyślnym manifeście, a ownership zarządzanych launcherów i `goal.yaml` jest
+  kompletny. Stan: `DONE / DONE`; focused i full Linux contract przechodzą,
+  bez external delivery.
 
 - [x] [`ticket-047`](project/ticket-047/README.md) — ujednolicono autonomiczny
   stan generowanych ticketów i opublikować pełną naprawę jako immutable

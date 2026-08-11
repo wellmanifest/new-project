@@ -2,8 +2,8 @@
 
 - **ID**: ticket-051
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-11
 
 ## Cel i Zakres
@@ -22,14 +22,14 @@ workstreamu.
 
 - [x] AC-01: Polecenie użytkownika, aby poprawiać komplikacje znalezione na
   `glon`, stanowi bounded `SESSION_EXECUTION_AUTHORIZATION` dla tej zmiany.
-- [ ] AC-02: Domyślny manifest nie wymaga Dockerfile/Compose i ma pustą listę
+- [x] AC-02: Domyślny manifest nie wymaga Dockerfile/Compose i ma pustą listę
   stacków; projekcja managed base pozostawia `docker.required` targetowi, więc
   target może rzeczywiście włączyć Docker bez naruszenia locka.
-- [ ] AC-03: Wszystkie entrypointy zarządzane poza katalogiem `project/` oraz
+- [x] AC-03: Wszystkie entrypointy zarządzane poza katalogiem `project/` oraz
   `goal.yaml` mają jednoznacznego właściciela w workstreamie governance.
-- [ ] AC-04: Regresje manifestu wymagają portable default i kompletnego
+- [x] AC-04: Regresje manifestu wymagają portable default i kompletnego
   ownershipu, a pełny kontrakt Linux przechodzi.
-- [ ] AC-05: Nie zmieniają się schematy, validator, package manifest,
+- [x] AC-05: Nie zmieniają się schematy, validator, package manifest,
   zależności, wersja ani wydanie; istniejące adopcje pozostają przypięte do
   wcześniejszego immutable manifestu.
 
@@ -53,6 +53,21 @@ workstreamu.
 
 Dozwolone są lokalne zmiany i testy z tego intentu. Push, PR, merge, bump,
 tagowanie i publikacja wymagają osobnej dyspozycji.
+
+## Dowody walidacji
+
+- Default schema-valid manifest nie zawiera `Dockerfile` w `requiredFiles`, ma
+  `docker.required=false` i pustą listę `stacks`.
+- Managed base usuwa wyłącznie `docker.required`; test adopcji włącza Docker w
+  manifeście targetu i potwierdza zachowanie opt-in po checku oraz upgrade.
+- Regresja ownershipu wymaga `goal.yaml`, `project.sh`, `project.bat` i
+  `scripts/runtime.sh` w workstreamie governance.
+- Focused validator i adoption-lock oraz wszystkie komendy Linux CI przechodzą.
+
+## Stan
+
+`DONE / DONE` lokalnie. Nie wykonano push, PR, merge, bumpu, tagu ani
+publikacji.
 
 ## Uczestnicy
 
