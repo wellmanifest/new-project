@@ -77,7 +77,13 @@ Protected review/attestation związane z repozytorium, PR-em, current HEAD,
 ticketem i aktorem pozostaje obowiązkowe dokładnie tak samo jak dla każdego
 innego implementation diffu.
 
-Manifest deklaruje wymagane pliki, Docker, aktywne/zamknięte statusy ticketów,
+Bazowy manifest jest stack-neutral: nie wymaga Dockerfile ani Compose i nie
+deklaruje stacku `docker`. Target korzystający z kontenerów rozszerza własny
+`.governance/manifest.json`: dodaje Dockerfile do `requiredFiles`, ustawia
+`docker.required` na `true` i dodaje `docker` do `stacks`. Schema, profile i
+walidator zachowują pełne egzekwowanie tego jawnego opt-in.
+
+Manifest deklaruje wymagane pliki, opcjonalny Docker, aktywne/zamknięte statusy ticketów,
 stany implementacyjne, ścieżki governance i profile technologiczne. Każdy nowy
 ticket zawiera intent v2 z workstreamem, zakresem, zależnościami, konfliktami i
 opcjonalnym routingiem przez ticket integracyjny. Zamknięte tickety intent v1

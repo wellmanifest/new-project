@@ -11,7 +11,6 @@
     "CHANGELOG.md",
     "TODO.md",
     "AGENTS.md",
-    "Dockerfile",
     "project/TICKETS.md",
     "project/new-ticket.sh",
     "project/readme.sh"
@@ -71,7 +70,7 @@
     "intentFile": "intent.json"
   },
   "docker": {
-    "required": true,
+    "required": false,
     "dockerfiles": ["Dockerfile", "Dockerfile.e2e"],
     "composeFiles": ["compose.yml", "docker-compose.yml", "compose.e2e.yml"]
   },
@@ -83,7 +82,7 @@
       "application": { "ownedPaths": ["src/**", "app/**", "lib/**", "test/**", "tests/**"] },
       "interfaces": { "ownedPaths": ["api/**", "sdk/**", "clients/**"] },
       "infrastructure": { "ownedPaths": ["Dockerfile*", "compose*.yml", "compose*.yaml", "infra/**", ".github/**"] },
-      "governance": { "ownedPaths": [".governance/**", "AGENTS.md", "README.md", "TODO.md", "CHANGELOG.md", ".env.example", "project/**"] },
+      "governance": { "ownedPaths": [".governance/**", "AGENTS.md", "README.md", "TODO.md", "CHANGELOG.md", ".env.example", "goal.yaml", "project.sh", "project.bat", "project/**", "scripts/runtime.sh"] },
       "integration": { "ownedPaths": ["package.json", "pyproject.toml", "go.mod", "Cargo.toml", "pom.xml", "docs/**"] }
     },
     "integration": {
@@ -104,5 +103,5 @@
     "publicInterfacePaths": ["api/**", "sdk/**", "src/public/**"],
     "dependencyManifestPaths": ["package.json", "pyproject.toml", "go.mod", "Cargo.toml", "pom.xml"]
   },
-  "stacks": ["docker"]
+  "stacks": []
 }

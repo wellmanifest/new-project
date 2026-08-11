@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [x] [`ticket-051`](project/ticket-051/README.md) — Docker jest opt-in w
+  domyślnym manifeście, a ownership zarządzanych launcherów i `goal.yaml` jest
+  kompletny. Stan: `DONE / DONE`; focused i full Linux contract przechodzą,
+  bez external delivery.
+
 - [x] [`ticket-049`](project/ticket-049/README.md) — obsłużono pierwszą,
   provenance-bound adopcję managed package bez bazowego locka, nie wyłączając
   z ownershipu plików targetu zastępowanych podczas bootstrapu. Stan:
