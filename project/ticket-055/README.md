@@ -3,7 +3,7 @@
 - **ID**: ticket-055
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-11
 
 ## Cel i Zakres
@@ -20,11 +20,11 @@ zgaduje bazy dla zwykłych ticketów i nie zmienia procesu publikacji.
 
 - [x] AC-01: Polecenie użytkownika stanowi bounded
   `SESSION_EXECUTION_AUTHORIZATION` dla lokalnej implementacji i testów.
-- [ ] AC-02: Brak `--base` przy dokładnie jednym aktywnym tickecie adopcyjnym
+- [x] AC-02: Brak `--base` przy dokładnie jednym aktywnym tickecie adopcyjnym
   rozwiązuje bazę do jego pełnego `delivery.acceptedBaseSha`.
-- [ ] AC-03: Fixture `base -> plan commit -> adoption commit` przechodzi przez
+- [x] AC-03: Fixture `base -> plan commit -> adoption commit` przechodzi przez
   zarządzany walidator bez jawnego `--base` i obejmuje zmieniony lock.
-- [ ] AC-04: Jawny `--base` zachowuje dotychczasowe pierwszeństwo, a błędna lub
+- [x] AC-04: Jawny `--base` zachowuje dotychczasowe pierwszeństwo, a błędna lub
   niejednoznaczna adopcja nadal kończy się fail-closed `GOV-SYNC-001`.
 - [ ] AC-05: Test walidatora i pełny kontrakt Linux przechodzą; poprawka zostaje
   ponownie sprawdzona przez `./project.sh` w izolowanym pilocie `semcod/codot`.
@@ -36,6 +36,14 @@ zgaduje bazy dla zwykłych ticketów i nie zmienia procesu publikacji.
 - Źródłem bazy jest zaakceptowany pełny SHA zapisany przed implementacją, nie
   `HEAD^`, nazwa brancha ani stan zdalny.
 - Nie wykonujemy push, PR, merge, tagowania ani publikacji.
+
+## Dowody walidacji
+
+- `bash tests/governance-validator.test.sh` przechodzi dla jawnej i wyznaczonej
+  bazy w historii `base -> plan -> initial adoption`.
+- Wszystkie osiem zestawów Linux CI, kontrakty JSON, kontrola kompletności CI
+  i `ruff check scripts/governance_check.py` przechodzą.
+- Pozostaje ponowne przypięcie i uruchomienie pakietu w izolowanym `codot`.
 
 ## Autoryzacja
 

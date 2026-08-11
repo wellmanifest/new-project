@@ -1,3 +1,6 @@
 2026-08-11 reproduction: semcod/codot explicit `goal governance check --base <accepted>` -> GOV-PASS.
 2026-08-11 reproduction: semcod/codot `./project.sh` -> GOV-SYNC-001 (base and changed lock are required).
 2026-08-11 diagnosis: Goal wrapper dispatch is correct; adopted validator sees only working-tree paths when base is omitted.
+2026-08-11 focused: python3 -m py_compile scripts/governance_check.py && bash tests/governance-validator.test.sh -> PASS.
+2026-08-11 Linux contract: required-checks, decision-record, governance-scripts, governance-validator, branch-lifecycle, governance-env, adoption-lock, rule-enforcement -> PASS.
+2026-08-11 static checks: JSON contracts, required-check wiring, CI suite completeness, ruff -> PASS.

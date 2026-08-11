@@ -13,7 +13,8 @@
   wyznaczanie bazy dla wielocommitowej adopcji: przypięty walidator ma użyć
   `delivery.acceptedBaseSha` z jednego aktywnego ticketu adopcyjnego, zachowując
   pierwszeństwo jawnego `--base`. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
-  `BUG / P1 / regression`.
+  `BUG / P1 / regression`; standardowy Linux contract przechodzi, pozostało
+  ponowne przypięcie i sprawdzenie pilota `codot`.
 
 - [x] [`ticket-054`](project/ticket-054/README.md) — doprecyzowano, że lokalny
   build pomija `image:`, natomiast `build:` z mutowalnym `image:` nadal może

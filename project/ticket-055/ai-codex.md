@@ -35,6 +35,12 @@ recorded in the active ticket.
   lock was invisible without a base.
 - Confirmed the wrappers already use Goal and that the correct repair boundary
   is the pinned `new-project` validator rather than a shell-side JSON parser.
+- Added an omitted-base resolver that runs before changed-path calculation and
+  accepts only the exact accepted SHA from one active adoption record.
+- Extended the existing initial-adoption fixture, whose history already has
+  separate base, plan and payload commits, with a no-argument validation pass.
+- Passed the focused regression, all eight Linux CI suites, JSON contracts, CI
+  completeness and Ruff. Downstream `codot` revalidation remains open.
 
 ## Blockers
 
