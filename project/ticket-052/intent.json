@@ -11,6 +11,7 @@
   "allowedPaths": [
     "scripts/governance_check.py",
     "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
     "tests/governance-validator.test.sh",
     "docs/GOVERNANCE_ENFORCEMENT.md",
     "project/ticket-052/**",
@@ -45,7 +46,7 @@
     "complexity": "S",
     "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 4,
+      "maxImplementationFiles": 5,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
@@ -56,7 +57,12 @@
       "components": [
         {
           "name": "docker-reference-gate",
-          "paths": ["scripts/governance_check.py", "governance/diagnostics.json", "tests/governance-validator.test.sh"]
+          "paths": [
+            "scripts/governance_check.py",
+            "governance/diagnostics.json",
+            "governance/rule-enforcement.json",
+            "tests/governance-validator.test.sh"
+          ]
         },
         {
           "name": "enforcement-guidance",
@@ -84,7 +90,7 @@
       {
         "criterion": "AC-04",
         "commands": ["all commands from the Linux CI test job"],
-        "evidence": "Focused variants and complete standard regression contract pass"
+        "evidence": "Focused variants, semantic C-DOCKER-004 mapping and complete standard regression contract pass"
       },
       {
         "criterion": "AC-05",

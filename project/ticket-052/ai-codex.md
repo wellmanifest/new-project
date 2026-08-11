@@ -19,8 +19,9 @@ grammar over the two normative image-reference locations is appropriate.
 2. Invoke them only for targets that require Docker; retain scratch/build-only
    Compose support.
 3. Add the stable diagnostic and positive/adversarial fixture matrix.
-4. Document exact supported grammar and remediation.
-5. Run focused and full Linux validation; stop before delivery.
+4. Replace the false C-DOCKER-004/presence-code mapping with the actual pin
+   diagnostic and document exact grammar/remediation.
+5. Run focused, traceability and full Linux validation; stop before delivery.
 
 ## Actual changes
 
@@ -28,6 +29,8 @@ grammar over the two normative image-reference locations is appropriate.
   from the request to execute this work.
 - Reproduced the missing enforcement on `algitex`: unpinned Docker/Compose
   references pass both the governance gate and Docker static build check.
+- Full validation exposed that C-DOCKER-004 was marked deterministic through
+  the unrelated presence-only code; amended scope to repair traceability.
 
 ## Blockers
 

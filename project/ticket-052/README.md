@@ -25,7 +25,8 @@ serwisy Compose używające wyłącznie `build:` nie wymagają sztucznego `image
 - [ ] AC-03: Tag, `latest`, zmienna i niepełny/uppercase digest kończą się
   nowym, stabilnym `GOV-DOCKER-002` z dokładną ścieżką i numerem linii.
 - [ ] AC-04: Regresje pokrywają Dockerfile flags/alias oraz cytowane Compose
-  scalar values, a pełny kontrakt Linux przechodzi.
+  scalar values, `C-DOCKER-004` mapuje rzeczywisty kod egzekwujący, a pełny
+  kontrakt Linux przechodzi.
 - [ ] AC-05: Nie zmieniają się zależności, schema, manifest default, package,
   wersja ani wydanie; brak external delivery.
 
@@ -38,6 +39,9 @@ serwisy Compose używające wyłącznie `build:` nie wymagają sztucznego `image
 - `scratch` jest specjalnym, bezwarstwowym Docker base i nie ma registry digestu.
 - Pilot `algitex` reprodukuje lukę: `python:3.12-slim` oraz wiele `:latest`
   przechodzą obecny `GOV-PASS` mimo dokumentowanej polityki pinów.
+- Traceability wcześniej przypisywało `C-DOCKER-004` do `GOV-DOCKER-001`, choć
+  ten kod sprawdza wyłącznie obecność runtime declaration. Nowy kod zastępuje
+  to semantycznie błędne mapowanie.
 
 ## Autoryzacja
 
