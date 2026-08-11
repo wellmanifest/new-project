@@ -14,6 +14,11 @@
   kompletny. Stan: `DONE / DONE`; focused i full Linux contract przechodzą,
   bez external delivery.
 
+- [x] [`ticket-049`](project/ticket-049/README.md) — obsłużono pierwszą,
+  provenance-bound adopcję managed package bez bazowego locka, nie wyłączając
+  z ownershipu plików targetu zastępowanych podczas bootstrapu. Stan:
+  `DONE / DONE`; pełny Linux contract przechodzi, bez external delivery.
+
 - [x] [`ticket-047`](project/ticket-047/README.md) — ujednolicono autonomiczny
   stan generowanych ticketów i opublikować pełną naprawę jako immutable
   `v0.14.1` wskazujące `main@63a3d56`. PR #75 przeszedł Linux, Windows i
