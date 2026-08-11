@@ -20,12 +20,52 @@ git -C "$standard" add .
 git -C "$standard" commit -qm 'test: publish standard fixture'
 revision="$(git -C "$standard" rev-parse HEAD)"
 
-set +e
+collision_target="$fixture/collision-target"
+mkdir -p "$collision_target"
+printf '%s\n' '#!/usr/bin/env bash' 'echo target automation' > "$collision_target/project.sh"
+printf '%s\r\n' '@echo off' 'echo target automation' > "$collision_target/project.bat"
+chmod 740 "$collision_target/project.sh"
+collision_sh_hash="$(sha256sum "$collision_target/project.sh" | cut -d' ' -f1)"
+collision_bat_hash="$(sha256sum "$collision_target/project.bat" | cut -d' ' -f1)"
+collision_sh_mode="$(stat -c '%a' "$collision_target/project.sh")"
+if python3 "$standard/scripts/create_adoption_lock.py" \
+  --target-root "$collision_target" --source-revision "$revision" --check \
+  > "$fixture/collision-check.out" 2> "$fixture/collision-check.err"; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+! grep -Eq '^(UPDATE|CHMOD) project\.sh$' "$fixture/collision-check.out"
+! grep -Eq '^(UPDATE|CHMOD) project\.bat$' "$fixture/collision-check.out"
 python3 "$standard/scripts/create_adoption_lock.py" \
+  --target-root "$collision_target" --source-revision "$revision" \
+  > "$fixture/collision-adopt.out"
+test "$(sha256sum "$collision_target/project.sh" | cut -d' ' -f1)" = "$collision_sh_hash"
+test "$(sha256sum "$collision_target/project.bat" | cut -d' ' -f1)" = "$collision_bat_hash"
+test "$(stat -c '%a' "$collision_target/project.sh")" = "$collision_sh_mode"
+python3 - "$collision_target/.governance/manifest.lock.json" <<'PY'
+import json
+import sys
+
+managed = json.load(open(sys.argv[1], encoding='utf-8'))['managedFiles']
+assert 'project.sh' not in managed
+assert 'project.bat' not in managed
+assert 'project/governance-check.sh' in managed
+assert 'project/governance-check.bat' in managed
+PY
+python3 "$standard/scripts/create_adoption_lock.py" \
+  --target-root "$collision_target" --source-revision "$revision" --check \
+  > "$fixture/collision-current.out"
+grep -q '^up-to-date wellmanifest/new-project ' "$fixture/collision-current.out"
+
+if python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check \
-  > "$fixture/initial-check.out" 2> "$fixture/initial-check.err"
-status=$?
-set -e
+  > "$fixture/initial-check.out" 2> "$fixture/initial-check.err"; then
+  status=0
+else
+  status=$?
+fi
 test "$status" -eq 1
 grep -q '^CREATE .governance/manifest.json$' "$fixture/initial-check.out"
 grep -q '^CREATE .governance/manifest.lock.json$' "$fixture/initial-check.out"
@@ -67,6 +107,10 @@ assert lock['standard']['publicationStatus'] == 'published'
 assert lock['standard']['version'] == '0.14.1'
 assert '.governance/manifest.base.json' in lock['managedFiles']
 assert '.governance/manifest.json' not in lock['managedFiles']
+assert 'project.sh' not in lock['managedFiles']
+assert 'project.bat' not in lock['managedFiles']
+assert 'project/governance-check.sh' in lock['managedFiles']
+assert 'project/governance-check.bat' in lock['managedFiles']
 assert (root / '.governance/manifest.base.json').is_file()
 assert manifest['docker']['required'] is False
 assert 'required' not in base['docker']
@@ -101,6 +145,8 @@ test -f "$target/project.bat"
 test -f "$target/AGENTS.md"
 test -f "$target/.governance/approval-evidence.schema.json"
 test -f "$target/.governance/package-manifest.json"
+printf '%s\n' '# target-owned seed extension' >> "$target/project.sh"
+printf '%s\r\n' 'REM target-owned seed extension' >> "$target/project.bat"
 python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check \
   > "$fixture/current-check.out"
@@ -144,25 +190,29 @@ fi
 grep -q 'violates its installed managed base' "$fixture/tampered-manifest.err"
 
 printf '\n# drift\n' >> "$target/project/governance-check.sh"
-set +e
-python3 "$standard/scripts/create_adoption_lock.py" \
+if python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check \
-  > "$fixture/drift-check.out" 2> "$fixture/drift-check.err"
-status=$?
-set -e
+  > "$fixture/drift-check.out" 2> "$fixture/drift-check.err"; then
+  status=0
+else
+  status=$?
+fi
 test "$status" -eq 1
 grep -q '^UPDATE project/governance-check.sh$' "$fixture/drift-check.out"
 grep -q '# drift' "$target/project/governance-check.sh"
-set +e
-python3 "$standard/scripts/create_adoption_lock.py" \
-  --target-root "$target" --source-revision "$revision" > /dev/null 2> "$fixture/drift.err"
-status=$?
-set -e
+if python3 "$standard/scripts/create_adoption_lock.py" \
+  --target-root "$target" --source-revision "$revision" > /dev/null 2> "$fixture/drift.err"; then
+  status=0
+else
+  status=$?
+fi
 test "$status" -ne 0
 grep -q 'rerun with --upgrade' "$fixture/drift.err"
 python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --upgrade > /dev/null
 ! grep -q '# drift' "$target/project/governance-check.sh"
+grep -q 'target-owned seed extension' "$target/project.sh"
+grep -q 'target-owned seed extension' "$target/project.bat"
 python3 - "$target/.governance/manifest.json" <<'PY'
 import json
 import sys
@@ -174,32 +224,35 @@ assert 'docker' in manifest['stacks']
 PY
 
 chmod -x "$target/project/governance-check.sh"
-set +e
-python3 "$standard/scripts/create_adoption_lock.py" \
+if python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check \
-  > "$fixture/mode-check.out"
-status=$?
-set -e
+  > "$fixture/mode-check.out"; then
+  status=0
+else
+  status=$?
+fi
 test "$status" -eq 1
 grep -q '^CHMOD project/governance-check.sh$' "$fixture/mode-check.out"
 python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" > /dev/null
 test -x "$target/project/governance-check.sh"
 
-set +e
-python3 "$standard/scripts/create_adoption_lock.py" \
-  --target-root "$target" --source-revision deadbeef > /dev/null 2> "$fixture/revision.err"
-status=$?
-set -e
+if python3 "$standard/scripts/create_adoption_lock.py" \
+  --target-root "$target" --source-revision deadbeef > /dev/null 2> "$fixture/revision.err"; then
+  status=0
+else
+  status=$?
+fi
 test "$status" -eq 2
 grep -q 'full lowercase 40-character commit SHA' "$fixture/revision.err"
 
-set +e
-python3 "$standard/scripts/create_adoption_lock.py" \
+if python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check --upgrade \
-  > /dev/null 2> "$fixture/options.err"
-status=$?
-set -e
+  > /dev/null 2> "$fixture/options.err"; then
+  status=0
+else
+  status=$?
+fi
 test "$status" -eq 2
 grep -q -- '--check and --upgrade are mutually exclusive' "$fixture/options.err"
 

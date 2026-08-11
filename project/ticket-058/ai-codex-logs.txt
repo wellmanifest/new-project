@@ -1,0 +1,11 @@
+2026-08-12 hillm baseline 2b311ef: 81 passed, 7 skipped; Ruff has 77 pre-existing findings; tree clean.
+2026-08-12 candidate 44026dc preflight: UPDATE project.sh plus 25 CREATE, missing project/TICKETS.md; no writes.
+2026-08-12 collision: hillm project.sh sha256 cd1791c0... and 139 lines; standard wrapper 38 lines.
+2026-08-12 provenance: ticket-024 documents the same unresolved managed-wrapper blocker in another downstream repository.
+2026-08-12 implementation 98c403c: 5 bounded files; focused adoption/governance scripts and full Linux contract PASS.
+2026-08-12 hillm exact-SHA: 25 CREATE, no prerequisite/collision, no upgrade; project.sh hash/mode retained.
+2026-08-12 hillm payload 6cc1429 + correction 004871c: explicit/inferred/canonical GOV-PASS; 81 passed, 7 skipped; Ruff 77.
+2026-08-12 hillm test-isolation defect: two generated tracked-ledger rows removed exactly from original and pilot; both clean.
+2026-08-12 publication rebuild: ticket-only commits replayed on current origin/main; full Linux CI contract PASS.
+2026-08-12 validator review: replaced the newly added relaxed error-mode block with explicit expected-failure branching; focused contract PASS.
+2026-08-12 validator follow-up: removed all legacy error-mode relaxation blocks from the touched adoption test; semantics retained through explicit status branches.

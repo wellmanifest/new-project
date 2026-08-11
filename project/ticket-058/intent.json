@@ -1,0 +1,92 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-058",
+  "summary": "Preserve colliding target root wrappers",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "governance/package-manifest.json",
+    "tests/adoption-lock.test.sh",
+    "template/files/AGENTS.template.md",
+    "AGENTS.md",
+    "docs/GOAL_ADOPTION.md",
+    "project/ticket-058/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "44026dced746ac5660fdb2326f9456096a7a8cd9",
+    "targetBranch": "main",
+    "outcome": "Initial adoption preserves pre-existing target root wrappers byte-for-byte while still seeding absent convenience wrappers and managing the canonical project/governance-check entrypoints",
+    "nonGoals": [
+      "No executable marker injection or merge into target-owned scripts",
+      "No weakening of managed project/governance-check.sh or project/governance-check.bat",
+      "No Goal-side policy duplication, downstream product mutation or external delivery"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reclassify optional root project.sh and project.bat compatibility entrypoints as seed artifacts and direct all unconditional governance instructions to the separately managed project/governance-check entrypoints",
+      "components": [
+        {
+          "name": "adoption-package",
+          "paths": ["governance/package-manifest.json", "tests/adoption-lock.test.sh"]
+        },
+        {
+          "name": "target-execution-instructions",
+          "paths": ["template/files/AGENTS.template.md", "AGENTS.md", "docs/GOAL_ADOPTION.md"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "project.sh and project.bat change from managed to seed package strategies"
+      ],
+      "dataChanges": [
+        "Fresh locks no longer hash optional root wrappers; canonical project/governance-check wrappers remain managed"
+      ],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert before candidate publication; existing immutable releases and target locks remain unchanged"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "An existing custom project.sh/project.bat pair is absent from drift, preserved byte-for-byte and excluded from managedFiles"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "An empty target receives executable/default seed wrappers, may extend them locally and still has an idempotent package check"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-scripts.test.sh"],
+        "evidence": "Canonical project/governance-check entrypoints remain managed, Goal-backed and documented as unconditional gates"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["all commands from the Linux CI test job", "Ruff on changed Python surfaces", "isolated Goal adoption pilot on hillm"],
+        "evidence": "Full contracts retain baseline and real collision adoption preserves hillm automation"
+      }
+    ]
+  }
+}

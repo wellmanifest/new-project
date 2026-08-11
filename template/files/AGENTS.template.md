@@ -19,8 +19,10 @@ Before any multi-step implementation, an agent must:
 6. Never create or edit `project/ticket-*/user-*.md`; only its human owner or a
    trusted intake boundary may do so.
 7. Keep executable source/tests/scripts outside ticket directories.
-8. Run `./project/governance-check.sh` plus the stack and Docker checks before
-   reporting completion.
+8. Run the managed `./project/governance-check.sh` (or
+   `project\governance-check.bat` on Windows) plus the stack checks before
+   reporting completion. Root `project.sh` / `project.bat` are optional
+   target-owned seed aliases and must not be assumed to contain the gate.
 9. Serialize ticket-ID allocation before branching, then use a separate
    branch/worktree per implementation ticket. Each diff must resolve to exactly
    one active ticket. Shared contract paths are edited only by the declared
