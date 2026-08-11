@@ -33,9 +33,17 @@ can calculate readiness without moving policy into Goal or owning target files.
   target-owned `TODO.md`; `gillm` otherwise passed 163 workspace tests.
 - Verified that Goal already dispatches to the pinned package generator, so no
   Goal-side policy duplication is needed.
+- Added a deterministic post-plan prerequisite resolver with relative-path
+  validation and informational stdout reporting in check/write modes.
+- Preserved package drift codes and target ownership; the generator never
+  creates a reported prerequisite.
+- Added empty-target, managed-payload, stable-order, up-to-date, resolution,
+  upgrade and unsafe-path regressions, plus Goal-facing documentation.
+- Passed Python compile/Ruff, focused adoption tests and the complete Linux CI
+  command contract. Docker Engine 29.1.3 is available locally.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- None inside the recorded intent; exact-SHA downstream revalidation remains.
 - New authority is still required for destructive action, secret access, new
   external coordination, material objective expansion and trusted merge.

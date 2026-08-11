@@ -13,7 +13,8 @@
   adopcji brakujące pliki bazowe należące do targetu po uwzględnieniu całego
   planu instalacji. Raport ma być deterministyczny i informacyjny, bez
   tworzenia plików, zmiany semantyki kodów wyjścia ani przejmowania własności
-  nad targetem. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  nad targetem. Stan: `IN_PROGRESS / VALIDATION`; focused i pełny Linux
+  contract przechodzą, pozostał exact-SHA pilot downstream. Klasyfikacja:
   `BUG / P1 / regression`.
 
 - [x] [`ticket-055`](project/ticket-055/README.md) — naprawiono domyślne

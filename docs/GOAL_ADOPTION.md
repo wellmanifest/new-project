@@ -21,6 +21,13 @@ goal governance adopt \
 Kod wyjścia `0` oznacza zgodność. Kod `1` oznacza, że raportowane operacje
 `CREATE`, `UPDATE` lub `CHMOD` są wymagane; `--check` nie zapisuje plików.
 
+Preflight uwzględnia cały plan instalacji i osobno wypisuje informacyjne linie
+`MISSING target prerequisite <path>` dla wymaganych plików, które nadal będą
+nieobecne po adopcji. Są to pliki należące do repozytorium docelowego, na
+przykład `TODO.md` lub `project/TICKETS.md`; generator ich nie tworzy. Same
+ostrzeżenia nie zmieniają kodu wyjścia: `0` nadal oznacza brak driftu pakietu,
+a `1` — wymagane operacje na plikach zarządzanych.
+
 Po przeglądzie planu wykonaj pierwszą adopcję:
 
 ```bash
@@ -39,7 +46,9 @@ ticketów i lock z hashami SHA-256.
 
 Generator nie zgaduje konfiguracji stacka. Przed zmianą implementacji projekt
 musi mieć lokalnie poprawne `Dockerfile` i Compose oraz wymagane pliki bazowe z
-manifestu. Następnie utwórz pierwszy ticket w repozytorium docelowym:
+manifestu. Uzupełnij pozycje wskazane przez `MISSING target prerequisite`
+zgodnie z zawartością i własnością repozytorium docelowego. Następnie utwórz
+pierwszy ticket w repozytorium docelowym:
 
 ```bash
 ./project/new-ticket.sh \

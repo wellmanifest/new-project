@@ -29,10 +29,29 @@ set -e
 test "$status" -eq 1
 grep -q '^CREATE .governance/manifest.json$' "$fixture/initial-check.out"
 grep -q '^CREATE .governance/manifest.lock.json$' "$fixture/initial-check.out"
+grep -q '^MISSING target prerequisite CHANGELOG.md$' "$fixture/initial-check.out"
+grep -q '^MISSING target prerequisite README.md$' "$fixture/initial-check.out"
+grep -q '^MISSING target prerequisite TODO.md$' "$fixture/initial-check.out"
+grep -q '^MISSING target prerequisite VERSION$' "$fixture/initial-check.out"
+grep -q '^MISSING target prerequisite project/TICKETS.md$' "$fixture/initial-check.out"
+expected_missing="$(printf '%s\n' \
+  'MISSING target prerequisite CHANGELOG.md' \
+  'MISSING target prerequisite README.md' \
+  'MISSING target prerequisite TODO.md' \
+  'MISSING target prerequisite VERSION' \
+  'MISSING target prerequisite project/TICKETS.md')"
+test "$(grep '^MISSING target prerequisite ' "$fixture/initial-check.out")" = "$expected_missing"
+! grep -q '^MISSING target prerequisite AGENTS.md$' "$fixture/initial-check.out"
+! grep -q '^MISSING target prerequisite project/new-ticket.sh$' "$fixture/initial-check.out"
+! grep -q '^MISSING target prerequisite project/readme.sh$' "$fixture/initial-check.out"
 test -z "$(find "$target" -mindepth 1 -print -quit)"
 
 python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" > "$fixture/adopt.out"
+grep -q '^adopted wellmanifest/new-project ' "$fixture/adopt.out"
+grep -q '^MISSING target prerequisite TODO.md$' "$fixture/adopt.out"
+test ! -e "$target/TODO.md"
+test ! -e "$target/project/TICKETS.md"
 python3 - "$target" "$revision" <<'PY'
 import hashlib
 import json
@@ -57,6 +76,8 @@ assert '.env.example' in governance_paths
 for path, expected in lock['managedFiles'].items():
     assert hashlib.sha256((root / path).read_bytes()).hexdigest() == expected
 PY
+touch "$target/README.md" "$target/VERSION" "$target/CHANGELOG.md" "$target/TODO.md" \
+  "$target/project/TICKETS.md"
 python3 - "$target/.governance/manifest.json" <<'PY'
 import json
 import sys
@@ -84,6 +105,13 @@ python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$revision" --check \
   > "$fixture/current-check.out"
 grep -q '^up-to-date wellmanifest/new-project ' "$fixture/current-check.out"
+grep -q '^MISSING target prerequisite Dockerfile$' "$fixture/current-check.out"
+touch "$target/Dockerfile"
+python3 "$standard/scripts/create_adoption_lock.py" \
+  --target-root "$target" --source-revision "$revision" --check \
+  > "$fixture/ready-check.out"
+grep -q '^up-to-date wellmanifest/new-project ' "$fixture/ready-check.out"
+! grep -q '^MISSING target prerequisite ' "$fixture/ready-check.out"
 python3 - "$target/.governance/manifest.json" "$target/.governance/manifest.base.json" <<'PY'
 import json
 import sys
@@ -188,6 +216,29 @@ fi
 grep -Eq 'target manifest (version must equal|does not extend the managed base)' "$fixture/mismatch.err"
 test ! -e "$mismatch/project/governance-check.sh"
 test ! -e "$mismatch/.governance/manifest.lock.json"
+
+invalid_required="$fixture/invalid-required-standard"
+cp -R "$standard" "$invalid_required"
+python3 - "$invalid_required/governance/manifest.default.json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+manifest = json.load(open(path, encoding='utf-8'))
+manifest['requiredFiles'].append('../outside')
+open(path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2) + '\n')
+PY
+git -C "$invalid_required" add governance/manifest.default.json
+git -C "$invalid_required" commit -qm 'test: publish invalid required path'
+invalid_required_revision="$(git -C "$invalid_required" rev-parse HEAD)"
+if python3 "$invalid_required/scripts/create_adoption_lock.py" \
+  --target-root "$fixture/invalid-required-target" \
+  --source-revision "$invalid_required_revision" --check \
+  > /dev/null 2> "$fixture/invalid-required.err"; then
+  echo 'expected invalid required path to fail' >&2
+  exit 1
+fi
+grep -q 'requiredFiles item .* must be repository-relative' "$fixture/invalid-required.err"
 
 missing="$fixture/missing-standard"
 cp -R "$standard" "$missing"
@@ -438,6 +489,7 @@ python3 "$upgrade_standard/scripts/create_adoption_lock.py" \
   --target-root "$target" --source-revision "$upgrade_revision" --check \
   > "$fixture/upgraded-check.out"
 grep -q '^up-to-date wellmanifest/new-project 0.14.2 ' "$fixture/upgraded-check.out"
+grep -q '^MISSING target prerequisite SECURITY.md$' "$fixture/upgraded-check.out"
 
 python3 - "$repo_root" <<'PY'
 import pathlib

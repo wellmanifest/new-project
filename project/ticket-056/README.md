@@ -3,7 +3,7 @@
 - **ID**: ticket-056
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-11
 
 ## Cel i Zakres
@@ -23,11 +23,11 @@ wersji, zależności ani publikacji.
 
 - [x] AC-01: Polecenie użytkownika stanowi bounded
   `SESSION_EXECUTION_AUTHORIZATION` dla lokalnej implementacji i testów.
-- [ ] AC-02: Preflight pustego targetu raportuje w stabilnej kolejności tylko
+- [x] AC-02: Preflight pustego targetu raportuje w stabilnej kolejności tylko
   te `requiredFiles`, których nie utworzy plan adopcji, i niczego nie zapisuje.
-- [ ] AC-03: Pliki zarządzane obecne w payloadzie nie są raportowane jako
+- [x] AC-03: Pliki zarządzane obecne w payloadzie nie są raportowane jako
   brakujące, a utworzenie pliku target-owned usuwa jego ostrzeżenie.
-- [ ] AC-04: Brak prerequisite pozostaje informacyjny: `--check` nadal zwraca
+- [x] AC-04: Brak prerequisite pozostaje informacyjny: `--check` nadal zwraca
   `0` dla pakietu up-to-date i `1` dla driftu, a adopcja nadal może zakończyć
   instalację bez przejmowania zawartości targetu.
 - [ ] AC-05: Focused adoption test, pełny Linux contract, Ruff i ponowny pilot
@@ -42,6 +42,21 @@ wersji, zależności ani publikacji.
 - Lista z manifestu musi być walidowana jako bezpieczne, względne ścieżki i
   emitowana deterministycznie.
 - Nie wykonujemy push, PR, merge, tagowania ani publikacji.
+
+## Dowody walidacji
+
+- Focused `adoption-lock.test.sh` potwierdza pięć posortowanych braków pustego
+  targetu, wyklucza trzy pliki planowane przez payload i dowodzi braku zapisów
+  w `--check`.
+- Ten sam test zachowuje `1` dla driftu oraz `0` dla pakietu up-to-date,
+  raportuje brakujący `Dockerfile`, a po utworzeniu pliku nie emituje żadnego
+  `MISSING target prerequisite`.
+- Niebezpieczne `../outside` w `requiredFiles` jest odrzucane jako ścieżka
+  niewzględna wobec repozytorium.
+- Wszystkie osiem zestawów Linux CI, kontrakty JSON, required-check wiring,
+  kompletność CI, `py_compile` i Ruff przechodzą.
+- Lokalny Docker Engine 29.1.3 jest dostępny; standardowy Linux contract nie
+  definiuje lokalnego obrazu huba i został wykonany zgodnie z komendami CI.
 
 ## Autoryzacja
 

@@ -264,6 +264,32 @@ def planned_changes(
     return changes
 
 
+def missing_target_prerequisites(
+    target_root: Path,
+    manifest: object,
+    payloads: dict[str, bytes],
+) -> list[str]:
+    """Return required files still absent after applying planned payloads."""
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("requiredFiles"), list):
+        raise SystemExit("target manifest requiredFiles must be an array")
+    required_files = manifest["requiredFiles"]
+    missing: set[str] = set()
+    for index, required in enumerate(required_files):
+        if not isinstance(required, str) or not required:
+            raise SystemExit(f"target manifest requiredFiles item {index} must be a non-empty string")
+        path = Path(required)
+        if path.is_absolute() or ".." in path.parts or path == Path("."):
+            raise SystemExit(f"target manifest requiredFiles item {index} must be repository-relative")
+        if required not in payloads and not (target_root / path).is_file():
+            missing.add(required)
+    return sorted(missing)
+
+
+def report_missing_target_prerequisites(paths: list[str]) -> None:
+    for path in paths:
+        print(f"MISSING target prerequisite {path}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target-root", required=True)
@@ -348,15 +374,17 @@ def main() -> int:
         managed_targets,
     )
     changes = planned_changes(target_root, payloads, expected_lock, executable_targets)
+    missing_prerequisites = missing_target_prerequisites(target_root, manifest, payloads)
 
     if args.check:
         if not changes:
             print(f"up-to-date wellmanifest/new-project {version} at {args.source_revision}")
-            return 0
-        for action, target in changes:
-            print(f"{action} {target}")
-        print(f"drift detected: {len(changes)} change(s) required")
-        return 1
+        else:
+            for action, target in changes:
+                print(f"{action} {target}")
+            print(f"drift detected: {len(changes)} change(s) required")
+        report_missing_target_prerequisites(missing_prerequisites)
+        return 1 if changes else 0
 
     conflicts = [
         target for target, content in payloads.items()
@@ -376,6 +404,7 @@ def main() -> int:
         expected_lock,
     )
     print(f"adopted wellmanifest/new-project {version} at {args.source_revision}")
+    report_missing_target_prerequisites(missing_prerequisites)
     return 0
 
 

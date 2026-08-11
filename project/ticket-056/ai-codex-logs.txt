@@ -1,3 +1,9 @@
 2026-08-11 fixop pilot: Goal adoption preflight did not report missing target-owned TODO.md.
 2026-08-11 gillm pilot: Goal adoption preflight did not report missing target-owned TODO.md; adopted governance and 163 workspace tests otherwise passed.
 2026-08-11 boundary: Goal dispatch already executes pinned scripts/create_adoption_lock.py; repair remains in the standard package.
+2026-08-11 static: python3 -m py_compile scripts/create_adoption_lock.py; ruff check scripts/create_adoption_lock.py -> PASS.
+2026-08-11 focused: bash tests/adoption-lock.test.sh -> adoption lock: PASS.
+2026-08-11 focused evidence: empty target reports CHANGELOG.md, README.md, TODO.md, VERSION, project/TICKETS.md in sorted order; planned AGENTS.md and ticket scripts are excluded; check mode leaves target empty.
+2026-08-11 semantics: up-to-date with missing Dockerfile exits 0 and reports it; after target creates Dockerfile no MISSING line remains; invalid ../outside required path fails closed.
+2026-08-11 Linux contract: JSON contracts, required-check wiring, required-checks, decision-record, governance-scripts, governance-validator, branch-lifecycle, governance-env, adoption-lock, rule-enforcement and CI completeness -> PASS.
+2026-08-11 environment: Docker Engine 29.1.3 on Ubuntu 25.10 available; no hub-local container definition is part of the CI contract.
