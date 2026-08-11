@@ -1,0 +1,97 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-051",
+  "summary": "Make adoption defaults portable and owned",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "governance/manifest.default.json",
+    "tests/governance-validator.test.sh",
+    "docs/GOVERNANCE_ENFORCEMENT.md",
+    "project/ticket-051/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".github/**",
+    "governance/manifest.schema.json",
+    "governance/intent.schema.json",
+    "governance/package-manifest.json",
+    "scripts/**",
+    "VERSION",
+    "CHANGELOG.md",
+    "package.json",
+    "pyproject.toml"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3549d21a5a31fea87b2dd4da37d8e8bd793f20f6",
+    "targetBranch": "main",
+    "outcome": "New adopters receive a stack-neutral governance baseline whose managed launchers and Goal configuration have complete ownership",
+    "nonGoals": [
+      "No removal of Docker support from schemas, profiles or validator",
+      "No package payload, dependency, version or release change",
+      "No downstream mutation, push, pull request, merge or publication"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the baseline stack-neutral and let targets opt into Docker while assigning every managed launcher to governance ownership",
+      "components": [
+        {
+          "name": "portable-default-manifest",
+          "paths": ["governance/manifest.default.json", "tests/governance-validator.test.sh"]
+        },
+        {
+          "name": "adoption-guidance",
+          "paths": ["docs/GOVERNANCE_ENFORCEMENT.md"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "The default target manifest no longer mandates the Docker stack"
+      ],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Targets that need the old behavior opt into Docker in their extendable manifest; reverting restores the mandatory default"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "Schema-valid default has no Docker required file, false docker.required and no declared stacks"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "Regression requires root wrappers, runtime script and Goal config in governance ownership"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["all commands from the Linux CI test job"],
+        "evidence": "Every supported standard test remains green"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["git diff --name-only 3549d21a5a31fea87b2dd4da37d8e8bd793f20f6...HEAD"],
+        "evidence": "Only the default manifest, regression, documentation and ticket evidence change"
+      }
+    ]
+  }
+}
