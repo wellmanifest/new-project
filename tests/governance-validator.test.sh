@@ -266,6 +266,16 @@ make_fixture() {
   mkdir -p "$target/.governance" "$target/project/ticket-001" "$target/project/ticket-002" "$target/src"
   cp "$repo_root/scripts/governance_check.py" "$target/.governance/governance_check.py"
   cp "$repo_root/governance/manifest.default.json" "$target/.governance/manifest.json"
+  python3 - "$target/.governance/manifest.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+manifest = json.loads(path.read_text(encoding='utf-8'))
+manifest['docker']['required'] = True
+path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+PY
   cp "$repo_root/governance/stack-profiles.json" "$target/.governance/stack-profiles.json"
   cp "$repo_root/governance/work-classification.dsl.json" "$target/.governance/work-classification.dsl.json"
   touch "$target/README.md" "$target/CHANGELOG.md" "$target/TODO.md" "$target/AGENTS.md"

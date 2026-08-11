@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [x] [`ticket-053`](project/ticket-053/README.md) — usunięto 17 błędów Ruffa
+  wprowadzanych przez zarządzany payload Pythona w żywej adopcji `code2docs`,
+  zachowując semantykę validatora i poprawne tryby wykonywalne. Stan:
+  `DONE / DONE`; klasyfikacja: `BUG / P1 / regression`.
+
 - [x] [`ticket-051`](project/ticket-051/README.md) — Docker jest opt-in w
   domyślnym manifeście, a ownership zarządzanych launcherów i `goal.yaml` jest
   kompletny. Stan: `DONE / DONE`; focused i full Linux contract przechodzą,
