@@ -4,3 +4,4 @@
 2026-08-12 implementation e5d67c0: focused compose-root/nested-only fixtures and complete Linux contract PASS.
 2026-08-12 mcp exact adoption: 25 CREATE, no prerequisite/collision, package idempotent; custom project.sh preserved.
 2026-08-12 mcp governance: no GOV-STACK-001; only GOV-DOCKER-002 for 10 mutable references; downstream ticket recorded BLOCKED.
+2026-08-12 publication rebuild: ticket-only commits replayed on current origin/main; full Linux CI contract PASS.
