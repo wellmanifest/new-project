@@ -14,6 +14,11 @@
   zachowując semantykę validatora i poprawne tryby wykonywalne. Stan:
   `DONE / DONE`; klasyfikacja: `BUG / P1 / regression`.
 
+- [x] [`ticket-052`](project/ticket-052/README.md) — pełne SHA-256 digesty są
+  egzekwowane dla Dockerfile `FROM` i Compose `image:` w targetach z Docker
+  opt-in.
+  Stan: `DONE / DONE`; focused, traceability i full Linux contract przechodzą.
+
 - [x] [`ticket-051`](project/ticket-051/README.md) — Docker jest opt-in w
   domyślnym manifeście, a ownership zarządzanych launcherów i `goal.yaml` jest
   kompletny. Stan: `DONE / DONE`; focused i full Linux contract przechodzą,

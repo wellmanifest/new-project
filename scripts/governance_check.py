@@ -29,6 +29,10 @@ SECRET_RE = re.compile(
 )
 SAFE_SECRET_VALUES = re.compile(r"(?i)^(example|placeholder|changeme|your[_-]|\$\{|<|xxx|test)")
 LOCAL_PATH_RE = re.compile(r"(?:[A-Za-z]:[\\/](?:Users|Documents|Desktop)[\\/]|/(?:home|Users)/[^/\s]+/)")
+IMMUTABLE_IMAGE_RE = re.compile(r"^[^@\s]+@sha256:[a-f0-9]{64}$")
+COMPOSE_IMAGE_RE = re.compile(
+    r"^\s*image\s*:\s*(?:\"([^\"]+)\"|'([^']+)'|([^\s#]+))"
+)
 
 
 @dataclass(order=True)
@@ -1478,6 +1482,61 @@ def check_required_files(root: Path, manifest: dict[str, Any], report: Report) -
             )
 
 
+def immutable_image_reference(reference: str) -> bool:
+    return reference == "scratch" or IMMUTABLE_IMAGE_RE.fullmatch(reference) is not None
+
+
+def dockerfile_image_references(path: Path) -> list[tuple[int, str]]:
+    references: list[tuple[int, str]] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        tokens = line.strip().split()
+        if not tokens or tokens[0].upper() != "FROM":
+            continue
+        image = next((token for token in tokens[1:] if not token.startswith("--")), "")
+        references.append((line_number, image))
+    return references
+
+
+def compose_image_references(path: Path) -> list[tuple[int, str]]:
+    references: list[tuple[int, str]] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        match = COMPOSE_IMAGE_RE.match(line)
+        if match:
+            references.append((line_number, next(value for value in match.groups() if value is not None)))
+    return references
+
+
+def check_docker_image_references(root: Path, manifest: dict[str, Any], report: Report) -> None:
+    docker = manifest["docker"]
+    if not docker["required"]:
+        return
+    invalid: list[tuple[str, int, str]] = []
+    for raw_path in docker["dockerfiles"]:
+        path = safe_repo_path(root, raw_path)
+        if path.is_file():
+            invalid.extend(
+                (raw_path, line_number, reference)
+                for line_number, reference in dockerfile_image_references(path)
+                if not immutable_image_reference(reference)
+            )
+    for raw_path in docker["composeFiles"]:
+        path = safe_repo_path(root, raw_path)
+        if path.is_file():
+            invalid.extend(
+                (raw_path, line_number, reference)
+                for line_number, reference in compose_image_references(path)
+                if not immutable_image_reference(reference)
+            )
+    if invalid:
+        report.add(
+            "GOV-DOCKER-002",
+            "Docker image references are not pinned to immutable SHA-256 digests.",
+            "Replace every non-scratch FROM and Compose image value with name@sha256:<64 lowercase hex>.",
+            [f"{path}:{line_number}" for path, line_number, _ in invalid],
+            {"references": [reference for _, _, reference in invalid]},
+        )
+
+
 def check_stacks(root: Path, manifest: dict[str, Any], profiles_path: Path | None, report: Report) -> None:
     stacks = manifest.get("stacks", [])
     if not stacks or profiles_path is None:
@@ -2670,6 +2729,7 @@ def run_governance_checks(
     load_work_classification(root, report)
     check_lock(root, lock_path, manifest, report)
     check_required_files(root, manifest, report)
+    check_docker_image_references(root, manifest, report)
     check_stacks(root, manifest, profiles_path, report)
     directories = ticket_directories(root, manifest["ticket"])
     check_ticket_content(root, directories, manifest["ticket"], report)

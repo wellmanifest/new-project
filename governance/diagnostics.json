@@ -35,6 +35,7 @@
     "GOV-BUDGET-001": "The actual implementation diff exceeds its approved file, component, interface or dependency budget.",
     "GOV-OWNER-001": "An untrusted actor changed a human-owned participant file.",
     "GOV-DOCKER-001": "The required Docker runtime declaration is incomplete.",
+    "GOV-DOCKER-002": "A Dockerfile or Compose image reference is not pinned to an immutable SHA-256 digest.",
     "GOV-STACK-001": "The declared technology stack lacks its required project marker.",
     "GOV-SECRET-001": "A changed file contains a probable secret assignment.",
     "GOV-PATH-001": "A committed governance artifact contains a machine-local absolute path.",

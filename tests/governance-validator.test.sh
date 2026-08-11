@@ -279,7 +279,8 @@ PY
   cp "$repo_root/governance/stack-profiles.json" "$target/.governance/stack-profiles.json"
   cp "$repo_root/governance/work-classification.dsl.json" "$target/.governance/work-classification.dsl.json"
   touch "$target/README.md" "$target/CHANGELOG.md" "$target/TODO.md" "$target/AGENTS.md"
-  touch "$target/Dockerfile" "$target/compose.yml" "$target/project/TICKETS.md"
+  printf '%s\n' 'FROM scratch' > "$target/Dockerfile"
+  touch "$target/compose.yml" "$target/project/TICKETS.md"
   touch "$target/project/new-ticket.sh" "$target/project/readme.sh"
   printf '%s\n' '0.1.0' > "$target/VERSION"
   printf '%s\n' '# Ticket 001' '- **Status**: DONE' '- **Workflow state**: DONE' > "$target/project/ticket-001/README.md"
@@ -515,6 +516,57 @@ payload = {
 pathlib.Path(sys.argv[1]).write_text(json.dumps(payload), encoding='utf-8')
 PY
 }
+
+docker_references="$fixture/docker-references"
+make_fixture "$docker_references"
+printf '%s\n' \
+  "FROM --platform=linux/amd64 python@sha256:$(printf 'a%.0s' {1..64}) AS runtime" \
+  > "$docker_references/Dockerfile"
+cat > "$docker_references/compose.yml" <<YAML
+services:
+  cache:
+    image: "redis@sha256:$(printf 'b%.0s' {1..64})"
+  local:
+    build: .
+YAML
+if ! run_check "$docker_references" --changed-file src/app.js \
+  > "$fixture/docker-references.out"; then
+  cat "$fixture/docker-references.out"
+  exit 1
+fi
+grep -q '^GOV-PASS:' "$fixture/docker-references.out"
+
+docker_tag="$fixture/docker-tag"
+cp -R "$docker_references" "$docker_tag"
+printf '%s\n' 'FROM python:3.12-slim AS runtime' > "$docker_tag/Dockerfile"
+expect_code GOV-DOCKER-002 run_check "$docker_tag" --changed-file src/app.js
+run_check "$docker_tag" --changed-file src/app.js > "$fixture/docker-tag.out" || true
+grep -Fq 'Dockerfile:1' "$fixture/docker-tag.out"
+
+compose_latest="$fixture/compose-latest"
+cp -R "$docker_references" "$compose_latest"
+cat > "$compose_latest/compose.yml" <<'YAML'
+services:
+  cache:
+    image: redis:latest
+YAML
+expect_code GOV-DOCKER-002 run_check "$compose_latest" --changed-file src/app.js
+run_check "$compose_latest" --changed-file src/app.js > "$fixture/compose-latest.out" || true
+grep -Fq 'compose.yml:3' "$fixture/compose-latest.out"
+
+docker_variable="$fixture/docker-variable"
+cp -R "$docker_references" "$docker_variable"
+printf '%s\n' 'FROM ${BASE_IMAGE} AS runtime' > "$docker_variable/Dockerfile"
+expect_code GOV-DOCKER-002 run_check "$docker_variable" --changed-file src/app.js
+
+compose_bad_digest="$fixture/compose-bad-digest"
+cp -R "$docker_references" "$compose_bad_digest"
+cat > "$compose_bad_digest/compose.yml" <<'YAML'
+services:
+  cache:
+    image: 'redis@sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+YAML
+expect_code GOV-DOCKER-002 run_check "$compose_bad_digest" --changed-file src/app.js
 
 allowed="$fixture/allowed"
 make_fixture "$allowed"
