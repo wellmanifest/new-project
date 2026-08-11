@@ -28,12 +28,13 @@ chmod 740 "$collision_target/project.sh"
 collision_sh_hash="$(sha256sum "$collision_target/project.sh" | cut -d' ' -f1)"
 collision_bat_hash="$(sha256sum "$collision_target/project.bat" | cut -d' ' -f1)"
 collision_sh_mode="$(stat -c '%a' "$collision_target/project.sh")"
-set +e
-python3 "$standard/scripts/create_adoption_lock.py" \
+if python3 "$standard/scripts/create_adoption_lock.py" \
   --target-root "$collision_target" --source-revision "$revision" --check \
-  > "$fixture/collision-check.out" 2> "$fixture/collision-check.err"
-status=$?
-set -e
+  > "$fixture/collision-check.out" 2> "$fixture/collision-check.err"; then
+  status=0
+else
+  status=$?
+fi
 test "$status" -eq 1
 ! grep -Eq '^(UPDATE|CHMOD) project\.sh$' "$fixture/collision-check.out"
 ! grep -Eq '^(UPDATE|CHMOD) project\.bat$' "$fixture/collision-check.out"
