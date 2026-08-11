@@ -2,8 +2,8 @@
 
 - **ID**: ticket-049
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-11
 
 ## Cel i Zakres
@@ -22,13 +22,13 @@ zmianą targetu — musi należeć do ticketu, workstreamu i budżetu.
 
 - [x] AC-01: Polecenie użytkownika, aby poprawiać standard po pilocie `glon`,
   stanowi bounded `SESSION_EXECUTION_AUTHORIZATION` dla lokalnej naprawy.
-- [ ] AC-02: Intent schema i walidator akceptują `fromRevision: null` wyłącznie
+- [x] AC-02: Intent schema i walidator akceptują `fromRevision: null` wyłącznie
   jako bootstrap do pełnego immutable `toRevision`.
-- [ ] AC-03: Bootstrap wymaga braku bazowego package manifestu i locka oraz
+- [x] AC-03: Bootstrap wymaga braku bazowego package manifestu i locka oraz
   kryptograficznie sprawdza head package, lock i każdy wyłączany managed target.
-- [ ] AC-04: Nowy managed target nieobecny w bazie jest wyłączony z normalnego
+- [x] AC-04: Nowy managed target nieobecny w bazie jest wyłączony z normalnego
   scope, ale zastępowany plik targetu pozostaje objęty ownershipem i budżetem.
-- [ ] AC-05: Dotychczasowa transakcja upgrade oraz jej negatywne mutacje nadal
+- [x] AC-05: Dotychczasowa transakcja upgrade oraz jej negatywne mutacje nadal
   przechodzą, podobnie jak pełny kontrakt Linux.
 
 ## Ryzyka i Uwagi
@@ -51,6 +51,22 @@ proweniencji wygenerowanego locka.
 
 Dozwolone są lokalne zmiany i testy z tego intentu. Push, PR, merge, tag i
 publikacja nie są autoryzowane.
+
+## Dowody walidacji
+
+- Nowy fixture pierwszej adopcji przechodzi z `fromRevision: null`, pełnym
+  head lockiem i nowymi targetami managed.
+- Istniejący w bazie, następnie zarządzany `AGENTS.md` pozostaje zwykłą zmianą;
+  usunięcie go z `allowedPaths` deterministycznie zwraca `GOV-SCOPE-001`.
+- Bootstrap zadeklarowany nad bazą zawierającą package manifest/lock zwraca
+  `GOV-SYNC-001` i nie otrzymuje wyjątku.
+- Istniejący zestaw upgrade, mutacje hash/revision/budget oraz wszystkie
+  komendy Linux CI przechodzą.
+
+## Stan
+
+`DONE / DONE` lokalnie na branchu ticketu. Nie wykonano push, PR, merge, tagu
+ani publikacji.
 
 ## Uczestnicy
 

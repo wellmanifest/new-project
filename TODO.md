@@ -9,10 +9,10 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-049`](project/ticket-049/README.md) — obsłużyć pierwszą,
+- [x] [`ticket-049`](project/ticket-049/README.md) — obsłużono pierwszą,
   provenance-bound adopcję managed package bez bazowego locka, nie wyłączając
   z ownershipu plików targetu zastępowanych podczas bootstrapu. Stan:
-  `IN_PROGRESS / EDIT`; reprodukcja: pilot `glon`.
+  `DONE / DONE`; pełny Linux contract przechodzi, bez external delivery.
 
 - [x] [`ticket-047`](project/ticket-047/README.md) — ujednolicono autonomiczny
   stan generowanych ticketów i opublikować pełną naprawę jako immutable

@@ -33,9 +33,18 @@ target was absent in the accepted Git base.
   transaction's managed-path accounting.
 - Bounded the change to the intent contract, validator, its test suite and
   enforcement documentation.
+- Added nullable `fromRevision` as an explicit initial-adoption declaration,
+  while retaining exact full-SHA validation for every upgrade and target
+  revision.
+- Made bootstrap fail closed when the accepted base already has a package
+  manifest or lock and verify the complete head package/lock/hash binding.
+- Exempted only new managed targets absent from the accepted base; pre-existing
+  target content remains in ordinary ticket, workstream and budget accounting.
+- Added positive bootstrap and adversarial ownership/existing-lock regressions;
+  the focused validator and full Linux CI contract pass.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- None; the bounded local objective is complete.
 - New authority is still required for destructive action, secret access, new
   external coordination, material objective expansion and trusted merge.
