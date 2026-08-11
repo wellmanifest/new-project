@@ -159,13 +159,15 @@ assert any(
 PY
 
 python3 - "$repo_root/governance/manifest.schema.json" "$repo_root/governance/manifest.default.json" \
-  "$repo_root/governance/approval-evidence.schema.json" <<'PY'
+  "$repo_root/governance/approval-evidence.schema.json" \
+  "$repo_root/governance/stack-profiles.json" <<'PY'
 import json
 import sys
 
 schema = json.load(open(sys.argv[1], encoding='utf-8'))
 manifest = json.load(open(sys.argv[2], encoding='utf-8'))
 approval_schema = json.load(open(sys.argv[3], encoding='utf-8'))
+stack_profiles = json.load(open(sys.argv[4], encoding='utf-8'))
 assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
@@ -181,6 +183,15 @@ assert manifest['delivery']['maxImplementationFiles'] == 5
 assert 'Dockerfile' not in manifest['requiredFiles']
 assert manifest['docker']['required'] is False
 assert manifest['stacks'] == []
+assert {'compose.yaml', 'docker-compose.yaml'} <= set(manifest['docker']['composeFiles'])
+assert {
+    'Dockerfile',
+    'Dockerfile.e2e',
+    'compose.yml',
+    'compose.yaml',
+    'docker-compose.yml',
+    'docker-compose.yaml',
+} <= set(stack_profiles['profiles']['docker']['anyFiles'])
 assert 'github-app-review' in manifest['trustedApprovalSources']
 assert manifest['approvalEvidence']['schema'] == 'new-project.approval-evidence/v1'
 assert approval_schema['properties']['headSha']['pattern'] == '^[0-9a-f]{40}$'
@@ -568,6 +579,41 @@ if ! run_check "$docker_references" --changed-file src/app.js \
   exit 1
 fi
 grep -q '^GOV-PASS:' "$fixture/docker-references.out"
+
+compose_root="$fixture/compose-root"
+cp -R "$docker_references" "$compose_root"
+mkdir -p "$compose_root/services/api"
+mv "$compose_root/Dockerfile" "$compose_root/services/api/Dockerfile"
+mv "$compose_root/compose.yml" "$compose_root/docker-compose.yml"
+python3 - "$compose_root/.governance/manifest.json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+manifest = json.load(open(path, encoding='utf-8'))
+manifest['docker']['dockerfiles'] = ['services/api/Dockerfile']
+manifest['docker']['composeFiles'] = ['docker-compose.yml']
+manifest['stacks'] = ['docker']
+open(path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2) + '\n')
+PY
+run_check "$compose_root" --changed-file src/app.js \
+  > "$fixture/compose-root.out"
+grep -q '^GOV-PASS:' "$fixture/compose-root.out"
+
+nested_only="$fixture/nested-only"
+cp -R "$compose_root" "$nested_only"
+mkdir -p "$nested_only/deploy"
+mv "$nested_only/docker-compose.yml" "$nested_only/deploy/stack.yml"
+python3 - "$nested_only/.governance/manifest.json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+manifest = json.load(open(path, encoding='utf-8'))
+manifest['docker']['composeFiles'] = ['deploy/stack.yml']
+open(path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2) + '\n')
+PY
+expect_code GOV-STACK-001 run_check "$nested_only" --changed-file src/app.js
 
 docker_tag="$fixture/docker-tag"
 cp -R "$docker_references" "$docker_tag"

@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [x] [`ticket-059`](project/ticket-059/README.md) — rootowy Compose jest
+  markerem stosu Docker, a nested Dockerfiles nadal są wyliczane jawnie i
+  kontrolowane. Pełny Linux contract przechodzi; pilot `mcp` nie ma już
+  `GOV-STACK-001` i poprawnie ujawnia osobny dług pinowania. Stan:
+  `DONE / DONE`; klasyfikacja: `BUG / P1 / regression`; bez publikacji.
+
 - [x] [`ticket-058`](project/ticket-058/README.md) — istniejące rootowe
   `project.sh`/`.bat` są target-owned seedami, brakujące aliasy nadal powstają,
   a zarządzane `project/governance-check.*` pozostają kanoniczną bramą. Pełny
