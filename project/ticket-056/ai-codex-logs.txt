@@ -12,3 +12,6 @@
 2026-08-11 Goal/fixop adoption: adopted 0.14.1 at a331a7d; same two MISSING lines; neither target-owned file created.
 2026-08-11 Goal/fixop idempotence: up-to-date at a331a7d; same two MISSING lines; exit 0.
 2026-08-11 external state: no push, pull request, merge, tag or publication.
+adoption lock: PASS
+governance validator: PASS
+All checks passed!
