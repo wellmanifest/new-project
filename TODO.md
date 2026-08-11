@@ -9,6 +9,10 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-052`](project/ticket-052/README.md) — egzekwować pełne SHA-256
+  digesty dla Dockerfile `FROM` i Compose `image:` w targetach z Docker opt-in.
+  Stan: `IN_PROGRESS / EDIT`; reprodukcja: pilot `algitex`.
+
 - [x] [`ticket-047`](project/ticket-047/README.md) — ujednolicono autonomiczny
   stan generowanych ticketów i opublikować pełną naprawę jako immutable
   `v0.14.1` wskazujące `main@63a3d56`. PR #75 przeszedł Linux, Windows i
