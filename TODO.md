@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [x] [`ticket-053`](project/ticket-053/README.md) — usunięto 17 błędów Ruffa
+  wprowadzanych przez zarządzany payload Pythona w żywej adopcji `code2docs`,
+  zachowując semantykę validatora i poprawne tryby wykonywalne. Stan:
+  `DONE / DONE`; klasyfikacja: `BUG / P1 / regression`.
+
 - [x] [`ticket-052`](project/ticket-052/README.md) — pełne SHA-256 digesty są
   egzekwowane dla Dockerfile `FROM` i Compose `image:` w targetach z Docker
   opt-in.
