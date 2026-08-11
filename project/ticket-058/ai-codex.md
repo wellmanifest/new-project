@@ -37,9 +37,22 @@ so the root aliases do not need managed ownership.
 - Verified target and standard wrappers differ materially (139 versus 38
   lines), while ticket 024 already records the same unresolved collision in a
   second downstream repository.
+- Changed only the two root aliases to seed strategies; the canonical gates
+  remain managed and target instructions now distinguish the boundary.
+- Added collision-preservation, absent-seed, local-extension, lock-membership
+  and upgrade regressions. Focused tests and the complete Linux CI contract
+  pass on implementation `98c403c`.
+- Repeated exact-SHA Goal adoption on fresh `hillm`: preflight became 25
+  creates with no collision, adoption needed no upgrade, and the original
+  script hash/mode stayed unchanged.
+- Verified explicit/inferred/canonical governance gates pass, Python remains
+  Docker-free, and native tests plus the known Ruff baseline do not regress.
+- Recorded but did not mix in a pre-existing product-test event-ledger side
+  effect; removed only the rows produced by this validation from both clones.
+- Completed the bounded repair locally without external delivery.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- None inside the recorded intent.
 - New authority is still required for destructive action, secret access, new
   external coordination, material objective expansion and trusted merge.

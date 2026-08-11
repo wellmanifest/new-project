@@ -9,11 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-058`](project/ticket-058/README.md) — zachować istniejące
-  rootowe `project.sh`/`.bat` jako target-owned seedy, nadal tworzyć brakujące
-  aliasy i używać zarządzanych `project/governance-check.*` jako kanonicznej
-  bramy. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
-  `BUG / P1 / regression`.
+- [x] [`ticket-058`](project/ticket-058/README.md) — istniejące rootowe
+  `project.sh`/`.bat` są target-owned seedami, brakujące aliasy nadal powstają,
+  a zarządzane `project/governance-check.*` pozostają kanoniczną bramą. Pełny
+  Linux contract i exact-SHA pilot `hillm` przechodzą bez utraty automatyzacji.
+  Stan: `DONE / DONE`; klasyfikacja: `BUG / P1 / regression`; bez publikacji.
 
 - [x] [`ticket-057`](project/ticket-057/README.md) — przypisano obowiązkowy
   root `VERSION` do workstreamu `integration` także dla profilu stackless;
