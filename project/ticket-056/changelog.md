@@ -14,3 +14,7 @@
   semantics, owner resolution, upgrade and invalid path rejection.
 - Documented the Goal-facing informational output and passed focused, static
   and complete Linux CI contracts.
+- Validated exact candidate `a331a7d` through Goal on a fresh `fixop` clone:
+  drift/up-to-date codes stayed `1/0`, only the two target-owned prerequisites
+  were reported and neither was created.
+- Marked the ticket `DONE / DONE`; no external delivery occurred.

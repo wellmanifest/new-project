@@ -2,8 +2,8 @@
 
 - **ID**: ticket-056
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-11
 
 ## Cel i Zakres
@@ -30,7 +30,7 @@ wersji, zależności ani publikacji.
 - [x] AC-04: Brak prerequisite pozostaje informacyjny: `--check` nadal zwraca
   `0` dla pakietu up-to-date i `1` dla driftu, a adopcja nadal może zakończyć
   instalację bez przejmowania zawartości targetu.
-- [ ] AC-05: Focused adoption test, pełny Linux contract, Ruff i ponowny pilot
+- [x] AC-05: Focused adoption test, pełny Linux contract, Ruff i ponowny pilot
   Goal na repo bez `TODO.md` przechodzą z oczekiwanym raportem.
 
 ## Ryzyka i Uwagi
@@ -52,11 +52,14 @@ wersji, zależności ani publikacji.
   raportuje brakujący `Dockerfile`, a po utworzeniu pliku nie emituje żadnego
   `MISSING target prerequisite`.
 - Niebezpieczne `../outside` w `requiredFiles` jest odrzucane jako ścieżka
-  niewzględna wobec repozytorium.
+  wychodząca poza repozytorium.
 - Wszystkie osiem zestawów Linux CI, kontrakty JSON, required-check wiring,
   kompletność CI, `py_compile` i Ruff przechodzą.
 - Lokalny Docker Engine 29.1.3 jest dostępny; standardowy Linux contract nie
   definiuje lokalnego obrazu huba i został wykonany zgodnie z komendami CI.
+- Exact-SHA `a331a7d` uruchomiony przez Goal na świeżym klonie `fixop` wskazał
+  tylko `TODO.md` i `project/TICKETS.md`. Preflight zwrócił `1`, adopcja nie
+  utworzyła tych plików, a idempotentny check zwrócił `0` i zachował raport.
 
 ## Autoryzacja
 

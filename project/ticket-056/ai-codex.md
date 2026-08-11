@@ -41,9 +41,16 @@ can calculate readiness without moving policy into Goal or owning target files.
   upgrade and unsafe-path regressions, plus Goal-facing documentation.
 - Passed Python compile/Ruff, focused adoption tests and the complete Linux CI
   command contract. Docker Engine 29.1.3 is available locally.
+- Committed exact candidate `a331a7d` and exercised it through Goal on a fresh
+  `fixop` clone: preflight/adoption/up-to-date check consistently reported only
+  `TODO.md` and `project/TICKETS.md`, never created them and retained exit codes
+  `1/0` for drift/up-to-date.
+- Completed the bounded ticket locally without push, merge, tag or publication.
 
 ## Blockers
 
-- None inside the recorded intent; exact-SHA downstream revalidation remains.
+- None inside the recorded intent.
+- New authority is still required for destructive action, secret access, new
+  external coordination, material objective expansion and trusted merge.
 - New authority is still required for destructive action, secret access, new
   external coordination, material objective expansion and trusted merge.
