@@ -2,8 +2,8 @@
 
 - **ID**: ticket-052
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-11
 
 ## Cel i Zakres
@@ -20,14 +20,14 @@ serwisy Compose używające wyłącznie `build:` nie wymagają sztucznego `image
 
 - [x] AC-01: Polecenie użytkownika, aby poprawiać standard na podstawie
   kolejnych pilotów, stanowi bounded `SESSION_EXECUTION_AUTHORIZATION`.
-- [ ] AC-02: Pinned Dockerfile `FROM`, `scratch` i pinned Compose images
+- [x] AC-02: Pinned Dockerfile `FROM`, `scratch` i pinned Compose images
   przechodzą bez dostępu do sieci.
-- [ ] AC-03: Tag, `latest`, zmienna i niepełny/uppercase digest kończą się
+- [x] AC-03: Tag, `latest`, zmienna i niepełny/uppercase digest kończą się
   nowym, stabilnym `GOV-DOCKER-002` z dokładną ścieżką i numerem linii.
-- [ ] AC-04: Regresje pokrywają Dockerfile flags/alias oraz cytowane Compose
+- [x] AC-04: Regresje pokrywają Dockerfile flags/alias oraz cytowane Compose
   scalar values, `C-DOCKER-004` mapuje rzeczywisty kod egzekwujący, a pełny
   kontrakt Linux przechodzi.
-- [ ] AC-05: Nie zmieniają się zależności, schema, manifest default, package,
+- [x] AC-05: Nie zmieniają się zależności, schema, manifest default, package,
   wersja ani wydanie; brak external delivery.
 
 ## Ryzyka i Uwagi
@@ -47,6 +47,21 @@ serwisy Compose używające wyłącznie `build:` nie wymagają sztucznego `image
 
 Dozwolone są lokalne zmiany i testy. Push, PR, merge, bump, tag i publikacja
 pozostają poza zakresem.
+
+## Dowody walidacji
+
+- Pinned Dockerfile z `--platform`/`AS`, `scratch`, cytowany pinned Compose
+  image i lokalny service `build:` przechodzą.
+- Tag, Compose `latest`, `${BASE_IMAGE}` oraz uppercase digest zwracają
+  `GOV-DOCKER-002`; text report wskazuje np. `Dockerfile:1` i `compose.yml:3`.
+- `C-DOCKER-004` mapuje teraz faktyczny kod pinning zamiast presence-only
+  `GOV-DOCKER-001`; rule traceability ma 0 nieprzypisanych kodów.
+- Focused validator, rule-enforcement i wszystkie komendy Linux CI przechodzą.
+
+## Stan
+
+`DONE / DONE` lokalnie. Nie wykonano push, PR, merge, bumpu, tagu ani
+publikacji.
 
 ## Uczestnicy
 

@@ -7,3 +7,6 @@
 - Bounded offline Docker reference enforcement from the algitex pilot finding.
 - Expanded the bounded plan to replace the false pinned-image traceability
   mapping with the actual new diagnostic.
+- Added strict offline Dockerfile/Compose digest enforcement with line-aware
+  `GOV-DOCKER-002` findings and scratch/build-only support.
+- Corrected C-DOCKER-004 traceability and passed focused/full validation.

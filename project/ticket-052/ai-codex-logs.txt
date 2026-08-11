@@ -3,3 +3,7 @@
 2026-08-11 reproduction: algitex unpinned python:3.12-slim and multiple :latest Compose images still return GOV-PASS
 2026-08-11 design: dependency-free scan of Dockerfile FROM and Compose image scalars; scratch/build-only services allowed
 2026-08-11 plan amendment: rule audit found C-DOCKER-004 falsely mapped to presence-only GOV-DOCKER-001; include semantic mapping repair
+2026-08-11 focused validator: pinned/scratch/build-only PASS; tag/latest/variable/uppercase digest fail with GOV-DOCKER-002 and exact locations
+2026-08-11 traceability: C-DOCKER-004 maps GOV-DOCKER-002; 0 unclaimed codes
+2026-08-11 full Linux CI command contract: PASS
+2026-08-11 delivery: local objective complete; no push, PR, merge, bump, tag or publication

@@ -9,9 +9,10 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-052`](project/ticket-052/README.md) — egzekwować pełne SHA-256
-  digesty dla Dockerfile `FROM` i Compose `image:` w targetach z Docker opt-in.
-  Stan: `IN_PROGRESS / EDIT`; reprodukcja: pilot `algitex`.
+- [x] [`ticket-052`](project/ticket-052/README.md) — pełne SHA-256 digesty są
+  egzekwowane dla Dockerfile `FROM` i Compose `image:` w targetach z Docker
+  opt-in.
+  Stan: `DONE / DONE`; focused, traceability i full Linux contract przechodzą.
 
 - [x] [`ticket-047`](project/ticket-047/README.md) — ujednolicono autonomiczny
   stan generowanych ticketów i opublikować pełną naprawę jako immutable

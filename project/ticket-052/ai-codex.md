@@ -31,9 +31,16 @@ grammar over the two normative image-reference locations is appropriate.
   references pass both the governance gate and Docker static build check.
 - Full validation exposed that C-DOCKER-004 was marked deterministic through
   the unrelated presence-only code; amended scope to repair traceability.
+- Added dependency-free, line-aware scans for Dockerfile `FROM` and Compose
+  scalar `image:` references when Docker is required.
+- Allowed immutable SHA-256 references, scratch and build-only services while
+  rejecting tags, variables and malformed/uppercase digests.
+- Added `GOV-DOCKER-002`, exact location regressions and corrected
+  C-DOCKER-004 traceability.
+- Passed focused validator, rule audit and the complete Linux CI contract.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- None; the bounded local objective is complete.
 - New authority is still required for destructive action, secret access, new
   external coordination, material objective expansion and trusted merge.
