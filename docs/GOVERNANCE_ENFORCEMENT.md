@@ -28,23 +28,29 @@ Skrypt czyta zarządzane pliki z obiektu Git, zachowuje istniejący dopasowany
 wersją manifest docelowy, atomowo zapisuje pliki i lock oraz odmawia driftu.
 Aktualizacja różniących się plików wymaga jawnego `--upgrade` po przeglądzie.
 
-### Atomowa aktualizacja zarządzanego pakietu
+### Atomowa pierwsza adopcja lub aktualizacja zarządzanego pakietu
 
-Gdy upgrade jednego opublikowanego pakietu zmienia więcej plików niż zwykły
-budżet ticketu albo przecina ich normalne workstreamy, aktywny intent v3 może
-zadeklarować transakcję:
+Gdy pierwsza adopcja albo upgrade jednego opublikowanego pakietu zmienia więcej
+plików niż zwykły budżet ticketu lub przecina ich normalne workstreamy, aktywny
+intent v3 może zadeklarować transakcję. Bootstrap używa `null`, upgrade — SHA
+poprzedniego wydania:
 
 ```json
 {
   "delivery": {
     "standardAdoption": {
       "sourceRepository": "wellmanifest/new-project",
-      "fromRevision": "<40-znakowy SHA obecnego wydania>",
+      "fromRevision": null,
       "toRevision": "<40-znakowy SHA nowego wydania>"
     }
   }
 }
 ```
+
+`fromRevision: null` jest dozwolone tylko wtedy, gdy zaakceptowana baza Git nie
+zawiera jeszcze `.governance/package-manifest.json` ani
+`.governance/manifest.lock.json`. Dla upgrade należy podać pełny SHA wydania
+związanego z bazowym lockiem.
 
 Wyjątek nie powiększa ticketu i nie przenosi zwykłej własności. Walidator
 odejmuje z normalnego rozliczenia tylko zmienione targety ze strategią
@@ -52,6 +58,11 @@ odejmuje z normalnego rozliczenia tylko zmienione targety ze strategią
 spójny kontrakt. Nowy target musi być nieobecny w bazie oraz występować jako
 `managed` i zgadzać się z hashem head locka. Aktualizowany target musi mieć
 ciągłość `managed` i poprawny hash po obu stronach.
+
+Podczas bootstrapu target `managed`, który istniał już w bazie, nie otrzymuje
+wyjątku. Jego zastąpienie pozostaje zwykłą zmianą i musi należeć do
+`allowedPaths`, workstreamu oraz budżetu ticketu. Zapobiega to przejęciu
+istniejącego skryptu lub konfiguracji pod pozorem instalacji standardu.
 
 Seed manifest, `.governance/manifest.lock.json`, changelog i każda ścieżka
 spoza tak wyliczonego zbioru pozostają zwykłym diffem. Nadal muszą rozwiązać
@@ -66,7 +77,13 @@ Protected review/attestation związane z repozytorium, PR-em, current HEAD,
 ticketem i aktorem pozostaje obowiązkowe dokładnie tak samo jak dla każdego
 innego implementation diffu.
 
-Manifest deklaruje wymagane pliki, Docker, aktywne/zamknięte statusy ticketów,
+Bazowy manifest jest stack-neutral: nie wymaga Dockerfile ani Compose i nie
+deklaruje stacku `docker`. Target korzystający z kontenerów rozszerza własny
+`.governance/manifest.json`: dodaje Dockerfile do `requiredFiles`, ustawia
+`docker.required` na `true` i dodaje `docker` do `stacks`. Schema, profile i
+walidator zachowują pełne egzekwowanie tego jawnego opt-in.
+
+Manifest deklaruje wymagane pliki, opcjonalny Docker, aktywne/zamknięte statusy ticketów,
 stany implementacyjne, ścieżki governance i profile technologiczne. Każdy nowy
 ticket zawiera intent v2 z workstreamem, zakresem, zależnościami, konfliktami i
 opcjonalnym routingiem przez ticket integracyjny. Zamknięte tickety intent v1

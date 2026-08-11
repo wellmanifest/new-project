@@ -457,10 +457,16 @@ def standard_adoption_error(value: Any) -> str | None:
         return "delivery standardAdoption fields are invalid"
     if value.get("sourceRepository") != "wellmanifest/new-project":
         return "delivery standardAdoption sourceRepository is invalid"
-    revisions = [value.get("fromRevision"), value.get("toRevision")]
-    if any(not isinstance(item, str) or re.fullmatch(r"[0-9a-f]{40}", item) is None for item in revisions):
+    from_revision = value.get("fromRevision")
+    to_revision = value.get("toRevision")
+    if from_revision is not None and (
+        not isinstance(from_revision, str)
+        or re.fullmatch(r"[0-9a-f]{40}", from_revision) is None
+    ):
         return "delivery standardAdoption revisions must be full lowercase commit SHAs"
-    if revisions[0] == revisions[1]:
+    if not isinstance(to_revision, str) or re.fullmatch(r"[0-9a-f]{40}", to_revision) is None:
+        return "delivery standardAdoption revisions must be full lowercase commit SHAs"
+    if from_revision == to_revision:
         return "delivery standardAdoption revisions must differ"
     return None
 
@@ -2390,19 +2396,26 @@ def standard_adoption_records(active: list[TicketRecord]) -> list[TicketRecord]:
 def load_standard_adoption_evidence(
     root: Path,
     base: str,
-    adoption: dict[str, str],
-) -> tuple[dict[str, str], dict[str, str], dict[str, str], dict[str, str]]:
+    adoption: dict[str, Any],
+) -> tuple[dict[str, str], dict[str, str], dict[str, str], dict[str, str], bool]:
     base_package_content = git_revision_file(root, base, ".governance/package-manifest.json")
     base_lock_content = git_revision_file(root, base, ".governance/manifest.lock.json")
-    if base_package_content is None or base_lock_content is None:
-        raise ValueError("base package manifest or lock is missing")
     head_package_path = safe_repo_path(root, ".governance/package-manifest.json")
     head_lock_path = safe_repo_path(root, ".governance/manifest.lock.json")
     if not head_package_path.is_file() or not head_lock_path.is_file():
         raise ValueError("head package manifest or lock is missing")
-    base_strategies = package_strategies(base_package_content)
+    initial = adoption["fromRevision"] is None
+    if initial:
+        if base_package_content is not None or base_lock_content is not None:
+            raise ValueError("initial adoption base already contains a package manifest or lock")
+        base_strategies: dict[str, str] = {}
+        base_hashes: dict[str, str] = {}
+    else:
+        if base_package_content is None or base_lock_content is None:
+            raise ValueError("upgrade base package manifest or lock is missing")
+        base_strategies = package_strategies(base_package_content)
+        base_hashes = adoption_lock(base_lock_content, adoption["fromRevision"])
     head_strategies = package_strategies(head_package_path.read_bytes())
-    base_hashes = adoption_lock(base_lock_content, adoption["fromRevision"])
     head_hashes = adoption_lock(head_lock_path.read_bytes(), adoption["toRevision"])
     base_managed = {path for path, strategy in base_strategies.items() if strategy == "managed"}
     head_managed = {path for path, strategy in head_strategies.items() if strategy == "managed"}
@@ -2410,7 +2423,7 @@ def load_standard_adoption_evidence(
         raise ValueError("base package targets and lock targets differ")
     if set(head_hashes) != head_managed:
         raise ValueError("package targets and lock targets differ")
-    return base_strategies, head_strategies, base_hashes, head_hashes
+    return base_strategies, head_strategies, base_hashes, head_hashes, initial
 
 
 def verify_changed_managed_paths(
@@ -2421,6 +2434,7 @@ def verify_changed_managed_paths(
     head_strategies: dict[str, str],
     base_hashes: dict[str, str],
     head_hashes: dict[str, str],
+    initial: bool,
 ) -> set[str]:
     exempt: set[str] = set()
     for raw_path in changed:
@@ -2436,6 +2450,10 @@ def verify_changed_managed_paths(
             if content_digest(base_content) != base_hashes[raw_path]:
                 raise ValueError(f"base managed hash differs: {raw_path}")
         elif base_content is not None:
+            if initial:
+                # Installing the standard does not erase target ownership.
+                # A replaced path remains an ordinary implementation change.
+                continue
             raise ValueError(f"new managed target already existed at base: {raw_path}")
         exempt.add(raw_path)
     if not exempt:
@@ -2470,7 +2488,7 @@ def atomic_standard_adoption_paths(
         report.add(
             "GOV-SYNC-001",
             f"Atomic standard adoption preconditions are invalid: {error or 'base and changed lock are required'}.",
-            "Declare distinct immutable revisions, compare against the approved Git base and regenerate the complete lock through Goal.",
+            "Declare null-to-SHA bootstrap or distinct immutable upgrade revisions, compare against the approved Git base and regenerate the complete lock through Goal.",
             evidence_paths,
         )
         return set()
