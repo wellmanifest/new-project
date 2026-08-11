@@ -19,6 +19,7 @@ MANIFEST_BASE_TARGET = ".governance/manifest.base.json"
 MANIFEST_TARGET = ".governance/manifest.json"
 TARGET_OWNED_MANIFEST_PATHS = {
     ("$schema",),
+    ("docker", "required"),
     ("coordination", "workstreams"),
     ("coordination", "integration", "requiredForPaths"),
     ("delivery", "requiredForImplementation"),
