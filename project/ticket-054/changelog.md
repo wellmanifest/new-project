@@ -9,3 +9,7 @@
 - Rejected a partial YAML-parser exemption and narrowed the change to strict
   regression coverage plus actionable remediation.
 - Recorded the live code2logic reproduction and dependency on ticket 052.
+- Clarified the validator remediation and added a fail-closed build-plus-image
+  regression without adding a parser or dependency.
+- Passed the focused and full Linux contracts, combined-candidate downstream
+  Ruff, Goal upgrade/idempotence and the six-reference code2logic reproduction.

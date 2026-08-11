@@ -9,10 +9,10 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-054`](project/ticket-054/README.md) — doprecyzować, że lokalny
+- [x] [`ticket-054`](project/ticket-054/README.md) — doprecyzowano, że lokalny
   build pomija `image:`, natomiast `build:` z mutowalnym `image:` nadal może
   wykonać pull i pozostaje fail-closed; bez parsera YAML i nowego wyjątku.
-  Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  Stan: `DONE / DONE`; klasyfikacja:
   `BUG / P1 / requested`; zależy od lokalnego `ticket-052`.
 
 - [x] [`ticket-052`](project/ticket-052/README.md) — pełne SHA-256 digesty są

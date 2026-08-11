@@ -37,9 +37,16 @@ partial YAML parser or a new policy exemption.
 - Rejected an initially passing but roughly 100-line partial YAML parser after
   checking the official Compose pull/build semantics; it was unnecessary
   complexity and would have weakened a correct fail-closed result.
+- Replaced the generic remediation with two precise outcomes: pin an external
+  image by digest, or omit `image:` for a local-only Compose build.
+- Added a regression proving `build:` plus a mutable image remains blocked and
+  retains the exact image-line evidence.
+- Passed the focused validator and full eight-suite Linux contract, then
+  cherry-picked the two-file implementation into combined candidate `4ee2b38`.
+- Passed downstream Ruff on the combined candidate and upgraded code2logic
+  through Goal; all six unsafe live references remain reported.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
-- New authority is still required for destructive action, secret access, new
-  external coordination, material objective expansion and trusted merge.
+- None for the completed local implementation and validation scope.
+- External publication and trusted merge approval remain unauthorized.

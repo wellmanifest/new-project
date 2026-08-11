@@ -2,8 +2,8 @@
 
 - **ID**: ticket-054
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-11
 
 ## Cel i Zakres
@@ -20,15 +20,15 @@ wyjątku od polityki supply-chain.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Usługa Compose z samym `build:` i bez `image:` nadal przechodzi.
-- [ ] AC-02: Usługa z `build:` oraz mutowalnym `image:` nadal daje
+- [x] AC-01: Usługa Compose z samym `build:` i bez `image:` nadal przechodzi.
+- [x] AC-02: Usługa z `build:` oraz mutowalnym `image:` nadal daje
   `GOV-DOCKER-002` z lokalizacją linii obrazu.
-- [ ] AC-03: Remediacja rozróżnia przypięcie zewnętrznego obrazu od usunięcia
+- [x] AC-03: Remediacja rozróżnia przypięcie zewnętrznego obrazu od usunięcia
   `image:` dla lokalnego buildu; brak parsera YAML i nowej zależności runtime.
-- [ ] AC-04: Pełny kontrakt Linux oraz żywy pilot `semcod/code2logic`
-  potwierdzają, że bezpieczny wyjątek nie ukrywa jego sześciu mutowalnych
+- [x] AC-04: Pełny kontrakt Linux oraz żywy pilot `semcod/code2logic`
+  potwierdzają, że doprecyzowanie nie ukrywa jego sześciu mutowalnych
   referencji.
-- [ ] AC-05: Zmiana pozostaje lokalna; bez push, PR, merge, tagu, release ani
+- [x] AC-05: Zmiana pozostaje lokalna; bez push, PR, merge, tagu, release ani
   publikacji pakietu.
 
 ## Ryzyka i Uwagi
@@ -39,6 +39,20 @@ wyjątku od polityki supply-chain.
   politykę supply-chain. Lokalny build może działać bez pola `image:`.
 - Ticket zależy od lokalnego ticketu 052; implementacja i walidacja mają bazę
   na jego dokładnym HEAD `ed3c577f6abb9cc4c26bed6e218ea6177ccda3cf`.
+
+## Wynik walidacji
+
+- Focused validator oraz pełne osiem zestawów testów Linux przechodzą.
+- Istniejący fixture z `build:` bez `image:` pozostaje zielony; nowy fixture
+  z `build:` i `image: local/code2logic:latest` daje `GOV-DOCKER-002`, dokładną
+  linię i nową remediację.
+- Złożony kandydat `4ee2b3854c8651935d93dbbc144858befe75a8cc`
+  przechodzi pełny kontrakt i przypięty Ruff downstream bez naruszeń.
+- Upgrade przez Goal w żywym pilocie code2logic jest idempotentny i nadal
+  raportuje wszystkie sześć mutowalnych referencji z precyzyjniejszą poradą.
+- Ostateczna implementacja zmienia jedną linię produkcyjną i dodaje 15 linii
+  testu; nie dodaje parsera, zależności ani nowej gałęzi polityki.
+- Nie wykonano push, PR, merge, tagu, release ani publikacji pakietu.
 
 ## Uczestnicy
 
