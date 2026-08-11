@@ -2705,16 +2705,38 @@ def optional_repo_path(
         return None
 
 
-def resolve_changed_paths(args: argparse.Namespace, root: Path, report: Report) -> list[str]:
+def resolve_changed_paths(
+    args: argparse.Namespace,
+    root: Path,
+    base: str | None,
+    report: Report,
+) -> list[str]:
     try:
-        return changed_paths(root, args.base, args.head, args.changed_file)
+        return changed_paths(root, base, args.head, args.changed_file)
     except (RuntimeError, ValueError) as error:
         report.add(
             "GOV-DIFF-001", str(error),
             "Use repository-relative changed paths and fetch the complete base/head history before retrying.",
-            evidence={"base": args.base, "head": args.head},
+            evidence={"base": base, "head": args.head},
         )
         return []
+
+
+def resolve_validation_base(
+    supplied_base: str | None,
+    records: list[TicketRecord],
+    config: dict[str, Any],
+) -> str | None:
+    if supplied_base is not None:
+        return supplied_base
+    active_statuses = set(config.get("activeStatuses", ACTIVE_DEFAULT))
+    active = [record for record in records if record.status in active_statuses]
+    adoption_records = standard_adoption_records(active)
+    if len(adoption_records) != 1:
+        return None
+    record = adoption_records[0]
+    assert record.intent is not None
+    return record.intent["delivery"]["acceptedBaseSha"]
 
 
 def run_governance_checks(
@@ -2725,19 +2747,20 @@ def run_governance_checks(
 ) -> str | None:
     lock_path = optional_repo_path(root, args.lock, "GOV-SYNC-001", "governance lock", report)
     profiles_path = optional_repo_path(root, args.stack_profiles, "GOV-MANIFEST-001", "stack-profile", report)
-    changed = resolve_changed_paths(args, root, report)
+    directories = ticket_directories(root, manifest["ticket"])
+    records = load_ticket_records(directories, manifest["ticket"])
+    base = resolve_validation_base(args.base, records, manifest["ticket"])
+    changed = resolve_changed_paths(args, root, base, report)
     load_work_classification(root, report)
     check_lock(root, lock_path, manifest, report)
     check_required_files(root, manifest, report)
     check_docker_image_references(root, manifest, report)
     check_stacks(root, manifest, profiles_path, report)
-    directories = ticket_directories(root, manifest["ticket"])
     check_ticket_content(root, directories, manifest["ticket"], report)
-    records = load_ticket_records(directories, manifest["ticket"])
     check_coordination(root, manifest, records, changed, report)
     check_changed_content(root, changed, args.actor, args.trusted_human_change, report)
     return check_change_gate(
-        root, manifest, records, changed, args.base, args.head, args.approval_source,
+        root, manifest, records, changed, base, args.head, args.approval_source,
         args.approved_ticket, args.approval_evidence, args.expected_repository,
         args.expected_pull_request, args.expected_head, args.enforce_approval,
         args.elapsed_minutes, report,

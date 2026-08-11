@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-055",
+  "summary": "Resolve default base for multi-commit initial adoption",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "project/ticket-055/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4ee2b3854c8651935d93dbbc144858befe75a8cc",
+    "targetBranch": "main",
+    "outcome": "A committed multi-step standard adoption validates through Goal without requiring the user to repeat the base already bound in its active ticket intent",
+    "nonGoals": [
+      "No generic base inference for ordinary implementation tickets",
+      "No policy, schema, package layout, dependency, version or release change",
+      "No downstream product mutation, push, pull request, merge or publication"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Resolve an omitted validator base from the accepted SHA of exactly one active standard-adoption ticket before computing changed paths, while preserving explicit-base precedence",
+      "components": [
+        {
+          "name": "adoption-validation",
+          "paths": ["scripts/governance_check.py", "tests/governance-validator.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert this ticket and require callers to pass the intent-bound accepted base explicitly"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "The validator resolves an omitted base only from one active standard-adoption ticket"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "A three-stage adoption history passes without an explicit base and includes the committed lock"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "Explicit-base precedence and fail-closed malformed adoption regressions remain green"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["all commands from the Linux CI test job", "codot ./project.sh and container baselines"],
+        "evidence": "The standard contract and isolated downstream pilot pass on exact local commits"
+      }
+    ]
+  }
+}

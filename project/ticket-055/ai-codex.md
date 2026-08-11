@@ -1,0 +1,54 @@
+---
+participant-id: agent:codex
+participant: codex
+role: agent
+ticket: ticket-055
+---
+# Participant: codex (AI agent)
+
+## Understanding
+
+The `project.sh` wrapper already delegates to `goal governance check`, and Goal
+correctly executes the target's pinned validator. The defect is inside that
+validator: without `--base` it computes only working-tree paths, but atomic
+adoption requires a base and a changed lock. A committed plan followed by a
+committed adoption therefore fails even though the accepted base is already
+recorded in the active ticket.
+
+## Execution plan
+
+1. Resolve an omitted base from the accepted SHA of exactly one active
+   standard-adoption ticket before calculating changed paths.
+2. Keep explicit `--base` authoritative and retain fail-closed behavior for
+   malformed or multiple active adoption records.
+3. Split the adoption fixture into base, plan and payload commits, then verify
+   both inferred-base and explicit-base execution.
+4. Run the focused and complete Linux contracts, integrate the tested commit
+   into the pinned pilot candidate and repeat the isolated `codot` gate.
+
+## Actual changes
+
+- Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
+  from the request to execute this work.
+- Reproduced the defect in `semcod/codot`: explicit Goal validation passed,
+  while no-argument `./project.sh` returned `GOV-SYNC-001` because the committed
+  lock was invisible without a base.
+- Confirmed the wrappers already use Goal and that the correct repair boundary
+  is the pinned `new-project` validator rather than a shell-side JSON parser.
+- Added an omitted-base resolver that runs before changed-path calculation and
+  accepts only the exact accepted SHA from one active adoption record.
+- Extended the existing initial-adoption fixture, whose history already has
+  separate base, plan and payload commits, with a no-argument validation pass.
+- Passed the focused regression, all eight Linux CI suites, JSON contracts, CI
+  completeness and Ruff.
+- Integrated the tested commits into candidate `ebc274a`, adopted that exact
+  SHA in isolated `semcod/codot` and obtained `GOV-PASS` from no-argument and
+  explicit-base paths plus an up-to-date adoption preflight.
+- Repeated downstream Python, Go and Compose baselines and confirmed the final
+  diff contains governance paths only. The ticket is complete locally.
+
+## Blockers
+
+- None inside the recorded intent.
+- New authority is still required for destructive action, secret access, new
+  external coordination, material objective expansion and trusted merge.

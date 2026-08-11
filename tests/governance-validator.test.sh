@@ -837,6 +837,12 @@ if ! run_check "$initial_adoption" --base "$initial_base" \
   exit 1
 fi
 grep -q '^GOV-PASS:' "$fixture/initial-adoption.out"
+if ! run_check "$initial_adoption" \
+  > "$fixture/initial-adoption-inferred-base.out"; then
+  cat "$fixture/initial-adoption-inferred-base.out"
+  exit 1
+fi
+grep -q '^GOV-PASS:' "$fixture/initial-adoption-inferred-base.out"
 
 initial_hidden_target="$fixture/initial-adoption-hidden-target"
 cp -R "$initial_adoption" "$initial_hidden_target"
