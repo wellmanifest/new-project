@@ -1,0 +1,3 @@
+2026-08-12 mcp beb72ba baseline: root frozen uv contract 18 passed; pilot tree clean.
+2026-08-12 standard 503cefa preflight: 25 CREATE, missing project/TICKETS.md, no root-wrapper collision.
+2026-08-12 docker layout: root docker-compose.yml, 8 nested Dockerfiles, no root Dockerfile/Dockerfile.e2e.

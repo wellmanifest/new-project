@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-059`](project/ticket-059/README.md) — rozpoznawać rootowy
+  Compose jako marker stosu Docker, zachowując jawne wyliczanie nested
+  Dockerfile i kontrolę pinów. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  `BUG / P1 / regression`.
+
 - [x] [`ticket-058`](project/ticket-058/README.md) — istniejące rootowe
   `project.sh`/`.bat` są target-owned seedami, brakujące aliasy nadal powstają,
   a zarządzane `project/governance-check.*` pozostają kanoniczną bramą. Pełny

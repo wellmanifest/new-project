@@ -1,0 +1,77 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-059",
+  "summary": "Recognize Compose-only Docker roots",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "governance/stack-profiles.json",
+    "governance/manifest.default.json",
+    "tests/governance-validator.test.sh",
+    "project/ticket-059/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["docker"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "503cefa6fbe66f20bc7a420512339f3cbada41e7",
+    "targetBranch": "main",
+    "outcome": "A Docker monorepo with root Compose and explicitly declared nested Dockerfiles can truthfully enable the docker stack without adding a synthetic root Dockerfile",
+    "nonGoals": [
+      "No recursive Dockerfile auto-discovery or weakening of explicit pin validation",
+      "No mutation of downstream Docker configuration or images",
+      "No dependency, package version, Goal or external delivery change"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Recognize conventional root Compose files as Docker stack markers while retaining an explicit manifest list for every Dockerfile and Compose file whose image references are validated",
+      "components": [
+        {
+          "name": "docker-stack-profile",
+          "paths": ["governance/stack-profiles.json", "governance/manifest.default.json", "tests/governance-validator.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert before candidate publication; compose-only roots again require a synthetic marker or omit the stack"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "Root docker-compose.yml plus an explicitly listed nested Dockerfile reaches GOV-PASS"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "A nested Dockerfile without any root Docker/Compose marker remains GOV-STACK-001"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["all commands from the Linux CI test job", "isolated Goal adoption pilot on mcp"],
+        "evidence": "Full standard contract and real compose-root monorepo validation retain the baseline"
+      }
+    ]
+  }
+}
