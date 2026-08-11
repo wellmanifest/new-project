@@ -6,3 +6,4 @@
 2026-08-12 hillm exact-SHA: 25 CREATE, no prerequisite/collision, no upgrade; project.sh hash/mode retained.
 2026-08-12 hillm payload 6cc1429 + correction 004871c: explicit/inferred/canonical GOV-PASS; 81 passed, 7 skipped; Ruff 77.
 2026-08-12 hillm test-isolation defect: two generated tracked-ledger rows removed exactly from original and pilot; both clean.
+2026-08-12 publication rebuild: ticket-only commits replayed on current origin/main; full Linux CI contract PASS.
