@@ -20,10 +20,12 @@ into a stack-lint regression even though the deterministic gate reports
 2. Apply only behavior-preserving simplifications reported by downstream Ruff.
 3. Mark all three shebang Python targets executable and extend the existing
    adoption-mode regression.
-4. Run focused tests, Ruff, the complete Linux contract and Docker validation.
-5. Cherry-pick the implementation into the combined local candidate and repeat
+4. Make the Docker-reference fixture explicitly opt into the portable,
+   default-off Docker policy.
+5. Run focused tests, Ruff and the complete Linux contract.
+6. Cherry-pick the implementation into the combined local candidate and repeat
    clean `code2docs` adoption, Ruff and product tests.
-6. Record evidence and stop before external delivery.
+7. Record evidence and stop before external delivery.
 
 ## Actual changes
 
@@ -31,6 +33,9 @@ into a stack-lint regression even though the deterministic gate reports
   from the request to execute this work.
 - Confirmed the downstream delta: 514 baseline Ruff errors become 531 after
   adoption, with all 17 new findings isolated to `.governance`.
+- During combined validation, found that the Docker-reference fixture did not
+  opt into ticket 051's default-off Docker policy and therefore could not
+  exercise ticket 052's diagnostics.
 
 ## Blockers
 

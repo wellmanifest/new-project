@@ -14,9 +14,9 @@ zarządzane pliki Pythona dodają 17 błędów Ruffa do repozytorium docelowego.
 instalowane z bitem wykonywalnym zgodnym z ich źródłowym trybem.
 
 Zakres obejmuje dwa źródła wymagające mechanicznych uproszczeń, manifest
-pakietu, test trybu adopcji oraz dowód integracyjny z konfiguracją Ruffa
-rzeczywistego repo. Nie zmienia reguł governance, diagnostyki, schematów ani
-publicznego zachowania walidatora.
+pakietu, test trybu adopcji, jawny Docker opt-in fixture oraz dowód
+integracyjny z konfiguracją Ruffa rzeczywistego repo. Nie zmienia reguł
+governance, diagnostyki, schematów ani publicznego zachowania walidatora.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
@@ -25,7 +25,8 @@ publicznego zachowania walidatora.
 - [ ] AC-02: trzy zarządzane skrypty `.governance/*.py` są deklarowane jako
   executable, a test adopcji potwierdza tryb w repo docelowym.
 - [ ] AC-03: pełny kontrakt Linux, testy validatora, decision record i adopcji
-  przechodzą bez zmiany oczekiwanych kodów `GOV-*`.
+  przechodzą bez zmiany oczekiwanych kodów `GOV-*`; fixture testujący
+  `GOV-DOCKER-002` jawnie włącza opcjonalną politykę Docker.
 - [ ] AC-04: złożony kandydat po ponownej adopcji w `code2docs` nie zwiększa
   baseline Ruffa 514 i zachowuje 161 przechodzących testów produktu.
 - [ ] AC-05: zmiana pozostaje lokalna; bez push, PR, merge, tagu, release ani
@@ -40,6 +41,10 @@ publicznego zachowania walidatora.
   sprawdzić dokładnie ten efekt.
 - Ruff jest dowodem integracyjnym z istniejącego, przypiętego lockfile
   `code2docs`, nie nową zależnością runtime standardu.
+- Złożenie ticketów 051 i 052 ujawniło fałszywy test: fixture dziedziczył nowe
+  `docker.required=false`, więc przypadki mutowalnych obrazów nie uruchamiały
+  reguły. Jawny target opt-in przywraca rzeczywiste pokrycie bez zmiany
+  portable defaults.
 
 ## Uczestnicy
 

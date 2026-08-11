@@ -13,6 +13,7 @@
     "scripts/governance_check.py",
     "governance/package-manifest.json",
     "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
     "project/ticket-053/**",
     "TODO.md",
     "project/TICKETS.md"
@@ -36,7 +37,7 @@
     "complexity": "S",
     "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 4,
+      "maxImplementationFiles": 5,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
@@ -51,7 +52,11 @@
         },
         {
           "name": "adoption-package",
-          "paths": ["governance/package-manifest.json", "tests/adoption-lock.test.sh"]
+          "paths": [
+            "governance/package-manifest.json",
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
         }
       ],
       "responsibilityChanges": false,
