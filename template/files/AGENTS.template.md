@@ -46,6 +46,14 @@ Before any multi-step implementation, an agent must:
    must disappear after merge. A PR closed without merge keeps its branch until
    the owner explicitly discards that unmerged work. When no PR is open, the
    only remote branch is the default branch.
+16. At merge, publication or explicit pilot discard, inventory temporary linked
+   worktrees and duplicate clones. Verify dirty state and HEAD reachability
+   before removal; preserve unknown or unique data. Remove an exact linked
+   worktree through Git, prune its metadata and only then delete its released
+   disposable branch. Prefer recoverable trash for a verified duplicate clone.
+   Run the adopted workspace lifecycle checker through Goal for the terminal
+   audit. CI validates GitHub state separately and cannot inspect a developer
+   filesystem.
 
 Markdown approval is an audit note, not trusted merge approval. Required
 merge approval comes from the repository's protected review, attestation and

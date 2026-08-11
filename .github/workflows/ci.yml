@@ -37,6 +37,8 @@ jobs:
         run: bash tests/governance-validator.test.sh
       - name: Test deterministic branch lifecycle validator
         run: bash tests/branch-lifecycle.test.sh
+      - name: Test local workspace lifecycle validator
+        run: bash tests/workspace-lifecycle.test.sh
       - name: Test governance environment runtime
         run: bash tests/governance-env.test.sh
       - name: Test immutable adoption lock
