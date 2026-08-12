@@ -34,10 +34,15 @@ wstrzykniętego klienta `github`, które v8 zachowuje.
   zmienia żadnej innej linii workflow.
 - Wszystkie dziewięć kontraktów shell, kontrola required checks, kontrakty JSON
   i skupiony audyt siedmiu pinów przechodzą lokalnie.
+- Pierwsza próba `todo2code` na committed HEAD `a61f3b0` użyła
+  `require-llm`, lecz OpenRouter odrzucił już etap NL kodem HTTP 403 z powodu
+  nadal aktywnego limitu tygodniowego klucza. Run pozostał fail-closed: bez
+  grafu, fallbacku i fałszywego twierdzenia o analizie LLM.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- Dostęp lokalnego `todo2code` do LLM jest nadal ograniczony po stronie
+  skonfigurowanego klucza OpenRouter; ponowienie nastąpi na finalnym HEAD.
 - New authority is still required for destructive action, secret access, new
   external coordination or material objective expansion. Trusted merge wymaga
   niezależnego review current-head; autoryzacja sesji go nie zastępuje.

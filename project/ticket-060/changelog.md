@@ -11,3 +11,6 @@
   with v7.0.0, and both github-script pins with v8.0.0.
 - Passed the complete Linux shell contract and an exact seven-reference action
   audit; no legacy Node.js 20 action revision remains in the owned workflows.
+- Kept the first required-LLM todo2code attempt fail-closed when the configured
+  OpenRouter key still reported its weekly limit; no deterministic fallback was
+  accepted as semantic evidence.

@@ -11,6 +11,17 @@ none
 $ git diff --check
 PASS
 
+2026-08-12 todo2code required-LLM attempt
+base=1e7ff1ceeb3e9dff2e5c926a8088878a6ffb7d2f
+head=a61f3b0330ecf77032d3cc5308379c2ea9d48570
+requested=nl:require-llm,markdown:require-llm,docs:llm,communication:require-llm,task:require-llm,summary:llm
+result=FAILED
+stage=naturalLanguageExtraction
+provider_status=HTTP 403
+provider_reason=key weekly limit exceeded
+graph=none
+fallback=false
+
 Official immutable action evidence
 actions/checkout refs/tags/v7.0.1 = 3d3c42e5aac5ba805825da76410c181273ba90b1; action.yml runs.using=node24
 actions/setup-python refs/tags/v7.0.0 = 5fda3b95a4ea91299a34e894583c3862153e4b97; action.yml runs.using=node24
