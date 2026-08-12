@@ -2,12 +2,22 @@
 
 ```dsl
 DOCUMENT CONTRIBUTING
-VERSION 10
+VERSION 11
 LANGUAGE PL
 MODE PROCEDURAL
 PURPOSE "proces pracy nad repozytorium"
 POLICY "POLICY.md"
 ```
+
+## MODUŁY LIFECYCLE
+
+Procedura składa się z dwóch szczegółowych podprojektów:
+[`git-lifecycle`](subprojects/git-lifecycle/README.md) opisuje skutki w historii
+i workspace Git, a [`ticket-lifecycle`](subprojects/ticket-lifecycle/README.md)
+opisuje bounded intent, autoryzację, stany i dowody pracy. Ten dokument zawiera
+ich egzekwowalną projekcję zgodności. Requesty modelu muszą przejść przez
+odpowiedni request-only GBNF, zamknięte JSON Schema, preconditions kontrolera i
+dopiero potem przez URI Process/CQRS do pojedynczego skutku oraz receipt.
 
 ## LEGENDA DSL I REGUŁY INTERPRETACJI
 
@@ -999,20 +1009,42 @@ werdykt), `GOV-DECISION-004` (rozjazd przy odtworzeniu).
 
 ## PROCEDURA PUBLICATION
 
+Autonomiczny bootstrap nowego repozytorium ma osobną, jednorazową transakcję.
+Nie jest ona skrótem zwykłej publikacji:
+
+```dsl
+AUTONOMOUS_SEED_BASELINE_AUTHORIZATION = valid WHEN
+  USER_REQUEST_CREATES_NEW_REPOSITORY
+  AND USER_REQUEST_AUTHORIZES_EXECUTION_OR_AUTONOMOUS_MODE
+  AND HEAD_STATE = unborn
+  AND IMPLEMENTATION_PRESENT = false
+  AND TRUSTED_SEED_PROFILE_RESOLVED = true
+  AND STAGED_PATHS = RESOLVED_SEED_PROFILE_PATHS
+  AND ADOPTION_LOCK = VALID
+  AND SECRET_SCAN = PASS
+
+AUTONOMOUS_SEED_BASELINE_EFFECTS = [one-local-commit]
+AUTONOMOUS_SEED_BASELINE_FORBIDDEN_EFFECTS = [remote-add, push, pull-request, merge, tag, release]
+```
+
 ```dsl
 RULE C-PUBLISH-001
-WHEN USER_DID_NOT_REQUEST_COMMIT
+WHEN USER_DID_NOT_REQUEST_COMMIT AND AUTONOMOUS_SEED_BASELINE_AUTHORIZATION != valid
 DO SKIP COMMIT
 DO SKIP PUSH
 ASSERT GIT_HISTORY_UNCHANGED
 NEXT DONE
 
 RULE C-PUBLISH-002
-WHEN USER_REQUESTS_COMMIT
+WHEN USER_REQUESTS_COMMIT OR AUTONOMOUS_SEED_BASELINE_AUTHORIZATION = valid
 DO REVIEW "git status --short"
 DO REVIEW "git diff"
+DO REQUIRE EXACT_EXPLICIT_STAGE_ALLOWLIST WHEN AUTONOMOUS_SEED_BASELINE_AUTHORIZATION = valid
+DO REQUIRE GOVERNANCE_CARRIERS_ONLY_AND_ZERO_IMPLEMENTATION_PATHS WHEN AUTONOMOUS_SEED_BASELINE_AUTHORIZATION = valid
 DO COMMIT_ATOMIC_CHANGE
-ASSERT COMMIT_DESCRIBES_REASON
+DO RECORD RESULTING_HEAD_AS delivery.acceptedBaseSha AFTER AUTONOMOUS_SEED_BASELINE_COMMIT
+FORBID REMOTE_ADD_PUSH_PULL_REQUEST_MERGE_TAG_RELEASE WHEN AUTONOMOUS_SEED_BASELINE_AUTHORIZATION = valid
+ASSERT COMMIT_DESCRIBES_REASON_AND_SEED_EXCEPTION_CREATES_EXACTLY_ONE_LOCAL_COMMIT
 NEXT DONE
 
 RULE C-PUBLISH-003
