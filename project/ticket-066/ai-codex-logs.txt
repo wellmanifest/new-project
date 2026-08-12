@@ -1,0 +1,3 @@
+2026-08-12 analysis: current diagnostics catalog covers governance_check and decision_record only; branch, workspace, environment, classification and allocator GOV codes are absent.
+2026-08-12 root cause: original ticket-060 was created outside managed new-ticket.sh, leaving clone-wide high-water below its untracked worktree claim; a later allocator reused 060 for a different intent.
+2026-08-12 lifecycle: C-PUBLISH-003 currently transitions to DONE immediately after opening a PR; required target is IN_PROGRESS/PUBLICATION until trusted merge plus governance-only closure on integrated main.
