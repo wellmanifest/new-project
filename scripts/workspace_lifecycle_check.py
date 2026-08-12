@@ -163,12 +163,25 @@ def evaluate(workspace_root: Path, allowed: set[Path]) -> list[Finding]:
     candidate_paths = {candidate.resolve() for candidate in candidates}
     if len(candidate_paths) > MAX_REPOSITORIES:
         raise AuditError(f"workspace contains more than {MAX_REPOSITORIES} repositories")
-    for candidate in sorted(candidate_paths, key=str):
-        candidate_paths.update(registered_worktrees(candidate))
+
+    pending = sorted(candidate_paths, key=str)
+    inspected: set[Path] = set()
+    while pending:
+        candidate = pending.pop(0)
+        if candidate in inspected:
+            continue
+        inspected.add(candidate)
+        discovered = {
+            worktree
+            for worktree in registered_worktrees(candidate)
+            if worktree not in candidate_paths
+        }
+        candidate_paths.update(discovered)
         if len(candidate_paths) > MAX_REPOSITORIES:
             raise AuditError(
                 f"workspace contains more than {MAX_REPOSITORIES} repositories"
             )
+        pending.extend(sorted(discovered, key=str))
     checkouts = [
         inspect_checkout(candidate) for candidate in sorted(candidate_paths, key=str)
     ]

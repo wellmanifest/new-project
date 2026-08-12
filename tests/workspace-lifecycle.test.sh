@@ -86,7 +86,8 @@ rm -rf "$nested_duplicate"
 python3 "$validator" --workspace-root "$workspace" > "$fixture/clean.out"
 grep -Fxq 'GOV-WORKSPACE-PASS: passed (0 errors, 0 warnings)' "$fixture/clean.out"
 
-if python3 "$validator" --workspace-root "$fixture/missing" > "$fixture/missing.out"; then
+if python3 "$validator" --workspace-root "$fixture/missing" \
+  > "$fixture/missing.out" 2>&1; then
   status=0
 else
   status=$?

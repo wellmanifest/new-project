@@ -32,7 +32,8 @@ Pilotażowe linked worktree i niezależne klony nie są widoczne dla CI.
   workflow z live snapshotem GitHuba oraz deterministyczne mapowanie reguł na
   kody diagnostyczne.
 - Checker wykrywa repozytoria bezpośrednie, jeden poziom kontenerów oraz
-  wszystkie worktree zarejestrowane przez Git, również poza katalogiem audytu.
+  rekurencyjne domknięcie worktree zarejestrowanych przez Git, również poza
+  katalogiem audytu.
 - Dodatkowy audyt ujawnił 23 stare rejestracje. Czyste i zintegrowane worktree
   usunięto; unikalne HEAD-y i dirty dane zachowano w tagach albo lokalnych
   `refs/archive/workspaces/*` przed usunięciem checkoutów.
@@ -47,6 +48,10 @@ Pilotażowe linked worktree i niezależne klony nie są widoczne dla CI.
 - Ponownie uruchomiono focused lifecycle/adoption/traceability, Ruff oraz pełny
   Linux contract: wszystkie zestawy przeszły, 160 reguł mapuje się na 48 kodów
   bez luk.
+- Validator LLM wskazał, że jednopoziomowe rozwinięcie zbioru worktree nie
+  gwarantuje domknięcia dla ścieżek odkrytych w trakcie audytu. Zastąpiono je
+  ograniczoną kolejką roboczą, a test błędu wejściowego przechwytuje jawnie oba
+  strumienie diagnostyczne.
 
 ## Blockers
 

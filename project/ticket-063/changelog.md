@@ -18,3 +18,6 @@
   workflow targetu na immutable checkout v7 oraz github-script v8.
 - Ponowiono pełny kontrakt po integracji: wszystkie testy, Ruff i mapowanie
   160 reguł na 48 kodów przechodzą bez luk.
+- Po semantycznym review Validatora domknięto rekurencyjne odkrywanie
+  zarejestrowanych worktree i ujednoznaczniono przechwytywanie diagnostyki w
+  regresji brakującego katalogu.
