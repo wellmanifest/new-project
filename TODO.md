@@ -11,8 +11,13 @@
 
 - [ ] [`ticket-063`](project/ticket-063/README.md) — domknąć lokalny lifecycle
   worktree/klonów oraz instalować rzeczywisty zdalny enforcement w pakiecie
-  adopcyjnym. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  adopcyjnym. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
   `BUG / P1 / regression`.
+
+- [ ] [`ticket-060`](project/ticket-060/README.md) — przepiąć własne workflow
+  huba i reusable governance na pełne SHA oficjalnych akcji Node.js 24 bez
+  zmiany kontraktu workflow. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  `SERVICE / P1 / health`.
 
 - [x] [`ticket-059`](project/ticket-059/README.md) — rootowy Compose jest
   markerem stosu Docker, a nested Dockerfiles nadal są wyliczane jawnie i

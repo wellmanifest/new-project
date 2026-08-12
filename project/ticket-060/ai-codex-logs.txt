@@ -1,0 +1,48 @@
+2026-08-12 plan validation
+$ python3 -m json.tool project/ticket-060/intent.json
+PASS
+$ jsonschema governance/intent.schema.json project/ticket-060/intent.json
+intent schema: PASS
+$ bash tests/governance-scripts.test.sh
+warning: You appear to have cloned an empty repository.
+governance scripts: PASS
+$ placeholder scan project/ticket-060
+none
+$ git diff --check
+PASS
+
+2026-08-12 todo2code required-LLM attempt
+base=1e7ff1ceeb3e9dff2e5c926a8088878a6ffb7d2f
+head=a61f3b0330ecf77032d3cc5308379c2ea9d48570
+requested=nl:require-llm,markdown:require-llm,docs:llm,communication:require-llm,task:require-llm,summary:llm
+result=FAILED
+stage=naturalLanguageExtraction
+provider_status=HTTP 403
+provider_reason=key weekly limit exceeded
+graph=none
+fallback=false
+
+Official immutable action evidence
+actions/checkout refs/tags/v7.0.1 = 3d3c42e5aac5ba805825da76410c181273ba90b1; action.yml runs.using=node24
+actions/setup-python refs/tags/v7.0.0 = 5fda3b95a4ea91299a34e894583c3862153e4b97; action.yml runs.using=node24
+actions/github-script refs/tags/v8.0.0 = ed597411d8f924073f98dfc5c65a23a2325f34cd; action.yml runs.using=node24
+
+2026-08-12 implementation validation
+$ python3 scripts/check_required_checks.py
+required-checks gate OK: source=governance/required-checks.json required=['test', 'windows-governance'] published=['test', 'windows-governance']
+$ for suite in tests/*.test.sh; do bash "$suite"; done
+adoption lock: PASS
+branch lifecycle validator: PASS
+decision-record tests: PASS
+governance environment runtime tests passed
+governance scripts: PASS
+governance validator: PASS
+required-checks tests: PASS
+governed Goal publication contract: PASS
+rule enforcement traceability: PASS
+$ exact action pin audit
+action pin audit: PASS (7 references)
+$ legacy Node 20 pin scan
+legacy Node 20 pins: none
+$ git diff --check
+PASS
