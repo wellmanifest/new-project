@@ -54,11 +54,19 @@ checker enumeruje tylko checkouty. W efekcie po usunięciu worktree zwolniony
   projection all verified.
 - Kept the immutable 0.16.2 release in a separate dependent delivery ticket;
   adding six release carriers here would exceed the hub's nine-file limit.
+- Verified hosted Linux/Windows twice for exact head `d43e44c...`, obtained
+  deterministic Validator App approval in run `31617357073`, and merged the
+  unchanged tree as `7a2dd94194e67567b7c9c2ffbae91951c673e102`.
+- Verified post-merge CI run `31617559613`, remote branch deletion and exact
+  cleanup of the released local implementation worktree/branch.
+- Closed governance-only from the integrated default branch; no implementation
+  code is present in this closure.
 
 ## Blockers
 
 - None inside the recorded intent; proceed without another confirmation.
 - Destructive cleanup remains outside the checker and requires exact evidence.
-- Hosted Windows and exact-head review remain pending.
+- None for source integration. Immutable 0.16.2 publication is intentionally a
+  separate dependent ticket and is not claimed by this closure.
 - New authority is still required for destructive action, secret access, new
   external coordination, material objective expansion and trusted merge.

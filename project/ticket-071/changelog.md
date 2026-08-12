@@ -13,3 +13,5 @@
   integrated stale refs and preserved two active workspaces.
 - Passed full Linux/Ruff and an exact-candidate Goal 2.1.298 adoption; moved to
   PUBLICATION while hosted Windows and Validator remain pending.
+- Passed hosted Linux/Windows and exact-head Validator review, merged unchanged,
+  passed post-merge CI and closed governance-only from integrated `main`.
