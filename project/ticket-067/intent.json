@@ -17,6 +17,7 @@
     "governance/diagnostics.json",
     "governance/package-manifest.json",
     "governance/rule-enforcement.json",
+    "scripts/audit_rule_enforcement.py",
     "scripts/remediation_intent.py",
     "template/files/remediation-intent.template.dsl.json",
     "error/GOV-REMEDIATION-INTENT.md",
@@ -48,7 +49,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 14,
+      "maxImplementationFiles": 15,
       "maxAffectedComponents": 4,
       "maxPublicInterfaceChanges": 4,
       "maxRuntimeDependencies": 0
@@ -77,6 +78,7 @@
           "name": "deterministic-adapter",
           "paths": [
             "scripts/remediation_intent.py",
+            "scripts/audit_rule_enforcement.py",
             "governance/diagnostics.json",
             "error/GOV-REMEDIATION-INTENT.md",
             "tests/governance-scripts.test.sh"

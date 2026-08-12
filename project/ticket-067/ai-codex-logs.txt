@@ -2,3 +2,4 @@
 2026-08-12 scenario: Diagit-shaped report requires explicit false-positive exclusions, typed unreadable-path emission, explicit layout ambiguity, dependency-ordered release work and non-destructive dirty-worktree handling.
 2026-08-12 todo2code: local semcod/todo2code main exposes deterministic task extraction, diagnostics and t2c.code-change-plan/v1; no global todo2code binary is installed, so integration validation must invoke its built Node CLI explicitly.
 2026-08-12 coordination: ticket-065 remains IN_PROGRESS/PUBLICATION in governance; ticket-067 uses distinct integration scope and does not publish v0.15.0.
+2026-08-12 scope refinement: scripts/audit_rule_enforcement.py must enumerate the new deterministic analyzer so C-REMEDIATION mappings can claim its GOV codes; added before editing that script.

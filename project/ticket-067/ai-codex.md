@@ -34,6 +34,9 @@ paths.
 6. Run focused/full tests plus an actual deterministic todo2code pipeline,
    publish one ticket PR and retain `PUBLICATION` until trusted merge.
 
+The rule-enforcement audit must also discover the new deterministic analyzer;
+that existing audit script is therefore part of the bounded adapter component.
+
 ## Actual changes
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
