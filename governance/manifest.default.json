@@ -5,6 +5,10 @@
     "id": "wellmanifest/new-project",
     "version": "0.16.2"
   },
+  "repository": {
+    "mode": "standalone",
+    "componentRoots": []
+  },
   "requiredFiles": [
     "README.md",
     "VERSION",
@@ -94,11 +98,37 @@
     "requiredForImplementation": true,
     "maxActiveMinutes": 30,
     "checkpointMinutes": 25,
-    "allowedComplexityClasses": ["XS", "S"],
-    "maxImplementationFiles": 5,
-    "maxAffectedComponents": 2,
-    "maxPublicInterfaceChanges": 0,
-    "maxRuntimeDependencies": 0,
+    "allowedComplexityClasses": ["XS", "S", "M", "L"],
+    "maxImplementationFiles": 15,
+    "maxAffectedComponents": 5,
+    "maxPublicInterfaceChanges": 3,
+    "maxRuntimeDependencies": 3,
+    "profiles": {
+      "XS": {
+        "maxImplementationFiles": 2,
+        "maxAffectedComponents": 1,
+        "maxPublicInterfaceChanges": 0,
+        "maxRuntimeDependencies": 0
+      },
+      "S": {
+        "maxImplementationFiles": 5,
+        "maxAffectedComponents": 2,
+        "maxPublicInterfaceChanges": 1,
+        "maxRuntimeDependencies": 1
+      },
+      "M": {
+        "maxImplementationFiles": 9,
+        "maxAffectedComponents": 3,
+        "maxPublicInterfaceChanges": 2,
+        "maxRuntimeDependencies": 2
+      },
+      "L": {
+        "maxImplementationFiles": 15,
+        "maxAffectedComponents": 5,
+        "maxPublicInterfaceChanges": 3,
+        "maxRuntimeDependencies": 3
+      }
+    },
     "targetBranches": ["main"],
     "publicInterfacePaths": ["api/**", "sdk/**", "src/public/**"],
     "dependencyManifestPaths": ["package.json", "pyproject.toml", "go.mod", "Cargo.toml", "pom.xml"]

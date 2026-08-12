@@ -320,6 +320,25 @@ def delivery_limits_valid(value: dict[str, Any]) -> bool:
     ])
 
 
+DELIVERY_BUDGET_FIELDS = {
+    "maxImplementationFiles", "maxAffectedComponents",
+    "maxPublicInterfaceChanges", "maxRuntimeDependencies",
+}
+
+
+def delivery_profile_valid(value: Any) -> bool:
+    if not isinstance(value, dict) or set(value) != DELIVERY_BUDGET_FIELDS:
+        return False
+    if not integer_fields_valid(value, DELIVERY_BUDGET_FIELDS):
+        return False
+    return (
+        value["maxImplementationFiles"] >= 1
+        and value["maxAffectedComponents"] >= 1
+        and value["maxPublicInterfaceChanges"] >= 0
+        and value["maxRuntimeDependencies"] >= 0
+    )
+
+
 def delivery_policy_valid(value: Any) -> bool:
     fields = {
         "requiredForImplementation", "maxActiveMinutes", "checkpointMinutes",
@@ -328,7 +347,8 @@ def delivery_policy_valid(value: Any) -> bool:
         "maxRuntimeDependencies", "targetBranches", "publicInterfacePaths",
         "dependencyManifestPaths",
     }
-    if not isinstance(value, dict) or set(value) != fields:
+    allowed_fields = {frozenset(fields), frozenset(fields | {"profiles"})}
+    if not isinstance(value, dict) or frozenset(value) not in allowed_fields:
         return False
     integer_limits = (
         "maxActiveMinutes", "checkpointMinutes", "maxImplementationFiles",
@@ -340,7 +360,20 @@ def delivery_policy_valid(value: Any) -> bool:
     limits_valid = delivery_limits_valid(value)
     classes_valid = (
         string_list(value.get("allowedComplexityClasses"), nonempty=True)
-        and set(value["allowedComplexityClasses"]) <= {"XS", "S"}
+        and len(set(value["allowedComplexityClasses"])) == len(value["allowedComplexityClasses"])
+        and set(value["allowedComplexityClasses"]) <= {"XS", "S", "M", "L"}
+    )
+    profiles = value.get("profiles")
+    profiles_valid = profiles is None or (
+        classes_valid
+        and isinstance(profiles, dict)
+        and set(profiles) == set(value["allowedComplexityClasses"])
+        and all(delivery_profile_valid(profile) for profile in profiles.values())
+        and all(
+            profile[field] <= value[field]
+            for profile in profiles.values()
+            for field in DELIVERY_BUDGET_FIELDS
+        )
     )
     targets_valid = (
         string_list(value.get("targetBranches"), nonempty=True)
@@ -349,7 +382,12 @@ def delivery_policy_valid(value: Any) -> bool:
     paths_valid = relative_pattern_list(value.get("publicInterfacePaths")) and relative_pattern_list(
         value.get("dependencyManifestPaths")
     )
-    return limits_valid and classes_valid and targets_valid and paths_valid
+    return limits_valid and classes_valid and profiles_valid and targets_valid and paths_valid
+
+
+def effective_delivery_policy(policy: dict[str, Any], complexity: str) -> dict[str, Any]:
+    profile = policy.get("profiles", {}).get(complexity)
+    return policy if profile is None else {**policy, **profile}
 
 
 def delivery_header_error(value: dict[str, Any]) -> str | None:
@@ -361,8 +399,8 @@ def delivery_header_error(value: dict[str, Any]) -> str | None:
         return "delivery outcome is blank"
     if not string_list(value.get("nonGoals"), nonempty=True):
         return "delivery nonGoals must be an explicit non-empty list"
-    if value.get("complexity") not in {"XS", "S"}:
-        return "delivery complexity must be XS or S"
+    if value.get("complexity") not in {"XS", "S", "M", "L"}:
+        return "delivery complexity must be XS, S, M or L"
     minutes = value.get("estimatedMinutes")
     if not isinstance(minutes, int) or isinstance(minutes, bool) or not 1 <= minutes <= 30:
         return "delivery estimatedMinutes must be between 1 and 30"
@@ -791,6 +829,23 @@ def docker_policy_valid(docker: Any) -> bool:
     )
 
 
+def repository_policy_valid(repository: Any) -> bool:
+    if repository is None:
+        return True
+    if (
+        not isinstance(repository, dict)
+        or set(repository) != {"mode", "componentRoots"}
+    ):
+        return False
+    mode = repository.get("mode")
+    roots = repository.get("componentRoots")
+    if mode not in {"standalone", "monorepo"} or not relative_pattern_list(roots):
+        return False
+    if len(set(roots)) != len(roots):
+        return False
+    return (mode == "standalone" and not roots) or (mode == "monorepo" and bool(roots))
+
+
 def workstreams_policy_valid(workstreams: Any) -> bool:
     if not isinstance(workstreams, dict) or not workstreams:
         return False
@@ -867,12 +922,13 @@ def basic_manifest_valid(manifest: Any) -> bool:
     allowed_root_keys = {
         "$schema", "schema", "standard", "requiredFiles", "governancePaths",
         "trustedApprovalSources", "approvalEvidence", "ticket", "docker",
-        "coordination", "delivery", "stacks",
+        "repository", "coordination", "delivery", "stacks",
     }
     coordination = manifest.get("coordination")
     delivery = manifest.get("delivery")
     return (
         set(manifest) <= allowed_root_keys
+        and repository_policy_valid(manifest.get("repository"))
         and string_list(manifest.get("stacks", []))
         and set(manifest.get("stacks", [])) <= {"node", "python", "go", "rust", "java", "docker", "frontend", "terraform", "kubernetes"}
         and coordination_policy_valid(coordination)
@@ -1512,8 +1568,6 @@ def compose_image_references(path: Path) -> list[tuple[int, str]]:
 
 def check_docker_image_references(root: Path, manifest: dict[str, Any], report: Report) -> None:
     docker = manifest["docker"]
-    if not docker["required"]:
-        return
     invalid: list[tuple[str, int, str]] = []
     for raw_path in docker["dockerfiles"]:
         path = safe_repo_path(root, raw_path)
@@ -1691,13 +1745,14 @@ def check_declared_delivery_budget(
     intent_path: str,
     report: Report,
 ) -> None:
+    limits = effective_delivery_policy(policy, delivery["complexity"])
     complexity_limit = 10 if delivery["complexity"] == "XS" else policy["maxActiveMinutes"]
     declared_limits = delivery["budgets"]
     policy_limits = {
-        "maxImplementationFiles": policy["maxImplementationFiles"],
-        "maxAffectedComponents": policy["maxAffectedComponents"],
-        "maxPublicInterfaceChanges": policy["maxPublicInterfaceChanges"],
-        "maxRuntimeDependencies": policy["maxRuntimeDependencies"],
+        "maxImplementationFiles": limits["maxImplementationFiles"],
+        "maxAffectedComponents": limits["maxAffectedComponents"],
+        "maxPublicInterfaceChanges": limits["maxPublicInterfaceChanges"],
+        "maxRuntimeDependencies": limits["maxRuntimeDependencies"],
     }
     violations = {
         name: {"declared": declared_limits[name], "policy": limit}
@@ -1828,17 +1883,18 @@ def check_delivery_architecture(
     intent_path: str,
     report: Report,
 ) -> set[str]:
+    limits = effective_delivery_policy(policy, delivery["complexity"])
     declared_limits = delivery["budgets"]
     architecture = delivery["architecture"]
     components = architecture["components"]
     component_overflow = len(components) > min(
-        declared_limits["maxAffectedComponents"], policy["maxAffectedComponents"],
+        declared_limits["maxAffectedComponents"], limits["maxAffectedComponents"],
     )
     interface_overflow = len(architecture["interfaceChanges"]) > min(
-        declared_limits["maxPublicInterfaceChanges"], policy["maxPublicInterfaceChanges"],
+        declared_limits["maxPublicInterfaceChanges"], limits["maxPublicInterfaceChanges"],
     )
     dependency_overflow = len(delivery["runtimeDependencies"]) > min(
-        declared_limits["maxRuntimeDependencies"], policy["maxRuntimeDependencies"],
+        declared_limits["maxRuntimeDependencies"], limits["maxRuntimeDependencies"],
     )
     unmapped, multiply_mapped, touched_components = map_implementation_components(implementation, components)
     if component_overflow or unmapped or multiply_mapped:
@@ -1855,7 +1911,7 @@ def check_delivery_architecture(
             },
         )
     check_actual_delivery_budget(
-        policy, delivery, record, implementation, touched_components,
+        limits, delivery, record, implementation, touched_components,
         interface_overflow, dependency_overflow, report,
     )
     return touched_components
@@ -2596,6 +2652,20 @@ def check_change_gate(
     ]
     if not implementation:
         return None
+    repository = manifest.get("repository")
+    if repository and repository["mode"] == "monorepo":
+        outside_roots = [
+            path for path in implementation
+            if not matches(path, repository["componentRoots"])
+        ]
+        if outside_roots:
+            report.add(
+                "GOV-SCOPE-001",
+                "Monorepo implementation paths fall outside declared component roots.",
+                "Move the change under repository.componentRoots or update the manifest in a separately governed adoption.",
+                outside_roots,
+                {"componentRoots": repository["componentRoots"]},
+            )
     selected = select_change_ticket(root, active, manifest.get("coordination"), implementation, report)
     if selected is None:
         return None
