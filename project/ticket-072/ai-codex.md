@@ -34,6 +34,13 @@ bez dalszej zmiany zachowania checkera i bez włączania pracy ticketu 069.
   `publish-only`, `direct-main` oraz `--force-publish`.
 - Zweryfikowano istniejący, śledzony `goal.yaml`: immutable GitHub Release jest
   włączony, publikacja do registry wyłączona, a wymagany tryb Goal aktywny.
+- Zsynchronizowano sześć nośników wydania z `0.16.1` do `0.16.2`; historyczne
+  wpisy `0.16.1` pozostały bez zmian.
+- Wszystkie dziewięć zestawów Linux, Ruff i wymagane-checks przechodzą.
+- Bounded candidate adoption na czystym, odłączonym worktree żywego
+  `subactor/intent-contract-dsl-runtime` utworzył dokładnie siedem planowanych
+  zmian, lock `unpublished-test` i byte-identical checker; audyt workspace
+  przeszedł 0/0, a testowy worktree został usunięty.
 
 ## Blockers
 

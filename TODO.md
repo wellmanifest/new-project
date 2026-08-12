@@ -12,7 +12,7 @@
 - [ ] [`ticket-072`](project/ticket-072/README.md) — opublikować zintegrowany
   audyt osieroconych lokalnych branchy jako immutable `new-project 0.16.2`,
   używając Goal dopiero po exact-head approval, niezmienionym merge i czystym
-  reteście `main`. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  reteście `main`. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
   `SERVICE / P1 / requested`; workstream: `governance`; zależy od
   `ticket-071`.
 
