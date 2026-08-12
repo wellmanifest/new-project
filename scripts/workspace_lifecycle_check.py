@@ -133,20 +133,26 @@ def choose_primary(checkouts: list[Checkout]) -> Checkout:
         for checkout in checkouts
         if checkout.common_git_dir == checkout.path / ".git"
     ]
-    return sorted(common_owners or checkouts, key=lambda item: str(item.path))[0]
+    return min(
+        common_owners or checkouts,
+        key=lambda item: (len(item.path.parts), str(item.path)),
+    )
 
 
 def evaluate(workspace_root: Path, allowed: set[Path]) -> list[Finding]:
     if not workspace_root.is_dir():
         raise AuditError(f"workspace root is not a directory: {workspace_root}")
-    candidates = sorted(
-        (
-            child
-            for child in workspace_root.iterdir()
-            if child.is_dir() and (child / ".git").exists()
-        ),
-        key=lambda item: str(item),
-    )
+    candidates: list[Path] = []
+    for child in workspace_root.iterdir():
+        if not child.is_dir():
+            continue
+        if (child / ".git").exists():
+            candidates.append(child)
+            continue
+        for grandchild in child.iterdir():
+            if grandchild.is_dir() and (grandchild / ".git").exists():
+                candidates.append(grandchild)
+    candidates.sort(key=lambda item: str(item))
     if len(candidates) > MAX_REPOSITORIES:
         raise AuditError(f"workspace contains more than {MAX_REPOSITORIES} repositories")
     checkouts = [inspect_checkout(candidate) for candidate in candidates]
