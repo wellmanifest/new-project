@@ -2,8 +2,8 @@
 
 - **ID**: ticket-069
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-12
 
 ## Cel i zakres
@@ -90,3 +90,13 @@ contract development. The `subprojects/` copies in `new-project` remain the
 composition/incubation projection required by this ticket until an immutable
 standalone release can replace source duplication with versioned references.
 No remote repository, push or release was created during extraction.
+
+## Dowody dostawy
+
+- PR #108 przeszedł oba wymagane checki Linux i Windows dla exact HEAD
+  `16618957355bdeeedd751ab8dc5a964e204b560f`.
+- `ifuri-validator-agent[bot]` zatwierdził dokładnie ten HEAD w review
+  `4919433080`.
+- PR #108 został scalony do `main` jako
+  `5484605930c6235bed7ad9e2e462281e619654ac`, a tymczasowy zdalny branch
+  `goal/ticket-069` został usunięty przez politykę repozytorium.

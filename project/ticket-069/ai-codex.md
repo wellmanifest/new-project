@@ -68,18 +68,14 @@ bez implementacji, remote i publikacji. Dopiero jego prawdziwy SHA staje się
 - Hash kontraktów w `subprojects/` jest identyczny z przetestowanymi
   samodzielnymi repozytoriami; oba przechodzą host i networkless Docker
   conformance z łącznie 6 dokumentami dodatnimi i 16 próbami adversarial.
+- PR #108 przeszedł wymagane Linux/Windows checks i exact-head Validator App
+  review `4919433080`, został scalony jako `5484605930c6235bed7ad9e2e462281e619654ac`,
+  a jego zdalny branch został automatycznie usunięty.
 
 ## Blokery
 
-- Dawny blocker ticketu 070 jest rozwiązany: jego governance-only closure jest
-  zintegrowane, a bieżący `origin/main` nie ma aktywnego ticketu w workstreamie
-  `governance`. Ticket 069 wrócił do `IN_PROGRESS / VALIDATION`.
-- Blokada huba nie blokuje samodzielnych repozytoriów: mają niezależne
-  workstreamy i poprawnie ukończoną walidację lokalną.
-- Jawne polecenie wypchnięcia zmian autoryzuje lokalny commit, push gałęzi
-  ticketu i utworzenie PR dla dokładnie tego zakresu.
-- Osobnej władzy nadal wymagają destrukcja, sekrety, materialna zmiana celu,
-  trusted merge, tag i release.
+- Brak; implementation merge jest zintegrowany i ticket zamyka się
+  governance-only na podstawie dokładnych dowodów z GitHub.
 
 ## Ryzyka i zabezpieczenia
 
