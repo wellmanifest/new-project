@@ -10,3 +10,5 @@
   primary; błędy uszkodzonego HEAD nadal pozostają fail-closed.
 - Pełny kontrakt i Ruff przechodzą; wymagany todo2code GLM pozostaje jawnie
   fail-closed przy limicie providera, bez deterministycznego substytutu.
+- Exact-head Validator GLM zatwierdził zmianę bez findings; PR #92 i jego
+  post-merge Linux/Windows przeszły, po czym ticket oznaczono `DONE / DONE`.

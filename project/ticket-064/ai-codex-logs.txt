@@ -5,3 +5,6 @@
 [2026-08-12] Full github-root audit still fails closed on intentionally invalid test-repo HEAD refs/heads/.invalid.
 [2026-08-12] Full Linux contract, governance JSON validation, traceability and Ruff: PASS.
 [2026-08-12] todo2code run 20260812T012417Z-3710f5ae requested GLM 5.2 on a1ac355 and failed closed at NL with LLM_UNAVAILABLE; no graph or fallback.
+[2026-08-12] Final todo2code run 20260812T012500Z-6f465038 on c088f95 failed closed at NL; no graph or fallback.
+[2026-08-12] Validator run 31553565297 reviewed exact c088f9557080847fc3ce9532d1337f1af91fdff0 with GLM 5.2: APPROVE, two chunks, zero findings.
+[2026-08-12] PR #92 merged as b27e68744966bff2a23a501ce4bf125e9b55ed9a; post-merge run 31553673726 passed Linux and Windows.
