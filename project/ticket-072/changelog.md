@@ -7,3 +7,5 @@
 - Bound release preparation to integrated ticket 071 and exactly six
   implementation files; immutable publication remains deferred until trusted
   merge and a clean default-branch retest.
+- Prepared and validated all `0.16.2` carriers, then proved mutation-free Goal
+  resume by opening PR #106 from the committed release candidate.

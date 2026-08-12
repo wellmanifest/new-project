@@ -16,9 +16,9 @@ audytu pozostaje dokładnie tym, który przeszedł PR #104 i został scalony do
 
 ## Kryteria odbioru
 
-- [ ] AC-01: `VERSION` i oba manifesty standardu deklarują `0.16.2`, a testy
+- [x] AC-01: `VERSION` i oba manifesty standardu deklarują `0.16.2`, a testy
   blokady adopcji oraz walidatora oczekują tej samej wersji.
-- [ ] AC-02: changelog opisuje wykrywanie pozostawionych branchy i zachowanie
+- [x] AC-02: changelog opisuje wykrywanie pozostawionych branchy i zachowanie
   read-only/fail-closed bez przepisywania historii wydania `0.16.1`.
 - [ ] AC-03: pełny kontrakt Linux, Ruff, testy Windows i dokładny Validator App
   przechodzą dla bieżącego SHA PR.

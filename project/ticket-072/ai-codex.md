@@ -41,6 +41,8 @@ bez dalszej zmiany zachowania checkera i bez włączania pracy ticketu 069.
   `subactor/intent-contract-dsl-runtime` utworzył dokładnie siedem planowanych
   zmian, lock `unpublished-test` i byte-identical checker; audyt workspace
   przeszedł 0/0, a testowy worktree został usunięty.
+- Naprawiony Goal `2.1.298` wznowił czysty, zatwierdzony lokalnie kandydat
+  `d212d9d9ed7a...` bez bootstrapu ani zmian checkoutu i utworzył PR #106.
 
 ## Blockers
 
