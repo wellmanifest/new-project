@@ -14,7 +14,7 @@
   weryfikacją i bezpieczeństwem; dodać deterministyczny validator, brief dla
   LLM i hash-bound analizę todo2code. Pełny Linux contract przechodzi, a
   rzeczywisty todo2code wykrył drift priorytetu P1→P2 i dodał advisory hint.
-  Stan: `IN_PROGRESS / VALIDATION`;
+  Stan: `IN_PROGRESS / PUBLICATION`;
   klasyfikacja: `FEATURE / P1 / requested`; workstream: `integration`.
 
 - [ ] [`ticket-065`](project/ticket-065/README.md) — usunąć bezwarunkowe
