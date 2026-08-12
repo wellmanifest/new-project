@@ -39,7 +39,7 @@ docelowego.
 - [ ] AC-04: analizator używa grafu todo2code do ograniczenia diagnostyk i
   planów do rekordów bieżącej projekcji; ignoruje niepowiązaną historię, a
   zachowuje wykrywanie rzeczywistych scope/criterion/priority/deletion oraz
-  ambiguity/conflict.
+  ambiguity/conflict; overlay wiąże digest grafu i użyte record IDs.
 - [ ] AC-05: zasady, dokumentacja, katalog diagnostyk, runbook i szablon AGENTS
   jednoznacznie definiują przepływ oraz poprawne miejsce zapisu każdego rodzaju
   wiedzy naprawczej.

@@ -11,3 +11,5 @@
 - Serialized the independently published ticket 069, closed superseded PR #109
   without losing local work, and refreshed the approved base to the integrated
   governance-only closure `5b7ce13` before replaying implementation.
+- Added the todo2code graph digest and projection record IDs to the bounded
+  advisory data contract before implementation.
