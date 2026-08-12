@@ -8,3 +8,5 @@
   evidence `head` dla pustych checkoutów.
 - Dodano regresję duplicate empty clone oraz clean state z pojedynczym unborn
   primary; błędy uszkodzonego HEAD nadal pozostają fail-closed.
+- Pełny kontrakt i Ruff przechodzą; wymagany todo2code GLM pozostaje jawnie
+  fail-closed przy limicie providera, bez deterministycznego substytutu.

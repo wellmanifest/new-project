@@ -3,7 +3,7 @@
 - **ID**: ticket-064
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-12
 
 ## Cel i zakres

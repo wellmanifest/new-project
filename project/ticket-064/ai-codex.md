@@ -35,6 +35,9 @@ branch, status i remote nadal są audytowalne.
   na uszkodzonym `test-repo` z HEAD wskazującym `refs/heads/.invalid`.
 - Focused regression, wszystkie suite Linux CI, kontrakty JSON, kompletność
   traceability i Ruff przechodzą po zmianie.
+- todo2code `20260812T012417Z-3710f5ae` wymagał GLM 5.2 na implementacji
+  `a1ac355`, lecz skonfigurowany klucz nadal otrzymał limit tygodniowy. Run
+  zakończył się fail-closed na NL, bez grafu i bez fallbacku.
 
 ## Blockers
 
