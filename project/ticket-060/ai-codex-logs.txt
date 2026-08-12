@@ -1,0 +1,17 @@
+2026-08-12 plan validation
+$ python3 -m json.tool project/ticket-060/intent.json
+PASS
+$ jsonschema governance/intent.schema.json project/ticket-060/intent.json
+intent schema: PASS
+$ bash tests/governance-scripts.test.sh
+warning: You appear to have cloned an empty repository.
+governance scripts: PASS
+$ placeholder scan project/ticket-060
+none
+$ git diff --check
+PASS
+
+Official immutable action evidence
+actions/checkout refs/tags/v7.0.1 = 3d3c42e5aac5ba805825da76410c181273ba90b1; action.yml runs.using=node24
+actions/setup-python refs/tags/v7.0.0 = 5fda3b95a4ea91299a34e894583c3862153e4b97; action.yml runs.using=node24
+actions/github-script refs/tags/v8.0.0 = ed597411d8f924073f98dfc5c65a23a2325f34cd; action.yml runs.using=node24
