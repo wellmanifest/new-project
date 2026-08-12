@@ -1,0 +1,6 @@
+2026-08-12 ticket-074 allocated through project/new-ticket.sh on accepted base 2621e77a43fe4055f24165bccc3b10433439ad5a and isolated on goal/ticket-074.
+2026-08-12 schema smoke: PASS for manifest schema, default manifest, legacy hub manifest, intent schema and ticket-074 intent.
+2026-08-12 governance validator: PASS, including optional-Docker/no-files, optional-Docker/existing-mutable-image rejection, legacy manifest fallback, complete profiles, S overflow, valid M and monorepo scope fixtures.
+2026-08-12 governance scripts: PASS; rule-enforcement audit: 172 rules, 57 codes, 0 unmapped, 0 unclaimed.
+2026-08-12 source-hub governance gate: GOV-PASS (0 errors, 0 warnings) against accepted base 2621e77a43fe4055f24165bccc3b10433439ad5a.
+2026-08-12 full Linux validation: required-checks names/test, decision-record, governance-scripts, governance-validator, branch-lifecycle, workspace-lifecycle, governance-env, adoption-lock and rule-enforcement all PASS.

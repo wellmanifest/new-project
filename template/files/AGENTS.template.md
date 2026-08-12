@@ -6,6 +6,11 @@ Before any multi-step implementation, an agent must:
 
 1. Read `.governance/manifest.json`, `TODO.md`, `project/TICKETS.md` and the
    active ticket.
+   Respect `repository.mode`: `standalone` owns a separate repository, while
+   `monorepo` confines work to declared `repository.componentRoots`. Require a
+   running Docker engine and Docker runtime files only when
+   `docker.required=true`; existing Docker configuration remains subject to
+   stack validation even when Docker is optional.
 2. Reuse an unfinished ticket whose workstream and scope match. A second active
    ticket is allowed only in a distinct workstream with no write-scope overlap.
    Otherwise run `./project/new-ticket.sh --title "..." --agent "..."

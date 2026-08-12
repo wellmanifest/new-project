@@ -242,7 +242,38 @@ assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
 assert not set(ticket['activeStatuses']) & set(ticket['nonActiveStatuses'])
 assert manifest['delivery']['maxActiveMinutes'] == 30
 assert manifest['delivery']['checkpointMinutes'] == 25
-assert manifest['delivery']['maxImplementationFiles'] == 5
+assert manifest['repository'] == {
+    'mode': 'standalone',
+    'componentRoots': [],
+}
+assert manifest['delivery']['allowedComplexityClasses'] == ['XS', 'S', 'M', 'L']
+assert manifest['delivery']['maxImplementationFiles'] == 15
+assert manifest['delivery']['profiles'] == {
+    'XS': {
+        'maxImplementationFiles': 2,
+        'maxAffectedComponents': 1,
+        'maxPublicInterfaceChanges': 0,
+        'maxRuntimeDependencies': 0,
+    },
+    'S': {
+        'maxImplementationFiles': 5,
+        'maxAffectedComponents': 2,
+        'maxPublicInterfaceChanges': 1,
+        'maxRuntimeDependencies': 1,
+    },
+    'M': {
+        'maxImplementationFiles': 9,
+        'maxAffectedComponents': 3,
+        'maxPublicInterfaceChanges': 2,
+        'maxRuntimeDependencies': 2,
+    },
+    'L': {
+        'maxImplementationFiles': 15,
+        'maxAffectedComponents': 5,
+        'maxPublicInterfaceChanges': 3,
+        'maxRuntimeDependencies': 3,
+    },
+}
 assert 'Dockerfile' not in manifest['requiredFiles']
 assert manifest['docker']['required'] is False
 assert manifest['stacks'] == []
@@ -552,6 +583,18 @@ elif action == 'ambiguous-component':
     delivery['architecture']['components'].append({'name': 'duplicate-owner', 'paths': ['src/**']})
 elif action == 'over-policy-budget':
     delivery['budgets']['maxImplementationFiles'] = 6
+elif action == 's-profile-overflow':
+    delivery['complexity'] = 'S'
+    delivery['budgets']['maxImplementationFiles'] = 6
+elif action == 'm-profile':
+    delivery['complexity'] = 'M'
+    delivery['estimatedMinutes'] = 30
+    delivery['budgets'] = {
+        'maxImplementationFiles': 9,
+        'maxAffectedComponents': 3,
+        'maxPublicInterfaceChanges': 2,
+        'maxRuntimeDependencies': 2,
+    }
 else:
     raise SystemExit(f'unknown mutation: {action}')
 with open(path, 'w', encoding='utf-8') as handle:
@@ -663,6 +706,21 @@ make_fixture "$hub_scope_escape"
 configure_hub_ticket "$hub_scope_escape" '[".github/**"]'
 expect_code GOV-SCOPE-001 run_check "$hub_scope_escape" --changed-file goal.yaml
 
+docker_optional="$fixture/docker-optional"
+make_fixture "$docker_optional"
+python3 - "$docker_optional/.governance/manifest.json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+manifest = json.load(open(path, encoding='utf-8'))
+manifest['docker']['required'] = False
+open(path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2) + '\n')
+PY
+rm "$docker_optional/Dockerfile" "$docker_optional/compose.yml"
+run_check "$docker_optional" --changed-file src/app.js > "$fixture/docker-optional.out"
+grep -q '^GOV-PASS:' "$fixture/docker-optional.out"
+
 docker_references="$fixture/docker-references"
 make_fixture "$docker_references"
 printf '%s\n' \
@@ -723,6 +781,19 @@ printf '%s\n' 'FROM python:3.12-slim AS runtime' > "$docker_tag/Dockerfile"
 expect_code GOV-DOCKER-002 run_check "$docker_tag" --changed-file src/app.js
 run_check "$docker_tag" --changed-file src/app.js > "$fixture/docker-tag.out" || true
 grep -Fq 'Dockerfile:1' "$fixture/docker-tag.out"
+
+docker_optional_tag="$fixture/docker-optional-tag"
+cp -R "$docker_tag" "$docker_optional_tag"
+python3 - "$docker_optional_tag/.governance/manifest.json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+manifest = json.load(open(path, encoding='utf-8'))
+manifest['docker']['required'] = False
+open(path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2) + '\n')
+PY
+expect_code GOV-DOCKER-002 run_check "$docker_optional_tag" --changed-file src/app.js
 
 compose_latest="$fixture/compose-latest"
 cp -R "$docker_references" "$compose_latest"
@@ -966,7 +1037,7 @@ intent = {
         'targetBranch': 'main',
         'outcome': 'Install a verified managed package without hiding replaced target content',
         'nonGoals': ['No application change'],
-        'complexity': 'XS',
+        'complexity': 'S',
         'estimatedMinutes': 10,
         'standardAdoption': {
             'sourceRepository': 'wellmanifest/new-project',
@@ -1331,6 +1402,56 @@ policy_budget="$fixture/policy-budget"
 make_fixture "$policy_budget"
 mutate_delivery "$policy_budget" over-policy-budget
 expect_code GOV-DELIVERY-001 run_check "$policy_budget" --changed-file src/app.js
+
+s_profile_budget="$fixture/s-profile-budget"
+make_fixture "$s_profile_budget"
+mutate_delivery "$s_profile_budget" s-profile-overflow
+expect_code GOV-DELIVERY-001 run_check "$s_profile_budget" --changed-file src/app.js
+
+m_profile="$fixture/m-profile"
+make_fixture "$m_profile"
+mutate_delivery "$m_profile" m-profile
+run_check "$m_profile" --changed-file src/app.js > "$fixture/m-profile.out"
+grep -q '^GOV-PASS:' "$fixture/m-profile.out"
+
+invalid_monorepo="$fixture/invalid-monorepo"
+make_fixture "$invalid_monorepo"
+python3 - "$invalid_monorepo/.governance/manifest.json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+manifest = json.load(open(path, encoding='utf-8'))
+manifest['repository'] = {'mode': 'monorepo', 'componentRoots': []}
+open(path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2) + '\n')
+PY
+expect_code GOV-MANIFEST-001 run_check "$invalid_monorepo" --changed-file src/app.js
+
+incomplete_profiles="$fixture/incomplete-profiles"
+make_fixture "$incomplete_profiles"
+python3 - "$incomplete_profiles/.governance/manifest.json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+manifest = json.load(open(path, encoding='utf-8'))
+manifest['delivery']['profiles'].pop('L')
+open(path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2) + '\n')
+PY
+expect_code GOV-MANIFEST-001 run_check "$incomplete_profiles" --changed-file src/app.js
+
+monorepo_scope="$fixture/monorepo-scope"
+make_fixture "$monorepo_scope"
+python3 - "$monorepo_scope/.governance/manifest.json" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+manifest = json.load(open(path, encoding='utf-8'))
+manifest['repository'] = {'mode': 'monorepo', 'componentRoots': ['services/**']}
+open(path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2) + '\n')
+PY
+expect_code GOV-SCOPE-001 run_check "$monorepo_scope" --changed-file src/app.js
 
 ambiguous_architecture="$fixture/ambiguous-architecture"
 make_fixture "$ambiguous_architecture"

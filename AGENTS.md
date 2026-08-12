@@ -31,8 +31,14 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
      target-owned seed aliases: create them only when absent and never replace
      established target automation. The canonical managed gates are
      `project/governance-check.sh` and `project/governance-check.bat`.
-  4. In System X's repository, BEFORE writing any code, initializes:
-     - Root `README.md`, `VERSION`, `CHANGELOG.md`, `TODO.md`, `Dockerfile`, `compose.yml`.
+  4. In System X's repository, BEFORE writing any code, resolves
+     `.governance/manifest.json` repository mode and initializes:
+     - Root `README.md`, `VERSION`, `CHANGELOG.md` and `TODO.md`.
+     - `Dockerfile` and `compose.yml` only when `docker.required=true`; an
+       application kind alone never makes Docker mandatory.
+     - A separate repository for `repository.mode=standalone`, or every
+       declared `repository.componentRoots` path in the current repository for
+       `repository.mode=monorepo`.
      - Scaffolds `project/ticket-{NNN}/` containing `preprompt.md` (technical directives and resource links) and `changelog.md`.
      - Creates machine-readable `intent.json`; its `allowedPaths` bounds implementation after approval.
      - `project/TICKETS.md` is the ticket index; existing `project/README.md` files owned by analysis generators remain untouched.
