@@ -1,0 +1,92 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-074",
+  "summary": "Align repository and delivery profiles",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-074/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "AGENTS.md",
+    "template/files/AGENTS.template.md",
+    "governance/manifest.default.json",
+    "governance/manifest.schema.json",
+    "governance/intent.schema.json",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2621e77a43fe4055f24165bccc3b10433439ad5a",
+    "targetBranch": "main",
+    "outcome": "Repository modes, opt-in Docker and per-complexity delivery profiles form one deterministic backward-compatible governance contract",
+    "nonGoals": [
+      "Do not migrate downstream repositories in this ticket",
+      "Do not weaken Docker image pinning when Docker is enabled",
+      "Do not merge, tag or publish an immutable release"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Make repository topology and runtime isolation explicit manifest choices and derive each ticket budget from its exact complexity profile",
+      "components": [
+        {
+          "name": "normative-projection",
+          "paths": ["POLICY.md", "CONTRIBUTING.md", "AGENTS.md", "template/files/AGENTS.template.md"]
+        },
+        {
+          "name": "manifest-contract",
+          "paths": ["governance/manifest.default.json", "governance/manifest.schema.json", "governance/intent.schema.json"]
+        },
+        {
+          "name": "deterministic-enforcement",
+          "paths": ["scripts/governance_check.py", "tests/governance-validator.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Governance manifests may declare repository mode and component roots",
+        "Delivery policy may declare XS/S/M/L profile limits",
+        "Ticket intent accepts M and L when policy allows them"
+      ],
+      "dataChanges": [
+        "Introduce optional repository and delivery profiles with legacy fallback"
+      ],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert ticket 074; legacy scalar delivery remains the compatibility baseline."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-04",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "Profile-bound positive and overflow fixtures"
+      },
+      {
+        "criterion": "AC-06",
+        "commands": ["bash tests/governance-scripts.test.sh", "bash tests/governance-validator.test.sh", "python3 scripts/audit_rule_enforcement.py --root . --require-complete"],
+        "evidence": "Complete Linux governance contract and rule traceability"
+      }
+    ]
+  }
+}
