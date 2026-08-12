@@ -1,0 +1,1 @@
+2026-08-12 coordination: no active writer or implementation found; placeholder ticket moved to BACKLOG / PLAN so it does not reserve the governance workstream.
