@@ -25,6 +25,16 @@ branch, status i remote nadal są audytowalne.
 
 - Reprodukowano abort na `/home/tom/github/subactor/www-sub-actor` bez
   modyfikowania tego repozytorium.
+- Dodano `checkout_head()`, które uznaje brak SHA wyłącznie wtedy, gdy Git
+  porcelain v2 raportuje `branch.oid (initial)`; wszystkie inne błędy są dalej
+  propagowane jako fail-closed.
+- Fixture zawiera pusty primary i jego duplicate clone. Duplicate ma
+  `head: null`, a po usunięciu duplikatu pozostawiony unborn primary przechodzi.
+- Live audit `/home/tom/github/subactor` zakończył inspekcję bez kodu 003 i
+  ujawnił 50 zachowanych live workspace. Pełny root nadal poprawnie blokuje się
+  na uszkodzonym `test-repo` z HEAD wskazującym `refs/heads/.invalid`.
+- Focused regression, wszystkie suite Linux CI, kontrakty JSON, kompletność
+  traceability i Ruff przechodzą po zmianie.
 
 ## Blockers
 

@@ -1,2 +1,6 @@
 [2026-08-12] Fleet workspace audit aborted on valid unborn repository subactor/www-sub-actor while resolving HEAD.
 [2026-08-12] Diagit independently classified the same repository as EMPTY_REPOSITORY and completed its 48-repository local audit.
+[2026-08-12] Focused fixture PASS: valid unborn primary continues; duplicate empty clone is reported with head=null.
+[2026-08-12] Live subactor audit completed with 50 linked/duplicate findings and zero GOV-WORKSPACE-LIFECYCLE-003 findings.
+[2026-08-12] Full github-root audit still fails closed on intentionally invalid test-repo HEAD refs/heads/.invalid.
+[2026-08-12] Full Linux contract, governance JSON validation, traceability and Ruff: PASS.

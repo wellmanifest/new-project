@@ -17,6 +17,8 @@ linked_two="$workspace/worktrees/sample-worktree-two"
 external_linked="$fixture/external/sample-worktree"
 duplicate="$workspace/sample-pilot"
 nested_duplicate="$workspace/archive/sample"
+empty_primary="$workspace/empty"
+empty_duplicate="$workspace/empty-pilot"
 mkdir -p "$workspace"
 git init --quiet --initial-branch=main "$primary"
 git -C "$primary" config user.email workspace-test@example.invalid
@@ -33,6 +35,9 @@ git -C "$primary" worktree add --quiet -b ticket/003 "$external_linked"
 git clone --quiet "$primary" "$duplicate"
 mkdir -p "$workspace/archive"
 git clone --quiet "$primary" "$nested_duplicate"
+git init --quiet --initial-branch=main "$empty_primary"
+git -C "$empty_primary" remote add origin git@github.com:example/empty.git
+git clone --quiet "$empty_primary" "$empty_duplicate"
 printf '%s\n' dirty > "$linked/untracked.txt"
 
 if python3 "$validator" --workspace-root "$workspace" --format json \
@@ -43,14 +48,14 @@ else
 fi
 test "$status" -eq 1
 python3 - "$fixture/violations.json" "$linked" "$external_linked" \
-  "$duplicate" "$nested_duplicate" <<'PY'
+  "$duplicate" "$nested_duplicate" "$empty_duplicate" <<'PY'
 import json
 import sys
 
 report = json.load(open(sys.argv[1], encoding="utf-8"))
 assert report["schema"] == "new-project.workspace-lifecycle-report/v1"
 assert report["status"] == "failed"
-assert report["summary"] == {"errors": 5, "warnings": 0, "findings": 5}
+assert report["summary"] == {"errors": 6, "warnings": 0, "findings": 6}
 assert {finding["code"] for finding in report["findings"]} == {
     "GOV-WORKSPACE-LIFECYCLE-001",
     "GOV-WORKSPACE-LIFECYCLE-002",
@@ -64,18 +69,28 @@ duplicates = [
     if finding["code"] == "GOV-WORKSPACE-LIFECYCLE-002"
 ]
 assert len(linked) == 3
-assert len(duplicates) == 2
+assert len(duplicates) == 3
 dirty = next(item for item in linked if item["evidence"]["path"] == sys.argv[2])
 assert dirty["evidence"]["dirty"] is True
 assert any(item["evidence"]["path"] == sys.argv[3] for item in linked)
-assert {item["evidence"]["path"] for item in duplicates} == {sys.argv[4], sys.argv[5]}
-assert all(item["evidence"]["primary"].endswith("/sample") for item in report["findings"])
+assert {item["evidence"]["path"] for item in duplicates} == {
+    sys.argv[4], sys.argv[5], sys.argv[6]
+}
+empty = next(item for item in duplicates if item["evidence"]["path"] == sys.argv[6])
+assert empty["evidence"]["head"] is None
+assert empty["evidence"]["primary"].endswith("/empty")
+assert all(
+    item["evidence"]["primary"].endswith("/sample")
+    for item in report["findings"]
+    if item is not empty
+)
 PY
 
 python3 "$validator" --workspace-root "$workspace" \
   --allow "$linked" --allow "$linked_two" --allow "$external_linked" \
   --allow "$duplicate" \
-  --allow "$nested_duplicate" > "$fixture/allowed.out"
+  --allow "$nested_duplicate" --allow "$empty_duplicate" \
+  > "$fixture/allowed.out"
 grep -Fxq 'GOV-WORKSPACE-PASS: passed (0 errors, 0 warnings)' "$fixture/allowed.out"
 
 git -C "$primary" worktree remove --force "$linked"
@@ -83,6 +98,7 @@ git -C "$primary" worktree remove --force "$linked_two"
 git -C "$primary" worktree remove --force "$external_linked"
 rm -rf "$duplicate"
 rm -rf "$nested_duplicate"
+rm -rf "$empty_duplicate"
 python3 "$validator" --workspace-root "$workspace" > "$fixture/clean.out"
 grep -Fxq 'GOV-WORKSPACE-PASS: passed (0 errors, 0 warnings)' "$fixture/clean.out"
 

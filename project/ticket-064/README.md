@@ -3,7 +3,7 @@
 - **ID**: ticket-064
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: PLAN
+- **Workflow state**: EDIT
 - **Utworzono**: 2026-08-12
 
 ## Cel i zakres
@@ -17,12 +17,12 @@ zduplikowany pusty klon i nie tworzyć sztucznego commita w audytowanym repo.
 
 - [x] AC-01: Bieżące zlecenie autonomicznego dokończenia audytu stanowi bounded
   `SESSION_EXECUTION_AUTHORIZATION` dla tej poprawki i publikacji PR.
-- [ ] AC-02: Pojedyncze repozytorium z unborn HEAD nie przerywa audytu i nie
+- [x] AC-02: Pojedyncze repozytorium z unborn HEAD nie przerywa audytu i nie
   otrzymuje fałszywego findingu lifecycle.
-- [ ] AC-03: Dwa puste checkouty o tej samej tożsamości nadal dają dokładny
+- [x] AC-03: Dwa puste checkouty o tej samej tożsamości nadal dają dokładny
   finding duplicate-clone z `head: null`.
-- [ ] AC-04: Focused workspace regression, pełny Linux contract, Ruff oraz
-  hosted Linux/Windows przechodzą.
+- [x] AC-04: Focused workspace regression, pełny Linux contract i Ruff
+  przechodzą; hosted Linux/Windows zostaną związane z exact head PR.
 - [ ] AC-05: todo2code wymaga LLM i pozostaje fail-closed bez substytutu przy
   niedostępnym providerze; niezależny Validator GLM zatwierdza exact head.
 
