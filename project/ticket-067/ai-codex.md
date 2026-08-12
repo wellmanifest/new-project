@@ -65,8 +65,13 @@ that existing audit script is therefore part of the bounded adapter component.
   because it intentionally expects adopted `.governance/*` paths. Hub-native
   deterministic validators and adoption/gate fixtures pass; this pre-existing
   source-vs-adopted entrypoint mismatch is not hidden as successful execution.
+- Hosted push/PR runs `31592124288` and `31592144537` passed Linux and Windows
+  on exact head `b6a6b7f9bb792feb3d60c05a43e564db9c83682c`. Validator App run
+  `31592222753` issued trusted deterministic approval for that head; PR #98
+  merged as `711766de158a4138b34682f5a6399844acd1d86b`, its implementation branch
+  was deleted, and post-merge run `31592421759` passed both jobs.
 
 ## Blockers
 
-- Independent exact-head review and hosted Windows CI remain publication
-  gates. Advisory model output is not approval.
+- None. The ticket moved to `DONE / DONE` only in this governance-only closure
+  based on the reviewed, integrated and post-merge-tested default branch.
