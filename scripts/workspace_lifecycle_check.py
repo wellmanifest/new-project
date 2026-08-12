@@ -32,7 +32,7 @@ class Checkout:
     path: Path
     common_git_dir: Path
     identity: str
-    head: str
+    head: str | None
     branch: str | None
     dirty: bool
 
@@ -105,11 +105,27 @@ def repository_identity(root: Path, seen: set[Path] | None = None) -> str:
     return normalized_network_remote(remote)
 
 
+def checkout_head(path: Path) -> str | None:
+    try:
+        return run_git(path, "rev-parse", "--verify", "HEAD")
+    except AuditError:
+        status = run_git(
+            path,
+            "status",
+            "--porcelain=v2",
+            "--branch",
+            "--untracked-files=no",
+        )
+        if "# branch.oid (initial)" in status.splitlines():
+            return None
+        raise
+
+
 def inspect_checkout(path: Path) -> Checkout:
     common = Path(
         run_git(path, "rev-parse", "--path-format=absolute", "--git-common-dir")
     ).resolve()
-    head = run_git(path, "rev-parse", "HEAD")
+    head = checkout_head(path)
     branch = run_git(path, "branch", "--show-current") or None
     dirty = bool(run_git(path, "status", "--porcelain=v1", "--untracked-files=all"))
     identity = repository_identity(path)
