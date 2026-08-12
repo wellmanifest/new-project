@@ -1,6 +1,6 @@
 {
   "schema": "new-project.rule-enforcement/v1",
-  "note": "Maps a normative RULE to the deterministic GOV-* codes that enforce it. Both sides are derived by scripts/audit_rule_enforcement.py: rules from POLICY.md and CONTRIBUTING.md, codes from scripts/governance_check.py. Only this association is written by hand. A rule that no mechanism can enforce is declared enforcement: manual with a reason, so the gap is visible rather than absent. Ticket-034 filled the initial complete map; manual entries are candidates for future GOV-* codes.",
+  "note": "Maps a normative RULE to the deterministic GOV-* codes that enforce it. Both sides are derived by scripts/audit_rule_enforcement.py: rules from POLICY.md and CONTRIBUTING.md, codes from the deterministic governance, branch-lifecycle and workspace-lifecycle validators. Only this association is written by hand. A rule that no mechanism can enforce is declared enforcement: manual with a reason, so the gap is visible rather than absent. Ticket-034 filled the initial complete map; manual entries are candidates for future GOV-* codes.",
   "rules": {
     "C-ANALYSIS-001": {
       "codes": [],
@@ -541,6 +541,34 @@
       ],
       "enforcement": "deterministic"
     },
+    "C-WORKSPACE-001": {
+      "codes": [
+        "GOV-WORKSPACE-LIFECYCLE-001",
+        "GOV-WORKSPACE-LIFECYCLE-002",
+        "GOV-WORKSPACE-LIFECYCLE-003"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-WORKSPACE-002": {
+      "codes": [
+        "GOV-WORKSPACE-LIFECYCLE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-WORKSPACE-003": {
+      "codes": [
+        "GOV-WORKSPACE-LIFECYCLE-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-WORKSPACE-004": {
+      "codes": [
+        "GOV-WORKSPACE-LIFECYCLE-001",
+        "GOV-WORKSPACE-LIFECYCLE-002",
+        "GOV-WORKSPACE-LIFECYCLE-003"
+      ],
+      "enforcement": "deterministic"
+    },
     "P-AGENT-001": {
       "codes": [
         "GOV-OWNER-001"
@@ -609,19 +637,22 @@
     },
     "P-BRANCH-001": {
       "codes": [
-        "GOV-BASE-001"
+        "GOV-BRANCH-LIFECYCLE-001",
+        "GOV-BRANCH-LIFECYCLE-003"
       ],
       "enforcement": "deterministic"
     },
     "P-BRANCH-002": {
       "codes": [
-        "GOV-BASE-001"
+        "GOV-BRANCH-LIFECYCLE-002",
+        "GOV-BRANCH-LIFECYCLE-003"
       ],
       "enforcement": "deterministic"
     },
     "P-BRANCH-003": {
       "codes": [
-        "GOV-BASE-001"
+        "GOV-BRANCH-LIFECYCLE-002",
+        "GOV-BRANCH-LIFECYCLE-003"
       ],
       "enforcement": "deterministic"
     },
@@ -890,6 +921,34 @@
     "P-WORK-004": {
       "codes": [
         "GOV-ARCHITECTURE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-WORKSPACE-001": {
+      "codes": [
+        "GOV-WORKSPACE-LIFECYCLE-001",
+        "GOV-WORKSPACE-LIFECYCLE-002",
+        "GOV-WORKSPACE-LIFECYCLE-003"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-WORKSPACE-002": {
+      "codes": [
+        "GOV-WORKSPACE-LIFECYCLE-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-WORKSPACE-003": {
+      "codes": [
+        "GOV-WORKSPACE-LIFECYCLE-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-WORKSPACE-004": {
+      "codes": [
+        "GOV-WORKSPACE-LIFECYCLE-001",
+        "GOV-WORKSPACE-LIFECYCLE-002",
+        "GOV-WORKSPACE-LIFECYCLE-003"
       ],
       "enforcement": "deterministic"
     }

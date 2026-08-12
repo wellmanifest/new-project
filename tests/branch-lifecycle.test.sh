@@ -111,4 +111,24 @@ if grep -Fq 'repository.data.delete_branch_on_merge' \
 fi
 grep -Fq 'bash tests/branch-lifecycle.test.sh' "$repo_root/.github/workflows/ci.yml"
 
+target_workflow="$repo_root/template/files/new-project-governance.workflow.yml"
+grep -Fq "new-project.branch-lifecycle-snapshot/v1" "$target_workflow"
+grep -Fq 'deleteBranchOnMerge: settings.repository.deleteBranchOnMerge' "$target_workflow"
+grep -Fq 'python3 .governance/branch_lifecycle_check.py' "$target_workflow"
+python3 - "$repo_root/governance/package-manifest.json" <<'PY'
+import json
+import sys
+
+package = json.load(open(sys.argv[1], encoding="utf-8"))
+by_target = {item["target"]: item for item in package["files"]}
+assert by_target[".governance/branch_lifecycle_check.py"]["strategy"] == "managed"
+assert by_target[".governance/workspace_lifecycle_check.py"]["strategy"] == "managed"
+assert by_target[".github/workflows/new-project-governance.yml"] == {
+    "source": "template/files/new-project-governance.workflow.yml",
+    "target": ".github/workflows/new-project-governance.yml",
+    "strategy": "managed",
+    "executable": False,
+}
+PY
+
 echo 'branch lifecycle validator: PASS'

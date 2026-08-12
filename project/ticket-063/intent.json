@@ -1,0 +1,69 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-063",
+  "summary": "Enforce terminal cleanup of local workspaces and remote branches without destroying unique data",
+  "workstream": "governance",
+  "classification": {"kind": "BUG", "priority": "P1", "origin": "regression"},
+  "allowedPaths": [
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "AGENTS.md",
+    "template/files/AGENTS.template.md",
+    "scripts/workspace_lifecycle_check.py",
+    "scripts/branch_lifecycle_check.py",
+    "template/files/new-project-governance.workflow.yml",
+    "governance/package-manifest.json",
+    "governance/rule-enforcement.json",
+    "scripts/audit_rule_enforcement.py",
+    "tests/workspace-lifecycle.test.sh",
+    "tests/branch-lifecycle.test.sh",
+    "tests/adoption-lock.test.sh",
+    ".github/workflows/ci.yml",
+    "project/ticket-063/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "268311ba502cfa5306262f709e8086011c95088a",
+    "targetBranch": "main",
+    "outcome": "A completed task leaves no disposable local workspace and no orphan remote branch while preserving every unmerged or unclassified datum",
+    "nonGoals": [
+      "No automatic deletion by CI or the checker",
+      "No claim that GitHub Actions can inspect a developer filesystem",
+      "No publication of the combined standard candidate"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 16,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use separate deterministic local and GitHub lifecycle checks, package both enforcement surfaces, and keep deletion behind explicit verified cleanup",
+      "components": [
+        {"name": "workspace-contract", "paths": ["POLICY.md", "CONTRIBUTING.md", "AGENTS.md", "template/files/AGENTS.template.md"]},
+        {"name": "workspace-audit", "paths": ["scripts/workspace_lifecycle_check.py", "tests/workspace-lifecycle.test.sh"]},
+        {"name": "target-ci-package", "paths": ["template/files/new-project-governance.workflow.yml", "scripts/branch_lifecycle_check.py", "governance/package-manifest.json", "governance/rule-enforcement.json", "scripts/audit_rule_enforcement.py", "tests/branch-lifecycle.test.sh", ".github/workflows/ci.yml"]}
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": ["Adopted package gains a local workspace checker and managed remote lifecycle workflow"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert before candidate publication; existing remote-only written policy remains"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-03", "commands": ["bash tests/workspace-lifecycle.test.sh"], "evidence": "Fixtures distinguish primary, linked worktree, duplicate clone, allowlisted active workspace and clean resting state"},
+      {"criterion": "AC-04", "commands": ["bash tests/branch-lifecycle.test.sh", "bash tests/adoption-lock.test.sh"], "evidence": "Package installs both checkers and managed target workflow with live GitHub snapshot acquisition"},
+      {"criterion": "AC-05", "commands": ["all commands from the Linux CI test job", "ruff check .", "workspace audit of /home/tom/github/semcod"], "evidence": "Contract stays green and all remaining workspace exceptions are classified"}
+    ]
+  }
+}
