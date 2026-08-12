@@ -181,6 +181,21 @@
       "remediation": "Replace the local path with a repository-relative reference and sanitize committed logs.",
       "documentation": null
     },
+    "GOV-REMEDIATION-001": {
+      "message": "A diagnostic remediation intent is malformed, unresolved or semantically unsafe.",
+      "remediation": "Correct the target-owned remediation-intent DSL and pass deterministic schema and semantic validation before LLM planning.",
+      "documentation": "error/GOV-REMEDIATION-INTENT.md"
+    },
+    "GOV-REMEDIATION-002": {
+      "message": "A todo2code plan conflicts with accepted remediation scope, criteria, priority or user-state safety.",
+      "remediation": "Reject or regenerate the conflicting plan; obtain a fresh bounded intent before any material scope or authority expansion.",
+      "documentation": "error/GOV-REMEDIATION-INTENT.md"
+    },
+    "GOV-REMEDIATION-003": {
+      "message": "The todo2code advisory overlay is stale for the current remediation intent.",
+      "remediation": "Discard the overlay and rerun deterministic todo2code analysis against the current authority-bearing intent digest.",
+      "documentation": "error/GOV-REMEDIATION-INTENT.md"
+    },
     "GOV-SCOPE-001": {
       "message": "A changed implementation path is outside approved intent scope.",
       "remediation": "Remove the unrelated change or obtain a fresh bounded intent before editing that path.",

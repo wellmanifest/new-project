@@ -3,7 +3,7 @@
 - **ID**: ticket-067
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-12
 
 ## Cel i Zakres
@@ -23,19 +23,19 @@ ale nie może rozszerzyć zaakceptowanego zakresu ani zatwierdzić zmiany.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Normatywny kontrakt rozróżnia reusable solution
+- [x] AC-01: Normatywny kontrakt rozróżnia reusable solution
   (`diagnostics.json` + `error/*.md`) od instance-specific remediation intent
   zapisanego wyłącznie w ticketcie repozytorium docelowego.
-- [ ] AC-02: Schema i dependency-free validator wykrywają błędy struktury,
+- [x] AC-02: Schema i dependency-free validator wykrywają błędy struktury,
   nieuziemione false-positive, ciche pominięcia bez kodu, cykle kroków,
   brak weryfikacji i ryzykowne operacje bez jawnej autoryzacji.
-- [ ] AC-03: Renderer tworzy stabilny brief dla LLM oraz task/TODO dla
+- [x] AC-03: Renderer tworzy stabilny brief dla LLM oraz task/TODO dla
   todo2code; importer wiąże analizę z dokładnym digestem intencji i wykrywa
   ścieżki/kryteria spoza kontraktu.
-- [ ] AC-04: Regresja odwzorowuje klasy problemów z raportu Diagit: false
+- [x] AC-04: Regresja odwzorowuje klasy problemów z raportu Diagit: false
   positive OpenRouter, niedostępny path, niejednoznaczny layout, drift wydania,
   brak inventory i zakaz automatycznego czyszczenia brudnych worktree.
-- [ ] AC-05: Focused testy, istniejący audyt diagnostyk/rule traceability,
+- [x] AC-05: Focused testy, istniejący audyt diagnostyk/rule traceability,
   pełny Linux contract i rzeczywisty deterministyczny pipeline todo2code
   przechodzą bez nowej zależności runtime.
 

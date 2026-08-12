@@ -46,8 +46,27 @@ that existing audit script is therefore part of the bounded adapter component.
 - Verified that current new-project only provides diagnostics v2 and Markdown
   runbooks, while todo2code already exposes deterministic task extraction,
   intent diagnostics and grounded `t2c.code-change-plan/v1` proposals.
+- Added `new-project.remediation-intent/v1`, a dependency-free semantic
+  validator, canonical LLM/todo2code renderers and a digest-bound advisory
+  importer. READY intents now fail on unresolved ownership/evidence, unsafe
+  path scope, false-positive findings without exclusions, cycles, incomplete
+  verification, unsafe user-state actions and release ordering gaps.
+- Registered `GOV-REMEDIATION-001/002/003`, linked their reusable runbook and
+  shipped the schema/template/analyzer through the immutable adoption package.
+- Added Diagit-shaped regressions for OpenRouter detector-source false
+  positives, unreadable selected paths, layout ambiguity, missing inventory,
+  dirty worktree preservation and release drift. Negative fixtures also cover
+  stale analysis, todo2code scope expansion and unauthorized deletion.
+- Ran the complete local Linux CI contract and Ruff successfully. A real
+  deterministic todo2code 0.5.0 pipeline consumed the rendered TODO, produced
+  a code-change plan, and the importer correctly surfaced its P1-to-P2
+  priority drift as a digest-bound LLM hint.
+- Confirmed the target wrapper cannot run directly in the source Governance Hub
+  because it intentionally expects adopted `.governance/*` paths. Hub-native
+  deterministic validators and adoption/gate fixtures pass; this pre-existing
+  source-vs-adopted entrypoint mismatch is not hidden as successful execution.
 
 ## Blockers
 
-- None inside the recorded intent. Independent exact-head review remains a
-  later publication gate and advisory model output is not approval.
+- Independent exact-head review and hosted Windows CI remain publication
+  gates. Advisory model output is not approval.

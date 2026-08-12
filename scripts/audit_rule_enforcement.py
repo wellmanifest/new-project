@@ -33,6 +33,7 @@ VALIDATOR_PATHS = (
     Path("scripts/governance_check.py"),
     Path("scripts/branch_lifecycle_check.py"),
     Path("scripts/workspace_lifecycle_check.py"),
+    Path("scripts/remediation_intent.py"),
 )
 
 DSL_BLOCK = re.compile(r"```(?:dsl|bash)\n(.*?)```", re.S)

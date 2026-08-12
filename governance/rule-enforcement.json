@@ -132,6 +132,30 @@
       "enforcement": "manual",
       "reason": "Promoting reusable knowledge from historical ticket evidence requires maintainer judgment."
     },
+    "C-REMEDIATION-001": {
+      "codes": [
+        "GOV-REMEDIATION-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-REMEDIATION-002": {
+      "codes": [
+        "GOV-REMEDIATION-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-REMEDIATION-003": {
+      "codes": [
+        "GOV-REMEDIATION-002",
+        "GOV-REMEDIATION-003"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-REMEDIATION-004": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Distinguishing reusable standard knowledge from target-owned incident evidence requires repository context and maintainer review."
+    },
     "C-DELEGATION-001": {
       "codes": [],
       "enforcement": "manual",
