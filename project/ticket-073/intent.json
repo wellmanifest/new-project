@@ -1,0 +1,124 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-073",
+  "summary": "Make remediation intent projections atomic and analyzable",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P0",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "docs/DIAGNOSTIC_REMEDIATION_DSL.md",
+    "error/GOV-REMEDIATION-INTENT.md",
+    "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
+    "scripts/remediation_intent.py",
+    "template/files/AGENTS.template.md",
+    "tests/governance-scripts.test.sh",
+    "project/ticket-073/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-067"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "452d4008a71d67ad1965f6042faa217978a82b42",
+    "targetBranch": "main",
+    "outcome": "Make target-owned remediation DSL projections atomic, byte-verifiable and correlated with only their own todo2code evidence before an LLM plans refactoring",
+    "nonGoals": [
+      "Do not change todo2code itself or add it as a runtime dependency",
+      "Do not store populated target reports, plans or remediation intents in this Governance Hub",
+      "Do not let todo2code or an LLM expand accepted scope or grant approval",
+      "Do not clean or rewrite unrelated user worktrees, branches or historical plans"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the accepted remediation intent authoritative, project exactly one todo2code-readable record per action, verify declared projections byte-for-byte and correlate advisory diagnostics and plans through the todo2code graph before checking them",
+      "components": [
+        {
+          "name": "remediation-policy",
+          "paths": [
+            "AGENTS.md",
+            "CONTRIBUTING.md",
+            "docs/DIAGNOSTIC_REMEDIATION_DSL.md",
+            "error/GOV-REMEDIATION-INTENT.md",
+            "governance/diagnostics.json",
+            "governance/rule-enforcement.json",
+            "template/files/AGENTS.template.md"
+          ]
+        },
+        {
+          "name": "deterministic-adapter",
+          "paths": [
+            "scripts/remediation_intent.py"
+          ]
+        },
+        {
+          "name": "regression-contract",
+          "paths": [
+            "tests/governance-scripts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "render-todo2code can write atomically to taskPath and todoPath declared by the accepted intent",
+        "verify-todo2code fails when a declared projection is missing, stale or escapes the selected repository root",
+        "analyze-todo2code accepts a todo2code intent graph and scopes plans and diagnostics to projection record IDs"
+      ],
+      "dataChanges": [
+        "Canonical task and TODO projections encode one complete actionable sentence per remediation action"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded branch before publication; after publication issue a patch release while preserving the previous immutable contract"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/governance-scripts.test.sh"
+        ],
+        "evidence": "project/ticket-073/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "Run todo2code deterministically against canonical REMEDIATION.task.md and REMEDIATION.todo.md, then analyze its graph, diagnostics and plan set"
+        ],
+        "evidence": "project/ticket-073/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-06",
+        "commands": [
+          "for suite in tests/*.test.sh; do bash $suite; done",
+          "ruff check scripts",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-073/ai-codex-logs.txt"
+      }
+    ]
+  }
+}

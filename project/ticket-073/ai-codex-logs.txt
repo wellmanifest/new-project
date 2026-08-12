@@ -1,0 +1,1 @@
+2026-08-12 pre-implementation correction: project/new-ticket.sh accepted workstream `integration`, but manifest.hub.json declares only `governance` and uses it as coordination.integration.workstream; corrected intent/TODO to governance before replaying implementation commits.
