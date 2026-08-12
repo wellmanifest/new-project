@@ -38,7 +38,13 @@ branch, status i remote nadal są audytowalne.
 - todo2code `20260812T012417Z-3710f5ae` wymagał GLM 5.2 na implementacji
   `a1ac355`, lecz skonfigurowany klucz nadal otrzymał limit tygodniowy. Run
   zakończył się fail-closed na NL, bez grafu i bez fallbacku.
+- Finalny todo2code `20260812T012500Z-6f465038` zachował ten sam kontrakt
+  fail-closed. Validator `31553565297` przeanalizował exact head `c088f95`
+  przez GLM 5.2 i zatwierdził dwa chunki bez findings.
+- PR #92 został scalony jako `b27e68744966bff2a23a501ce4bf125e9b55ed9a`, a
+  post-merge Linux/Windows `31553673726` przeszedł.
 
 ## Blockers
 
-- Brak.
+- Brak. Ticket zakończono `DONE / DONE` po exact-head review, merge i zielonym
+  post-merge.

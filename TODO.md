@@ -9,9 +9,10 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-064`](project/ticket-064/README.md) — audyt workspace ma
-  poprawnie reprezentować unborn HEAD i nadal wykrywać duplikaty pustych
-  checkoutów. Stan: `IN_PROGRESS / PLAN`; klasyfikacja:
+- [x] [`ticket-064`](project/ticket-064/README.md) — audyt workspace poprawnie
+  reprezentuje unborn HEAD jako `null`, nadal wykrywa duplikaty pustych
+  checkoutów i nie maskuje uszkodzonego HEAD. PR #92 oraz post-merge
+  Linux/Windows przechodzą. Stan: `DONE / DONE`; klasyfikacja:
   `BUG / P1 / regression`.
 
 - [x] [`ticket-063`](project/ticket-063/README.md) — lokalny lifecycle
