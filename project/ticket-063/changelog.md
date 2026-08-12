@@ -21,3 +21,7 @@
 - Po semantycznym review Validatora domknięto rekurencyjne odkrywanie
   zarejestrowanych worktree i ujednoznaczniono przechwytywanie diagnostyki w
   regresji brakującego katalogu.
+- Finalny exact-head Validator GLM 5.2 zatwierdził pięć chunków bez findings;
+  todo2code zachował tryb fail-closed przy niedostępnym limicie providera.
+- PR #89 i jego post-merge Linux/Windows zostały zweryfikowane, po czym ticket
+  oznaczono `DONE / DONE`.

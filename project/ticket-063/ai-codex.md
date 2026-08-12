@@ -56,7 +56,13 @@ Pilotażowe linked worktree i niezależne klony nie są widoczne dla CI.
   etapów dokładnego headu `370b07c`, lecz skonfigurowany klucz nadal otrzymał
   limit tygodniowy 403. Run zakończył się fail-closed na NL, bez grafu i bez
   fallbacku; niezależne review LLM pozostaje obowiązkową bramką publikacji.
+- Finalny run todo2code `20260812T005033Z-ddf4d049` na `a09cdeb` zachował ten
+  sam fail-closed kontrakt. Validator `31551863706` przeanalizował pięć chunków
+  finalnego diffu przez GLM 5.2 i zwrócił `APPROVE` bez findings.
+- PR #89 został scalony jako `b477b9221838fa292817fb8e64bdd9723046191a`;
+  post-merge run `31551977984` przeszedł na Linuxie i Windowsie.
 
 ## Blockers
 
-- Brak. Ticket pozostaje `IN_PROGRESS / PUBLICATION` do czasu review i merge.
+- Brak. Ticket zakończono jako `DONE / DONE` po exact-head review, merge i
+  zielonej walidacji post-merge.

@@ -14,3 +14,6 @@
 [2026-08-12] Validator GLM 5.2 reviewed exact head 132146827c7235f902e1ba57d82088094a716050 and requested recursive worktree discovery plus explicit diagnostic stream capture.
 [2026-08-12] Replaced single-pass worktree expansion with a bounded worklist and captured stderr in the missing-root regression.
 [2026-08-12] todo2code run 20260812T004929Z-a1a7dbc7 requested GLM 5.2 on exact head 370b07c, then failed closed at NL with LLM_UNAVAILABLE; no graph or fallback was produced.
+[2026-08-12] Final todo2code run 20260812T005033Z-ddf4d049 on a09cdeb failed closed at the configured weekly key limit; no graph or fallback was produced.
+[2026-08-12] Validator run 31551863706 reviewed exact head a09cdeb9bb57093107fed269bf879f29d3ee6e10 with GLM 5.2: APPROVE, five chunks, zero findings.
+[2026-08-12] PR #89 merged as b477b9221838fa292817fb8e64bdd9723046191a; post-merge run 31551977984 passed Linux and Windows.
