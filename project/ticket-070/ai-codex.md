@@ -45,6 +45,9 @@ uses Goal to upgrade.
 - Passed the Governance Hub validator against the complete committed
   `origin/main...HEAD` diff with zero errors and zero warnings, then entered
   `PUBLICATION` for Goal-owned pull-request delivery.
+- Rejected Goal's unrelated README license insertion and duplicate changelog
+  section after the hosted scope gate correctly failed the contaminated head;
+  retained the intended eight-file implementation budget unchanged.
 
 ## Blockers
 

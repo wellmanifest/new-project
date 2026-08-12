@@ -4,17 +4,6 @@
 
 ## [0.16.1] - 2026-08-12
 
-### Docs
-- Update TODO.md
-- Update project/ticket-070/README.md
-- Update project/ticket-070/ai-codex.md
-- Update project/ticket-070/changelog.md
-
-### Other
-- Update project/ticket-070/ai-codex-logs.txt
-
-## [0.16.1] - 2026-08-12
-
 ### Canonical managed workflow formatting
 
 - Canonicalize the managed governance workflow's cron scalar for Prettier 3

@@ -8,3 +8,6 @@
 2026-08-12 LOCAL full Linux CI contract PASS (9 suites plus JSON/check wiring)
 2026-08-12 LOCAL pwsh unavailable; hosted Windows evidence remains pending
 2026-08-12 GOV origin/main..HEAD PASS (0 errors, 0 warnings)
+2026-08-12 GOAL PR #102 head 2aa22c054f2398b58db0f4c464987c19d9b82f75
+2026-08-12 HOSTED Windows head 2aa22c0 PASS
+2026-08-12 HOSTED Linux head 2aa22c0 FAIL expected: Goal inserted README.md outside intent and duplicate changelog section
