@@ -3,7 +3,7 @@
 - **ID**: ticket-066
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-12
 
 ## Cel i Zakres
@@ -24,16 +24,16 @@ krótki opis i bezpieczna remediacja należą do maszynowego katalogu
 reusable runbookiem.
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [ ] AC-01: Udokumentowana przyczyna kolizji ticketu 060 wskazuje konkretny
+- [x] AC-01: Udokumentowana przyczyna kolizji ticketu 060 wskazuje konkretny
   bypass zarządzanego allocatora, a reguły zabraniają ręcznego przydzielania
   `project/ticket-{NNN}`.
-- [ ] AC-02: Lokalny audyt wykrywa ticket poza clone-wide high-water oraz dwa
+- [x] AC-02: Lokalny audyt wykrywa ticket poza clone-wide high-water oraz dwa
   różne intenty roszczące ten sam numer; prawidłowa rezerwacja pozostaje
   dozwolona.
-- [ ] AC-03: `C-PUBLISH-003` utrzymuje implementacyjny ticket w
+- [x] AC-03: `C-PUBLISH-003` utrzymuje implementacyjny ticket w
   `IN_PROGRESS / PUBLICATION` aż do trusted merge, a `DONE / DONE` powstaje
   dopiero w governance-only closure na zintegrowanej bazie.
-- [ ] AC-04: Każdy emitowany stabilny `GOV-*` ma wpis z komunikatem i
+- [x] AC-04: Każdy emitowany stabilny `GOV-*` ma wpis z komunikatem i
   remediacją w walidowanym katalogu; złożone rozwiązania mogą wskazywać
   sprawdzalny runbook `error/*.md` o jednolitej strukturze.
 - [ ] AC-05: Focused testy allocatora, workspace, katalogu diagnostyk i

@@ -25,6 +25,7 @@
     "governance/rule-enforcement.json",
     "error/**",
     "tests/governance-scripts.test.sh",
+    "tests/governance-validator.test.sh",
     "tests/workspace-lifecycle.test.sh",
     "tests/rule-enforcement.test.sh",
     "tests/adoption-lock.test.sh",
@@ -71,7 +72,7 @@
         },
         {
           "name": "diagnostic-contract",
-          "paths": ["governance/diagnostics.json", "governance/diagnostics.schema.json", "scripts/audit_diagnostics.py", "governance/rule-enforcement.json", "scripts/audit_rule_enforcement.py", "tests/rule-enforcement.test.sh"]
+          "paths": ["governance/diagnostics.json", "governance/diagnostics.schema.json", "scripts/audit_diagnostics.py", "governance/rule-enforcement.json", "scripts/audit_rule_enforcement.py", "tests/rule-enforcement.test.sh", "tests/governance-validator.test.sh"]
         },
         {
           "name": "operator-solutions",

@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 REPORT_SCHEMA = "new-project.workspace-lifecycle-report/v1"
 MAX_REPOSITORIES = 10_000
 SCP_REMOTE_RE = re.compile(r"^(?:[^@/]+@)?([^:/]+):(.+)$")
+TICKET_DIRECTORY_RE = re.compile(r"^ticket-([0-9]+)$")
 
 
 @dataclass(order=True)
@@ -28,6 +29,15 @@ class Finding:
 
 
 @dataclass(frozen=True)
+class TicketClaim:
+    number: int
+    ticket: str | None
+    summary: str | None
+    workstream: str | None
+    path: str
+
+
+@dataclass(frozen=True)
 class Checkout:
     path: Path
     common_git_dir: Path
@@ -35,6 +45,7 @@ class Checkout:
     head: str | None
     branch: str | None
     dirty: bool
+    tickets: tuple[TicketClaim, ...]
 
 
 class AuditError(RuntimeError):
@@ -129,6 +140,7 @@ def inspect_checkout(path: Path) -> Checkout:
     branch = run_git(path, "branch", "--show-current") or None
     dirty = bool(run_git(path, "status", "--porcelain=v1", "--untracked-files=all"))
     identity = repository_identity(path)
+    tickets = ticket_claims(path)
     return Checkout(
         path=path.resolve(),
         common_git_dir=common,
@@ -136,7 +148,138 @@ def inspect_checkout(path: Path) -> Checkout:
         head=head,
         branch=branch,
         dirty=dirty,
+        tickets=tickets,
     )
+
+
+def ticket_claims(root: Path) -> tuple[TicketClaim, ...]:
+    project = root / "project"
+    if not project.is_dir():
+        return ()
+    claims: list[TicketClaim] = []
+    for directory in sorted(project.iterdir(), key=lambda item: item.name):
+        match = TICKET_DIRECTORY_RE.fullmatch(directory.name)
+        if not directory.is_dir() or match is None:
+            continue
+        intent_path = directory / "intent.json"
+        intent: dict[str, Any] = {}
+        try:
+            value = json.loads(intent_path.read_text(encoding="utf-8"))
+            if isinstance(value, dict):
+                intent = value
+        except (OSError, json.JSONDecodeError):
+            pass
+        claims.append(TicketClaim(
+            number=int(match.group(1)),
+            ticket=intent.get("ticket") if isinstance(intent.get("ticket"), str) else None,
+            summary=intent.get("summary") if isinstance(intent.get("summary"), str) else None,
+            workstream=(
+                intent.get("workstream")
+                if isinstance(intent.get("workstream"), str)
+                else None
+            ),
+            path=str(directory.resolve()),
+        ))
+    return tuple(claims)
+
+
+def highest_ref_ticket(root: Path) -> int:
+    highest = 0
+    refs = run_git(
+        root,
+        "for-each-ref",
+        "--format=%(refname)",
+        "refs/heads",
+        "refs/remotes",
+    ).splitlines()
+    for ref in refs:
+        paths = run_git(root, "ls-tree", "-d", "-r", "--name-only", ref, "--", "project")
+        for raw_path in paths.splitlines():
+            match = re.fullmatch(r"project/ticket-([0-9]+)", raw_path)
+            if match:
+                highest = max(highest, int(match.group(1)))
+    return highest
+
+
+def allocation_high_water(common_git_dir: Path) -> tuple[int | None, str | None]:
+    state = common_git_dir / "new-project-ticket-high-water"
+    if not state.exists():
+        return None, None
+    try:
+        raw = state.read_text(encoding="utf-8").strip()
+    except OSError as error:
+        return None, str(error)
+    if not raw.isdigit():
+        return None, "high-water state is not a decimal ticket number"
+    return int(raw), None
+
+
+def allocation_findings(checkouts: list[Checkout]) -> list[Finding]:
+    findings: list[Finding] = []
+    groups: dict[Path, list[Checkout]] = {}
+    for checkout in checkouts:
+        groups.setdefault(checkout.common_git_dir, []).append(checkout)
+
+    for common_git_dir, group in sorted(groups.items(), key=lambda item: str(item[0])):
+        primary = min(group, key=lambda item: str(item.path))
+        ref_highest = highest_ref_ticket(primary.path)
+        high_water, state_error = allocation_high_water(common_git_dir)
+        reserved_highest = max(ref_highest, high_water or 0)
+        if state_error:
+            findings.append(Finding(
+                code="GOV-TICKET-ALLOCATION-001",
+                severity="error",
+                message="The clone-wide ticket allocation reservation is unreadable.",
+                remediation=(
+                    "Stop allocators, preserve every ticket worktree and repair the shared "
+                    "high-water state through the managed allocator before assigning a number."
+                ),
+                evidence={"reason": state_error},
+            ))
+
+        claims_by_number: dict[int, list[TicketClaim]] = {}
+        for checkout in group:
+            for claim in checkout.tickets:
+                claims_by_number.setdefault(claim.number, []).append(claim)
+                if claim.number > reserved_highest:
+                    findings.append(Finding(
+                        code="GOV-TICKET-ALLOCATION-001",
+                        severity="error",
+                        message="A ticket directory is outside the clone-wide reservation.",
+                        remediation=(
+                            "Do not reuse or rename it automatically. Preserve the worktree, "
+                            "classify ownership, then allocate through project/new-ticket.sh."
+                        ),
+                        evidence={
+                            "path": claim.path,
+                            "refHighest": ref_highest,
+                            "reservedHighWater": high_water,
+                            "ticket": f"ticket-{claim.number:03d}",
+                        },
+                    ))
+
+        for number, claims in sorted(claims_by_number.items()):
+            identities = {
+                (claim.ticket, claim.summary, claim.workstream)
+                for claim in claims
+            }
+            if len(identities) <= 1:
+                continue
+            findings.append(Finding(
+                code="GOV-TICKET-ALLOCATION-002",
+                severity="error",
+                message="Linked worktrees assign different intents to the same ticket ID.",
+                remediation=(
+                    "Stop both writers and preserve both heads. Keep the earlier reserved "
+                    "identity, allocate a new ID through project/new-ticket.sh for the other "
+                    "workstream, then rebuild its branch without mixing histories."
+                ),
+                evidence={
+                    "claims": [asdict(claim) for claim in sorted(claims, key=lambda item: item.path)],
+                    "ticket": f"ticket-{number:03d}",
+                },
+            ))
+    return findings
 
 
 def registered_worktrees(path: Path) -> list[Path]:
@@ -206,6 +349,7 @@ def evaluate(workspace_root: Path, allowed: set[Path]) -> list[Finding]:
         groups.setdefault(checkout.identity, []).append(checkout)
 
     findings: list[Finding] = []
+    findings.extend(allocation_findings(checkouts))
     for identity in sorted(groups):
         group = groups[identity]
         if len(group) < 2:

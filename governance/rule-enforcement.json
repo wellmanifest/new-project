@@ -69,7 +69,9 @@
     },
     "C-CONCURRENCY-002": {
       "codes": [
-        "GOV-TICKET-002"
+        "GOV-TICKET-002",
+        "GOV-TICKET-ALLOCATION-001",
+        "GOV-TICKET-ALLOCATION-002"
       ],
       "enforcement": "deterministic"
     },
@@ -112,6 +114,23 @@
         "GOV-DECISION-004"
       ],
       "enforcement": "deterministic"
+    },
+    "C-DIAGNOSTIC-001": {
+      "codes": [
+        "GOV-DIAGNOSTIC-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-DIAGNOSTIC-002": {
+      "codes": [
+        "GOV-DIAGNOSTIC-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-DIAGNOSTIC-003": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Promoting reusable knowledge from historical ticket evidence requires maintainer judgment."
     },
     "C-DELEGATION-001": {
       "codes": [],
@@ -300,9 +319,10 @@
       "reason": "Commit message quality is review practice."
     },
     "C-PUBLISH-003": {
-      "codes": [],
-      "enforcement": "manual",
-      "reason": "PR-required publication is branch protection / operator procedure."
+      "codes": [
+        "GOV-TICKET-001"
+      ],
+      "enforcement": "deterministic"
     },
     "C-PUBLISH-004": {
       "codes": [],
@@ -328,6 +348,11 @@
       "codes": [],
       "enforcement": "manual",
       "reason": "Goal writes local audit evidence while remote APIs and protected workflows provide authoritative publication state."
+    },
+    "C-PUBLISH-009": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Post-merge governance-only closure runs on the integrated default branch and requires authoritative remote merge state."
     },
     "C-START-001": {
       "codes": [],
@@ -789,6 +814,26 @@
       "codes": [
         "GOV-DEPENDENCY-001",
         "GOV-DEPENDENCY-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-022": {
+      "codes": [
+        "GOV-TICKET-ALLOCATION-001",
+        "GOV-TICKET-ALLOCATION-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-023": {
+      "codes": [
+        "GOV-TICKET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-024": {
+      "codes": [
+        "GOV-DIAGNOSTIC-001",
+        "GOV-DIAGNOSTIC-002"
       ],
       "enforcement": "deterministic"
     },

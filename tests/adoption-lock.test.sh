@@ -9,6 +9,7 @@ standard="$fixture/standard"
 target="$fixture/target"
 mkdir -p "$standard" "$target"
 cp -R "$repo_root/governance" "$repo_root/project" "$repo_root/scripts" "$standard/"
+cp -R "$repo_root/error" "$standard/"
 mkdir -p "$standard/template/files"
 cp "$repo_root/template/files/AGENTS.template.md" "$standard/template/files/AGENTS.template.md"
 cp "$repo_root/template/files/new-project-governance.workflow.yml" \
@@ -119,6 +120,11 @@ assert 'required' not in base['docker']
 governance_paths = manifest['coordination']['workstreams']['governance']['ownedPaths']
 assert 'CHANGELOG.md' in governance_paths
 assert '.env.example' in governance_paths
+catalog = json.load(open(root / '.governance/diagnostics.json', encoding='utf-8'))
+for entry in catalog['codes'].values():
+    documentation = entry['documentation']
+    if documentation is not None:
+        assert (root / '.governance' / documentation).is_file(), documentation
 for path, expected in lock['managedFiles'].items():
     assert hashlib.sha256((root / path).read_bytes()).hexdigest() == expected
 PY

@@ -39,6 +39,18 @@ wykrycie bypassu lub rozbieżnych intentów.
 - Verified the existing partial diagnostic catalog, missing `error/` contract,
   stale `C-PUBLISH-003 -> DONE` transition and the manual-allocation bypass
   that caused the duplicate ticket 060 identity.
+- Made `project/new-ticket.sh` refresh remote refs while holding the clone-wide
+  lock, and made the read-only workspace audit reject unreserved ticket claims
+  and divergent identities for the same number.
+- Added the structured diagnostics v2 schema/catalog, an exact emitted-code
+  audit and canonical multi-step runbooks under `error/`; the adopted package
+  now installs those contracts.
+- Kept pull-request publication in `IN_PROGRESS / PUBLICATION` through trusted
+  merge and defined a governance-only closure from integrated `main`.
+- Added positive and negative regression fixtures for allocation, publication,
+  catalog completeness, runbook structure and adoption. Focused Linux suites
+  and the complete local Linux CI contract plus Ruff pass. Publication remains
+  active pending hosted Linux/Windows checks, exact-head review and merge.
 
 ## Blockers
 

@@ -243,36 +243,45 @@ cp "$repo_root/project/new-ticket.sh" "$race/mine/project/new-ticket.sh"
 cp "$repo_root/project/readme.sh" "$race/mine/project/readme.sh"
 cp -R "$repo_root/template/files" "$race/mine/template/files"
 cp "$repo_root/governance/work-classification.dsl.json" "$race/mine/.governance/work-classification.dsl.json"
-git -C "$race/mine" fetch -q origin '+refs/heads/*:refs/remotes/origin/*'
+
+# A third claim appears only after the worker clone exists. The allocator must
+# fetch it itself rather than rely on the caller to refresh remote refs.
+mkdir -p "$race/upstream/project/ticket-009"
+printf '# Ticket 009\n' > "$race/upstream/project/ticket-009/README.md"
+git -C "$race/upstream" -c user.email=t@e -c user.name=t add -A
+git -C "$race/upstream" -c user.email=t@e -c user.name=t commit -qm 'late claim'
+git -C "$race/upstream" push -q origin HEAD:refs/heads/ticket/009-late
 
 (
   cd "$race/mine"
-  bash project/new-ticket.sh --title 'Must not reuse 008' --workstream application > alloc.out 2>&1
+  bash project/new-ticket.sh --title 'Must not reuse a remote claim' --workstream application > alloc.out 2>&1
 )
-# 008 exists only on an unmerged remote branch, so disk alone would have picked it.
+# 008 and 009 exist only on unmerged remote branches; 009 was unknown locally
+# before the allocator fetched.
 test ! -d "$race/mine/project/ticket-008"
-test -d "$race/mine/project/ticket-009"
+test ! -d "$race/mine/project/ticket-009"
+test -d "$race/mine/project/ticket-010"
 
-# ticket-009 is untracked in that clone, so the index must leave it out.
+# ticket-010 is untracked in that clone, so the index must leave it out.
 (
   cd "$race/mine"
   bash project/readme.sh > index.out 2> index.err
 )
-grep -q 'skipping untracked project/ticket-009' "$race/mine/index.err"
-if grep -q 'ticket-009' "$race/mine/project/TICKETS.md"; then
+grep -q 'skipping untracked project/ticket-010' "$race/mine/index.err"
+if grep -q 'ticket-010' "$race/mine/project/TICKETS.md"; then
   echo 'Index referenced an untracked ticket' >&2
   exit 1
 fi
 
-# The shared high-water mark must keep 009 reserved after its uncommitted
+# The shared high-water mark must keep 010 reserved after its uncommitted
 # directory disappears, which models allocation from another linked worktree.
-rm -rf "$race/mine/project/ticket-009"
+rm -rf "$race/mine/project/ticket-010"
 (
   cd "$race/mine"
-  bash project/new-ticket.sh --title 'Must not recycle 009' --workstream integration > reserve.out 2>&1
+  bash project/new-ticket.sh --title 'Must not recycle 010' --workstream integration > reserve.out 2>&1
 )
-test -d "$race/mine/project/ticket-010"
-test ! -d "$race/mine/project/ticket-009"
+test -d "$race/mine/project/ticket-011"
+test ! -d "$race/mine/project/ticket-010"
 
 # The adopted Bash entrypoint executes a dependency-free TypeScript-compatible
 # runtime. Exercise exact Git/contract bindings and adversarial evidence here so

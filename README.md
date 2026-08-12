@@ -25,6 +25,9 @@ DOCELOWE REPOZYTORIUM SYSTEMU X (Root)
 ├── TODO.md                      <-- (Główna checklista kroków i zadań)
 ├── Dockerfile & compose.yml     <-- (Odizolowane środowisko kontenerowe)
 ├── project.sh / project.bat     <-- (Fail-closed governance gate; opcjonalna analiza w przypiętym obrazie)
+├── .governance/                  <-- (Pakiet standardu przypięty do immutable revision)
+│   ├── diagnostics.json         <-- (Maszynowy katalog kodów GOV-*)
+│   └── error/                   <-- (Kanoniczne runbooki dla złożonych kodów GOV-*)
 │
 └── project/                     <-- (Katalog zarządzania ticketami)
     ├── README.md                <-- (Opcjonalny plik generatora analizy; scaffolder go nie nadpisuje)
@@ -62,6 +65,9 @@ Realizacja każdego zadania w docelowym repozytorium odbywa się według ściśl
    * 4.1. Skrypt tworzy `README.md`, `preprompt.md`, jawnie typowany `ai-{AGENT}.md`, pusty log agenta i `changelog.md`.
    * 4.2. Skrypt nie tworzy `user-*` ani tożsamości człowieka. Taki plik może utworzyć wyłącznie jego ludzki właściciel lub zaufana granica intake.
    * 4.3. Generator odmawia drugiego aktywnego ticketu w tym samym workstreamie albo przy nierozstrzygniętym workstreamie. Równoległy ticket wymaga jawnie innego workstreamu; ostateczny overlap sprawdza walidator.
+   * 4.4. Numer ticketu wolno przydzielić wyłącznie tym skryptem. Ręczne
+     utworzenie lub skopiowanie `project/ticket-{NNN}` omija clone-wide lock i
+     high-water, dlatego jest błędem governance.
 
 5. **Ekstrakcja Wytycznych (`preprompt.md`)**
    * 5.1. Agent AI analizuje tylko istniejące, human-owned notatki `user-{NAME}.md` i zapisuje własne rozumienie w `ai-{AGENT}.md`. Brak człowieka pozostaje `unresolved:human`.
@@ -91,6 +97,8 @@ Realizacja każdego zadania w docelowym repozytorium odbywa się według ściśl
 | **`ai-{AGENT}-logs.txt`** | **Dedykowane Logi**: wyłączne surowe wyjścia komend CLI i testów uruchamianych przez danego agenta. |
 | **`changelog.md`** | **Lokalny Changelog**: wykaz zmian i edycji wykonanych wyłącznie w ramach danego ticketu. |
 | **`project/TICKETS.md`** | **Indeks Ticketów**: centralny plik nawigacyjny indeksujący tickety bez nadpisywania analitycznego `project/README.md`. |
+| **`governance/diagnostics.json` → `.governance/diagnostics.json`** | **Maszynowy katalog błędów**: stabilny kod `GOV-*`, komunikat, najkrótsza bezpieczna remediacja i opcjonalny link do runbooka. |
+| **`error/*.md` → `.governance/error/*.md`** | **Runbook rozwiązania**: wieloetapowa lub ryzykowna procedura z weryfikacją i jawnymi zakazami. Nie zastępuje reguły ani findingu validatora. |
 
 ---
 
