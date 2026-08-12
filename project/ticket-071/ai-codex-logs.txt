@@ -9,3 +9,6 @@
 2026-08-12 cleanup proof: platform ref 50ae88c matched merged PR #67 exact approved head/tree; founder ref 9224859 matched merged PR #1 head and exact merge tree 5e87d9a; both exact refs deleted.
 2026-08-12 preservation: www-sub-actor ticket-012 remains active and untouched; the newly created Twin ticket-005 closure worktree remains IN_PROGRESS/EDIT and untouched.
 2026-08-12 live allow audit: exact --allow paths for www-sub-actor and Twin closure -> GOV-WORKSPACE-PASS 0 errors/0 warnings; terminal audit without allow -> three expected active findings.
+2026-08-12 full Linux: required checks, decision record, governance scripts/validator, branch/workspace lifecycle, governance env, adoption lock, rule enforcement, suite wiring and Ruff PASS.
+2026-08-12 Goal candidate: Goal 2.1.298 check exit 1 with planned changes; bounded adoption exact e2720b50148fc865874bf4ea963113ac1061d63f PASS with unpublished-test provenance and byte-identical managed checker.
+2026-08-12 delivery split: immutable 0.16.2 version carriers deferred to a dependent release ticket to preserve hub maxImplementationFiles=9.

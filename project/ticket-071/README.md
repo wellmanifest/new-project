@@ -3,7 +3,7 @@
 - **ID**: ticket-071
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-12
 
 ## Cel i Zakres
@@ -36,6 +36,11 @@ aktywną, jawnie allowlistowaną pracę od osieroconego refa.
 - Governance-only closure aktywnego wcześniej `ticket-070` została scalona jako
   `f5c2dcb754b01b97f1fee8ca00a569f4c884db6a`; workstream jest zwolniony i
   implementacja 071 może rozpocząć się na tej dokładnej bazie.
+- Source-hub Linux contract i bounded Goal candidate adoption przechodzą;
+  hosted Windows, exact-head Validator review i merge pozostają bramą
+  publikacji. Wersja 0.16.2 będzie osobnym, zależnym ticketem wydaniowym, aby
+  7-plikiowa poprawka nie przekroczyła limitu 9 po dodaniu sześciu nośników
+  wydania.
 
 ## Uczestnicy
 

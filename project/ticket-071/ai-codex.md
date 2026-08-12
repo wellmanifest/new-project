@@ -47,11 +47,18 @@ checker enumeruje tylko checkouty. W efekcie po usunięciu worktree zwolniony
   0/0 when those two active checkout paths were explicitly allowlisted.
 - Deleted the two proven disposable refs only after exact integration evidence:
   Platform PR #67 head/tree and founder-subactor-com PR #1 head/tree.
+- Passed the complete Linux CI contract and Ruff.
+- Passed a real Goal 2.1.298 candidate preflight/adoption at exact commit
+  `e2720b50148fc865874bf4ea963113ac1061d63f`: unpublished-test provenance,
+  byte-identical packaged checker, diagnostic/runbook and downstream AGENTS
+  projection all verified.
+- Kept the immutable 0.16.2 release in a separate dependent delivery ticket;
+  adding six release carriers here would exceed the hub's nine-file limit.
 
 ## Blockers
 
 - None inside the recorded intent; proceed without another confirmation.
 - Destructive cleanup remains outside the checker and requires exact evidence.
-- Full Linux plus hosted Windows/exact-head review remain pending.
+- Hosted Windows and exact-head review remain pending.
 - New authority is still required for destructive action, secret access, new
   external coordination, material objective expansion and trusted merge.
