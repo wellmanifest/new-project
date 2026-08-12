@@ -1,0 +1,5 @@
+2026-08-12 allocation: managed allocator reserved ticket-072 on accepted base 3a997d6b022faab5f6f6915eacad3cc02ac76c57; ticket-069 remains BLOCKED and its isolated changes are excluded.
+2026-08-12 feature probe: Goal 2.1.298 exposes --delivery-mode direct-main|publish-only|pull-request and --force-publish; tracked goal.yaml requires Goal, disables registries and enables GitHub Release creation on tag.
+2026-08-12 focused: JSON carriers valid; adoption-lock PASS; governance validator PASS; diagnostic catalog 63 codes/0 findings; every current carrier and test assertion reads 0.16.2.
+2026-08-12 full Linux: all nine tests/*.test.sh suites PASS. Initial Ruff invocation included absent hub path .governance and returned E902; the ticket command was corrected to the existing source path scripts before retry, without changing implementation.
+2026-08-12 static checks: ruff 0.15.21 scripts PASS; required-checks source/workflow parity PASS.

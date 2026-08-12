@@ -97,8 +97,8 @@
       {
         "criterion": "AC-03",
         "commands": [
-          "bash tests/ci-contract.test.sh",
-          "ruff check scripts .governance"
+          "for suite in tests/*.test.sh; do bash $suite; done",
+          "ruff check scripts"
         ],
         "evidence": "project/ticket-072/ai-codex-logs.txt"
       },
