@@ -3,7 +3,7 @@
 - **ID**: ticket-071
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-12
 
 ## Cel i Zakres
@@ -15,14 +15,14 @@ aktywną, jawnie allowlistowaną pracę od osieroconego refa.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Audyt zgłasza każdą nie-defaultową lokalną gałąź, która nie jest
+- [x] AC-01: Audyt zgłasza każdą nie-defaultową lokalną gałąź, która nie jest
       przypisana do jawnie allowlistowanego aktywnego checkoutu.
-- [ ] AC-02: Usunięcie worktree bez usunięcia jego zwolnionej gałęzi pozostawia
+- [x] AC-02: Usunięcie worktree bez usunięcia jego zwolnionej gałęzi pozostawia
       deterministyczny błąd; po bezpiecznym usunięciu dokładnego refa audyt
       przechodzi.
-- [ ] AC-03: Finding zawiera branch, HEAD, default branch i dokładny primary
+- [x] AC-03: Finding zawiera branch, HEAD, default branch i dokładny primary
       checkout, ale checker nigdy sam niczego nie usuwa.
-- [ ] AC-04: Katalog diagnostyk, runbook, policy-as-code i instrukcje agentów
+- [x] AC-04: Katalog diagnostyk, runbook, policy-as-code i instrukcje agentów
       opisują ten sam kontrakt.
 - [ ] AC-05: Focused oraz pełny Linux/Windows contract przechodzą przed
       publikacją kolejnej immutable wersji standardu.

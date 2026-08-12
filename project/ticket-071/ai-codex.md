@@ -33,10 +33,25 @@ checker enumeruje tylko checkouty. W efekcie po usunięciu worktree zwolniony
 - Verified and merged ticket-070 closure PR #103 as
   `f5c2dcb754b01b97f1fee8ca00a569f4c884db6a`, then fast-forwarded this isolated
   worktree and resumed 071 as `IN_PROGRESS / EDIT`.
+- Added clone-local `refs/heads` inventory, deterministic default-branch
+  resolution and exact checkout-to-branch mapping. Only a branch checked out
+  at an exact `--allow` path is exempt; an orphan ref remains an error.
+- Added stable `GOV-WORKSPACE-LIFECYCLE-004`, catalog/runbook/rule mappings and
+  downstream agent instructions. The checker remains read-only.
+- Added a fixture that removes three linked worktrees, proves all three refs
+  remain and fail the audit, then deletes only those exact integrated refs and
+  proves PASS.
+- Ran the candidate against `/home/tom/github/subactor`: it found two genuinely
+  stale refs that the released checker missed, preserved the active dirty
+  `www-sub-actor` branch and a newly created Twin closure worktree, and passed
+  0/0 when those two active checkout paths were explicitly allowlisted.
+- Deleted the two proven disposable refs only after exact integration evidence:
+  Platform PR #67 head/tree and founder-subactor-com PR #1 head/tree.
 
 ## Blockers
 
 - None inside the recorded intent; proceed without another confirmation.
 - Destructive cleanup remains outside the checker and requires exact evidence.
+- Full Linux plus hosted Windows/exact-head review remain pending.
 - New authority is still required for destructive action, secret access, new
   external coordination, material objective expansion and trusted merge.

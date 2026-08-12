@@ -3,3 +3,9 @@
 2026-08-12 ordering: ticket-071 set to PLAN/PLAN until governance-only closure of ticket-070.
 2026-08-12 prerequisite: ticket-070 closure exact head b6093ed9e3b330f9958ce4a67bb9b291aeafd9c2 approved and merged unchanged as f5c2dcb754b01b97f1fee8ca00a569f4c884db6a.
 2026-08-12 resume: ticket-071 IN_PROGRESS/EDIT on accepted base f5c2dcb754b01b97f1fee8ca00a569f4c884db6a.
+2026-08-12 focused: workspace-lifecycle PASS; diagnostic catalog 63 codes/0 findings; rule-enforcement PASS; Ruff PASS.
+2026-08-12 live old baseline: released checker previously reported subactor workspace PASS 0/0 while local refs remained.
+2026-08-12 live candidate: detected founder codex/publish-control-lan-origin-20260809, platform fix/www-canonical-source-path and active www-sub-actor ticket-012-transparent-offer.
+2026-08-12 cleanup proof: platform ref 50ae88c matched merged PR #67 exact approved head/tree; founder ref 9224859 matched merged PR #1 head and exact merge tree 5e87d9a; both exact refs deleted.
+2026-08-12 preservation: www-sub-actor ticket-012 remains active and untouched; new Twin closure worktree /tmp/twin-ticket005-close.fOKvY1 remains IN_PROGRESS/EDIT and untouched.
+2026-08-12 live allow audit: exact --allow paths for www-sub-actor and Twin closure -> GOV-WORKSPACE-PASS 0 errors/0 warnings; terminal audit without allow -> three expected active findings.

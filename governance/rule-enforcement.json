@@ -594,13 +594,15 @@
       "codes": [
         "GOV-WORKSPACE-LIFECYCLE-001",
         "GOV-WORKSPACE-LIFECYCLE-002",
-        "GOV-WORKSPACE-LIFECYCLE-003"
+        "GOV-WORKSPACE-LIFECYCLE-003",
+        "GOV-WORKSPACE-LIFECYCLE-004"
       ],
       "enforcement": "deterministic"
     },
     "C-WORKSPACE-002": {
       "codes": [
-        "GOV-WORKSPACE-LIFECYCLE-001"
+        "GOV-WORKSPACE-LIFECYCLE-001",
+        "GOV-WORKSPACE-LIFECYCLE-004"
       ],
       "enforcement": "deterministic"
     },
@@ -614,7 +616,8 @@
       "codes": [
         "GOV-WORKSPACE-LIFECYCLE-001",
         "GOV-WORKSPACE-LIFECYCLE-002",
-        "GOV-WORKSPACE-LIFECYCLE-003"
+        "GOV-WORKSPACE-LIFECYCLE-003",
+        "GOV-WORKSPACE-LIFECYCLE-004"
       ],
       "enforcement": "deterministic"
     },
@@ -997,13 +1000,15 @@
       "codes": [
         "GOV-WORKSPACE-LIFECYCLE-001",
         "GOV-WORKSPACE-LIFECYCLE-002",
-        "GOV-WORKSPACE-LIFECYCLE-003"
+        "GOV-WORKSPACE-LIFECYCLE-003",
+        "GOV-WORKSPACE-LIFECYCLE-004"
       ],
       "enforcement": "deterministic"
     },
     "P-WORKSPACE-002": {
       "codes": [
-        "GOV-WORKSPACE-LIFECYCLE-001"
+        "GOV-WORKSPACE-LIFECYCLE-001",
+        "GOV-WORKSPACE-LIFECYCLE-004"
       ],
       "enforcement": "deterministic"
     },
@@ -1017,7 +1022,8 @@
       "codes": [
         "GOV-WORKSPACE-LIFECYCLE-001",
         "GOV-WORKSPACE-LIFECYCLE-002",
-        "GOV-WORKSPACE-LIFECYCLE-003"
+        "GOV-WORKSPACE-LIFECYCLE-003",
+        "GOV-WORKSPACE-LIFECYCLE-004"
       ],
       "enforcement": "deterministic"
     }
