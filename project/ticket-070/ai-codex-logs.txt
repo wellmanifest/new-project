@@ -1,0 +1,5 @@
+2026-08-12 REPRO target format FAIL .github/workflows/new-project-governance.yml
+2026-08-12 DIFF - cron: '17 3 * * *'
+2026-08-12 DIFF + cron: "17 3 * * *"
+2026-08-12 TAG v0.16.0 source contains single-quoted cron
+2026-08-12 ALLOCATOR skipped reserved ticket-069; allocated ticket-070

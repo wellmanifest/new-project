@@ -1,0 +1,115 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-070",
+  "summary": "Format the managed target governance workflow and publish 0.16.1",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "template/files/new-project-governance.workflow.yml",
+    "tests/adoption-lock.test.sh",
+    "tests/branch-lifecycle.test.sh",
+    "tests/governance-validator.test.sh",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "CHANGELOG.md",
+    "project/ticket-070/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-068"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e0314db86e9f2a78a0512605c27c855ce72ad267",
+    "targetBranch": "main",
+    "outcome": "The published managed governance workflow is byte-stable under common Prettier 3 target formatting and upgrades safely through Goal",
+    "nonGoals": [
+      "No workflow behavior, permissions, action versions or schedule changes",
+      "No package-registry publication",
+      "No local target edit that bypasses the managed adoption lock"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Canonicalize the source template, bind the byte through existing adoption hashes and publish a patch release before any target upgrade",
+      "components": [
+        {
+          "name": "managed-target-workflow",
+          "paths": [
+            "template/files/new-project-governance.workflow.yml",
+            "tests/adoption-lock.test.sh",
+            "tests/branch-lifecycle.test.sh"
+          ]
+        },
+        {
+          "name": "standard-release-contract",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "CHANGELOG.md",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Managed workflow cron scalar uses canonical Prettier-compatible quoting"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the unmerged branch; after publication keep affected targets pinned to 0.16.0 and never move or delete v0.16.1"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/branch-lifecycle.test.sh"
+        ],
+        "evidence": "project/ticket-070/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "all commands from the Linux CI test job",
+          "tests/windows-governance.test.ps1"
+        ],
+        "evidence": "project/ticket-070/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-06",
+        "commands": [
+          "goal governance adopt --source-revision <published-0.16.1-sha> --target-root . --upgrade",
+          "goal governance check --target-root . -- --actor agent",
+          "./project.sh verify",
+          "docker run --rm --network none <target-verification-image>"
+        ],
+        "evidence": "target repository ticket evidence"
+      }
+    ]
+  }
+}
