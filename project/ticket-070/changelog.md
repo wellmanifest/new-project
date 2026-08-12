@@ -10,3 +10,5 @@
   regression coverage.
 - Advanced the release carriers and current-version fixtures to 0.16.1.
 - Passed the full local Linux CI command contract.
+- Passed the real Governance Hub diff gate and entered Goal-owned PR
+  publication.

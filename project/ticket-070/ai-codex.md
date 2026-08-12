@@ -42,6 +42,9 @@ uses Goal to upgrade.
 - Passed the complete Linux CI command contract locally; PowerShell is not
   installed in this workspace, so the exact-head hosted Windows job remains the
   required cross-platform evidence.
+- Passed the Governance Hub validator against the complete committed
+  `origin/main...HEAD` diff with zero errors and zero warnings, then entered
+  `PUBLICATION` for Goal-owned pull-request delivery.
 
 ## Blockers
 
