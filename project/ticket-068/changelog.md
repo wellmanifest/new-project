@@ -16,3 +16,5 @@
   work-classification input; focused scope regressions pass.
 - Passed the full local Linux contract; routed unavailable local PowerShell to
   the existing required hosted Windows check without claiming local success.
+- Confirmed the new hosted gate blocks Goal's post-test README/changelog scope
+  drift; reverted that generated drift before requesting any review.

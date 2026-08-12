@@ -4,17 +4,6 @@
 
 ## [0.16.0] - 2026-08-12
 
-### Docs
-- Update TODO.md
-- Update project/ticket-068/README.md
-- Update project/ticket-068/ai-codex.md
-- Update project/ticket-068/changelog.md
-
-### Other
-- Update project/ticket-068/ai-codex-logs.txt
-
-## [0.16.0] - 2026-08-12
-
 ### Validated remediation planning and source-hub delivery
 
 - Add the target-owned `new-project.remediation-intent/v1` DSL, semantic

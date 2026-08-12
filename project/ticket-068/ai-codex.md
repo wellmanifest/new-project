@@ -73,6 +73,12 @@ retest.
   suites. The worktree remained clean. Local Windows execution is unavailable
   because `pwsh` is not installed; the required hosted Windows check remains
   authoritative for this environment.
+- Goal created PR #100 but its post-test metadata phase appended an unapproved
+  README license section and duplicated the 0.16.0 changelog heading. The new
+  hosted source-hub gate rejected exact head `7d240e9` with `GOV-SCOPE-001`,
+  `GOV-ARCHITECTURE-001` and `GOV-BUDGET-001`, while hosted Windows passed.
+  The generated README/changelog drift is reverted and the corrective Goal
+  delivery disables version sync, changelog generation and tagging.
 
 ## Blockers
 
