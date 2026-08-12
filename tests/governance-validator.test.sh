@@ -35,6 +35,7 @@ schemas = {
     name: json.load(open(root / 'governance' / name, encoding='utf-8'))
     for name in (
         'approval-evidence.schema.json',
+        'diagnostics.schema.json',
         'intent.schema.json',
         'lock.schema.json',
         'manifest.schema.json',
@@ -43,6 +44,10 @@ schemas = {
 }
 for schema in schemas.values():
     Draft202012Validator.check_schema(schema)
+
+Draft202012Validator(schemas['diagnostics.schema.json']).validate(
+    json.load(open(root / 'governance/diagnostics.json', encoding='utf-8'))
+)
 
 Draft202012Validator(schemas['manifest.schema.json']).validate(
     json.load(open(root / 'governance/manifest.default.json', encoding='utf-8'))
@@ -139,6 +144,8 @@ assert package['files']
 assert len({item['target'] for item in package['files']}) == len(package['files'])
 assert 'governance/package-manifest.json' in {item['source'] for item in package['files']}
 assert {
+    'error/README.md',
+    'governance/diagnostics.schema.json',
     'governance/work-classification.dsl.json',
     'governance/work-classification.schema.json',
 } <= {item['source'] for item in package['files']}
@@ -242,21 +249,7 @@ assert module.standard_adoption_error({
     'toRevision': 'a' * 40,
 }) == 'delivery standardAdoption revisions must differ'
 PY
-python3 - "$repo_root/scripts/governance_check.py" \
-  "$repo_root/scripts/decision_record.py" \
-  "$repo_root/governance/diagnostics.json" <<'PY'
-import json
-import re
-import sys
-
-check_src = open(sys.argv[1], encoding='utf-8').read()
-decision_src = open(sys.argv[2], encoding='utf-8').read()
-catalog = set(json.load(open(sys.argv[3], encoding='utf-8'))['codes'])
-emitted = set(re.findall(r'report\.add\(\s*["\'](GOV-[A-Z]+-[0-9]+)', check_src))
-# Decision-record gate emits stable codes as GOV-DECISION-* string prefixes.
-emitted |= set(re.findall(r'["\'](GOV-[A-Z]+-[0-9]+)', decision_src))
-assert emitted == catalog, (sorted(emitted - catalog), sorted(catalog - emitted))
-PY
+python3 "$repo_root/scripts/audit_diagnostics.py" --root "$repo_root"
 grep -q 'review.commit_id === head' "$repo_root/.github/workflows/governance.yml"
 grep -Fq '^[0-9a-f]{40}$' "$repo_root/.github/workflows/governance.yml"
 grep -q 'trustedReviewers.has(normalize(review.user.login))' "$repo_root/.github/workflows/governance.yml"

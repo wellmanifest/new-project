@@ -347,6 +347,30 @@ deterministyczne testy, chroniona tożsamość i evidence.
 Hook lokalny jest tylko szybką informacją. Nie jest granicą bezpieczeństwa,
 ponieważ można go pominąć przez `--no-verify`.
 
+## Diagnostyka i kanoniczne rozwiązania
+
+Każdy stabilny kod `GOV-*` emitowany przez zarządzane entrypointy musi mieć
+wpis w `governance/diagnostics.json`. Wpis zawiera ogólny komunikat, krótką
+bezpieczną remediację i opcjonalny względny link do `error/*.md`. Finding z
+konkretnego uruchomienia uzupełnia ten kontrakt o ścieżki i evidence; nie
+zmienia znaczenia kodu.
+
+W źródłowym hubie katalogi mają ścieżki `governance/diagnostics.json` i
+`error/*.md`. Pakiet adopcyjny instaluje je odpowiednio jako
+`.governance/diagnostics.json` i `.governance/error/*.md`; wartość
+`documentation: "error/…"` jest rozwiązywana względem rootu danego pakietu,
+nie względem katalogu bieżącego procesu.
+
+Runbook `error/*.md` jest wymagany dla rozwiązania wieloetapowego albo
+ryzykownego. Opisuje sytuację, znaczenie, bezpieczne kroki, weryfikację,
+zabronione skróty i powiązane reguły. Nie wolno traktować historycznego
+`project/ticket-*/ai-*-logs.txt` jako jedynej instrukcji naprawy ani kopiować z
+niego poleceń destrukcyjnych bez ponownej klasyfikacji bieżącego stanu.
+
+`scripts/audit_diagnostics.py` porównuje katalog z kodami faktycznie
+emitowanymi przez runtime oraz waliduje każdy podlinkowany runbook. Dzięki temu
+nowy kod bez rozwiązania i usunięty kod pozostawiony w katalogu blokują CI.
+
 ## Profile technologiczne
 
 `governance/stack-profiles.json` publikuje markery i rekomendowane bramki dla

@@ -54,6 +54,15 @@ Before any multi-step implementation, an agent must:
    Run the adopted workspace lifecycle checker through Goal for the terminal
    audit. CI validates GitHub state separately and cannot inspect a developer
    filesystem.
+17. Allocate every ticket ID only through `./project/new-ticket.sh` after
+   fetching/pruning. Never create or copy `project/ticket-{NNN}` manually; the
+   clone-wide lock and high-water reservation must exist before commit.
+18. Keep an implementation ticket `IN_PROGRESS / PUBLICATION` through
+   exact-head review and trusted merge. Set `DONE / DONE` only in a
+   governance-only closure based on the integrated default branch.
+19. Resolve `GOV-*` findings through `.governance/diagnostics.json` and its
+   linked `.governance/error/*.md` runbook when present. Ticket logs are
+   historical evidence and never authorize bypassing a fail-closed gate.
 
 Markdown approval is an audit note, not trusted merge approval. Required
 merge approval comes from the repository's protected review, attestation and

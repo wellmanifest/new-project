@@ -102,6 +102,81 @@ rm -rf "$empty_duplicate"
 python3 "$validator" --workspace-root "$workspace" > "$fixture/clean.out"
 grep -Fxq 'GOV-WORKSPACE-PASS: passed (0 errors, 0 warnings)' "$fixture/clean.out"
 
+# A manually created ticket in a linked worktree did not pass through the
+# clone-wide allocator, so its number exceeds both refs and the shared
+# high-water mark. Allowlisting the active worktree must not hide that claim.
+allocation_workspace="$fixture/allocation-workspace"
+allocation_primary="$allocation_workspace/allocation"
+allocation_linked="$allocation_workspace/allocation-ticket"
+mkdir -p "$allocation_workspace"
+git init --quiet --initial-branch=main "$allocation_primary"
+git -C "$allocation_primary" config user.email workspace-test@example.invalid
+git -C "$allocation_primary" config user.name workspace-test
+git -C "$allocation_primary" remote add origin git@github.com:example/allocation.git
+mkdir -p "$allocation_primary/project/ticket-007"
+printf '%s\n' \
+  '{"ticket":"ticket-007","summary":"baseline","workstream":"governance"}' \
+  > "$allocation_primary/project/ticket-007/intent.json"
+git -C "$allocation_primary" add project/ticket-007/intent.json
+git -C "$allocation_primary" commit --quiet -m baseline
+git -C "$allocation_primary" worktree add --quiet -b ticket/008 "$allocation_linked"
+mkdir -p "$allocation_linked/project/ticket-008"
+printf '%s\n' \
+  '{"ticket":"ticket-008","summary":"manual claim","workstream":"governance"}' \
+  > "$allocation_linked/project/ticket-008/intent.json"
+
+if python3 "$validator" --workspace-root "$allocation_workspace" \
+  --allow "$allocation_linked" --format json > "$fixture/unreserved.json"; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+python3 - "$fixture/unreserved.json" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["summary"]["errors"] == 1
+finding = report["findings"][0]
+assert finding["code"] == "GOV-TICKET-ALLOCATION-001"
+assert finding["evidence"]["ticket"] == "ticket-008"
+assert finding["evidence"]["refHighest"] == 7
+PY
+
+# A real allocator reservation makes the same single claim valid.
+printf '%s\n' 8 > "$allocation_primary/.git/new-project-ticket-high-water"
+python3 "$validator" --workspace-root "$allocation_workspace" \
+  --allow "$allocation_linked" > "$fixture/reserved.out"
+grep -Fxq 'GOV-WORKSPACE-PASS: passed (0 errors, 0 warnings)' "$fixture/reserved.out"
+
+# Reusing the reserved number for a different intent in another linked
+# worktree is a collision even though the numeric high-water is sufficient.
+mkdir -p "$allocation_primary/project/ticket-008"
+printf '%s\n' \
+  '{"ticket":"ticket-008","summary":"different claim","workstream":"infrastructure"}' \
+  > "$allocation_primary/project/ticket-008/intent.json"
+if python3 "$validator" --workspace-root "$allocation_workspace" \
+  --allow "$allocation_linked" --format json > "$fixture/collision.json"; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+python3 - "$fixture/collision.json" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["summary"]["errors"] == 1
+finding = report["findings"][0]
+assert finding["code"] == "GOV-TICKET-ALLOCATION-002"
+assert finding["evidence"]["ticket"] == "ticket-008"
+assert {claim["summary"] for claim in finding["evidence"]["claims"]} == {
+    "manual claim", "different claim",
+}
+PY
+
 if python3 "$validator" --workspace-root "$fixture/missing" \
   > "$fixture/missing.out" 2>&1; then
   status=0

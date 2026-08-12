@@ -29,6 +29,7 @@ POLICY_DOCUMENTS = ("POLICY.md", "CONTRIBUTING.md")
 MAPPING_PATH = Path("governance/rule-enforcement.json")
 MAPPING_SCHEMA = "new-project.rule-enforcement/v1"
 VALIDATOR_PATHS = (
+    Path("scripts/audit_diagnostics.py"),
     Path("scripts/governance_check.py"),
     Path("scripts/branch_lifecycle_check.py"),
     Path("scripts/workspace_lifecycle_check.py"),

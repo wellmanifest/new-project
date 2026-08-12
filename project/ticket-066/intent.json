@@ -1,0 +1,118 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-066",
+  "summary": "Canonical diagnostic solutions and publication lifecycle",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "AGENTS.md",
+    "README.md",
+    "docs/GOVERNANCE_ENFORCEMENT.md",
+    "template/files/AGENTS.template.md",
+    "project/new-ticket.sh",
+    "scripts/workspace_lifecycle_check.py",
+    "scripts/audit_diagnostics.py",
+    "scripts/audit_rule_enforcement.py",
+    "governance/diagnostics.json",
+    "governance/diagnostics.schema.json",
+    "governance/package-manifest.json",
+    "governance/rule-enforcement.json",
+    "error/**",
+    "tests/governance-scripts.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/workspace-lifecycle.test.sh",
+    "tests/rule-enforcement.test.sh",
+    "tests/adoption-lock.test.sh",
+    "project/ticket-066/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e88a6d2ab65489818011a6f40ff6d14885805a6c",
+    "targetBranch": "main",
+    "outcome": "Ticket allocation and publication stay collision-free and state-correct, while every stable governance diagnostic has one canonical machine remediation and optional structured human runbook",
+    "nonGoals": [
+      "No migration or deletion of historical ticket evidence",
+      "No automatic cleanup or mutation by diagnostic checkers",
+      "No weakening of fail-closed governance gates",
+      "No completion or publication of ticket-065"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 4,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep rules normative, register each stable code and short remediation in diagnostics.json, store only multi-step human procedures under error/, and detect clone-local allocation bypasses in the read-only workspace audit",
+      "components": [
+        {
+          "name": "ticket-lifecycle-contract",
+          "paths": ["POLICY.md", "CONTRIBUTING.md", "AGENTS.md", "template/files/AGENTS.template.md", "project/new-ticket.sh"]
+        },
+        {
+          "name": "allocation-audit",
+          "paths": ["scripts/workspace_lifecycle_check.py", "tests/workspace-lifecycle.test.sh", "tests/governance-scripts.test.sh"]
+        },
+        {
+          "name": "diagnostic-contract",
+          "paths": ["governance/diagnostics.json", "governance/diagnostics.schema.json", "scripts/audit_diagnostics.py", "governance/rule-enforcement.json", "scripts/audit_rule_enforcement.py", "tests/rule-enforcement.test.sh", "tests/governance-validator.test.sh"]
+        },
+        {
+          "name": "operator-solutions",
+          "paths": ["error/**", "README.md", "docs/GOVERNANCE_ENFORCEMENT.md", "governance/package-manifest.json", "tests/adoption-lock.test.sh"]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        "C-PUBLISH-003 remains in PUBLICATION until trusted merge",
+        "diagnostics catalog changes to structured v2 entries",
+        "adopted package exposes structured error runbooks"
+      ],
+      "dataChanges": [
+        "diagnostics.json stores message, remediation and optional documentation per code"
+      ],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert before merge; do not restore manual allocation or premature DONE transitions after publication"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/workspace-lifecycle.test.sh", "bash tests/governance-scripts.test.sh"],
+        "evidence": "Fixtures distinguish reserved tickets from unreserved filesystem claims and divergent same-number intents"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/rule-enforcement.test.sh"],
+        "evidence": "Publication rule fragments and rule mapping reject the premature DONE transition"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["bash tests/rule-enforcement.test.sh", "bash tests/adoption-lock.test.sh"],
+        "evidence": "All emitted GOV codes are catalogued and linked runbooks are structurally valid and installed"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["all commands from the Linux CI test job", "ruff check changed Python files"],
+        "evidence": "Focused and complete contracts retain the baseline"
+      }
+    ]
+  }
+}

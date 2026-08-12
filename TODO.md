@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-066`](project/ticket-066/README.md) — naprawić ręczny bypass
+  clone-wide alokacji oraz przedwczesne `DONE` po otwarciu PR; zdefiniować
+  kanoniczny katalog remediacji i kontrakt `error/*.md`, objąć wszystkie
+  emitowane kody `GOV-*` deterministycznym audytem. Stan:
+  `IN_PROGRESS / PUBLICATION`; klasyfikacja: `BUG / P1 / regression`.
+
 - [x] [`ticket-064`](project/ticket-064/README.md) — audyt workspace poprawnie
   reprezentuje unborn HEAD jako `null`, nadal wykrywa duplikaty pustych
   checkoutów i nie maskuje uszkodzonego HEAD. PR #92 oraz post-merge
