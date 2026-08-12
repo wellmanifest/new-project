@@ -2,3 +2,9 @@
 2026-08-12 resume: Goal 2.1.295 public install verified; current generator line 234 still writes publicationStatus=published unconditionally.
 2026-08-12 base: scaffold rebased without conflict onto origin/main 79fd605d4883b9c8887dabfed1903115b9e4c1e9.
 2026-08-12 authorization: SESSION_EXECUTION_AUTHORIZATION recorded for implementation, release, pilot and cleanup; trusted merge remains external.
+2026-08-12 implementation: canonical ls-remote annotated tag peel plus bounded GitHub Release API proof added before publicationStatus=published.
+2026-08-12 candidate: --allow-unpublished-for-testing records unpublished-test; production validator rejection retained.
+2026-08-12 release carriers: VERSION and manifest.default=0.15.0; changelog and active assertions synchronized.
+2026-08-12 focused: Ruff PASS; adoption-lock PASS; governance-validator PASS (59 codes, 0 findings).
+2026-08-12 full Linux: JSON, required-checks, decisions, scripts, branch/workspace lifecycle, environment, rule traceability and suite wiring PASS.
+2026-08-12 live read-only proof: canonical v0.14.1 accepted; glon reports 26 managed changes and missing Dockerfile; no target writes.

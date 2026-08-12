@@ -3,7 +3,7 @@
 - **ID**: ticket-065
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-12
 
 ## Cel i Zakres
@@ -20,15 +20,15 @@ publiczny pakiet Goal 2.1.295 na żywym glon przed szerszą adopcją.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Bezpośrednia produkcyjna adopcja nieopublikowanego commita kończy
+- [x] AC-01: Bezpośrednia produkcyjna adopcja nieopublikowanego commita kończy
   się przed pierwszym zapisem i nie może utworzyć locka z `published`.
-- [ ] AC-02: Generator weryfikuje pełny SHA przez dokładny annotowany tag oraz
+- [x] AC-02: Generator weryfikuje pełny SHA przez dokładny annotowany tag oraz
   finalne metadane GitHub Release; draft, prerelease, zły tag i brak daty
   publikacji są odrzucane.
-- [ ] AC-03: `--allow-unpublished-for-testing` jest jawnym wyjątkiem tylko dla
+- [x] AC-03: `--allow-unpublished-for-testing` jest jawnym wyjątkiem tylko dla
   fixture'ów, zapisuje `unpublished-test`, a produkcyjny validator nadal
   odrzuca taki lock.
-- [ ] AC-04: Dokumentacja kieruje produkcyjną adopcję przez opublikowany pakiet
+- [x] AC-04: Dokumentacja kieruje produkcyjną adopcję przez opublikowany pakiet
   Goal; `VERSION`, manifest, changelog i aktywne asercje zgadzają się na 0.15.0.
 - [ ] AC-05: Focused i pełny Linux contract, Ruff, Windows CI oraz exact-head
   Validator App przechodzą przed trusted merge.
@@ -47,6 +47,18 @@ publiczny pakiet Goal 2.1.295 na żywym glon przed szerszą adopcją.
   zewnętrznej aprobacie, merge i ponownym teście czystego merge SHA.
 - Polecenie użytkownika tworzy bounded `SESSION_EXECUTION_AUTHORIZATION` dla
   tego zakresu, ale nie stanowi trusted merge approval.
+
+## Dowody przed PR
+
+- Fixture normalnej adopcji nieopublikowanego SHA kończy się przed zapisem;
+  jawny kandydat przechodzi i zapisuje wyłącznie `unpublished-test`.
+- Lock schema przyjmuje oba jawne stany provenance, natomiast produkcyjny
+  validator nadal emituje `GOV-SYNC-001` dla `unpublished-test`.
+- Focused adoption-lock, governance-validator (59 diagnostyk), wszystkie
+  pozostałe Linux CI suites, kontrola kompletności suite'ów i Ruff przechodzą.
+- Nowy generator zaakceptował opublikowane v0.14.1 dopiero po kanonicznym
+  tag/Release proof i doszedł do read-only planu 26 zmian dla glon; wykrył też
+  brakujący lokalny prerequisite `Dockerfile`, nie zapisując plików.
 
 ## Uczestnicy
 

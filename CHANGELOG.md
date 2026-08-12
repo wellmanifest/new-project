@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-08-12
+
+### Truthful publication provenance and complete lifecycle standard
+
+- Require the adoption generator itself to verify that the canonical annotated
+  version tag peels to the requested full SHA and that its GitHub Release is
+  final, published and bound to the same tag before recording `published`.
+- Add an explicit fixture-only candidate mode that records
+  `unpublished-test`; the production governance validator continues to reject
+  that provenance as an immutable published standard.
+- Establish Goal 2.1.295 or newer as the supported production adoption entry
+  point, retaining generator-level verification as defense in depth.
+- Publish the accumulated v0.14.1 follow-up standard: atomic initial adoption,
+  target prerequisite diagnostics, stackless and Docker ownership repairs,
+  branch/worktree cleanup enforcement, collision-free ticket allocation,
+  Node.js 24 Actions, and canonical diagnostic/runbook contracts.
+
 ## [0.14.1] - 2026-08-10
 
 ### Bounded autonomous execution and safe legacy migration

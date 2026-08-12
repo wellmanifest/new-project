@@ -38,6 +38,16 @@ standard as v0.15.0, then validate it first against live glon.
   identity without importing any ticket-066 implementation.
 - Resumed `IN_PROGRESS / EDIT` after Goal 2.1.295 became publicly available and
   the concrete generator bypass was confirmed in current source.
+- Added canonical remote annotated-tag resolution and bounded final GitHub
+  Release validation before a generator may record `published`.
+- Added explicit `unpublished-test` provenance, preserved the stricter runtime
+  semantic validator and converted Linux/Windows fixtures to the explicit
+  candidate interface.
+- Synchronized release carriers to 0.15.0 and made public documentation route
+  production adoption through Goal 2.1.295 or newer.
+- Passed Ruff, focused provenance tests and the complete local Linux CI
+  contract; the live published-v0.14.1 check reached glon's read-only drift
+  plan only after both publication proofs passed.
 
 ## Blockers
 

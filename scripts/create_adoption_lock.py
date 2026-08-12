@@ -11,6 +11,9 @@ from pathlib import Path
 import re
 import subprocess
 import tempfile
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote
+from urllib.request import Request, urlopen
 
 
 PACKAGE_MANIFEST = "governance/package-manifest.json"
@@ -25,10 +28,110 @@ TARGET_OWNED_MANIFEST_PATHS = {
     ("delivery", "requiredForImplementation"),
     ("delivery", "publicInterfacePaths"),
 }
+CANONICAL_STANDARD_REPOSITORY = "https://github.com/wellmanifest/new-project.git"
+CANONICAL_STANDARD_RELEASES_API = (
+    "https://api.github.com/repos/wellmanifest/new-project/releases/tags"
+)
+MAX_RELEASE_METADATA_BYTES = 1024 * 1024
+VERSION_PATTERN = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
 
 
 def git_bytes(root: Path, revision: str, source: str) -> bytes:
     return subprocess.check_output(["git", "show", f"{revision}:{source}"], cwd=root)
+
+
+def canonical_tag_revision(version: str) -> str:
+    """Resolve one annotated canonical tag without trusting local Git refs."""
+    tag = f"v{version}"
+    result = subprocess.run(
+        [
+            "git",
+            "ls-remote",
+            "--tags",
+            CANONICAL_STANDARD_REPOSITORY,
+            f"refs/tags/{tag}",
+            f"refs/tags/{tag}^{{}}",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise SystemExit(f"the canonical standard tag {tag} could not be verified")
+    refs: dict[str, str] = {}
+    for line in result.stdout.splitlines():
+        fields = line.split()
+        if len(fields) != 2 or re.fullmatch(r"[0-9a-f]{40}", fields[0]) is None:
+            raise SystemExit(f"the canonical standard tag {tag} returned invalid Git evidence")
+        if fields[1] in refs:
+            raise SystemExit(f"the canonical standard tag {tag} returned duplicate Git evidence")
+        refs[fields[1]] = fields[0]
+    direct_ref = f"refs/tags/{tag}"
+    peeled_ref = f"refs/tags/{tag}^{{}}"
+    if direct_ref not in refs:
+        raise SystemExit(f"the requested standard revision has no published release tag {tag}")
+    if peeled_ref not in refs or refs[peeled_ref] == refs[direct_ref]:
+        raise SystemExit(f"the standard release tag {tag} must be an annotated Git tag")
+    return refs[peeled_ref]
+
+
+def canonical_release(version: str) -> dict[str, object]:
+    """Read bounded, final GitHub Release metadata for the standard version."""
+    tag = f"v{version}"
+    request = Request(
+        f"{CANONICAL_STANDARD_RELEASES_API}/{quote(tag, safe='')}",
+        headers={
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "new-project-adoption-generator",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    )
+    try:
+        with urlopen(request, timeout=10) as response:
+            raw = response.read(MAX_RELEASE_METADATA_BYTES + 1)
+    except (HTTPError, URLError, TimeoutError, OSError) as error:
+        raise SystemExit(
+            f"the canonical standard has no verifiable published GitHub Release {tag}"
+        ) from error
+    if len(raw) > MAX_RELEASE_METADATA_BYTES:
+        raise SystemExit(
+            f"the canonical GitHub Release metadata for {tag} is unexpectedly large"
+        )
+    try:
+        release = json.loads(raw)
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise SystemExit(
+            f"the canonical GitHub Release metadata for {tag} is invalid"
+        ) from error
+    if not isinstance(release, dict):
+        raise SystemExit(f"the canonical GitHub Release metadata for {tag} is invalid")
+    return release
+
+
+def verify_publication_evidence(revision: str, version: str) -> None:
+    """Fail closed unless canonical tag and final Release bind this revision."""
+    if VERSION_PATTERN.fullmatch(version) is None:
+        raise SystemExit(f"the requested standard VERSION is invalid: {version!r}")
+    tag = f"v{version}"
+    if canonical_tag_revision(version) != revision:
+        raise SystemExit(
+            f"the standard release tag {tag} does not identify requested revision {revision}"
+        )
+    release = canonical_release(version)
+    if release.get("tag_name") != tag:
+        raise SystemExit(
+            f"the canonical GitHub Release does not identify standard tag {tag}"
+        )
+    published_at = release.get("published_at")
+    if (
+        release.get("draft") is not False
+        or release.get("prerelease") is not False
+        or not isinstance(published_at, str)
+        or not published_at.strip()
+    ):
+        raise SystemExit(
+            f"the canonical GitHub Release {tag} is not a final published release"
+        )
 
 
 def package_files(root: Path, revision: str) -> list[dict[str, object]]:
@@ -215,6 +318,7 @@ def lock_content(
     version: str,
     payloads: dict[str, bytes],
     managed_targets: set[str],
+    publication_status: str,
 ) -> bytes:
     """Build the lock from expected payloads without requiring prior writes."""
     managed_hashes: dict[str, str] = {}
@@ -231,7 +335,7 @@ def lock_content(
             "version": version,
             "sourceRepository": "wellmanifest/new-project",
             "sourceRevision": revision,
-            "publicationStatus": "published",
+            "publicationStatus": publication_status,
         },
         "managedFiles": managed_hashes,
     }
@@ -294,6 +398,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target-root", required=True)
     parser.add_argument("--source-revision", required=True)
+    parser.add_argument(
+        "--allow-unpublished-for-testing",
+        action="store_true",
+        help=(
+            "Skip external publication proof only for bounded fixtures and "
+            "record unpublished-test provenance"
+        ),
+    )
     parser.add_argument("--upgrade", action="store_true", help="Replace differing standard-managed files")
     parser.add_argument(
         "--check",
@@ -316,6 +428,11 @@ def main() -> int:
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
+    version = git_bytes(standard_root, args.source_revision, "VERSION").decode().strip()
+    publication_status = "unpublished-test"
+    if not args.allow_unpublished_for_testing:
+        verify_publication_evidence(args.source_revision, version)
+        publication_status = "published"
 
     files = package_files(standard_root, args.source_revision)
     managed_targets = {
@@ -362,7 +479,6 @@ def main() -> int:
         manifest = json.loads(manifest_content)
     except json.JSONDecodeError as error:
         raise SystemExit(f"target manifest is not valid JSON: {error}") from error
-    version = git_bytes(standard_root, args.source_revision, "VERSION").decode().strip()
     if manifest.get("standard", {}).get("version") != version:
         raise SystemExit(f"target manifest version must equal adopted standard version {version}")
 
@@ -372,6 +488,7 @@ def main() -> int:
         version,
         payloads,
         managed_targets,
+        publication_status,
     )
     changes = planned_changes(target_root, payloads, expected_lock, executable_targets)
     missing_prerequisites = missing_target_prerequisites(target_root, manifest, payloads)

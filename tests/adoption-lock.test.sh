@@ -23,6 +23,25 @@ git -C "$standard" add .
 git -C "$standard" commit -qm 'test: publish standard fixture'
 revision="$(git -C "$standard" rev-parse HEAD)"
 
+candidate_adopt() {
+  local standard_root="$1"
+  shift
+  python3 "$standard_root/scripts/create_adoption_lock.py" \
+    --allow-unpublished-for-testing "$@"
+}
+
+unpublished_target="$fixture/unpublished-target"
+mkdir -p "$unpublished_target"
+if python3 "$standard/scripts/create_adoption_lock.py" \
+  --target-root "$unpublished_target" --source-revision "$revision" --check \
+  > "$fixture/unpublished.out" 2> "$fixture/unpublished.err"; then
+  echo 'expected production adoption of an unpublished fixture to fail' >&2
+  exit 1
+fi
+grep -Eq 'has no published release tag|does not identify requested revision' \
+  "$fixture/unpublished.err"
+test -z "$(find "$unpublished_target" -mindepth 1 -print -quit)"
+
 collision_target="$fixture/collision-target"
 mkdir -p "$collision_target"
 printf '%s\n' '#!/usr/bin/env bash' 'echo target automation' > "$collision_target/project.sh"
@@ -31,7 +50,7 @@ chmod 740 "$collision_target/project.sh"
 collision_sh_hash="$(sha256sum "$collision_target/project.sh" | cut -d' ' -f1)"
 collision_bat_hash="$(sha256sum "$collision_target/project.bat" | cut -d' ' -f1)"
 collision_sh_mode="$(stat -c '%a' "$collision_target/project.sh")"
-if python3 "$standard/scripts/create_adoption_lock.py" \
+if candidate_adopt "$standard" \
   --target-root "$collision_target" --source-revision "$revision" --check \
   > "$fixture/collision-check.out" 2> "$fixture/collision-check.err"; then
   status=0
@@ -41,7 +60,7 @@ fi
 test "$status" -eq 1
 ! grep -Eq '^(UPDATE|CHMOD) project\.sh$' "$fixture/collision-check.out"
 ! grep -Eq '^(UPDATE|CHMOD) project\.bat$' "$fixture/collision-check.out"
-python3 "$standard/scripts/create_adoption_lock.py" \
+candidate_adopt "$standard" \
   --target-root "$collision_target" --source-revision "$revision" \
   > "$fixture/collision-adopt.out"
 test "$(sha256sum "$collision_target/project.sh" | cut -d' ' -f1)" = "$collision_sh_hash"
@@ -57,12 +76,12 @@ assert 'project.bat' not in managed
 assert 'project/governance-check.sh' in managed
 assert 'project/governance-check.bat' in managed
 PY
-python3 "$standard/scripts/create_adoption_lock.py" \
+candidate_adopt "$standard" \
   --target-root "$collision_target" --source-revision "$revision" --check \
   > "$fixture/collision-current.out"
 grep -q '^up-to-date wellmanifest/new-project ' "$fixture/collision-current.out"
 
-if python3 "$standard/scripts/create_adoption_lock.py" \
+if candidate_adopt "$standard" \
   --target-root "$target" --source-revision "$revision" --check \
   > "$fixture/initial-check.out" 2> "$fixture/initial-check.err"; then
   status=0
@@ -89,7 +108,7 @@ test "$(grep '^MISSING target prerequisite ' "$fixture/initial-check.out")" = "$
 ! grep -q '^MISSING target prerequisite project/readme.sh$' "$fixture/initial-check.out"
 test -z "$(find "$target" -mindepth 1 -print -quit)"
 
-python3 "$standard/scripts/create_adoption_lock.py" \
+candidate_adopt "$standard" \
   --target-root "$target" --source-revision "$revision" > "$fixture/adopt.out"
 grep -q '^adopted wellmanifest/new-project ' "$fixture/adopt.out"
 grep -q '^MISSING target prerequisite TODO.md$' "$fixture/adopt.out"
@@ -106,8 +125,8 @@ lock = json.load(open(root / '.governance/manifest.lock.json', encoding='utf-8')
 manifest = json.load(open(root / '.governance/manifest.json', encoding='utf-8'))
 base = json.load(open(root / '.governance/manifest.base.json', encoding='utf-8'))
 assert lock['standard']['sourceRevision'] == sys.argv[2]
-assert lock['standard']['publicationStatus'] == 'published'
-assert lock['standard']['version'] == '0.14.1'
+assert lock['standard']['publicationStatus'] == 'unpublished-test'
+assert lock['standard']['version'] == '0.15.0'
 assert '.governance/manifest.base.json' in lock['managedFiles']
 assert '.governance/manifest.json' not in lock['managedFiles']
 assert 'project.sh' not in lock['managedFiles']
@@ -155,13 +174,13 @@ test -f "$target/.governance/approval-evidence.schema.json"
 test -f "$target/.governance/package-manifest.json"
 printf '%s\n' '# target-owned seed extension' >> "$target/project.sh"
 printf '%s\r\n' 'REM target-owned seed extension' >> "$target/project.bat"
-python3 "$standard/scripts/create_adoption_lock.py" \
+candidate_adopt "$standard" \
   --target-root "$target" --source-revision "$revision" --check \
   > "$fixture/current-check.out"
 grep -q '^up-to-date wellmanifest/new-project ' "$fixture/current-check.out"
 grep -q '^MISSING target prerequisite Dockerfile$' "$fixture/current-check.out"
 touch "$target/Dockerfile"
-python3 "$standard/scripts/create_adoption_lock.py" \
+candidate_adopt "$standard" \
   --target-root "$target" --source-revision "$revision" --check \
   > "$fixture/ready-check.out"
 grep -q '^up-to-date wellmanifest/new-project ' "$fixture/ready-check.out"
@@ -189,7 +208,7 @@ manifest = json.load(open(path, encoding='utf-8'))
 manifest['standard']['id'] = 'target-owned-standard'
 open(path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2, sort_keys=True) + '\n')
 PY
-if python3 "$standard/scripts/create_adoption_lock.py" \
+if candidate_adopt "$standard" \
   --target-root "$tampered_manifest" --source-revision "$revision" --check \
   > /dev/null 2> "$fixture/tampered-manifest.err"; then
   echo 'expected managed manifest value removal to fail' >&2
@@ -198,7 +217,7 @@ fi
 grep -q 'violates its installed managed base' "$fixture/tampered-manifest.err"
 
 printf '\n# drift\n' >> "$target/project/governance-check.sh"
-if python3 "$standard/scripts/create_adoption_lock.py" \
+if candidate_adopt "$standard" \
   --target-root "$target" --source-revision "$revision" --check \
   > "$fixture/drift-check.out" 2> "$fixture/drift-check.err"; then
   status=0
@@ -208,7 +227,7 @@ fi
 test "$status" -eq 1
 grep -q '^UPDATE project/governance-check.sh$' "$fixture/drift-check.out"
 grep -q '# drift' "$target/project/governance-check.sh"
-if python3 "$standard/scripts/create_adoption_lock.py" \
+if candidate_adopt "$standard" \
   --target-root "$target" --source-revision "$revision" > /dev/null 2> "$fixture/drift.err"; then
   status=0
 else
@@ -216,7 +235,7 @@ else
 fi
 test "$status" -ne 0
 grep -q 'rerun with --upgrade' "$fixture/drift.err"
-python3 "$standard/scripts/create_adoption_lock.py" \
+candidate_adopt "$standard" \
   --target-root "$target" --source-revision "$revision" --upgrade > /dev/null
 ! grep -q '# drift' "$target/project/governance-check.sh"
 grep -q 'target-owned seed extension' "$target/project.sh"
@@ -232,7 +251,7 @@ assert 'docker' in manifest['stacks']
 PY
 
 chmod -x "$target/project/governance-check.sh"
-if python3 "$standard/scripts/create_adoption_lock.py" \
+if candidate_adopt "$standard" \
   --target-root "$target" --source-revision "$revision" --check \
   > "$fixture/mode-check.out"; then
   status=0
@@ -241,11 +260,11 @@ else
 fi
 test "$status" -eq 1
 grep -q '^CHMOD project/governance-check.sh$' "$fixture/mode-check.out"
-python3 "$standard/scripts/create_adoption_lock.py" \
+candidate_adopt "$standard" \
   --target-root "$target" --source-revision "$revision" > /dev/null
 test -x "$target/project/governance-check.sh"
 
-if python3 "$standard/scripts/create_adoption_lock.py" \
+if candidate_adopt "$standard" \
   --target-root "$target" --source-revision deadbeef > /dev/null 2> "$fixture/revision.err"; then
   status=0
 else
@@ -254,7 +273,7 @@ fi
 test "$status" -eq 2
 grep -q 'full lowercase 40-character commit SHA' "$fixture/revision.err"
 
-if python3 "$standard/scripts/create_adoption_lock.py" \
+if candidate_adopt "$standard" \
   --target-root "$target" --source-revision "$revision" --check --upgrade \
   > /dev/null 2> "$fixture/options.err"; then
   status=0
@@ -266,9 +285,9 @@ grep -q -- '--check and --upgrade are mutually exclusive' "$fixture/options.err"
 
 mismatch="$fixture/mismatch"
 mkdir -p "$mismatch/.governance"
-sed 's/"version": "0.14.1"/"version": "9.9.9"/' \
+sed 's/"version": "0.15.0"/"version": "9.9.9"/' \
   "$standard/governance/manifest.default.json" > "$mismatch/.governance/manifest.json"
-if python3 "$standard/scripts/create_adoption_lock.py" \
+if candidate_adopt "$standard" \
   --target-root "$mismatch" --source-revision "$revision" --upgrade \
   > /dev/null 2> "$fixture/mismatch.err"; then
   echo "expected version mismatch to fail" >&2
@@ -292,7 +311,7 @@ PY
 git -C "$invalid_required" add governance/manifest.default.json
 git -C "$invalid_required" commit -qm 'test: publish invalid required path'
 invalid_required_revision="$(git -C "$invalid_required" rev-parse HEAD)"
-if python3 "$invalid_required/scripts/create_adoption_lock.py" \
+if candidate_adopt "$invalid_required" \
   --target-root "$fixture/invalid-required-target" \
   --source-revision "$invalid_required_revision" --check \
   > /dev/null 2> "$fixture/invalid-required.err"; then
@@ -320,7 +339,7 @@ PY
 git -C "$missing" add governance/package-manifest.json
 git -C "$missing" commit -qm 'test: declare missing artifact'
 missing_revision="$(git -C "$missing" rev-parse HEAD)"
-if python3 "$missing/scripts/create_adoption_lock.py" \
+if candidate_adopt "$missing" \
   --target-root "$fixture/missing-target" --source-revision "$missing_revision" \
   > /dev/null 2> "$fixture/missing-artifact.err"; then
   echo 'expected missing package source to be rejected' >&2
@@ -344,7 +363,7 @@ PY
 git -C "$duplicate" add governance/package-manifest.json
 git -C "$duplicate" commit -qm 'test: declare duplicate target'
 duplicate_revision="$(git -C "$duplicate" rev-parse HEAD)"
-if python3 "$duplicate/scripts/create_adoption_lock.py" \
+if candidate_adopt "$duplicate" \
   --target-root "$fixture/duplicate-target" --source-revision "$duplicate_revision" \
   > /dev/null 2> "$fixture/duplicate-artifact.err"; then
   echo 'expected duplicate package target to be rejected' >&2
@@ -367,7 +386,7 @@ PY
 git -C "$unsupported" add governance/package-manifest.json
 git -C "$unsupported" commit -qm 'test: declare unsupported extendable target'
 unsupported_revision="$(git -C "$unsupported" rev-parse HEAD)"
-if python3 "$unsupported/scripts/create_adoption_lock.py" \
+if candidate_adopt "$unsupported" \
   --target-root "$fixture/unsupported-target" --source-revision "$unsupported_revision" \
   > /dev/null 2> "$fixture/unsupported.err"; then
   echo 'expected unsupported extendable target to fail' >&2
@@ -392,7 +411,7 @@ PY
 git -C "$missing_base" add governance/package-manifest.json
 git -C "$missing_base" commit -qm 'test: remove extendable managed base'
 missing_base_revision="$(git -C "$missing_base" rev-parse HEAD)"
-if python3 "$missing_base/scripts/create_adoption_lock.py" \
+if candidate_adopt "$missing_base" \
   --target-root "$fixture/missing-base-target" --source-revision "$missing_base_revision" \
   > /dev/null 2> "$fixture/missing-base.err"; then
   echo 'expected missing extendable managed base to fail' >&2
@@ -475,7 +494,7 @@ git -C "$legacy_standard" add VERSION governance/manifest.default.json governanc
 git -C "$legacy_standard" commit -qm 'test: publish extendable migration target'
 legacy_upgrade_revision="$(git -C "$legacy_standard" rev-parse HEAD)"
 
-python3 "$legacy_standard/scripts/create_adoption_lock.py" \
+candidate_adopt "$legacy_standard" \
   --target-root "$legacy_target" --source-revision "$legacy_upgrade_revision" --upgrade \
   > "$fixture/legacy-upgrade.out"
 python3 - "$legacy_target" "$legacy_upgrade_revision" <<'PY'
@@ -498,7 +517,7 @@ base = root / '.governance/manifest.base.json'
 assert lock['managedFiles'][str(base.relative_to(root))] == hashlib.sha256(base.read_bytes()).hexdigest()
 PY
 
-if python3 "$legacy_standard/scripts/create_adoption_lock.py" \
+if candidate_adopt "$legacy_standard" \
   --target-root "$legacy_tampered" --source-revision "$legacy_upgrade_revision" --upgrade \
   > /dev/null 2> "$fixture/legacy-tampered.err"; then
   echo 'expected hash-mismatched legacy manifest to fail closed' >&2
@@ -514,9 +533,9 @@ import json
 import sys
 
 version_path, manifest_path = sys.argv[1:]
-open(version_path, 'w', encoding='utf-8').write('0.14.2\n')
+open(version_path, 'w', encoding='utf-8').write('0.15.1\n')
 manifest = json.load(open(manifest_path, encoding='utf-8'))
-manifest['standard']['version'] = '0.14.2'
+manifest['standard']['version'] = '0.15.1'
 manifest['requiredFiles'].append('SECURITY.md')
 open(manifest_path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2) + '\n')
 PY
@@ -524,7 +543,7 @@ touch "$upgrade_standard/SECURITY.md"
 git -C "$upgrade_standard" add VERSION governance/manifest.default.json SECURITY.md
 git -C "$upgrade_standard" commit -qm 'test: publish extendable manifest upgrade'
 upgrade_revision="$(git -C "$upgrade_standard" rev-parse HEAD)"
-python3 "$upgrade_standard/scripts/create_adoption_lock.py" \
+candidate_adopt "$upgrade_standard" \
   --target-root "$target" --source-revision "$upgrade_revision" --upgrade \
   > "$fixture/upgrade.out"
 python3 - "$target" "$upgrade_revision" <<'PY'
@@ -537,7 +556,7 @@ root = pathlib.Path(sys.argv[1])
 manifest = json.load(open(root / '.governance/manifest.json', encoding='utf-8'))
 base = json.load(open(root / '.governance/manifest.base.json', encoding='utf-8'))
 lock = json.load(open(root / '.governance/manifest.lock.json', encoding='utf-8'))
-assert manifest['standard']['version'] == '0.14.2'
+assert manifest['standard']['version'] == '0.15.1'
 assert 'SECURITY.md' in manifest['requiredFiles']
 assert manifest['coordination']['workstreams']['sdk']['ownedPaths'][-1] == 'test/python-runtime.test.ts'
 assert 'coordination' in base and 'workstreams' not in base['coordination']
@@ -546,10 +565,10 @@ assert '.governance/manifest.json' not in lock['managedFiles']
 expected = hashlib.sha256((root / '.governance/manifest.base.json').read_bytes()).hexdigest()
 assert lock['managedFiles']['.governance/manifest.base.json'] == expected
 PY
-python3 "$upgrade_standard/scripts/create_adoption_lock.py" \
+candidate_adopt "$upgrade_standard" \
   --target-root "$target" --source-revision "$upgrade_revision" --check \
   > "$fixture/upgraded-check.out"
-grep -q '^up-to-date wellmanifest/new-project 0.14.2 ' "$fixture/upgraded-check.out"
+grep -q '^up-to-date wellmanifest/new-project 0.15.1 ' "$fixture/upgraded-check.out"
 grep -q '^MISSING target prerequisite SECURITY.md$' "$fixture/upgraded-check.out"
 
 python3 - "$repo_root" <<'PY'
