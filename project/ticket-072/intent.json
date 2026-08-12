@@ -1,0 +1,116 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-072",
+  "summary": "Publish orphan local branch audit as new-project 0.16.2",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-072/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-071"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3a997d6b022faab5f6f6915eacad3cc02ac76c57",
+    "targetBranch": "main",
+    "outcome": "Publish the integrated orphan-local-branch workspace audit as immutable new-project 0.16.2",
+    "nonGoals": [
+      "Do not change workspace audit behavior after the reviewed ticket-071 merge",
+      "Do not modify goal.yaml or the user's primary dirty checkout",
+      "Do not publish before exact-head approval, unchanged merge and clean main retest",
+      "Do not include blocked ticket-069 lifecycle subproject work"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep release preparation mechanical: synchronize the existing version carriers and their assertions without modifying the integrated audit payload",
+      "components": [
+        {
+          "name": "release-version",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        },
+        {
+          "name": "release-contract-tests",
+          "paths": [
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "release-notes",
+          "paths": [
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        "Advance the immutable standard version from 0.16.1 to 0.16.2"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Before publication, revert the release preparation commit; after publication, never move the tag and prepare a new patch release"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "project/ticket-072/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/ci-contract.test.sh",
+          "ruff check scripts .governance"
+        ],
+        "evidence": "project/ticket-072/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish",
+          "git ls-remote --tags origin v0.16.2",
+          "gh release view v0.16.2 --repo wellmanifest/new-project"
+        ],
+        "evidence": "project/ticket-072/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
