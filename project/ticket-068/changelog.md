@@ -6,3 +6,5 @@
 - No human participant identity or content was generated.
 - Recorded the exact PR #96 scope-escape cause and bounded both the malformed
   Goal contract repair and source-hub self-validation in one regression ticket.
+- Included the existing adoption-lock version assertion in the release-carrier
+  component before implementation began.

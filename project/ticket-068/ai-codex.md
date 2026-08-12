@@ -52,6 +52,9 @@ retest.
 - Confirmed Goal 2.1.297 has a distinct source-hub health contract and supports
   governed `pull-request` and `direct-main`; the downstream wrapper mismatch is
   therefore not a current defect.
+- Added the adoption-lock release assertion to the approved release-carrier
+  scope after inventorying every current-version reference and before changing
+  implementation files.
 
 ## Blockers
 
