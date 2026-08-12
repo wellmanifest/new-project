@@ -21,3 +21,11 @@
 - Revalidated the exact clean candidate with the native source-hub health
   runner installed from public Goal 2.1.297; all governed Linux suites passed
   and the runner preserved the working-tree state.
+- Passed Linux and Windows CI plus deterministic exact-head Validator App
+  review, then verified the trusted merge parentage and tree before release.
+- Published immutable `v0.15.0` as an annotated tag and final GitHub Release on
+  the trusted merge; a public Goal production pilot reported glon drift without
+  writes.
+- Removed implementation branches, worktree and generated delivery log after
+  proving their commit reachable from the default branch, then closed the
+  ticket from integrated main.

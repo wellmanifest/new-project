@@ -10,3 +10,8 @@
 2026-08-12 live read-only proof: canonical v0.14.1 accepted; glon reports 26 managed changes and missing Dockerfile; no target writes.
 2026-08-12 Goal candidate proof: public goal 2.1.295 passed exact candidate 74d7f8394e8509b9e41d2729a345aaa49adaf111 with explicit unpublished-test mode; glon reports 33 changes, exit 1, no writes.
 2026-08-12 public Goal health: PyPI goal 2.1.297 passed exact candidate 1bfe1510e9375243aedf527205eb7e1d77d399c1 with GOV-HUB-PASS (15 JSON, 9 shell suites); clean Git status hash remained e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.
+2026-08-12 hosted gates: PR #96 exact head 8e47d5594ddd014c87de25d02950db303c8caca8; CI runs 31588858157 and 31588863575 PASS; Validator run 31588938396 and Bot review 4915642055 APPROVED exact head.
+2026-08-12 trusted merge: 32238076db1e95ed60dbc878b71fab1588ff53d6 has approved head as parent 2 and identical tree; detached clean-merge Goal health and Ruff PASS.
+2026-08-12 release: annotated v0.15.0 tag object 9f09386c3ff57d14987acb028603df27dcc23b22 peels to trusted merge; final GitHub Release published at 2026-08-12T10:53:54Z.
+2026-08-12 production pilot: public Goal 2.1.297 accepted published SHA 32238076db1e95ed60dbc878b71fab1588ff53d6 and reported 33 glon changes with exit 1; Git status and both user-owned file hashes unchanged.
+2026-08-12 cleanup: remote goal/ticket-065 absent; implementation worktree, local goal/ticket-065 and ticket/065-publication-proof, and delivery-events log removed after reachability proof.

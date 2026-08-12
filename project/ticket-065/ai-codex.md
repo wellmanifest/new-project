@@ -55,8 +55,20 @@ standard as v0.15.0, then validate it first against live glon.
   against the exact clean candidate: all 15 governance JSON documents, the
   required-check comparator and all 9 wired shell suites passed without any
   Git-state mutation.
+- Delivered PR #96 through public Goal, passed both Linux and Windows hosted
+  checks, and obtained deterministic Validator App approval for exact head
+  `8e47d5594ddd014c87de25d02950db303c8caca8`.
+- Verified trusted merge `32238076db1e95ed60dbc878b71fab1588ff53d6`
+  against its parents and tree, then re-ran native source-hub health and Ruff
+  in a fresh detached worktree.
+- Published annotated `v0.15.0` and a final GitHub Release on that merge. Public
+  Goal 2.1.297 accepted the immutable proof and reported 33 read-only adoption
+  changes for live glon without changing its status or user-owned file hashes.
+- Removed the remote implementation branch, implementation worktree, both
+  local branch aliases and Goal's delivery log after proving the head reachable
+  from `origin/main`.
 
 ## Blockers
 
-- None. External trusted review remains a later publication gate, not an
-  implementation blocker.
+- None. Implementation, trusted review, publication, pilot and bounded cleanup
+  are complete.
