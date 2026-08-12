@@ -3,3 +3,5 @@
 2026-08-12 todo2code: local semcod/todo2code main exposes deterministic task extraction, diagnostics and t2c.code-change-plan/v1; no global todo2code binary is installed, so integration validation must invoke its built Node CLI explicitly.
 2026-08-12 coordination: ticket-065 remains IN_PROGRESS/PUBLICATION in governance; ticket-067 uses distinct integration scope and does not publish v0.15.0.
 2026-08-12 scope refinement: scripts/audit_rule_enforcement.py must enumerate the new deterministic analyzer so C-REMEDIATION mappings can claim its GOV codes; added before editing that script.
+2026-08-12T13:24:00+02:00 INPUT user requested continued implementation and testing of diagnostic remediation DSL and todo2code consistency analysis
+2026-08-12T13:24:00+02:00 DECISION extend allowedPaths with tests/adoption-lock.test.sh because the managed package fixture must copy and assert every newly shipped asset; no objective or component boundary changed

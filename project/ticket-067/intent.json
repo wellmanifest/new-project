@@ -22,6 +22,7 @@
     "template/files/remediation-intent.template.dsl.json",
     "error/GOV-REMEDIATION-INTENT.md",
     "tests/governance-scripts.test.sh",
+    "tests/adoption-lock.test.sh",
     "tests/rule-enforcement.test.sh",
     "project/ticket-067/**",
     "TODO.md",
@@ -81,7 +82,8 @@
             "scripts/audit_rule_enforcement.py",
             "governance/diagnostics.json",
             "error/GOV-REMEDIATION-INTENT.md",
-            "tests/governance-scripts.test.sh"
+            "tests/governance-scripts.test.sh",
+            "tests/adoption-lock.test.sh"
           ]
         },
         {
