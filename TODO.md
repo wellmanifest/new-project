@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-060`](project/ticket-060/README.md) — przepiąć własne workflow
+  huba i reusable governance na pełne SHA oficjalnych akcji Node.js 24 bez
+  zmiany kontraktu workflow. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  `SERVICE / P1 / health`.
+
 - [x] [`ticket-059`](project/ticket-059/README.md) — rootowy Compose jest
   markerem stosu Docker, a nested Dockerfiles nadal są wyliczane jawnie i
   kontrolowane. Pełny Linux contract przechodzi; pilot `mcp` nie ma już
