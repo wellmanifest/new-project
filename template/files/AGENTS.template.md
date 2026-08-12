@@ -13,6 +13,13 @@ Before any multi-step implementation, an agent must:
 3. Complete the ticket `README.md`, owned `ai-*.md`, `intent.json` and `TODO.md`.
 4. Treat a user request that already says to execute or work autonomously as
    `SESSION_EXECUTION_AUTHORIZATION`; record it in the agent-owned ticket file.
+   When that same request explicitly creates a new repository, `HEAD` is
+   unborn and no implementation exists, it also authorizes exactly one local
+   governance seed-baseline commit. Resolve an immutable seed profile, stage
+   only its exact allowlist, scan for secrets, create no remote effect, then
+   record the real resulting `HEAD` as `delivery.acceptedBaseSha`. This narrow
+   exception never authorizes remote creation, push, pull request, merge, tag
+   or release; ordinary implementation starts only after the baseline.
 5. Move to `EDIT` without a second confirmation and stay inside `intent.json`
    `allowedPaths`. Ask for new authority only for destructive action, secret
    access, new external coordination, or material objective expansion.

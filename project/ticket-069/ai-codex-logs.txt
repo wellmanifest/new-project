@@ -1,0 +1,19 @@
+2026-08-12 ALLOCATION managed_allocator=ticket-069 clone_wide_high_water=PASS
+2026-08-12 PRE_GATE initial_failures=GOV-DECISION-002,GOV-INTENT-002 remediation=record_replay_inputs_and_bound_complexity_estimate
+2026-08-12 PRE_GATE governance=PASS errors=0 warnings=0 base=fef743469082eb85b32ed1bd262fac8efcac6e60
+2026-08-12 BASE_REFRESH ticket_068_pr=101 origin_main=e0314db86e9f2a78a0512605c27c855ce72ad267 foreign_changes=preserved
+2026-08-12 CONTRACT metaschemas=2 positive_documents=6 adversarial_rejected=16 grammars=2 result=PASS
+2026-08-12 RULE_ENFORCEMENT rules=171 codes=55 unmapped=0 unclaimed=0 result=PASS
+2026-08-12 LINUX_CONTRACT required_checks=PASS decision_record=PASS governance_scripts=PASS governance_validator=PASS branch_lifecycle=PASS workspace_lifecycle=PASS governance_env=PASS adoption_lock=PASS rule_enforcement=PASS
+2026-08-12 DIFF_CHECK result=PASS
+2026-08-12 BASE_REFRESH ticket_070_pr=102 origin_main=4e6ba5ec15873346446d67d8787f17f68f57f81e tag=v0.16.1 conflicts=TODO.md,project/TICKETS.md resolution=preserve_both_tickets
+2026-08-12 V0161_RETEST contract=PASS adversarial_rejected=16 rule_enforcement=PASS full_linux=PASS diff_check=PASS
+2026-08-12 FINAL_GATE result=GOV-WORKSTREAM-002 competing_active_ticket=ticket-070 manifest_limit=1 action=park_ticket_069_BLOCKED_and_preserve_worktree
+2026-08-12 EXTRACT git_lifecycle_repo=wellmanifest/git-lifecycle baseline=c142c3b3c8a2eda3a3bf3a8e7cb711cf4bdc8629 governance=PASS conformance=PASS docker=PASS remote=none
+2026-08-12 EXTRACT ticket_lifecycle_repo=wellmanifest/ticket-lifecycle baseline=dd80fc8e2b33ef0133e104a4b97329d69a64c3a9 governance=PASS conformance=PASS docker=PASS remote=none
+2026-08-12 PUBLICATION_AUTH user_request=push_changes effects=commit,ticket_branch_push,pull_request merge=false tag=false release=false
+2026-08-12 BASE_REFRESH origin_main=452d4008a71d67ad1965f6042faa217978a82b42 version=0.16.2 rebase=PASS conflicts=0
+2026-08-12 CONTRACT_IDENTITY git_schema=ed0a79149cc6be4208e7ac93285fde51f42498449697d06741d7afb6ef3cf9e2 git_grammar=0cc78ea824285d1da5cd30f8624e53bdfa0291a2052c3d108f473071c770856c ticket_schema=827f18f0e223882a6f1905bb82a7bb1050cb86a59b90a34b2b3136760cc7f22f ticket_grammar=3578a5b963d6b8c8e4e68df50bd9bfd0bb709584053227036826619bb429e8ee standalone_match=PASS
+2026-08-12 RULE_ENFORCEMENT rules=171 codes=56 unmapped=0 unclaimed=0 result=PASS
+2026-08-12 LINUX_CONTRACT required_checks=PASS decision_record=PASS governance_scripts=PASS governance_validator=PASS branch_lifecycle=PASS workspace_lifecycle=PASS governance_env=PASS adoption_lock=PASS rule_enforcement=PASS
+2026-08-12 DIFF_CHECK result=PASS
