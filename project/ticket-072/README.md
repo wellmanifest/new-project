@@ -2,8 +2,8 @@
 
 - **ID**: ticket-072
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-12
 
 ## Cel i zakres
@@ -20,11 +20,11 @@ audytu pozostaje dokładnie tym, który przeszedł PR #104 i został scalony do
   blokady adopcji oraz walidatora oczekują tej samej wersji.
 - [x] AC-02: changelog opisuje wykrywanie pozostawionych branchy i zachowanie
   read-only/fail-closed bez przepisywania historii wydania `0.16.1`.
-- [ ] AC-03: pełny kontrakt Linux, Ruff, testy Windows i dokładny Validator App
+- [x] AC-03: pełny kontrakt Linux, Ruff, testy Windows i dokładny Validator App
   przechodzą dla bieżącego SHA PR.
-- [ ] AC-04: zatwierdzony payload jest scalony bez zmiany drzewa, a CI po
+- [x] AC-04: zatwierdzony payload jest scalony bez zmiany drzewa, a CI po
   scaleniu przechodzi na dokładnym merge SHA.
-- [ ] AC-05: Goal `2.1.298` tworzy annotowany tag `v0.16.2` i finalny GitHub
+- [x] AC-05: Goal `2.1.298` tworzy annotowany tag `v0.16.2` i finalny GitHub
   Release z czystego, ponownie przetestowanego `main`; tag i release wskazują
   ten sam merge SHA.
 
@@ -48,3 +48,13 @@ audytu pozostaje dokładnie tym, który przeszedł PR #104 i został scalony do
 Ten katalog przechowuje governance, decyzje, logi i dowody. Kod wykonywalny,
 skrypty badawcze i testy należą do zwykłych katalogów źródłowych repozytorium,
 nie do `project/ticket-072/`.
+
+## Dowody dostawy
+
+- PR #106 przeszedł Linux, Windows i Validator review `4919121676` dla exact
+  HEAD `a1c66de1b2a66c12a8c773ad9daefe963131ead6`.
+- Merge commit `63a03d0c2ec417f8eab9a6edb3c4ed654937a1ac` ma identyczne drzewo jak
+  zatwierdzony HEAD; post-merge run `31621012295` przeszedł Linux i Windows.
+- Annotowany tag `v0.16.2` (`0e4b1af88939f2c3db89cd31e907589c254e3f62`)
+  dereferencjonuje do merge SHA, a finalny GitHub Release został opublikowany
+  2026-08-12T17:09:21Z.
