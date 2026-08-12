@@ -1,9 +1,17 @@
 # Adopcja `new-project` przez `goal`
 
-Integracja z `goal` upraszcza pobranie i uruchomienie generatora, ale nie
-osłabia granicy zaufania: standard musi być wskazany pełnym, opublikowanym
-40-znakowym SHA commita. Ruchomy branch, tag bez zweryfikowanego SHA albo
-lokalny niezatwierdzony worktree nie jest źródłem produkcyjnej adopcji.
+Publiczny pakiet Goal 2.1.295 lub nowszy jest obsługiwanym produkcyjnym
+wejściem do adopcji. Nie osłabia granicy zaufania: standard musi być wskazany
+pełnym, opublikowanym 40-znakowym SHA commita. Ruchomy branch, tag bez
+zweryfikowanego SHA albo lokalny niezatwierdzony worktree nie jest źródłem
+produkcyjnej adopcji.
+
+Goal oraz przypięty generator niezależnie wymagają, aby kanoniczny tag wersji
+był annotowany, peelował dokładnie do żądanego SHA i miał finalny GitHub
+Release (`draft=false`, `prerelease=false`, niepuste `published_at`). Generator
+nie zapisze `publicationStatus: published` bez tych dowodów. Jawny
+`--allow-unpublished-for-testing` omija sieć tylko w ograniczonych fixture'ach
+i zapisuje `unpublished-test`, którego produkcyjny gate nie akceptuje.
 
 ## Retrofit istniejącego projektu
 

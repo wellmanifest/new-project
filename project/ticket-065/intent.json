@@ -1,0 +1,141 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-065",
+  "summary": "Verify immutable publication evidence before adoption",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P0",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "README.md",
+    "docs/GOAL_ADOPTION.md",
+    "governance/manifest.default.json",
+    "governance/lock.schema.json",
+    "scripts/create_adoption_lock.py",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/windows-governance.test.ps1",
+    "project/ticket-065/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".github/**",
+    "package.json",
+    "pyproject.toml",
+    ".env",
+    "**/*.pem",
+    "**/*secret*"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-066"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "79fd605d4883b9c8887dabfed1903115b9e4c1e9",
+    "targetBranch": "main",
+    "outcome": "Production adoption records published provenance only after exact annotated-tag and final GitHub Release proof, while explicit test candidates remain truthfully distinguishable, and the complete standard is published as immutable v0.15.0",
+    "nonGoals": [
+      "No weakening of the production lock validator",
+      "No network access in unpublished fixture paths",
+      "No target-repository mutation before the live read-only pilot",
+      "No moving or overwriting an existing tag or Release",
+      "No runtime dependency additions"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 13,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep Goal as the supported production entry point, make the pinned generator independently fail closed on exact tag and final Release evidence, and permit only an explicit test flag that records unpublished-test provenance",
+      "components": [
+        {
+          "name": "adoption-provenance",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "governance/lock.schema.json",
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh",
+            "tests/windows-governance.test.ps1"
+          ]
+        },
+        {
+          "name": "goal-first-contract",
+          "paths": [
+            "README.md",
+            "docs/GOAL_ADOPTION.md"
+          ]
+        },
+        {
+          "name": "release-metadata",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        "Production create_adoption_lock.py verifies annotated tag and final GitHub Release evidence",
+        "Fixture-only --allow-unpublished-for-testing records unpublished-test",
+        "The published standard advances from 0.14.1 to 0.15.0"
+      ],
+      "dataChanges": [
+        "lock.schema.json structurally distinguishes published from unpublished-test provenance"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Keep adopters pinned to immutable v0.14.1; never move or delete v0.15.0 after publication"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/adoption-lock.test.sh"
+        ],
+        "evidence": "Unpublished normal invocation fails before writes"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/adoption-lock.test.sh"
+        ],
+        "evidence": "Explicit candidate fixtures record unpublished-test and the production validator rejects it"
+      },
+      {
+        "criterion": "AC-06",
+        "commands": [
+          "goal governance adopt --source-revision <published-sha> --target-root <glon> --check"
+        ],
+        "evidence": "Public Goal and the pinned generator accept only the exact final v0.15.0 tag/Release and report read-only target drift"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "all commands from the Linux CI test job",
+          "ruff check changed Python files",
+          "protected windows-governance",
+          "exact-head Validator App review"
+        ],
+        "evidence": "Release carriers, supported environments and independent review bind the same candidate"
+      }
+    ]
+  }
+}

@@ -9,6 +9,13 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-065`](project/ticket-065/README.md) — usunąć bezwarunkowe
+  `publicationStatus: published` z generatora, wymagać dokładnego annotowanego
+  tagu i finalnego GitHub Release, a jawne fixture'y oznaczać jako
+  `unpublished-test`; następnie opublikować pełny standard v0.15.0 i sprawdzić
+  go przez publiczny Goal najpierw na glon. Stan: `IN_PROGRESS / PUBLICATION`;
+  klasyfikacja: `BUG / P0 / regression`.
+
 - [x] [`ticket-066`](project/ticket-066/README.md) — naprawiono ręczny bypass
   clone-wide alokacji oraz przedwczesne `DONE` po otwarciu PR; zdefiniowano
   kanoniczny katalog remediacji i kontrakt `error/*.md`, objęto wszystkie

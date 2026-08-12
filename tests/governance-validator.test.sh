@@ -79,13 +79,25 @@ Draft202012Validator(schemas['lock.schema.json']).validate({
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.14.1',
+        'version': '0.15.0',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'published',
     },
     'managedFiles': {'AGENTS.md': '0' * 64},
 })
+candidate_lock = {
+    'schema': 'new-project.lock/v1',
+    'standard': {
+        'id': 'wellmanifest/new-project',
+        'version': '0.15.0',
+        'sourceRepository': 'wellmanifest/new-project',
+        'sourceRevision': '0' * 40,
+        'publicationStatus': 'unpublished-test',
+    },
+    'managedFiles': {'AGENTS.md': '0' * 64},
+}
+Draft202012Validator(schemas['lock.schema.json']).validate(candidate_lock)
 Draft202012Validator(schemas['approval-evidence.schema.json']).validate({
     'schema': 'new-project.approval-evidence/v1',
     'source': 'github-app-review',
@@ -179,7 +191,7 @@ assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
 assert manifest['schema'] == schema['properties']['schema']['const']
-assert manifest['standard']['version'] == '0.14.1'
+assert manifest['standard']['version'] == '0.15.0'
 ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
@@ -668,7 +680,7 @@ lock = {
   'schema': 'new-project.lock/v1',
   'standard': {
     'id': 'wellmanifest/new-project',
-    'version': '0.14.1',
+    'version': '0.15.0',
     'sourceRepository': 'wellmanifest/new-project',
     'sourceRevision': 'a' * 40,
     'publicationStatus': 'published',
@@ -690,7 +702,7 @@ expect_code GOV-PATH-001 run_check "$allowed" --changed-file src/app.js \
   --resolved-ticket-output "$allowed/.governance/resolved-ticket.txt"
 run_check "$allowed" --changed-file src/app.js --lock .governance/manifest.lock.json > "$fixture/published-lock.out"
 grep -q '^GOV-PASS:' "$fixture/published-lock.out"
-sed -i 's/"published"/"uncommitted"/' "$allowed/.governance/manifest.lock.json"
+sed -i 's/"published"/"unpublished-test"/' "$allowed/.governance/manifest.lock.json"
 expect_code GOV-SYNC-001 run_check "$allowed" --changed-file src/app.js --lock .governance/manifest.lock.json
 
 extendable_sync="$fixture/extendable-sync"
@@ -726,7 +738,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.14.1',
+        'version': '0.15.0',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'a' * 40,
         'publicationStatus': 'published',
@@ -817,7 +829,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.14.1',
+        'version': '0.15.0',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'b' * 40,
         'publicationStatus': 'published',

@@ -12,7 +12,8 @@ $targetRoot = Join-Path $fixtureRoot 'target repository'
 try {
     New-Item -ItemType Directory -Path $targetRoot -Force | Out-Null
     & python (Join-Path $repoRoot 'scripts/create_adoption_lock.py') `
-        --target-root $targetRoot --source-revision $SourceRevision
+        --target-root $targetRoot --source-revision $SourceRevision `
+        --allow-unpublished-for-testing
     if ($LASTEXITCODE -ne 0) {
         throw "adoption failed with exit code $LASTEXITCODE"
     }

@@ -147,19 +147,22 @@ Validator GitHub App albo zweryfikowanej atestacji jest przypięte do konkretneg
 repozytorium, PR, HEAD, ticketu i aktora; dowolny review typu Bot nie jest
 zaufany.
 
-Opublikowaną rewizję adoptuje się bez ręcznego kopiowania i liczenia hashy:
+Opublikowaną rewizję adoptuje się przez publiczny pakiet Goal 2.1.295 lub
+nowszy, bez ręcznego kopiowania i liczenia hashy:
 
 ```bash
-python3 /path/to/new-project/scripts/create_adoption_lock.py \
-   --target-root /path/to/target-repository \
-   --source-revision <FULL_PUBLISHED_SHA>
+goal governance adopt \
+  --target-root /path/to/target-repository \
+  --source-revision <FULL_PUBLISHED_SHA>
 ```
 
-Generator czyta artefakty bezpośrednio z obiektu Git, odmawia nadpisania
-różniących się plików i wymaga świadomego `--upgrade` przy aktualizacji.
-Istniejące projekty korzystające z `goal` mogą wykonać tę samą adopcję przez
-`goal governance adopt`; preflight, retrofit i upgrade opisuje
-[`docs/GOAL_ADOPTION.md`](docs/GOAL_ADOPTION.md).
+Goal pobiera dokładny commit, weryfikuje kanoniczny annotowany tag i finalny
+GitHub Release, po czym uruchamia przypięty generator. Generator powtarza
+kontrolę publikacji jako obronę w głąb, czyta artefakty z obiektu Git, odmawia
+nadpisania różniących się plików i wymaga świadomego `--upgrade` przy
+aktualizacji. Jego bezpośredni tryb `--allow-unpublished-for-testing` służy
+wyłącznie fixture'om i zapisuje nieprodukcyjne `unpublished-test`. Preflight,
+retrofit i upgrade opisuje [`docs/GOAL_ADOPTION.md`](docs/GOAL_ADOPTION.md).
 
 Bieżący stan prac, bramy publikacji, pilotażu i szerszej adopcji opisuje
 [`docs/ROADMAP_AFTER_0.9.0.md`](docs/ROADMAP_AFTER_0.9.0.md).
