@@ -29,7 +29,8 @@ agenta potwierdzanym audytem, a nie pozorną kontrolą serwerową.
 - [x] AC-03: Deterministyczny audyt wykrywa dodatkowe linked worktree i
   niezależne klony tego samego repozytorium, nie wykonując usuwania.
 - [x] AC-04: Pakiet adopcyjny instaluje audyt workspace oraz workflow CI, który
-  sprawdza rzeczywisty zdalny lifecycle branchy.
+  sprawdza rzeczywisty zdalny lifecycle branchy i używa wyłącznie immutable
+  akcji z runtime Node.js 24.
 - [x] AC-05: Testy focused, pełny Linux contract i Ruff przechodzą, a audyt
   `~/github/semcod` nie pomija żadnego zachowanego wyjątku.
 

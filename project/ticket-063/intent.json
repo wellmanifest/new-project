@@ -29,7 +29,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "1e7ff1ceeb3e9dff2e5c926a8088878a6ffb7d2f",
+    "acceptedBaseSha": "268311ba502cfa5306262f709e8086011c95088a",
     "targetBranch": "main",
     "outcome": "A completed task leaves no disposable local workspace and no orphan remote branch while preserving every unmerged or unclassified datum",
     "nonGoals": [

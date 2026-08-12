@@ -41,6 +41,12 @@ Pilotażowe linked worktree i niezależne klony nie są widoczne dla CI.
   oraz zero otwartych PR-ów we wszystkich 77 repozytoriach.
 - Pełny Linux contract, Ruff, testy lifecycle, traceability oraz live audit
   `/home/tom/github/semcod` zakończyły się powodzeniem.
+- Po równoległym merge `ticket-060` odświeżono zaakceptowaną bazę do
+  `268311b` i usunięto z nowego workflow adopcyjnego odziedziczone piny Node 20;
+  checkout v7 oraz github-script v8 deklarują Node.js 24.
+- Ponownie uruchomiono focused lifecycle/adoption/traceability, Ruff oraz pełny
+  Linux contract: wszystkie zestawy przeszły, 160 reguł mapuje się na 48 kodów
+  bez luk.
 
 ## Blockers
 

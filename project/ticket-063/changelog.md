@@ -14,3 +14,7 @@
   mapowanie reguł lifecycle branchy.
 - Zachowano unikalne dane w tagach/refach archiwalnych, usunięto bezpieczne
   workspace’y i potwierdzono czysty stan lokalny oraz 77 zdalnych repozytoriów.
+- Zintegrowano zatwierdzony merge Node 24 jako nową bazę i przepięto tworzony
+  workflow targetu na immutable checkout v7 oraz github-script v8.
+- Ponowiono pełny kontrakt po integracji: wszystkie testy, Ruff i mapowanie
+  160 reguł na 48 kodów przechodzą bez luk.
