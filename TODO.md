@@ -9,9 +9,9 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-070`](project/ticket-070/README.md) — skanonizować quoting cron w
-  zarządzanym workflow targetów, dodać regresję, opublikować immutable 0.16.1 i
-  potwierdzić upgrade żywego targetu przez Goal. Stan: `IN_PROGRESS / PUBLICATION`;
+- [x] [`ticket-070`](project/ticket-070/README.md) — skanonizowano quoting cron w
+  zarządzanym workflow targetów, dodano regresję, opublikowano immutable 0.16.1 i
+  potwierdzono upgrade żywego targetu przez Goal. Stan: `DONE / DONE`;
   klasyfikacja: `BUG / P1 / regression`; workstream: `governance`.
 
 - [x] [`ticket-068`](project/ticket-068/README.md) — naprawiono wygenerowany poza

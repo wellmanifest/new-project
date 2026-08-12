@@ -48,9 +48,17 @@ uses Goal to upgrade.
 - Rejected Goal's unrelated README license insertion and duplicate changelog
   section after the hosted scope gate correctly failed the contaminated head;
   retained the intended eight-file implementation budget unchanged.
+- Verified the exact-head Validator App approval, successful Linux/Windows PR
+  checks, unchanged merge payload and successful post-merge CI.
+- Verified that annotated `v0.16.1` and its final GitHub Release bind the exact
+  merge SHA `4e6ba5ec15873346446d67d8787f17f68f57f81e`.
+- Verified the live Goal adoption in `subactor/intent-contract-dsl-runtime`:
+  clean `main`, published 0.16.1 lock at the exact source SHA, native/Docker/
+  hosted delivery recorded DONE, and integrated closure.
+- Closed the ticket governance-only from the integrated default branch; no
+  implementation payload is carried by this closure.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
-- New authority is still required for destructive action, secret access, new
-  external coordination, material objective expansion and trusted merge.
+- None. The ticket is integrated, published, adopted by the live target and
+  closed from the default branch.

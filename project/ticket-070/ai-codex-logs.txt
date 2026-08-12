@@ -11,3 +11,7 @@
 2026-08-12 GOAL PR #102 head 2aa22c054f2398b58db0f4c464987c19d9b82f75
 2026-08-12 HOSTED Windows head 2aa22c0 PASS
 2026-08-12 HOSTED Linux head 2aa22c0 FAIL expected: Goal inserted README.md outside intent and duplicate changelog section
+2026-08-12 CLOSURE PR #102 exact head f0398d24fd7e8305e9f5610fda93ef5c469fb03e approved by ifuri-validator-agent[bot]; test and windows-governance PASS
+2026-08-12 CLOSURE merge 4e6ba5ec15873346446d67d8787f17f68f57f81e; post-merge run 31601309628 PASS
+2026-08-12 CLOSURE annotated v0.16.1 peels to merge SHA; final release published 2026-08-12T14:01:06Z
+2026-08-12 CLOSURE target intent-contract-dsl-runtime clean main; published 0.16.1 lock at exact source SHA; ticket-014 DONE/DONE

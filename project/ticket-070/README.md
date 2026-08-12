@@ -2,8 +2,8 @@
 
 - **ID**: ticket-070
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-12
 
 ## Cel i Zakres
@@ -21,13 +21,13 @@ Goal.
       ustawienia cron, bez zmiany semantyki harmonogramu.
 - [x] AC-02: Test kontraktowy blokuje ponowne wprowadzenie niekanonicznego
       zapisu i adopcja nadal wiąże dokładny hash zarządzanego pliku.
-- [ ] AC-03: Wersje source hub, manifestu targetu i testów są spójne jako
+- [x] AC-03: Wersje source hub, manifestu targetu i testów są spójne jako
       0.16.1; pełny Linux i hosted Windows contract przechodzą.
-- [ ] AC-04: Exact-head Validator App zatwierdza PR przed merge, a czysty merge
+- [x] AC-04: Exact-head Validator App zatwierdza PR przed merge, a czysty merge
       SHA przechodzi post-merge CI.
-- [ ] AC-05: Annotowany tag i finalny GitHub Release `v0.16.1` peelują dokładnie
+- [x] AC-05: Annotowany tag i finalny GitHub Release `v0.16.1` peelują dokładnie
       do czystego, ponownie przetestowanego `origin/main`.
-- [ ] AC-06: Żywy target aktualizuje lock przez `goal governance adopt
+- [x] AC-06: Żywy target aktualizuje lock przez `goal governance adopt
       --upgrade`, zachowuje własne rootowe skrypty i przechodzi format,
       governance oraz pełny pipeline.
 
@@ -51,3 +51,16 @@ Goal.
 Ten katalog przechowuje governance, decyzje, logi i dowody. Kod wykonywalny,
 skrypty badawcze i testy należą do zwykłych katalogów źródłowych repozytorium,
 nie do `project/ticket-070/`.
+
+## Zintegrowana publikacja
+
+- PR #102 miał head `f0398d24fd7e8305e9f5610fda93ef5c469fb03e`;
+  wymagane `test` i `windows-governance` zakończyły się sukcesem.
+- `ifuri-validator-agent[bot]` zatwierdził dokładnie ten head przed merge'em.
+- Payload został scalony jako `4e6ba5ec15873346446d67d8787f17f68f57f81e`;
+  post-merge run `31601309628` zakończył się sukcesem.
+- Annotowany tag `v0.16.1` peeluje do `4e6ba5e...`, a finalny GitHub Release
+  został opublikowany 2026-08-12 bez draft/prerelease.
+- Żywy `subactor/intent-contract-dsl-runtime` ma czysty `main` i lock
+  `publicationStatus: published`, `version: 0.16.1`, `sourceRevision: 4e6ba5e...`;
+  jego adopcja i governance-only closure są zintegrowane w PR #12 i #13.
