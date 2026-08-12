@@ -59,6 +59,15 @@ retest.
   adopted-target default for `.governance/work-classification.dsl.json`.
   Bounded a backward-compatible explicit path option before editing that
   public script; no root `.governance` surrogate will be created.
+- Replaced the generated 523-line multi-registry configuration with a
+  JSON-compatible YAML contract for the generic source hub. Goal 2.1.297
+  resolves `pull-request` and `direct-main`, rejects `publish-only`, and its
+  config validator accepts the effective configuration.
+- Added the source-hub manifest, exact PR base/head CI invocation and regression
+  proving a Goal-generated path outside the ticket yields `GOV-SCOPE-001`.
+- Added `--work-classification` to preserve the adopted-target default while
+  allowing the source hub to supply its canonical `governance/` path. The real
+  current-ticket gate and focused governance-validator suite pass.
 
 ## Blockers
 

@@ -39,6 +39,7 @@ jobs:
             --root . \
             --manifest governance/manifest.hub.json \
             --stack-profiles governance/stack-profiles.json \
+            --work-classification governance/work-classification.dsl.json \
             --base "$BASE_SHA" \
             --head "$HEAD_SHA" \
             --actor ci \

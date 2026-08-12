@@ -317,6 +317,7 @@ grep -q 'APPROVAL_EVIDENCE_PATH.*runner.temp' "$repo_root/.github/workflows/gove
 grep -q 'ref:.*github.event.pull_request.head.sha' "$repo_root/.github/workflows/governance.yml"
 grep -Fq "'/.new-project-standard/' >> .git/info/exclude" "$repo_root/.github/workflows/governance.yml"
 grep -Fq -- '--manifest governance/manifest.hub.json' "$repo_root/.github/workflows/ci.yml"
+grep -Fq -- '--work-classification governance/work-classification.dsl.json' "$repo_root/.github/workflows/ci.yml"
 grep -Fq -- '--base "$BASE_SHA"' "$repo_root/.github/workflows/ci.yml"
 grep -Fq -- '--head "$HEAD_SHA"' "$repo_root/.github/workflows/ci.yml"
 if grep -q "Set('\${{ inputs.trusted-reviewers }}'" "$repo_root/.github/workflows/governance.yml"; then

@@ -10,3 +10,7 @@
   component before implementation began.
 - Bounded an explicit source-hub work-classification input after the real gate
   exposed the validator's target-repository default path.
+- Replaced ticket-specific package defaults with the generic non-registry Goal
+  contract and configured only governed PR/direct-main delivery.
+- Added source-hub PR scope enforcement, its dedicated manifest and an explicit
+  work-classification input; focused scope regressions pass.
