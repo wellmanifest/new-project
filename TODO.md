@@ -9,6 +9,13 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-072`](project/ticket-072/README.md) — opublikować zintegrowany
+  audyt osieroconych lokalnych branchy jako immutable `new-project 0.16.2`,
+  używając Goal dopiero po exact-head approval, niezmienionym merge i czystym
+  reteście `main`. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
+  `SERVICE / P1 / requested`; workstream: `governance`; zależy od
+  `ticket-071`.
+
 - [x] [`ticket-071`](project/ticket-071/README.md) — wykrywać pozostawione
   lokalne branche po usunięciu worktree, zachować aktywne dokładnie
   allowlistowane checkouty i nigdy nie usuwać unikalnych danych automatycznie.

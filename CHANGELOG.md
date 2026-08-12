@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.16.2] - 2026-08-12
+
+### Orphan local branch workspace audit
+
+- Inventory every non-default local branch in the shared Git directory so a
+  released worktree cannot leave an invisible disposable branch behind.
+- Report orphaned refs and secondary checked-out branches with stable
+  `GOV-WORKSPACE-LIFECYCLE-004` evidence, while retaining exact-path
+  allowlisting only for the branch checked out in that explicitly active
+  workspace.
+- Keep the checker read-only and fail closed when a default branch cannot be
+  derived safely; cleanup still requires independent dirty-state, integration
+  and reachability evidence before deleting an exact ref.
+
 ## [0.16.1] - 2026-08-12
 
 ### Canonical managed workflow formatting
