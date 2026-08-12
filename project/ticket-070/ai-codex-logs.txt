@@ -3,3 +3,7 @@
 2026-08-12 DIFF + cron: "17 3 * * *"
 2026-08-12 TAG v0.16.0 source contains single-quoted cron
 2026-08-12 ALLOCATOR skipped reserved ticket-069; allocated ticket-070
+2026-08-12 LOCAL bash tests/branch-lifecycle.test.sh PASS
+2026-08-12 LOCAL bash tests/adoption-lock.test.sh PASS
+2026-08-12 LOCAL full Linux CI contract PASS (9 suites plus JSON/check wiring)
+2026-08-12 LOCAL pwsh unavailable; hosted Windows evidence remains pending

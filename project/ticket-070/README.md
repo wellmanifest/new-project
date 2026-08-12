@@ -17,9 +17,9 @@ Goal.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Zarządzany workflow jest kanonicznym wyjściem Prettier 3 dla
+- [x] AC-01: Zarządzany workflow jest kanonicznym wyjściem Prettier 3 dla
       ustawienia cron, bez zmiany semantyki harmonogramu.
-- [ ] AC-02: Test kontraktowy blokuje ponowne wprowadzenie niekanonicznego
+- [x] AC-02: Test kontraktowy blokuje ponowne wprowadzenie niekanonicznego
       zapisu i adopcja nadal wiąże dokładny hash zarządzanego pliku.
 - [ ] AC-03: Wersje source hub, manifestu targetu i testów są spójne jako
       0.16.1; pełny Linux i hosted Windows contract przechodzą.

@@ -35,6 +35,13 @@ uses Goal to upgrade.
 - Confirmed both published 0.15.0 and 0.16.0 contain the same managed byte.
 - Confirmed ticket allocation skipped the independently reserved ID 069 and
   assigned collision-free ticket 070.
+- Canonicalized the managed cron scalar without changing the schedule and added
+  a regression that rejects the old byte.
+- Advanced the source and target manifest carriers and their fixtures to
+  0.16.1.
+- Passed the complete Linux CI command contract locally; PowerShell is not
+  installed in this workspace, so the exact-head hosted Windows job remains the
+  required cross-platform evidence.
 
 ## Blockers
 

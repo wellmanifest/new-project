@@ -6,3 +6,7 @@
 - No human participant identity or content was generated.
 - Recorded the managed-workflow formatting regression, bounded patch release
   and live-target upgrade validation.
+- Canonicalized the managed workflow cron scalar and added exact-byte
+  regression coverage.
+- Advanced the release carriers and current-version fixtures to 0.16.1.
+- Passed the full local Linux CI command contract.
