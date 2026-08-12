@@ -2,8 +2,8 @@
 
 - **ID**: ticket-063
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-12
 
 ## Cel i zakres
@@ -43,6 +43,19 @@ agenta potwierdzanym audytem, a nie pozorną kontrolą serwerową.
   ale nie zastępuje serwerowego review ani ustawień repozytorium.
 - Nie usuwać aktywnego kandydata standardu ani unikalnej implementacji Goal
   przed ich integracją lub zachowaniem w zaufanym refie.
+
+## Dowody zakończenia
+
+- PR #89 został scalony jako `b477b9221838fa292817fb8e64bdd9723046191a`.
+- Post-merge run `31551977984` przeszedł kompletny Linux contract oraz bramkę
+  Windows na dokładnym merge commitcie.
+- Validator `31551863706` użył GLM 5.2 na dokładnym headzie
+  `a09cdeb9bb57093107fed269bf879f29d3ee6e10`: pięć chunków, `APPROVE`, zero
+  findings. Wcześniejsze dwa trafne findings zostały poprawione i ponownie
+  zweryfikowane.
+- todo2code `20260812T005033Z-ddf4d049` wymagał GLM 5.2 na finalnym headzie,
+  lecz skonfigurowany klucz nadal otrzymał limit tygodniowy. Run zakończył się
+  fail-closed na NL, bez grafu i bez fallbacku.
 
 ## Uczestnicy
 

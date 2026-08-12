@@ -9,10 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-063`](project/ticket-063/README.md) — domknąć lokalny lifecycle
-  worktree/klonów oraz instalować rzeczywisty zdalny enforcement w pakiecie
-  adopcyjnym. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
-  `BUG / P1 / regression`.
+- [x] [`ticket-063`](project/ticket-063/README.md) — lokalny lifecycle
+  worktree/klonów ma read-only audyt z ochroną unikalnych danych, a pakiet
+  adopcyjny instaluje rzeczywisty zdalny enforcement. PR #89 oraz post-merge
+  Linux/Windows przechodzą, exact-head Validator GLM zatwierdza bez findings.
+  Stan: `DONE / DONE`; klasyfikacja: `BUG / P1 / regression`.
 
 - [ ] [`ticket-060`](project/ticket-060/README.md) — przepiąć własne workflow
   huba i reusable governance na pełne SHA oficjalnych akcji Node.js 24 bez
