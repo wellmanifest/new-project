@@ -13,3 +13,6 @@
 - Added adopted-package coverage and positive/negative Diagit-shaped
   regressions, then passed the full local Linux contract and a real todo2code
   0.5.0 deterministic integration pilot.
+- PR #98 received trusted exact-head Validator App approval, merged as
+  `main@711766de158a4138b34682f5a6399844acd1d86b`, deleted its head branch and
+  passed post-merge Linux/Windows run `31592421759`.
