@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-08-12
+
+### Validated remediation planning and source-hub delivery
+
+- Add the target-owned `new-project.remediation-intent/v1` DSL, semantic
+  validator and canonical LLM/todo2code projections, with digest-bound advisory
+  analysis that cannot expand approved authority or scope.
+- Register deterministic remediation diagnostics and adopted schema, template,
+  analyzer and runbook coverage for detector false positives, unreadable paths,
+  ambiguous layouts, missing inventory, dirty worktrees and release ordering.
+- Replace the ticket-specific generated Goal defaults with the truthful generic
+  `new-project` release contract: no package registry, governed PR delivery and
+  an immutable Git tag plus GitHub Release from clean `main` only.
+- Validate the Governance Hub's real pull-request diff against its active ticket
+  intent so a generated file outside `allowedPaths` cannot pass on fixture tests
+  alone.
+
 ## [0.15.0] - 2026-08-12
 
 ### Truthful publication provenance and complete lifecycle standard

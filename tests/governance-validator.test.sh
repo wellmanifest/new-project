@@ -52,6 +52,49 @@ Draft202012Validator(schemas['diagnostics.schema.json']).validate(
 Draft202012Validator(schemas['manifest.schema.json']).validate(
     json.load(open(root / 'governance/manifest.default.json', encoding='utf-8'))
 )
+hub_manifest = json.load(open(
+    root / 'governance/manifest.hub.json', encoding='utf-8'
+))
+Draft202012Validator(schemas['manifest.schema.json']).validate(hub_manifest)
+assert hub_manifest['standard']['version'] == '0.16.0'
+assert hub_manifest['coordination']['workstreams'] == {
+    'governance': {'ownedPaths': ['**']},
+}
+assert hub_manifest['coordination']['integration'] == {
+    'workstream': 'governance',
+    'requiredForPaths': [],
+}
+assert hub_manifest['delivery']['maxImplementationFiles'] == 9
+
+goal = json.load(open(root / 'goal.yaml', encoding='utf-8'))
+assert goal['project'] == {
+    'name': 'new-project',
+    'type': 'generic',
+    'description': 'Governance and onboarding standard source hub',
+}
+assert goal['versioning']['files'] == ['VERSION']
+assert goal['git']['commit']['scope'] == 'new-project'
+assert goal['git']['commit']['require_ticket'] is True
+assert goal['publishing']['enabled'] is False
+assert goal['publishing']['registries'] == []
+assert goal['publishing']['fallback']['github_release'] == {
+    'enabled': True,
+    'owner': 'wellmanifest',
+    'repo': 'new-project',
+    'token_env': 'GITHUB_TOKEN',
+    'create_on_tag': True,
+    'asset_glob': 'dist/*',
+}
+assert 'strategies' not in goal
+assert 'registries' not in goal
+assert goal['governance']['delivery'] == {
+    'require_goal_a': True,
+    'default_mode': 'pull-request',
+    'allowed_modes': ['pull-request', 'direct-main'],
+    'remote': 'origin',
+    'base_branch': 'main',
+    'require_clean_governance': True,
+}
 intent_validator = Draft202012Validator(schemas['intent.schema.json'])
 for intent_path in sorted((root / 'project').glob('ticket-*/intent.json')):
     intent_validator.validate(json.load(open(intent_path, encoding='utf-8')))
@@ -79,7 +122,7 @@ Draft202012Validator(schemas['lock.schema.json']).validate({
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.15.0',
+        'version': '0.16.0',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'published',
@@ -90,7 +133,7 @@ candidate_lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.15.0',
+        'version': '0.16.0',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'unpublished-test',
@@ -155,6 +198,7 @@ assert package['schema'] == 'new-project.package-manifest/v1'
 assert package['files']
 assert len({item['target'] for item in package['files']}) == len(package['files'])
 assert 'governance/package-manifest.json' in {item['source'] for item in package['files']}
+assert 'governance/manifest.hub.json' not in {item['source'] for item in package['files']}
 assert {
     'error/README.md',
     'governance/diagnostics.schema.json',
@@ -191,7 +235,7 @@ assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
 assert manifest['schema'] == schema['properties']['schema']['const']
-assert manifest['standard']['version'] == '0.15.0'
+assert manifest['standard']['version'] == '0.16.0'
 ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
@@ -272,6 +316,9 @@ grep -q "process.env.TRUSTED_VALIDATOR_APPS" "$repo_root/.github/workflows/gover
 grep -q 'APPROVAL_EVIDENCE_PATH.*runner.temp' "$repo_root/.github/workflows/governance.yml"
 grep -q 'ref:.*github.event.pull_request.head.sha' "$repo_root/.github/workflows/governance.yml"
 grep -Fq "'/.new-project-standard/' >> .git/info/exclude" "$repo_root/.github/workflows/governance.yml"
+grep -Fq -- '--manifest governance/manifest.hub.json' "$repo_root/.github/workflows/ci.yml"
+grep -Fq -- '--base "$BASE_SHA"' "$repo_root/.github/workflows/ci.yml"
+grep -Fq -- '--head "$HEAD_SHA"' "$repo_root/.github/workflows/ci.yml"
 if grep -q "Set('\${{ inputs.trusted-reviewers }}'" "$repo_root/.github/workflows/governance.yml"; then
   echo 'trusted-reviewers is interpolated into JavaScript source' >&2
   exit 1
@@ -566,6 +613,55 @@ pathlib.Path(sys.argv[1]).write_text(json.dumps(payload), encoding='utf-8')
 PY
 }
 
+configure_hub_ticket() {
+  local target="$1"
+  local allowed_paths="$2"
+  cp "$repo_root/governance/manifest.hub.json" "$target/.governance/manifest.json"
+  python3 - "$target/project/ticket-002/intent.json" "$allowed_paths" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+allowed = json.loads(sys.argv[2])
+intent['workstream'] = 'governance'
+intent['allowedPaths'] = allowed
+intent['stacks'] = []
+intent['delivery']['budgets'] = {
+    'maxImplementationFiles': 2,
+    'maxAffectedComponents': 1,
+    'maxPublicInterfaceChanges': 2,
+    'maxRuntimeDependencies': 0,
+}
+intent['delivery']['architecture']['components'] = [{
+    'name': 'source-hub',
+    'paths': ['.github/**', 'goal.yaml'],
+}]
+intent['delivery']['architecture']['responsibilityChanges'] = False
+intent['delivery']['architecture']['interfaceChanges'] = [
+    'Source-hub PR diff gate',
+    'Goal delivery contract',
+]
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+  mkdir -p "$target/.github/workflows"
+  printf '%s\n' 'name: fixture' > "$target/.github/workflows/ci.yml"
+  cp "$repo_root/goal.yaml" "$target/goal.yaml"
+}
+
+hub_scope="$fixture/hub-scope"
+make_fixture "$hub_scope"
+configure_hub_ticket "$hub_scope" '[".github/**", "goal.yaml"]'
+run_check "$hub_scope" --changed-file .github/workflows/ci.yml \
+  --changed-file goal.yaml > "$fixture/hub-scope.out"
+grep -q '^GOV-PASS:' "$fixture/hub-scope.out"
+
+hub_scope_escape="$fixture/hub-scope-escape"
+make_fixture "$hub_scope_escape"
+configure_hub_ticket "$hub_scope_escape" '[".github/**"]'
+expect_code GOV-SCOPE-001 run_check "$hub_scope_escape" --changed-file goal.yaml
+
 docker_references="$fixture/docker-references"
 make_fixture "$docker_references"
 printf '%s\n' \
@@ -680,7 +776,7 @@ lock = {
   'schema': 'new-project.lock/v1',
   'standard': {
     'id': 'wellmanifest/new-project',
-    'version': '0.15.0',
+    'version': '0.16.0',
     'sourceRepository': 'wellmanifest/new-project',
     'sourceRevision': 'a' * 40,
     'publicationStatus': 'published',
@@ -738,7 +834,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.15.0',
+        'version': '0.16.0',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'a' * 40,
         'publicationStatus': 'published',
@@ -829,7 +925,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.15.0',
+        'version': '0.16.0',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'b' * 40,
         'publicationStatus': 'published',

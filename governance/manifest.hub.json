@@ -71,37 +71,55 @@
   },
   "docker": {
     "required": false,
-    "dockerfiles": ["Dockerfile", "Dockerfile.e2e"],
-    "composeFiles": ["compose.yml", "compose.yaml", "docker-compose.yml", "docker-compose.yaml", "compose.e2e.yml"]
+    "dockerfiles": [
+      "Dockerfile",
+      "Dockerfile.e2e"
+    ],
+    "composeFiles": [
+      "compose.yml",
+      "compose.yaml",
+      "docker-compose.yml",
+      "docker-compose.yaml",
+      "compose.e2e.yml"
+    ]
   },
   "coordination": {
     "mode": "workstreams",
     "maxActiveTicketsPerWorkstream": 1,
     "rejectActiveScopeOverlap": true,
     "workstreams": {
-      "application": { "ownedPaths": ["src/**", "app/**", "lib/**", "test/**", "tests/**"] },
-      "interfaces": { "ownedPaths": ["api/**", "sdk/**", "clients/**"] },
-      "infrastructure": { "ownedPaths": ["Dockerfile*", "compose*.yml", "compose*.yaml", "infra/**", ".github/**"] },
-      "governance": { "ownedPaths": [".governance/**", "AGENTS.md", "README.md", "TODO.md", "CHANGELOG.md", ".env.example", "goal.yaml", "project.sh", "project.bat", "project/**", "scripts/runtime.sh"] },
-      "integration": { "ownedPaths": ["VERSION", "package.json", "pyproject.toml", "go.mod", "Cargo.toml", "pom.xml", "docs/**"] }
+      "governance": {
+        "ownedPaths": [
+          "**"
+        ]
+      }
     },
     "integration": {
-      "workstream": "integration",
-      "requiredForPaths": ["package.json", "pyproject.toml", "go.mod", "Cargo.toml", "pom.xml"]
+      "workstream": "governance",
+      "requiredForPaths": []
     }
   },
   "delivery": {
     "requiredForImplementation": true,
     "maxActiveMinutes": 30,
     "checkpointMinutes": 25,
-    "allowedComplexityClasses": ["XS", "S"],
-    "maxImplementationFiles": 5,
-    "maxAffectedComponents": 2,
-    "maxPublicInterfaceChanges": 0,
+    "allowedComplexityClasses": [
+      "XS",
+      "S"
+    ],
+    "maxImplementationFiles": 9,
+    "maxAffectedComponents": 3,
+    "maxPublicInterfaceChanges": 3,
     "maxRuntimeDependencies": 0,
-    "targetBranches": ["main"],
-    "publicInterfacePaths": ["api/**", "sdk/**", "src/public/**"],
-    "dependencyManifestPaths": ["package.json", "pyproject.toml", "go.mod", "Cargo.toml", "pom.xml"]
+    "targetBranches": [
+      "main"
+    ],
+    "publicInterfacePaths": [
+      ".github/workflows/ci.yml",
+      "goal.yaml",
+      "scripts/governance_check.py"
+    ],
+    "dependencyManifestPaths": []
   },
   "stacks": []
 }

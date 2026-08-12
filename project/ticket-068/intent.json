@@ -13,6 +13,7 @@
     "goal.yaml",
     "governance/manifest.hub.json",
     "governance/manifest.default.json",
+    "scripts/governance_check.py",
     "tests/governance-validator.test.sh",
     "tests/adoption-lock.test.sh",
     "VERSION",
@@ -42,9 +43,9 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 8,
+      "maxImplementationFiles": 9,
       "maxAffectedComponents": 3,
-      "maxPublicInterfaceChanges": 2,
+      "maxPublicInterfaceChanges": 3,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
@@ -56,6 +57,7 @@
           "paths": [
             ".github/workflows/ci.yml",
             "governance/manifest.hub.json",
+            "scripts/governance_check.py",
             "tests/governance-validator.test.sh"
           ]
         },
@@ -78,6 +80,7 @@
       "responsibilityChanges": true,
       "interfaceChanges": [
         "PR CI validates the Governance Hub diff against exactly one active ticket intent",
+        "governance_check.py accepts an explicit source-hub work-classification path",
         "The immutable standard advances to v0.16.0 with the remediation-intent DSL"
       ],
       "dataChanges": [

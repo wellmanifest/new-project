@@ -12,12 +12,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Install schema validator
         run: python3 -m pip install --disable-pip-version-check 'jsonschema==4.25.1'
       - name: Validate JSON contracts
         run: |
           python3 -m json.tool governance/manifest.schema.json >/dev/null
           python3 -m json.tool governance/manifest.default.json >/dev/null
+          python3 -m json.tool governance/manifest.hub.json >/dev/null
           python3 -m json.tool governance/intent.schema.json >/dev/null
           python3 -m json.tool governance/lock.schema.json >/dev/null
           python3 -m json.tool governance/diagnostics.json >/dev/null
@@ -25,6 +29,20 @@ jobs:
           python3 -m json.tool governance/package-manifest.json >/dev/null
           python3 -m json.tool governance/required-checks.json >/dev/null
           python3 -m json.tool governance/decision-record.schema.json >/dev/null
+      - name: Validate Governance Hub pull-request scope
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 scripts/governance_check.py \
+            --root . \
+            --manifest governance/manifest.hub.json \
+            --stack-profiles governance/stack-profiles.json \
+            --base "$BASE_SHA" \
+            --head "$HEAD_SHA" \
+            --actor ci \
+            --format text
       - name: Assert required check names match workflow jobs
         run: python3 scripts/check_required_checks.py
       - name: Test required-checks gate

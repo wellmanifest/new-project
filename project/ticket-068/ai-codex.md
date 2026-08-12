@@ -55,6 +55,10 @@ retest.
 - Added the adoption-lock release assertion to the approved release-carrier
   scope after inventorying every current-version reference and before changing
   implementation files.
+- The first real source-hub invocation correctly exposed the validator's
+  adopted-target default for `.governance/work-classification.dsl.json`.
+  Bounded a backward-compatible explicit path option before editing that
+  public script; no root `.governance` surrogate will be created.
 
 ## Blockers
 
