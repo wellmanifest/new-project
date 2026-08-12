@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-08-12
+
+### Canonical managed workflow formatting
+
+- Canonicalize the managed governance workflow's cron scalar for Prettier 3
+  without changing its schedule or behavior.
+- Guard the exact managed byte with a dependency-free contract test so adopted
+  targets remain formatting-clean without bypassing their immutable lock.
+
 ## [0.16.0] - 2026-08-12
 
 ### Validated remediation planning and source-hub delivery

@@ -112,6 +112,11 @@ fi
 grep -Fq 'bash tests/branch-lifecycle.test.sh' "$repo_root/.github/workflows/ci.yml"
 
 target_workflow="$repo_root/template/files/new-project-governance.workflow.yml"
+grep -Fq '    - cron: "17 3 * * *"' "$target_workflow"
+if grep -Fq "    - cron: '17 3 * * *'" "$target_workflow"; then
+  echo 'managed governance workflow uses non-canonical cron quoting' >&2
+  exit 1
+fi
 grep -Fq "new-project.branch-lifecycle-snapshot/v1" "$target_workflow"
 grep -Fq 'deleteBranchOnMerge: settings.repository.deleteBranchOnMerge' "$target_workflow"
 grep -Fq 'python3 .governance/branch_lifecycle_check.py' "$target_workflow"
