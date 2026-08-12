@@ -2,8 +2,8 @@
 
 - **ID**: ticket-066
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-12
 
 ## Cel i Zakres
@@ -36,7 +36,7 @@ reusable runbookiem.
 - [x] AC-04: Każdy emitowany stabilny `GOV-*` ma wpis z komunikatem i
   remediacją w walidowanym katalogu; złożone rozwiązania mogą wskazywać
   sprawdzalny runbook `error/*.md` o jednolitej strukturze.
-- [ ] AC-05: Focused testy allocatora, workspace, katalogu diagnostyk i
+- [x] AC-05: Focused testy allocatora, workspace, katalogu diagnostyk i
   traceability oraz pełny Linux contract przechodzą; hosted CI i exact-head
   approval wiążą finalny PR.
 
@@ -49,6 +49,16 @@ reusable runbookiem.
 - Nie migrujemy historycznych ticketów ani logów do `error/`; zapisujemy tam
   wyłącznie rozwiązania wielokrotnego użytku.
 - Ticket 065 pozostaje osobnym `BACKLOG / PLAN` i nie wchodzi w ten zakres.
+
+## Dowody zakończenia
+
+- Implementacyjny PR #94 przeszedł Linux i Windows dla exact head
+  `acd08f202bf3ac6543ac796631531222566ec7c8`.
+- Validator App run `31578853527` wystawił deterministyczne `APPROVED` jako
+  `ifuri-validator-agent[bot]` dla tego samego HEAD i `ticket-066`.
+- PR #94 został scalony jako
+  `9b2ca5dc55350139520121df019b1e0e0f2a9e5c`; post-merge run `31579226383`
+  przeszedł Linux i Windows, a zdalny branch implementacyjny został usunięty.
 
 ## Uczestnicy
 
