@@ -1,0 +1,2 @@
+[2026-08-12] Fleet workspace audit aborted on valid unborn repository subactor/www-sub-actor while resolving HEAD.
+[2026-08-12] Diagit independently classified the same repository as EMPTY_REPOSITORY and completed its 48-repository local audit.

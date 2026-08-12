@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-064`](project/ticket-064/README.md) — audyt workspace ma
+  poprawnie reprezentować unborn HEAD i nadal wykrywać duplikaty pustych
+  checkoutów. Stan: `IN_PROGRESS / PLAN`; klasyfikacja:
+  `BUG / P1 / regression`.
+
 - [x] [`ticket-063`](project/ticket-063/README.md) — lokalny lifecycle
   worktree/klonów ma read-only audyt z ochroną unikalnych danych, a pakiet
   adopcyjny instaluje rzeczywisty zdalny enforcement. PR #89 oraz post-merge

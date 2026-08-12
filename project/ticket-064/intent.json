@@ -1,0 +1,72 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-064",
+  "summary": "Audit valid unborn Git repositories without hiding corrupt HEAD metadata",
+  "workstream": "governance",
+  "classification": {"kind": "BUG", "priority": "P1", "origin": "regression"},
+  "allowedPaths": [
+    "scripts/workspace_lifecycle_check.py",
+    "tests/workspace-lifecycle.test.sh",
+    "project/ticket-064/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "eccbc62953ff13d0cc06ae31f80ebb672b540f24",
+    "targetBranch": "main",
+    "outcome": "A fleet audit represents a valid unborn checkout explicitly and continues without weakening corruption failures",
+    "nonGoals": [
+      "No commits or mutations in audited repositories",
+      "No automatic cleanup",
+      "No suppression of malformed or missing Git metadata"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use porcelain v2 branch.oid initial as the only proof that an unresolved HEAD is a valid unborn repository",
+      "components": [
+        {"name": "workspace-audit", "paths": ["scripts/workspace_lifecycle_check.py", "tests/workspace-lifecycle.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": ["Finding evidence head is nullable for an unborn checkout"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert before merge; the prior checker remains fail-closed on unborn repositories"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/workspace-lifecycle.test.sh"],
+        "evidence": "A valid initial repository is audited without a lifecycle finding"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/workspace-lifecycle.test.sh"],
+        "evidence": "Two empty checkouts of one remote identity produce one duplicate finding with null head"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["all commands from the Linux CI test job", "ruff check ."],
+        "evidence": "Focused and complete contracts preserve all existing lifecycle behavior"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["todo2code required-LLM exact-head analysis", "Validator App direct PR validation"],
+        "evidence": "Provider failure is fail-closed without fallback and independent LLM review binds the exact head"
+      }
+    ]
+  }
+}
