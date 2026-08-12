@@ -18,3 +18,5 @@
   the existing required hosted Windows check without claiming local success.
 - Confirmed the new hosted gate blocks Goal's post-test README/changelog scope
   drift; reverted that generated drift before requesting any review.
+- Recorded trusted merge, green post-merge Linux/Windows verification and exact
+  immutable v0.16.0 publication evidence; closed the ticket from `main`.

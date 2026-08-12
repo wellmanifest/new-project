@@ -9,10 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-068`](project/ticket-068/README.md) — naprawić wygenerowany poza
+- [x] [`ticket-068`](project/ticket-068/README.md) — naprawiono wygenerowany poza
   zakresem ticketu 065 `goal.yaml`, uruchamiać deterministyczną walidację na
   rzeczywistym diffie PR Governance Hub i opublikować DSL remediacji jako
-  immutable `v0.16.0`. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
+  immutable `v0.16.0`. PR #100 scalono jako `6800f01`, post-merge Linux/Windows
+  są zielone, a annotowany tag i finalny release wskazują ten sam SHA. Stan:
+  `DONE / DONE`; klasyfikacja:
   `BUG / P1 / regression`; workstream: `governance`.
 
 - [x] [`ticket-067`](project/ticket-067/README.md) — zdefiniowano target-owned

@@ -2,8 +2,8 @@
 
 - **ID**: ticket-068
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-12
 
 ## Cel i Zakres
@@ -22,11 +22,21 @@ DSL remediacji jako immutable `v0.16.0`.
 - [x] AC-02: `goal.yaml` ma tożsamość `new-project`, nie deklaruje żadnego
   registry ani strategii publikacji pakietów i dopuszcza wyłącznie zarządzany
   PR oraz immutable release z `main`.
-- [ ] AC-03: wersje w `VERSION`, manifeście targetu i manifeście huba są
+- [x] AC-03: wersje w `VERSION`, manifeście targetu i manifeście huba są
   spójne, a pełne Linux/Windows contract tests przechodzą na exact HEAD i po
   merge.
-- [ ] AC-04: annotowany tag i finalny GitHub Release `v0.16.0` wskazują
+- [x] AC-04: annotowany tag i finalny GitHub Release `v0.16.0` wskazują
   dokładny, czysty i ponownie przetestowany commit `origin/main`.
+
+## Dowód zamknięcia
+
+- PR #100 został zatwierdzony przez `ifuri-validator-agent[bot]` na dokładnym
+  headzie `938462933e5646195bbb69423cacf0e1f9aa4a95` i scalony jako
+  `6800f0138bc9063eb2dacb0a8b797dedcafb7952`.
+- Post-merge CI `31595348143` zakończyło zadania `test` i
+  `windows-governance` wynikiem `success` na tym merge SHA.
+- Annotowany tag `v0.16.0` peeluje dokładnie do merge SHA, a finalny GitHub
+  Release został opublikowany 2026-08-12T12:53:13Z.
 
 ## Ryzyka i Uwagi
 
