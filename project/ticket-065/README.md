@@ -59,6 +59,9 @@ publiczny pakiet Goal 2.1.295 na żywym glon przed szerszą adopcją.
 - Nowy generator zaakceptował opublikowane v0.14.1 dopiero po kanonicznym
   tag/Release proof i doszedł do read-only planu 26 zmian dla glon; wykrył też
   brakujący lokalny prerequisite `Dockerfile`, nie zapisując plików.
+- Publiczny Goal 2.1.295 przekazał pełny SHA bieżącego kandydata oraz jawny
+  `--allow-unpublished-for-testing` do nowego generatora. Read-only pilot glon
+  poprawnie zwrócił drift 33 zmian (exit 1), a stan targetu pozostał bez zmian.
 
 ## Uczestnicy
 

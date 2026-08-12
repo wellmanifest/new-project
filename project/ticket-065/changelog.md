@@ -16,3 +16,5 @@
   Goal-first docs and synchronized v0.15.0 release metadata.
 - Passed focused and complete local Linux contracts plus a read-only live glon
   proof using the already-published v0.14.1 standard.
+- Passed the exact candidate SHA through public Goal 2.1.295 in explicit
+  unpublished-test mode; the live glon pilot reported drift without writes.

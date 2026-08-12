@@ -48,6 +48,9 @@ standard as v0.15.0, then validate it first against live glon.
 - Passed Ruff, focused provenance tests and the complete local Linux CI
   contract; the live published-v0.14.1 check reached glon's read-only drift
   plan only after both publication proofs passed.
+- Passed the exact candidate SHA through the public Goal 2.1.295 high-level
+  interface with the explicit test-only flag; glon reported 33 read-only
+  changes and retained only its two pre-existing user-owned modifications.
 
 ## Blockers
 
