@@ -41,7 +41,7 @@ checker enumeruje tylko checkouty. W efekcie po usunięciu worktree zwolniony
 - Added a fixture that removes three linked worktrees, proves all three refs
   remain and fail the audit, then deletes only those exact integrated refs and
   proves PASS.
-- Ran the candidate against `/home/tom/github/subactor`: it found two genuinely
+- Ran the candidate against the live Subactor workspace: it found two genuinely
   stale refs that the released checker missed, preserved the active dirty
   `www-sub-actor` branch and a newly created Twin closure worktree, and passed
   0/0 when those two active checkout paths were explicitly allowlisted.

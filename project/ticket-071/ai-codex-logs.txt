@@ -7,5 +7,5 @@
 2026-08-12 live old baseline: released checker previously reported subactor workspace PASS 0/0 while local refs remained.
 2026-08-12 live candidate: detected founder codex/publish-control-lan-origin-20260809, platform fix/www-canonical-source-path and active www-sub-actor ticket-012-transparent-offer.
 2026-08-12 cleanup proof: platform ref 50ae88c matched merged PR #67 exact approved head/tree; founder ref 9224859 matched merged PR #1 head and exact merge tree 5e87d9a; both exact refs deleted.
-2026-08-12 preservation: www-sub-actor ticket-012 remains active and untouched; new Twin closure worktree /tmp/twin-ticket005-close.fOKvY1 remains IN_PROGRESS/EDIT and untouched.
+2026-08-12 preservation: www-sub-actor ticket-012 remains active and untouched; the newly created Twin ticket-005 closure worktree remains IN_PROGRESS/EDIT and untouched.
 2026-08-12 live allow audit: exact --allow paths for www-sub-actor and Twin closure -> GOV-WORKSPACE-PASS 0 errors/0 warnings; terminal audit without allow -> three expected active findings.
