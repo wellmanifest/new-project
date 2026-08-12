@@ -14,3 +14,9 @@
 - Kept the first required-LLM todo2code attempt fail-closed when the configured
   OpenRouter key still reported its weekly limit; no deterministic fallback was
   accepted as semantic evidence.
+- Merged PR #88 after exact-head Validator GLM approval and green hosted
+  Linux/Windows checks; the post-merge run remained green.
+- Verified the adopted SHA in `twin` through real Linux, Windows and reusable
+  governance execution with zero Node.js 20 annotations.
+- Marked the ticket `DONE / DONE`; provider unavailability remains explicit
+  and is not represented as a successful todo2code semantic analysis.

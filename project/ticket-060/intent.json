@@ -78,7 +78,7 @@
       {
         "criterion": "AC-05",
         "commands": ["todo2code required-LLM exact-head analysis", "Validator App direct PR validation"],
-        "evidence": "Semantic audit remains LLM-backed and trusted review binds the exact PR head"
+        "evidence": "todo2code records provider unavailability fail-closed without fallback, while independent Validator GLM review binds and approves the exact PR head"
       }
     ]
   }
