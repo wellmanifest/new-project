@@ -7,3 +7,4 @@
 2026-08-12 MERGE {"merge_commit_sha":"6800f0138bc9063eb2dacb0a8b797dedcafb7952","merged":true,"pull_request":100}
 2026-08-12 POST_MERGE {"run_id":31595348143,"head_sha":"6800f0138bc9063eb2dacb0a8b797dedcafb7952","test":"success","windows-governance":"success"}
 2026-08-12 RELEASE {"tag":"v0.16.0","tag_type":"tag","peeled_commit":"6800f0138bc9063eb2dacb0a8b797dedcafb7952","draft":false,"prerelease":false,"published_at":"2026-08-12T12:53:13Z"}
+2026-08-12 GOAL_PULL_REQUEST_NOOP {"version":"2.1.297","existing_commits":1,"force_publish":true,"result":"No changes to commit","branch_pushed":false,"pull_request_created":false}
