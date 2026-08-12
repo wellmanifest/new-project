@@ -15,9 +15,10 @@
   Linux/Windows przechodzą, exact-head Validator GLM zatwierdza bez findings.
   Stan: `DONE / DONE`; klasyfikacja: `BUG / P1 / regression`.
 
-- [ ] [`ticket-060`](project/ticket-060/README.md) — przepiąć własne workflow
-  huba i reusable governance na pełne SHA oficjalnych akcji Node.js 24 bez
-  zmiany kontraktu workflow. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+- [x] [`ticket-060`](project/ticket-060/README.md) — własne workflow huba i
+  reusable governance używają pełnych SHA oficjalnych akcji Node.js 24 bez
+  zmiany kontraktu; downstream `twin` potwierdza rzeczywiste wykonanie bez
+  adnotacji Node.js 20. Stan: `DONE / DONE`; klasyfikacja:
   `SERVICE / P1 / health`.
 
 - [x] [`ticket-059`](project/ticket-059/README.md) — rootowy Compose jest

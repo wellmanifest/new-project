@@ -38,11 +38,15 @@ wstrzykniętego klienta `github`, które v8 zachowuje.
   `require-llm`, lecz OpenRouter odrzucił już etap NL kodem HTTP 403 z powodu
   nadal aktywnego limitu tygodniowego klucza. Run pozostał fail-closed: bez
   grafu, fallbacku i fałszywego twierdzenia o analizie LLM.
+- PR #88 przeszedł Linux/Windows i Validator `31549702362` z GLM 5.2 bez
+  findings, po czym został scalony jako `268311ba502cfa5306262f709e8086011c95088a`;
+  post-merge run `31549898144` jest zielony.
+- Downstream `twin` przypiął nowy standard i wykonał reusable governance w runie
+  `31550250931` bez adnotacji Node.js 20. Integracja zakończyła się na
+  `main@edfb690d4523643d6d2ea410a943b0a4a3ddd078` z zielonym runem
+  `31550934709`.
 
 ## Blockers
 
-- Dostęp lokalnego `todo2code` do LLM jest nadal ograniczony po stronie
-  skonfigurowanego klucza OpenRouter; ponowienie nastąpi na finalnym HEAD.
-- New authority is still required for destructive action, secret access, new
-  external coordination or material objective expansion. Trusted merge wymaga
-  niezależnego review current-head; autoryzacja sesji go nie zastępuje.
+- Brak. Ticket zakończono `DONE / DONE`; niedostępność lokalnego klucza
+  todo2code jest jawnie zapisana jako fail-closed, a nie jako wynik analizy.
