@@ -14,3 +14,6 @@
 - Extracted both modules into independent local Wellmanifest repositories with
   separate governed baselines and conformance environments; kept the hub copies
   as a composition/incubation projection pending immutable standalone releases.
+- Resumed the ticket after the competing workstream closed, rebased onto
+  `new-project 0.16.2`, repeated the complete Linux contract and recorded the
+  user's bounded ticket-branch publication authority.

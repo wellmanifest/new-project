@@ -59,6 +59,15 @@ bez implementacji, remote i publikacji. Dopiero jego prawdziwy SHA staje się
   reguł oraz pełny Linux contract przeszły także po odświeżeniu na `v0.16.1`.
 - Wcześniejszy gate ticketu 069 przeszedł z 0 findings; finalny gate bieżącej
   bazy raportuje wyłącznie `GOV-WORKSTREAM-002` z powodu aktywnego ticketu 070.
+- Po governance-only closure ticketów 070-072 zrebasowano pojedynczy atomowy
+  commit na aktualny `origin/main@452d4008a71d67ad1965f6042faa217978a82b42`.
+- Ponowny audyt wykazał 171 reguł, 56 kodów, zero niezamapowanych reguł i zero
+  nieprzypisanych kodów. Required checks, decision records, governance scripts,
+  validator, branch/workspace lifecycle, environment, adoption lock i
+  rule-enforcement przeszły.
+- Hash kontraktów w `subprojects/` jest identyczny z przetestowanymi
+  samodzielnymi repozytoriami; oba przechodzą host i networkless Docker
+  conformance z łącznie 6 dokumentami dodatnimi i 16 próbami adversarial.
 
 ## Blokery
 

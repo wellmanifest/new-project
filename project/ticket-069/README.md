@@ -3,7 +3,7 @@
 - **ID**: ticket-069
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-12
 
 ## Cel i zakres
@@ -33,7 +33,7 @@ Wyjątek nie może autoryzować remote, push, PR, merge, tagu ani release.
   repozytorium, ticketem, stanem oczekiwanym oraz referencjami dowodów.
 - [x] AC-06: `POLICY.md`, `CONTRIBUTING.md` i instrukcje agentów dopuszczają
   seed baseline tylko w wąskiej granicy, bez osłabienia `C-PUBLISH-001`.
-- [ ] AC-07: Governance, Draft 2020-12 metaschema, pozytywne i negatywne
+- [x] AC-07: Governance, Draft 2020-12 metaschema, pozytywne i negatywne
   kontrakty, audyt rule-enforcement oraz pełne testy Linux przechodzą.
 
 ## Ryzyka i uwagi
@@ -54,6 +54,10 @@ Wyjątek nie może autoryzować remote, push, PR, merge, tagu ani release.
   Dawny konflikt workstreamu z ticketem 070 zniknął po jego governance-only
   closure na `main`. Ticket 069 został wznowiony do walidacji względem
   aktualnej bazy `452d4008a71d67ad1965f6042faa217978a82b42`.
+- Po rebase na bieżący `main` (`new-project 0.16.2`) audyt 171 reguł, wszystkie
+  dziewięć testów Linux, dwa identyczne kontrakty standalone/subproject oraz
+  `git diff --check` przechodzą. Ticket pozostaje `IN_PROGRESS / PUBLICATION`
+  do czasu niezależnego exact-head review i trusted merge.
 
 ## Publication authorization
 
