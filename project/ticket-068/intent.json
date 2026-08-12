@@ -1,0 +1,131 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-068",
+  "summary": "Correct Goal release contract and publish remediation DSL",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    ".github/workflows/ci.yml",
+    "goal.yaml",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "tests/adoption-lock.test.sh",
+    "VERSION",
+    "CHANGELOG.md",
+    "project/ticket-068/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2ae4142a3c54a7542d33cf7ddae7614068ccb3f6",
+    "targetBranch": "main",
+    "outcome": "The Governance Hub rejects pull-request paths outside its approved ticket, uses a truthful non-registry Goal delivery contract, and publishes the remediation DSL as immutable v0.16.0",
+    "nonGoals": [
+      "No Python, Node.js, Rust or other package-registry publication",
+      "No target-repository ticket, report or remediation intent is stored in the Governance Hub",
+      "No weakening of exact-head review or branch lifecycle enforcement",
+      "No mutation or cleanup of the user's primary dirty worktree",
+      "No moving, replacing or deleting an existing tag or GitHub Release"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the existing deterministic governance validator with a source-hub manifest in PR CI, and keep Goal configured as a generic non-registry project whose only publication side effect is the governed immutable Git tag and GitHub Release",
+      "components": [
+        {
+          "name": "source-hub-scope-gate",
+          "paths": [
+            ".github/workflows/ci.yml",
+            "governance/manifest.hub.json",
+            "scripts/governance_check.py",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "goal-delivery-contract",
+          "paths": [
+            "goal.yaml"
+          ]
+        },
+        {
+          "name": "release-carriers",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "CHANGELOG.md",
+            "tests/adoption-lock.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        "PR CI validates the Governance Hub diff against exactly one active ticket intent",
+        "governance_check.py accepts an explicit source-hub work-classification path",
+        "The immutable standard advances to v0.16.0 with the remediation-intent DSL"
+      ],
+      "dataChanges": [
+        "goal.yaml records the real new-project identity, synchronized version sources and non-registry release policy",
+        "manifest.hub.json defines source-maintenance coordination separately from the adopted target manifest"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the unmerged branch; after publication keep adopters pinned to v0.15.0 and never move or delete v0.16.0"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "A source-hub fixture accepts the approved mixed-component diff and rejects an unlisted Goal-generated path with GOV-SCOPE-001"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "goal governance verify-delivery --delivery-mode pull-request",
+          "goal governance verify-delivery --delivery-mode direct-main"
+        ],
+        "evidence": "Goal resolves only the configured governed delivery modes and no package registry is configured"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "all commands from the Linux CI test job",
+          "tests/windows-governance.test.ps1"
+        ],
+        "evidence": "All source-hub contracts pass at the exact reviewed head and clean merge SHA"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "An annotated v0.16.0 tag and final GitHub Release bind the clean retested origin/main SHA"
+      }
+    ]
+  }
+}

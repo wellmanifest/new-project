@@ -216,9 +216,13 @@ def work_classification_error(value: Any) -> str | None:
     return None
 
 
-def load_work_classification(root: Path, report: Report) -> dict[str, Any] | None:
-    path = root / ".governance/work-classification.dsl.json"
+def load_work_classification(
+    root: Path,
+    report: Report,
+    raw_path: str = ".governance/work-classification.dsl.json",
+) -> dict[str, Any] | None:
     try:
+        path = safe_repo_path(root, raw_path)
         value = load_json(path)
         error = work_classification_error(value)
         if error:
@@ -228,7 +232,7 @@ def load_work_classification(root: Path, report: Report) -> dict[str, Any] | Non
             "GOV-MANIFEST-001",
             f"Work classification contract is invalid: {error}",
             "Restore the managed work-classification DSL from the pinned standard release.",
-            [".governance/work-classification.dsl.json"],
+            [raw_path],
         )
         return None
     return value
@@ -2654,6 +2658,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--manifest", default=".governance/manifest.json")
     parser.add_argument("--lock", default=None)
     parser.add_argument("--stack-profiles", default=None)
+    parser.add_argument(
+        "--work-classification",
+        default=".governance/work-classification.dsl.json",
+    )
     parser.add_argument("--base")
     parser.add_argument("--head", default="HEAD")
     parser.add_argument("--changed-file", action="append", default=[])
@@ -2751,7 +2759,7 @@ def run_governance_checks(
     records = load_ticket_records(directories, manifest["ticket"])
     base = resolve_validation_base(args.base, records, manifest["ticket"])
     changed = resolve_changed_paths(args, root, base, report)
-    load_work_classification(root, report)
+    load_work_classification(root, report, args.work_classification)
     check_lock(root, lock_path, manifest, report)
     check_required_files(root, manifest, report)
     check_docker_image_references(root, manifest, report)
