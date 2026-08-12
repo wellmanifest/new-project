@@ -13,3 +13,4 @@
 [2026-08-12] Full Linux contract: PASS; 160 rules, 48 codes, zero unmapped or unclaimed codes.
 [2026-08-12] Validator GLM 5.2 reviewed exact head 132146827c7235f902e1ba57d82088094a716050 and requested recursive worktree discovery plus explicit diagnostic stream capture.
 [2026-08-12] Replaced single-pass worktree expansion with a bounded worklist and captured stderr in the missing-root regression.
+[2026-08-12] todo2code run 20260812T004929Z-a1a7dbc7 requested GLM 5.2 on exact head 370b07c, then failed closed at NL with LLM_UNAVAILABLE; no graph or fallback was produced.

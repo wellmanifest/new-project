@@ -52,6 +52,10 @@ Pilotażowe linked worktree i niezależne klony nie są widoczne dla CI.
   gwarantuje domknięcia dla ścieżek odkrytych w trakcie audytu. Zastąpiono je
   ograniczoną kolejką roboczą, a test błędu wejściowego przechwytuje jawnie oba
   strumienie diagnostyczne.
+- todo2code `20260812T004929Z-a1a7dbc7` zażądał GLM 5.2 dla semantycznych
+  etapów dokładnego headu `370b07c`, lecz skonfigurowany klucz nadal otrzymał
+  limit tygodniowy 403. Run zakończył się fail-closed na NL, bez grafu i bez
+  fallbacku; niezależne review LLM pozostaje obowiązkową bramką publikacji.
 
 ## Blockers
 
