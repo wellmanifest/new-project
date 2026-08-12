@@ -17,3 +17,6 @@
 - Resumed the ticket after the competing workstream closed, rebased onto
   `new-project 0.16.2`, repeated the complete Linux contract and recorded the
   user's bounded ticket-branch publication authority.
+- Closed the lifecycle after PR #108 passed required checks, received trusted
+  exact-head Validator App approval and merged as `5484605`; its remote branch
+  was deleted.

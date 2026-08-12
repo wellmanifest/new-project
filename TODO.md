@@ -27,13 +27,12 @@
   potwierdzono upgrade żywego targetu przez Goal. Stan: `DONE / DONE`;
   klasyfikacja: `BUG / P1 / regression`; workstream: `governance`.
 
-- [ ] [`ticket-069`](project/ticket-069/README.md) — wydzielono i zwalidowano
+- [x] [`ticket-069`](project/ticket-069/README.md) — wydzielono i zwalidowano
   `git-lifecycle` i `ticket-lifecycle` jako wersjonowane podprojekty z
   zamkniętymi schema/GBNF oraz bezpieczną transakcją autonomicznego seed
-  baseline. Stan: `IN_PROGRESS / PUBLICATION`; blocker ticketu 070 jest
-  zamknięty, pełny kontrakt przechodzi względem aktualnego `main`, a
-  implementacja jest publikowana przez ticket branch oraz PR. Oba moduły
-  wydzielono równolegle do osobnych repozytoriów Wellmanifest. Klasyfikacja:
+  baseline. Stan: `DONE / DONE`; PR #108 przeszedł Linux/Windows, exact-head
+  Validator approval i został scalony jako `5484605`; branch został usunięty.
+  Oba moduły wydzielono równolegle do osobnych repozytoriów Wellmanifest. Klasyfikacja:
   `FEATURE / P1 / requested`; workstream: `governance`; zależy od zamknięcia
   publikacji ticketu 068.
 
