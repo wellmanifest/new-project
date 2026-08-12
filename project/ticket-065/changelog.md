@@ -18,3 +18,6 @@
   proof using the already-published v0.14.1 standard.
 - Passed the exact candidate SHA through public Goal 2.1.295 in explicit
   unpublished-test mode; the live glon pilot reported drift without writes.
+- Revalidated the exact clean candidate with the native source-hub health
+  runner installed from public Goal 2.1.297; all governed Linux suites passed
+  and the runner preserved the working-tree state.

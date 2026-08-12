@@ -51,6 +51,10 @@ standard as v0.15.0, then validate it first against live glon.
 - Passed the exact candidate SHA through the public Goal 2.1.295 high-level
   interface with the explicit test-only flag; glon reported 33 read-only
   changes and retained only its two pre-existing user-owned modifications.
+- Installed Goal 2.1.297 from public PyPI and used its native source-hub runner
+  against the exact clean candidate: all 15 governance JSON documents, the
+  required-check comparator and all 9 wired shell suites passed without any
+  Git-state mutation.
 
 ## Blockers
 

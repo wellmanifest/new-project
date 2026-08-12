@@ -9,3 +9,4 @@
 2026-08-12 full Linux: JSON, required-checks, decisions, scripts, branch/workspace lifecycle, environment, rule traceability and suite wiring PASS.
 2026-08-12 live read-only proof: canonical v0.14.1 accepted; glon reports 26 managed changes and missing Dockerfile; no target writes.
 2026-08-12 Goal candidate proof: public goal 2.1.295 passed exact candidate 74d7f8394e8509b9e41d2729a345aaa49adaf111 with explicit unpublished-test mode; glon reports 33 changes, exit 1, no writes.
+2026-08-12 public Goal health: PyPI goal 2.1.297 passed exact candidate 1bfe1510e9375243aedf527205eb7e1d77d399c1 with GOV-HUB-PASS (15 JSON, 9 shell suites); clean Git status hash remained e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.

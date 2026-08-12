@@ -62,6 +62,10 @@ publiczny pakiet Goal 2.1.295 na żywym glon przed szerszą adopcją.
 - Publiczny Goal 2.1.295 przekazał pełny SHA bieżącego kandydata oraz jawny
   `--allow-unpublished-for-testing` do nowego generatora. Read-only pilot glon
   poprawnie zwrócił drift 33 zmian (exit 1), a stan targetu pozostał bez zmian.
+- Publiczny Goal 2.1.297 z PyPI uruchomił natywny source-hub health na dokładnym
+  HEAD `1bfe1510e9375243aedf527205eb7e1d77d399c1`: 15 dokumentów JSON, comparator
+  wymaganych checków i wszystkie 9 zestawów shell zakończyły się
+  `GOV-HUB-PASS`, a hash pustego stanu Git pozostał bez zmian.
 
 ## Uczestnicy
 
