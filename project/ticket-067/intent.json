@@ -38,7 +38,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "32238076db1e95ed60dbc878b71fab1588ff53d6",
+    "acceptedBaseSha": "619718bc7a8339119d87b6bb9875a82b69b66480",
     "targetBranch": "main",
     "outcome": "Target repositories can turn stable diagnostics into validated, hash-bound remediation intents that an LLM and todo2code can analyze without expanding approved scope or authority",
     "nonGoals": [

@@ -47,8 +47,8 @@ ale nie może rozszerzyć zaakceptowanego zakresu ani zatwierdzić zmiany.
   trusted exact-head approval pozostają niezależnymi twardymi granicami.
 - Brudnych worktree, nieczytelnych ścieżek ani nieznanych danych nie wolno
   automatycznie usuwać lub ukrywać.
-- Ticket 065 zachowuje osobny workstream `governance` i stan `PUBLICATION`;
-  ten ticket nie taguje v0.15.0 ani nie zmienia jego plików.
+- Ticket 065 został niezależnie zamknięty przez PR #97 przed publikacją tego
+  workstreamu; ticket 067 nie tagował v0.15.0 ani nie zmieniał jego plików.
 
 ## Uczestnicy
 
