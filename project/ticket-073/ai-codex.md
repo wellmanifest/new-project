@@ -29,7 +29,8 @@ grafu todo2code, których `source.path` wskazuje deklarowane projekcje, oraz
 3. Dodać byte-exact `verify-todo2code` z fail-closed
    `GOV-REMEDIATION-004`.
 4. Wymagać grafu przy analizie, wyznaczać rekordy projekcji po `source.path` i
-   oceniać wyłącznie plany/diagnostyki cytujące te rekordy.
+   oceniać wyłącznie plany/diagnostyki cytujące te rekordy, wiążąc digest grafu
+   i użyte record IDs w advisory overlay.
 5. Uaktualnić regułę DSL, runbook, katalog, dokumentację i instrukcje adopcji.
 6. Uruchomić test regresyjny oraz realny todo2code, pełne testy, Ruff i gate;
    zapisać dowody i dostarczyć przez Goal/PR z exact-head Validator review.

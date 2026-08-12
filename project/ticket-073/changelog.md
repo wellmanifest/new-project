@@ -8,3 +8,5 @@
   regressions, bounded architecture, acceptance criteria and validation plan.
 - Corrected the allocator-supplied workstream to the current hub manifest's
   `governance` integration boundary before any implementation commit.
+- Added the todo2code graph digest and projection record IDs to the bounded
+  advisory data contract before implementation.
