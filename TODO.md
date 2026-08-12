@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-068`](project/ticket-068/README.md) — naprawić wygenerowany poza
+  zakresem ticketu 065 `goal.yaml`, uruchamiać deterministyczną walidację na
+  rzeczywistym diffie PR Governance Hub i opublikować DSL remediacji jako
+  immutable `v0.16.0`. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  `BUG / P1 / regression`; workstream: `governance`.
+
 - [x] [`ticket-067`](project/ticket-067/README.md) — zdefiniowano target-owned
   DSL intencji naprawy z faktami, wykluczeniami false-positive, zależnościami,
   weryfikacją i bezpieczeństwem; dodać deterministyczny validator, brief dla
@@ -18,11 +24,11 @@
   jako `main@711766d`, a post-merge CI jest zielone. Stan: `DONE / DONE`;
   klasyfikacja: `FEATURE / P1 / requested`; workstream: `integration`.
 
-- [ ] [`ticket-065`](project/ticket-065/README.md) — usunąć bezwarunkowe
+- [x] [`ticket-065`](project/ticket-065/README.md) — usunąć bezwarunkowe
   `publicationStatus: published` z generatora, wymagać dokładnego annotowanego
   tagu i finalnego GitHub Release, a jawne fixture'y oznaczać jako
   `unpublished-test`; następnie opublikować pełny standard v0.15.0 i sprawdzić
-  go przez publiczny Goal najpierw na glon. Stan: `IN_PROGRESS / PUBLICATION`;
+  go przez publiczny Goal najpierw na glon. Stan: `DONE / DONE`;
   klasyfikacja: `BUG / P0 / regression`.
 
 - [x] [`ticket-066`](project/ticket-066/README.md) — naprawiono ręczny bypass
