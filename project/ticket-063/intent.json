@@ -13,6 +13,8 @@
     "scripts/branch_lifecycle_check.py",
     "template/files/new-project-governance.workflow.yml",
     "governance/package-manifest.json",
+    "governance/rule-enforcement.json",
+    "scripts/audit_rule_enforcement.py",
     "tests/workspace-lifecycle.test.sh",
     "tests/branch-lifecycle.test.sh",
     "tests/adoption-lock.test.sh",
@@ -27,7 +29,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "3bc7b96d06245e34276087ab4d664e2aa3599672",
+    "acceptedBaseSha": "1e7ff1ceeb3e9dff2e5c926a8088878a6ffb7d2f",
     "targetBranch": "main",
     "outcome": "A completed task leaves no disposable local workspace and no orphan remote branch while preserving every unmerged or unclassified datum",
     "nonGoals": [
@@ -38,7 +40,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 10,
+      "maxImplementationFiles": 16,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
@@ -49,7 +51,7 @@
       "components": [
         {"name": "workspace-contract", "paths": ["POLICY.md", "CONTRIBUTING.md", "AGENTS.md", "template/files/AGENTS.template.md"]},
         {"name": "workspace-audit", "paths": ["scripts/workspace_lifecycle_check.py", "tests/workspace-lifecycle.test.sh"]},
-        {"name": "target-ci-package", "paths": ["template/files/new-project-governance.workflow.yml", "scripts/branch_lifecycle_check.py", "governance/package-manifest.json", "tests/branch-lifecycle.test.sh", ".github/workflows/ci.yml"]}
+        {"name": "target-ci-package", "paths": ["template/files/new-project-governance.workflow.yml", "scripts/branch_lifecycle_check.py", "governance/package-manifest.json", "governance/rule-enforcement.json", "scripts/audit_rule_enforcement.py", "tests/branch-lifecycle.test.sh", ".github/workflows/ci.yml"]}
       ],
       "responsibilityChanges": true,
       "interfaceChanges": ["Adopted package gains a local workspace checker and managed remote lifecycle workflow"],

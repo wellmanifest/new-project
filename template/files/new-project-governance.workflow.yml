@@ -71,4 +71,3 @@ jobs:
             --snapshot "$BRANCH_LIFECYCLE_SNAPSHOT" \
             --expected-repository "$GITHUB_REPOSITORY" \
             --format text
-

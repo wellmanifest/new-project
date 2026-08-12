@@ -3,7 +3,7 @@
 - **ID**: ticket-063
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-12
 
 ## Cel i zakres
@@ -24,13 +24,13 @@ agenta potwierdzanym audytem, a nie pozorną kontrolą serwerową.
 
 - [x] AC-01: Polecenie użytkownika upoważnia do lokalnego audytu, naprawy
   standardu i usunięcia wyłącznie zweryfikowanych artefaktów pilotażowych.
-- [ ] AC-02: DSL i instrukcje agenta definiują bezpieczny terminalny cleanup
+- [x] AC-02: DSL i instrukcje agenta definiują bezpieczny terminalny cleanup
   worktree, klonów i lokalnych branchy, z ochroną dirty/unreachable danych.
-- [ ] AC-03: Deterministyczny audyt wykrywa dodatkowe linked worktree i
+- [x] AC-03: Deterministyczny audyt wykrywa dodatkowe linked worktree i
   niezależne klony tego samego repozytorium, nie wykonując usuwania.
-- [ ] AC-04: Pakiet adopcyjny instaluje audyt workspace oraz workflow CI, który
+- [x] AC-04: Pakiet adopcyjny instaluje audyt workspace oraz workflow CI, który
   sprawdza rzeczywisty zdalny lifecycle branchy.
-- [ ] AC-05: Testy focused, pełny Linux contract i Ruff przechodzą, a audyt
+- [x] AC-05: Testy focused, pełny Linux contract i Ruff przechodzą, a audyt
   `~/github/semcod` nie pomija żadnego zachowanego wyjątku.
 
 ## Ryzyka i uwagi
@@ -48,4 +48,3 @@ agenta potwierdzanym audytem, a nie pozorną kontrolą serwerową.
 - Human participant: unresolved; `user-*` jest tworzony wyłącznie przez jego
   właściciela albo zaufaną granicę intake.
 - Agent participant: `ai-codex.md`.
-

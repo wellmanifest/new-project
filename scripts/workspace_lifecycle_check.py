@@ -123,6 +123,14 @@ def inspect_checkout(path: Path) -> Checkout:
     )
 
 
+def registered_worktrees(path: Path) -> list[Path]:
+    worktrees: list[Path] = []
+    for line in run_git(path, "worktree", "list", "--porcelain").splitlines():
+        if line.startswith("worktree "):
+            worktrees.append(Path(line.removeprefix("worktree ")).resolve())
+    return worktrees
+
+
 def choose_primary(checkouts: list[Checkout]) -> Checkout:
     slug = checkouts[0].identity.rsplit("/", 1)[-1]
     named = [checkout for checkout in checkouts if checkout.path.name.lower() == slug]
@@ -152,10 +160,18 @@ def evaluate(workspace_root: Path, allowed: set[Path]) -> list[Finding]:
         for grandchild in child.iterdir():
             if grandchild.is_dir() and (grandchild / ".git").exists():
                 candidates.append(grandchild)
-    candidates.sort(key=lambda item: str(item))
-    if len(candidates) > MAX_REPOSITORIES:
+    candidate_paths = {candidate.resolve() for candidate in candidates}
+    if len(candidate_paths) > MAX_REPOSITORIES:
         raise AuditError(f"workspace contains more than {MAX_REPOSITORIES} repositories")
-    checkouts = [inspect_checkout(candidate) for candidate in candidates]
+    for candidate in sorted(candidate_paths, key=str):
+        candidate_paths.update(registered_worktrees(candidate))
+        if len(candidate_paths) > MAX_REPOSITORIES:
+            raise AuditError(
+                f"workspace contains more than {MAX_REPOSITORIES} repositories"
+            )
+    checkouts = [
+        inspect_checkout(candidate) for candidate in sorted(candidate_paths, key=str)
+    ]
     groups: dict[str, list[Checkout]] = {}
     for checkout in checkouts:
         groups.setdefault(checkout.identity, []).append(checkout)

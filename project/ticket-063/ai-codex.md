@@ -28,10 +28,20 @@ Pilotażowe linked worktree i niezależne klony nie są widoczne dla CI.
 - Zweryfikowano 26 pilotów: commity dotyczyły wyłącznie governance, a dirty
   pliki były wygenerowaną analizą. Usunięto 19 linked worktree i przeniesiono
   7 czystych niezależnych klonów do kosza.
+- Dodano reguły `P-WORKSPACE-*` i `C-WORKSPACE-*`, read-only checker, pakietowy
+  workflow z live snapshotem GitHuba oraz deterministyczne mapowanie reguł na
+  kody diagnostyczne.
+- Checker wykrywa repozytoria bezpośrednie, jeden poziom kontenerów oraz
+  wszystkie worktree zarejestrowane przez Git, również poza katalogiem audytu.
+- Dodatkowy audyt ujawnił 23 stare rejestracje. Czyste i zintegrowane worktree
+  usunięto; unikalne HEAD-y i dirty dane zachowano w tagach albo lokalnych
+  `refs/archive/workspaces/*` przed usunięciem checkoutów.
+- W 77 należących do użytkownika repozytoriach GitHub włączono automatyczne
+  usuwanie branchy po merge. Końcowy audyt potwierdził `main` jako jedyny branch
+  oraz zero otwartych PR-ów we wszystkich 77 repozytoriach.
+- Pełny Linux contract, Ruff, testy lifecycle, traceability oraz live audit
+  `/home/tom/github/semcod` zakończyły się powodzeniem.
 
 ## Blockers
 
-- Brak w zakresie implementacji standardu.
-- Unikalne, nieopublikowane branche Goal i aktywne PR-y innych repozytoriów
-  wymagają osobnego audytu przed cleanupem.
-
+- Brak. Ticket pozostaje `IN_PROGRESS / PUBLICATION` do czasu review i merge.

@@ -2,9 +2,9 @@
 """Report which normative rules have deterministic enforcement, and which do not.
 
 `POLICY.md` and `CONTRIBUTING.md` state the contract as `RULE` blocks.
-`scripts/governance_check.py` enforces part of it as stable `GOV-*` diagnostic
-codes. Nothing connected the two: a rule could lose its check, or a check could
-outlive its rule, and no gate would notice.
+Deterministic governance validators enforce part of it as stable `GOV-*`
+diagnostic codes. Nothing connected the two: a rule could lose its check, or a
+check could outlive its rule, and no gate would notice.
 
 Both sides are derived, never restated here. Rules come from the documents, codes
 come from the validator source. Only the mapping in
@@ -21,7 +21,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -29,11 +28,15 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 POLICY_DOCUMENTS = ("POLICY.md", "CONTRIBUTING.md")
 MAPPING_PATH = Path("governance/rule-enforcement.json")
 MAPPING_SCHEMA = "new-project.rule-enforcement/v1"
-VALIDATOR_PATH = Path("scripts/governance_check.py")
+VALIDATOR_PATHS = (
+    Path("scripts/governance_check.py"),
+    Path("scripts/branch_lifecycle_check.py"),
+    Path("scripts/workspace_lifecycle_check.py"),
+)
 
 DSL_BLOCK = re.compile(r"```(?:dsl|bash)\n(.*?)```", re.S)
 RULE_HEADER = re.compile(r"^RULE\s+([A-Za-z0-9_.:-]+)(?:\s+TYPE\s+(\S+))?\s*$", re.MULTILINE)
-GOV_CODE = re.compile(r'"(GOV-[A-Z]+-[0-9]{3})"')
+GOV_CODE = re.compile(r'"(GOV-[A-Z]+(?:-[A-Z]+)*-[0-9]{3})"')
 
 
 def _wellm_rules(block: str) -> list[dict[str, Any]] | None:
@@ -77,8 +80,11 @@ def declared_rules(root: Path) -> tuple[list[dict[str, Any]], str]:
 
 
 def enforcement_codes(root: Path) -> list[str]:
-    source = (root / VALIDATOR_PATH).read_text(encoding="utf-8")
-    return sorted(set(GOV_CODE.findall(source)))
+    codes: set[str] = set()
+    for validator_path in VALIDATOR_PATHS:
+        source = (root / validator_path).read_text(encoding="utf-8")
+        codes.update(GOV_CODE.findall(source))
+    return sorted(codes)
 
 
 def audit(root: Path = REPO_ROOT) -> dict[str, Any]:

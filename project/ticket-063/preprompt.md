@@ -7,4 +7,3 @@
 - Dostarcz read-only checker przez pakiet adopcyjny i Goal.
 - Zainstaluj w targetach rzeczywistą kontrolę zdalnego lifecycle.
 - Testuj deterministycznie i nie wykonuj publikacji w ramach implementacji.
-
