@@ -9,3 +9,5 @@
   merge and a clean default-branch retest.
 - Prepared and validated all `0.16.2` carriers, then proved mutation-free Goal
   resume by opening PR #106 from the committed release candidate.
+- Recorded exact-head approval, identical-tree merge, post-merge Linux/Windows
+  and immutable tag/release publication; closed the completed lifecycle.
