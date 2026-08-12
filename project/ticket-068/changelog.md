@@ -14,3 +14,5 @@
   contract and configured only governed PR/direct-main delivery.
 - Added source-hub PR scope enforcement, its dedicated manifest and an explicit
   work-classification input; focused scope regressions pass.
+- Passed the full local Linux contract; routed unavailable local PowerShell to
+  the existing required hosted Windows check without claiming local success.

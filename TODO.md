@@ -12,7 +12,7 @@
 - [ ] [`ticket-068`](project/ticket-068/README.md) — naprawić wygenerowany poza
   zakresem ticketu 065 `goal.yaml`, uruchamiać deterministyczną walidację na
   rzeczywistym diffie PR Governance Hub i opublikować DSL remediacji jako
-  immutable `v0.16.0`. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  immutable `v0.16.0`. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
   `BUG / P1 / regression`; workstream: `governance`.
 
 - [x] [`ticket-067`](project/ticket-067/README.md) — zdefiniowano target-owned

@@ -1,2 +1,4 @@
 2026-08-12 root cause: PR #96 commit 8e47d55 generated goal.yaml outside ticket-065 allowedPaths; hub CI ran fixture contracts but not the PR base/head diff.
 2026-08-12 focused: source-hub gate PASS; governance-validator PASS; Goal 2.1.297 accepts pull-request/direct-main and rejects publish-only.
+2026-08-12 full Linux: 16 governance JSON documents, source-hub ticket diff, required checks and all 9 shell suites PASS; clean status retained.
+2026-08-12 local Windows: not run because pwsh is unavailable; required hosted windows-governance remains pending.

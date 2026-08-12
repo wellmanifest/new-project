@@ -68,6 +68,11 @@ retest.
 - Added `--work-classification` to preserve the adopted-target default while
   allowing the source hub to supply its canonical `governance/` path. The real
   current-ticket gate and focused governance-validator suite pass.
+- Passed the complete local Linux CI contract: source-hub diff gate, all 16
+  governance JSON documents, required-check comparison and all 9 wired shell
+  suites. The worktree remained clean. Local Windows execution is unavailable
+  because `pwsh` is not installed; the required hosted Windows check remains
+  authoritative for this environment.
 
 ## Blockers
 

@@ -3,7 +3,7 @@
 - **ID**: ticket-068
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-12
 
 ## Cel i Zakres
@@ -17,9 +17,9 @@ DSL remediacji jako immutable `v0.16.0`.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: CI huba deterministycznie wiąże diff PR z dokładnie jednym
+- [x] AC-01: CI huba deterministycznie wiąże diff PR z dokładnie jednym
   aktywnym ticketem i odrzuca ścieżkę spoza jego `allowedPaths`.
-- [ ] AC-02: `goal.yaml` ma tożsamość `new-project`, nie deklaruje żadnego
+- [x] AC-02: `goal.yaml` ma tożsamość `new-project`, nie deklaruje żadnego
   registry ani strategii publikacji pakietów i dopuszcza wyłącznie zarządzany
   PR oraz immutable release z `main`.
 - [ ] AC-03: wersje w `VERSION`, manifeście targetu i manifeście huba są
