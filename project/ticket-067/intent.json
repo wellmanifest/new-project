@@ -1,0 +1,146 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-067",
+  "summary": "Diagnostic remediation intent DSL and todo2code analysis",
+  "workstream": "integration",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "CONTRIBUTING.md",
+    "AGENTS.md",
+    "template/files/AGENTS.template.md",
+    "docs/DIAGNOSTIC_REMEDIATION_DSL.md",
+    "governance/remediation-intent.schema.json",
+    "governance/diagnostics.json",
+    "governance/package-manifest.json",
+    "governance/rule-enforcement.json",
+    "scripts/remediation_intent.py",
+    "template/files/remediation-intent.template.dsl.json",
+    "error/GOV-REMEDIATION-INTENT.md",
+    "tests/governance-scripts.test.sh",
+    "tests/rule-enforcement.test.sh",
+    "project/ticket-067/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-066"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "32238076db1e95ed60dbc878b71fab1588ff53d6",
+    "targetBranch": "main",
+    "outcome": "Target repositories can turn stable diagnostics into validated, hash-bound remediation intents that an LLM and todo2code can analyze without expanding approved scope or authority",
+    "nonGoals": [
+      "No Diagit implementation, ticket, task log or release artifact is stored in the governance hub",
+      "No LLM or todo2code output becomes a deterministic merge decision",
+      "No automatic cleanup of dirty worktrees or unreadable paths",
+      "No v0.15.0 publication or ticket-065 closure"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 14,
+      "maxAffectedComponents": 4,
+      "maxPublicInterfaceChanges": 4,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep reusable code/runbook remediation separate from one target ticket's JSON DSL; validate and render deterministically, then bind todo2code advisory findings to the intent projection digest",
+      "components": [
+        {
+          "name": "normative-remediation-contract",
+          "paths": [
+            "CONTRIBUTING.md",
+            "AGENTS.md",
+            "template/files/AGENTS.template.md",
+            "docs/DIAGNOSTIC_REMEDIATION_DSL.md"
+          ]
+        },
+        {
+          "name": "remediation-dsl",
+          "paths": [
+            "governance/remediation-intent.schema.json",
+            "template/files/remediation-intent.template.dsl.json"
+          ]
+        },
+        {
+          "name": "deterministic-adapter",
+          "paths": [
+            "scripts/remediation_intent.py",
+            "governance/diagnostics.json",
+            "error/GOV-REMEDIATION-INTENT.md",
+            "tests/governance-scripts.test.sh"
+          ]
+        },
+        {
+          "name": "adopted-traceability",
+          "paths": [
+            "governance/package-manifest.json",
+            "governance/rule-enforcement.json",
+            "tests/rule-enforcement.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        "new-project.remediation-intent/v1 JSON DSL",
+        "remediation_intent.py validate/render-llm/render-todo2code/analyze-todo2code commands",
+        "hash-bound advisoryAnalysis projection in the DSL",
+        "adopted .governance remediation schema, template and analyzer"
+      ],
+      "dataChanges": [
+        "Target ticket may contain remediation-intent.dsl.json with facts, applicability, ordered steps, verification and advisory analysis"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the unmerged ticket branch; adopted targets remain pinned to their previous immutable standard revision"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/governance-scripts.test.sh"
+        ],
+        "evidence": "Positive and negative DSL fixtures exercise structure, graph, applicability, safety and verification semantics"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 scripts/remediation_intent.py render-llm fixture",
+          "python3 scripts/remediation_intent.py analyze-todo2code fixture --diagnostics diagnostics.json --plans code-change-plans.json"
+        ],
+        "evidence": "Stable projections and advisory overlay are digest-bound and detect plan scope/criterion mismatches"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "bash tests/governance-scripts.test.sh"
+        ],
+        "evidence": "Sanitized Diagit-shaped fixture preserves blockers, dependencies and dirty-worktree non-automation"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "all commands from the Linux CI test job",
+          "ruff check changed Python files",
+          "deterministic todo2code pipeline against rendered task"
+        ],
+        "evidence": "Hub contracts and real todo2code output remain consistent without runtime dependency additions"
+      }
+    ]
+  }
+}
