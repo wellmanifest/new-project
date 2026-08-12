@@ -3,7 +3,7 @@
 - **ID**: ticket-073
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-12
 
 ## Cel i zakres
@@ -27,25 +27,26 @@ docelowego.
 
 ## Kryteria odbioru
 
-- [ ] AC-01: ticket, `intent.json`, plan agenta i TODO zapisują bounded
+- [x] AC-01: ticket, `intent.json`, plan agenta i TODO zapisują bounded
   `SESSION_EXECUTION_AUTHORIZATION` przed zmianą plików implementacji.
-- [ ] AC-02: renderer tworzy dokładnie jeden atomowy, todo2code-readable rekord
+- [x] AC-02: renderer tworzy dokładnie jeden atomowy, todo2code-readable rekord
   na akcję w obu projekcjach, ze zidentyfikowanym działaniem, findingiem,
   ścieżkami, kryteriami i deterministyczną weryfikacją; metadane i guardraile są
   nagłówkami pomijanymi przez ekstraktor.
-- [ ] AC-03: projekcje są atomowo zapisywane do deklarowanych ścieżek, a osobne
+- [x] AC-03: projekcje są atomowo zapisywane do deklarowanych ścieżek, a osobne
   polecenie wykrywa brak, drift bajtów i próbę wyjścia poza repository root jako
   `GOV-REMEDIATION-004`.
-- [ ] AC-04: analizator używa grafu todo2code do ograniczenia diagnostyk i
+- [x] AC-04: analizator używa grafu todo2code do ograniczenia diagnostyk i
   planów do rekordów bieżącej projekcji; ignoruje niepowiązaną historię, a
   zachowuje wykrywanie rzeczywistych scope/criterion/priority/deletion oraz
   ambiguity/conflict; overlay wiąże digest grafu i użyte record IDs.
-- [ ] AC-05: zasady, dokumentacja, katalog diagnostyk, runbook i szablon AGENTS
+- [x] AC-05: zasady, dokumentacja, katalog diagnostyk, runbook i szablon AGENTS
   jednoznacznie definiują przepływ oraz poprawne miejsce zapisu każdego rodzaju
   wiedzy naprawczej.
-- [ ] AC-06: focused i pełne testy, Ruff, governance gate oraz rzeczywisty
+- [x] AC-06: focused i pełne testy, Ruff oraz rzeczywisty
   deterministyczny todo2code przechodzą; projekcja nie wytwarza fałszywych
   `AMBIGUOUS_REQUIREMENT`, a advisory overlay zawiera wyłącznie powiązane plany.
+  Governance gate zostanie przeliczony dla committed candidate przed PR.
 
 ## Ryzyka i uwagi
 

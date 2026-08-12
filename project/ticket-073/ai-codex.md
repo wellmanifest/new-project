@@ -41,6 +41,19 @@ grafu todo2code, których `source.path` wskazuje deklarowane projekcje, oraz
   from the request to execute this work.
 - Przeanalizowano realne artefakty `goal/ticket-055` i kod ekstraktora oraz
   generatora planów todo2code 0.5.1; potwierdzono oba źródła false-positive.
+- Renderer emituje metadane i guardraile wyłącznie jako nagłówki oraz jeden
+  kompletny conventional-commit-like rekord na akcję w task i TODO.
+- Dodano atomowy zapis, deklarowane ścieżki oraz `verify-todo2code`, który
+  wykrywa brak, byte drift i symlink/path escape jako `GOV-REMEDIATION-004`.
+- Analyzer wymaga grafu, koreluje źródła przez `source.path`, filtruje plany i
+  diagnostyki przez record IDs oraz wiąże graph/input digests i record IDs w
+  advisory overlay.
+- Pełny kontrakt dziewięciu zestawów shell, Ruff i testy schematów przechodzą.
+- Rzeczywisty todo2code 0.5.1 na kopii `goal/ticket-055` wyekstrahował po trzy
+  kompletne rekordy task/TODO bez brakujących pól i bez
+  `AMBIGUOUS_REQUIREMENT`. Z 1888 rekordów i 50 planów repozytorium overlay
+  przyjął wyłącznie 6 planów cytujących projekcję, bez blocking, ambiguity ani
+  scope expansion. Zachował realną poradę `T2C_PRIORITY_DRIFT` P1 -> P2.
 
 ## Blockers
 

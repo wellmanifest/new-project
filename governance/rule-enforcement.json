@@ -156,6 +156,13 @@
       "enforcement": "manual",
       "reason": "Distinguishing reusable standard knowledge from target-owned incident evidence requires repository context and maintainer review."
     },
+    "C-REMEDIATION-005": {
+      "codes": [
+        "GOV-REMEDIATION-002",
+        "GOV-REMEDIATION-004"
+      ],
+      "enforcement": "deterministic"
+    },
     "C-DELEGATION-001": {
       "codes": [],
       "enforcement": "manual",
