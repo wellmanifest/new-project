@@ -47,13 +47,14 @@ Before any multi-step implementation, an agent must:
    the owner explicitly discards that unmerged work. When no PR is open, the
    only remote branch is the default branch.
 16. At merge, publication or explicit pilot discard, inventory temporary linked
-   worktrees and duplicate clones. Verify dirty state and HEAD reachability
+   worktrees, duplicate clones and non-default local branches. Verify dirty state and HEAD reachability
    before removal; preserve unknown or unique data. Remove an exact linked
    worktree through Git, prune its metadata and only then delete its released
    disposable branch. Prefer recoverable trash for a verified duplicate clone.
-   Run the adopted workspace lifecycle checker through Goal for the terminal
-   audit. CI validates GitHub state separately and cannot inspect a developer
-   filesystem.
+   The checker is read-only; during active work exempt a branch only through
+   the exact allowlisted checkout path, never a pattern or branch name. Run the
+   adopted workspace lifecycle checker through Goal for the terminal audit. CI
+   validates GitHub state separately and cannot inspect a developer filesystem.
 17. Allocate every ticket ID only through `./project/new-ticket.sh` after
    fetching/pruning. Never create or copy `project/ticket-{NNN}` manually; the
    clone-wide lock and high-water reservation must exist before commit.

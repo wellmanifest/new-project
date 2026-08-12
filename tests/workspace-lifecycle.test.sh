@@ -55,10 +55,11 @@ import sys
 report = json.load(open(sys.argv[1], encoding="utf-8"))
 assert report["schema"] == "new-project.workspace-lifecycle-report/v1"
 assert report["status"] == "failed"
-assert report["summary"] == {"errors": 6, "warnings": 0, "findings": 6}
+assert report["summary"] == {"errors": 9, "warnings": 0, "findings": 9}
 assert {finding["code"] for finding in report["findings"]} == {
     "GOV-WORKSPACE-LIFECYCLE-001",
     "GOV-WORKSPACE-LIFECYCLE-002",
+    "GOV-WORKSPACE-LIFECYCLE-004",
 }
 linked = [
     finding for finding in report["findings"]
@@ -68,8 +69,18 @@ duplicates = [
     finding for finding in report["findings"]
     if finding["code"] == "GOV-WORKSPACE-LIFECYCLE-002"
 ]
+branches = [
+    finding for finding in report["findings"]
+    if finding["code"] == "GOV-WORKSPACE-LIFECYCLE-004"
+]
 assert len(linked) == 3
 assert len(duplicates) == 3
+assert len(branches) == 3
+assert {item["evidence"]["branch"] for item in branches} == {
+    "ticket/001", "ticket/002", "ticket/003",
+}
+assert all(item["evidence"]["defaultBranch"] == "main" for item in branches)
+assert all(item["evidence"]["checkout"] is not None for item in branches)
 dirty = next(item for item in linked if item["evidence"]["path"] == sys.argv[2])
 assert dirty["evidence"]["dirty"] is True
 assert any(item["evidence"]["path"] == sys.argv[3] for item in linked)
@@ -99,6 +110,33 @@ git -C "$primary" worktree remove --force "$external_linked"
 rm -rf "$duplicate"
 rm -rf "$nested_duplicate"
 rm -rf "$empty_duplicate"
+
+# Releasing a worktree is not enough: its local branch remains in refs/heads.
+# The checker reports all three exact refs without deleting them.
+if python3 "$validator" --workspace-root "$workspace" --format json \
+  > "$fixture/orphan-branches.json"; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+python3 - "$fixture/orphan-branches.json" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["summary"] == {"errors": 3, "warnings": 0, "findings": 3}
+assert {finding["code"] for finding in report["findings"]} == {
+    "GOV-WORKSPACE-LIFECYCLE-004",
+}
+assert {finding["evidence"]["branch"] for finding in report["findings"]} == {
+    "ticket/001", "ticket/002", "ticket/003",
+}
+assert all(finding["evidence"]["checkout"] is None for finding in report["findings"])
+assert all(finding["evidence"]["defaultBranch"] == "main" for finding in report["findings"])
+PY
+test "$(git -C "$primary" for-each-ref --format='%(refname:short)' refs/heads/ticket | wc -l)" -eq 3
+git -C "$primary" branch -d ticket/001 ticket/002 ticket/003
 python3 "$validator" --workspace-root "$workspace" > "$fixture/clean.out"
 grep -Fxq 'GOV-WORKSPACE-PASS: passed (0 errors, 0 warnings)' "$fixture/clean.out"
 

@@ -291,6 +291,11 @@
       "remediation": "Repair repository metadata or narrow the explicit workspace root before cleanup.",
       "documentation": "error/GOV-WORKSPACE-LIFECYCLE.md"
     },
+    "GOV-WORKSPACE-LIFECYCLE-004": {
+      "message": "A terminal workspace still contains a non-default local branch.",
+      "remediation": "Classify its HEAD, preserve unique history, release any worktree and delete only the exact disposable local ref.",
+      "documentation": "error/GOV-WORKSPACE-LIFECYCLE.md"
+    },
     "GOV-WORKSTREAM-001": {
       "message": "An active ticket declares a missing or unknown workstream.",
       "remediation": "Choose a workstream declared by the current governance manifest.",
