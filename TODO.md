@@ -27,6 +27,16 @@
   potwierdzono upgrade żywego targetu przez Goal. Stan: `DONE / DONE`;
   klasyfikacja: `BUG / P1 / regression`; workstream: `governance`.
 
+- [ ] [`ticket-069`](project/ticket-069/README.md) — wydzielono i zwalidowano
+  `git-lifecycle` i `ticket-lifecycle` jako wersjonowane podprojekty z
+  zamkniętymi schema/GBNF oraz bezpieczną transakcją autonomicznego seed
+  baseline. Stan: `IN_PROGRESS / VALIDATION`; blocker ticketu 070 jest
+  zamknięty, a implementacja została wznowiona względem aktualnego `main` i
+  przygotowana do publikacji przez ticket branch oraz PR. Oba moduły
+  wydzielono równolegle do osobnych repozytoriów Wellmanifest. Klasyfikacja:
+  `FEATURE / P1 / requested`; workstream: `governance`; zależy od zamknięcia
+  publikacji ticketu 068.
+
 - [x] [`ticket-068`](project/ticket-068/README.md) — naprawiono wygenerowany poza
   zakresem ticketu 065 `goal.yaml`, uruchamiać deterministyczną walidację na
   rzeczywistym diffie PR Governance Hub i opublikować DSL remediacji jako

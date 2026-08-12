@@ -1,0 +1,115 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-069",
+  "summary": "Extract Git and ticket lifecycle subprojects",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "template/files/AGENTS.template.md",
+    "subprojects/**",
+    "project/ticket-069/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-068"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "452d4008a71d67ad1965f6042faa217978a82b42",
+    "targetBranch": "main",
+    "outcome": "Git and ticket lifecycle are independently documented, machine-constrained modules, including a safe autonomous seed-baseline transaction for new repositories",
+    "nonGoals": [
+      "Do not push directly to the default branch or reconfigure the existing remote",
+      "Do not merge a pull request, tag or publish a release",
+      "Do not weaken trusted exact-head review or target governance validation",
+      "Do not implement a general shell or arbitrary Git command executor",
+      "Do not modify the user's primary dirty new-project worktree"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep enforceable compatibility rules in POLICY and CONTRIBUTING while extracting detailed Git and ticket state machines into versioned subprojects with closed JSON Schema and request-only GBNF contracts",
+      "components": [
+        {
+          "name": "lifecycle-composition",
+          "paths": [
+            "POLICY.md",
+            "CONTRIBUTING.md",
+            "template/files/AGENTS.template.md"
+          ]
+        },
+        {
+          "name": "git-lifecycle",
+          "paths": [
+            "subprojects/git-lifecycle/README.md",
+            "subprojects/git-lifecycle/git-lifecycle.schema.json",
+            "subprojects/git-lifecycle/git-lifecycle.v1.gbnf"
+          ]
+        },
+        {
+          "name": "ticket-lifecycle",
+          "paths": [
+            "subprojects/ticket-lifecycle/README.md",
+            "subprojects/ticket-lifecycle/ticket-lifecycle.schema.json",
+            "subprojects/ticket-lifecycle/ticket-lifecycle.v1.gbnf"
+          ]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        "A new repository request in explicit autonomous mode may authorize one local governance seed-baseline commit under closed preconditions",
+        "Lifecycle mutations can be requested only through typed request ASTs resolved by a trusted controller"
+      ],
+      "dataChanges": [
+        "Introduce wellmanifest.git-lifecycle/v1 and wellmanifest.ticket-lifecycle/v1 document families"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Remove the subprojects and revert the two top-level projections; no remote or publication side effect is part of this ticket"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "Draft202012Validator.check_schema for both schemas",
+          "positive and adversarial validation fixtures",
+          "static GBNF request-surface audit"
+        ],
+        "evidence": "project/ticket-069/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-07",
+        "commands": [
+          "python3 scripts/audit_rule_enforcement.py --root . --require-complete",
+          "bash tests/rule-enforcement.test.sh",
+          "bash tests/governance-scripts.test.sh",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "project/ticket-069/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
