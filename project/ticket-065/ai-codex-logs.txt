@@ -1,1 +1,4 @@
 2026-08-12 coordination: no active writer or implementation found; placeholder ticket moved to BACKLOG / PLAN so it does not reserve the governance workstream.
+2026-08-12 resume: Goal 2.1.295 public install verified; current generator line 234 still writes publicationStatus=published unconditionally.
+2026-08-12 base: scaffold rebased without conflict onto origin/main 79fd605d4883b9c8887dabfed1903115b9e4c1e9.
+2026-08-12 authorization: SESSION_EXECUTION_AUTHORIZATION recorded for implementation, release, pilot and cleanup; trusted merge remains external.

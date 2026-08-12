@@ -11,7 +11,10 @@
 
 ## Podlinkowane Zasoby i Dokumentacja Specyfikacji
 - Dokumentacja Zarządcza Hub: https://github.com/wellmanifest/new-project
-- Specyfikacja modułu: {Wpisz odnośnik do dokumentacji technicznej lub pliku}
+- Generator adopcji: `scripts/create_adoption_lock.py`
+- Publiczna ścieżka adopcji: `docs/GOAL_ADOPTION.md`
+- Kontrakt locka: `governance/lock.schema.json`
+- Pakiet wykonawczy: Goal 2.1.295 lub nowszy
 
 ## Dyrektywy Wykonawcze dla Agenta AI
 - Odczytaj niniejsze wytyczne techniczne oraz istniejące, human-owned notatki
