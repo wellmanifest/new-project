@@ -19,3 +19,6 @@
   runbook instructions and regression coverage.
 - Verified the full shell contract, Ruff and a real todo2code 0.5.1 run against
   `goal/ticket-055`; unrelated repository history no longer enters the overlay.
+- Closed the lifecycle after PR #111 passed required checks, received trusted
+  exact-head Validator App approval and merged as `b50b581`; its tree matched
+  the approved payload, post-merge CI passed and the remote branch was deleted.

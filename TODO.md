@@ -9,12 +9,14 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-073`](project/ticket-073/README.md) — naprawić projekcję
+- [x] [`ticket-073`](project/ticket-073/README.md) — naprawiono projekcję
   remediation DSL tak, aby każda akcja była jednym atomowym rekordem todo2code,
-  dodać byte-exact weryfikację deklarowanych plików i korelować analizę przez
+  dodano byte-exact weryfikację deklarowanych plików i korelację analizy przez
   rekordy grafu bieżącej projekcji zamiast historycznych planów całego repo.
-  Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja: `BUG / P0 / regression`;
-  workstream: `governance`; zależy od `ticket-067`.
+  Stan: `DONE / DONE`; PR #111 przeszedł Linux/Windows i exact-head Validator
+  approval, został scalony jako `b50b581`, a post-merge CI jest zielone.
+  Klasyfikacja: `BUG / P0 / regression`; workstream: `governance`; zależy od
+  `ticket-067`.
 
 - [x] [`ticket-072`](project/ticket-072/README.md) — opublikowano zintegrowany
   audyt osieroconych lokalnych branchy jako immutable `new-project 0.16.2`,

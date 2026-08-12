@@ -2,8 +2,8 @@
 
 - **ID**: ticket-073
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-12
 
 ## Cel i zakres
@@ -46,7 +46,8 @@ docelowego.
 - [x] AC-06: focused i pełne testy, Ruff oraz rzeczywisty
   deterministyczny todo2code przechodzą; projekcja nie wytwarza fałszywych
   `AMBIGUOUS_REQUIREMENT`, a advisory overlay zawiera wyłącznie powiązane plany.
-  Governance gate zostanie przeliczony dla committed candidate przed PR.
+  Governance gate przeszedł dla committed candidate, PR i zintegrowanego
+  `main`.
 
 ## Ryzyka i uwagi
 
@@ -69,3 +70,14 @@ docelowego.
 Ten katalog przechowuje governance, decyzje, logi i dowody. Kod wykonywalny,
 skrypty badawcze i testy należą do zwykłych katalogów źródłowych repozytorium,
 nie do `project/ticket-073/`.
+
+## Dowody dostawy
+
+- PR #111 przeszedł oba wymagane checki Linux i Windows dla exact HEAD
+  `ed132ce10e97708e06214b50f65728d390a8bb18`.
+- `ifuri-validator-agent[bot]` zatwierdził dokładnie ten HEAD w review
+  `4919569201`; advisory GLM 5.2 nie było źródłem zaufania.
+- PR #111 został scalony do `main` jako
+  `b50b581ff8e9203ee2162b69bbc5d3b5df1f54ad`; merge ma identyczne drzewo jak
+  zatwierdzony HEAD, zdalny branch `goal/ticket-073` został usunięty, a
+  post-merge run `31625229321` przeszedł Linux i Windows.
