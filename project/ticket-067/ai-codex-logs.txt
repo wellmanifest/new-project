@@ -1,0 +1,13 @@
+2026-08-12 analysis: diagnostics v2 provides code, message, remediation and optional error/*.md only; no incident-specific refactoring intent or semantic validator exists.
+2026-08-12 scenario: Diagit-shaped report requires explicit false-positive exclusions, typed unreadable-path emission, explicit layout ambiguity, dependency-ordered release work and non-destructive dirty-worktree handling.
+2026-08-12 todo2code: local semcod/todo2code main exposes deterministic task extraction, diagnostics and t2c.code-change-plan/v1; no global todo2code binary is installed, so integration validation must invoke its built Node CLI explicitly.
+2026-08-12 coordination: ticket-065 remains IN_PROGRESS/PUBLICATION in governance; ticket-067 uses distinct integration scope and does not publish v0.15.0.
+2026-08-12 scope refinement: scripts/audit_rule_enforcement.py must enumerate the new deterministic analyzer so C-REMEDIATION mappings can claim its GOV codes; added before editing that script.
+2026-08-12T13:24:00+02:00 INPUT user requested continued implementation and testing of diagnostic remediation DSL and todo2code consistency analysis
+2026-08-12T13:24:00+02:00 DECISION extend allowedPaths with tests/adoption-lock.test.sh because the managed package fixture must copy and assert every newly shipped asset; no objective or component boundary changed
+2026-08-12T13:31:00+02:00 IMPLEMENTATION added remediation-intent v1 schema/template, semantic validator, canonical renderers, todo2code advisory importer, GOV-REMEDIATION catalog/runbook, adoption payload and Diagit-shaped regressions
+2026-08-12T13:32:00+02:00 TEST focused remediation, diagnostics, rule traceability and adoption tests pass; all Linux CI suites pass; Ruff and JSON/schema validation pass
+2026-08-12T13:33:00+02:00 TODO2CODE deterministic pipeline version 0.5.0 generated one grounded plan; importer returned T2C_PRIORITY_DRIFT for accepted P1 versus proposed P2 and rendered the digest-bound LLM hint
+2026-08-12T13:34:00+02:00 GATE project/governance-check.sh cannot execute in the Governance Hub source tree because .governance/governance_check.py is an adopted-target path; hub-native validator suites and target adoption/gate fixtures pass, and the mismatch is recorded rather than reported as a passing command
+2026-08-12T13:36:00+02:00 BASE origin/main advanced only through ticket-065 governance closure PR #97; rebased the unpublished ticket-067 branch without conflicts and bound delivery to main@619718bc7a8339119d87b6bb9875a82b69b66480
+2026-08-12T13:38:00+02:00 STATE all local implementation and integration validations pass; moved IN_PROGRESS from VALIDATION to PUBLICATION before branch push and exact-head review

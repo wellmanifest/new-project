@@ -582,4 +582,289 @@ if bash "$runtime" policy \
 fi
 grep -Fq 'EVD-POLICY-001' "$evaluation_root/incomplete-policy.out"
 
+remediation_root="$fixture/remediation-intent"
+mkdir -p "$remediation_root"
+python3 - "$remediation_root" <<'PY'
+import copy
+import hashlib
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+
+def finding(fid, category, priority, code, current, required, path, criterion, *, excluded=None):
+    return {
+        "id": fid,
+        "category": category,
+        "status": "CONFIRMED",
+        "priority": priority,
+        "summary": f"Evidence-backed scenario for {code}.",
+        "diagnostic": {"code": code, "current": current, "required": required},
+        "evidence": [{"ref": f"diagit-report.json#/{fid}", "observation": f"Observed {code}."}],
+        "applicability": {
+            "requiredSignals": [f"Positive runtime signal for {code}."],
+            "excludedSignals": excluded or [],
+            "unknownOutcome": "BLOCK",
+        },
+        "desiredOutcome": f"Make {code} deterministic without expanding scope.",
+        "affectedPaths": [path],
+        "dependsOn": [],
+        "acceptanceCriteria": [criterion],
+    }
+
+findings = [
+    finding(
+        "F-OPENROUTER", "FALSE_POSITIVE", "P1", "OPENROUTER_APP_IDENTITY_MISSING",
+        "FALSE_POSITIVE", "REFINE", "src/openrouter_detector.py", "AC-01",
+        excluded=["Detector source, documentation and tests merely mention OPENROUTER_* variables."],
+    ),
+    finding(
+        "F-UNREADABLE", "SILENT_OMISSION", "P1", "DISCOVERY_PATH_UNREADABLE",
+        "MISSING", "EMIT", "src/discovery.py", "AC-02",
+    ),
+    finding(
+        "F-LAYOUT", "AMBIGUOUS_HEURISTIC", "P2", "DISCOVERY_LAYOUT_AMBIGUOUS",
+        "DRIFT", "REFINE", "src/discovery.py", "AC-03",
+    ),
+    finding(
+        "F-INVENTORY", "MISSING_INVENTORY", "P2", "EXPECTED_REPOSITORY_MISSING",
+        "MISSING", "EMIT", "inventory/repositories.json", "AC-04",
+    ),
+    finding(
+        "F-DIRTY", "STATE_RISK", "P1", "WORKTREE_DIRTY",
+        "EMITTED", "PRESERVE", "worktrees/**", "AC-05",
+    ),
+    finding(
+        "F-RELEASE", "CONTRACT_DRIFT", "P2", "RELEASE_VERSION_DRIFT",
+        "DRIFT", "REFINE", "CHANGELOG.md", "AC-06",
+    ),
+]
+
+action_specs = [
+    ("A-OPENROUTER", "F-OPENROUTER", "IMPLEMENT", ["src/openrouter_detector.py"], []),
+    ("A-UNREADABLE", "F-UNREADABLE", "IMPLEMENT", ["src/discovery.py"], []),
+    ("A-LAYOUT", "F-LAYOUT", "IMPLEMENT", ["src/discovery.py"], ["A-UNREADABLE"]),
+    ("A-INVENTORY", "F-INVENTORY", "IMPLEMENT", ["inventory/repositories.json"], []),
+    ("A-PRESERVE", "F-DIRTY", "PRESERVE", ["worktrees/**"], []),
+    (
+        "A-RELEASE", "F-RELEASE", "RELEASE", ["CHANGELOG.md", "VERSION"],
+        ["A-OPENROUTER", "A-UNREADABLE", "A-PRESERVE"],
+    ),
+]
+actions = []
+verifications = []
+criteria = []
+for index, ((aid, fid, operation, paths, depends), item) in enumerate(zip(action_specs, findings), 1):
+    vid = f"V-{index:02d}"
+    action = {
+        "id": aid,
+        "findingIds": [fid],
+        "operation": operation,
+        "description": f"Resolve {fid} and preserve its applicability contract.",
+        "paths": paths,
+        "dependsOn": depends,
+        "verificationIds": [vid],
+        "risk": {
+            "level": "READ_ONLY" if operation == "PRESERVE" else "REVERSIBLE_WRITE",
+            "authorization": "NOT_APPLICABLE" if operation == "PRESERVE" else "SESSION_EXECUTION_AUTHORIZATION",
+            "automation": "PROHIBITED" if operation == "PRESERVE" else "ALLOWED",
+            "preservesUserData": True,
+        },
+    }
+    actions.append(action)
+    verifications.append({
+        "id": vid,
+        "type": "COMMAND",
+        "command": f"pytest -q tests/test_{index:02d}.py",
+        "expected": f"Deterministic regression for {fid} passes.",
+        "deterministic": True,
+        "covers": [fid, aid],
+    })
+    criteria.append({
+        "id": f"AC-{index:02d}",
+        "statement": f"{fid} has the required diagnostic transition and regression proof.",
+        "findingIds": [fid],
+        "verificationIds": [vid],
+    })
+
+intent = {
+    "schema": "new-project.remediation-intent/v1",
+    "intentId": "RI-DIAGIT-DISCOVERY",
+    "ticket": "ticket-123",
+    "repository": "subactor/diagit",
+    "ownerRoute": "github:subactor-maintainer",
+    "status": "READY",
+    "source": {
+        "producer": {"name": "diagit", "version": "0.10.1"},
+        "observedAt": "2026-08-12T10:00:00Z",
+        "reportDigest": hashlib.sha256(b"diagit fleet report").hexdigest(),
+    },
+    "objective": {
+        "outcome": "Make discovery findings applicable, complete and safe before publication.",
+        "nonGoals": ["Do not clean dirty worktrees or publish from this planning intent."],
+        "constraints": ["Preserve user state and require explicit signals before suppressing a finding."],
+    },
+    "scope": {
+        "allowedPaths": ["src/**", "tests/**", "inventory/**", "worktrees/**", "CHANGELOG.md", "VERSION"],
+        "forbiddenPaths": [".env", "secrets/**"],
+        "preservePaths": ["worktrees/**"],
+    },
+    "findings": findings,
+    "actions": actions,
+    "verifications": verifications,
+    "acceptanceCriteria": criteria,
+    "llmGuidance": {
+        "role": "Plan a bounded refactoring from accepted findings; do not approve or publish it.",
+        "mustPreserve": ["Dirty and unclassified worktrees.", "Positive and excluded applicability signals."],
+        "forbiddenAssumptions": ["Do not treat detector source as a real OpenRouter client.", "Do not infer a missing repository or unreadable path is absent."],
+        "planningOrder": [item[0] for item in action_specs],
+        "openQuestions": [],
+    },
+    "todo2code": {
+        "enabled": True,
+        "taskPath": "project/ticket-123/REMEDIATION.task.md",
+        "todoPath": "project/ticket-123/REMEDIATION.todo.md",
+        "planSchema": "t2c.code-change-plan/v1",
+        "requiredDiagnosticCodes": [
+            "AMBIGUOUS_REQUIREMENT",
+            "HUMAN_AGENT_CONFLICT",
+            "HUMAN_COMMUNICATION_CONFLICT",
+            "PLANNED_NOT_IMPLEMENTED",
+        ],
+    },
+}
+
+def write(name, value):
+    (root / name).write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+write("intent.json", intent)
+mutations = {
+    "missing-exclusion.json": lambda value: value["findings"][0]["applicability"].update(excludedSignals=[]),
+    "action-cycle.json": lambda value: value["actions"][0].update(dependsOn=["A-RELEASE"]),
+    "unsafe-preserve.json": lambda value: value["actions"][4]["risk"].update(automation="ALLOWED"),
+    "release-too-early.json": lambda value: value["actions"][5].update(dependsOn=[]),
+    "unresolved-owner.json": lambda value: value.update(ownerRoute="unresolved:human"),
+    "missing-t2c-capability.json": lambda value: value["todo2code"].update(
+        requiredDiagnosticCodes=["AMBIGUOUS_REQUIREMENT"]
+    ),
+}
+for name, mutate in mutations.items():
+    value = copy.deepcopy(intent)
+    mutate(value)
+    write(name, value)
+
+diagnostics = {"schemaVersion": "t2c.diagnostics/v1", "diagnostics": []}
+plan_text = " ".join(
+    [item["id"] + " " + item["diagnostic"]["code"] for item in findings]
+    + [item["id"] + " " + item["statement"] for item in criteria]
+)
+plans = {
+    "schemaVersion": "t2c.code-change-plan-set/v1",
+    "generation": {"runtimeVersion": "0.17.2"},
+    "plans": [{
+        "schemaVersion": "t2c.code-change-plan/v1",
+        "id": "CPLAN-DIAGIT",
+        "title": plan_text,
+        "priority": "P1",
+        "target": {"paths": ["src/openrouter_detector.py", "src/discovery.py", "inventory/repositories.json", "worktrees/**", "CHANGELOG.md", "VERSION"]},
+        "changes": [{"path": "src/discovery.py", "action": "modify"}],
+        "acceptanceCriteria": [item["id"] + " " + item["statement"] for item in criteria],
+    }],
+}
+write("diagnostics.json", diagnostics)
+write("plans.json", plans)
+unsafe_plans = copy.deepcopy(plans)
+unsafe_plans["plans"][0]["target"]["paths"].append("secrets.txt")
+unsafe_plans["plans"][0]["changes"].append({"path": "worktrees/local", "action": "delete"})
+write("unsafe-plans.json", unsafe_plans)
+PY
+
+python3 - \
+  "$repo_root/governance/remediation-intent.schema.json" \
+  "$repo_root/template/files/remediation-intent.template.dsl.json" \
+  "$remediation_root/intent.json" <<'PY'
+import json
+import sys
+from jsonschema import Draft202012Validator
+
+schema = json.load(open(sys.argv[1], encoding="utf-8"))
+Draft202012Validator.check_schema(schema)
+validator = Draft202012Validator(schema, format_checker=Draft202012Validator.FORMAT_CHECKER)
+validator.validate(json.load(open(sys.argv[2], encoding="utf-8")))
+validator.validate(json.load(open(sys.argv[3], encoding="utf-8")))
+PY
+
+remediation="$repo_root/scripts/remediation_intent.py"
+python3 "$remediation" validate "$remediation_root/intent.json" --format json > "$remediation_root/validation.json"
+grep -Fq '"ok": true' "$remediation_root/validation.json"
+python3 "$remediation" validate "$repo_root/template/files/remediation-intent.template.dsl.json" > "$remediation_root/template.out"
+grep -Fq '0 errors' "$remediation_root/template.out"
+if python3 "$remediation" render-llm \
+  "$repo_root/template/files/remediation-intent.template.dsl.json" \
+  > "$remediation_root/draft-brief.out" 2>&1; then
+  echo 'expected DRAFT remediation intent to be rejected before LLM projection' >&2
+  exit 1
+fi
+grep -Fq 'GOV-REMEDIATION-001' "$remediation_root/draft-brief.out"
+
+python3 "$remediation" render-llm "$remediation_root/intent.json" --out "$remediation_root/brief.md"
+grep -Fq 'OPENROUTER_APP_IDENTITY_MISSING' "$remediation_root/brief.md"
+grep -Fq 'Detector source, documentation and tests' "$remediation_root/brief.md"
+grep -Fq 'Dirty and unclassified worktrees' "$remediation_root/brief.md"
+python3 "$remediation" render-todo2code "$remediation_root/intent.json" \
+  --task-out "$remediation_root/task.md" --todo-out "$remediation_root/TODO.md"
+grep -Fq 'F-UNREADABLE/DISCOVERY_PATH_UNREADABLE/P1' "$remediation_root/task.md"
+grep -Fq 'AC-05' "$remediation_root/TODO.md"
+
+expect_remediation_failure() {
+  local input="$1"
+  local output="$2"
+  if python3 "$remediation" validate "$input" > "$output" 2>&1; then
+    echo "expected remediation validation failure for $input" >&2
+    exit 1
+  fi
+  grep -Fq 'GOV-REMEDIATION-001' "$output"
+}
+expect_remediation_failure "$remediation_root/missing-exclusion.json" "$remediation_root/missing-exclusion.out"
+expect_remediation_failure "$remediation_root/action-cycle.json" "$remediation_root/action-cycle.out"
+expect_remediation_failure "$remediation_root/unsafe-preserve.json" "$remediation_root/unsafe-preserve.out"
+expect_remediation_failure "$remediation_root/release-too-early.json" "$remediation_root/release-too-early.out"
+expect_remediation_failure "$remediation_root/unresolved-owner.json" "$remediation_root/unresolved-owner.out"
+expect_remediation_failure "$remediation_root/missing-t2c-capability.json" "$remediation_root/missing-t2c-capability.out"
+
+python3 "$remediation" analyze-todo2code "$remediation_root/intent.json" \
+  --diagnostics "$remediation_root/diagnostics.json" \
+  --plans "$remediation_root/plans.json" \
+  --out "$remediation_root/analyzed.json"
+python3 "$remediation" validate "$remediation_root/analyzed.json" --format json > "$remediation_root/analyzed-validation.json"
+grep -Fq '"ok": true' "$remediation_root/analyzed-validation.json"
+grep -Fq '"authority": "ADVISORY"' "$remediation_root/analyzed.json"
+
+if python3 "$remediation" analyze-todo2code "$remediation_root/intent.json" \
+  --diagnostics "$remediation_root/diagnostics.json" \
+  --plans "$remediation_root/unsafe-plans.json" \
+  --out "$remediation_root/unsafe-analyzed.json" > "$remediation_root/unsafe.out" 2>&1; then
+  echo 'expected unsafe todo2code plan to block' >&2
+  exit 1
+fi
+grep -Fq 'GOV-REMEDIATION-002' "$remediation_root/unsafe.out"
+grep -Fq 'T2C_SCOPE_EXPANSION' "$remediation_root/unsafe-analyzed.json"
+grep -Fq 'T2C_UNAUTHORIZED_DELETION' "$remediation_root/unsafe-analyzed.json"
+
+python3 - "$remediation_root/analyzed.json" "$remediation_root/stale.json" <<'PY'
+import json
+import sys
+value = json.load(open(sys.argv[1], encoding="utf-8"))
+value["objective"]["outcome"] += " Changed after analysis."
+with open(sys.argv[2], "w", encoding="utf-8") as handle:
+    json.dump(value, handle, ensure_ascii=False, indent=2)
+    handle.write("\n")
+PY
+if python3 "$remediation" validate "$remediation_root/stale.json" > "$remediation_root/stale.out" 2>&1; then
+  echo 'expected stale advisory digest to fail' >&2
+  exit 1
+fi
+grep -Fq 'GOV-REMEDIATION-003' "$remediation_root/stale.out"
+
 echo 'governance scripts: PASS'
