@@ -30,6 +30,10 @@ wstrzykniętego klienta `github`, które v8 zachowuje.
   from the request to execute this work.
 - Zweryfikowano tagi i runtime: checkout `3d3c42e...`, setup-python
   `5fda3b95...` oraz github-script `ed597411...` deklarują `node24`.
+- Zastąpiono siedem pinów w lokalnym CI i reusable governance; diff nie
+  zmienia żadnej innej linii workflow.
+- Wszystkie dziewięć kontraktów shell, kontrola required checks, kontrakty JSON
+  i skupiony audyt siedmiu pinów przechodzą lokalnie.
 
 ## Blockers
 
