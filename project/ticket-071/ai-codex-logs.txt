@@ -12,3 +12,6 @@
 2026-08-12 full Linux: required checks, decision record, governance scripts/validator, branch/workspace lifecycle, governance env, adoption lock, rule enforcement, suite wiring and Ruff PASS.
 2026-08-12 Goal candidate: Goal 2.1.298 check exit 1 with planned changes; bounded adoption exact e2720b50148fc865874bf4ea963113ac1061d63f PASS with unpublished-test provenance and byte-identical managed checker.
 2026-08-12 delivery split: immutable 0.16.2 version carriers deferred to a dependent release ticket to preserve hub maxImplementationFiles=9.
+2026-08-12 hosted PR #104: exact head d43e44c4e760299c0581b3e58281eb773cb15406; test PASS twice; windows-governance PASS twice.
+2026-08-12 Validator: run 31617357073 deterministic APPROVE for exact head and ticket-071; advisory GLM APPROVE/no findings was not trust authority.
+2026-08-12 merge: unchanged tree merged as 7a2dd94194e67567b7c9c2ffbae91951c673e102; post-merge run 31617559613 PASS; remote and local implementation refs removed.

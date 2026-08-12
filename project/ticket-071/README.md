@@ -2,8 +2,8 @@
 
 - **ID**: ticket-071
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-12
 
 ## Cel i Zakres
@@ -24,7 +24,7 @@ aktywną, jawnie allowlistowaną pracę od osieroconego refa.
       checkout, ale checker nigdy sam niczego nie usuwa.
 - [x] AC-04: Katalog diagnostyk, runbook, policy-as-code i instrukcje agentów
       opisują ten sam kontrakt.
-- [ ] AC-05: Focused oraz pełny Linux/Windows contract przechodzą przed
+- [x] AC-05: Focused oraz pełny Linux/Windows contract przechodzą przed
       publikacją kolejnej immutable wersji standardu.
 
 ## Ryzyka i Uwagi
@@ -36,9 +36,9 @@ aktywną, jawnie allowlistowaną pracę od osieroconego refa.
 - Governance-only closure aktywnego wcześniej `ticket-070` została scalona jako
   `f5c2dcb754b01b97f1fee8ca00a569f4c884db6a`; workstream jest zwolniony i
   implementacja 071 może rozpocząć się na tej dokładnej bazie.
-- Source-hub Linux contract i bounded Goal candidate adoption przechodzą;
-  hosted Windows, exact-head Validator review i merge pozostają bramą
-  publikacji. Wersja 0.16.2 będzie osobnym, zależnym ticketem wydaniowym, aby
+- Source-hub Linux contract, hosted Windows i bounded Goal candidate adoption
+  przeszły, a exact-head Validator zatwierdził niezmieniony payload przed
+  merge'em. Wersja 0.16.2 będzie osobnym, zależnym ticketem wydaniowym, aby
   7-plikiowa poprawka nie przekroczyła limitu 9 po dodaniu sześciu nośników
   wydania.
 
@@ -53,3 +53,16 @@ aktywną, jawnie allowlistowaną pracę od osieroconego refa.
 Ten katalog przechowuje governance, decyzje, logi i dowody. Kod wykonywalny,
 skrypty badawcze i testy należą do zwykłych katalogów źródłowych repozytorium,
 nie do `project/ticket-071/`.
+
+## Zintegrowana dostawa
+
+- PR #104 miał head `d43e44c4e760299c0581b3e58281eb773cb15406`;
+  oba uruchomienia `test` i `windows-governance` zakończyły się sukcesem.
+- `ifuri-validator-agent[bot]` zatwierdził dokładnie ten head w runie
+  `31617357073`; advisory GLM również nie zgłosił findings, ale nie był trust
+  rootem.
+- Payload został scalony bez zmiany drzewa jako
+  `7a2dd94194e67567b7c9c2ffbae91951c673e102`; post-merge run `31617559613`
+  zakończył się sukcesem, a gałąź implementacyjna zniknęła lokalnie i zdalnie.
+- Immutable publikacja 0.16.2 pozostaje następnym, zależnym ticketem; 071
+  kończy się na zweryfikowanym source-hub payloadzie i nie udaje wydania.

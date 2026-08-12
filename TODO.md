@@ -9,10 +9,10 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-071`](project/ticket-071/README.md) — wykrywać pozostawione
+- [x] [`ticket-071`](project/ticket-071/README.md) — wykrywać pozostawione
   lokalne branche po usunięciu worktree, zachować aktywne dokładnie
   allowlistowane checkouty i nigdy nie usuwać unikalnych danych automatycznie.
-  Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja: `BUG / P1 / regression`;
+  Stan: `DONE / DONE`; klasyfikacja: `BUG / P1 / regression`;
   workstream: `governance`.
 
 - [x] [`ticket-070`](project/ticket-070/README.md) — skanonizowano quoting cron w
