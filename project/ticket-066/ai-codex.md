@@ -49,11 +49,12 @@ wykrycie bypassu lub rozbieżnych intentów.
   merge and defined a governance-only closure from integrated `main`.
 - Added positive and negative regression fixtures for allocation, publication,
   catalog completeness, runbook structure and adoption. Focused Linux suites
-  and the complete local Linux CI contract plus Ruff pass. Publication remains
-  active pending hosted Linux/Windows checks, exact-head review and merge.
+  and the complete local Linux CI contract plus Ruff pass.
+- Hosted Linux/Windows passed on exact implementation head `acd08f2`.
+  Validator App run `31578853527` approved that exact head, PR #94 merged as
+  `9b2ca5d`, its branch was deleted, and post-merge run `31579226383` passed.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
-- New authority is still required for destructive action, secret access, new
-  external coordination, material objective expansion and trusted merge.
+- None. Ticket closed `DONE / DONE` only after trusted exact-head review,
+  integrated merge and green post-merge checks.
