@@ -1,0 +1,127 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-071",
+  "summary": "Detect orphaned local branches in terminal workspace audits",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "AGENTS.md",
+    "template/files/AGENTS.template.md",
+    "scripts/workspace_lifecycle_check.py",
+    "tests/workspace-lifecycle.test.sh",
+    "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
+    "error/GOV-WORKSPACE-LIFECYCLE.md",
+    "project/ticket-071/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f5c2dcb754b01b97f1fee8ca00a569f4c884db6a",
+    "targetBranch": "main",
+    "outcome": "A terminal workspace audit fails on every non-default local branch unless its exact active checkout is explicitly allowlisted, while preserving all unique data",
+    "nonGoals": [
+      "No automatic branch or worktree deletion",
+      "No remote GitHub branch inspection in the local checker",
+      "No cleanup of the dirty ticket-069 worktree"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Compare clone-local refs/heads with the derived default branch and registered checkout paths, exempt only exact allowlisted active paths, and emit a read-only stable diagnostic",
+      "components": [
+        {
+          "name": "local-branch-audit",
+          "paths": [
+            "scripts/workspace_lifecycle_check.py",
+            "tests/workspace-lifecycle.test.sh"
+          ]
+        },
+        {
+          "name": "diagnostic-contract",
+          "paths": [
+            "governance/diagnostics.json",
+            "governance/rule-enforcement.json",
+            "error/GOV-WORKSPACE-LIFECYCLE.md"
+          ]
+        },
+        {
+          "name": "agent-cleanup-instructions",
+          "paths": [
+            "AGENTS.md",
+            "template/files/AGENTS.template.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Workspace lifecycle report gains GOV-WORKSPACE-LIFECYCLE-004 with branch, head, defaultBranch and primary evidence"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the unmerged branch; after publication keep targets pinned to 0.16.1 until a corrected immutable patch exists"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/workspace-lifecycle.test.sh"
+        ],
+        "evidence": "project/ticket-071/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/workspace-lifecycle.test.sh"
+        ],
+        "evidence": "project/ticket-071/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/workspace-lifecycle.test.sh"
+        ],
+        "evidence": "project/ticket-071/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "bash tests/rule-enforcement.test.sh",
+          "python3 scripts/audit_diagnostics.py"
+        ],
+        "evidence": "project/ticket-071/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "all commands from the Linux CI test job",
+          "tests/windows-governance.test.ps1"
+        ],
+        "evidence": "project/ticket-071/ai-codex-logs.txt"
+      }
+    ]
+  }
+}

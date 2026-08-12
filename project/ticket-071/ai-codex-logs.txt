@@ -1,0 +1,5 @@
+2026-08-12 allocation: managed allocator reserved ticket-071; no implementation changed.
+2026-08-12 preflight: origin/main still records ticket-070 as IN_PROGRESS/PUBLICATION although PR #102 and v0.16.1 are complete.
+2026-08-12 ordering: ticket-071 set to PLAN/PLAN until governance-only closure of ticket-070.
+2026-08-12 prerequisite: ticket-070 closure exact head b6093ed9e3b330f9958ce4a67bb9b291aeafd9c2 approved and merged unchanged as f5c2dcb754b01b97f1fee8ca00a569f4c884db6a.
+2026-08-12 resume: ticket-071 IN_PROGRESS/EDIT on accepted base f5c2dcb754b01b97f1fee8ca00a569f4c884db6a.
