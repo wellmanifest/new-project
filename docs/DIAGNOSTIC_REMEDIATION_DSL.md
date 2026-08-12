@@ -10,8 +10,10 @@ flowchart LR
   detector[Detector report] --> catalog[diagnostics.json + reusable runbook]
   catalog --> intent[Target ticket remediation-intent.dsl.json]
   intent --> validate[Deterministic validation]
-  validate --> brief[Canonical LLM/todo2code inputs]
-  brief --> t2c[todo2code diagnostics and plans]
+  validate --> brief[Canonical LLM brief]
+  validate --> projection[Atomic task and TODO projections]
+  projection --> verify[Byte-exact verification]
+  verify --> t2c[todo2code graph, diagnostics and plans]
   t2c --> overlay[Digest-bound ADVISORY overlay]
   overlay --> refactor[Bounded refactoring plan]
   refactor --> gate[Governance and stack gates]
@@ -67,8 +69,24 @@ Run these from a repository that adopted the governed assets:
 ```bash
 python3 .governance/remediation_intent.py validate project/ticket-123/remediation-intent.dsl.json
 python3 .governance/remediation_intent.py render-llm project/ticket-123/remediation-intent.dsl.json --out project/ticket-123/remediation-brief.md
-python3 .governance/remediation_intent.py render-todo2code project/ticket-123/remediation-intent.dsl.json --task-out project/ticket-123/todo2code-task.md --todo-out project/ticket-123/todo2code-TODO.md
+python3 .governance/remediation_intent.py render-todo2code project/ticket-123/remediation-intent.dsl.json --root .
+python3 .governance/remediation_intent.py verify-todo2code project/ticket-123/remediation-intent.dsl.json --root .
 ```
+
+`render-todo2code` writes atomically to `todo2code.taskPath` and
+`todo2code.todoPath` from the accepted intent. Supplying both legacy
+`--task-out` and `--todo-out` remains available for an explicit external
+projection. `verify-todo2code` is the required gate for target-owned declared
+paths: a missing file, byte drift or symlink/path escape emits
+`GOV-REMEDIATION-004`.
+
+The task and TODO contain the same canonical action sentence. All authority
+metadata, outcome, constraints, non-goals and LLM guardrails are Markdown
+headings, which the todo2code NL extractor ignores as records. Each action is
+one physical sentence with a conventional action prefix, finding IDs/codes and
+priority, exact paths, dependencies, acceptance criteria, verification command
+and expected result, plus risk/authorization. Thus one DSL action cannot turn
+into several anonymous requirements.
 
 After todo2code has deterministically produced `t2c.diagnostics/v1` and
 `t2c.code-change-plan-set/v1` artifacts:
@@ -76,16 +94,21 @@ After todo2code has deterministically produced `t2c.diagnostics/v1` and
 ```bash
 python3 .governance/remediation_intent.py analyze-todo2code \
   project/ticket-123/remediation-intent.dsl.json \
+  --graph path/to/intent.graph.json \
   --diagnostics path/to/diagnostics.json \
   --plans path/to/code-change-plans.json \
   --out project/ticket-123/remediation-intent.analyzed.dsl.json
 ```
 
-The analyzer reports scope expansion, unauthorized deletion, missing finding
-or acceptance coverage, lowered priority, ambiguity and human/agent conflicts.
-Its hints have `authority: ADVISORY` and bind the authority-bearing intent and
-todo2code inputs by SHA-256. Any intent edit makes the overlay stale and
-requires re-analysis.
+The analyzer first selects graph records whose `source.path` is the declared
+task or TODO projection. It then considers only diagnostics whose `recordIds`
+and plans whose `evidence.recordIds` cite that set. Unrelated historical plans
+remain in the digest-bound input artifacts but cannot expand or block this
+incident. Relevant scope expansion, unauthorized deletion, missing finding or
+acceptance coverage, lowered priority, ambiguity and human/agent conflicts are
+still reported. The overlay has `authority: ADVISORY` and binds the
+authority-bearing intent, graph, diagnostics, plans and correlated record IDs.
+Any input edit requires re-analysis.
 
 `todo2code.requiredDiagnosticCodes` is a fail-closed capability declaration.
 Version 1 requires todo2code ambiguity, planned-not-implemented and both

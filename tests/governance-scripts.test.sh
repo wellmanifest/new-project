@@ -754,7 +754,33 @@ for name, mutate in mutations.items():
     mutate(value)
     write(name, value)
 
-diagnostics = {"schemaVersion": "t2c.diagnostics/v1", "diagnostics": []}
+graph = {
+    "schemaVersion": "t2c.graph/v1",
+    "records": [
+        {
+            "id": "INT-NL-projection-task",
+            "source": {"path": intent["todo2code"]["taskPath"]},
+        },
+        {
+            "id": "INT-TODO-projection-todo",
+            "source": {"path": intent["todo2code"]["todoPath"]},
+        },
+        {
+            "id": "INT-TODO-unrelated-history",
+            "source": {"path": "TODO.md"},
+        },
+    ],
+}
+diagnostics = {
+    "schemaVersion": "t2c.diagnostics/v1",
+    "diagnostics": [{
+        "id": "DIAG-UNRELATED",
+        "code": "AMBIGUOUS_REQUIREMENT",
+        "recordIds": ["INT-TODO-unrelated-history"],
+        "detail": "Unrelated historical ambiguity must not enter this overlay.",
+        "suggestedAction": "Repair the unrelated historical ticket separately.",
+    }],
+}
 plan_text = " ".join(
     [item["id"] + " " + item["diagnostic"]["code"] for item in findings]
     + [item["id"] + " " + item["statement"] for item in criteria]
@@ -770,10 +796,26 @@ plans = {
         "target": {"paths": ["src/openrouter_detector.py", "src/discovery.py", "inventory/repositories.json", "worktrees/**", "CHANGELOG.md", "VERSION"]},
         "changes": [{"path": "src/discovery.py", "action": "modify"}],
         "acceptanceCriteria": [item["id"] + " " + item["statement"] for item in criteria],
+        "evidence": {"recordIds": ["INT-NL-projection-task"]},
+    }, {
+        "schemaVersion": "t2c.code-change-plan/v1",
+        "id": "CPLAN-HISTORY",
+        "title": "Unrelated historical plan.",
+        "priority": "P0",
+        "target": {"paths": ["secrets/history.txt"]},
+        "changes": [{"path": "secrets/history.txt", "action": "delete"}],
+        "acceptanceCriteria": ["Unrelated history remains independent."],
+        "evidence": {"recordIds": ["INT-TODO-unrelated-history"]},
     }],
 }
+write("graph.json", graph)
 write("diagnostics.json", diagnostics)
 write("plans.json", plans)
+relevant_diagnostics = copy.deepcopy(diagnostics)
+relevant_diagnostics["diagnostics"][0]["id"] = "DIAG-RELEVANT"
+relevant_diagnostics["diagnostics"][0]["recordIds"] = ["INT-TODO-projection-todo"]
+relevant_diagnostics["diagnostics"][0]["detail"] = "Relevant projection ambiguity."
+write("relevant-diagnostics.json", relevant_diagnostics)
 unsafe_plans = copy.deepcopy(plans)
 unsafe_plans["plans"][0]["target"]["paths"].append("secrets.txt")
 unsafe_plans["plans"][0]["changes"].append({"path": "worktrees/local", "action": "delete"})
@@ -816,6 +858,56 @@ python3 "$remediation" render-todo2code "$remediation_root/intent.json" \
   --task-out "$remediation_root/task.md" --todo-out "$remediation_root/TODO.md"
 grep -Fq 'F-UNREADABLE/DISCOVERY_PATH_UNREADABLE/P1' "$remediation_root/task.md"
 grep -Fq 'AC-05' "$remediation_root/TODO.md"
+python3 - "$remediation_root/task.md" "$remediation_root/TODO.md" <<'PY'
+import pathlib
+import re
+import sys
+
+task = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8").splitlines()
+todo = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8").splitlines()
+task_records = [line for line in task if line and not line.startswith("#")]
+todo_records = [re.sub(r"^- \[ \] ", "", line) for line in todo if line.startswith("- [ ] ")]
+assert len(task_records) == 6, task_records
+assert task_records == todo_records
+assert all(re.match(r"^(?:fix|test|docs|build|chore)\(remediation\):", line) for line in task_records)
+assert all("verification V-" in line and "expected=" in line for line in task_records)
+PY
+
+projection_repo="$remediation_root/projection-repo"
+mkdir -p "$projection_repo"
+python3 "$remediation" render-todo2code "$remediation_root/intent.json" --root "$projection_repo"
+python3 "$remediation" verify-todo2code "$remediation_root/intent.json" \
+  --root "$projection_repo" --format json > "$remediation_root/projection-verification.json"
+grep -Fq '"ok": true' "$remediation_root/projection-verification.json"
+printf '%s\n' 'manual drift' >> "$projection_repo/project/ticket-123/REMEDIATION.task.md"
+if python3 "$remediation" verify-todo2code "$remediation_root/intent.json" \
+  --root "$projection_repo" > "$remediation_root/projection-drift.out" 2>&1; then
+  echo 'expected byte-drifted remediation projection to fail' >&2
+  exit 1
+fi
+grep -Fq 'GOV-REMEDIATION-004' "$remediation_root/projection-drift.out"
+python3 "$remediation" render-todo2code "$remediation_root/intent.json" --root "$projection_repo"
+python3 - "$projection_repo/project/ticket-123/REMEDIATION.todo.md" <<'PY'
+import pathlib
+import sys
+pathlib.Path(sys.argv[1]).unlink()
+PY
+if python3 "$remediation" verify-todo2code "$remediation_root/intent.json" \
+  --root "$projection_repo" > "$remediation_root/projection-missing.out" 2>&1; then
+  echo 'expected missing remediation projection to fail' >&2
+  exit 1
+fi
+grep -Fq 'GOV-REMEDIATION-004' "$remediation_root/projection-missing.out"
+escape_repo="$remediation_root/escape-repo"
+escape_target="$remediation_root/escape-target"
+mkdir -p "$escape_repo" "$escape_target"
+ln -s "$escape_target" "$escape_repo/project"
+if python3 "$remediation" render-todo2code "$remediation_root/intent.json" \
+  --root "$escape_repo" > "$remediation_root/projection-escape.out" 2>&1; then
+  echo 'expected symlink-escaped remediation projection to fail' >&2
+  exit 1
+fi
+grep -Fq 'GOV-REMEDIATION-004' "$remediation_root/projection-escape.out"
 
 expect_remediation_failure() {
   local input="$1"
@@ -834,14 +926,36 @@ expect_remediation_failure "$remediation_root/unresolved-owner.json" "$remediati
 expect_remediation_failure "$remediation_root/missing-t2c-capability.json" "$remediation_root/missing-t2c-capability.out"
 
 python3 "$remediation" analyze-todo2code "$remediation_root/intent.json" \
+  --graph "$remediation_root/graph.json" \
   --diagnostics "$remediation_root/diagnostics.json" \
   --plans "$remediation_root/plans.json" \
   --out "$remediation_root/analyzed.json"
 python3 "$remediation" validate "$remediation_root/analyzed.json" --format json > "$remediation_root/analyzed-validation.json"
 grep -Fq '"ok": true' "$remediation_root/analyzed-validation.json"
 grep -Fq '"authority": "ADVISORY"' "$remediation_root/analyzed.json"
+grep -Fq '"graphDigest"' "$remediation_root/analyzed.json"
+grep -Fq 'INT-NL-projection-task' "$remediation_root/analyzed.json"
+grep -Fq 'INT-TODO-projection-todo' "$remediation_root/analyzed.json"
+grep -Fq 'CPLAN-DIAGIT' "$remediation_root/analyzed.json"
+if grep -Fq 'CPLAN-HISTORY' "$remediation_root/analyzed.json"; then
+  echo 'unrelated historical todo2code plan entered remediation overlay' >&2
+  exit 1
+fi
+if grep -Fq 'Unrelated historical ambiguity' "$remediation_root/analyzed.json"; then
+  echo 'unrelated historical todo2code diagnostic entered remediation overlay' >&2
+  exit 1
+fi
+
+python3 "$remediation" analyze-todo2code "$remediation_root/intent.json" \
+  --graph "$remediation_root/graph.json" \
+  --diagnostics "$remediation_root/relevant-diagnostics.json" \
+  --plans "$remediation_root/plans.json" \
+  --out "$remediation_root/relevant-ambiguity.json"
+grep -Fq 'T2C_AMBIGUOUS_INTENT' "$remediation_root/relevant-ambiguity.json"
+grep -Fq 'Relevant projection ambiguity' "$remediation_root/relevant-ambiguity.json"
 
 if python3 "$remediation" analyze-todo2code "$remediation_root/intent.json" \
+  --graph "$remediation_root/graph.json" \
   --diagnostics "$remediation_root/diagnostics.json" \
   --plans "$remediation_root/unsafe-plans.json" \
   --out "$remediation_root/unsafe-analyzed.json" > "$remediation_root/unsafe.out" 2>&1; then

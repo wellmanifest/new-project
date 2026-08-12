@@ -65,8 +65,11 @@ Before any multi-step implementation, an agent must:
    linked `.governance/error/*.md` runbook when present. Ticket logs are
    historical evidence and never authorize bypassing a fail-closed gate.
 20. Keep each incident-specific `remediation-intent.dsl.json` in its target
-   ticket. Validate it before LLM planning and treat todo2code/LLM results as
-   digest-bound advisory input; never let either expand the accepted intent.
+   ticket. Validate it, atomically render its declared task/TODO paths and run
+   `verify-todo2code` before extraction. Analyze todo2code with the exact graph,
+   diagnostics and plans so only records citing those projections can affect
+   the digest-bound advisory overlay; never let todo2code or an LLM expand the
+   accepted intent.
 
 Markdown approval is an audit note, not trusted merge approval. Required
 merge approval comes from the repository's protected review, attestation and
