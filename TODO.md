@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-074`](project/ticket-074/README.md) — uzgodnić tryby standalone i
+  monorepo, warunkowy Docker oraz profile dostawy XS/S/M/L w jednej
+  deterministycznej projekcji; oddzielić status `IN_PROGRESS` od stanów
+  workflow. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
+  `FEATURE / P1 / requested`; workstream: `governance`.
+
 - [x] [`ticket-073`](project/ticket-073/README.md) — naprawiono projekcję
   remediation DSL tak, aby każda akcja była jednym atomowym rekordem todo2code,
   dodano byte-exact weryfikację deklarowanych plików i korelację analizy przez

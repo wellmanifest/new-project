@@ -56,7 +56,7 @@
           "minItems": 1,
           "uniqueItems": true
         },
-        "complexity": { "enum": ["XS", "S"] },
+        "complexity": { "enum": ["XS", "S", "M", "L"] },
         "estimatedMinutes": { "type": "integer", "minimum": 1, "maximum": 30 },
         "standardAdoption": {
           "type": "object",

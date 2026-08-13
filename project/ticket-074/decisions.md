@@ -1,0 +1,39 @@
+# Decision log
+
+```dsl
+DECISION D-074-0001
+TICKET ticket-074
+HEAD_SHA fec37d1bfd05ad98daae375a7e470c63ed704ef4
+CORRELATION_ID new-project-ticket-074-continuation-20260813
+ACTOR agent:codex
+APPLIED_RULE C-APPROVAL-002
+INPUT user_requested_continuation = true
+INPUT user_requested_completion_audit = true
+INPUT bounded_ticket = "ticket-074"
+INPUT destructive_or_out_of_scope_authority = false
+INPUT trusted_merge_self_approval = false
+INPUT expected_verdict_from_rule = "CONTINUE_PUBLICATION"
+VERDICT CONTINUE_PUBLICATION AUTHORITY DETERMINISTIC
+REJECTED WAIT_FOR_APPROVAL BECAUSE USER_ALREADY_AUTHORIZED_BOUNDED_CONTINUATION
+ASSERT SESSION_EXECUTION_AUTHORIZATION_IS_NOT_TRUSTED_MERGE_APPROVAL
+```
+
+```dsl
+DECISION D-074-0002
+TICKET ticket-074
+HEAD_SHA fec37d1bfd05ad98daae375a7e470c63ed704ef4
+CORRELATION_ID new-project-pr-113-history-recovery
+ACTOR agent:codex
+APPLIED_RULE P-BRANCH-002
+INPUT failed_pull_request = 113
+INPUT failed_remote_head = "goal/ticket-074@9c77d97c12f760d113a4b47fe81af0c7155f51e1"
+INPUT replacement_local_head = "goal/ticket-074-v2@fec37d1bfd05ad98daae375a7e470c63ed704ef4"
+INPUT implementation_tree_equal = true
+INPUT goal_push_result = "NON_FAST_FORWARD"
+INPUT old_head_preserved_by_remote_rename = true
+INPUT expected_verdict_from_rule = "PRESERVE_AND_REPUBLISH"
+VERDICT PRESERVE_AND_REPUBLISH AUTHORITY DETERMINISTIC
+REJECTED FORCE_PUSH BECAUSE P-SEC-005_REQUIRES_EXPLICIT_DESTRUCTIVE_AUTHORITY
+REJECTED DELETE_OLD_BRANCH BECAUSE P-BRANCH-002_REQUIRES_PRESERVATION_WITHOUT_EXPLICIT_DISCARD
+ASSERT FAILED_HEAD_REMAINS_REMOTE_REACHABLE_AND_REPLACEMENT_USES_GOVERNED_GOAL_DELIVERY
+```
