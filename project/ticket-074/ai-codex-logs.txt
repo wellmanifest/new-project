@@ -8,3 +8,4 @@
 2026-08-13 PR #113 diagnosis: push checks PASS; pull-request scope check FAIL with GOV-INTENT-003 because the plan and implementation were squashed into one commit.
 2026-08-13 v2 recovery: tree d53ede8b2fcd8b3ad96f5f83ebcd07028c7c9f7c matches PR #113, while eaf1629 records the plan before implementation commit a942d48.
 2026-08-13 exact base/HEAD governance check: GOV-PASS (0 errors, 0 warnings); required-checks, decision-record, governance-scripts, governance-validator, branch-lifecycle, workspace-lifecycle, governance-env, adoption-lock, rule-enforcement and diff check all PASS.
+2026-08-13 governed Goal publication attempt: tests PASS and local evidence commit fec37d1 created; remote push safely rejected NON_FAST_FORWARD because Goal maps ticket-074 to the existing failed head branch goal/ticket-074; no force push performed.
