@@ -15,3 +15,8 @@
   transition from `BLOCKED` to `EDIT`.
 - Passed manifest/intent metaschemas, all Linux test suites, rule traceability,
   diff checks and the source-hub governance gate.
+
+## 2026-08-13 publication
+
+- Closed after `ifuri-validator-agent` approved and merged pull request #114 at
+  `7ce09f1737f757c0e6d1fc4072b311d5453fd4f7`.
