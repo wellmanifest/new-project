@@ -4,3 +4,7 @@
 2026-08-12 governance scripts: PASS; rule-enforcement audit: 172 rules, 57 codes, 0 unmapped, 0 unclaimed.
 2026-08-12 source-hub governance gate: GOV-PASS (0 errors, 0 warnings) against accepted base 2621e77a43fe4055f24165bccc3b10433439ad5a.
 2026-08-12 full Linux validation: required-checks names/test, decision-record, governance-scripts, governance-validator, branch-lifecycle, workspace-lifecycle, governance-env, adoption-lock and rule-enforcement all PASS.
+2026-08-13 Diagit workspace audit ae263ae3-33fd-4957-9ac0-5789f21c6dd2: complete; 15 repositories; 0 ERROR; 0 CRITICAL; ticket-074-v2 clean and two commits ahead of its configured origin/main upstream.
+2026-08-13 PR #113 diagnosis: push checks PASS; pull-request scope check FAIL with GOV-INTENT-003 because the plan and implementation were squashed into one commit.
+2026-08-13 v2 recovery: tree d53ede8b2fcd8b3ad96f5f83ebcd07028c7c9f7c matches PR #113, while eaf1629 records the plan before implementation commit a942d48.
+2026-08-13 exact base/HEAD governance check: GOV-PASS (0 errors, 0 warnings); required-checks, decision-record, governance-scripts, governance-validator, branch-lifecycle, workspace-lifecycle, governance-env, adoption-lock, rule-enforcement and diff check all PASS.

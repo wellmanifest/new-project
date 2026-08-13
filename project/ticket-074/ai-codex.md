@@ -27,6 +27,9 @@ dopuszcza tylko XS/S, używając jednego globalnego budżetu. Ponadto przejście
   from the request to execute this work.
 - Ticket zaalokowano zarządzanym, clone-wide alokatorem po fetch/prune i
   odizolowano na `goal/ticket-074` od bieżącego `origin/main`.
+- Po tym, jak PR #113 ujawnił `GOV-INTENT-003` dla jednego squasowanego
+  commita, odtworzono identyczne drzewo na `goal/ticket-074-v2` z osobnym
+  commitem planistycznym poprzedzającym implementację.
 - Dodano jawny kontrakt `repository.mode` z `componentRoots`; brak pól w
   starszym manifeście zachowuje kompatybilny tryb standalone.
 - Domyślny manifest publikuje kompletne profile XS/S/M/L, a runtime wybiera
@@ -37,6 +40,9 @@ dopuszcza tylko XS/S, używając jednego globalnego budżetu. Ponadto przejście
   `BLOCKED -> EDIT`.
 - Metaschema, pełny kontrakt Linux, audyt reguł i bramka huba przeszły; ticket
   przeszedł do `PUBLICATION`.
+- Ponowny audyt Diagit nie wykazał błędów ani usterek krytycznych w zakresie
+  workspace; dokładna bramka base/HEAD oraz pełny kontrakt Linux przeszły dla
+  poprawionej historii v2.
 
 ## Blockers
 
