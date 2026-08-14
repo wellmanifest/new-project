@@ -3,7 +3,7 @@
 - **ID**: ticket-085
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -21,15 +21,24 @@ adopcji. Tryb domyślny pozostaje wyłączony dla zwykłych repozytoriów; każd
 standard domenowy włącza `mode: cqrs` we własnym ticketcie adopcyjnym.
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [ ] AC-01: Manifest przyjmuje wyłącznie `domainContracts.mode` równe `none`
+- [x] AC-01: Manifest przyjmuje wyłącznie `domainContracts.mode` równe `none`
       albo zamknięty kontrakt `cqrs` ze stałymi kanonicznymi ścieżkami.
-- [ ] AC-02: W trybie `cqrs` brak katalogu/rejestru, zduplikowana definicja C/Q
+- [x] AC-02: W trybie `cqrs` brak katalogu/rejestru, zduplikowana definicja C/Q
       albo zerwane odwołanie command-query-event-error kończy bramkę błędem.
-- [ ] AC-03: Poprawny minimalny standard CQRS przechodzi walidację, a istniejące
+- [x] AC-03: Poprawny minimalny standard CQRS przechodzi walidację, a istniejące
       manifesty bez pola i domyślny `mode: none` zachowują kompatybilność.
-- [ ] AC-04: Dokumentacja i szablon agenta jednoznacznie wskazują
+- [x] AC-04: Dokumentacja i szablon agenta jednoznacznie wskazują
       `operations/index.json` jako jedyne źródło prawdy C/Q oraz rozdzielają
       semantykę domeny od modeli transportowych.
+
+## Dowody walidacji
+
+- `bash tests/governance-validator.test.sh`: PASS; dodatni standard CQRS,
+  kompatybilność manifestu bez pola oraz ujemne przypadki braku katalogu,
+  drugiego źródła C/Q i zerwanej relacji emitenta.
+- `for test in tests/*.test.sh; do bash "$test"; done`: PASS dla wszystkich
+  dziewięciu kontraktów Linux.
+- `python3 -m ruff check scripts/governance_check.py`: PASS.
 
 ## Ryzyka i Uwagi
 - Największym ryzykiem jest wymuszenie szkieletu domenowego na zwykłych

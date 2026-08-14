@@ -44,6 +44,16 @@ adopt `cqrs` through their own bounded tickets.
   model catalogs may reference it but may not redefine operations.
 - Chose an explicit opt-in so domain standards can make the skeleton mandatory
   without imposing CQRS on ordinary target applications.
+- Added the closed manifest variants and reserved integration ownership for the
+  canonical operations, events, error, models and proto namespaces.
+- Added dependency-free validation of registry shapes, model files, authority
+  boundaries, command/event/error relations and query/projection/replay safety.
+- Added a complete positive Protobuf fixture, legacy-manifest coverage and
+  fail-closed regressions for missing, duplicated and broken contracts.
+- Documented the sole-source boundary in the managed policy, procedure, live
+  agent instructions and adopted agent template.
+- Passed focused Ruff, the CQRS/governance validator contract and all nine
+  Linux test contracts; moved the ticket to deterministic validation.
 
 ## Blockers
 

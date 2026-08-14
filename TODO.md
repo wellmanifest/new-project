@@ -12,7 +12,7 @@
 - [ ] [`ticket-085`](project/ticket-085/README.md) — ustanowić opcjonalny,
   deterministyczny kontrakt domenowy, w którym `operations/index.json` jest
   jedynym źródłem prawdy C/Q, a standardy CQRS obowiązkowo publikują katalogi
-  `events/` i `error/`. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  `events/` i `error/`. Stan: `IN_PROGRESS / VALIDATION`; klasyfikacja:
   `FEATURE / P1 / requested`; workstream: `governance`.
 
 - [x] [`ticket-084`](project/ticket-084/README.md) — opublikować zintegrowaną

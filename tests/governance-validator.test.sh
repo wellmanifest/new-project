@@ -30,7 +30,11 @@ for instructions in (agents, agent_template):
     assert 'closed without merge' in instructions.lower()
     assert 'HOME vs ADOPT' in instructions or 'HOME vs ADOPT:' in instructions
     assert 'w ramach wellmanifest' in instructions
+    assert 'operations/index.json' in instructions
+    assert 'events/' in instructions
+    assert 'error/' in instructions
 assert 'RULE P-CORE-025 TYPE REQUIRED' in policy
+assert 'operations/index.json' in policy
 assert 'open pull requests = 0' in enforcement
 assert 'remote branches = [default branch]' in enforcement
 assert 'Sam walidator jest read-only i nie usuwa branchy.' in enforcement
@@ -55,6 +59,27 @@ Draft202012Validator(schemas['diagnostics.schema.json']).validate(
 Draft202012Validator(schemas['manifest.schema.json']).validate(
     json.load(open(root / 'governance/manifest.default.json', encoding='utf-8'))
 )
+manifest_validator = Draft202012Validator(schemas['manifest.schema.json'])
+for valid_domain_contracts in (
+    {'mode': 'none'},
+    {
+        'mode': 'cqrs',
+        'commandsAndQueries': 'operations/index.json',
+        'events': 'events/index.json',
+        'errors': 'error/index.json',
+        'models': 'operations/index.json#/models',
+    },
+):
+    candidate = json.load(open(
+        root / 'governance/manifest.default.json', encoding='utf-8'
+    ))
+    candidate['domainContracts'] = valid_domain_contracts
+    manifest_validator.validate(candidate)
+candidate['domainContracts']['events'] = 'domain/events.json'
+assert not manifest_validator.is_valid(candidate)
+candidate['domainContracts']['events'] = 'events/index.json'
+candidate['domainContracts']['queries'] = 'operations/index.json'
+assert not manifest_validator.is_valid(candidate)
 hub_manifest = json.load(open(
     root / 'governance/manifest.hub.json', encoding='utf-8'
 ))
@@ -271,6 +296,7 @@ assert manifest['repository'] == {
     'mode': 'standalone',
     'componentRoots': [],
 }
+assert manifest['domainContracts'] == {'mode': 'none'}
 assert manifest['delivery']['allowedComplexityClasses'] == ['XS', 'S', 'M', 'L']
 assert manifest['delivery']['maxImplementationFiles'] == 15
 assert manifest['delivery']['profiles'] == {
@@ -319,6 +345,12 @@ integration_paths = manifest['coordination']['workstreams']['integration']['owne
 assert 'CHANGELOG.md' in governance_paths
 assert '.env.example' in governance_paths
 assert 'VERSION' in integration_paths
+assert {
+    'operations/**', 'events/**', 'error/**', 'models/**', 'proto/**',
+} <= set(integration_paths)
+assert {
+    'operations/**', 'events/**', 'error/**', 'models/**', 'proto/**',
+} <= set(manifest['coordination']['integration']['requiredForPaths'])
 assert 'VERSION' not in governance_paths
 assert 'VERSION' not in manifest['coordination']['workstreams']['application']['ownedPaths']
 assert {
@@ -336,6 +368,14 @@ spec = importlib.util.spec_from_file_location('governance_check', sys.argv[1])
 module = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = module
 spec.loader.exec_module(module)
+assert module.domain_contract_policy_valid(None)
+assert module.domain_contract_policy_valid({'mode': 'none'})
+assert module.domain_contract_policy_valid(module.DOMAIN_CONTRACTS_CQRS)
+assert not module.domain_contract_policy_valid({'mode': 'cqrs'})
+assert not module.domain_contract_policy_valid({
+    **module.DOMAIN_CONTRACTS_CQRS,
+    'events': 'domain/events.json',
+})
 assert module.probable_secret_fields(
     'API_TOKEN=__GENERATE_API_TOKEN__'
 ) == []
@@ -493,6 +533,125 @@ JSON
   printf '%s\n' '{"name":"fixture"}' > "$target/package.json"
   printf '%s\n' 'export const ok = true;' > "$target/src/app.js"
   printf '%s\n' 'OPENROUTER_API_KEY= T2C_NL_MODE=deterministic' > "$target/README.md"
+}
+
+configure_cqrs_fixture() {
+  local target="$1"
+  mkdir -p "$target/operations" "$target/events" "$target/error" "$target/proto"
+  python3 - "$target/.governance/manifest.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+manifest = json.loads(path.read_text(encoding='utf-8'))
+manifest['domainContracts'] = {
+    'mode': 'cqrs',
+    'commandsAndQueries': 'operations/index.json',
+    'events': 'events/index.json',
+    'errors': 'error/index.json',
+    'models': 'operations/index.json#/models',
+}
+path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+PY
+  printf '%s\n' 'syntax = "proto3";' 'message Request {}' > "$target/proto/request.proto"
+  printf '%s\n' '{"$schema":"https://json-schema.org/draft/2020-12/schema"}' \
+    > "$target/operations/registry.schema.json"
+  cat > "$target/operations/index.json" <<'JSON'
+{
+  "$schema": "./registry.schema.json",
+  "schema": "wellmanifest.operations/v1",
+  "domain": "wellmanifest.fixture/v1",
+  "sourceOfTruth": {
+    "commandsAndQueries": "operations/index.json",
+    "events": "events/index.json",
+    "errors": "error/index.json",
+    "models": "proto/request.proto",
+    "transportRule": "Transport models encode shape only and never grant authority."
+  },
+  "invariants": {
+    "commandEffectsBecomeFactsOnlyThroughEvents": true,
+    "queriesAreEffectFree": true,
+    "replayExecutesEffects": false,
+    "eventsCarryAuthority": false,
+    "modelsCarryAuthority": false
+  },
+  "models": [{
+    "id": "fixture.request",
+    "schemaRef": "../proto/request.proto#Request",
+    "transport": "protobuf",
+    "authority": false
+  }],
+  "commands": [{
+    "id": "fixture.request.record",
+    "uri": "urn:wellmanifest:fixture:command:request-record",
+    "intent": "Record one accepted request.",
+    "inputModel": "fixture.request",
+    "authority": "external-policy",
+    "inputCarriesAuthority": false,
+    "idempotency": "required",
+    "effect": "append-events",
+    "emits": ["fixture.request.recorded"],
+    "rejects": ["FIXTURE-REQUEST-001"]
+  }],
+  "queries": [{
+    "id": "fixture.request.get",
+    "uri": "urn:wellmanifest:fixture:query:request-get",
+    "intent": "Read one request projection.",
+    "inputModel": "fixture.request",
+    "outputModel": "fixture.request",
+    "cardinality": "one-or-none",
+    "projection": "fixture.request-record",
+    "consistency": "eventual",
+    "effect": "none",
+    "emits": []
+  }],
+  "projections": [{
+    "id": "fixture.request-record",
+    "intent": "Rebuild one request from facts.",
+    "outputModel": "fixture.request",
+    "cardinality": "one-or-none",
+    "rebuiltFrom": ["fixture.request.recorded"],
+    "reducer": {"version": 1, "deterministic": true, "effects": false}
+  }]
+}
+JSON
+  cat > "$target/events/index.json" <<'JSON'
+{
+  "schema": "wellmanifest.events/v1",
+  "domain": "wellmanifest.fixture/v1",
+  "sourceOfTruth": "operations/index.json",
+  "immutability": {
+    "appendOnly": true,
+    "eventsCarryAuthority": false,
+    "replayExecutesEffects": false
+  },
+  "events": [{
+    "id": "fixture.request.recorded",
+    "emittedBy": "fixture.request.record",
+    "payloadFields": ["requestId"],
+    "documentation": "events/fixture.request.recorded.md",
+    "authority": false,
+    "replay": {"deterministic": true, "effects": false}
+  }]
+}
+JSON
+  cat > "$target/error/index.json" <<'JSON'
+{
+  "schema": "wellmanifest.errors/v1",
+  "domain": "wellmanifest.fixture/v1",
+  "sourceOfTruth": "operations/index.json#/commands/*/rejects",
+  "errors": [{
+    "code": "FIXTURE-REQUEST-001",
+    "documentation": "error/FIXTURE-REQUEST-001.md",
+    "retryability": "after-correction",
+    "status": {"http": 422, "grpc": "INVALID_ARGUMENT"},
+    "rejectionEvent": "fixture.request.recorded"
+  }]
+}
+JSON
+  printf '%s\n' '# fixture.request.recorded' > "$target/events/fixture.request.recorded.md"
+  printf '%s\n' '# FIXTURE-REQUEST-001' > "$target/error/FIXTURE-REQUEST-001.md"
 }
 
 add_active_ticket() {
@@ -1472,6 +1631,63 @@ make_fixture "$m_profile"
 mutate_delivery "$m_profile" m-profile
 run_check "$m_profile" --changed-file src/app.js > "$fixture/m-profile.out"
 grep -q '^GOV-PASS:' "$fixture/m-profile.out"
+
+cqrs_valid="$fixture/cqrs-valid"
+make_fixture "$cqrs_valid"
+configure_cqrs_fixture "$cqrs_valid"
+run_check "$cqrs_valid" --changed-file src/app.js > "$fixture/cqrs-valid.out"
+grep -q '^GOV-PASS:' "$fixture/cqrs-valid.out"
+
+cqrs_legacy="$fixture/cqrs-legacy"
+make_fixture "$cqrs_legacy"
+python3 - "$cqrs_legacy/.governance/manifest.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+manifest = json.loads(path.read_text(encoding='utf-8'))
+manifest.pop('domainContracts')
+path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+PY
+run_check "$cqrs_legacy" --changed-file src/app.js > "$fixture/cqrs-legacy.out"
+grep -q '^GOV-PASS:' "$fixture/cqrs-legacy.out"
+
+cqrs_missing="$fixture/cqrs-missing"
+make_fixture "$cqrs_missing"
+configure_cqrs_fixture "$cqrs_missing"
+rm "$cqrs_missing/error/index.json"
+expect_code GOV-MANIFEST-001 run_check "$cqrs_missing" --changed-file src/app.js
+
+cqrs_duplicate_authority="$fixture/cqrs-duplicate-authority"
+make_fixture "$cqrs_duplicate_authority"
+configure_cqrs_fixture "$cqrs_duplicate_authority"
+python3 - "$cqrs_duplicate_authority/events/index.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+events = json.loads(path.read_text(encoding='utf-8'))
+events['commands'] = []
+path.write_text(json.dumps(events, indent=2) + '\n', encoding='utf-8')
+PY
+expect_code GOV-MANIFEST-001 run_check "$cqrs_duplicate_authority" --changed-file src/app.js
+
+cqrs_broken_relation="$fixture/cqrs-broken-relation"
+make_fixture "$cqrs_broken_relation"
+configure_cqrs_fixture "$cqrs_broken_relation"
+python3 - "$cqrs_broken_relation/events/index.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+events = json.loads(path.read_text(encoding='utf-8'))
+events['events'][0]['emittedBy'] = 'fixture.unknown.command'
+path.write_text(json.dumps(events, indent=2) + '\n', encoding='utf-8')
+PY
+expect_code GOV-MANIFEST-001 run_check "$cqrs_broken_relation" --changed-file src/app.js
 
 invalid_monorepo="$fixture/invalid-monorepo"
 make_fixture "$invalid_monorepo"

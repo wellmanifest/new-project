@@ -94,6 +94,12 @@ Before any multi-step implementation, an agent must:
    diagnostics and plans so only records citing those projections can affect
    the digest-bound advisory overlay; never let todo2code or an LLM expand the
    accepted intent.
+21. When `.governance/manifest.json` selects `domainContracts.mode=cqrs`, keep
+   command and query definitions only in `operations/index.json`. Publish the
+   mandatory `events/index.json` and `error/index.json` catalogs with stable
+   `events/{event-id}.md` and `error/{code}.md` documents. Protobuf and JSON
+   Schema models describe transport shape only; they never grant authority or
+   redefine C/Q semantics. Run the managed gate after every graph change.
 
 Markdown approval is an audit note, not trusted merge approval. Required
 merge approval comes from the repository's protected review, attestation and
