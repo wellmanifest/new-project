@@ -3,7 +3,7 @@
 - **ID**: ticket-078
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -42,6 +42,8 @@ od ADOPT standardów Wellmanifest. Kontrakt obejmuje `home`, `shape`, opcjonalny
 - Wszystkie dziewięć zestawów `tests/*.test.sh`: PASS.
 - JSON Schema, JSON syntax, Python compile, Ruff 0.15.21, diff whitespace i
   wzorce sekretów: PASS.
+- Commit implementacyjny: `04715d71aa5c5aa822eb45217d51412fbc563688`;
+  exact commit scope gate: `GOV-PASS`.
 
 ## Uczestnicy
 

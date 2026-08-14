@@ -44,6 +44,9 @@ release ticket; exact-head trusted approval remains external evidence.
   regression coverage without changing the v0.17.0 release carriers.
 - Passed the complete local Hub test contract, Ruff 0.15.21 and the current
   ticket scope gate.
+- Committed the bounded implementation as
+  `04715d71aa5c5aa822eb45217d51412fbc563688` and entered `PUBLICATION` after
+  the exact committed diff passed the deterministic gate.
 
 ## Blockers
 
