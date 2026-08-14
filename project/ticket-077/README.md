@@ -2,8 +2,8 @@
 
 - **ID**: ticket-077
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: BLOCKED
+- **Workflow state**: BLOCKED
 - **Utworzono**: 2026-08-14
 
 ## Cel i zakres
@@ -47,3 +47,10 @@ Polecenie użytkownika, żeby zaimplementować bramki jakości, stanowi
 Ten katalog przechowuje governance, decyzje, logi i dowody. Kod wykonywalny,
 skrypty badawcze i testy należą do zwykłych katalogów źródłowych repozytorium,
 nie do `project/ticket-077/`.
+
+## Stan koordynacji
+
+Ticket został przeniesiony do `BLOCKED`, ponieważ jego zatwierdzony intent
+jawnie wyklucza push i pull request, a lokalna implementacja jest już
+zapisana w zachowanym commicie. Zgodnie z `P-CORE-017` oczekiwanie na osobną
+autoryzację publikacji nie może rezerwować jedynego workstreamu governance.

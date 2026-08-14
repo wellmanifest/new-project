@@ -1,0 +1,18 @@
+# Decision log
+
+```dsl
+DECISION D-077-0001
+TICKET ticket-077
+HEAD_SHA 7b300e1481272a5fa0fbf732fc22af8268c6c3ce
+CORRELATION_ID new-project-ticket-077-release-wait-7b300e148127
+ACTOR agent:codex
+APPLIED_RULE C-TICKET-017
+INPUT ticket_status = "IN_PROGRESS"
+INPUT workflow_state = "EDIT"
+INPUT publication_authorized = false
+INPUT implementation_commit = "7b300e1481272a5fa0fbf732fc22af8268c6c3ce"
+INPUT expected_verdict_from_rule = "BLOCKED"
+VERDICT BLOCKED AUTHORITY DETERMINISTIC
+REJECTED IN_PROGRESS BECAUSE WAITING_TICKET_MUST_RELEASE_WORKSTREAM
+ASSERT VERDICT_AUTHORITY != "ADVISORY"
+```
