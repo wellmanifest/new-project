@@ -9,11 +9,13 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-076`](project/ticket-076/README.md) — rozdzielić autoryzację
+- [x] [`ticket-076`](project/ticket-076/README.md) — rozdzielić autoryzację
   uruchomienia chronionego procesu Validatora od exact-head trusted approval,
   usuwając ponowne pytanie o merge w już autoryzowanym zakresie. Stan:
-  `IN_PROGRESS / PUBLICATION`; klasyfikacja: `BUG / P0 / requested`; workstream:
-  `governance`.
+  `DONE / DONE`; klasyfikacja: `BUG / P0 / requested`; workstream:
+  `governance`. PR #118 otrzymał exact-head approval Validatora dla
+  `85fc7d5...` i został scalony jako
+  `0b4170a353fa30cb5857a4b3c97c6f0b2d2df5b0`.
 
 - [x] [`ticket-075`](project/ticket-075/README.md) — opublikowano zintegrowane
   tryby repozytorium, warunkowy Docker i profile dostawy XS/S/M/L jako

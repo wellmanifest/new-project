@@ -51,6 +51,9 @@ redundantnej zgody człowieka.
   Goal correctly rejected the non-fast-forward update. Verified the exact
   remote SHA and used a lease-bound recovery so concurrent work could not be
   overwritten.
+- The protected Validator approved exact head `85fc7d5...`, merged PR #118,
+  and GitHub removed the merged delivery branch. Closed the ticket only from
+  the resulting integrated `main` commit `0b4170a...`.
 
 ## Blockers
 
