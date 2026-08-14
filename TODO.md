@@ -9,6 +9,10 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-080`](project/ticket-080/README.md) — adopt reviewed Policy DSL
+  as an immutable managed runtime for every repository with
+  `CONTRIBUTING.md`; currently `PLAN / PLAN` pending dependency review.
+
 - [x] [`ticket-079`](project/ticket-079/README.md) — opublikowano zintegrowany
   kontrakt HOME vs ADOPT jako immutable `new-project 0.18.0`. Stan:
   `DONE / DONE`; klasyfikacja: `SERVICE / P1 / requested`; workstream:
