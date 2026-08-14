@@ -597,19 +597,30 @@ core = rule(policy, 'P-CORE-008')
 assert 'SESSION_EXECUTION_AUTHORIZATION' in core
 assert 'USER_REQUEST_AUTHORIZES_EXECUTION_OR_AUTONOMOUS_MODE' in core
 assert 'REQUIRE_SEPARATE_AUTHORITY' in core
+assert 'DECLARED_PROTECTED_DELIVERY_PROCESS_INVOCATION' in core
+assert 'PROTECTED_EXACT_HEAD_EVIDENCE_AUTHORIZES_MERGE' in core
 assert 'WAIT_FOR_APPROVAL' not in core
-assert 'EXTERNAL_TRUSTED_APPROVAL' in rule(policy, 'P-CORE-015')
+merge = rule(policy, 'P-CORE-015')
+assert 'EXTERNAL_TRUSTED_APPROVAL' in merge
+assert 'PROTECTED_DELIVERY_PROCESS_OWNED_MERGE' in merge
+assert 'DIRECT_AGENT_MERGE' in merge
 
 approval = rule(contributing, 'C-APPROVAL-002')
 assert 'USER_REQUEST_AUTHORIZES_EXECUTION_OR_AUTONOMOUS_MODE' in approval
 assert 'SEPARATE_CONFIRMATION_NOT_REQUIRED' in approval
 assert 'TRUSTED_MERGE_APPROVAL' in approval
+assert 'PROTECTED_DELIVERY_PROCESS_INVOCATION' in approval
+assert 'SEPARATE_CHAT_CONFIRMATION' in approval
 assert 'MATERIAL_OBJECTIVE_EXPANSION' in rule(contributing, 'C-APPROVAL-003')
 
 for agents in (hub_agents, target_agents):
     assert 'SESSION_EXECUTION_AUTHORIZATION' in agents
     assert 'without a second confirmation' in agents
-    assert 'trusted merge approval' in agents.lower()
+assert 'protected delivery' in target_agents.lower()
+assert 'session prose is never' in target_agents.lower()
+assert 'agent must not merge directly' in target_agents.lower()
+for agents in (hub_agents, target_agents):
+    assert 'material objective expansion and trusted merge' not in agents.lower()
 assert 'STOP & WAIT FOR USER REVIEW' not in hub_agents
 assert 'Stop in `WAIT_FOR_APPROVAL`' not in target_agents
 PY

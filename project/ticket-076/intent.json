@@ -1,0 +1,94 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-076",
+  "summary": "Authorize protected Validator delivery without redundant prompts",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P0",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "CONTRIBUTING.md",
+    "POLICY.md",
+    "project/new-ticket.sh",
+    "project/ticket-076/**",
+    "subprojects/ticket-lifecycle/README.md",
+    "template/files/AGENTS.template.md",
+    "template/files/agent-participant.template.md",
+    "template/files/preprompt.template.md",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-scripts.test.sh",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "414ebf147768e470dfa160ea1b4e1dfd035c2f11",
+    "targetBranch": "main",
+    "outcome": "Standardize protected Validator delivery so bounded autonomous work does not request redundant merge authorization",
+    "nonGoals": [
+      "Do not weaken exact-head approval evidence or allow self-approval",
+      "Do not authorize direct merge outside a declared protected delivery process",
+      "Do not modify the concurrent uncommitted placement-policy work",
+      "Do not publish a new immutable new-project release in this ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep session authority and trusted evidence separate while allowing the declared protected Validator process to complete delivery without a second prompt",
+      "components": [
+        {
+          "name": "normative-policy",
+          "paths": ["POLICY.md", "CONTRIBUTING.md", "subprojects/ticket-lifecycle/README.md"]
+        },
+        {
+          "name": "generated-agent-contract",
+          "paths": ["AGENTS.md", "template/files/*.md", "project/new-ticket.sh"]
+        },
+        {
+          "name": "regression-contract",
+          "paths": ["tests/adoption-lock.test.sh", "tests/governance-scripts.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "SESSION_EXECUTION_AUTHORIZATION explicitly authorizes invocation of a configured protected delivery process"
+      ],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the policy, lifecycle, generated instruction and regression changes together"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/governance-scripts.test.sh"],
+        "evidence": "project/ticket-076/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "project/ticket-076/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["for suite in tests/*.test.sh; do bash $suite; done", "ruff check scripts"],
+        "evidence": "project/ticket-076/ai-codex-logs.txt"
+      }
+    ]
+  }
+}

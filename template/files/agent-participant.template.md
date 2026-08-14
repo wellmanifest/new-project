@@ -24,4 +24,6 @@ input.
 
 - None inside the recorded intent; proceed without a second confirmation.
 - New authority is still required for destructive action, secret access, new
-  external coordination, material objective expansion and trusted merge.
+  external coordination or material objective expansion. Protected delivery
+  may be invoked without another prompt when publication is in scope; its
+  exact-head trusted approval remains independent evidence.

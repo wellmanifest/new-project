@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-076`](project/ticket-076/README.md) — rozdzielić autoryzację
+  uruchomienia chronionego procesu Validatora od exact-head trusted approval,
+  usuwając ponowne pytanie o merge w już autoryzowanym zakresie. Stan:
+  `IN_PROGRESS / PUBLICATION`; klasyfikacja: `BUG / P0 / requested`; workstream:
+  `governance`.
+
 - [x] [`ticket-075`](project/ticket-075/README.md) — opublikowano zintegrowane
   tryby repozytorium, warunkowy Docker i profile dostawy XS/S/M/L jako
   immutable `new-project 0.17.0`. Stan: `DONE / DONE`; klasyfikacja:

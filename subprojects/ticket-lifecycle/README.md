@@ -2,7 +2,7 @@
 
 ```dsl
 DOCUMENT TICKET_LIFECYCLE
-VERSION 1
+VERSION 2
 LANGUAGE EN
 MODE STRICT
 SCHEMA "wellmanifest.ticket-lifecycle/v1"
@@ -119,14 +119,26 @@ SEPARATE_AUTHORITY_REQUIRED =
   OR SECRET_ACCESS
   OR NEW_EXTERNAL_COORDINATION
   OR MATERIAL_OBJECTIVE_EXPANSION
-  OR TRUSTED_MERGE
-  OR RELEASE_PUBLICATION
+
+PROTECTED_DELIVERY_PROCESS_INVOCATION_AUTHORIZED =
+  SESSION_EXECUTION_AUTHORIZATION
+  AND REQUESTED_OUTCOME_INCLUDES_PUBLICATION
+  AND PROTECTED_PROCESS_IS_DECLARED_BY_REPOSITORY_POLICY
+
+TRUSTED_MERGE_EVIDENCE_REQUIRED =
+  APPROVAL_BINDS_REPOSITORY_PR_CURRENT_HEAD_TICKET_AND_ACTOR
+  AND APPROVAL_ORIGINATES_OUTSIDE_AUTHOR_CHECKOUT
+  AND APPROVER_IS_ALLOWLISTED_HUMAN_OR_VALIDATOR_APP_OR_VERIFIED_ATTESTATION
 ```
 
 Session authorization prevents redundant prompts inside a stable, recorded
-scope. It is not a trusted review, merge or release authorization. The one
-autonomous seed commit is governed by `git-lifecycle`; ordinary commits remain
-subject to the publication rules.
+scope. When publication belongs to that outcome, it authorizes invocation of
+the declared protected delivery process and allows that process to perform its
+owned merge after all exact-head gates pass. It is not a trusted review or
+merge evidence, never permits the authoring agent to approve or merge directly,
+and cannot replace the process-owned approval. The one autonomous seed commit
+is governed by `git-lifecycle`; ordinary commits remain subject to the
+publication rules.
 
 ## Validation, publication and closure
 
@@ -159,6 +171,9 @@ ticket and intent reference.
   rejected.
 - `edit` requires a real accepted base and session authorization.
 - `publish` cannot create trusted approval; it stops at a reviewable PR.
+- A declared protected delivery process may continue from that PR through
+  exact-head approval and merge without another chat confirmation when the
+  recorded outcome includes publication.
 - `close` requires resolved trusted integration and post-merge evidence.
 - `block` preserves evidence and releases workstream/write reservations.
 - `resume` revalidates base, scope, dependencies and foreign workspace state.
