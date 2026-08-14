@@ -16,6 +16,8 @@
     "README.md",
     "CHANGELOG.md",
     "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
     "governance/package-manifest.json",
     "governance/policy-dsl.lock.json",
     "governance/policy-dsl-lock.schema.json",
@@ -81,7 +83,7 @@
         },
         {
           "name": "release-guidance",
-          "paths": ["README.md", "CHANGELOG.md", "VERSION"]
+          "paths": ["CHANGELOG.md", "VERSION", "governance/manifest.default.json", "governance/manifest.hub.json"]
         }
       ],
       "responsibilityChanges": true,

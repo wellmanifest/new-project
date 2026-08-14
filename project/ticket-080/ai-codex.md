@@ -49,6 +49,11 @@ Policy DSL dependency or this standard's eventual merge.
   `6fe12f9fcce206c1d69b95f9cac1b4bc8c10abbf` and deletion of the ticket branch.
 - Returned this ticket to `IN_PROGRESS / EDIT` before changing implementation
   files.
+- Corrected the bounded release path list before implementation: the published
+  version bump must keep both managed governance manifests synchronized. The
+  implementation remains within the existing 15-file budget by recording the
+  interface in `CHANGELOG.md` and concentrating regressions in the adoption
+  contract test.
 
 ## Blockers
 
