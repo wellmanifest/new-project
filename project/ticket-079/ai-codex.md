@@ -30,6 +30,13 @@ minor release `0.18.0`; it introduces no further semantics.
   from the request to execute this work.
 - Bound release preparation to `main@0479febb68810b9650ca6c2109e253d7a7b7750f`,
   ticket-078 and six mechanical carriers; implementation is not yet present.
+- Synchronized the six carriers from 0.17.0 to 0.18.0 and moved the integrated
+  HOME versus ADOPT notes into the dated release section without editing
+  placement semantics.
+- Passed the exact scope gate, all nine Linux suites, required-check parity,
+  JSON/schema checks, Ruff 0.15.21 and whitespace validation.
+- Verified Goal 2.1.300 and that neither tag nor release `v0.18.0` exists;
+  moved to `VALIDATION` before the implementation commit.
 
 ## Blockers
 

@@ -11,7 +11,7 @@
 
 - [ ] [`ticket-079`](project/ticket-079/README.md) — opublikować zintegrowany
   kontrakt HOME vs ADOPT jako immutable `new-project 0.18.0`. Stan:
-  `IN_PROGRESS / EDIT`; klasyfikacja: `SERVICE / P1 / requested`; workstream:
+  `IN_PROGRESS / VALIDATION`; klasyfikacja: `SERVICE / P1 / requested`; workstream:
   `governance`; zależy od `ticket-078`.
 
 - [x] [`ticket-078`](project/ticket-078/README.md) — dodano opcjonalny kontrakt

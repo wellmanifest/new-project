@@ -3,7 +3,7 @@
 - **ID**: ticket-079
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -15,11 +15,11 @@ placement po ich merge.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: `VERSION`, oba manifesty i aktywne asercje testowe deklarują
+- [x] AC-01: `VERSION`, oba manifesty i aktywne asercje testowe deklarują
   dokładnie `0.18.0`.
-- [ ] AC-02: changelog opisuje HOME vs ADOPT jako kompatybilne wstecz minor
+- [x] AC-02: changelog opisuje HOME vs ADOPT jako kompatybilne wstecz minor
   release i zachowuje historię `0.17.0`.
-- [ ] AC-03: pełny kontrakt Linux, Ruff 0.15.21, schema, secret scan i
+- [x] AC-03: pełny kontrakt Linux, Ruff 0.15.21, schema, secret scan i
   governance przechodzą dla dokładnego commita kandydata.
 - [ ] AC-04: PR otrzymuje trusted exact-head Validator approval i jest scalony
   bez zmiany zatwierdzonego drzewa.
@@ -34,6 +34,15 @@ placement po ich merge.
   łamania istniejących intentów.
 - Adopcja w `env-dsl` pozostaje osobnym target-owned ticketem i nie należy do
   write scope tego wydania.
+
+## Dowody przed publikacją
+
+- Diff implementacyjny obejmuje dokładnie sześć zadeklarowanych nośników;
+  brama scope raportuje `GOV-PASS` (0 błędów, 0 ostrzeżeń).
+- Wszystkie dziewięć zestawów `tests/*.test.sh`, wymagane checki, JSON Schema,
+  Ruff 0.15.21 i diff whitespace: PASS.
+- `v0.18.0` nie istnieje jako tag ani GitHub Release przed publikacją.
+- Post-merge Linux/Windows ticketu 078 i zamknięcia na `main@0479feb`: PASS.
 
 ## Uczestnicy
 
