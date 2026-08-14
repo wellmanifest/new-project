@@ -11,7 +11,7 @@
 
 - [ ] [`ticket-075`](project/ticket-075/README.md) — opublikować zintegrowane
   tryby repozytorium, warunkowy Docker i profile dostawy XS/S/M/L jako
-  immutable `new-project 0.17.0`. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  immutable `new-project 0.17.0`. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
   `SERVICE / P0 / requested`; workstream: `governance`; zależy od
   `ticket-074`.
 

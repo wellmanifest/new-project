@@ -3,7 +3,7 @@
 - **ID**: ticket-075
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -16,11 +16,11 @@ semantyki profili.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: `VERSION` i oba manifesty standardu deklarują `0.17.0`, a testy
+- [x] AC-01: `VERSION` i oba manifesty standardu deklarują `0.17.0`, a testy
   adopcji oraz walidatora oczekują tej samej wersji.
-- [ ] AC-02: changelog publikuje zintegrowane profile delivery jako nowe,
+- [x] AC-02: changelog publikuje zintegrowane profile delivery jako nowe,
   kompatybilne wstecz minor release bez przepisywania historii `0.16.2`.
-- [ ] AC-03: wszystkie zestawy Linux, Ruff, wymagane checki i governance
+- [x] AC-03: wszystkie zestawy Linux, przypięty Ruff, wymagane checki i governance
   przechodzą na dokładnym HEAD kandydata.
 - [ ] AC-04: PR otrzymuje trusted exact-head Validator approval i jest scalony
   bez zmiany zatwierdzonego drzewa.
@@ -35,6 +35,20 @@ semantyki profili.
   budżety per klasa złożoności; nie wolno zmienić znaczenia `v0.16.2`.
 - Downstream Hub pozostaje fail-closed na swojej obecnej wersji do czasu
   osobnej, exact-SHA adopcji po publikacji.
+
+## Dowody przed publikacją
+
+- Dokładny diff od `main@59a0298` obejmuje sześć zadeklarowanych plików
+  wydaniowych i ticketowe artefakty governance; `GOV-PASS` raportuje 0 błędów
+  i 0 ostrzeżeń.
+- Wszystkie dziewięć zestawów `tests/*.test.sh` oraz kontrola nazw wymaganych
+  checków przechodzą.
+- Ruff `0.15.21`, użyty dla ostatniego wydania, przechodzi. Hostowy Ruff
+  `0.16.1` wykrywa 13 nowych-regułowych findings identycznie na bazie i
+  kandydacie; release nie dotyka żadnego pliku `scripts/`.
+- Goal `2.1.300` udostępnia wymagane tryby `pull-request` i `direct-main` oraz
+  `--force-publish`; tag i GitHub Release `v0.17.0` nie istnieją przed
+  publikacją.
 
 ## Uczestnicy
 

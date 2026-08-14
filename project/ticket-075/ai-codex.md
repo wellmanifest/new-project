@@ -29,6 +29,15 @@ jako minor `0.17.0` bez dalszej zmiany zachowania.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- Synchronized the six release carriers and assertions from `0.16.2` to
+  `0.17.0`, preserving the historical 0.16.2 changelog entry.
+- Added release notes for repository topology, opt-in Docker, closed XS/S/M/L
+  budgets and separation of ticket status from workflow state.
+- Passed deterministic governance, all nine Linux shell suites, required-check
+  parity and Ruff 0.15.21. Ruff 0.16.1 reports the same 13 pre-existing
+  findings on base and candidate, so no unrelated lint repair entered scope.
+- Verified Goal 2.1.300 and the absence of a pre-existing v0.17.0 tag/release;
+  moved the ticket to `IN_PROGRESS / PUBLICATION` for trusted review.
 
 ## Blockers
 

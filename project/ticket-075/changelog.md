@@ -8,3 +8,7 @@
   exactly six version, assertion and release-note files.
 - Recorded that downstream adoption remains separate and publication waits for
   trusted exact-head merge plus a clean default-branch retest.
+- Prepared all six 0.17.0 carriers and passed governance, nine Linux suites,
+  required-check parity and the release-pinned Ruff version.
+- Transitioned to publication with no pre-existing v0.17.0 tag or release;
+  immutable publication remains deferred until exact-head trusted merge.
