@@ -1,0 +1,60 @@
+$ ./project/governance-check.sh
+python3: can't open file '<worktree>/.governance/governance_check.py': [Errno 2] No such file or directory
+
+$ bash tests/adoption-lock.test.sh
+adoption lock: PASS
+
+$ bash tests/governance-scripts.test.sh
+warning: You appear to have cloned an empty repository.
+governance scripts: PASS
+
+$ bash tests/governance-validator.test.sh
+diagnostic-catalog: 64 codes, 0 findings
+governance validator: PASS
+
+$ for suite in tests/*.test.sh; do bash "$suite"; done
+adoption lock: PASS
+branch lifecycle validator: PASS
+decision-record tests: PASS
+governance environment runtime tests passed
+governance scripts: PASS
+diagnostic-catalog: 64 codes, 0 findings
+governance validator: PASS
+required-checks tests: PASS
+governed Goal publication contract: PASS
+rule enforcement traceability: PASS
+workspace lifecycle validator: PASS
+
+$ ruff check scripts
+All checks passed!
+
+$ goal --delivery-mode pull-request --no-publish -a push --ticket ticket-076
+Goal v2.1.300 (dev — source at <goal-source>)
+Governed pull-request mode: registry publish waits for merge.
+Error: pull-request resume refuses commits not bound to ticket-076: fix(governance): authorize protected validator delivery
+
+$ goal --delivery-mode pull-request --no-publish -a push --ticket ticket-076
+Goal v2.1.300 (dev — source at <goal-source>)
+Governed pull-request mode: registry publish waits for merge.
+Error: pull-request resume refuses commits not bound to ticket-076: fix(ticket-076): authorize protected validator delivery
+
+$ hosted scope-check for initial one-commit candidate
+GOV-ARCHITECTURE-001 ERROR: Ticket ticket-076 has unresolved or ambiguous component ownership.
+GOV-BUDGET-001 ERROR: Actual diff for ticket-076 exceeds its approved complexity budget.
+GOV-DELIVERY-001 ERROR: Ticket ticket-076 exceeds the approved delivery class or policy budget.
+GOV-INTENT-003 ERROR: project/ticket-076/intent.json did not exist before the first implementation commit.
+GOV-PATH-001 ERROR: Machine-local absolute path detected in governed artifact: project/ticket-076/ai-codex-logs.txt
+
+$ python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base 414ebf147768e470dfa160ea1b4e1dfd035c2f11 --head HEAD --actor ci --format text
+GOV-PASS: passed (0 errors, 0 warnings)
+
+$ goal --delivery-mode pull-request --no-publish -a push --ticket ticket-076
+Goal v2.1.300 (dev — source at <goal-source>)
+Governed pull-request mode: registry publish waits for merge.
+Resuming governed pull-request delivery for committed HEAD 22d3ac9f4997.
+Error: could not push PR branch 'goal/ticket-076': non-fast-forward
+AUTO: Running tests (--all mode)
+All tests passed successfully
+
+$ git ls-remote origin refs/heads/goal/ticket-076
+a2bb246c2eeef8100be6dd214224a776f572fe76 refs/heads/goal/ticket-076

@@ -28,6 +28,11 @@ Before any multi-step implementation, an agent must:
 5. Move to `EDIT` without a second confirmation and stay inside `intent.json`
    `allowedPaths`. Ask for new authority only for destructive action, secret
    access, new external coordination, or material objective expansion.
+   When the recorded outcome includes publication, this authorization also
+   permits invoking the repository's declared protected delivery process and
+   that process's merge after exact-head trusted approval. Do not ask for a
+   second chat confirmation. Session prose is never approval evidence and the
+   agent must not merge directly.
 6. Never create or edit `project/ticket-*/user-*.md`; only its human owner or a
    trusted intake boundary may do so.
 7. Keep executable source/tests/scripts outside ticket directories.
