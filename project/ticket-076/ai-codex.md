@@ -47,6 +47,10 @@ redundantnej zgody człowieka.
   review and merge; no concurrent dirty main-worktree content entered the diff.
 - Goal rejected two noncanonical commit messages before push; rebound both
   commits to the required `[ticket-076]` format.
+- After splitting the already-pushed candidate into plan and implementation,
+  Goal correctly rejected the non-fast-forward update. Verified the exact
+  remote SHA and used a lease-bound recovery so concurrent work could not be
+  overwritten.
 
 ## Blockers
 
