@@ -11,8 +11,9 @@
 
 ## Podlinkowane Zasoby i Dokumentacja Specyfikacji
 - Dokumentacja Zarządcza Hub: https://github.com/wellmanifest/new-project
-- Specyfikacja modułu: {Wpisz odnośnik do dokumentacji technicznej lub pliku}
-
+- Enforcement: `scripts/governance_check.py`
+- Manifests & schema: `governance/manifest.schema.json`, `governance/manifest.default.json`, `governance/manifest.hub.json`
+- Validator test suite: `tests/governance-validator.test.sh`
 ## Dyrektywy Wykonawcze dla Agenta AI
 - Odczytaj niniejsze wytyczne techniczne oraz istniejące, human-owned notatki
   z `user-{github_username}.md`. Nie twórz ani nie modyfikuj ich za człowieka.
