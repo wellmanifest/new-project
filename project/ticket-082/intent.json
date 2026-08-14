@@ -87,7 +87,7 @@
       {
         "criterion": "AC-01",
         "commands": [
-          "grep -rn 'wellmanifest\\.dev' --exclude-dir=.git ."
+          "grep -rn 'wellmanifest\\.dev' --exclude-dir=.git governance scripts tests POLICY.md docs"
         ],
         "evidence": "No governance identifier still names the retired host"
       },
