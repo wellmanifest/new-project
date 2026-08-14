@@ -2,8 +2,8 @@
 
 - **ID**: ticket-079
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -21,9 +21,9 @@ placement po ich merge.
   release i zachowuje historię `0.17.0`.
 - [x] AC-03: pełny kontrakt Linux, Ruff 0.15.21, schema, secret scan i
   governance przechodzą dla dokładnego commita kandydata.
-- [ ] AC-04: PR otrzymuje trusted exact-head Validator approval i jest scalony
+- [x] AC-04: PR otrzymuje trusted exact-head Validator approval i jest scalony
   bez zmiany zatwierdzonego drzewa.
-- [ ] AC-05: czysty merge `main` przechodzi retest, a annotowany tag i finalny
+- [x] AC-05: czysty merge `main` przechodzi retest, a annotowany tag i finalny
   GitHub Release `v0.18.0` wskazują dokładnie ten merge SHA.
 
 ## Ryzyka i Uwagi
@@ -45,6 +45,20 @@ placement po ich merge.
 - Post-merge Linux/Windows ticketu 078 i zamknięcia na `main@0479feb`: PASS.
 - Commit kandydata `6c57973c3ed94269a4b57d1dfa9e99e753dc738f`
   przeszedł exact-head scope gate: `GOV-PASS`.
+
+## Dowody dostawy
+
+- PR #122: HEAD `e500174d51ec09b1f087dcbb8d8cb88a83d45329`;
+  hostowane Linux/Windows: PASS; trusted Validator review `4939013630`:
+  APPROVED dla dokładnego HEAD.
+- Merge `769183ca27593af1d166acee11bc9e37decf9870` ma identyczne drzewo
+  `1899b684999d8fcbd0ddc25d83dc47af795773a8` jak zatwierdzony kandydat.
+- Czysty `main` przeszedł dziewięć lokalnych suite'ów, Ruff 0.15.21 oraz
+  post-merge run `31816934548` na Linux i Windows.
+- Goal 2.1.300 opublikował finalny release
+  `https://github.com/wellmanifest/new-project/releases/tag/v0.18.0`.
+  Annotowany tag object `2f050edac7f7363f48d69dd0e48ee88108efccb9`
+  dereferencjonuje do merge SHA; tag-triggered run `31817259786`: PASS.
 
 ## Uczestnicy
 

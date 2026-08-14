@@ -38,11 +38,17 @@ minor release `0.18.0`; it introduces no further semantics.
 - Verified Goal 2.1.300 and that neither tag nor release `v0.18.0` exists;
   committed the candidate as `6c57973c3ed94269a4b57d1dfa9e99e753dc738f`,
   passed its exact-head gate and entered protected publication.
+- Goal opened PR #122. Hosted Linux/Windows and trusted Validator review
+  approved exact head `e500174d51ec09b1f087dcbb8d8cb88a83d45329` before
+  merge `769183ca27593af1d166acee11bc9e37decf9870`; both commits have the
+  identical tree.
+- Re-ran all nine suites and Ruff on clean merged `main`; post-merge and
+  tag-triggered hosted runs passed.
+- Goal direct-main publication created final release `v0.18.0`; annotated tag
+  `2f050edac7f7363f48d69dd0e48ee88108efccb9` peels exactly to the merge.
+  This governance-only commit closes the lifecycle from integrated `main`.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
-- New authority is still required for destructive action, secret access, new
-  external coordination or material objective expansion. Protected delivery
-  may be invoked without another prompt when publication is in scope; its
-  exact-head trusted approval remains independent evidence.
+- None. The immutable release is published and all declared acceptance
+  criteria are satisfied.
