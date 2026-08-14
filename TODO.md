@@ -9,10 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-078`](project/ticket-078/README.md) — dodać opcjonalny kontrakt
-  HOME vs ADOPT `placement` do intentów i opublikować zmianę przez chroniony
-  PR. Stan: `IN_PROGRESS / EDIT`; klasyfikacja: `FEATURE / P1 / requested`;
-  workstream: `governance`.
+- [x] [`ticket-078`](project/ticket-078/README.md) — dodano opcjonalny kontrakt
+  HOME vs ADOPT `placement` do intentów. Stan: `DONE / DONE`; klasyfikacja:
+  `FEATURE / P1 / requested`; workstream: `governance`. PR #120 przeszedł
+  Linux/Windows i exact-head Validator approval, a następnie został scalony
+  jako `335b0f1975c4c9d3f2f99aeeeaba109a2cc41c2d`.
 
 - [x] [`ticket-076`](project/ticket-076/README.md) — rozdzielić autoryzację
   uruchomienia chronionego procesu Validatora od exact-head trusted approval,

@@ -47,10 +47,21 @@ release ticket; exact-head trusted approval remains external evidence.
 - Committed the bounded implementation as
   `04715d71aa5c5aa822eb45217d51412fbc563688` and entered `PUBLICATION` after
   the exact committed diff passed the deterministic gate.
+- Goal published PR #120 at exact head
+  `aa7e15f2a6a4c8471b844fd658d4c605f1780d89`; all Linux and Windows checks
+  passed, the trusted Validator App approved that head, and the protected
+  flow merged it as `335b0f1975c4c9d3f2f99aeeeaba109a2cc41c2d`.
+- Closed this ticket only from the integrated default branch. The mechanical
+  version bump, tag and immutable release remain owned by a separate ticket.
+- Unified the split: published contract is `origin/main@335b0f1` from
+  `goal/ticket-078`. Recovery branch `ticket/078-home-adopt-placement`
+  stays unmerged (out-of-scope `llms.txt`). Closure docs live on
+  `ticket/078-placement-closure` and are not re-merged to `main` this
+  session per founder instruction.
 
 ## Blockers
 
-- New authority is still required for destructive action, secret access, new
-  external coordination beyond the authorized publication, or material
-  objective expansion. Protected delivery is in scope; its exact-head trusted
-  approval remains independent evidence.
+- Founder forbade opening a PR or merging ticket-078 onto `main` in the
+  follow-up session; PR #120 had already landed. Closure evidence is
+  pushed on the ticket branch only. Release publication remains outside
+  this ticket's write scope.
