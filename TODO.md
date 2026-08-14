@@ -9,10 +9,10 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-080`](project/ticket-080/README.md) — adopt reviewed Policy DSL
-  as an immutable managed runtime for every repository with
-  `CONTRIBUTING.md`; source conformance slice is `IN_PROGRESS / PUBLICATION` at
-  reviewed dependency head `daaf7b7b96312a2469de1b4799f2f81c7396de4e`.
+- [x] [`ticket-080`](project/ticket-080/README.md) — adopted reviewed Policy DSL
+  source conformance as integrated commit
+  `50892fbec07dfaae90b74d219737f999d8409eed`. Managed package/runtime adoption
+  remains the next bounded slice before release.
 
 - [x] [`ticket-079`](project/ticket-079/README.md) — opublikowano zintegrowany
   kontrakt HOME vs ADOPT jako immutable `new-project 0.18.0`. Stan:
