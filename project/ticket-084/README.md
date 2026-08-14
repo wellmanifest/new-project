@@ -3,7 +3,7 @@
 - **ID**: ticket-084
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -14,11 +14,11 @@ sześć nośników wersji, aktywne asercje testów i changelog. Nie zmienia skan
 ani semantyki `GOV-SECRET-001` po ich merge.
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [ ] AC-01: `VERSION`, oba manifesty i aktywne asercje testowe deklarują
+- [x] AC-01: `VERSION`, oba manifesty i aktywne asercje testowe deklarują
       dokładnie `0.18.1`.
-- [ ] AC-02: Changelog opisuje poprawkę markerów `__GENERATE_*__` jako patch i
+- [x] AC-02: Changelog opisuje poprawkę markerów `__GENERATE_*__` jako patch i
       zachowuje historię `0.18.0`.
-- [ ] AC-03: Wszystkie zestawy testów, Ruff, secret scan i governance
+- [x] AC-03: Wszystkie zestawy testów, Ruff, secret scan i governance
       przechodzą dla dokładnego commita kandydata.
 - [ ] AC-04: PR otrzymuje trusted exact-head Validator approval i jest scalony
       bez zmiany zatwierdzonego drzewa.
@@ -32,6 +32,16 @@ ani semantyki `GOV-SECRET-001` po ich merge.
   false-positive bez rozszerzenia składni sekretów.
 - Adopcja w Platform pozostaje osobnym target-owned ticketem i nie należy do
   write scope tego wydania.
+
+## Dowody przed publikacją
+
+- Diff implementacyjny obejmuje dokładnie sześć zadeklarowanych nośników.
+- Wszystkie dziewięć zestawów `tests/*.test.sh`, wymagane checki, JSON/schema,
+  secret scan i Ruff `0.15.21`: PASS.
+- `v0.18.1` nie istnieje jako tag ani GitHub Release przed publikacją.
+- Lokalny Ruff `0.16.1` emituje nowe findingi na niezmienionych plikach bazy;
+  release używa kanonicznej przypiętej wersji `0.15.21` zgodnie z poprzednim
+  kontraktem wydania, bez maskowania findings w testowanym kodzie.
 
 ## Uczestnicy
 

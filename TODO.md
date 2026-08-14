@@ -11,7 +11,7 @@
 
 - [ ] [`ticket-084`](project/ticket-084/README.md) — opublikować zintegrowaną
   poprawkę bezpiecznych markerów bootstrapu jako immutable
-  `new-project 0.18.1`. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  `new-project 0.18.1`. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
   `SERVICE / P1 / requested`; workstream: `governance`; zależy od
   `ticket-083`.
 

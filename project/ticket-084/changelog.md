@@ -6,3 +6,5 @@
 - No human participant identity or content was generated.
 - Bound immutable `0.18.1` preparation to integrated ticket-083 and exactly
   six version, assertion and release-note files.
+- Prepared all six 0.18.1 carriers and passed governance, nine Linux suites,
+  required-check parity, JSON/schema validation and Ruff 0.15.21.

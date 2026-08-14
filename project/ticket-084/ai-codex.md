@@ -31,6 +31,13 @@ scanner semantics.
   from the request to execute this work.
 - Bound release preparation to integrated ticket-083 and six mechanical
   carriers; implementation is not yet present.
+- Synchronized the six carriers from 0.18.0 to 0.18.1 and moved the integrated
+  generated-placeholder notes into a dated patch-release section without
+  editing scanner semantics.
+- Passed all nine Linux suites, required-check parity, JSON/schema checks,
+  secret scanning, whitespace validation and canonical Ruff 0.15.21.
+- Verified that neither tag nor release `v0.18.1` exists and entered protected
+  publication with the ticket still `IN_PROGRESS / PUBLICATION`.
 
 ## Blockers
 
