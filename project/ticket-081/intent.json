@@ -29,7 +29,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "7089c4a35efffc776b7e4d30ed2b9e72e80d63a9",
+    "acceptedBaseSha": "7089c4a9a0834c08539d4d6f9785118345e4cc36",
     "targetBranch": "main",
     "outcome": "Adopt Policy DSL v1 as the explicit language contract for CONTRIBUTING VERSION 13 with a digest-bound profile and canonical Markdown selector",
     "nonGoals": [
