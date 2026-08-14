@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-079`](project/ticket-079/README.md) — opublikować zintegrowany
+  kontrakt HOME vs ADOPT jako immutable `new-project 0.18.0`. Stan:
+  `IN_PROGRESS / PUBLICATION`; klasyfikacja: `SERVICE / P1 / requested`; workstream:
+  `governance`; zależy od `ticket-078`.
+
 - [x] [`ticket-078`](project/ticket-078/README.md) — dodano opcjonalny kontrakt
   HOME vs ADOPT `placement` do intentów. Stan: `DONE / DONE`; klasyfikacja:
   `FEATURE / P1 / requested`; workstream: `governance`. PR #120 przeszedł

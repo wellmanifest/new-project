@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-08-14
+
 ### HOME vs ADOPT placement
 
 - Add optional `intent.json` `placement` (`home`, `shape`, `runtimeOwner`,
@@ -9,6 +11,12 @@
   without treating "w ramach wellmanifest" as HOME. Existing tickets stay
   valid; invalid placement values reject. `runtime_service` must not HOME
   wellmanifest.
+
+- Keep adoption distinct from repository ownership: `adopt` contains closed
+  `wellmanifest/<pack>` identifiers while `home` and `runtimeOwner` use the
+  closed `wellmanifest`, `subactor` or `semcod` vocabulary.
+- Validate placement deterministically, including the cross-field rule that a
+  runtime service cannot be HOME in Wellmanifest.
 
 ## [0.17.0] - 2026-08-14
 
