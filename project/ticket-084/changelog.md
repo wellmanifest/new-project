@@ -8,3 +8,5 @@
   six version, assertion and release-note files.
 - Prepared all six 0.18.1 carriers and passed governance, nine Linux suites,
   required-check parity, JSON/schema validation and Ruff 0.15.21.
+- Entered protected publication after the exact implementation commit passed
+  the deterministic source-hub scope gate.

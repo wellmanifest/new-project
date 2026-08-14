@@ -38,6 +38,9 @@ scanner semantics.
   secret scanning, whitespace validation and canonical Ruff 0.15.21.
 - Verified that neither tag nor release `v0.18.1` exists and entered protected
   publication with the ticket still `IN_PROGRESS / PUBLICATION`.
+- Committed the mechanical release candidate as
+  `08752b1c0eb5ac2a81e42337094980719b2ba92f`; its exact-head source-hub gate
+  reports `GOV-PASS`.
 
 ## Blockers
 
