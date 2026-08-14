@@ -102,7 +102,7 @@
       "rollback": "Before release revert ticket-080; after release preserve the pin and publish an explicit standard upgrade with a new reviewed Policy DSL revision"
     },
     "runtimeDependencies": [
-      "wellmanifest/policy-dsl@f78d2066b6cda230091548401272d84f699d5650"
+      "wellmanifest/policy-dsl@daaf7b7f66346654689296b6d32a33ef21fe2dd4"
     ],
     "validation": [
       {

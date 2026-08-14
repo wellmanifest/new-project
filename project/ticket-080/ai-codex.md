@@ -49,5 +49,5 @@ Policy DSL dependency or this standard's eventual merge.
 
 - `wellmanifest/policy-dsl#1` has a green remote lifecycle check but no
   independent approval for exact head
-  `f78d2066b6cda230091548401272d84f699d5650`. The agent cannot manufacture or
+  `daaf7b7f66346654689296b6d32a33ef21fe2dd4`. The agent cannot manufacture or
   self-issue trusted review evidence.
