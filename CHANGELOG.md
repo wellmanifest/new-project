@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-08-14
+
+### Repository modes and bounded delivery profiles
+
+- Declare standalone and monorepo topology explicitly, with component-root
+  validation for monorepo targets and backward-compatible standalone handling
+  for existing v2 manifests.
+- Keep Docker opt-in and validate existing Docker configuration without
+  inferring a container requirement from the application kind.
+- Add closed XS/S/M/L delivery profiles and bind each ticket's declared file,
+  component, public-interface and runtime-dependency budgets to its exact
+  complexity class.
+- Keep workflow status and execution state distinct so only `IN_PROGRESS`
+  reserves ownership while `EDIT`, `VALIDATION` and `PUBLICATION` remain
+  implementation states.
+
 ## [0.16.2] - 2026-08-12
 
 ### Orphan local branch workspace audit
