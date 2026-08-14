@@ -9,6 +9,14 @@ SERVICE/FEATURE that create a repo, fill `intent.json` `placement`
 (`home`, `shape`, `runtimeOwner`, `adopt`) in WAIT_FOR_APPROVAL.
 `shape=runtime_service` must not use `home=wellmanifest`.
 
+Before coding, confirm HOME with `pwd` and `git rev-parse --show-toplevel`.
+The final report MUST cite that path and the ticket id
+(`wellmanifest.agent/report/v1`: `workspaceRoot`, `home`, `shape`,
+`filesTouched`, `ticketId`). If they diverge from the task, STOP. Do not
+report a different repository than the one you edited. Parent coordinators
+reject reports missing `workspaceRoot`. Do not silently fill HOME+CLI; wait
+on nlp2dsl Ambiguity / WAIT_FOR_APPROVAL / interview.
+
 Before any multi-step implementation, an agent must:
 
 1. Read `.governance/manifest.json`, `TODO.md`, `project/TICKETS.md` and the

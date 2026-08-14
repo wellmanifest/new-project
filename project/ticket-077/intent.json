@@ -1,0 +1,98 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-077",
+  "summary": "Bind agent reports to workspace identity",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "AGENTS.md",
+    "template/files/AGENTS.template.md",
+    "governance/agent-report.schema.json",
+    "scripts/validate-agent-report.py",
+    "tests/agent-report.test.sh",
+    "project/ticket-077/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "governance/intent.schema.json",
+    "POLICY.md",
+    "VERSION"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "414ebf147768e470dfa160ea1b4e1dfd035c2f11",
+    "targetBranch": "main",
+    "outcome": "Agents bind reports to pwd/git toplevel and coordinators reject reports missing workspaceRoot",
+    "nonGoals": [
+      "Do not make intent.placement required on existing tickets",
+      "Do not change closed wellmanifest/agent v1 profile/request/run/receipt",
+      "Do not add a report runtime or daemon",
+      "Do not continue hostguard, guard-agent, project-ssot or maskfleet product work",
+      "Do not open a pull request or push"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add a coordinator report schema plus portable AGENTS identity bind; keep placement optional and reuse HOME vs ADOPT vocabulary",
+      "components": [
+        {
+          "name": "agent-instructions",
+          "paths": [
+            "AGENTS.md",
+            "template/files/AGENTS.template.md"
+          ]
+        },
+        {
+          "name": "agent-report-contract",
+          "paths": [
+            "governance/agent-report.schema.json",
+            "scripts/validate-agent-report.py",
+            "tests/agent-report.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the five implementation files and ticket-077 evidence; existing tickets remain valid without placement"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/agent-report.test.sh"
+        ],
+        "evidence": "project/ticket-077/ai-grok-logs.txt"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 scripts/validate-agent-report.py --self-test"
+        ],
+        "evidence": "project/ticket-077/ai-grok-logs.txt"
+      }
+    ]
+  }
+}

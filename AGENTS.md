@@ -27,6 +27,24 @@ validate; fill them in `WAIT_FOR_APPROVAL` before execution):
 
 `shape=runtime_service` must not use `home=wellmanifest`.
 
+## Workspace identity bind (reports)
+
+Before writing code, confirm the git HOME with `pwd` and
+`git rev-parse --show-toplevel`. The completion report MUST cite that path and
+the ticket id. If they diverge from the assigned task, STOP. Do not report a
+different repository than the one you edited.
+
+Use `wellmanifest.agent/report/v1` (`governance/agent-report.schema.json`):
+required `workspaceRoot`, `home`, `shape`, `filesTouched`, `ticketId`. A parent
+coordinator MUST reject a report missing `workspaceRoot`. Validate with
+`python3 scripts/validate-agent-report.py <report.json>` (schema + docs; not a
+runtime).
+
+Do not silently fill placement, HOME+CLI, or a missing runtime: emit nlp2dsl
+`Ambiguity` and wait (`WAIT_FOR_APPROVAL` / ssot interview). A project-ssot
+document should carry `placement` plus `allowedPaths` (or bind `intent.json`
+`allowedPaths`) so agents fail closed on GOV-SCOPE.
+
 ## Primary Instructions & Policy Rules
 AI Agents interacting with this workspace MUST immediately read and adhere to the authoritative policy files:
 

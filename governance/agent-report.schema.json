@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wellmanifest/new-project/governance/agent-report.schema.json",
+  "title": "wellmanifest.agent/report/v1",
+  "description": "Coordinator-facing agent completion report. Schema and docs only — not a runtime. Does not extend closed wellmanifest/agent v1 (profile/request/run/receipt). Parent coordinators MUST reject a report missing workspaceRoot. Reuses intent.placement home/shape; placement stays optional on existing tickets.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "workspaceRoot",
+    "home",
+    "shape",
+    "filesTouched",
+    "ticketId"
+  ],
+  "properties": {
+    "schema": { "const": "wellmanifest.agent/report/v1" },
+    "workspaceRoot": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Exact `git rev-parse --show-toplevel` (or pwd if not a git checkout). Must be the repository that was edited. Must match the user task or the agent STOPs."
+    },
+    "gitToplevel": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Repeat of git rev-parse --show-toplevel. When present, must equal workspaceRoot."
+    },
+    "pwd": {
+      "type": "string",
+      "minLength": 1
+    },
+    "home": {
+      "enum": ["wellmanifest", "subactor", "semcod"],
+      "description": "Same enum as intent.placement.home. ADOPT is not HOME."
+    },
+    "shape": {
+      "enum": ["domain_pack", "runtime_service", "both"]
+    },
+    "runtimeOwner": {
+      "enum": ["wellmanifest", "subactor", "semcod"]
+    },
+    "adopt": {
+      "type": "array",
+      "description": "wellmanifest/<pack> ids followed; adopt ≠ home.",
+      "items": {
+        "type": "string",
+        "pattern": "^wellmanifest/[a-z0-9][a-z0-9-]*$"
+      },
+      "uniqueItems": true
+    },
+    "ticketId": {
+      "type": "string",
+      "pattern": "^ticket-[0-9]{3}$"
+    },
+    "filesTouched": {
+      "type": "array",
+      "description": "Repository-relative paths actually edited. Empty is valid for STOP. When allowedPaths is present, each path must match a glob (fail-closed GOV-SCOPE).",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "allowedPaths": {
+      "type": "array",
+      "description": "Copy of intent.json allowedPaths when known. Optional so old tickets remain compatible.",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "outcome": {
+      "enum": ["completed", "stopped", "rejected"]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "shape": { "const": "runtime_service" } },
+        "required": ["shape"]
+      },
+      "then": {
+        "properties": {
+          "home": { "not": { "const": "wellmanifest" } }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "schema": "wellmanifest.agent/report/v1",
+      "workspaceRoot": "/workspace/example-repo",
+      "gitToplevel": "/workspace/example-repo",
+      "pwd": "/workspace/example-repo",
+      "home": "subactor",
+      "shape": "runtime_service",
+      "runtimeOwner": "subactor",
+      "adopt": ["wellmanifest/new-project", "wellmanifest/dsl"],
+      "ticketId": "ticket-001",
+      "filesTouched": ["src/app.py", "tests/test_app.py"],
+      "allowedPaths": ["src/**", "tests/**"],
+      "outcome": "completed"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+pwd=/home/tom/github/wellmanifest/new-project
+git_toplevel=/home/tom/github/wellmanifest/new-project
+ticket=ticket-077
+agent-report self-test: ok
+agent-report self-test: ok

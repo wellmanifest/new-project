@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-077`](project/ticket-077/README.md) — powiązać raport agenta z
+  `pwd` / `git rev-parse --show-toplevel` (`wellmanifest.agent/report/v1`);
+  koordynator odrzuca raport bez `workspaceRoot`. Stan: `IN_PROGRESS / EDIT`;
+  klasyfikacja: `FEATURE / P1 / requested`; workstream: `governance`.
+  `placement` pozostaje opcjonalne na starych ticketach.
+
 - [ ] [`ticket-078`](project/ticket-078/README.md) — dodać opcjonalny kontrakt
   HOME vs ADOPT `placement` do intentów i opublikować zmianę przez chroniony
   PR. Stan: `IN_PROGRESS / EDIT`; klasyfikacja: `FEATURE / P1 / requested`;
