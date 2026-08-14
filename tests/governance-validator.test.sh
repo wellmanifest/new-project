@@ -1689,6 +1689,36 @@ path.write_text(json.dumps(events, indent=2) + '\n', encoding='utf-8')
 PY
 expect_code GOV-MANIFEST-001 run_check "$cqrs_broken_relation" --changed-file src/app.js
 
+cqrs_query_effect="$fixture/cqrs-query-effect"
+make_fixture "$cqrs_query_effect"
+configure_cqrs_fixture "$cqrs_query_effect"
+python3 - "$cqrs_query_effect/operations/index.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+operations = json.loads(path.read_text(encoding='utf-8'))
+operations['queries'][0]['effect'] = 'write-state'
+path.write_text(json.dumps(operations, indent=2) + '\n', encoding='utf-8')
+PY
+expect_code GOV-MANIFEST-001 run_check "$cqrs_query_effect" --changed-file src/app.js
+
+cqrs_model_authority="$fixture/cqrs-model-authority"
+make_fixture "$cqrs_model_authority"
+configure_cqrs_fixture "$cqrs_model_authority"
+python3 - "$cqrs_model_authority/operations/index.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+operations = json.loads(path.read_text(encoding='utf-8'))
+operations['models'][0]['authority'] = True
+path.write_text(json.dumps(operations, indent=2) + '\n', encoding='utf-8')
+PY
+expect_code GOV-MANIFEST-001 run_check "$cqrs_model_authority" --changed-file src/app.js
+
 invalid_monorepo="$fixture/invalid-monorepo"
 make_fixture "$invalid_monorepo"
 python3 - "$invalid_monorepo/.governance/manifest.json" <<'PY'

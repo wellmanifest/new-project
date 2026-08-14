@@ -35,7 +35,8 @@ standard domenowy włącza `mode: cqrs` we własnym ticketcie adopcyjnym.
 
 - `bash tests/governance-validator.test.sh`: PASS; dodatni standard CQRS,
   kompatybilność manifestu bez pola oraz ujemne przypadki braku katalogu,
-  drugiego źródła C/Q i zerwanej relacji emitenta.
+  drugiego źródła C/Q, zerwanej relacji emitenta, efektu query i modelu
+  transportowego próbującego przejąć authority.
 - `for test in tests/*.test.sh; do bash "$test"; done`: PASS dla wszystkich
   dziewięciu kontraktów Linux.
 - `python3 -m ruff check scripts/governance_check.py`: PASS.

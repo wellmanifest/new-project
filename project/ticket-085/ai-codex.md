@@ -50,6 +50,8 @@ adopt `cqrs` through their own bounded tickets.
   boundaries, command/event/error relations and query/projection/replay safety.
 - Added a complete positive Protobuf fixture, legacy-manifest coverage and
   fail-closed regressions for missing, duplicated and broken contracts.
+- Added explicit adversarial fixtures proving that a query effect and transport
+  model authority claim both fail closed.
 - Documented the sole-source boundary in the managed policy, procedure, live
   agent instructions and adopted agent template.
 - Passed focused Ruff, the CQRS/governance validator contract and all nine
