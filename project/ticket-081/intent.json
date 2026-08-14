@@ -1,0 +1,93 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-081",
+  "summary": "Adopt Policy DSL v1 for CONTRIBUTING",
+  "workstream": "governance",
+  "classification": {"kind": "FEATURE", "priority": "P1", "origin": "requested"},
+  "allowedPaths": [
+    "project/ticket-081/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CONTRIBUTING.md",
+    "dsl-manifest.json",
+    "docs/POLICY_DSL.md",
+    "tests/rule-enforcement.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "AGENTS.md",
+    "POLICY.md",
+    "governance/**",
+    "scripts/**",
+    "template/**",
+    ".github/**",
+    "VERSION",
+    "CHANGELOG.md"
+  ],
+  "stacks": [],
+  "dependsOn": ["ticket-080"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f8817e7588fd456a8994599549ea7cf74381de9a",
+    "targetBranch": "main",
+    "outcome": "Adopt Policy DSL v1 as the explicit language contract for CONTRIBUTING VERSION 13 with a digest-bound profile and canonical Markdown selector",
+    "nonGoals": [
+      "Publish policy-dsl from this repository",
+      "Implement a Policy DSL parser or executor",
+      "Change rule semantics, ticket lifecycle or execution authority",
+      "Treat the embedded environment declarations as Env DSL 1 conformance"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep Policy DSL language ownership external, publish only a consuming profile here, select canonical dsl fences deterministically and leave every effect behind existing governance and POA authority",
+      "components": [
+        {"name": "policy-carrier", "paths": ["CONTRIBUTING.md"]},
+        {"name": "profile-and-guidance", "paths": ["dsl-manifest.json", "docs/POLICY_DSL.md"]},
+        {"name": "selector-conformance", "paths": ["tests/rule-enforcement.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        "Bind CONTRIBUTING document revision 13 to Policy DSL language v1",
+        "Relabel two policy-shaped Bash fences as canonical dsl fences",
+        "Lock the profile to the reviewed Policy DSL v1 contracts integrated by ticket-080"
+      ],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the four implementation paths before merge; after adoption preserve profile revision history and issue a newer compatible revision."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python3 ../dsl/src/dsl_check.py validate dsl-manifest.json",
+          "python3 ../dsl/src/dsl_check.py standards dsl-manifest.json"
+        ],
+        "evidence": "project/ticket-081/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-06",
+        "commands": ["bash tests/rule-enforcement.test.sh"],
+        "evidence": "project/ticket-081/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-07",
+        "commands": [
+          "for suite in tests/*.test.sh; do bash $suite; done",
+          "ruff check scripts",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "project/ticket-081/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
