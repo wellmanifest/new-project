@@ -29,7 +29,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "414ebf147768e470dfa160ea1b4e1dfd035c2f11",
+    "acceptedBaseSha": "335b0f1975c4c9d3f2f99aeeeaba109a2cc41c2d",
     "targetBranch": "main",
     "outcome": "Agents bind reports to pwd/git toplevel and coordinators reject reports missing workspaceRoot",
     "nonGoals": [

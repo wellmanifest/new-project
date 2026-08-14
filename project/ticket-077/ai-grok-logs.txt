@@ -3,3 +3,6 @@ git_toplevel=/home/tom/github/wellmanifest/new-project
 ticket=ticket-077
 agent-report self-test: ok
 agent-report self-test: ok
+2026-08-14 rebase onto origin/main@335b0f1 (ticket-078 already merged via PR #120; no 078 remerge)
+publication_authorized=false
+conflicts_resolved=AGENTS.md,TODO.md,project/TICKETS.md,template/files/AGENTS.template.md
