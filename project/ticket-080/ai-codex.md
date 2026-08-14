@@ -32,9 +32,12 @@ Policy DSL dependency or this standard's eventual merge.
 4. Add both artifacts to the immutable governance adoption package.
 5. Invoke Policy DSL from the governance gate, runtime policy command and rule
    enforcement audit, failing closed on missing, changed or invalid runtime.
-6. Normalize the one legacy policy-shaped Bash fence to canonical `dsl`.
-7. Add positive, negative, no-document and adoption-integrity regressions.
-8. Run focused and full gates, then publish through exact-head review.
+6. Normalize the one legacy policy-shaped Bash fence to canonical `dsl` and
+   shorten the single Policy opcode that exceeds the reviewed v1 bound.
+7. Reuse the existing generic package, adoption and rule-enforcement
+   regressions, which automatically cover every managed package entry.
+8. Run focused and full gates, then publish through exact-head review. Allocate
+   a separate bounded release ticket only after the feature is integrated.
 
 ## Actual changes
 
@@ -49,11 +52,12 @@ Policy DSL dependency or this standard's eventual merge.
   `6fe12f9fcce206c1d69b95f9cac1b4bc8c10abbf` and deletion of the ticket branch.
 - Returned this ticket to `IN_PROGRESS / EDIT` before changing implementation
   files.
-- Corrected the bounded release path list before implementation: the published
-  version bump must keep both managed governance manifests synchronized. The
-  implementation remains within the existing 15-file budget by recording the
-  interface in `CHANGELOG.md` and concentrating regressions in the adoption
-  contract test.
+- Reconciled the slice with the authoritative hub delivery profile before an
+  implementation commit: complexity `S`, at most 9 implementation files, 3
+  components and zero install-time dependencies. The reviewed checker is
+  vendored data with immutable provenance, not a package-manager dependency.
+  Versioning and release metadata move to a dependent publication ticket after
+  this feature is integrated.
 
 ## Blockers
 

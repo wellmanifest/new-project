@@ -12,24 +12,15 @@
     "project/ticket-080/**",
     "TODO.md",
     "project/TICKETS.md",
+    "POLICY.md",
     "CONTRIBUTING.md",
-    "README.md",
-    "CHANGELOG.md",
-    "VERSION",
-    "governance/manifest.default.json",
-    "governance/manifest.hub.json",
     "governance/package-manifest.json",
     "governance/policy-dsl.lock.json",
-    "governance/policy-dsl-lock.schema.json",
     "governance/diagnostics.json",
-    "error/GOV-POLICY-DSL-001.md",
     "scripts/policy_dsl_check.py",
     "scripts/governance_check.py",
     "scripts/runtime.sh",
-    "scripts/audit_rule_enforcement.py",
-    "tests/governance-validator.test.sh",
-    "tests/rule-enforcement.test.sh",
-    "tests/adoption-lock.test.sh"
+    "scripts/audit_rule_enforcement.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md",
@@ -50,16 +41,16 @@
     "nonGoals": [
       "Do not execute Policy DSL actions or grant authority from validation",
       "Do not fetch a mutable branch or use network access during repository validation",
-      "Do not treat the current unreviewed Policy DSL pull request as a published dependency",
+      "Do not add an external package-manager or network dependency at runtime",
       "Do not validate unrelated Markdown or shell example fences as policy"
     ],
-    "complexity": "L",
+    "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 15,
-      "maxAffectedComponents": 5,
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 3,
-      "maxRuntimeDependencies": 1
+      "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
@@ -67,23 +58,15 @@
       "components": [
         {
           "name": "immutable-policy-dependency",
-          "paths": ["scripts/policy_dsl_check.py", "governance/policy-dsl.lock.json", "governance/policy-dsl-lock.schema.json", "governance/package-manifest.json"]
+          "paths": ["scripts/policy_dsl_check.py", "governance/policy-dsl.lock.json", "governance/package-manifest.json"]
         },
         {
-          "name": "governance-policy-gate",
-          "paths": ["scripts/governance_check.py", "governance/diagnostics.json", "error/GOV-POLICY-DSL-001.md"]
+          "name": "policy-validation-boundary",
+          "paths": ["scripts/governance_check.py", "scripts/runtime.sh", "scripts/audit_rule_enforcement.py", "governance/diagnostics.json"]
         },
         {
-          "name": "operator-runtime",
-          "paths": ["scripts/runtime.sh", "scripts/audit_rule_enforcement.py"]
-        },
-        {
-          "name": "policy-carrier-and-tests",
-          "paths": ["CONTRIBUTING.md", "tests/governance-validator.test.sh", "tests/rule-enforcement.test.sh", "tests/adoption-lock.test.sh"]
-        },
-        {
-          "name": "release-guidance",
-          "paths": ["CHANGELOG.md", "VERSION", "governance/manifest.default.json", "governance/manifest.hub.json"]
+          "name": "policy-carriers",
+          "paths": ["POLICY.md", "CONTRIBUTING.md"]
         }
       ],
       "responsibilityChanges": true,
@@ -94,18 +77,17 @@
       ],
       "dataChanges": [
         "Add a closed policy dependency lock binding repository, reviewed revision, runtime path and SHA-256",
-        "Normalize the legacy policy-shaped Bash fence in CONTRIBUTING.md to the canonical dsl selector"
+        "Normalize the legacy policy-shaped Bash fence in CONTRIBUTING.md to the canonical dsl selector",
+        "Shorten one overlong Policy opcode without changing its required prohibition"
       ],
       "ui": {
         "impact": "none",
         "states": [],
         "evidence": []
       },
-      "rollback": "Before release revert ticket-080; after release preserve the pin and publish an explicit standard upgrade with a new reviewed Policy DSL revision"
+      "rollback": "Before the dependent release revert ticket-080; after release preserve the pin and publish an explicit standard upgrade with a new reviewed Policy DSL revision"
     },
-    "runtimeDependencies": [
-      "wellmanifest/policy-dsl@daaf7b7b96312a2469de1b4799f2f81c7396de4e"
-    ],
+    "runtimeDependencies": [],
     "validation": [
       {
         "criterion": "AC-02",

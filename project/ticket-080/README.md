@@ -33,10 +33,10 @@ never grants authority. Unrelated Markdown and shell examples are ignored.
   checker and dependency lock in every target repository.
 - [ ] AC-06: Repositories without `CONTRIBUTING.md` remain valid and no policy
   action is executed during validation.
-- [ ] AC-07: Focused tests, the full Linux contract, package/adoption tests,
+- [ ] AC-07: Existing focused tests, the full Linux contract, package/adoption tests,
   exact-diff and governance checks pass at the reviewed HEAD.
-- [ ] AC-08: The change is released through protected publication so targets
-  can adopt a published `new-project` revision containing the immutable pin.
+- [ ] AC-08: The feature reaches protected `main`; a dependent bounded release
+  ticket publishes the integrated revision for target adoption.
 
 ## Dependency evidence
 

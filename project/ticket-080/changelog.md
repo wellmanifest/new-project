@@ -8,5 +8,6 @@
   design; implementation waits for independent exact-head dependency review.
 - Verified exact-head Validator App approval and protected merge of Policy DSL,
   then returned the ticket to `IN_PROGRESS / EDIT` for implementation.
-- Added the two version-bearing governance manifests to the release scope before
-  implementation; no objective or runtime dependency changed.
+- Reconciled the feature slice to the hub's `S` delivery profile: nine files,
+  three components and no external runtime install. A dependent ticket will own
+  the post-merge versioned release.
