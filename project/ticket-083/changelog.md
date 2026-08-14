@@ -11,3 +11,6 @@
   scan pass.
 - Recorded the scanner behavior as one public interface change and removed the
   secret-shaped tracked test literal while preserving the negative assertion.
+- PR #130 received exact-head Validator App approval, merged as
+  `af9cb1231f7eafc9a484dacdc3deaf5b589e1001`, deleted its head branch and is
+  closed by this governance-only payload from integrated `main`.
