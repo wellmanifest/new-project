@@ -11,7 +11,7 @@
 
 - [ ] [`ticket-080`](project/ticket-080/README.md) — adopt reviewed Policy DSL
   as an immutable managed runtime for every repository with
-  `CONTRIBUTING.md`; source conformance slice is `IN_PROGRESS / VALIDATION` at
+  `CONTRIBUTING.md`; source conformance slice is `IN_PROGRESS / PUBLICATION` at
   reviewed dependency head `daaf7b7b96312a2469de1b4799f2f81c7396de4e`.
 
 - [x] [`ticket-079`](project/ticket-079/README.md) — opublikowano zintegrowany
