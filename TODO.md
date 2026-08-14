@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-084`](project/ticket-084/README.md) — opublikować zintegrowaną
+  poprawkę bezpiecznych markerów bootstrapu jako immutable
+  `new-project 0.18.1`. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
+  `SERVICE / P1 / requested`; workstream: `governance`; zależy od
+  `ticket-083`.
+
 - [x] [`ticket-083`](project/ticket-083/README.md) — rozpoznać wyłącznie pełne
   markery bootstrapu `__GENERATE_[A-Z0-9_]+__` jako bezpieczne placeholdery,
   zachowując `GOV-SECRET-001` dla podobnych wartości i rzeczywistych tokenów.

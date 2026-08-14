@@ -1,0 +1,25 @@
+2026-08-14 plan
+BASE_HEAD=1a715c92a28bde7810dabced4f71a96fbdc00314
+ALLOCATOR=project/new-ticket.sh
+ALLOCATED_TICKET=ticket-084
+WORKSTREAM=governance
+SESSION_EXECUTION_AUTHORIZATION=autonomous scanner release and Platform unblock
+IMPLEMENTATION_PRESENT=false
+TARGET_VERSION=0.18.1
+PREVIOUS_RELEASE=v0.18.0@769183ca27593af1d166acee11bc9e37decf9870
+2026-08-14 implementation validation
+IMPLEMENTATION_FILES=6
+SUITES=adoption-lock,branch-lifecycle,decision-record,governance-env,governance-scripts,governance-validator,required-checks,rule-enforcement,workspace-lifecycle:PASS
+DIAGNOSTIC_CATALOG=65-codes:0-findings
+RUFF_VERSION=0.15.21
+RUFF_RESULT=PASS
+LOCAL_RUFF_0_16_1_BASELINE_FINDINGS=19
+JSON_SCHEMA=PASS
+DIFF_CHECK=PASS
+SECRET_SCAN=PASS
+TAG_V0_18_1=ABSENT
+RELEASE_V0_18_1=ABSENT
+WORKFLOW=IN_PROGRESS/PUBLICATION
+2026-08-14 publication candidate
+IMPLEMENTATION_COMMIT=08752b1c0eb5ac2a81e42337094980719b2ba92f
+EXACT_IMPLEMENTATION_GOVERNANCE_GATE=PASS:0-errors:0-warnings

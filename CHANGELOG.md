@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-08-14
+
+### Generated bootstrap placeholder secret scan
+
+- Accept only the exact uppercase `__GENERATE_[A-Z0-9_]+__` bootstrap marker
+  as a safe tracked placeholder, allowing generated `.env.example` contracts
+  to remain publishable without embedding credentials.
+- Keep `GOV-SECRET-001` fail-closed for marker prefixes, suffixes, lowercase
+  spellings, forbidden characters and real token-shaped values.
+
 ## [0.18.0] - 2026-08-14
 
 ### HOME vs ADOPT placement
