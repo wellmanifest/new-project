@@ -17,6 +17,22 @@ Niniejszy dokument pozostaje nadrzędną, egzekwowalną projekcją zgodności. P
 rozbieżności obowiązuje bardziej restrykcyjna reguła i zmiana zatrzymuje się do
 czasu synchronizacji modułu oraz projekcji w jednym tickecie.
 
+## Kanoniczny kontrakt domenowy C/Q
+
+Repozytorium standardu domenowego wybiera w manifeście
+`domainContracts.mode=cqrs`. Wtedy `operations/index.json` jest jedynym
+semantycznym źródłem prawdy o komendach, zapytaniach i projekcjach.
+`events/index.json` kataloguje wyłącznie niezmienne fakty emitowane przez
+komendy, a `error/index.json` wyłącznie stabilne odmowy wskazane przez komendy;
+żaden z tych katalogów nie może ponownie definiować C/Q. Każdy fakt i kod ma
+stabilny dokument odpowiednio w `events/{event-id}.md` i `error/{code}.md`.
+
+Modele Protobuf oraz JSON Schema opisują kształt transportowy payloadu, ale nie
+udzielają autoryzacji i nie definiują skutków. Wzajemne odwołania rejestrów,
+brak efektów zapytań, append-only zdarzeń oraz bezskutkowy replay są wymaganiami
+deterministycznej bramki. Zwykłe repozytorium aplikacji zachowuje `mode=none`;
+standard domenowy włącza CQRS we własnym ograniczonym tickecie adopcyjnym.
+
 ## Zasady nadrzędne
 
 ```dsl

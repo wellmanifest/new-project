@@ -91,3 +91,10 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
    18. **KEEP PUBLICATION ACTIVE**: An implementation PR remains `IN_PROGRESS / PUBLICATION` through exact-head review and trusted merge. Set `DONE / DONE` only in a governance-only closure created from the integrated default branch; never close the unmerged full-diff branch.
    19. **FOLLOW CANONICAL REMEDIATION**: Resolve `GOV-*` findings through `governance/diagnostics.json` and the linked `error/*.md` runbook when present. A ticket log is historical evidence, not a reusable solution, and a runbook never authorizes bypassing a fail-closed gate.
    20. **VALIDATE TARGET REMEDIATION INTENT**: Keep an incident-specific `remediation-intent.dsl.json` in the target repository ticket, validate it deterministically before LLM planning, and treat todo2code/LLM analysis as digest-bound advisory input. Never store target reports or remediation intents in this Governance Hub.
+   21. **KEEP ONE C/Q AUTHORITY**: When `.governance/manifest.json` selects
+       `domainContracts.mode=cqrs`, keep command and query definitions only in
+       `operations/index.json`. Publish the mandatory `events/index.json` and
+       `error/index.json` catalogs plus stable `events/{event-id}.md` and
+       `error/{code}.md` documents. Protobuf and JSON Schema models describe
+       transport shape only; they never grant authority or redefine operation
+       semantics. Run the managed gate after every graph change.

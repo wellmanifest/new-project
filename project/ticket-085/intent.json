@@ -1,0 +1,129 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-085",
+  "summary": "Standardize CQRS domain contract skeleton",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "POLICY.md",
+    "governance/manifest.default.json",
+    "governance/manifest.schema.json",
+    "scripts/governance_check.py",
+    "template/files/AGENTS.template.md",
+    "tests/governance-validator.test.sh",
+    "project/ticket-085/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python",
+    "bash"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "03cbe45568d24d0d2b6b2bc9a520d98a5de71a7c",
+    "targetBranch": "main",
+    "outcome": "Every opted-in Wellmanifest domain standard has one deterministic C/Q authority with mandatory event and error catalogs",
+    "nonGoals": [
+      "No forced CQRS structure for ordinary application repositories",
+      "No runtime event bus, command dispatcher or generated application code",
+      "No migration of existing standards outside their own tickets",
+      "No protobuf or JSON Schema promotion to semantic source of truth",
+      "No new runtime dependency"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use an optional closed manifest mode whose CQRS variant fixes operations/index.json as the sole command/query authority and validates referenced event and error catalogs",
+      "components": [
+        {
+          "name": "governance-manifest-contract",
+          "paths": [
+            "governance/manifest.schema.json",
+            "governance/manifest.default.json"
+          ]
+        },
+        {
+          "name": "deterministic-domain-validator",
+          "paths": [
+            "scripts/governance_check.py",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "managed-adoption-guidance",
+          "paths": [
+            "AGENTS.md",
+            "CONTRIBUTING.md",
+            "POLICY.md",
+            "template/files/AGENTS.template.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        "Governance manifests may declare a closed domainContracts mode",
+        "Opted-in standards must publish operations, events and error registries",
+        "The governance checker validates C/Q/Event/Error cross-references"
+      ],
+      "dataChanges": [
+        "The default manifest reserves integration-owned operations, events, error, models and proto namespaces"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the optional manifest property, checker, default ownership paths and managed prose; existing manifests remain valid throughout"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Schema and direct policy assertions accept only the closed none/cqrs forms"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Adversarial fixtures reject missing catalogs, duplicate C/Q authority and broken graph references"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "for test in tests/*.test.sh; do bash \"$test\"; done"
+        ],
+        "evidence": "Full Linux contract covers a positive CQRS fixture and existing backward-compatible fixtures"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base 03cbe45568d24d0d2b6b2bc9a520d98a5de71a7c --head HEAD --actor agent --format text"
+        ],
+        "evidence": "Source-hub gate verifies the bounded managed documentation and implementation diff"
+      }
+    ]
+  }
+}

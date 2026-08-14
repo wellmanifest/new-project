@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-085`](project/ticket-085/README.md) — ustanowić opcjonalny,
+  deterministyczny kontrakt domenowy, w którym `operations/index.json` jest
+  jedynym źródłem prawdy C/Q, a standardy CQRS obowiązkowo publikują katalogi
+  `events/` i `error/`. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
+  `FEATURE / P1 / requested`; workstream: `governance`.
+
 - [x] [`ticket-084`](project/ticket-084/README.md) — opublikować zintegrowaną
   poprawkę bezpiecznych markerów bootstrapu jako immutable
   `new-project 0.18.1`. Stan: `DONE / DONE`; klasyfikacja:

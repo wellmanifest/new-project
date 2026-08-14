@@ -19,6 +19,28 @@ ich egzekwowalną projekcję zgodności. Requesty modelu muszą przejść przez
 odpowiedni request-only GBNF, zamknięte JSON Schema, preconditions kontrolera i
 dopiero potem przez URI Process/CQRS do pojedynczego skutku oraz receipt.
 
+### Szkielet standardu domenowego
+
+Standard domenowy ustawia `domainContracts.mode` na `cqrs` i utrzymuje cztery
+rozłączne warstwy kontraktu:
+
+1. `operations/index.json` — jedyne źródło prawdy o identyfikatorach i semantyce
+   komend, zapytań oraz projekcji; command wskazuje dozwolone `emits` i
+   `rejects`, query wskazuje jedną projekcję i nie ma efektów.
+2. `events/index.json` oraz `events/{event-id}.md` — append-only katalog faktów,
+   ich emitentów, payloadów i bezskutkowego replay; event nie udziela
+   autoryzacji.
+3. `error/index.json` oraz `error/{code}.md` — katalog publicznych odmów i ich
+   mapowania transportowego, wyprowadzany ze zbiorów `rejects` komend.
+4. Wpisy `models` w rejestrze operacji — referencje do Protobuf lub JSON Schema
+   opisujące wyłącznie kształt transportu, nigdy semantykę C/Q ani authority.
+
+Zmiana któregokolwiek rejestru obejmuje cały dotknięty graf referencji i
+przechodzi zarządzany governance gate. Nie kopiuje się list komend lub zapytań
+do katalogu zdarzeń, błędów, modeli ani dokumentacji. Repozytoria niedomenowe
+pozostają w `domainContracts.mode=none`; starsze manifesty bez pola zachowują
+zgodność.
+
 ## LEGENDA DSL I REGUŁY INTERPRETACJI
 
 Bloki `dsl` są normatywnym, czytelnym dla ludzi i agentów zapisem polityki;
