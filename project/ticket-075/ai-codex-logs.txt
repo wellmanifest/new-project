@@ -1,0 +1,17 @@
+2026-08-14 allocation: managed allocator reserved ticket-075 on accepted base
+59a029883f0a4a7756407a01d3deee52dc23ae36; no active ticket reserved the
+governance workstream.
+2026-08-14 release candidate: VERSION, both standard manifests and active test
+assertions read 0.17.0; historical changelog 0.16.2 remains unchanged.
+2026-08-14 governance: exact base through candidate reports GOV-PASS with 0
+errors and 0 warnings; diff check and JSON syntax pass.
+2026-08-14 full Linux: adoption-lock, branch-lifecycle, decision-record,
+governance-env, governance-scripts, governance-validator, required-checks,
+rule-enforcement and workspace-lifecycle suites all PASS; diagnostic catalog
+contains 64 codes and 0 findings.
+2026-08-14 static checks: required-check source/workflow parity PASS; Ruff
+0.15.21 scripts PASS. Ruff 0.16.1 emits the same 13 findings on main@59a0298
+and the candidate; no scripts file changed.
+2026-08-14 publication preflight: Goal 2.1.300 exposes pull-request,
+direct-main and --force-publish; tag and final GitHub Release v0.17.0 are
+absent.

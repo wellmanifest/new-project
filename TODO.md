@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-075`](project/ticket-075/README.md) — opublikować zintegrowane
+  tryby repozytorium, warunkowy Docker i profile dostawy XS/S/M/L jako
+  immutable `new-project 0.17.0`. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
+  `SERVICE / P0 / requested`; workstream: `governance`; zależy od
+  `ticket-074`.
+
 - [x] [`ticket-074`](project/ticket-074/README.md) — uzgodnić tryby standalone i
   monorepo, warunkowy Docker oraz profile dostawy XS/S/M/L w jednej
   deterministycznej projekcji; oddzielić status `IN_PROGRESS` od stanów
