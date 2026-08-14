@@ -3,7 +3,7 @@
 - **ID**: ticket-085
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -39,6 +39,8 @@ standard domenowy włącza `mode: cqrs` we własnym ticketcie adopcyjnym.
 - `for test in tests/*.test.sh; do bash "$test"; done`: PASS dla wszystkich
   dziewięciu kontraktów Linux.
 - `python3 -m ruff check scripts/governance_check.py`: PASS.
+- Dokładny diff `03cbe455..f99f576` ma 8 plików implementacyjnych i przechodzi
+  źródłową bramkę huba jako `GOV-PASS` bez ostrzeżeń.
 
 ## Ryzyka i Uwagi
 - Największym ryzykiem jest wymuszenie szkieletu domenowego na zwykłych

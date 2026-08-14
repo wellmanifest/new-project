@@ -54,6 +54,8 @@ adopt `cqrs` through their own bounded tickets.
   agent instructions and adopted agent template.
 - Passed focused Ruff, the CQRS/governance validator contract and all nine
   Linux test contracts; moved the ticket to deterministic validation.
+- Confirmed `origin/main` remains the accepted base, no other governance ticket
+  is active, and entered protected publication with the ticket still active.
 
 ## Blockers
 
