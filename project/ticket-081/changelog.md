@@ -7,3 +7,8 @@
 - Bounded adoption to four implementation files at exact base `7089c4a`.
 - Recorded the user's explicit instruction to execute and repair DSL version
   inconsistencies as session authorization, not merge approval.
+- Adopted Policy DSL v1 as the language contract for CONTRIBUTING revision 13.
+- Corrected the two mislabelled context-rule fences, added the consuming
+  manifest and composition guide, and pinned the selector with a regression.
+- Completed all deterministic, stack and governance checks; moved the active
+  ticket to `PUBLICATION` without claiming trusted merge authorization.

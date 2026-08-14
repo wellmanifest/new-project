@@ -3,7 +3,7 @@
 - **ID**: ticket-081
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -16,19 +16,19 @@ granice Env DSL/LLM/MCP/POA i zabezpieczyć selektory testem regresji.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Ticket wiąże jawne polecenie wykonania z dokładnym base SHA,
+- [x] AC-01: Ticket wiąże jawne polecenie wykonania z dokładnym base SHA,
   czterema plikami implementacyjnymi i zerem zależności runtime.
-- [ ] AC-02: `CONTRIBUTING VERSION 13` odróżnia wersję profilu dokumentu od
+- [x] AC-02: `CONTRIBUTING VERSION 13` odróżnia wersję profilu dokumentu od
   Policy DSL v1 i aliasu `policy-sh@1`.
-- [ ] AC-03: Wszystkie normatywne reguły Policy DSL używają selektora `dsl`;
+- [x] AC-03: Wszystkie normatywne reguły Policy DSL używają selektora `dsl`;
   zwykłe przykłady Bash nie są interpretowane jako polityka.
-- [ ] AC-04: `dsl-manifest.json` wiąże źródło, dokumentację i parser-contract
+- [x] AC-04: `dsl-manifest.json` wiąże źródło, dokumentację i parser-contract
   dokładnymi SHA-256 oraz mapuje Policy DSL, Env DSL, DSL Standard i POA.
-- [ ] AC-05: Manifest nie fabrykuje immutable locka do lokalnego,
+- [x] AC-05: Manifest nie fabrykuje immutable locka do lokalnego,
   nieopublikowanego `policy-dsl`; opublikowane DSL i POA są przypięte dokładnie.
-- [ ] AC-06: Test regresji wykrywa policy-shaped reguły poza kanonicznymi
+- [x] AC-06: Test regresji wykrywa policy-shaped reguły poza kanonicznymi
   fence'ami i nadal przechodzi pełny audyt reguł.
-- [ ] AC-07: Governance, wszystkie suite'y shell, Ruff, JSON i manifest
+- [x] AC-07: Governance, wszystkie suite'y shell, Ruff, JSON i manifest
   conformance przechodzą; Docker jest jawnie niewymagany.
 
 ## Ryzyka i Uwagi
@@ -39,6 +39,15 @@ granice Env DSL/LLM/MCP/POA i zabezpieczyć selektory testem regresji.
   ostrzeżenie kompatybilności i domyka deterministyczny selektor Markdown.
 - Dokument ani wynik parsera nie stanowi zgody na wykonanie; efekty pozostają
   za chronioną granicą POA i governance.
+
+## Dowody walidacji
+
+- Manifest i standards lock: `DSL-PASS` bez błędów.
+- Pełny carrier `CONTRIBUTING.md`: `POLICY-MARKDOWN-PASS`.
+- Dziewięć suite'ów `tests/*.test.sh`: PASS; Ruff dla `scripts`: PASS.
+- Cztery pliki implementacyjne i ich SHA-256 mieszczą się dokładnie w intencie;
+  brama Hub raportuje `GOV-PASS` bez błędów i ostrzeżeń.
+- Docker: niewymagany przez `governance/manifest.hub.json`.
 
 ## Uczestnicy
 

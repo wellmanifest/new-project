@@ -30,10 +30,19 @@ POA/governance boundary.
   from the request to execute this work.
 - Reserved ticket ID 081 clone-wide before creating
   `ticket/081-adopt-policy-dsl-v1` from `origin/main@7089c4a`.
+- Declared `wellmanifest.policy/v1`, document revision 13 and the
+  `policy-sh@1` runtime alias as separate version layers.
+- Relabelled the two concrete context rules from `bash` to the canonical `dsl`
+  carrier without changing their statements.
+- Added a digest-bound consuming manifest and composition guidance for Env
+  DSL, GBNF, MCP, `wellm` and POA.
+- Added a fail-closed Markdown selector regression; Policy parsing, all nine
+  shell suites, Ruff, artifact hashes and Hub governance pass.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- None inside the recorded intent; implementation is ready for protected
+  publication.
 - New authority is still required for destructive action, secret access, new
   external coordination or material objective expansion. Protected delivery
   may be invoked without another prompt when publication is in scope; its
