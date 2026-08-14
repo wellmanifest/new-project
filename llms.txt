@@ -6,3 +6,8 @@
 - [README.md](README.md): Workspace overview, system rules, and quickstart checklist.
 - [POLICY.md](POLICY.md): Strict safety rules, source of truth hierarchy, tool and agent policies.
 - [CONTRIBUTING.md](CONTRIBUTING.md): Procedural workflows, ticketing system, Docker constraints, and state transitions.
+
+## HOME vs ADOPT
+- wellmanifest owns standards (`domain_pack`). Product CLI/daemons HOME in `subactor` or `semcod`.
+- `ADOPT wellmanifest/{new-project,dsl,logs}` is not HOME. "w ramach wellmanifest" means ADOPT.
+- Emit optional `intent.json` `placement` (`home`, `shape`, `runtimeOwner`, `adopt`) for SERVICE/FEATURE that create a repo. Invalid values fail the schema; missing values stay optional until WAIT_FOR_APPROVAL fills them.

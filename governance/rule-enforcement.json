@@ -42,6 +42,13 @@
       ],
       "enforcement": "deterministic"
     },
+    "C-APPROVAL-004": {
+      "codes": [
+        "GOV-INTENT-002"
+      ],
+      "enforcement": "manual",
+      "reason": "Invalid placement values fail GOV-INTENT-002. Requiring placement for SERVICE/FEATURE that create a repo remains WAIT_FOR_APPROVAL procedure until the field is required."
+    },
     "C-CI-001": {
       "codes": [
         "GOV-APPROVAL-001",
@@ -870,6 +877,13 @@
         "GOV-DIAGNOSTIC-002"
       ],
       "enforcement": "deterministic"
+    },
+    "P-CORE-025": {
+      "codes": [
+        "GOV-INTENT-002"
+      ],
+      "enforcement": "manual",
+      "reason": "Invalid placement values fail GOV-INTENT-002. HOME vs ADOPT for new runtime_service remains agent/WAIT_FOR_APPROVAL procedure because placement is still optional on existing tickets."
     },
     "P-DOCS-001": {
       "codes": [
