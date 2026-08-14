@@ -32,8 +32,8 @@ never grants authority. Unrelated Markdown and shell examples are ignored.
   instead of the optional `wellm`/regex fallback.
 - [ ] AC-05: Repositories without `CONTRIBUTING.md` remain valid and no policy
   action is executed during validation.
-- [ ] AC-06: Existing focused tests, the full Linux contract and exact-diff
-  exact-diff and governance checks pass at the reviewed HEAD.
+- [ ] AC-06: Existing focused tests, the full Linux contract, exact-diff and
+  governance checks pass at the reviewed HEAD.
 - [ ] AC-07: The source dependency reaches protected `main`; a dependent
   bounded ticket completes managed-package/runtime adoption before release.
 

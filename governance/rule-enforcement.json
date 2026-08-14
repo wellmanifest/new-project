@@ -64,7 +64,8 @@
     },
     "C-CI-003": {
       "codes": [
-        "GOV-MANIFEST-001"
+        "GOV-MANIFEST-001",
+        "GOV-POLICY-DSL-001"
       ],
       "enforcement": "deterministic"
     },
