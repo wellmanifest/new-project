@@ -44,10 +44,15 @@ bypass.
   test source.
 - Kept the ticket `IN_PROGRESS / PUBLICATION` until exact-head Validator App
   approval and protected merge are recorded.
+- Published PR #130 at exact head
+  `7427b51a000bb7103483dd816b23a95fe0347ad6`; Validator App approved and
+  merged it as `af9cb1231f7eafc9a484dacdc3deaf5b589e1001` with branch
+  deletion.
+- Created this governance-only closure from the integrated default branch.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- None; the generated-placeholder scanner fix is integrated and complete.
 - New authority is still required for destructive action, secret access, new
   external coordination or material objective expansion. Protected delivery
   may be invoked without another prompt when publication is in scope; its

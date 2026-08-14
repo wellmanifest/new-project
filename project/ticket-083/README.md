@@ -2,8 +2,8 @@
 
 - **ID**: ticket-083
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -42,6 +42,17 @@ prawdziwych tokenów i wartości tylko podobnych do markera.
   `[A-Z0-9_]` i ujemne regresje dla wartości podobnych do markera.
 - Ticket nie odczytuje sekretów, nie zmienia bootstrapu runtime i nie osłabia
   skanowania plików `.env.example`.
+
+## Dowody publikacji
+
+- Pull request [#130](https://github.com/wellmanifest/new-project/pull/130)
+  przeszedł `test` i `windows-governance` na dokładnym HEAD
+  `7427b51a000bb7103483dd816b23a95fe0347ad6`.
+- Validator App `ifuri-validator-agent[bot]` zatwierdził ten sam HEAD i scalił
+  go przez chroniony proces jako
+  `af9cb1231f7eafc9a484dacdc3deaf5b589e1001`.
+- Gałąź implementacyjna została usunięta przed utworzeniem tego
+  governance-only closure ze zintegrowanego `main`.
 
 ## Uczestnicy
 
