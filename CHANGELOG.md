@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### HOME vs ADOPT placement
+
+- Add optional `intent.json` `placement` (`home`, `shape`, `runtimeOwner`,
+  `adopt`) so SERVICE/FEATURE that create a repo can name the owning org
+  without treating "w ramach wellmanifest" as HOME. Existing tickets stay
+  valid; invalid placement values reject. `runtime_service` must not HOME
+  wellmanifest.
+
 ## [0.17.0] - 2026-08-14
 
 ### Repository modes and bounded delivery profiles

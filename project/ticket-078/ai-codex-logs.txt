@@ -18,3 +18,38 @@ EXIT_CODE=0
 $ python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --base eab2f4641364cbbc481a620f357a31ee6a2b5000 --head HEAD --actor agent --changed-file '<ticket-plan-paths>'
 GOV-PASS: passed (0 errors, 0 warnings)
 EXIT_CODE=0
+
+2026-08-14 implementation validation
+$ bash tests/governance-validator.test.sh
+diagnostic-catalog: 64 codes, 0 findings
+governance validator: PASS
+EXIT_CODE=0
+
+$ for suite in tests/*.test.sh; do bash "$suite"; done
+adoption lock: PASS
+branch lifecycle validator: PASS
+decision-record tests: PASS
+governance environment runtime tests passed
+governance scripts: PASS
+governance validator: PASS
+required-checks tests: PASS
+rule enforcement traceability: PASS
+workspace lifecycle validator: PASS
+EXIT_CODE=0
+
+$ ruff --version
+ruff 0.15.21
+$ ruff check scripts
+All checks passed!
+EXIT_CODE=0
+
+$ python3 -m jsonschema -i project/ticket-078/intent.json governance/intent.schema.json
+EXIT_CODE=0
+
+$ python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --base eab2f4641364cbbc481a620f357a31ee6a2b5000 --head HEAD --actor agent --changed-file '<nine implementation paths>'
+GOV-PASS: passed (0 errors, 0 warnings)
+EXIT_CODE=0
+
+$ git diff --check
+EXIT_CODE=0
+SECRET_SCAN=PASS

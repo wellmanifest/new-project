@@ -38,6 +38,12 @@ release ticket; exact-head trusted approval remains external evidence.
 - Preserved the ungoverned recovery branch without rewriting or deleting it.
 - Released waiting ticket-077 to `BLOCKED` without modifying its implementation
   or agent-owned Grok report.
+- Added optional closed placement fields to the intent schema and matching
+  deterministic validation for HOME, shape, runtime owner and adopted packs.
+- Added policy, procedure, hub/target instructions, enforcement mapping and
+  regression coverage without changing the v0.17.0 release carriers.
+- Passed the complete local Hub test contract, Ruff 0.15.21 and the current
+  ticket scope gate.
 
 ## Blockers
 
