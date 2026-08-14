@@ -29,7 +29,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "7089c4a9a0834c08539d4d6f9785118345e4cc36",
+    "acceptedBaseSha": "c252f5cdda2288e8d05657c7ec88d990b101e562",
     "targetBranch": "main",
     "outcome": "Every governance identifier this standard publishes names the live host, so adopting repositories stop hand-editing files their adoption lock hashes",
     "nonGoals": [
@@ -101,7 +101,7 @@
       {
         "criterion": "AC-03",
         "commands": [
-          "./project/governance-check.sh --actor agent --base 7089c4a9a0834c08539d4d6f9785118345e4cc36 --head HEAD"
+          "./project/governance-check.sh --actor agent --base c252f5cdda2288e8d05657c7ec88d990b101e562 --head HEAD"
         ],
         "evidence": "The hub gate passes with the change resolving to exactly one governance ticket"
       }
