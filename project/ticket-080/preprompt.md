@@ -12,9 +12,9 @@
 ## Podlinkowane Zasoby i Dokumentacja Specyfikacji
 - Dokumentacja Zarządcza Hub: https://github.com/wellmanifest/new-project
 - Policy DSL PR: https://github.com/wellmanifest/policy-dsl/pull/1
-- Candidate revision: `7407fc5bd9f6b04477f3912658bbf2b580513a01`
-- Normative specification: https://github.com/wellmanifest/policy-dsl/blob/7407fc5bd9f6b04477f3912658bbf2b580513a01/spec/POLICY_DSL.md
-- Reference checker: https://github.com/wellmanifest/policy-dsl/blob/7407fc5bd9f6b04477f3912658bbf2b580513a01/tests/policy_dsl_check.py
+- Candidate revision: `f78d2066b6cda230091548401272d84f699d5650`
+- Normative specification: https://github.com/wellmanifest/policy-dsl/blob/f78d2066b6cda230091548401272d84f699d5650/spec/POLICY_DSL.md
+- Reference checker: https://github.com/wellmanifest/policy-dsl/blob/f78d2066b6cda230091548401272d84f699d5650/tests/policy_dsl_check.py
 
 ## Dyrektywy Wykonawcze dla Agenta AI
 - Odczytaj niniejsze wytyczne techniczne oraz istniejące, human-owned notatki

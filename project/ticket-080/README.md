@@ -41,7 +41,7 @@ never grants authority. Unrelated Markdown and shell examples are ignored.
 ## Current prerequisite
 
 Policy DSL pull request [wellmanifest/policy-dsl#1](https://github.com/wellmanifest/policy-dsl/pull/1)
-is open at exact head `7407fc5bd9f6b04477f3912658bbf2b580513a01`.
+is open at exact head `f78d2066b6cda230091548401272d84f699d5650`.
 Its remote lifecycle check is green, but independent exact-head review is still
 required. This ticket remains `PLAN / PLAN`, which releases the governance
 workstream while that external publication boundary is pending.
