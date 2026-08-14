@@ -2,8 +2,8 @@
 
 - **ID**: ticket-080
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Created**: 2026-08-14
 
 ## Goal and scope
@@ -34,7 +34,7 @@ never grants authority. Unrelated Markdown and shell examples are ignored.
   action is executed during validation.
 - [x] AC-06: Existing focused tests, the full Linux contract, exact-diff and
   governance checks pass at the reviewed HEAD.
-- [ ] AC-07: The source dependency reaches protected `main`; a dependent
+- [x] AC-07: The source dependency reaches protected `main`; a dependent
   bounded ticket completes managed-package/runtime adoption before release.
 
 ## Dependency evidence
@@ -45,6 +45,17 @@ received an approved Validator App review bound to exact head
 `6fe12f9fcce206c1d69b95f9cac1b4bc8c10abbf`. The implementation revision is
 therefore immutable, reachable from protected `main` and eligible for the
 managed dependency lock. This ticket has returned to `IN_PROGRESS / EDIT`.
+
+## Publication evidence
+
+- Pull request [#125](https://github.com/wellmanifest/new-project/pull/125)
+  passed `test` and `windows-governance` at exact head
+  `922d704cc8ebe9c11eb86545276ba2d53ec8d2ba`.
+- Validator App `ifuri-validator-agent[bot]` approved that exact head and the
+  protected process merged it as
+  `50892fbec07dfaae90b74d219737f999d8409eed`.
+- The implementation branch was deleted before this governance-only closure
+  was created from integrated `main`.
 
 ## Risks and mitigations
 

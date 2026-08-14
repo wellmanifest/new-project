@@ -17,3 +17,6 @@
   governance gate and rule audit, and normalized every normative carrier needed
   for complete parsing.
 - Full Linux CI-equivalent validation and the exact-diff governance gate pass.
+- PR #125 received exact-head Validator App approval, merged as
+  `50892fbec07dfaae90b74d219737f999d8409eed`, deleted its head branch and was
+  closed by this governance-only payload from integrated `main`.

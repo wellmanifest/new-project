@@ -76,6 +76,12 @@ Policy DSL dependency or this standard's eventual merge.
   prohibition.
 - Passed the full Linux contract and the actual eight-file implementation diff
   through the deterministic governance gate at head `4c7df842578242089283ff67ea3c514d3744178a`.
+- Goal published PR #125 at final head
+  `922d704cc8ebe9c11eb86545276ba2d53ec8d2ba`; both hosted checks passed,
+  Validator App approved the same head, and the protected process merged it as
+  `50892fbec07dfaae90b74d219737f999d8409eed` with branch deletion.
+- Created this governance-only closure from the integrated default branch. No
+  unmerged implementation diff is present.
 
 ## Blockers
 
