@@ -3,7 +3,7 @@
 - **ID**: ticket-082
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
