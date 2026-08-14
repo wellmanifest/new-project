@@ -38,6 +38,9 @@ POA/governance boundary.
   DSL, GBNF, MCP, `wellm` and POA.
 - Added a fail-closed Markdown selector regression; Policy parsing, all nine
   shell suites, Ruff, artifact hashes and Hub governance pass.
+- Integrated ticket-080 from protected `main`, preserving both ticket indexes
+  and the Policy DSL carrier normalization, then replaced the pre-publication
+  mapping with exact reviewed contract digests.
 
 ## Blockers
 

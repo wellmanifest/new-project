@@ -25,11 +25,11 @@
     "CHANGELOG.md"
   ],
   "stacks": [],
-  "dependsOn": [],
+  "dependsOn": ["ticket-080"],
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "7089c4a9a0834c08539d4d6f9785118345e4cc36",
+    "acceptedBaseSha": "f8817e7588fd456a8994599549ea7cf74381de9a",
     "targetBranch": "main",
     "outcome": "Adopt Policy DSL v1 as the explicit language contract for CONTRIBUTING VERSION 13 with a digest-bound profile and canonical Markdown selector",
     "nonGoals": [
@@ -58,7 +58,8 @@
       "interfaceChanges": [],
       "dataChanges": [
         "Bind CONTRIBUTING document revision 13 to Policy DSL language v1",
-        "Relabel two policy-shaped Bash fences as canonical dsl fences"
+        "Relabel two policy-shaped Bash fences as canonical dsl fences",
+        "Lock the profile to the reviewed Policy DSL v1 contracts integrated by ticket-080"
       ],
       "ui": {"impact": "none", "states": [], "evidence": []},
       "rollback": "Revert the four implementation paths before merge; after adoption preserve profile revision history and issue a newer compatible revision."

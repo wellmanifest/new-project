@@ -12,3 +12,5 @@
   manifest and composition guide, and pinned the selector with a regression.
 - Completed all deterministic, stack and governance checks; moved the active
   ticket to `PUBLICATION` without claiming trusted merge authorization.
+- Reconciled the profile with integrated ticket-080 and pinned the published
+  Policy DSL v1 contracts to their exact reviewed revision.

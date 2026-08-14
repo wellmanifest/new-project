@@ -16,7 +16,7 @@ granice Env DSL/LLM/MCP/POA i zabezpieczyć selektory testem regresji.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [x] AC-01: Ticket wiąże jawne polecenie wykonania z dokładnym base SHA,
+- [x] AC-01: Ticket wiąże jawne polecenie wykonania z aktualnym dokładnym base SHA,
   czterema plikami implementacyjnymi i zerem zależności runtime.
 - [x] AC-02: `CONTRIBUTING VERSION 13` odróżnia wersję profilu dokumentu od
   Policy DSL v1 i aliasu `policy-sh@1`.
@@ -24,8 +24,8 @@ granice Env DSL/LLM/MCP/POA i zabezpieczyć selektory testem regresji.
   zwykłe przykłady Bash nie są interpretowane jako polityka.
 - [x] AC-04: `dsl-manifest.json` wiąże źródło, dokumentację i parser-contract
   dokładnymi SHA-256 oraz mapuje Policy DSL, Env DSL, DSL Standard i POA.
-- [x] AC-05: Manifest nie fabrykuje immutable locka do lokalnego,
-  nieopublikowanego `policy-dsl`; opublikowane DSL i POA są przypięte dokładnie.
+- [x] AC-05: Manifest przypina opublikowany kontrakt `policy-dsl` do dokładnej,
+  chronionej rewizji i digestów; DSL Standard oraz POA pozostają przypięte.
 - [x] AC-06: Test regresji wykrywa policy-shaped reguły poza kanonicznymi
   fence'ami i nadal przechodzi pełny audyt reguł.
 - [x] AC-07: Governance, wszystkie suite'y shell, Ruff, JSON i manifest
@@ -33,8 +33,8 @@ granice Env DSL/LLM/MCP/POA i zabezpieczyć selektory testem regresji.
 
 ## Ryzyka i Uwagi
 
-- `policy-dsl` pozostaje lokalnym standardem eksperymentalnym do chwili
-  chronionej publikacji; manifest używa mappingu, nie fałszywego locka.
+- `policy-dsl` pozostaje standardem eksperymentalnym, lecz jego kontrakt v1 ma
+  chronioną publikację; profil nie śledzi mutowalnej gałęzi ani taga.
 - Zmiana etykiety fence'a nie zmienia semantyki dwóch reguł, lecz usuwa
   ostrzeżenie kompatybilności i domyka deterministyczny selektor Markdown.
 - Dokument ani wynik parsera nie stanowi zgody na wykonanie; efekty pozostają
@@ -48,6 +48,9 @@ granice Env DSL/LLM/MCP/POA i zabezpieczyć selektory testem regresji.
 - Cztery pliki implementacyjne i ich SHA-256 mieszczą się dokładnie w intencie;
   brama Hub raportuje `GOV-PASS` bez błędów i ostrzeżeń.
 - Docker: niewymagany przez `governance/manifest.hub.json`.
+- Po integracji ticketu 080 profil został ponownie oparty na `main` i związał
+  kontrakty z reviewed revision
+  `daaf7b7b96312a2469de1b4799f2f81c7396de4e`.
 
 ## Uczestnicy
 

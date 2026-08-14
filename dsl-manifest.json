@@ -32,12 +32,12 @@
     {
       "path": "CONTRIBUTING.md",
       "role": "normative-source",
-      "digest": "sha256:72f93f90c73092ba9b460bcfa38abb8ee6f89d43685a223d731da7e038e92cfb"
+      "digest": "sha256:cf01589e58c99baddfe43c8013b4a8a013991c55583d5a334cf82103da695715"
     },
     {
       "path": "docs/POLICY_DSL.md",
       "role": "documentation",
-      "digest": "sha256:e299645a2969308245ee4387e934693b66cf37f9136e303c2f9bca7debcb71d2"
+      "digest": "sha256:26e0cbfbcdce6f358627bebb6d41cdc5e555c8ffd122f409de1ead7bce183426"
     },
     {
       "path": "tests/rule-enforcement.test.sh",
@@ -150,6 +150,34 @@
           {
             "ref": "https://wellmanifest.dev/schemas/dsl-manifest/v1",
             "digest": "sha256:34d356b76bbd483372df84bb986e15bb84e9c1f8b11b7dc9e3a6c7276c85ed13"
+          }
+        ]
+      },
+      {
+        "standard": "wellmanifest.policy",
+        "version": "0.1.0-dev",
+        "repository": "https://github.com/wellmanifest/policy-dsl",
+        "revision": "daaf7b7b96312a2469de1b4799f2f81c7396de4e",
+        "contracts": [
+          {
+            "ref": "https://github.com/wellmanifest/policy-dsl/blob/daaf7b7b96312a2469de1b4799f2f81c7396de4e/spec/POLICY_DSL.md",
+            "digest": "sha256:4d7da4b9ded58e9fa24eec76375f752ad6ae1712c49dd466480ce10fb0f04ba6"
+          },
+          {
+            "ref": "https://github.com/wellmanifest/policy-dsl/blob/daaf7b7b96312a2469de1b4799f2f81c7396de4e/spec/policy-dsl.ebnf",
+            "digest": "sha256:78423cac9bd9172006fd292feeb68bacd4586ae5ebf89299e2c05a58643bc982"
+          },
+          {
+            "ref": "https://github.com/wellmanifest/policy-dsl/blob/daaf7b7b96312a2469de1b4799f2f81c7396de4e/spec/policy-dsl-candidate.v1.gbnf",
+            "digest": "sha256:ca24f970beb0f17c082e7b146ac6b47e7effba22baa0076f1ad7b4424a23770d"
+          },
+          {
+            "ref": "https://github.com/wellmanifest/policy-dsl/blob/daaf7b7b96312a2469de1b4799f2f81c7396de4e/schemas/policy-ir.schema.json",
+            "digest": "sha256:b80d6ed236111dbeddfa0ecb277816e254436c9bf54c9b00e433019abf7dc607"
+          },
+          {
+            "ref": "https://github.com/wellmanifest/policy-dsl/blob/daaf7b7b96312a2469de1b4799f2f81c7396de4e/tests/policy_dsl_check.py",
+            "digest": "sha256:1ebed8ada3f687bf82de235b352ec1ce94b606887ad2a1657d66bd58f04314e8"
           }
         ]
       },

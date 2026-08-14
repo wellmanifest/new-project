@@ -95,9 +95,11 @@ controller may bind an approved plan to an execution envelope.
 
 ## Publication status
 
-The profile is marked experimental while `policy-dsl` is local and not yet
-available at an immutable protected revision. Consequently the manifest uses
-a compatibility mapping for Policy DSL and does not invent a standards lock.
-Published DSL Standard and POA contracts are locked by exact repository
-revision and digest. A Policy DSL lock may be added only after its protected
-publication.
+The language remains experimental, but its v1 contract is now available from
+the exact reviewed revision
+`daaf7b7b96312a2469de1b4799f2f81c7396de4e`, reachable from protected
+`wellmanifest/policy-dsl` main. The consuming manifest locks the normative
+specification, EBNF, constrained GBNF, closed Policy IR schema and reference
+checker to that revision and their SHA-256 digests. The installable checker is
+independently pinned by `governance/policy-dsl.lock.json`; neither lock follows
+a mutable branch.
