@@ -497,6 +497,33 @@ def delivery_validation_error(validation: Any) -> str | None:
     return "delivery validation criteria must be unique" if len(criteria) != len(set(criteria)) else None
 
 
+PLACEMENT_HOMES = {"wellmanifest", "subactor", "semcod"}
+PLACEMENT_SHAPES = {"domain_pack", "runtime_service", "both"}
+PLACEMENT_ADOPT = re.compile(r"^wellmanifest/[a-z0-9][a-z0-9-]*$")
+
+
+def placement_error(value: Any) -> str | None:
+    required = {"home", "shape"}
+    allowed = required | {"runtimeOwner", "adopt"}
+    if not isinstance(value, dict) or not required <= set(value) <= allowed:
+        return "placement must contain home and shape"
+    if value["home"] not in PLACEMENT_HOMES:
+        return "placement home is invalid"
+    if value["shape"] not in PLACEMENT_SHAPES:
+        return "placement shape is invalid"
+    runtime_owner = value.get("runtimeOwner")
+    if runtime_owner is not None and runtime_owner not in PLACEMENT_HOMES:
+        return "placement runtimeOwner is invalid"
+    if value["home"] == "wellmanifest" and value["shape"] == "runtime_service":
+        return "runtime_service must not HOME wellmanifest; ADOPT packs from subactor or semcod"
+    adopt = value.get("adopt")
+    if adopt is not None and (
+        not string_list(adopt) or not all(PLACEMENT_ADOPT.fullmatch(item) for item in adopt)
+    ):
+        return "placement adopt must be wellmanifest/<pack> ids"
+    return None
+
+
 def standard_adoption_error(value: Any) -> str | None:
     fields = {"sourceRepository", "fromRevision", "toRevision"}
     if not isinstance(value, dict) or set(value) != fields:
@@ -1129,7 +1156,13 @@ def intent_v2_error(intent: dict[str, Any], ticket_name: str) -> str | None:
         return "intent integrationTicket must be null or a ticket ID"
     if integration == ticket_name:
         return "intent integrationTicket cannot reference its own ticket"
-    return delivery_intent_error(intent["delivery"]) if "delivery" in intent else None
+    if "delivery" in intent:
+        error = delivery_intent_error(intent["delivery"])
+        if error:
+            return error
+    if "placement" in intent:
+        return placement_error(intent["placement"])
+    return None
 
 
 def intent_classification_error(value: Any) -> str | None:
@@ -1154,7 +1187,15 @@ def intent_fields_error(intent: Any) -> str | None:
     expected = v1_fields if intent["schema"] == "new-project.intent/v1" else v2_fields
     if intent["schema"] == "new-project.intent/v3":
         expected |= {"classification"}
-    allowed = [expected] if intent["schema"] == "new-project.intent/v1" else [expected, expected | {"delivery"}]
+    if intent["schema"] == "new-project.intent/v1":
+        allowed = [expected]
+    else:
+        allowed = [
+            expected,
+            expected | {"delivery"},
+            expected | {"placement"},
+            expected | {"delivery", "placement"},
+        ]
     if set(intent) not in allowed:
         return f"intent must contain exactly the {intent['schema'].rsplit('/', 1)[-1]} fields"
     return None

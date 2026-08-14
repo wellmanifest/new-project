@@ -1,0 +1,49 @@
+# Decision log
+
+```dsl
+DECISION D-078-0001
+TICKET ticket-078
+HEAD_SHA eab2f4641364cbbc481a620f357a31ee6a2b5000
+CORRELATION_ID new-project-ticket-078-autonomous-placement-eab2f4641364
+ACTOR agent:codex
+APPLIED_RULE C-APPROVAL-002
+INPUT user_request = "to zrob to autonomicznie"
+INPUT requested_outcome = "publish placement support and unblock env-dsl"
+INPUT expected_verdict_from_rule = "APPROVE"
+VERDICT APPROVE AUTHORITY DETERMINISTIC
+REJECTED WAIT_FOR_APPROVAL BECAUSE SESSION_EXECUTION_AUTHORIZATION_EXISTS
+ASSERT VERDICT_AUTHORITY != "ADVISORY"
+```
+
+```dsl
+DECISION D-078-0002
+TICKET ticket-078
+HEAD_SHA 7f58d9a50f43b58605a34b795b69a91dfe386213
+CORRELATION_ID new-project-ticket-078-local-validation-7f58d9a50f43
+ACTOR agent:codex
+APPLIED_RULE C-VALIDATION-007
+INPUT governance_gate = "PASS"
+INPUT test_suites = "9/9 PASS"
+INPUT implementation_files = 9
+INPUT maximum_implementation_files = 9
+INPUT expected_verdict_from_rule = "APPROVE"
+VERDICT APPROVE AUTHORITY DETERMINISTIC
+REJECTED REQUEST_CHANGES BECAUSE ALL_DECLARED_LOCAL_GATES_PASS
+ASSERT VERDICT_AUTHORITY != "ADVISORY"
+```
+
+```dsl
+DECISION D-078-0003
+TICKET ticket-078
+HEAD_SHA 04715d71aa5c5aa822eb45217d51412fbc563688
+CORRELATION_ID new-project-ticket-078-publication-04715d71aa5c
+ACTOR agent:codex
+APPLIED_RULE C-PUBLISH-003
+INPUT implementation_commit = "04715d71aa5c5aa822eb45217d51412fbc563688"
+INPUT exact_commit_governance_gate = "PASS"
+INPUT publication_mode = "pull-request"
+INPUT expected_verdict_from_rule = "APPROVE"
+VERDICT APPROVE AUTHORITY DETERMINISTIC
+REJECTED DIRECT_PUSH BECAUSE IMPLEMENTATION_REQUIRES_PULL_REQUEST
+ASSERT VERDICT_AUTHORITY != "ADVISORY"
+```

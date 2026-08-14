@@ -28,6 +28,9 @@ assert 'REMOTE_BRANCHES = [DEFAULT_BRANCH]' in policy
 for instructions in (agents, agent_template):
     assert 'delete_branch_on_merge=true' in instructions
     assert 'closed without merge' in instructions.lower()
+    assert 'HOME vs ADOPT' in instructions or 'HOME vs ADOPT:' in instructions
+    assert 'w ramach wellmanifest' in instructions
+assert 'RULE P-CORE-025 TYPE REQUIRED' in policy
 assert 'open pull requests = 0' in enforcement
 assert 'remote branches = [default branch]' in enforcement
 assert 'Sam walidator jest read-only i nie usuwa branchy.' in enforcement
@@ -110,6 +113,28 @@ intent_validator.validate(adoption_intent)
 bootstrap_intent = json.loads(json.dumps(adoption_intent))
 bootstrap_intent['delivery']['standardAdoption']['fromRevision'] = None
 intent_validator.validate(bootstrap_intent)
+placement_intent = json.loads(json.dumps(adoption_intent))
+placement_intent['placement'] = {
+    'home': 'subactor',
+    'runtimeOwner': 'subactor',
+    'shape': 'runtime_service',
+    'adopt': ['wellmanifest/new-project', 'wellmanifest/dsl', 'wellmanifest/logs'],
+}
+intent_validator.validate(placement_intent)
+for field, invalid in (
+    ('home', 'maskservice'),
+    ('shape', 'daemon'),
+    ('runtimeOwner', 'hostguard'),
+):
+    candidate = json.loads(json.dumps(placement_intent))
+    candidate['placement'][field] = invalid
+    assert not intent_validator.is_valid(candidate), (field, invalid)
+unknown_adopt = json.loads(json.dumps(placement_intent))
+unknown_adopt['placement']['adopt'] = ['subactor/core']
+assert not intent_validator.is_valid(unknown_adopt)
+extra_key = json.loads(json.dumps(placement_intent))
+extra_key['placement']['owner'] = 'subactor'
+assert not intent_validator.is_valid(extra_key)
 for field, invalid in (
     ('sourceRepository', 'other/project'),
     ('fromRevision', 'main'),
@@ -335,6 +360,22 @@ assert module.standard_adoption_error({
     'fromRevision': 'a' * 40,
     'toRevision': 'a' * 40,
 }) == 'delivery standardAdoption revisions must differ'
+assert module.placement_error({
+    'home': 'subactor',
+    'shape': 'runtime_service',
+    'runtimeOwner': 'subactor',
+    'adopt': ['wellmanifest/new-project', 'wellmanifest/dsl', 'wellmanifest/logs'],
+}) is None
+assert module.placement_error({
+    'home': 'wellmanifest',
+    'shape': 'runtime_service',
+}) == 'runtime_service must not HOME wellmanifest; ADOPT packs from subactor or semcod'
+assert module.placement_error({'home': 'subactor'}) == 'placement must contain home and shape'
+assert module.placement_error({
+    'home': 'subactor',
+    'shape': 'runtime_service',
+    'adopt': ['subactor/core'],
+}) == 'placement adopt must be wellmanifest/<pack> ids'
 PY
 python3 "$repo_root/scripts/audit_diagnostics.py" --root "$repo_root"
 grep -q 'review.commit_id === head' "$repo_root/.github/workflows/governance.yml"
@@ -1487,6 +1528,40 @@ invalid_intent_path="$fixture/invalid-intent-path"
 make_fixture "$invalid_intent_path"
 sed -i 's#"allowedPaths": \["src/\*\*"\]#"allowedPaths": ["../outside/**"]#' "$invalid_intent_path/project/ticket-002/intent.json"
 expect_code GOV-INTENT-002 run_check "$invalid_intent_path" --changed-file TODO.md
+
+placement_ok="$fixture/placement-ok"
+make_fixture "$placement_ok"
+python3 - "$placement_ok/project/ticket-002/intent.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+intent['placement'] = {
+    'home': 'subactor',
+    'runtimeOwner': 'subactor',
+    'shape': 'runtime_service',
+    'adopt': ['wellmanifest/new-project', 'wellmanifest/dsl', 'wellmanifest/logs'],
+}
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+run_check "$placement_ok" --changed-file src/app.js > "$fixture/placement-ok.out"
+grep -q '^GOV-PASS:' "$fixture/placement-ok.out"
+
+placement_home="$fixture/placement-home"
+make_fixture "$placement_home"
+python3 - "$placement_home/project/ticket-002/intent.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+intent['placement'] = {'home': 'wellmanifest', 'shape': 'runtime_service'}
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+expect_code GOV-INTENT-002 run_check "$placement_home" --changed-file src/app.js
 
 unknown_status="$fixture/unknown-status"
 make_fixture "$unknown_status"

@@ -1,0 +1,113 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-078",
+  "summary": "Add HOME versus ADOPT placement to ticket intent",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "POLICY.md",
+    "governance/intent.schema.json",
+    "governance/rule-enforcement.json",
+    "scripts/governance_check.py",
+    "template/files/AGENTS.template.md",
+    "tests/governance-validator.test.sh",
+    "project/ticket-078/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "llms.txt"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "eab2f4641364cbbc481a620f357a31ee6a2b5000",
+    "targetBranch": "main",
+    "outcome": "Ticket intents express HOME versus ADOPT placement with deterministic validation while existing intents remain compatible.",
+    "nonGoals": [
+      "Do not require placement on existing tickets in the JSON Schema",
+      "Do not host a runtime service in wellmanifest",
+      "Do not publish a version tag or GitHub Release from the implementation branch",
+      "Do not merge without independent current-head trusted approval",
+      "Do not modify ticket-077 implementation or participant files"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend intent v2/v3 with one optional closed placement object and enforce HOME versus ADOPT invariants in the deterministic validator.",
+      "components": [
+        {
+          "name": "placement-contract",
+          "paths": [
+            "governance/intent.schema.json",
+            "scripts/governance_check.py",
+            "governance/rule-enforcement.json",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "governance-guidance",
+          "paths": [
+            "AGENTS.md",
+            "template/files/AGENTS.template.md",
+            "POLICY.md",
+            "CONTRIBUTING.md",
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Add optional intent.placement to new-project.intent/v2 and v3",
+        "Add deterministic HOME versus ADOPT validation"
+      ],
+      "dataChanges": [
+        "New repository tickets may record home, shape, runtimeOwner and adopted Wellmanifest packs"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Before merge, revert ticket-owned changes; after merge, preserve compatibility and publish a corrective patch rather than removing accepted placement fields."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "project/ticket-078/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "for suite in tests/*.test.sh; do bash $suite; done",
+          "ruff check scripts"
+        ],
+        "evidence": "project/ticket-078/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
