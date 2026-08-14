@@ -9,9 +9,9 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-084`](project/ticket-084/README.md) — opublikować zintegrowaną
+- [x] [`ticket-084`](project/ticket-084/README.md) — opublikować zintegrowaną
   poprawkę bezpiecznych markerów bootstrapu jako immutable
-  `new-project 0.18.1`. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
+  `new-project 0.18.1`. Stan: `DONE / DONE`; klasyfikacja:
   `SERVICE / P1 / requested`; workstream: `governance`; zależy od
   `ticket-083`.
 
