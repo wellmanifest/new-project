@@ -3,7 +3,7 @@
 - **ID**: ticket-076
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: PLAN
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -17,15 +17,26 @@ bramkach; nie jest natomiast samo w sobie approval ani dowodem merge.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Policy i ticket-lifecycle odróżniają process invocation authority
+- [x] AC-01: Policy i ticket-lifecycle odróżniają process invocation authority
       od exact-head trusted merge evidence.
-- [ ] AC-02: Agent pyta ponownie tylko o destrukcję, sekrety, nową koordynację
+- [x] AC-02: Agent pyta ponownie tylko o destrukcję, sekrety, nową koordynację
       zewnętrzną lub materialne rozszerzenie celu, a nie o sam chroniony merge.
-- [ ] AC-03: Wszystkie generowane instrukcje i fallbacki `new-ticket.sh`
+- [x] AC-03: Wszystkie generowane instrukcje i fallbacki `new-ticket.sh`
       przekazują tę samą semantykę bez starszego, sprzecznego sformułowania.
-- [ ] AC-04: Testy regresyjne wykrywają ponowne dodanie redundantnego promptu,
+- [x] AC-04: Testy regresyjne wykrywają ponowne dodanie redundantnego promptu,
       zachowując wymaganie niezależnego exact-head approval.
-- [ ] AC-05: Pełny kontrakt governance oraz testy szablonów przechodzą.
+- [x] AC-05: Pełny kontrakt governance oraz testy szablonów przechodzą.
+
+## Dowody walidacji
+
+- Wszystkie zestawy `tests/*.test.sh` przeszły, w tym adoption lock,
+  governance scripts, governance validator i rule-enforcement traceability.
+- `ruff check scripts` zakończył się komunikatem `All checks passed!`.
+- Dokładny PR scope-check z `--base 414ebf1... --head HEAD` raportuje
+  `GOV-PASS`, a diff mieści się w profilu `S` i `allowedPaths`.
+- Targetowy wrapper `project/governance-check.sh` nie jest bramką huba i
+  zgodnie z projektem nie działa bez `.governance`; użyto kanonicznych testów
+  huba zamiast przedstawiać ten wynik jako sukces.
 
 ## Ryzyka i Uwagi
 

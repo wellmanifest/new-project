@@ -31,6 +31,22 @@ redundantnej zgody człowieka.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- Updated `P-CORE-008`, `P-CORE-015` and their procedural projections so the
+  session authorizes declared protected delivery invocation, while exact-head
+  protected evidence alone authorizes merge.
+- Updated the ticket-lifecycle module to version 2 with explicit process
+  invocation and trusted evidence predicates.
+- Synchronized target AGENTS, preprompt, participant template and both
+  `new-ticket.sh` paths so protected publication never triggers a redundant
+  chat question and direct agent merge remains forbidden.
+- Added adoption and generator regressions for the new boundary; all shell
+  suites and Ruff pass.
+- Split the delivery into a plan-only commit followed by implementation after
+  hosted scope validation correctly exposed the missing baseline boundary.
+- Kept the ticket `IN_PROGRESS / PUBLICATION` pending exact-head protected
+  review and merge; no concurrent dirty main-worktree content entered the diff.
+- Goal rejected two noncanonical commit messages before push; rebound both
+  commits to the required `[ticket-076]` format.
 
 ## Blockers
 

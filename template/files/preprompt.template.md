@@ -21,7 +21,11 @@
   `intent.json`. Polecenie zlecające wykonanie lub tryb autonomiczny tworzy
   `SESSION_EXECUTION_AUTHORIZATION`; realizuj zapisany zakres bez ponownego
   pytania o tę samą zgodę (`P-CORE-008`).
-- Osobnej władzy wymagają destrukcja, sekrety, nowa koordynacja zewnętrzna,
-  materialnie nowy cel oraz trusted merge approval.
+- Osobnej władzy wymagają destrukcja, sekrety, nowa koordynacja zewnętrzna
+  oraz materialnie nowy cel. Jeżeli zapisany outcome obejmuje publikację,
+  autoryzacja sesji pozwala uruchomić zadeklarowany chroniony proces dostawy i
+  jego merge po exact-head trusted approval bez ponownego pytania. Sama
+  autoryzacja sesji nigdy nie jest approval evidence, a agent nie scala
+  bezpośrednio.
 - Kod wykonywalny, testy i skrypty badawcze zapisuj poza katalogiem ticketu;
   ticket przechowuje wyłącznie governance, decyzje, logi i dowody.

@@ -12,7 +12,7 @@
 - [ ] [`ticket-076`](project/ticket-076/README.md) — rozdzielić autoryzację
   uruchomienia chronionego procesu Validatora od exact-head trusted approval,
   usuwając ponowne pytanie o merge w już autoryzowanym zakresie. Stan:
-  `IN_PROGRESS / PLAN`; klasyfikacja: `BUG / P0 / requested`; workstream:
+  `IN_PROGRESS / PUBLICATION`; klasyfikacja: `BUG / P0 / requested`; workstream:
   `governance`.
 
 - [x] [`ticket-075`](project/ticket-075/README.md) — opublikowano zintegrowane
