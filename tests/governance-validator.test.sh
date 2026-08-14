@@ -682,7 +682,7 @@ verification = {'method': sys.argv[5], 'verified': sys.argv[10] == 'true'}
 if sys.argv[2] == 'signed-attestation':
     verification.update({
         'issuer': 'https://token.actions.githubusercontent.com',
-        'predicateType': 'https://wellmanifest.dev/attestations/validator/v1',
+        'predicateType': 'https://wellmanifest.com/attestations/validator/v1',
     })
 payload = {
     'schema': 'new-project.approval-evidence/v1',

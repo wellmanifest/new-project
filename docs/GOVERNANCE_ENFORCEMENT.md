@@ -173,7 +173,7 @@ repozytorium, bo autor PR mógłby je sam zmienić.
   `trusted-validator-apps`, review `APPROVED` dla bieżącego HEAD;
 - `signed-attestation`: podpis i issuer zweryfikowane poza checkoutem, a
   predicate type równy
-  `https://wellmanifest.dev/attestations/validator/v1`.
+  `https://wellmanifest.com/attestations/validator/v1`.
 
 Samo `user.type=Bot`, pole `verified: true` w pliku PR ani komentarz modelu nie
 stanowią zaufania. Dla atestacji chroniony krok Sigstore/GitHub Attestations
