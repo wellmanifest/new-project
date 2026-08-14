@@ -47,3 +47,23 @@ VERDICT APPROVE AUTHORITY DETERMINISTIC
 REJECTED DIRECT_PUSH BECAUSE IMPLEMENTATION_REQUIRES_PULL_REQUEST
 ASSERT VERDICT_AUTHORITY != "ADVISORY"
 ```
+
+```dsl
+DECISION D-078-0004
+TICKET ticket-078
+HEAD_SHA aa7e15f2a6a4c8471b844fd658d4c605f1780d89
+CORRELATION_ID new-project-pr-120-ticket-078
+ACTOR agent:codex
+APPLIED_RULE P-CORE-015
+INPUT pull_request = 120
+INPUT hosted_checks = ["test=PASS", "windows-governance=PASS"]
+INPUT trusted_reviewer = "ifuri-validator-agent[bot]"
+INPUT trusted_review = "APPROVED"
+INPUT merge_commit = "335b0f1975c4c9d3f2f99aeeeaba109a2cc41c2d"
+INPUT required_checks = ["trusted_merge", "hosted_test", "hosted_windows", "post_merge_test", "post_merge_windows"]
+INPUT observed_checks = ["trusted_merge=PASS", "hosted_test=PASS", "hosted_windows=PASS", "post_merge_test=PASS", "post_merge_windows=PASS"]
+INPUT unsafe_change_reasons = []
+VERDICT APPROVE AUTHORITY DETERMINISTIC
+REJECTED KEEP_IN_PROGRESS BECAUSE EXACT_HEAD_TRUSTED_MERGE_COMPLETED
+ASSERT VERDICT_AUTHORITY != "ADVISORY"
+```
