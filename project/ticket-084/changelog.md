@@ -10,3 +10,7 @@
   required-check parity, JSON/schema validation and Ruff 0.15.21.
 - Entered protected publication after the exact implementation commit passed
   the deterministic source-hub scope gate.
+- Recorded exact-head Validator approval, identical-tree merge, clean
+  post-merge validation and successful Linux/Windows hosted runs.
+- Published final immutable `v0.18.1`, verified the annotated tag's peeled
+  merge SHA and closed the lifecycle governance-only.
