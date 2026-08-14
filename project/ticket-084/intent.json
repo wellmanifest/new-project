@@ -1,0 +1,121 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-084",
+  "summary": "Release generated placeholder fix as new-project 0.18.1",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-084/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "scripts/governance_check.py",
+    "AGENTS.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "template/**"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-083"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "1a715c92a28bde7810dabced4f71a96fbdc00314",
+    "targetBranch": "main",
+    "outcome": "Publish the integrated generated-placeholder scanner fix as immutable new-project 0.18.1",
+    "nonGoals": [
+      "Do not modify the integrated scanner or its placeholder semantics after ticket-083",
+      "Do not publish before exact-head trusted approval, unchanged merge and clean main retest",
+      "Do not mutate or move any prior release tag",
+      "Do not adopt the release in Platform inside this ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Publish the already integrated backward-compatible false-positive fix as a patch release and keep release preparation mechanical",
+      "components": [
+        {
+          "name": "release-version",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        },
+        {
+          "name": "release-contract-tests",
+          "paths": [
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "release-notes",
+          "paths": [
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        "Advance the immutable standard version from 0.18.0 to 0.18.1"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Before publication, revert the release preparation commit; after publication, never move the tag and prepare a newer release"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "project/ticket-084/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "for suite in tests/*.test.sh; do bash $suite; done",
+          "ruff check scripts"
+        ],
+        "evidence": "project/ticket-084/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish",
+          "git ls-remote --tags origin v0.18.1",
+          "gh release view v0.18.1 --repo wellmanifest/new-project"
+        ],
+        "evidence": "project/ticket-084/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
