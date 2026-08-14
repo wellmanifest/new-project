@@ -1,0 +1,110 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-082",
+  "summary": "Point governance identifiers at the live host",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "governance/**",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "POLICY.md",
+    "docs/GOVERNANCE_ENFORCEMENT.md",
+    "project/ticket-082/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python",
+    "bash"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7089c4a9a0834c08539d4d6f9785118345e4cc36",
+    "targetBranch": "main",
+    "outcome": "Every governance identifier this standard publishes names the live host, so adopting repositories stop hand-editing files their adoption lock hashes",
+    "nonGoals": [
+      "No change to governance semantics, diagnostics, gates or ticket rules",
+      "No release; publishing a new adoptable revision stays with the owner",
+      "No edit inside an adopting repository; those move by re-adoption, not by hand",
+      "No acceptance of two predicate types at once; one exact value stays enforced"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Rename the two schema identifiers and the attestation predicate type together in one revision, because manifest.schema.json pins the predicate as a const and a partial rename would make every adopting manifest schema-invalid",
+      "components": [
+        {
+          "name": "governance-package",
+          "paths": [
+            "governance/diagnostics.schema.json",
+            "governance/remediation-intent.schema.json",
+            "governance/manifest.schema.json",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        },
+        {
+          "name": "governance-enforcement",
+          "paths": [
+            "scripts/governance_check.py",
+            "tests/governance-validator.test.sh",
+            "POLICY.md",
+            "docs/GOVERNANCE_ENFORCEMENT.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "signedAttestationPredicateType moves to the live host in the same revision as its schema const"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this ticket before any repository re-adopts; adopted repositories are unaffected until they upgrade"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "grep -rn 'wellmanifest\\.dev' --exclude-dir=.git ."
+        ],
+        "evidence": "No governance identifier still names the retired host"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "The governance validator suite passes with the renamed predicate type"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh --actor agent --base 7089c4a9a0834c08539d4d6f9785118345e4cc36 --head HEAD"
+        ],
+        "evidence": "The hub gate passes with the change resolving to exactly one governance ticket"
+      }
+    ]
+  }
+}
