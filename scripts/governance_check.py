@@ -46,6 +46,7 @@ SECRET_RE = re.compile(
     r"[ \t]*[:=][ \t]*['\"]?([A-Za-z0-9_./+=-]{12,})"
 )
 SAFE_SECRET_VALUES = re.compile(r"(?i)^(example|placeholder|changeme|your[_-]|\$\{|<|xxx|test)")
+GENERATED_SECRET_PLACEHOLDER_RE = re.compile(r"^__GENERATE_[A-Z0-9_]+__$")
 LOCAL_PATH_RE = re.compile(r"(?:[A-Za-z]:[\\/](?:Users|Documents|Desktop)[\\/]|/(?:home|Users)/[^/\s]+/)")
 IMMUTABLE_IMAGE_RE = re.compile(r"^[^@\s]+@sha256:[a-f0-9]{64}$")
 COMPOSE_IMAGE_RE = re.compile(
@@ -1760,9 +1761,16 @@ def check_ticket_content(root: Path, directories: list[Path], config: dict[str, 
 def probable_secret_fields(text: str) -> list[str]:
     fields = []
     for match in SECRET_RE.finditer(text):
+        value = match.group(2)
         shell_assignment = text[match.end(2):].startswith("=")
-        environment_reference = re.match(r"^[A-Z][A-Z0-9_]*=", match.group(2))
-        if not shell_assignment and not environment_reference and not SAFE_SECRET_VALUES.match(match.group(2)):
+        environment_reference = re.match(r"^[A-Z][A-Z0-9_]*=", value)
+        safe_generated_placeholder = GENERATED_SECRET_PLACEHOLDER_RE.fullmatch(value)
+        if (
+            not shell_assignment
+            and not environment_reference
+            and not SAFE_SECRET_VALUES.match(value)
+            and not safe_generated_placeholder
+        ):
             fields.append(match.group(1))
     return sorted(set(fields))
 

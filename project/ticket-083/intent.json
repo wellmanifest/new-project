@@ -1,0 +1,96 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-083",
+  "summary": "Recognize generated secret placeholders safely",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "project/ticket-083/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python",
+    "bash"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4f6534988eb93be226beed58bacfa17e4bc99d47",
+    "targetBranch": "main",
+    "outcome": "Generated bootstrap placeholders remain publishable while probable real secrets stay fail-closed",
+    "nonGoals": [
+      "No blanket exception for values merely containing GENERATE",
+      "No disabling or narrowing of changed-file secret scanning",
+      "No change to runtime bootstrap marker syntax",
+      "No access to or migration of any secret value"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep existing placeholder-prefix behavior unchanged and add one separate case-sensitive full-value matcher for generated bootstrap markers",
+      "components": [
+        {
+          "name": "governance-secret-scanner",
+          "paths": [
+            "scripts/governance_check.py",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "The probable-secret scanner accepts one exact generated bootstrap placeholder syntax"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the matcher and its focused assertions; no stored data or runtime secret changes are involved"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Focused assertions accept the exact generated marker"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Focused assertions reject generated-marker near misses"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/governance-validator.test.sh",
+          "python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base 4f6534988eb93be226beed58bacfa17e4bc99d47 --head HEAD --actor agent --format text"
+        ],
+        "evidence": "Real token-shaped values remain findings and the source-hub scope gate reports GOV-PASS"
+      }
+    ]
+  }
+}
