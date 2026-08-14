@@ -62,6 +62,20 @@ Policy DSL dependency or this standard's eventual merge.
   slice owns the immutable source dependency, source gate, traceable diagnostic,
   Policy DSL-only rule audit and carrier normalization. Package installation
   and `scripts/runtime.sh policy` remain the declared dependent slice.
+- Vendored the byte-exact dependency-free checker, bound repository, version,
+  reviewed revision, upstream path and SHA-256 in a closed lock, and rejected
+  any lock or checker drift before import.
+- Added fail-closed `GOV-POLICY-DSL-001` validation for existing
+  `CONTRIBUTING.md`; repositories without that carrier are unchanged.
+- Removed both optional `wellm` and local regex policy frontends from the rule
+  audit. The pinned runtime now parses 174 unique mapped rules with zero
+  unclaimed codes or stale mappings.
+- Normalized the context fence, folded decision rules into the canonical
+  distributed document, expressed `WORK_CLASSIFICATION` as a SNAKE_CASE
+  constant equation and shortened one overlong opcode without weakening its
+  prohibition.
+- Passed the full Linux contract and the actual eight-file implementation diff
+  through the deterministic governance gate at head `4c7df842578242089283ff67ea3c514d3744178a`.
 
 ## Blockers
 

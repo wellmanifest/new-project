@@ -11,8 +11,8 @@
 
 - [ ] [`ticket-080`](project/ticket-080/README.md) — adopt reviewed Policy DSL
   as an immutable managed runtime for every repository with
-  `CONTRIBUTING.md`; currently `IN_PROGRESS / EDIT` at reviewed dependency
-  head `daaf7b7b96312a2469de1b4799f2f81c7396de4e`.
+  `CONTRIBUTING.md`; source conformance slice is `IN_PROGRESS / VALIDATION` at
+  reviewed dependency head `daaf7b7b96312a2469de1b4799f2f81c7396de4e`.
 
 - [x] [`ticket-079`](project/ticket-079/README.md) — opublikowano zintegrowany
   kontrakt HOME vs ADOPT jako immutable `new-project 0.18.0`. Stan:

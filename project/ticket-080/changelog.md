@@ -13,3 +13,7 @@
   the post-merge versioned release.
 - Split source conformance from managed-package/runtime adoption at the hard
   delivery boundary; this ticket now changes eight implementation files.
+- Added the reviewed Policy DSL checker and closed lock, connected the source
+  governance gate and rule audit, and normalized every normative carrier needed
+  for complete parsing.
+- Full Linux CI-equivalent validation and the exact-diff governance gate pass.

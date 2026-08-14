@@ -3,7 +3,7 @@
 - **ID**: ticket-080
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Created**: 2026-08-14
 
 ## Goal and scope
@@ -20,19 +20,19 @@ never grants authority. Unrelated Markdown and shell examples are ignored.
 
 ## Acceptance criteria
 
-- [ ] AC-01: The dependency lock binds `wellmanifest/policy-dsl`, its exact
+- [x] AC-01: The dependency lock binds `wellmanifest/policy-dsl`, its exact
   reviewed revision, checker path, version and SHA-256 without a moving ref.
-- [ ] AC-02: The vendored checker validates the complete current
+- [x] AC-02: The vendored checker validates the complete current
   `CONTRIBUTING.md`, including constants, equations, operators, conditions,
   guarded actions and state transitions.
-- [ ] AC-03: A malformed selected Policy DSL fence blocks the governance gate
+- [x] AC-03: A malformed selected Policy DSL fence blocks the governance gate
   with stable `GOV-POLICY-DSL-001`; unrelated Markdown and shell examples do
   not enter the policy document.
-- [ ] AC-04: The rule-enforcement audit consumes the pinned Policy DSL runtime
+- [x] AC-04: The rule-enforcement audit consumes the pinned Policy DSL runtime
   instead of the optional `wellm`/regex fallback.
-- [ ] AC-05: Repositories without `CONTRIBUTING.md` remain valid and no policy
+- [x] AC-05: Repositories without `CONTRIBUTING.md` remain valid and no policy
   action is executed during validation.
-- [ ] AC-06: Existing focused tests, the full Linux contract, exact-diff and
+- [x] AC-06: Existing focused tests, the full Linux contract, exact-diff and
   governance checks pass at the reviewed HEAD.
 - [ ] AC-07: The source dependency reaches protected `main`; a dependent
   bounded ticket completes managed-package/runtime adoption before release.
