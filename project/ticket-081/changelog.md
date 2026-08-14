@@ -14,3 +14,6 @@
   ticket to `PUBLICATION` without claiming trusted merge authorization.
 - Reconciled the profile with integrated ticket-080 and pinned the published
   Policy DSL v1 contracts to their exact reviewed revision.
+- PR #127 received exact-head Validator App approval, merged as
+  `93b4a69b55b2383a8a0250e12d08e61fec3a58cd`, deleted its head branch and was
+  closed by this governance-only payload from integrated `main`.

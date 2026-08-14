@@ -2,8 +2,8 @@
 
 - **ID**: ticket-081
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -51,6 +51,17 @@ granice Env DSL/LLM/MCP/POA i zabezpieczyć selektory testem regresji.
 - Po integracji ticketu 080 profil został ponownie oparty na `main` i związał
   kontrakty z reviewed revision
   `daaf7b7b96312a2469de1b4799f2f81c7396de4e`.
+
+## Dowody publikacji
+
+- Pull request [#127](https://github.com/wellmanifest/new-project/pull/127)
+  przeszedł `test` i `windows-governance` na dokładnym HEAD
+  `82e918cad7decdc43772c190710bf36cd9601848`.
+- Validator App `ifuri-validator-agent[bot]` zatwierdził ten sam HEAD, a
+  chroniony proces scalił go jako
+  `93b4a69b55b2383a8a0250e12d08e61fec3a58cd`.
+- Gałąź implementacyjna została usunięta przed utworzeniem tego
+  governance-only closure ze zintegrowanego `main`.
 
 ## Uczestnicy
 

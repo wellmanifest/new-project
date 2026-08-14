@@ -41,11 +41,15 @@ POA/governance boundary.
 - Integrated ticket-080 from protected `main`, preserving both ticket indexes
   and the Policy DSL carrier normalization, then replaced the pre-publication
   mapping with exact reviewed contract digests.
+- Published PR #127 at exact head
+  `82e918cad7decdc43772c190710bf36cd9601848`; hosted checks passed,
+  Validator App approved that head and the protected process merged it as
+  `93b4a69b55b2383a8a0250e12d08e61fec3a58cd` with branch deletion.
+- Created this governance-only closure from the integrated default branch.
 
 ## Blockers
 
-- None inside the recorded intent; implementation is ready for protected
-  publication.
+- None; the bounded profile adoption is integrated and complete.
 - New authority is still required for destructive action, secret access, new
   external coordination or material objective expansion. Protected delivery
   may be invoked without another prompt when publication is in scope; its
