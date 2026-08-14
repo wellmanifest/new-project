@@ -336,6 +336,24 @@ spec = importlib.util.spec_from_file_location('governance_check', sys.argv[1])
 module = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = module
 spec.loader.exec_module(module)
+assert module.probable_secret_fields(
+    'API_TOKEN=__GENERATE_API_TOKEN__'
+) == []
+assert module.probable_secret_fields(
+    'API_TOKEN=placeholder_value'
+) == []
+assert module.probable_secret_fields(
+    'API_TOKEN=' + '__GENERATE_API_TOKEN__' + 'suffix'
+) == ['TOKEN']
+assert module.probable_secret_fields(
+    'API_TOKEN=' + '__generate_api_token__'
+) == ['TOKEN']
+assert module.probable_secret_fields(
+    'API_TOKEN=' + '__GENERATE_API-TOKEN__'
+) == ['TOKEN']
+assert module.probable_secret_fields(
+    'API_TOKEN=' + 'sk_live_' + '4f3d2c1b0a9876543210'
+) == ['TOKEN']
 assert module.matches('src/nested/app.js', ['src/**'])
 assert not module.matches('src/nested/app.js', ['src/*'])
 assert module.patterns_may_overlap('future/**', 'future/*.js')

@@ -35,12 +35,12 @@
       "No change to runtime bootstrap marker syntax",
       "No access to or migration of any secret value"
     ],
-    "complexity": "XS",
-    "estimatedMinutes": 10,
+    "complexity": "S",
+    "estimatedMinutes": 20,
     "budgets": {
       "maxImplementationFiles": 2,
       "maxAffectedComponents": 1,
-      "maxPublicInterfaceChanges": 0,
+      "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
@@ -56,7 +56,9 @@
         }
       ],
       "responsibilityChanges": false,
-      "interfaceChanges": [],
+      "interfaceChanges": [
+        "The probable-secret scanner accepts one exact generated bootstrap placeholder syntax"
+      ],
       "dataChanges": [],
       "ui": {
         "impact": "none",

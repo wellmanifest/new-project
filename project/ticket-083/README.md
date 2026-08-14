@@ -3,7 +3,7 @@
 - **ID**: ticket-083
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -19,12 +19,22 @@ Zakres obejmuje wyłącznie precyzyjne rozpoznanie pełnej wartości
 prawdziwych tokenów i wartości tylko podobnych do markera.
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [ ] AC-01: Dokładny, wielkoliterowy marker `__GENERATE_[A-Z0-9_]+__` nie
+- [x] AC-01: Dokładny, wielkoliterowy marker `__GENERATE_[A-Z0-9_]+__` nie
       emituje `GOV-SECRET-001`.
-- [ ] AC-02: Marker z prefiksem, sufiksem, małymi literami albo niedozwolonym
+- [x] AC-02: Marker z prefiksem, sufiksem, małymi literami albo niedozwolonym
       znakiem nadal jest skanowany jak zwykła wartość i nie tworzy wyjątku.
-- [ ] AC-03: Długa rzeczywista wartość tokenu nadal emituje
+- [x] AC-03: Długa rzeczywista wartość tokenu nadal emituje
       `GOV-SECRET-001`, a pełny kontrakt walidatora i bramka huba przechodzą.
+
+## Dowody walidacji
+
+- `bash tests/governance-validator.test.sh`: PASS; katalog diagnostyczny ma 65
+  kodów i zero findings.
+- Focused Ruff przechodzi po wyłączeniu dwóch istniejących kodów bazowych w
+  tym samym pliku (`BLE001`, `I001`); ticket nie rozszerza zakresu o ich
+  porządkowanie.
+- Nowy skaner uruchomiony na rzeczywistym `.env.example` Platform ticket-021
+  zwraca `probable_secret_fields=[]` bez odczytu jakiegokolwiek sekretu.
 
 ## Ryzyka i Uwagi
 - Najważniejszym ryzykiem jest zbyt szeroki wyjątek maskujący sekret.

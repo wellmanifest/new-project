@@ -29,6 +29,21 @@ bypass.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- Added a separate case-sensitive full-value matcher for generated bootstrap
+  placeholders while preserving the existing human-readable safe prefixes.
+- Added positive and negative assertions covering the exact marker, suffix,
+  lowercase spelling, forbidden dash and a real token-shaped value.
+- Passed the full governance validator contract and confirmed the changed
+  scanner returns no probable-secret fields for Platform ticket-021's actual
+  `.env.example`.
+- Reclassified the bounded change from XS to S after the source-hub gate
+  correctly identified the scanner behavior as one public interface change;
+  the same two implementation files and one component remain in scope.
+- Constructed the negative real-token fixture at runtime so the regression
+  exercises detection without placing a secret-shaped assignment in tracked
+  test source.
+- Kept the ticket `IN_PROGRESS / PUBLICATION` until exact-head Validator App
+  approval and protected merge are recorded.
 
 ## Blockers
 
