@@ -9,3 +9,6 @@
   ticket-lifecycle to version 2 and added regression coverage.
 - Completed local validation and moved the ticket to PUBLICATION for protected
   exact-head delivery.
+- Validator approved exact head `85fc7d5...` and merged PR #118 as
+  `0b4170a353fa30cb5857a4b3c97c6f0b2d2df5b0`; closed the ticket from the
+  integrated `main` state.

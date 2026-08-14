@@ -2,8 +2,8 @@
 
 - **ID**: ticket-076
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -34,6 +34,8 @@ bramkach; nie jest natomiast samo w sobie approval ani dowodem merge.
 - `ruff check scripts` zakończył się komunikatem `All checks passed!`.
 - Dokładny PR scope-check z `--base 414ebf1... --head HEAD` raportuje
   `GOV-PASS`, a diff mieści się w profilu `S` i `allowedPaths`.
+- PR #118 otrzymał chronione exact-head approval dla `85fc7d5...` i został
+  scalony przez Validator jako `0b4170a353fa30cb5857a4b3c97c6f0b2d2df5b0`.
 - Targetowy wrapper `project/governance-check.sh` nie jest bramką huba i
   zgodnie z projektem nie działa bez `.governance`; użyto kanonicznych testów
   huba zamiast przedstawiać ten wynik jako sukces.
