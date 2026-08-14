@@ -9,10 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-079`](project/ticket-079/README.md) — opublikować zintegrowany
+- [x] [`ticket-079`](project/ticket-079/README.md) — opublikowano zintegrowany
   kontrakt HOME vs ADOPT jako immutable `new-project 0.18.0`. Stan:
-  `IN_PROGRESS / PUBLICATION`; klasyfikacja: `SERVICE / P1 / requested`; workstream:
-  `governance`; zależy od `ticket-078`.
+  `DONE / DONE`; klasyfikacja: `SERVICE / P1 / requested`; workstream:
+  `governance`; zależy od `ticket-078`. PR #122 przeszedł exact-head trusted
+  approval i został scalony jako `769183ca`; finalny tag/release wskazuje ten
+  sam merge SHA.
 
 - [x] [`ticket-078`](project/ticket-078/README.md) — dodano opcjonalny kontrakt
   HOME vs ADOPT `placement` do intentów. Stan: `DONE / DONE`; klasyfikacja:
