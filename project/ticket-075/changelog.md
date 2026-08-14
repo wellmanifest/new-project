@@ -12,3 +12,7 @@
   required-check parity and the release-pinned Ruff version.
 - Transitioned to publication with no pre-existing v0.17.0 tag or release;
   immutable publication remains deferred until exact-head trusted merge.
+- Recorded exact-head Validator approval, identical-tree merge, clean
+  post-merge validation and both successful hosted runs.
+- Published immutable final release `v0.17.0`, verified the annotated tag's
+  peeled merge SHA and closed the lifecycle governance-only.

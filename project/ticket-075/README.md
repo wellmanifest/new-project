@@ -2,8 +2,8 @@
 
 - **ID**: ticket-075
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -22,9 +22,9 @@ semantyki profili.
   kompatybilne wstecz minor release bez przepisywania historii `0.16.2`.
 - [x] AC-03: wszystkie zestawy Linux, przypięty Ruff, wymagane checki i governance
   przechodzą na dokładnym HEAD kandydata.
-- [ ] AC-04: PR otrzymuje trusted exact-head Validator approval i jest scalony
+- [x] AC-04: PR otrzymuje trusted exact-head Validator approval i jest scalony
   bez zmiany zatwierdzonego drzewa.
-- [ ] AC-05: czysty merge `main` przechodzi ponowne testy, a annotowany tag i
+- [x] AC-05: czysty merge `main` przechodzi ponowne testy, a annotowany tag i
   finalny GitHub Release `v0.17.0` wskazują dokładnie ten merge SHA.
 
 ## Ryzyka i Uwagi
@@ -49,6 +49,20 @@ semantyki profili.
 - Goal `2.1.300` udostępnia wymagane tryby `pull-request` i `direct-main` oraz
   `--force-publish`; tag i GitHub Release `v0.17.0` nie istnieją przed
   publikacją.
+
+## Dowody dostawy
+
+- PR #116 przeszedł hostowane checki i Validator run `31793130857`; trusted
+  review `4936394638` zatwierdził dokładny HEAD
+  `751faeca43da7973a3607c01fa6091510730ff19`.
+- Merge `4d0a61837245b2906ce19c75c050fea1bc12adf2` ma identyczne drzewo jak
+  zatwierdzony HEAD. Post-merge run `31793244550` oraz tag-triggered run
+  `31793503708` przeszły Linux i Windows governance.
+- Goal `2.1.300` opublikował finalny release
+  `https://github.com/wellmanifest/new-project/releases/tag/v0.17.0` o
+  `2026-08-14T10:45:47Z`. Annotowany tag object
+  `45d1e156487c884c0af9e638b1c31c4b987bbf11` dereferencjonuje dokładnie do
+  merge SHA.
 
 ## Uczestnicy
 
