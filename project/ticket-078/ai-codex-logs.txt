@@ -62,3 +62,17 @@ EXIT_CODE=0
 $ python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --base eab2f4641364cbbc481a620f357a31ee6a2b5000 --head HEAD --actor agent --format text
 GOV-PASS: passed (0 errors, 0 warnings)
 EXIT_CODE=0
+
+2026-08-14 protected publication
+GOAL_PR=https://github.com/wellmanifest/new-project/pull/120
+PR_HEAD=aa7e15f2a6a4c8471b844fd658d4c605f1780d89
+HOSTED_CHECKS=test:PASS,windows-governance:PASS
+POST_MERGE_RUN=31815214333
+POST_MERGE_CHECKS=test:PASS,windows-governance:PASS
+VALIDATOR_RUN=31815079064
+VALIDATOR_ACTOR=ifuri-validator-agent[bot]
+VALIDATOR_REVIEW=APPROVED
+ADVISORY_LLM=LLM_UNAVAILABLE
+DETERMINISTIC_RESULT=approved-degraded
+MERGE_COMMIT=335b0f1975c4c9d3f2f99aeeeaba109a2cc41c2d
+REMOTE_HEAD_BRANCH=deleted
