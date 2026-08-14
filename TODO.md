@@ -9,11 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-075`](project/ticket-075/README.md) — opublikować zintegrowane
+- [x] [`ticket-075`](project/ticket-075/README.md) — opublikowano zintegrowane
   tryby repozytorium, warunkowy Docker i profile dostawy XS/S/M/L jako
-  immutable `new-project 0.17.0`. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
+  immutable `new-project 0.17.0`. Stan: `DONE / DONE`; klasyfikacja:
   `SERVICE / P0 / requested`; workstream: `governance`; zależy od
-  `ticket-074`.
+  `ticket-074`. PR #116 przeszedł exact-head Validator approval i został
+  scalony jako `4d0a618`; finalny tag/release wskazuje ten sam merge SHA.
 
 - [x] [`ticket-074`](project/ticket-074/README.md) — uzgodnić tryby standalone i
   monorepo, warunkowy Docker oraz profile dostawy XS/S/M/L w jednej

@@ -38,6 +38,14 @@ jako minor `0.17.0` bez dalszej zmiany zachowania.
   findings on base and candidate, so no unrelated lint repair entered scope.
 - Verified Goal 2.1.300 and the absence of a pre-existing v0.17.0 tag/release;
   moved the ticket to `IN_PROGRESS / PUBLICATION` for trusted review.
+- Goal opened PR #116, whose exact HEAD `751faec` passed hosted Linux/Windows
+  checks and trusted Validator review before merge as `4d0a618` with an
+  identical tree.
+- Re-ran all nine Linux suites, pinned Ruff and required-check parity on clean
+  merged `main`; both post-merge and tag-triggered hosted runs passed.
+- Goal direct-main publication created final release `v0.17.0`; annotated tag
+  object `45d1e15` peels exactly to merge `4d0a618`. Closed the ticket through
+  a separate governance-only delivery.
 
 ## Blockers
 

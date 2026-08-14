@@ -15,3 +15,15 @@ and the candidate; no scripts file changed.
 2026-08-14 publication preflight: Goal 2.1.300 exposes pull-request,
 direct-main and --force-publish; tag and final GitHub Release v0.17.0 are
 absent.
+2026-08-14 trusted delivery: Goal opened PR #116 at exact head
+751faeca43da7973a3607c01fa6091510730ff19; hosted Linux/Windows checks passed,
+Validator run 31793130857 submitted trusted approval review 4936394638, and
+the PR merged as 4d0a61837245b2906ce19c75c050fea1bc12adf2 with an identical tree.
+2026-08-14 post-merge validation: all nine Linux suites, required-check parity
+and pinned Ruff 0.15.21 passed on clean merged main; hosted run 31793244550 and
+tag-triggered run 31793503708 both passed test and windows-governance.
+2026-08-14 immutable publication: Goal 2.1.300 direct-main --force-publish
+created final release https://github.com/wellmanifest/new-project/releases/tag/v0.17.0
+at 2026-08-14T10:45:47Z; annotated tag object
+45d1e156487c884c0af9e638b1c31c4b987bbf11 peels exactly to merge
+4d0a61837245b2906ce19c75c050fea1bc12adf2.
