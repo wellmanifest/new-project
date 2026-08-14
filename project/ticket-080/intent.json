@@ -14,12 +14,11 @@
     "project/TICKETS.md",
     "POLICY.md",
     "CONTRIBUTING.md",
-    "governance/package-manifest.json",
     "governance/policy-dsl.lock.json",
     "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
     "scripts/policy_dsl_check.py",
     "scripts/governance_check.py",
-    "scripts/runtime.sh",
     "scripts/audit_rule_enforcement.py"
   ],
   "forbiddenPaths": [
@@ -37,7 +36,7 @@
   "delivery": {
     "acceptedBaseSha": "7089c4a9a0834c08539d4d6f9785118345e4cc36",
     "targetBranch": "main",
-    "outcome": "Make reviewed Policy DSL an immutable managed dependency of new-project and automatically validate every adopted repository CONTRIBUTING.md through the pinned inert runtime",
+    "outcome": "Establish reviewed Policy DSL as the immutable source dependency for new-project, normalize its policy carriers and make the source governance gate plus rule audit validate CONTRIBUTING.md through the pinned inert runtime",
     "nonGoals": [
       "Do not execute Policy DSL actions or grant authority from validation",
       "Do not fetch a mutable branch or use network access during repository validation",
@@ -58,11 +57,11 @@
       "components": [
         {
           "name": "immutable-policy-dependency",
-          "paths": ["scripts/policy_dsl_check.py", "governance/policy-dsl.lock.json", "governance/package-manifest.json"]
+          "paths": ["scripts/policy_dsl_check.py", "governance/policy-dsl.lock.json"]
         },
         {
           "name": "policy-validation-boundary",
-          "paths": ["scripts/governance_check.py", "scripts/runtime.sh", "scripts/audit_rule_enforcement.py", "governance/diagnostics.json"]
+          "paths": ["scripts/governance_check.py", "scripts/audit_rule_enforcement.py", "governance/diagnostics.json", "governance/rule-enforcement.json"]
         },
         {
           "name": "policy-carriers",
@@ -72,8 +71,7 @@
       "responsibilityChanges": true,
       "interfaceChanges": [
         "The governance gate validates CONTRIBUTING.md with Policy DSL when that file exists",
-        "scripts/runtime.sh policy performs Policy DSL conformance before policy evaluation",
-        "The adoption package installs the checker and its immutable upstream lock"
+        "The rule-enforcement audit parses policy documents only through the pinned Policy DSL runtime"
       ],
       "dataChanges": [
         "Add a closed policy dependency lock binding repository, reviewed revision, runtime path and SHA-256",
@@ -85,7 +83,7 @@
         "states": [],
         "evidence": []
       },
-      "rollback": "Before the dependent release revert ticket-080; after release preserve the pin and publish an explicit standard upgrade with a new reviewed Policy DSL revision"
+      "rollback": "Before the dependent adoption-package release revert ticket-080; after release preserve the pin and publish an explicit standard upgrade with a new reviewed Policy DSL revision"
     },
     "runtimeDependencies": [],
     "validation": [

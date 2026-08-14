@@ -29,15 +29,15 @@ Policy DSL dependency or this standard's eventual merge.
 1. Wait for independent exact-head review of `wellmanifest/policy-dsl#1`.
 2. Return this ticket to `IN_PROGRESS / EDIT` without changing its scope.
 3. Vendor the reviewed dependency-free checker and create its closed lock.
-4. Add both artifacts to the immutable governance adoption package.
-5. Invoke Policy DSL from the governance gate, runtime policy command and rule
-   enforcement audit, failing closed on missing, changed or invalid runtime.
+4. Invoke Policy DSL from the source governance gate and rule-enforcement audit,
+   failing closed on missing, changed or invalid runtime.
 6. Normalize the one legacy policy-shaped Bash fence to canonical `dsl` and
    shorten the single Policy opcode that exceeds the reviewed v1 bound.
 7. Reuse the existing generic package, adoption and rule-enforcement
    regressions, which automatically cover every managed package entry.
 8. Run focused and full gates, then publish through exact-head review. Allocate
-   a separate bounded release ticket only after the feature is integrated.
+   a dependent bounded package/runtime ticket only after this slice is
+   integrated, and a release ticket after the complete adoption is integrated.
 
 ## Actual changes
 
@@ -58,6 +58,10 @@ Policy DSL dependency or this standard's eventual merge.
   vendored data with immutable provenance, not a package-manager dependency.
   Versioning and release metadata move to a dependent publication ticket after
   this feature is integrated.
+- Split the implementation at the manifest-enforced nine-file boundary: this
+  slice owns the immutable source dependency, source gate, traceable diagnostic,
+  Policy DSL-only rule audit and carrier normalization. Package installation
+  and `scripts/runtime.sh policy` remain the declared dependent slice.
 
 ## Blockers
 

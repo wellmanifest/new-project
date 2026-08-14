@@ -8,11 +8,12 @@
 
 ## Goal and scope
 
-Make Policy DSL a managed, immutable dependency of `wellmanifest/new-project`.
-The published package will install the exact dependency-free checker and a
-closed upstream lock into every adopting repository. If `CONTRIBUTING.md`
-exists, the governance gate and `scripts/runtime.sh policy` validate its
-canonical `dsl` fences before evaluating or auditing repository rules.
+Make Policy DSL a managed, immutable source dependency of
+`wellmanifest/new-project`. This first bounded slice pins the exact
+dependency-free checker, normalizes the policy carriers and makes the source
+governance gate plus rule audit validate canonical `dsl` fences. A dependent
+slice will install the same byte-verified artifacts into every adopting
+repository and connect `scripts/runtime.sh policy` before the versioned release.
 
 The runtime remains inert: parsing a rule never executes its `DO` action and
 never grants authority. Unrelated Markdown and shell examples are ignored.
@@ -27,16 +28,14 @@ never grants authority. Unrelated Markdown and shell examples are ignored.
 - [ ] AC-03: A malformed selected Policy DSL fence blocks the governance gate
   with stable `GOV-POLICY-DSL-001`; unrelated Markdown and shell examples do
   not enter the policy document.
-- [ ] AC-04: `scripts/runtime.sh policy` and rule-enforcement audit consume the
-  pinned Policy DSL runtime instead of the optional `wellm`/regex fallback.
-- [ ] AC-05: The immutable adoption package installs and hash-locks the policy
-  checker and dependency lock in every target repository.
-- [ ] AC-06: Repositories without `CONTRIBUTING.md` remain valid and no policy
+- [ ] AC-04: The rule-enforcement audit consumes the pinned Policy DSL runtime
+  instead of the optional `wellm`/regex fallback.
+- [ ] AC-05: Repositories without `CONTRIBUTING.md` remain valid and no policy
   action is executed during validation.
-- [ ] AC-07: Existing focused tests, the full Linux contract, package/adoption tests,
+- [ ] AC-06: Existing focused tests, the full Linux contract and exact-diff
   exact-diff and governance checks pass at the reviewed HEAD.
-- [ ] AC-08: The feature reaches protected `main`; a dependent bounded release
-  ticket publishes the integrated revision for target adoption.
+- [ ] AC-07: The source dependency reaches protected `main`; a dependent
+  bounded ticket completes managed-package/runtime adoption before release.
 
 ## Dependency evidence
 

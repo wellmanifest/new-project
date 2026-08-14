@@ -11,3 +11,5 @@
 - Reconciled the feature slice to the hub's `S` delivery profile: nine files,
   three components and no external runtime install. A dependent ticket will own
   the post-merge versioned release.
+- Split source conformance from managed-package/runtime adoption at the hard
+  delivery boundary; this ticket now changes eight implementation files.
