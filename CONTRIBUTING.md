@@ -23,7 +23,10 @@ dopiero potem przez URI Process/CQRS do pojedynczego skutku oraz receipt.
 
 Bloki `dsl` są normatywnym, czytelnym dla ludzi i agentów zapisem polityki;
 nie są samodzielnie wykonywalnym językiem programowania. Deterministyczne
-egzekwowanie realizuje walidator i manifest policy-as-code.
+egzekwowanie realizuje walidator i manifest policy-as-code. Ten profil używa
+języka `wellmanifest.policy/v1`; historyczne `policy-sh@1` jest wyłącznie
+aliasem zgodności runtime. `VERSION 13` powyżej wersjonuje dokument
+`CONTRIBUTING`, a nie gramatykę ani runtime.
 
 ```dsl
 DOCUMENT <NAME>                 # nazwa kontraktu

@@ -101,6 +101,52 @@ grep -q 'GOV-DIAGNOSTIC-002' "$work/bad-runbook.txt"
 count="$(python3 "$repo_root/scripts/audit_rule_enforcement.py" --root "$repo_root" --format json | python3 -c 'import json,sys; print(json.load(sys.stdin)["rules"])')"
 test "$count" -ge 144
 
+# A Markdown language label is part of the Policy DSL carrier contract. Every
+# concrete policy declaration must live in a canonical `dsl` fence; broadening
+# the parser to shell examples would turn unrelated commands into policy.
+python3 - "$repo_root/CONTRIBUTING.md" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+source = path.read_text(encoding="utf-8")
+blocks = []
+language = None
+start = None
+body = []
+
+for number, line in enumerate(source.splitlines(), 1):
+    if language is None and line.startswith("```"):
+        language = line[3:].strip()
+        start = number
+        body = []
+    elif language is not None and line.strip() == "```":
+        blocks.append((language, start, body))
+        language = None
+        start = None
+        body = []
+    elif language is not None:
+        body.append(line)
+
+assert language is None, "unterminated Markdown fence"
+header = next(
+    lines
+    for lang, _, lines in blocks
+    if lang == "dsl" and any(line == "DOCUMENT CONTRIBUTING" for line in lines)
+)
+assert "VERSION 13" in header
+
+declaration = re.compile(r"^(?:RULE|STATE|TRANSITION) [A-Z][A-Z0-9_-]*")
+mislabelled = [
+    (line_number, lang, line.strip())
+    for lang, line_number, lines in blocks
+    for line in lines
+    if declaration.match(line.strip()) and lang != "dsl"
+]
+assert not mislabelled, f"policy declarations outside dsl fences: {mislabelled}"
+PY
+
 # Governed publication must use the phase-specific Goal full workflow. These
 # checks intentionally validate semantics, not a version string: two Goal
 # builds with the same version may expose different capabilities.
