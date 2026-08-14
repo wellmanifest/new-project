@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-083`](project/ticket-083/README.md) — rozpoznać wyłącznie pełne
+  markery bootstrapu `__GENERATE_[A-Z0-9_]+__` jako bezpieczne placeholdery,
+  zachowując `GOV-SECRET-001` dla podobnych wartości i rzeczywistych tokenów.
+  Stan: `IN_PROGRESS / EDIT`; klasyfikacja: `BUG / P1 / regression`;
+  workstream: `governance`.
+
 - [x] [`ticket-080`](project/ticket-080/README.md) — adopted reviewed Policy DSL
   source conformance as integrated commit
   `50892fbec07dfaae90b74d219737f999d8409eed`. Managed package/runtime adoption

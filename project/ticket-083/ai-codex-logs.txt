@@ -1,0 +1,7 @@
+2026-08-14 ticket initialization
+SESSION_EXECUTION_AUTHORIZATION=user requested autonomous Validator delivery
+ACCEPTED_BASE=4f6534988eb93be226beed58bacfa17e4bc99d47
+WORKSTREAM=governance
+CLASSIFICATION=BUG/P1/regression
+ROOT_CAUSE=GOV-SECRET-001 does not recognize exact runtime __GENERATE_*__ markers
+SECRET_ACCESS=none
