@@ -44,10 +44,12 @@ Policy DSL dependency or this standard's eventual merge.
   target-owned adoption scope before implementation.
 - Released the governance workstream by setting `PLAN / PLAN` until the
   independent dependency review exists.
+- Verified trusted Validator App approval for Policy DSL exact head
+  `daaf7b7b96312a2469de1b4799f2f81c7396de4e`, protected merge
+  `6fe12f9fcce206c1d69b95f9cac1b4bc8c10abbf` and deletion of the ticket branch.
+- Returned this ticket to `IN_PROGRESS / EDIT` before changing implementation
+  files.
 
 ## Blockers
 
-- `wellmanifest/policy-dsl#1` has a green remote lifecycle check but no
-  independent approval for exact head
-  `daaf7b7b96312a2469de1b4799f2f81c7396de4e`. The agent cannot manufacture or
-  self-issue trusted review evidence.
+- None. The external Policy DSL publication prerequisite is satisfied.

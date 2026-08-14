@@ -2,8 +2,8 @@
 
 - **ID**: ticket-080
 - **Owner**: unresolved:human
-- **Status**: PLAN
-- **Workflow state**: PLAN
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
 - **Created**: 2026-08-14
 
 ## Goal and scope
@@ -38,13 +38,14 @@ never grants authority. Unrelated Markdown and shell examples are ignored.
 - [ ] AC-08: The change is released through protected publication so targets
   can adopt a published `new-project` revision containing the immutable pin.
 
-## Current prerequisite
+## Dependency evidence
 
 Policy DSL pull request [wellmanifest/policy-dsl#1](https://github.com/wellmanifest/policy-dsl/pull/1)
-is open at exact head `daaf7b7b96312a2469de1b4799f2f81c7396de4e`.
-Its remote lifecycle check is green, but independent exact-head review is still
-required. This ticket remains `PLAN / PLAN`, which releases the governance
-workstream while that external publication boundary is pending.
+received an approved Validator App review bound to exact head
+`daaf7b7b96312a2469de1b4799f2f81c7396de4e` and merged as
+`6fe12f9fcce206c1d69b95f9cac1b4bc8c10abbf`. The implementation revision is
+therefore immutable, reachable from protected `main` and eligible for the
+managed dependency lock. This ticket has returned to `IN_PROGRESS / EDIT`.
 
 ## Risks and mitigations
 
