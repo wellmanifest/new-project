@@ -3,7 +3,7 @@
 - **ID**: ticket-079
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -43,6 +43,8 @@ placement po ich merge.
   Ruff 0.15.21 i diff whitespace: PASS.
 - `v0.18.0` nie istnieje jako tag ani GitHub Release przed publikacją.
 - Post-merge Linux/Windows ticketu 078 i zamknięcia na `main@0479feb`: PASS.
+- Commit kandydata `6c57973c3ed94269a4b57d1dfa9e99e753dc738f`
+  przeszedł exact-head scope gate: `GOV-PASS`.
 
 ## Uczestnicy
 

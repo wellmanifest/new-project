@@ -36,7 +36,8 @@ minor release `0.18.0`; it introduces no further semantics.
 - Passed the exact scope gate, all nine Linux suites, required-check parity,
   JSON/schema checks, Ruff 0.15.21 and whitespace validation.
 - Verified Goal 2.1.300 and that neither tag nor release `v0.18.0` exists;
-  moved to `VALIDATION` before the implementation commit.
+  committed the candidate as `6c57973c3ed94269a4b57d1dfa9e99e753dc738f`,
+  passed its exact-head gate and entered protected publication.
 
 ## Blockers
 
