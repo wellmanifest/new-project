@@ -1,0 +1,9 @@
+2026-08-14 command: bash tests/governance-validator.test.sh; for test in tests/*.test.sh; do bash "$test"; done; python3 -m ruff check scripts/governance_check.py
+exit: 0
+output: focused validator PASS; all nine Linux suites PASS; Ruff PASS
+2026-08-14 command: python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base 03cbe45568d24d0d2b6b2bc9a520d98a5de71a7c --head cbdc725d0104724fba272b26a37ac06ef4e96791 --actor agent --format text
+exit: 0
+output: GOV-PASS: passed (0 errors, 0 warnings); implementation files=8
+2026-08-14 GitHub API: PR #134 head=cbdc725d0104724fba272b26a37ac06ef4e96791; test and windows-governance=success
+2026-08-14 protected run: validator-agent 31842958666 conclusion=success; ifuri-validator-agent[bot] review=APPROVED commit_id=cbdc725d0104724fba272b26a37ac06ef4e96791
+2026-08-14 GitHub API: PR #134 mergedAt=2026-08-14T21:35:46Z mergeCommit=ac8730a141ae15c7b087139565559c66906f8b74; Goal branch deleted

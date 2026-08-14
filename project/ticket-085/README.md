@@ -2,8 +2,8 @@
 
 - **ID**: ticket-085
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -40,8 +40,19 @@ standard domenowy włącza `mode: cqrs` we własnym ticketcie adopcyjnym.
 - `for test in tests/*.test.sh; do bash "$test"; done`: PASS dla wszystkich
   dziewięciu kontraktów Linux.
 - `python3 -m ruff check scripts/governance_check.py`: PASS.
-- Dokładny diff `03cbe455..f99f576` ma 8 plików implementacyjnych i przechodzi
+- Dokładny diff `03cbe455..cbdc725` ma 8 plików implementacyjnych i przechodzi
   źródłową bramkę huba jako `GOV-PASS` bez ostrzeżeń.
+
+## Dowody publikacji
+
+- Goal otworzył PR #134 na dokładnym HEAD
+  `cbdc725d0104724fba272b26a37ac06ef4e96791`; oba hosted przebiegi Linux i
+  Windows zakończyły się sukcesem.
+- Chroniony validator-agent run `31842958666` zakończył się sukcesem, a
+  `ifuri-validator-agent[bot]` zatwierdził dokładnie ten HEAD o 21:35:43Z.
+- Chroniony proces scalił PR #134 o 21:35:46Z jako
+  `ac8730a141ae15c7b087139565559c66906f8b74` i usunął zdalny branch Goal.
+  Ten closure powstał z już zintegrowanego `main`.
 
 ## Ryzyka i Uwagi
 - Największym ryzykiem jest wymuszenie szkieletu domenowego na zwykłych

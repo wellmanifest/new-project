@@ -9,3 +9,5 @@
   regressions.
 - Added managed policy, procedure and agent guidance for the sole-source and
   transport-authority boundaries.
+- Published exact head `cbdc725…` through Validator App as merge `ac8730a…`,
+  deleted the remote implementation branch and recorded this terminal closure.
