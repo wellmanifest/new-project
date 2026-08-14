@@ -12,9 +12,9 @@ come from the validator source. Only the mapping in
 knowledge rather than something a parser can recover - and because it is derived
 on both sides, a drift on either immediately fails.
 
-Rules are parsed with the `policy-sh@1` frontend from `wellm` when it is
-importable, so the grammar has one owner. A bounded local reader covers the same
-shape when it is not, and the mode is reported so a reader knows which ran.
+Rules are parsed only with the byte-verified Policy DSL runtime pinned by
+`governance/policy-dsl.lock.json`. The audit has no optional parser and no
+regular-expression fallback for policy documents.
 """
 from __future__ import annotations
 
@@ -23,6 +23,8 @@ import json
 import re
 from pathlib import Path
 from typing import Any
+
+from governance_check import load_policy_dsl_module
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 POLICY_DOCUMENTS = ("POLICY.md", "CONTRIBUTING.md")
@@ -36,49 +38,20 @@ VALIDATOR_PATHS = (
     Path("scripts/remediation_intent.py"),
 )
 
-DSL_BLOCK = re.compile(r"```(?:dsl|bash)\n(.*?)```", re.S)
-RULE_HEADER = re.compile(r"^RULE\s+([A-Za-z0-9_.:-]+)(?:\s+TYPE\s+(\S+))?\s*$", re.MULTILINE)
 GOV_CODE = re.compile(r'"(GOV-[A-Z]+(?:-[A-Z]+)*-[0-9]{3})"')
 
 
-def _wellm_rules(block: str) -> list[dict[str, Any]] | None:
-    try:
-        from wellmanifest.dialects.policy import PolicyDialect
-    except ImportError:
-        return None
-    dialect = PolicyDialect()
-    # probe(), not looks_like_policy(). The latter tests only the first non-empty
-    # line, so a block that opens with data before its first RULE is rejected
-    # whole - that alone dropped 30 rules here, every C-DOCKER, C-ENV and
-    # C-EVALUATION. probe() searches the whole block and scores those 0.98, and
-    # parse() reads them correctly.
-    if dialect.probe(block) < 0.5:
-        return []
-    parsed = dialect.parse(block)
-    data = parsed.data if hasattr(parsed, "data") else parsed
-    return list(data.get("rules", []))
-
-
-def _local_rules(block: str) -> list[dict[str, Any]]:
-    return [{"id": rule_id, "type": rule_type} for rule_id, rule_type in RULE_HEADER.findall(block)]
-
-
 def declared_rules(root: Path) -> tuple[list[dict[str, Any]], str]:
-    mode = "local"
+    policy_dsl = load_policy_dsl_module(root)
     rules: list[dict[str, Any]] = []
     for name in POLICY_DOCUMENTS:
         document = root / name
         if not document.is_file():
             continue
-        for block in DSL_BLOCK.findall(document.read_text(encoding="utf-8")):
-            parsed = _wellm_rules(block)
-            if parsed is None:
-                parsed = _local_rules(block)
-            else:
-                mode = "wellm"
-            for rule in parsed:
-                rules.append({"id": rule["id"], "type": rule.get("type"), "document": name})
-    return rules, mode
+        parsed = policy_dsl.parse_markdown(document.read_text(encoding="utf-8"))
+        for rule in parsed["rules"]:
+            rules.append({"id": rule["id"], "type": rule.get("type"), "document": name})
+    return rules, "policy-dsl"
 
 
 def enforcement_codes(root: Path) -> list[str]:

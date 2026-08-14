@@ -23,7 +23,10 @@ dopiero potem przez URI Process/CQRS do pojedynczego skutku oraz receipt.
 
 Bloki `dsl` są normatywnym, czytelnym dla ludzi i agentów zapisem polityki;
 nie są samodzielnie wykonywalnym językiem programowania. Deterministyczne
-egzekwowanie realizuje walidator i manifest policy-as-code.
+egzekwowanie realizuje walidator i manifest policy-as-code. Ten profil używa
+języka `wellmanifest.policy/v1`; historyczne `policy-sh@1` jest wyłącznie
+aliasem zgodności runtime. `VERSION 13` powyżej wersjonuje dokument
+`CONTRIBUTING`, a nie gramatykę ani runtime.
 
 ```dsl
 DOCUMENT <NAME>                 # nazwa kontraktu
@@ -173,7 +176,7 @@ ASSERT GOVERNANCE_HUB_TEST_ENVIRONMENT = VERIFIED_BY_CI_WORKFLOW
 
 ## KONTEKST REPOZYTORIUM
 
-```bash
+```dsl
 RULE C-CONTEXT-001
 WHEN ROOT_REPOSITORY = "wellmanifest/new-project"
 DO SET TASK_CONTEXT = GOVERNANCE_HUB_MAINTENANCE
@@ -972,13 +975,6 @@ przez `scripts/decision_record.py`. Wpis powinien być **wyprowadzany** z
 `t2c.change-evaluation/v1`, gdy ocena zmiany istnieje — nie pisany niezależnie.
 
 ```dsl
-DOCUMENT DECISION_LOG
-VERSION 1
-LANGUAGE PL
-MODE STRICT
-PURPOSE "sprawdzalny zapis decyzji podejmowanych autonomicznie"
-POLICY "POLICY.md"
-
 RULE C-DECISION-001 TYPE REQUIRED
 WHEN AGENT_DECISION_AFFECTS_REPOSITORY_STATE
 DO APPEND DECISION_RECORD TO "project/{TICKET_ID}/decisions.md"

@@ -9,6 +9,16 @@
 
 ## Aktywne utrzymanie standardu
 
+- [x] [`ticket-080`](project/ticket-080/README.md) — adopted reviewed Policy DSL
+  source conformance as integrated commit
+  `50892fbec07dfaae90b74d219737f999d8409eed`. Managed package/runtime adoption
+  remains the next bounded slice before release.
+
+- [x] [`ticket-081`](project/ticket-081/README.md) — zintegrowano Policy DSL v1
+  jako jawny standard `CONTRIBUTING VERSION 13`, digest-bound profil,
+  kanoniczne selektory Markdown i regresję. Stan: `DONE / DONE`; managed
+  package/runtime adoption pozostaje osobnym, ograniczonym zakresem.
+
 - [x] [`ticket-079`](project/ticket-079/README.md) — opublikowano zintegrowany
   kontrakt HOME vs ADOPT jako immutable `new-project 0.18.0`. Stan:
   `DONE / DONE`; klasyfikacja: `SERVICE / P1 / requested`; workstream:
