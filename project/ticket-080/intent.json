@@ -1,0 +1,112 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-080",
+  "summary": "Adopt immutable Policy DSL runtime for CONTRIBUTING",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-080/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "governance/policy-dsl.lock.json",
+    "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
+    "scripts/policy_dsl_check.py",
+    "scripts/governance_check.py",
+    "scripts/audit_rule_enforcement.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".governance/**",
+    ".github/**",
+    "governance/manifest.default.json",
+    "governance/manifest.schema.json",
+    "template/**"
+  ],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7089c4a9a0834c08539d4d6f9785118345e4cc36",
+    "targetBranch": "main",
+    "outcome": "Establish reviewed Policy DSL as the immutable source dependency for new-project, normalize its policy carriers and make the source governance gate plus rule audit validate CONTRIBUTING.md through the pinned inert runtime",
+    "nonGoals": [
+      "Do not execute Policy DSL actions or grant authority from validation",
+      "Do not fetch a mutable branch or use network access during repository validation",
+      "Do not add an external package-manager or network dependency at runtime",
+      "Do not validate unrelated Markdown or shell example fences as policy"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Vendor the exact reviewed dependency-free Policy DSL checker into the managed governance package, bind its upstream repository revision and SHA-256 in a closed lock, verify the lock before use, and invoke it fail-closed whenever CONTRIBUTING.md exists",
+      "components": [
+        {
+          "name": "immutable-policy-dependency",
+          "paths": ["scripts/policy_dsl_check.py", "governance/policy-dsl.lock.json"]
+        },
+        {
+          "name": "policy-validation-boundary",
+          "paths": ["scripts/governance_check.py", "scripts/audit_rule_enforcement.py", "governance/diagnostics.json", "governance/rule-enforcement.json"]
+        },
+        {
+          "name": "policy-carriers",
+          "paths": ["POLICY.md", "CONTRIBUTING.md"]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        "The governance gate validates CONTRIBUTING.md with Policy DSL when that file exists",
+        "The rule-enforcement audit parses policy documents only through the pinned Policy DSL runtime"
+      ],
+      "dataChanges": [
+        "Add a closed policy dependency lock binding repository, reviewed revision, runtime path and SHA-256",
+        "Normalize the legacy policy-shaped Bash fence in CONTRIBUTING.md to the canonical dsl selector",
+        "Shorten one overlong Policy opcode without changing its required prohibition"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Before the dependent adoption-package release revert ticket-080; after release preserve the pin and publish an explicit standard upgrade with a new reviewed Policy DSL revision"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["python3 scripts/policy_dsl_check.py validate-markdown CONTRIBUTING.md"],
+        "evidence": "project/ticket-080/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["bash tests/rule-enforcement.test.sh", "bash tests/governance-validator.test.sh"],
+        "evidence": "project/ticket-080/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "project/ticket-080/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-07",
+        "commands": ["python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base main --head HEAD --actor agent --format text", "git diff --check"],
+        "evidence": "project/ticket-080/ai-codex-logs.txt"
+      }
+    ]
+  }
+}

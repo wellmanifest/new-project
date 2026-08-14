@@ -173,7 +173,7 @@ ASSERT GOVERNANCE_HUB_TEST_ENVIRONMENT = VERIFIED_BY_CI_WORKFLOW
 
 ## KONTEKST REPOZYTORIUM
 
-```bash
+```dsl
 RULE C-CONTEXT-001
 WHEN ROOT_REPOSITORY = "wellmanifest/new-project"
 DO SET TASK_CONTEXT = GOVERNANCE_HUB_MAINTENANCE
@@ -972,13 +972,6 @@ przez `scripts/decision_record.py`. Wpis powinien być **wyprowadzany** z
 `t2c.change-evaluation/v1`, gdy ocena zmiany istnieje — nie pisany niezależnie.
 
 ```dsl
-DOCUMENT DECISION_LOG
-VERSION 1
-LANGUAGE PL
-MODE STRICT
-PURPOSE "sprawdzalny zapis decyzji podejmowanych autonomicznie"
-POLICY "POLICY.md"
-
 RULE C-DECISION-001 TYPE REQUIRED
 WHEN AGENT_DECISION_AFFECTS_REPOSITORY_STATE
 DO APPEND DECISION_RECORD TO "project/{TICKET_ID}/decisions.md"
