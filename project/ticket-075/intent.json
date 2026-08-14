@@ -1,0 +1,116 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-075",
+  "summary": "Publish delivery profiles as new-project 0.17.0",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P0",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-075/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-074"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "59a029883f0a4a7756407a01d3deee52dc23ae36",
+    "targetBranch": "main",
+    "outcome": "Publish the integrated repository and delivery profile contract as immutable new-project 0.17.0",
+    "nonGoals": [
+      "Do not modify integrated profile or validator behavior after ticket-074",
+      "Do not publish before exact-head approval, unchanged merge and clean main retest",
+      "Do not mutate or move any prior release tag",
+      "Do not adopt the release in downstream repositories inside this ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Publish the already integrated backward-compatible profile contract as a new minor release and keep release preparation mechanical",
+      "components": [
+        {
+          "name": "release-version",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        },
+        {
+          "name": "release-contract-tests",
+          "paths": [
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "release-notes",
+          "paths": [
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        "Advance the immutable standard version from 0.16.2 to 0.17.0"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Before publication, revert the release preparation commit; after publication, never move the tag and prepare a newer release"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "project/ticket-075/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "for suite in tests/*.test.sh; do bash $suite; done",
+          "ruff check scripts"
+        ],
+        "evidence": "project/ticket-075/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish",
+          "git ls-remote --tags origin v0.17.0",
+          "gh release view v0.17.0 --repo wellmanifest/new-project"
+        ],
+        "evidence": "project/ticket-075/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
