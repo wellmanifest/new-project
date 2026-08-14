@@ -2,8 +2,8 @@
 
 - **ID**: ticket-082
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-14
 
 ## Cel i Zakres
@@ -44,6 +44,17 @@ jakakolwiek edycja wewnątrz repozytoriów adoptujących.
   równoległej.
 - Repozytoria adoptowane pozostają nienaruszone do momentu, w którym same
   wykonają `goal governance adopt --upgrade`.
+
+## Dowody publikacji
+
+- Pull request [#124](https://github.com/wellmanifest/new-project/pull/124)
+  przeszedł `test` i `windows-governance` na dokładnym HEAD
+  `7019ddd120caf94e628dc1fb5c7598919532ecb6`.
+- Validator App `ifuri-validator-agent[bot]` zatwierdził ten sam HEAD, po czym
+  chroniony merge zintegrował zmianę jako
+  `e0c87a753d6ce7cda9dc1719993107f124b1b90d`.
+- Gałąź implementacyjna została usunięta przed utworzeniem tego
+  governance-only closure ze zintegrowanego `main`.
 
 ## Uczestnicy
 
