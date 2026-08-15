@@ -11,3 +11,5 @@
   transport-authority boundaries.
 - Published exact head `cbdc725…` through Validator App as merge `ac8730a…`,
   deleted the remote implementation branch and recorded this terminal closure.
+- Recorded post-merge `main` checks on exact merge SHA `ac8730a…` (run
+  `31843109800`: `test` and `windows-governance` success).

@@ -64,6 +64,8 @@ adopt `cqrs` through their own bounded tickets.
   `ifuri-validator-agent[bot]`, merged the PR as `ac8730a…` and deleted its
   temporary remote branch.
 - Created this governance-only `DONE / DONE` closure from integrated `main`.
+- Inspected integrated `main` after merge: hosted run `31843109800` passed
+  `test` and `windows-governance` on exact SHA `ac8730a…`.
 
 ## Blockers
 

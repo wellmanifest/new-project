@@ -53,6 +53,11 @@ standard domenowy włącza `mode: cqrs` we własnym ticketcie adopcyjnym.
 - Chroniony proces scalił PR #134 o 21:35:46Z jako
   `ac8730a141ae15c7b087139565559c66906f8b74` i usunął zdalny branch Goal.
   Ten closure powstał z już zintegrowanego `main`.
+- Czysty `main` pod merge SHA `ac8730a141ae15c7b087139565559c66906f8b74`
+  przeszedł post-merge run
+  [31843109800](https://github.com/wellmanifest/new-project/actions/runs/31843109800):
+  joby `test` i `windows-governance` zakończyły się sukcesem. Zielony PR nie
+  był jedynym sygnałem zdrowia.
 
 ## Ryzyka i Uwagi
 - Największym ryzykiem jest wymuszenie szkieletu domenowego na zwykłych
