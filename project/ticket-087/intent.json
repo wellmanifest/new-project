@@ -1,0 +1,94 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-087",
+  "summary": "Mandate agents invoke validator-agent for trusted merge approval",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P0",
+    "origin": "requested"
+  },
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": ["wellmanifest/new-project", "wellmanifest/autonomy"]
+  },
+  "allowedPaths": [
+    "project/ticket-087/**",
+    "project/ticket-085/README.md",
+    "project/TICKETS.md",
+    "TODO.md",
+    "AGENTS.md",
+    "template/files/AGENTS.template.md",
+    "CONTRIBUTING.md",
+    "docs/GOVERNANCE_ENFORCEMENT.md",
+    "CHANGELOG.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".github/**",
+    "scripts/**"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ac8730a141ae15c7b087139565559c66906f8b74",
+    "targetBranch": "main",
+    "outcome": "AGENTS.md and AGENTS.template.md require coding agents to invoke subactor/validator-agent via dispatch-direct-pr.sh for trusted merge; they must not ask humans to substitute for Validator App",
+    "nonGoals": [
+      "Change validator-agent runtime or registry",
+      "Weaken protected-branch rules",
+      "Allow implementing agents to self-approve"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Encode the invoke-validator obligation in the hub AGENTS carriers that every adopted target copies; point to existing PUBLICATION_FREEZE + dispatch-direct-pr.sh without relocating the runtime (HOME remains subactor/validator-agent).",
+      "components": [
+        {
+          "name": "agent-policy",
+          "paths": ["AGENTS.md", "template/files/AGENTS.template.md", "CONTRIBUTING.md"]
+        },
+        {
+          "name": "governance-docs",
+          "paths": ["docs/GOVERNANCE_ENFORCEMENT.md", "CHANGELOG.md", "TODO.md", "project/ticket-087/**", "project/ticket-085/README.md", "project/TICKETS.md"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "AGENTS publication rule: MUST dispatch validator-agent; MUST NOT ask human to approve instead"
+      ],
+      "dataChanges": [],
+      "ui": { "impact": "none", "states": [], "evidence": [] },
+      "rollback": "Revert AGENTS.md, template, CONTRIBUTING and docs snippets."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["rg -n 'dispatch-direct-pr|MUST invoke|validator-agent' AGENTS.md template/files/AGENTS.template.md"],
+        "evidence": "Hub and template both mandate dispatch-direct-pr.sh"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["rg -n 'MUST NOT ask the human to approve|MUST NOT ask humans' AGENTS.md template/files/AGENTS.template.md"],
+        "evidence": "Explicit ban on substituting chat/human for Validator App"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["./project/governance-check.sh"],
+        "evidence": "GOV-PASS"
+      }
+    ]
+  }
+}
