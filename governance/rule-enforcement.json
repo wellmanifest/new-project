@@ -393,6 +393,11 @@
       "enforcement": "manual",
       "reason": "Post-merge governance-only closure runs on the integrated default branch and requires authoritative remote merge state."
     },
+    "C-PUBLISH-010": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Integrated default-branch health is observed on hosted post-merge checks; the local gate cannot see GitHub Actions on main."
+    },
     "C-START-001": {
       "codes": [],
       "enforcement": "manual",
@@ -407,6 +412,11 @@
       "codes": [],
       "enforcement": "manual",
       "reason": "Tool selection at session start is not encoded as GOV-* codes."
+    },
+    "C-SOURCE-001": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Which pair of sets must stay consistent is an architecture fact; existing derive gates cover specific pairs such as required-check names."
     },
     "C-TICKET-001": {
       "codes": [
@@ -885,6 +895,16 @@
       ],
       "enforcement": "manual",
       "reason": "Invalid placement values fail GOV-INTENT-002. HOME vs ADOPT for new runtime_service remains agent/WAIT_FOR_APPROVAL procedure because placement is still optional on existing tickets."
+    },
+    "P-CORE-026": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Post-merge health of the default branch is a hosted GitHub signal; the local validator does not query Actions."
+    },
+    "P-CORE-027": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "The general derive-one-source rule is procedural until each duplicated pair has its own GOV-* drift gate."
     },
     "P-DOCS-001": {
       "codes": [

@@ -226,6 +226,23 @@ for fragment in (
     assert fragment in closure
 assert mapping["C-PUBLISH-009"]["enforcement"] == "manual"
 
+post_merge = rule_body("C-PUBLISH-010")
+for fragment in (
+    "INSPECT_DEFAULT_BRANCH_AT_EXACT_MERGE_SHA",
+    "POST_MERGE_CHECKS_ON_DEFAULT_BRANCH",
+    "FORBID INFER_REPOSITORY_HEALTH_FROM_PULL_REQUEST_CHECKS_ALONE",
+):
+    assert fragment in post_merge
+assert mapping["C-PUBLISH-010"]["enforcement"] == "manual"
+
+derive = rule_body("C-SOURCE-001")
+for fragment in (
+    "DERIVE_ONE_SET_FROM_THE_OTHER",
+    "FORBID HAND_MAINTAINED_DUPLICATE_SET",
+):
+    assert fragment in derive
+assert mapping["C-SOURCE-001"]["enforcement"] == "manual"
+
 allocation = rule_body("C-CONCURRENCY-002")
 for fragment in (
     'MANAGED_ALLOCATOR "project/new-ticket.sh"',

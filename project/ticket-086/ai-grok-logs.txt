@@ -1,0 +1,9 @@
+2026-08-15 command: python3 scripts/audit_diagnostics.py --root .
+exit: 0
+output: diagnostic-catalog: 65 codes, 0 findings
+2026-08-15 command: python3 scripts/audit_rule_enforcement.py --root . --require-complete
+exit: 0
+output: rule-enforcement: 178 rules (policy-dsl parser), 58 codes, 0 unmapped, 0 codes unclaimed
+2026-08-15 command: bash tests/rule-enforcement.test.sh; bash tests/governance-validator.test.sh
+exit: 0
+output: rule enforcement traceability PASS; governance validator PASS

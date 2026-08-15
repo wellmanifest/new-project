@@ -34,6 +34,10 @@ for instructions in (agents, agent_template):
     assert 'events/' in instructions
     assert 'error/' in instructions
 assert 'RULE P-CORE-025 TYPE REQUIRED' in policy
+assert 'RULE P-CORE-026 TYPE REQUIRED' in policy
+assert 'RULE P-CORE-027 TYPE REQUIRED' in policy
+assert 'INFER_REPOSITORY_HEALTH_FROM_PULL_REQUEST_CHECKS_ALONE' in policy
+assert 'DERIVE_ONE_SET_FROM_THE_OTHER' in policy
 assert 'operations/index.json' in policy
 assert 'open pull requests = 0' in enforcement
 assert 'remote branches = [default branch]' in enforcement

@@ -3,7 +3,7 @@
 - **ID**: ticket-086
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-15
 
 ## Cel i Zakres
@@ -21,13 +21,13 @@ założyciel zabronił otwierania nowych PR), merge ticketu 077 ani zmiany
 semantyki istniejących kodów `GOV-INTENT-*`.
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [ ] AC-01: `error/GOV-INTENT.md` ma wymagane sekcje runbooka, a katalog
+- [x] AC-01: `error/GOV-INTENT.md` ma wymagane sekcje runbooka, a katalog
       diagnostyczny wskazuje go dla `GOV-INTENT-001`–`003`.
-- [ ] AC-02: `POLICY.md` i `CONTRIBUTING.md` zawierają regułę post-merge
+- [x] AC-02: `POLICY.md` i `CONTRIBUTING.md` zawierają regułę post-merge
       inspekcji `main` oraz zakaz wnioskowania zdrowia z samego zielonego PR.
-- [ ] AC-03: `POLICY.md` i `CONTRIBUTING.md` zawierają regułę wyprowadzania
+- [x] AC-03: `POLICY.md` i `CONTRIBUTING.md` zawierają regułę wyprowadzania
       spójnych zbiorów z jednego źródła zamiast ręcznej duplikacji.
-- [ ] AC-04: `audit_diagnostics` pozostaje kompletny (0 findings), mapowanie
+- [x] AC-04: `audit_diagnostics` pozostaje kompletny (0 findings), mapowanie
       rule-enforcement jest kompletne, a hub gate w trybie zakresowym przechodzi.
 
 ## Ryzyka i Uwagi

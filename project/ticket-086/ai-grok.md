@@ -37,6 +37,11 @@ request, and the founder forbade opening one. Ticket-077 stays `BLOCKED`.
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the founder's request to continue, close 085 paperwork, and land the
   runbook plus the two rules without opening a PR.
+- Added `error/GOV-INTENT.md` and pointed `GOV-INTENT-001`–`003` at it.
+- Added `P-CORE-026` / `C-PUBLISH-010` and `P-CORE-027` / `C-SOURCE-001` with
+  complete manual rule-enforcement mapping and digest-derived `dsl-manifest.json`.
+- Passed `audit_diagnostics` (65 codes, 0 findings), rule-enforcement,
+  governance-validator and the source-hub scope gate.
 
 ## Blockers
 

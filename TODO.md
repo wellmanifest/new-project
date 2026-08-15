@@ -11,7 +11,7 @@
 
 - [ ] [`ticket-086`](project/ticket-086/README.md) — dodać runbook GOV-INTENT
   oraz reguły: inspekcja `main` po merge (nie zielony PR) i wyprowadzanie
-  spójnych zbiorów z jednego źródła. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  spójnych zbiorów z jednego źródła. Stan: `IN_PROGRESS / VALIDATION`; klasyfikacja:
   `FEATURE / P1 / requested`; workstream: `governance`; zależy od
   `ticket-085`.
 

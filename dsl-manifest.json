@@ -11,7 +11,12 @@
     {
       "kind": "repository",
       "id": "github:wellmanifest/new-project",
-      "responsibilities": ["semantics", "validation", "compatibility", "security"]
+      "responsibilities": [
+        "semantics",
+        "validation",
+        "compatibility",
+        "security"
+      ]
     }
   ],
   "source": {
@@ -20,7 +25,9 @@
     "declaredVersion": "13",
     "canonical": "markdown-embedded",
     "mediaType": "text/markdown",
-    "selectors": ["fenced-code:dsl"]
+    "selectors": [
+      "fenced-code:dsl"
+    ]
   },
   "ownedPaths": [
     "CONTRIBUTING.md",
@@ -32,7 +39,7 @@
     {
       "path": "CONTRIBUTING.md",
       "role": "normative-source",
-      "digest": "sha256:cf01589e58c99baddfe43c8013b4a8a013991c55583d5a334cf82103da695715"
+      "digest": "sha256:b07fcc54c8883e739e64ddbaa150c0a9c008542c52fdd24ccf821f2460b7eb27"
     },
     {
       "path": "docs/POLICY_DSL.md",
@@ -42,7 +49,7 @@
     {
       "path": "tests/rule-enforcement.test.sh",
       "role": "parser-contract",
-      "digest": "sha256:d3c212b84b38ecdf17ff3a028daf4973bd1cdf542bf880c922b39960412d697d"
+      "digest": "sha256:7be783f0d0cdf437d8239629416c300f378a835d121b4867c63e1c4ef0caf876"
     }
   ],
   "namespaces": [
@@ -84,9 +91,15 @@
   },
   "findingPolicy": {
     "schema": "wellmanifest.dsl/findings/v1",
-    "requiredProducers": ["wellmanifest.new-project.governance-check"],
-    "securityProducers": ["wellmanifest.new-project.governance-check"],
-    "blockingSeverities": ["critical"],
+    "requiredProducers": [
+      "wellmanifest.new-project.governance-check"
+    ],
+    "securityProducers": [
+      "wellmanifest.new-project.governance-check"
+    ],
+    "blockingSeverities": [
+      "critical"
+    ],
     "requireEvaluable": true,
     "blockUnresolvedSecurity": true
   },
@@ -98,7 +111,10 @@
     "runtimeIsolation": false
   },
   "conformance": {
-    "levels": ["manifest", "contract"],
+    "levels": [
+      "manifest",
+      "contract"
+    ],
     "commands": [
       "bash tests/rule-enforcement.test.sh",
       "python3 scripts/audit_rule_enforcement.py --root . --require-complete"
