@@ -59,6 +59,23 @@ Before any multi-step implementation, an agent must:
    either a `User` login is in protected `trusted-reviewers` or a `Bot` login
    is in the separate protected `trusted-validator-apps` input. Never trust an
    arbitrary Bot review.
+11a. **INVOKE VALIDATOR-AGENT — do not ask the human.** When publication needs
+   trusted merge approval (protected default branch, merge blocked on reviews,
+   or the user asks to publish/merge), the coding agent MUST dispatch
+   `subactor/validator-agent` itself:
+
+   ```bash
+   # from a checkout of subactor/validator-agent @ main
+   ./bin/dispatch-direct-pr.sh \
+     --owner <org> --name <repo> --pr <N> --ticket ticket-NNN \
+     --wait-checks --merge --watch
+   ```
+
+   Freeze: re-read `gh pr view <N> --json headRefOid` immediately before
+   dispatch; do not push after freeze until approve or fail. MUST NOT ask the
+   human to “use the validator”, MUST NOT self-approve, and MUST NOT treat
+   chat/Markdown as merge approval. Normative: 
+   `subactor/validator-agent/docs/PUBLICATION_FREEZE.md`.
 12. Require merge approval evidence to bind repository, PR, current HEAD,
    active ticket and actor. The protected resolver creates that evidence
    outside the PR checkout; repository-authored evidence is untrusted.

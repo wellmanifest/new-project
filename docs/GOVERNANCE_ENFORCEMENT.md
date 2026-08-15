@@ -302,11 +302,26 @@ i **nie** jest logiem decyzji.
 
 Integrację wykonuje się w osobnych, zatwierdzonych ticketach obu repozytoriów.
 Nie należy rozszerzać istniejącego trybu repair o ukryte wyjątki. Validator
-powinien otrzymać jawny tryb `validate-pr` z wejściami:
+powinien otrzymać jawny tryb `validate-pr` / `direct-pr` z wejściami:
 
 ```text
 repository, pullRequest, headSha, ticket, correlationId
 ```
+
+### Obowiązek agenta codingowego (hub AGENTS)
+
+Gdy publikacja wymaga trusted approval, agent **MUST** sam wywołać Validator —
+z checkoutu `subactor/validator-agent`:
+
+```bash
+./bin/dispatch-direct-pr.sh \
+  --owner <org> --name <repo> --pr <N> --ticket ticket-NNN \
+  --wait-checks --merge --watch
+```
+
+**MUST NOT** prosić człowieka o „użycie validatora”, self-approve ani traktować
+czatu jako merge approval. Protokół freeze:
+[`PUBLICATION_FREEZE.md`](https://github.com/subactor/validator-agent/blob/main/docs/PUBLICATION_FREEZE.md).
 
 Tryb ten:
 
