@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-086`](project/ticket-086/README.md) — dodać runbook GOV-INTENT
+  oraz reguły: inspekcja `main` po merge (nie zielony PR) i wyprowadzanie
+  spójnych zbiorów z jednego źródła. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  `FEATURE / P1 / requested`; workstream: `governance`; zależy od
+  `ticket-085`.
+
 - [x] [`ticket-085`](project/ticket-085/README.md) — ustanowić opcjonalny,
   deterministyczny kontrakt domenowy, w którym `operations/index.json` jest
   jedynym źródłem prawdy C/Q, a standardy CQRS obowiązkowo publikują katalogi

@@ -1,0 +1,129 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-086",
+  "summary": "GOV-INTENT runbook and post-merge derive rules",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "POLICY.md",
+    "dsl-manifest.json",
+    "error/GOV-INTENT.md",
+    "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
+    "tests/governance-validator.test.sh",
+    "tests/rule-enforcement.test.sh",
+    "project/ticket-086/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python",
+    "bash"
+  ],
+  "dependsOn": [
+    "ticket-085"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ac8730a141ae15c7b087139565559c66906f8b74",
+    "targetBranch": "main",
+    "outcome": "GOV-INTENT family has a structured runbook, and the hub forbids inferring health from a green PR or duplicating sets that must stay consistent",
+    "nonGoals": [
+      "No new pull request and no direct push to protected main",
+      "No merge or publication of ticket-077",
+      "No new GOV-* diagnostic codes or validator behavior change",
+      "No CONTRIBUTING document major/language change",
+      "No immutable standard release"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Publish the already-verified GOV-INTENT runbook as the catalog documentation pointer and add two manual Policy DSL rules whose tests lock the prose; keep enforcement manual until a later ticket adds GOV-* codes",
+      "components": [
+        {
+          "name": "intent-runbook",
+          "paths": [
+            "error/GOV-INTENT.md",
+            "governance/diagnostics.json"
+          ]
+        },
+        {
+          "name": "post-merge-and-derive-rules",
+          "paths": [
+            "POLICY.md",
+            "CONTRIBUTING.md",
+            "AGENTS.md",
+            "governance/rule-enforcement.json"
+          ]
+        },
+        {
+          "name": "conformance",
+          "paths": [
+            "tests/rule-enforcement.test.sh",
+            "tests/governance-validator.test.sh",
+            "dsl-manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        "GOV-INTENT-001 through GOV-INTENT-003 gain documentation pointers to error/GOV-INTENT.md"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the nine implementation paths; ticket-085 closure commits remain independently valid"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 scripts/audit_diagnostics.py --root ."
+        ],
+        "evidence": "Catalog lists 65 codes with 0 findings and a valid GOV-INTENT runbook"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/rule-enforcement.test.sh"
+        ],
+        "evidence": "C-PUBLISH-010 forbids inferring health from pull-request checks alone"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "POLICY declares P-CORE-026 and P-CORE-027"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base ac8730a141ae15c7b087139565559c66906f8b74 --head HEAD --actor agent --format text"
+        ],
+        "evidence": "Source-hub gate reports GOV-PASS for the bounded implementation diff"
+      }
+    ]
+  }
+}
