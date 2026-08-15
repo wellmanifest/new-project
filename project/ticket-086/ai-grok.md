@@ -39,7 +39,8 @@ request, and the founder forbade opening one. Ticket-077 stays `BLOCKED`.
   runbook plus the two rules without opening a PR.
 - Added `error/GOV-INTENT.md` and pointed `GOV-INTENT-001`–`003` at it.
 - Added `P-CORE-026` / `C-PUBLISH-010` and `P-CORE-027` / `C-SOURCE-001` with
-  complete manual rule-enforcement mapping and digest-derived `dsl-manifest.json`.
+  complete manual rule-enforcement mapping, packaged runbook adoption, and
+  digest-derived `dsl-manifest.json`.
 - Passed `audit_diagnostics` (65 codes, 0 findings), rule-enforcement,
   governance-validator and the source-hub scope gate.
 

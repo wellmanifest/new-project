@@ -9,12 +9,12 @@
     "origin": "requested"
   },
   "allowedPaths": [
-    "AGENTS.md",
     "CONTRIBUTING.md",
     "POLICY.md",
     "dsl-manifest.json",
     "error/GOV-INTENT.md",
     "governance/diagnostics.json",
+    "governance/package-manifest.json",
     "governance/rule-enforcement.json",
     "tests/governance-validator.test.sh",
     "tests/rule-enforcement.test.sh",
@@ -69,7 +69,7 @@
           "paths": [
             "POLICY.md",
             "CONTRIBUTING.md",
-            "AGENTS.md",
+            "governance/package-manifest.json",
             "governance/rule-enforcement.json"
           ]
         },
