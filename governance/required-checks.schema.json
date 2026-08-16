@@ -43,12 +43,14 @@
       "items": { "type": "object" }
     }
   },
-  "allOf": [
+  "oneOf": [
     {
-      "anyOf": [
-        { "required": ["workflowFile", "requiredCheckNames"] },
-        { "required": ["requiredChecks"] }
-      ]
+      "required": ["workflowFile", "requiredCheckNames"],
+      "not": { "required": ["requiredChecks"] }
+    },
+    {
+      "required": ["requiredChecks"],
+      "not": { "required": ["workflowFile"] }
     }
   ]
 }
