@@ -92,6 +92,44 @@ na `requiredChecks: [{name, workflowFile}]`.
 Ta zmiana musi wejść razem ze zmianą strategii — inaczej instancje trzeba by
 migrować dwa razy.
 
+### 6. Ograniczenie kolejności — dwa błędy się dziś znoszą
+
+Walidator **preferuje plik repozytorium nad rejestrem**, ale sięga po niego
+ścieżką hubu:
+
+    subactor/validator-agent
+      src/validator_agent/direct_validation.py:20
+        REQUIRED_CHECKS_PATH = "governance/required-checks.json"   <- bez kropki
+
+        raw = github.file_at_ref(repository, REQUIRED_CHECKS_PATH, head_sha)
+        if not raw:
+            return fallback, "env/request"                          <- rejestr
+
+    new-project   governance/: TAK   .governance/: nie
+    autonomy      governance/: nie   .governance/: TAK
+    modularity    governance/: nie   .governance/: TAK
+
+W hubie plik jest znajdowany i jest prawdziwy. W 22 adoptujących ścieżka nie
+istnieje, więc walidator cicho spada na rejestr `direct-pr-registry.json`, który
+jest poprawny. To ten sam błąd ścieżki co defekt opisany wyżej, tylko po stronie
+czytelnika — i to on unieszkodliwia fałszywą deklarację.
+
+**Konsekwencja dla kolejności prac.** Przestawienie samej ścieżki w walidatorze
+na `.governance/` — pozornie oczywista jednolinijkowa poprawka — sprawi, że
+zacznie on czytać fałszywy plik w 21 repozytoriach i egzekwować
+`test | windows-governance`, czyli konteksty, które tam nigdy się nie zgłaszają.
+Dziś nieszkodliwa deklaracja stanie się blokadą publikacji w całej organizacji.
+
+Obowiązuje więc kolejność:
+
+1. Ten ticket: strategia `extendable`, schemat, poprawki bramki.
+2. Uzupełnienie instancji i weryfikacja, że każda jest prawdziwa.
+3. Dopiero wtedy `REQUIRED_CHECKS_PATH` w `subactor/validator-agent`.
+
+Nigdy odwrotnie i nigdy krok 3 osobno. Gdy walidator zacznie czytać plik
+repozytorium, powinien dodatkowo odrzucać deklarację, której kontekstów nie
+publikuje żaden workflow, zamiast czekać na check, który się nie zgłosi.
+
 ## Kryteria Odbioru
 
 - **AC-01** `strategy` dla `.governance/required-checks.json` to `extendable`.

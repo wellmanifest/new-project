@@ -18,3 +18,13 @@
   wyświetlanej jest odrzucany; instancja z odziedziczonymi wartościami hubu
   jest odrzucana.
 - Regresja hubu: brak. Istniejące przypadki testowe przechodzą bez zmian.
+
+## [0.3.0] - 2026-08-16
+
+- Zapisano ograniczenie kolejności: `subactor/validator-agent` czyta
+  `governance/required-checks.json` ścieżką hubu, więc u 22 adoptujących plik
+  nie jest znajdowany i walidator spada na rejestr. Fałszywa deklaracja jest
+  dziś nieszkodliwa wyłącznie dzięki temu drugiemu błędowi ścieżki.
+- Wynika z tego, że `REQUIRED_CHECKS_PATH` wolno przestawić dopiero po
+  uzupełnieniu i zweryfikowaniu instancji. Zmiana samej ścieżki zamieniłaby
+  nieszkodliwą deklarację w blokadę publikacji w 21 repozytoriach.
