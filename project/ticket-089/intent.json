@@ -39,7 +39,7 @@
       "No change to validator-agent dispatch mechanics",
       "No edit to the hub's own governance/required-checks.json"
     ],
-    "complexity": "L",
+    "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
       "maxImplementationFiles": 8,

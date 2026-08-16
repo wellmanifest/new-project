@@ -219,15 +219,16 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - {err}", file=sys.stderr)
         return 1
     required_names = [name for name, _workflow in pairs]
-    try:
-        source_label = source_path.relative_to(root)
-    except ValueError:
-        source_label = source_path
-    print(
-        "required-checks gate OK: "
-        f"source={source_label} "
-        f"required={required_names} published={published_names}"
-    )
+    if __name__ == "__main__":
+        try:
+            source_label = source_path.relative_to(root)
+        except ValueError:
+            source_label = source_path
+        print(
+            "required-checks gate OK: "
+            f"source={source_label} "
+            f"required={required_names} published={published_names}"
+        )
     return 0
 
 
