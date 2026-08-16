@@ -28,3 +28,12 @@
 - Wynika z tego, że `REQUIRED_CHECKS_PATH` wolno przestawić dopiero po
   uzupełnieniu i zweryfikowaniu instancji. Zmiana samej ścieżki zamieniłaby
   nieszkodliwą deklarację w blokadę publikacji w 21 repozytoriach.
+
+## [0.4.0] - 2026-08-16
+
+- Zapisano implementację: `required-checks.json` jest `extendable`, schemat
+  instancji jest `managed`, bramka szuka pliku obok skryptu i czyta `name:`
+  joba, `governance_check.py` wywołuje bramkę, a lock adoptujący nie traktuje
+  drugiej pary extendable jak manifestu z bazą zarządzaną.
+- AC-01–AC-06 zweryfikowane; `tests/required-checks.test.sh`,
+  `tests/adoption-lock.test.sh` i `tests/governance-validator.test.sh` zielone.

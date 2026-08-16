@@ -3,7 +3,7 @@
 - **ID**: ticket-089
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-16
 
 > **Odblokowane**: ticket-088 jest `DONE`/`DONE` na tym branchu (PR #137 już na
@@ -22,12 +22,12 @@ rozwiązywanie ścieżki i parsowanie nazwy checka w bramce oraz jej wpięcie do
 `governance_check.py`. Pełna analiza w `ai-claude.md`.
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [ ] AC-01: `strategy` dla `.governance/required-checks.json` to `extendable`.
-- [ ] AC-02: `python3 scripts/check_required_checks.py` nadal przechodzi w hubie.
-- [ ] AC-03: test pokrywa układ `.governance/` adoptującego.
-- [ ] AC-04: `governance_check.py` wywołuje bramkę.
-- [ ] AC-05: job z nadpisanym `name:` jest publikowany pod nazwą wyświetlaną.
-- [ ] AC-06: bramka hubu przypisuje diff do ticket-089.
+- [x] AC-01: `strategy` dla `.governance/required-checks.json` to `extendable`.
+- [x] AC-02: `python3 scripts/check_required_checks.py` nadal przechodzi w hubie.
+- [x] AC-03: test pokrywa układ `.governance/` adoptującego.
+- [x] AC-04: `governance_check.py` wywołuje bramkę.
+- [x] AC-05: job z nadpisanym `name:` jest publikowany pod nazwą wyświetlaną.
+- [x] AC-06: bramka hubu przypisuje diff do ticket-089.
 
 ## Ryzyka i Uwagi
 - Risk 1: {Opis ryzyka i mitygacja}

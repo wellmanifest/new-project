@@ -15,6 +15,7 @@
     "scripts/create_adoption_lock.py",
     "scripts/governance_check.py",
     "tests/required-checks.test.sh",
+    "tests/governance-validator.test.sh",
     "project/ticket-088/README.md",
     "project/ticket-089/**",
     "TODO.md",
@@ -63,7 +64,8 @@
             "scripts/check_required_checks.py",
             "scripts/create_adoption_lock.py",
             "scripts/governance_check.py",
-            "tests/required-checks.test.sh"
+            "tests/required-checks.test.sh",
+            "tests/governance-validator.test.sh"
           ]
         }
       ],
@@ -122,7 +124,7 @@
       {
         "criterion": "AC-06",
         "commands": [
-          "python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --actor agent --base 2a89c18ee8b953edd500ca390bc6965f34f4c124 --head HEAD"
+          "python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base 2a89c18ee8b953edd500ca390bc6965f34f4c124 --head HEAD --actor agent"
         ],
         "evidence": "Hub gate resolves the diff to ticket-089"
       }

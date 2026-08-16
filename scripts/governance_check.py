@@ -319,6 +319,46 @@ def load_policy_dsl_module(root: Path) -> Any:
     return module
 
 
+def check_required_checks_declaration(root: Path, report: Report) -> None:
+    script = next(
+        (
+            candidate
+            for candidate in (
+                root / "scripts" / "check_required_checks.py",
+                root / ".governance" / "check_required_checks.py",
+            )
+            if candidate.is_file()
+        ),
+        None,
+    )
+    if script is None:
+        return
+    try:
+        spec = importlib.util.spec_from_file_location("_new_project_required_checks", script)
+        if spec is None or spec.loader is None:
+            raise ValueError("required-checks gate cannot be imported")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        code = module.main(["--root", str(root)])
+    except SystemExit as error:
+        code = error.code if isinstance(error.code, int) else 1
+    except Exception as error:
+        report.add(
+            "GOV-SYNC-001",
+            f"Required-checks gate could not run: {error}",
+            "Restore scripts/check_required_checks.py or .governance/check_required_checks.py.",
+            [rel(root, script)],
+        )
+        return
+    if code:
+        report.add(
+            "GOV-SYNC-001",
+            "Required-checks declaration does not match published workflow job names.",
+            "Write the repository instance with the check names the ruleset enforces, using each job's name: field.",
+            ["governance/required-checks.json", ".governance/required-checks.json"],
+        )
+
+
 def check_policy_dsl(root: Path, report: Report) -> None:
     contributing = root / "CONTRIBUTING.md"
     if not contributing.is_file():
@@ -2850,10 +2890,12 @@ def package_entry(item: Any) -> tuple[str, str, str]:
         raise ValueError("package manifest entry is invalid")
     if not isinstance(item.get("executable"), bool):
         raise TypeError("package manifest entry is invalid")
+    allowed_extendable = {
+        ("governance/manifest.default.json", ".governance/manifest.json"),
+        ("governance/required-checks.json", ".governance/required-checks.json"),
+    }
     if item.get("strategy") == "extendable" and (
-        source != "governance/manifest.default.json"
-        or target != ".governance/manifest.json"
-        or item.get("executable")
+        (source, target) not in allowed_extendable or item.get("executable")
     ):
         raise ValueError("package manifest extendable target is invalid")
     return source, target, item["strategy"]
@@ -3246,6 +3288,7 @@ def run_governance_checks(
     load_work_classification(root, report, args.work_classification)
     check_lock(root, lock_path, manifest, report)
     check_policy_dsl(root, report)
+    check_required_checks_declaration(root, report)
     check_required_files(root, manifest, report)
     check_domain_contracts(root, manifest, report)
     check_docker_image_references(root, manifest, report)
