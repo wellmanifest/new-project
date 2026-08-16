@@ -133,6 +133,32 @@ mogą niezależnie przydzielić tego samego `ticket-{NNN}`.
 Ostateczne porządkowanie równoległych PR-ów realizuje chroniony merge queue,
 który ponownie uruchamia governance i testy na aktualnej bazie.
 
+
+## Commercial and product SSOT paths
+
+Repositories that publish prices, entitlements, brand copy or checkout-facing
+legal copy MUST treat those files as integration contracts:
+
+1. Put the facade paths in `coordination.integration.requiredForPaths`
+   (example: `src/**/plans.json`, brand token/CSS maps, marketing copy).
+2. Bump the product HOME first: commercial catalogs and site bindings in
+   `subactor/offer` (or another product-owned offer pack); brand tokens and
+   closed vocabulary in `subactor/brand`. Portal/runtime files are facades.
+   `wellmanifest/policy-dsl` sales profiles ADOPT plan ids for promo decisions
+   only — they are not a second price or brand SSOT. Normative pointers:
+   `wellmanifest/offer`, `wellmanifest/brand`.
+3. Keep a machine gate that fails on drift before merge (example Subactor:
+   `node scripts/check-commercial-ssot.mjs`,
+   `python3 …/subactor/offer/scripts/pin-check.py`, and brand/vocabulary checks).
+4. Parallel worktrees without a ticket that claims those paths are experiments,
+   not an alternate production truth — resolve with `wellmanifest/merge`
+   dispositions (`superseded`, `regressive`, `rebuild`), not silent overwrite.
+5. Ticket AC/tests that pin commercial numbers or brand terms MUST move with a
+   catalog/profile version, never alone with an unrelated FEATURE ticket.
+6. Do not invent a second price or brand SSOT inside portal tickets, local
+   packages, or policy packs.
+
+
 Lokalna kontrola:
 
 ```bash
@@ -302,11 +328,26 @@ i **nie** jest logiem decyzji.
 
 Integrację wykonuje się w osobnych, zatwierdzonych ticketach obu repozytoriów.
 Nie należy rozszerzać istniejącego trybu repair o ukryte wyjątki. Validator
-powinien otrzymać jawny tryb `validate-pr` z wejściami:
+powinien otrzymać jawny tryb `validate-pr` / `direct-pr` z wejściami:
 
 ```text
 repository, pullRequest, headSha, ticket, correlationId
 ```
+
+### Obowiązek agenta codingowego (hub AGENTS)
+
+Gdy publikacja wymaga trusted approval, agent **MUST** sam wywołać Validator —
+z checkoutu `subactor/validator-agent`:
+
+```bash
+./bin/dispatch-direct-pr.sh \
+  --owner <org> --name <repo> --pr <N> --ticket ticket-NNN \
+  --wait-checks --merge --watch
+```
+
+**MUST NOT** prosić człowieka o „użycie validatora”, self-approve ani traktować
+czatu jako merge approval. Protokół freeze:
+[`PUBLICATION_FREEZE.md`](https://github.com/subactor/validator-agent/blob/main/docs/PUBLICATION_FREEZE.md).
 
 Tryb ten:
 
