@@ -12,8 +12,10 @@
     "governance/package-manifest.json",
     "governance/required-checks.schema.json",
     "scripts/check_required_checks.py",
+    "scripts/create_adoption_lock.py",
     "scripts/governance_check.py",
     "tests/required-checks.test.sh",
+    "project/ticket-088/README.md",
     "project/ticket-089/**",
     "TODO.md",
     "project/TICKETS.md"
@@ -27,7 +29,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "31b35212f619126afb0fd72bc08c5e6f5f91cc26",
+    "acceptedBaseSha": "2a89c18ee8b953edd500ca390bc6965f34f4c124",
     "targetBranch": "main",
     "outcome": "Each adopting repository owns a truthful .governance/required-checks.json validated against a pinned schema, and the gate that verifies it runs in the adopter under the same check names the ruleset enforces, instead of raising FileNotFoundError",
     "nonGoals": [
@@ -36,10 +38,10 @@
       "No change to validator-agent dispatch mechanics",
       "No edit to the hub's own governance/required-checks.json"
     ],
-    "complexity": "S",
+    "complexity": "L",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 4,
+      "maxImplementationFiles": 8,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
@@ -59,6 +61,7 @@
           "name": "required-checks-gate",
           "paths": [
             "scripts/check_required_checks.py",
+            "scripts/create_adoption_lock.py",
             "scripts/governance_check.py",
             "tests/required-checks.test.sh"
           ]
@@ -119,7 +122,7 @@
       {
         "criterion": "AC-06",
         "commands": [
-          "./project/governance-check.sh --actor agent --base 31b35212f619126afb0fd72bc08c5e6f5f91cc26 --head HEAD"
+          "python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --actor agent --base 2a89c18ee8b953edd500ca390bc6965f34f4c124 --head HEAD"
         ],
         "evidence": "Hub gate resolves the diff to ticket-089"
       }

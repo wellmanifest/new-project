@@ -2,17 +2,12 @@
 
 - **ID**: ticket-089
 - **Owner**: unresolved:human
-- **Status**: BLOCKED
+- **Status**: IN_PROGRESS
 - **Workflow state**: EDIT
 - **Utworzono**: 2026-08-16
 
-> **Blokada**: workstream `governance` dopuszcza jeden aktywny ticket
-> (`maxActiveTicketsPerWorkstream: 1`), a `ticket-088` ma status `IN_PROGRESS`.
-> Jego praca jest już scalona do `main` (PR #137, `31b3521`), brakuje wyłącznie
-> ustawienia `DONE`. Ten ticket jest block-routowany zgodnie z remediacją
-> `GOV-WORKSTREAM-002`; przechodzi do `IN_PROGRESS` po domknięciu 088. Zakresy
-> nie kolidują: 088 dotyka `AGENTS.md`, `docs/`, `template/`, a 089
-> `governance/`, `scripts/`, `tests/`.
+> **Odblokowane**: ticket-088 jest `DONE`/`DONE` na tym branchu (PR #137 już na
+> `main`). Workstream `governance` ma jeden aktywny ticket.
 
 ## Cel i Zakres
 
