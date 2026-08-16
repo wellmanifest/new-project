@@ -37,3 +37,11 @@
   drugiej pary extendable jak manifestu z bazą zarządzaną.
 - AC-01–AC-06 zweryfikowane; `tests/required-checks.test.sh`,
   `tests/adoption-lock.test.sh` i `tests/governance-validator.test.sh` zielone.
+
+## [0.5.0] - 2026-08-16
+
+- Schemat `oneOf` odrzuca dokument, który deklaruje jednocześnie
+  `workflowFile`+`requiredCheckNames` i `requiredChecks`. Druga gałąź
+  zabrania też samego `requiredCheckNames` obok `requiredChecks`.
+- Bramka nie wybiera już po cichu jednego kształtu: obecność obu kluczy
+  kończy się komunikatem `exactly one shape`.

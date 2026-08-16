@@ -50,7 +50,12 @@
     },
     {
       "required": ["requiredChecks"],
-      "not": { "required": ["workflowFile"] }
+      "not": {
+        "anyOf": [
+          { "required": ["workflowFile"] },
+          { "required": ["requiredCheckNames"] }
+        ]
+      }
     }
   ]
 }

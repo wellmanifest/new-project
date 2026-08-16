@@ -149,4 +149,47 @@ grep -q 'source file not found' "$TMP/missing.err"
 grep -q 'required-checks.json' "$TMP/missing.err"
 echo "missing source correctly reported looked-in paths"
 
+echo "== both shapes at once are rejected =="
+python3 - "$TMP/both-shapes.json" <<'PY'
+import json
+from pathlib import Path
+import sys
+Path(sys.argv[1]).write_text(json.dumps({
+    "schema": "new-project.required-checks/v1",
+    "version": 1,
+    "repository": "wellmanifest/autonomy",
+    "workflowFile": ".github/workflows/ci.yml",
+    "requiredCheckNames": ["test", "windows-governance"],
+    "requiredChecks": [
+        {
+            "name": "governance / remote lifecycle",
+            "workflowFile": ".github/workflows/new-project-governance.yml",
+        }
+    ],
+}, indent=2) + "\n", encoding="utf-8")
+PY
+if python3 scripts/check_required_checks.py --source "$TMP/both-shapes.json" \
+  > "$TMP/both.out" 2> "$TMP/both.err"; then
+  echo "expected both-shapes declaration to fail the gate" >&2
+  exit 1
+fi
+grep -q 'exactly one shape' "$TMP/both.err"
+python3 - "$TMP/both-shapes.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+try:
+    import jsonschema
+except ImportError:
+    raise SystemExit(0)
+schema = json.loads(Path("governance/required-checks.schema.json").read_text(encoding="utf-8"))
+instance = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+if jsonschema.Draft202012Validator(schema).is_valid(instance):
+    raise SystemExit("schema must reject a document that declares both shapes")
+hub = json.loads(Path("governance/required-checks.json").read_text(encoding="utf-8"))
+jsonschema.Draft202012Validator(schema).validate(hub)
+PY
+echo "both-shapes declaration correctly failed"
+
 echo "required-checks tests: PASS"

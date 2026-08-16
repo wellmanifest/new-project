@@ -54,6 +54,13 @@ def resolve_source(root: Path, script_path: Path) -> tuple[Path | None, list[Pat
 
 
 def declared_checks(data: dict) -> list[tuple[str, str]]:
+    has_legacy = "workflowFile" in data or "requiredCheckNames" in data
+    has_bound = "requiredChecks" in data
+    if has_legacy and has_bound:
+        raise SystemExit(
+            "required-checks must declare exactly one shape: "
+            "workflowFile+requiredCheckNames or requiredChecks"
+        )
     required_checks = data.get("requiredChecks")
     if isinstance(required_checks, list) and required_checks:
         pairs: list[tuple[str, str]] = []
