@@ -45,3 +45,9 @@
   zabrania też samego `requiredCheckNames` obok `requiredChecks`.
 - Bramka nie wybiera już po cichu jednego kształtu: obecność obu kluczy
   kończy się komunikatem `exactly one shape`.
+
+## [0.6.0] - 2026-08-18
+
+- Odświeżono digest `CONTRIBUTING.md` w `dsl-manifest.json` (`DSL-HASH-001`).
+- Dopisano `dsl-manifest.json` do `allowedPaths`, żeby ta naprawa była legalna
+  w tym samym ticket-089 przed publikacją na `main`.

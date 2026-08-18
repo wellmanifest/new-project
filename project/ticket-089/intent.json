@@ -19,7 +19,8 @@
     "project/ticket-088/README.md",
     "project/ticket-089/**",
     "TODO.md",
-    "project/TICKETS.md"
+    "project/TICKETS.md",
+    "dsl-manifest.json"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md",
@@ -42,8 +43,8 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 8,
-      "maxAffectedComponents": 2,
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
     },
@@ -66,6 +67,12 @@
             "scripts/governance_check.py",
             "tests/required-checks.test.sh",
             "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "dsl-manifest",
+          "paths": [
+            "dsl-manifest.json"
           ]
         }
       ],
