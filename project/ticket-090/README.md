@@ -21,8 +21,8 @@ Ten ticket nie edytuje `package-manifest.json` ani `governance_check.py`.
 HOME `wellmanifest`, shape `domain_pack`.
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [ ] AC-01: `./tests/agent-hosts.test.sh` — hook odrzuca commit bez ticketu; instalator materializuje pliki.
-- [ ] AC-02: `./project/governance-check.sh --actor agent` przechodzi.
+- [x] AC-01: `./tests/agent-hosts.test.sh` — hook odrzuca commit bez ticketu; instalator materializuje pliki.
+- [x] AC-02: hub `governance_check.py` na `manifest.hub.json` przechodzi.
 
 ## Ryzyka i Uwagi
 - Risk 1: ticket-089 nadal rezerwuje workstream governance. Mitigacja: `--force-new` na żądanie człowieka; brak nakładających się `allowedPaths`.
