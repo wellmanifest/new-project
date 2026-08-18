@@ -1,0 +1,12 @@
+2026-08-18T15:10:00+02:00 GATE ./project/governance-check.sh --actor agent
+GOV-PASS: passed (0 errors, 0 warnings)
+2026-08-18T15:10:13+02:00 TEST all tests in tests/*.test.sh
+adoption-lock.test.sh: PASS
+branch-lifecycle.test.sh: PASS
+decision-record.test.sh: PASS
+governance-env.test.sh: PASS
+governance-scripts.test.sh: PASS
+governance-validator.test.sh: PASS
+required-checks.test.sh: PASS
+rule-enforcement.test.sh: PASS
+workspace-lifecycle.test.sh: PASS

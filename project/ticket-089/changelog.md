@@ -51,3 +51,10 @@
 - Odświeżono digest `CONTRIBUTING.md` w `dsl-manifest.json` (`DSL-HASH-001`).
 - Dopisano `dsl-manifest.json` do `allowedPaths`, żeby ta naprawa była legalna
   w tym samym ticket-089 przed publikacją na `main`.
+
+## [0.7.0] - 2026-08-18
+
+- Naprawiono wrapper `project/governance-check.sh` i `project/governance-check.bat`, dodając dynamiczną detekcję środowiska (katalog `.governance/` adoptującego vs `scripts/` i `governance/manifest.hub.json` hubu).
+- W `scripts/governance_check.py` dodano automatyczny fallback w `load_work_classification` na `governance/work-classification.dsl.json` przy uruchamianiu w hubie.
+- Rozszerzono `allowedPaths` oraz komponent `required-checks-gate` w `intent.json` o zarządzane wrappery bramki.
+
