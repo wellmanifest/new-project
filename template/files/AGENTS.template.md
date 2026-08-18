@@ -122,6 +122,12 @@ Before any multi-step implementation, an agent must:
    `events/{event-id}.md` and `error/{code}.md` documents. Protobuf and JSON
    Schema models describe transport shape only; they never grant authority or
    redefine C/Q semantics. Run the managed gate after every graph change.
+22. Host-agnostic standard: follow `GEMINI.md`, `CLAUDE.md`, and
+   `.cursor/rules/new-project-standard.mdc` in addition to this file. Run
+   `./scripts/install-agent-hosts.sh` once per clone so `.githooks/pre-commit`
+   rejects commits that are not bound to an `IN_PROGRESS` `ticket-NNN`. Do
+   not write on `main` or a dirty primary checkout. Markdown is not a
+   substitute for the hook.
 
 Markdown approval is an audit note, not trusted merge approval. Required
 merge approval comes from the repository's protected review, attestation and
