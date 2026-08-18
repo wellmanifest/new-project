@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Invoke validator-agent (agents MUST)
+
+- Coding agents MUST dispatch `subactor/validator-agent` via
+  `bin/dispatch-direct-pr.sh` when publication needs trusted merge approval.
+- MUST NOT ask humans to substitute for the Validator App; chat is never
+  trusted merge approval. Encoded in `AGENTS.md`, the adoption template,
+  `CONTRIBUTING.md` `C-PUBLISH-003`, and `docs/GOVERNANCE_ENFORCEMENT.md`.
+
 ## [0.18.1] - 2026-08-14
 
 ### Generated bootstrap placeholder secret scan
