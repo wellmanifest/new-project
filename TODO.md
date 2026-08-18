@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-090`](project/ticket-090/README.md) — ten sam kontrakt
+  `new-project` niezależnie od hosta LLM: `GEMINI.md`, `CLAUDE.md`,
+  reguła Cursor, hook git i `scripts/install-agent-hosts.sh`. Stan:
+  `IN_PROGRESS / EDIT`; klasyfikacja: `FEATURE / P1 / requested`;
+  workstream: `governance`. `--force-new` po leftover `ticket-089`.
+
 - [ ] [`ticket-085`](project/ticket-085/README.md) — ustanowić opcjonalny,
   deterministyczny kontrakt domenowy, w którym `operations/index.json` jest
   jedynym źródłem prawdy C/Q, a standardy CQRS obowiązkowo publikują katalogi
