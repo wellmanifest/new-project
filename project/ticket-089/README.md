@@ -2,17 +2,12 @@
 
 - **ID**: ticket-089
 - **Owner**: unresolved:human
-- **Status**: BLOCKED
-- **Workflow state**: EDIT
+- **Status**: IN_PROGRESS
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-16
 
-> **Blokada**: workstream `governance` dopuszcza jeden aktywny ticket
-> (`maxActiveTicketsPerWorkstream: 1`), a `ticket-088` ma status `IN_PROGRESS`.
-> Jego praca jest już scalona do `main` (PR #137, `31b3521`), brakuje wyłącznie
-> ustawienia `DONE`. Ten ticket jest block-routowany zgodnie z remediacją
-> `GOV-WORKSTREAM-002`; przechodzi do `IN_PROGRESS` po domknięciu 088. Zakresy
-> nie kolidują: 088 dotyka `AGENTS.md`, `docs/`, `template/`, a 089
-> `governance/`, `scripts/`, `tests/`.
+> **Odblokowane**: ticket-088 jest `DONE`/`DONE` na tym branchu (PR #137 już na
+> `main`). Workstream `governance` ma jeden aktywny ticket.
 
 ## Cel i Zakres
 
@@ -27,12 +22,12 @@ rozwiązywanie ścieżki i parsowanie nazwy checka w bramce oraz jej wpięcie do
 `governance_check.py`. Pełna analiza w `ai-claude.md`.
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [ ] AC-01: `strategy` dla `.governance/required-checks.json` to `extendable`.
-- [ ] AC-02: `python3 scripts/check_required_checks.py` nadal przechodzi w hubie.
-- [ ] AC-03: test pokrywa układ `.governance/` adoptującego.
-- [ ] AC-04: `governance_check.py` wywołuje bramkę.
-- [ ] AC-05: job z nadpisanym `name:` jest publikowany pod nazwą wyświetlaną.
-- [ ] AC-06: bramka hubu przypisuje diff do ticket-089.
+- [x] AC-01: `strategy` dla `.governance/required-checks.json` to `extendable`.
+- [x] AC-02: `python3 scripts/check_required_checks.py` nadal przechodzi w hubie.
+- [x] AC-03: test pokrywa układ `.governance/` adoptującego.
+- [x] AC-04: `governance_check.py` wywołuje bramkę.
+- [x] AC-05: job z nadpisanym `name:` jest publikowany pod nazwą wyświetlaną.
+- [x] AC-06: bramka hubu przypisuje diff do ticket-089.
 
 ## Ryzyka i Uwagi
 - Risk 1: {Opis ryzyka i mitygacja}

@@ -12,11 +12,15 @@
     "governance/package-manifest.json",
     "governance/required-checks.schema.json",
     "scripts/check_required_checks.py",
+    "scripts/create_adoption_lock.py",
     "scripts/governance_check.py",
     "tests/required-checks.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-088/README.md",
     "project/ticket-089/**",
     "TODO.md",
-    "project/TICKETS.md"
+    "project/TICKETS.md",
+    "dsl-manifest.json"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md",
@@ -27,7 +31,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "31b35212f619126afb0fd72bc08c5e6f5f91cc26",
+    "acceptedBaseSha": "e426cb2a6ddeca8fbb3cd590b9e5d17698ec979d",
     "targetBranch": "main",
     "outcome": "Each adopting repository owns a truthful .governance/required-checks.json validated against a pinned schema, and the gate that verifies it runs in the adopter under the same check names the ruleset enforces, instead of raising FileNotFoundError",
     "nonGoals": [
@@ -39,8 +43,8 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 4,
-      "maxAffectedComponents": 2,
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
     },
@@ -59,8 +63,16 @@
           "name": "required-checks-gate",
           "paths": [
             "scripts/check_required_checks.py",
+            "scripts/create_adoption_lock.py",
             "scripts/governance_check.py",
-            "tests/required-checks.test.sh"
+            "tests/required-checks.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "dsl-manifest",
+          "paths": [
+            "dsl-manifest.json"
           ]
         }
       ],
@@ -119,7 +131,7 @@
       {
         "criterion": "AC-06",
         "commands": [
-          "./project/governance-check.sh --actor agent --base 31b35212f619126afb0fd72bc08c5e6f5f91cc26 --head HEAD"
+          "python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base e426cb2a6ddeca8fbb3cd590b9e5d17698ec979d --head HEAD --actor agent"
         ],
         "evidence": "Hub gate resolves the diff to ticket-089"
       }

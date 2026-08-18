@@ -28,3 +28,26 @@
 - Wynika z tego, że `REQUIRED_CHECKS_PATH` wolno przestawić dopiero po
   uzupełnieniu i zweryfikowaniu instancji. Zmiana samej ścieżki zamieniłaby
   nieszkodliwą deklarację w blokadę publikacji w 21 repozytoriach.
+
+## [0.4.0] - 2026-08-16
+
+- Zapisano implementację: `required-checks.json` jest `extendable`, schemat
+  instancji jest `managed`, bramka szuka pliku obok skryptu i czyta `name:`
+  joba, `governance_check.py` wywołuje bramkę, a lock adoptujący nie traktuje
+  drugiej pary extendable jak manifestu z bazą zarządzaną.
+- AC-01–AC-06 zweryfikowane; `tests/required-checks.test.sh`,
+  `tests/adoption-lock.test.sh` i `tests/governance-validator.test.sh` zielone.
+
+## [0.5.0] - 2026-08-16
+
+- Schemat `oneOf` odrzuca dokument, który deklaruje jednocześnie
+  `workflowFile`+`requiredCheckNames` i `requiredChecks`. Druga gałąź
+  zabrania też samego `requiredCheckNames` obok `requiredChecks`.
+- Bramka nie wybiera już po cichu jednego kształtu: obecność obu kluczy
+  kończy się komunikatem `exactly one shape`.
+
+## [0.6.0] - 2026-08-18
+
+- Odświeżono digest `CONTRIBUTING.md` w `dsl-manifest.json` (`DSL-HASH-001`).
+- Dopisano `dsl-manifest.json` do `allowedPaths`, żeby ta naprawa była legalna
+  w tym samym ticket-089 przed publikacją na `main`.

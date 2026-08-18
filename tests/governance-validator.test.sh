@@ -258,12 +258,20 @@ assert {
 for item in package['files']:
     assert (root / item['source']).is_file(), item['source']
 extendable = [item for item in package['files'] if item['strategy'] == 'extendable']
-assert extendable == [{
-    'source': 'governance/manifest.default.json',
-    'target': '.governance/manifest.json',
-    'strategy': 'extendable',
-    'executable': False,
-}]
+assert extendable == [
+    {
+        'source': 'governance/required-checks.json',
+        'target': '.governance/required-checks.json',
+        'strategy': 'extendable',
+        'executable': False,
+    },
+    {
+        'source': 'governance/manifest.default.json',
+        'target': '.governance/manifest.json',
+        'strategy': 'extendable',
+        'executable': False,
+    },
+]
 assert any(
     item['target'] == '.governance/manifest.base.json'
     and item['strategy'] == 'managed'

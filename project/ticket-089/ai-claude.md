@@ -153,6 +153,8 @@ pliku.
 
 ## Stan
 
-`BLOCKED`. Cała implementacja jest gotowa i zweryfikowana w
-piaskownicy (hub bez regresji, adoptujący przechodzi, trzy mutacje odrzucane).
-Nie zapisano jej do repozytorium, bo ticket nie jest aktywny.
+`IN_PROGRESS` / `VALIDATION`. Implementacja jest w drzewie roboczym:
+strategia `extendable`, schemat, bramka z układem adoptującego i `name:`,
+wpięcie do `governance_check.py`, lock nie projektuje drugiej pary extendable
+jak manifestu. Kolejność wobec walidatora bez zmian: najpierw ten ticket,
+potem prawdziwe instancje, dopiero wtedy `REQUIRED_CHECKS_PATH`.
