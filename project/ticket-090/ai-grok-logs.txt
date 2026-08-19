@@ -1,0 +1,4 @@
+[2026-08-18T13:40:00Z] [EXEC] [provider:grok] $ ./tests/agent-hosts.test.sh
+agent-hosts.test.sh OK
+[2026-08-18T13:41:00Z] [EXEC] [provider:grok] $ python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base 3f73892fba0589a773cf15c27b649c1742d7d6ae --head HEAD --actor agent
+GOV-PASS: passed (0 errors, 0 warnings)
