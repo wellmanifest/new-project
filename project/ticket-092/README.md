@@ -30,6 +30,12 @@ ticket-089/090/091.
 - [x] AC-05: A repository-level run reports only its own repository identity, so
   an unrelated conflict cannot block a commit.
 
+## Known follow-up
+
+`.github/workflows/ci.yml` still has to run `tests/worktree-overlap.test.sh`.
+That path belongs to ticket-090, so wiring it here breaks the approved budget
+and the workstream scope rule. See [changelog.md](changelog.md).
+
 ## Participants
 
 - Human participant: unresolved; no user-* file was created by this script.

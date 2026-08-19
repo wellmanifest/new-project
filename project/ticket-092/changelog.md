@@ -9,3 +9,13 @@
   and a `--report` file for scans with nowhere to print.
 - Added a safe, idempotent `pyqual.yaml` stage installer that leaves the file
   byte-identical when it cannot verify the edit.
+
+## Required follow-up (not in this ticket's scope)
+
+`.github/workflows/ci.yml` must gain a step running
+`bash tests/worktree-overlap.test.sh`. The workflow asserts that every
+`tests/*.test.sh` is wired into it, so until that step exists this branch
+cannot pass CI. That file is declared by ticket-090's `allowedPaths`;
+adding it here raises `GOV-WORKSTREAM-004` and `GOV-BUDGET-001`
+(`maxImplementationFiles: 8`). It belongs in ticket-090's closure or in an
+explicitly dependent ticket.
