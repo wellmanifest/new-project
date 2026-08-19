@@ -1,5 +1,7 @@
 # ticket-092 changelog
 
+- Closed ticket-092 (`DONE / DONE`) from integrated `main` after `7d673d4`
+  (PR #144). No implementation files in this closure.
 - Added the worktree overlap checker, YAML runner, installer, tests and docs.
 - Split ignored paths from declared-scope comparison and attributed tickets by
   branch, so the rule stops firing on `TODO.md` and on stale ticket copies.
