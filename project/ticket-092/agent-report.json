@@ -1,8 +1,8 @@
 {
   "schema": "wellmanifest.agent/report/v1",
-  "workspaceRoot": "/home/tom/github/wellmanifest/.worktrees/ticket-worktree-overlap-hub",
-  "gitToplevel": "/home/tom/github/wellmanifest/.worktrees/ticket-worktree-overlap-hub",
-  "pwd": "/home/tom/github/wellmanifest/.worktrees/ticket-worktree-overlap-hub",
+  "workspaceRoot": ".",
+  "gitToplevel": ".",
+  "pwd": ".",
   "home": "wellmanifest",
   "shape": "domain_pack",
   "runtimeOwner": "wellmanifest",

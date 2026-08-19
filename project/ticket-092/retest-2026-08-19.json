@@ -2,7 +2,7 @@
   "schema": "wellmanifest.worktree-guard/retest/v1",
   "ticketId": "ticket-092",
   "when": "2026-08-19T14:20:00+02:00",
-  "workspaceRoot": "/home/tom/github/wellmanifest/.worktrees/ticket-worktree-overlap-hub",
+  "workspaceRoot": "~/github/wellmanifest/.worktrees/ticket-worktree-overlap-hub",
   "verdict": "guard_works; live_workspaces_fail_closed_on_real_overlaps",
   "matrix": [
     {
@@ -79,7 +79,7 @@
     {
       "id": "code2llm",
       "result": "PASS",
-      "note": "available=true, binary=/home/tom/.pyenv/versions/3.12.0/bin/code2llm"
+      "note": "available=true, binary=~/.pyenv/versions/3.12.0/bin/code2llm"
     },
     {
       "id": "lifecycle-docs",
