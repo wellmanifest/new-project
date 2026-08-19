@@ -3,4 +3,4 @@
 ## [0.1.0] - 2026-08-19
 
 - Initial governance scaffold created.
-- No human participant identity or content was generated.
+- Apply hub/adopter fallback in governance-check wrappers.

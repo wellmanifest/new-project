@@ -17,9 +17,9 @@ Zakres: trzy pliki wrappera/loadera. Nie otwieramy ticket-089.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Na hubie wrapper wywołuje `scripts/governance_check.py`.
-- [ ] AC-02: Na adopterze wrapper nadal wywołuje `.governance/governance_check.py`.
-- [ ] AC-03: Loader work-classification znajduje `governance/work-classification.dsl.json`, gdy brak pliku w `.governance/`.
+- [x] AC-01: Na hubie wrapper wywołuje `scripts/governance_check.py`.
+- [x] AC-02: Na adopterze wrapper nadal wywołuje `.governance/governance_check.py`.
+- [x] AC-03: Loader work-classification znajduje `governance/work-classification.dsl.json`, gdy brak pliku w `.governance/`.
 
 ## Uczestnicy
 
