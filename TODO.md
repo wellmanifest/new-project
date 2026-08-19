@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-092`](project/ticket-092/README.md) — proaktywny
+  `worktree-guard.yaml` (jak `pyqual.yaml`): fail-closed przy nachodzących
+  zmianach w dwóch worktree tego samego repo. Stan: `IN_PROGRESS / EDIT`;
+  klasyfikacja: `FEATURE / P1 / requested`; workstream: `governance`.
+
 - [x] [`ticket-090`](project/ticket-090/README.md) — ten sam kontrakt
   `new-project` niezależnie od hosta LLM: `GEMINI.md`, `CLAUDE.md`,
   reguła Cursor, hook git i `scripts/install-agent-hosts.sh`. Stan:

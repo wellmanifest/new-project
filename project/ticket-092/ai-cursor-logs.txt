@@ -1,0 +1,1 @@
+2026-08-19T10:58Z allocated ticket-092 and implemented worktree-guard.yaml + overlap checker.
