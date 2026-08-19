@@ -20,6 +20,12 @@ PACKAGE_MANIFEST = "governance/package-manifest.json"
 MANIFEST_SOURCE = "governance/manifest.default.json"
 MANIFEST_BASE_TARGET = ".governance/manifest.base.json"
 MANIFEST_TARGET = ".governance/manifest.json"
+CHECKS_SOURCE = "governance/required-checks.json"
+CHECKS_TARGET = ".governance/required-checks.json"
+ALLOWED_EXTENDABLE = {
+    (MANIFEST_SOURCE, MANIFEST_TARGET),
+    (CHECKS_SOURCE, CHECKS_TARGET),
+}
 TARGET_OWNED_MANIFEST_PATHS = {
     ("$schema",),
     ("docker", "required"),
@@ -159,10 +165,11 @@ def package_files(root: Path, revision: str) -> list[dict[str, object]]:
             raise SystemExit(f"package manifest file {index} paths must be repository-relative")
         if strategy not in {"managed", "seed", "extendable"} or not isinstance(executable, bool):
             raise SystemExit(f"package manifest file {index} has invalid strategy or executable flag")
-        if strategy == "extendable" and (
-            source != MANIFEST_SOURCE or target != MANIFEST_TARGET or executable
-        ):
-            raise SystemExit("extendable strategy currently supports only the target governance JSON manifest")
+        if strategy == "extendable" and ((source, target) not in ALLOWED_EXTENDABLE or executable):
+            raise SystemExit(
+                "extendable strategy currently supports only the target governance JSON manifest "
+                "and the required-checks instance"
+            )
         if target in targets:
             raise SystemExit(f"duplicate package target: {target}")
         sources.add(source)
@@ -451,10 +458,10 @@ def main() -> int:
             source_content = manifest_projection(source_content)
         target_path = target_root / target
         if strategy == "extendable" and not target_path.exists():
-            payloads[target] = json_bytes(load_json_bytes(source_content, "standard manifest"))
+            payloads[target] = json_bytes(load_json_bytes(source_content, f"standard {target}"))
         elif strategy == "managed" or not target_path.exists():
             payloads[target] = source_content
-        elif strategy == "extendable":
+        elif strategy == "extendable" and target == MANIFEST_TARGET:
             current_base = manifest_projection(source_content)
             target_document = load_json_bytes(target_path.read_bytes(), "target manifest")
             if previous_base is None:
@@ -469,6 +476,8 @@ def main() -> int:
                     load_json_bytes(current_base, "current managed manifest base"),
                     target_document,
                 ))
+        elif strategy == "extendable":
+            payloads[target] = target_path.read_bytes()
     manifest_path = target_root / ".governance/manifest.json"
 
     manifest_content = payloads.get(

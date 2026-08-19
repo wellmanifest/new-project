@@ -32,7 +32,7 @@
     {
       "path": "CONTRIBUTING.md",
       "role": "normative-source",
-      "digest": "sha256:cf01589e58c99baddfe43c8013b4a8a013991c55583d5a334cf82103da695715"
+      "digest": "sha256:7b7e4d01d9bc6439a77db475f5c4b5d230ce08b4461e60c8e1c606837fe7bc1d"
     },
     {
       "path": "docs/POLICY_DSL.md",

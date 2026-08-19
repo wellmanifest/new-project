@@ -1,0 +1,86 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-088",
+  "summary": "Offer and brand commercial SSOT standards",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "AGENTS.md",
+    "docs/GOVERNANCE_ENFORCEMENT.md",
+    "template/files/AGENTS.template.md",
+    "project/ticket-088/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ac8730a141ae15c7b087139565559c66906f8b74",
+    "targetBranch": "main",
+    "outcome": "Adopters are required to HOME commercial sheets in subactor/offer and brand kits in subactor/brand; portal files stay facades; policy-dsl owns promo only",
+    "nonGoals": [
+      "No product catalog content under wellmanifest",
+      "No runtime code changes in this ticket",
+      "No change to validator-agent dispatch mechanics"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Encode commercial and brand SSOT rules in managed AGENTS and governance prose; product content stays in subactor packs; wellmanifest/offer and wellmanifest/brand are standard pointers only",
+      "components": [
+        {
+          "name": "managed-adoption-guidance",
+          "paths": [
+            "AGENTS.md",
+            "docs/GOVERNANCE_ENFORCEMENT.md",
+            "template/files/AGENTS.template.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Commercial and brand facade paths must follow product HOMEs before portal rewrites"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the three managed prose files; adopting repositories keep their own locks"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "rg -n 'subactor/offer|subactor/brand' AGENTS.md docs/GOVERNANCE_ENFORCEMENT.md template/files/AGENTS.template.md"
+        ],
+        "evidence": "Managed prose names product HOMEs and standard pointers"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh --actor agent --base ac8730a141ae15c7b087139565559c66906f8b74 --head HEAD"
+        ],
+        "evidence": "Hub gate resolves the diff to ticket-088"
+      }
+    ]
+  }
+}

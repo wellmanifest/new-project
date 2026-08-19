@@ -1,0 +1,140 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-089",
+  "summary": "Required-checks SSOT: per-repo instance and a gate that runs",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "governance/package-manifest.json",
+    "governance/required-checks.schema.json",
+    "scripts/check_required_checks.py",
+    "scripts/create_adoption_lock.py",
+    "scripts/governance_check.py",
+    "tests/required-checks.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-088/README.md",
+    "project/ticket-089/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "dsl-manifest.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "governance/required-checks.json"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e426cb2a6ddeca8fbb3cd590b9e5d17698ec979d",
+    "targetBranch": "main",
+    "outcome": "Each adopting repository owns a truthful .governance/required-checks.json validated against a pinned schema, and the gate that verifies it runs in the adopter under the same check names the ruleset enforces, instead of raising FileNotFoundError",
+    "nonGoals": [
+      "No change to any repository's actual ruleset or enforced check names",
+      "No standard version bump in adopting repositories in this ticket",
+      "No change to validator-agent dispatch mechanics",
+      "No edit to the hub's own governance/required-checks.json"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "required-checks.json carries per-repository data, so it must not be distributed with strategy=managed (pinned byte-identical). Reclassify it as extendable, the strategy already used for governance/manifest.default.json -> .governance/manifest.json, and add a managed required-checks.schema.json so the instance stays constrained. Resolve the gate's source relative to the script's own location, because package-manifest.json relocates it from scripts/ to .governance/ without adjusting its hardcoded path. Parse a job's name: field as the published check context, because that display name is what a GitHub ruleset requires; comparing against the job key only happens to work in the hub, where no job overrides its name. Widen the contract from a single workflowFile to a per-check binding, because ten adopting repositories draw their enforced contexts from two workflow files and cannot express that today; this must land with the strategy change or every instance would be migrated twice.",
+      "components": [
+        {
+          "name": "packaging-strategy",
+          "paths": [
+            "governance/package-manifest.json",
+            "governance/required-checks.schema.json"
+          ]
+        },
+        {
+          "name": "required-checks-gate",
+          "paths": [
+            "scripts/check_required_checks.py",
+            "scripts/create_adoption_lock.py",
+            "scripts/governance_check.py",
+            "tests/required-checks.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "dsl-manifest",
+          "paths": [
+            "dsl-manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        ".governance/required-checks.json becomes target-owned (extendable) instead of pinned (managed)",
+        "governance_check.py invokes the required-checks gate, so an adopter fails closed on a false declaration"
+      ],
+      "dataChanges": [
+        "Adopting repositories replace the inherited hub values with their own repository slug and the check names their ruleset enforces"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert package-manifest.json strategy to managed and the two scripts; adopting repositories keep their existing locks untouched"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "jq -r '.files[] | select(.target==\".governance/required-checks.json\") | .strategy' governance/package-manifest.json"
+        ],
+        "evidence": "Prints extendable, not managed"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 scripts/check_required_checks.py"
+        ],
+        "evidence": "Hub gate still passes from its own location; regression guard for the path change"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./tests/required-checks.test.sh"
+        ],
+        "evidence": "The existing test grows a case that copies the gate into a .governance/ layout; it fails on the current code and passes after the fix"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "grep -n 'check_required_checks' scripts/governance_check.py"
+        ],
+        "evidence": "The gate is invoked by governance_check.py, so it cannot stay orphaned again"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "./tests/required-checks.test.sh"
+        ],
+        "evidence": "The same test grows a case where a job overrides name:; the gate publishes that display name, so a declared value can match what the ruleset enforces"
+      },
+      {
+        "criterion": "AC-06",
+        "commands": [
+          "python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base e426cb2a6ddeca8fbb3cd590b9e5d17698ec979d --head HEAD --actor agent"
+        ],
+        "evidence": "Hub gate resolves the diff to ticket-089"
+      }
+    ]
+  }
+}
