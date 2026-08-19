@@ -1,0 +1,118 @@
+{
+  "schema": "wellmanifest.worktree-guard/retest/v1",
+  "ticketId": "ticket-092",
+  "when": "2026-08-19T14:20:00+02:00",
+  "workspaceRoot": "/home/tom/github/wellmanifest/.worktrees/ticket-worktree-overlap-hub",
+  "verdict": "guard_works; live_workspaces_fail_closed_on_real_overlaps",
+  "matrix": [
+    {
+      "id": "unit",
+      "command": "./tests/worktree-overlap.test.sh",
+      "result": "PASS",
+      "exit": 0,
+      "note": "Synthetic overlap fail, disjoint pass, GIT_DIR isolation, hook blocks overlapping commit, re-wire is idempotent"
+    },
+    {
+      "id": "schema",
+      "command": "jsonschema validate worktree-guard.yaml",
+      "result": "PASS",
+      "note": "schema wellmanifest.worktree-guard/v1"
+    },
+    {
+      "id": "missing-root",
+      "command": "worktree_overlap_check.py --workspace-root /tmp/definitely-missing-overlap-root",
+      "result": "PASS",
+      "exit": 1,
+      "note": "GOV-WORKTREE-OVERLAP-003 fail-closed"
+    },
+    {
+      "id": "installer",
+      "command": "install-worktree-guard.sh --target <tmp> --wire-hook",
+      "result": "PASS",
+      "exit": 0,
+      "note": "Copies yaml/scripts/error; wires pre-commit; adopted --once on a single checkout PASSES"
+    },
+    {
+      "id": "watch",
+      "command": "worktree_guard.py --watch --interval 1",
+      "result": "PASS",
+      "exit": 124,
+      "note": "Detected change, ran check, printed GOV-WORKTREE-OVERLAP-FAIL; timeout is expected"
+    },
+    {
+      "id": "hub-once",
+      "command": "worktree_guard.py --root hub --once",
+      "result": "FAIL_CLOSED",
+      "exit": 1,
+      "errors": 8,
+      "checkouts": 7,
+      "note": "Correct: new-project siblings overlap (089/091/077/086)"
+    },
+    {
+      "id": "live-wellmanifest",
+      "command": "worktree_overlap_check.py --workspace-root ~/github/wellmanifest",
+      "result": "FAIL_CLOSED",
+      "errors": 8,
+      "checkouts": 45,
+      "codes": {"GOV-WORKTREE-OVERLAP-001": 5, "GOV-WORKTREE-OVERLAP-002": 3}
+    },
+    {
+      "id": "live-subactor",
+      "command": "worktree_overlap_check.py --workspace-root ~/github/subactor",
+      "result": "FAIL_CLOSED",
+      "errors": 12,
+      "checkouts": 115,
+      "codes": {"GOV-WORKTREE-OVERLAP-001": 9, "GOV-WORKTREE-OVERLAP-002": 3}
+    },
+    {
+      "id": "www-sub-actor-site-audit",
+      "command": "worktree_guard.py --root ~/github/subactor/www-sub-actor --once",
+      "result": "FAIL_CLOSED",
+      "errors": 2,
+      "note": "main-8781 vs ticket-126: scripts/run-php-saas.py; ticket-126 vs current: App.tsx, Modules.php, index.php. Site http://127.0.0.1:8789/ is down (connection refused)."
+    },
+    {
+      "id": "adopted-installs",
+      "result": "PASS",
+      "note": "worktree-guard.yaml + .governance copies present in www-sub-actor, core, platform"
+    },
+    {
+      "id": "code2llm",
+      "result": "PASS",
+      "note": "available=true, binary=/home/tom/.pyenv/versions/3.12.0/bin/code2llm"
+    },
+    {
+      "id": "lifecycle-docs",
+      "result": "PASS",
+      "note": "git-lifecycle ticket-005 and ticket-lifecycle ticket-004 still have docs/WORKTREE_GUARD.md, clean vs origin"
+    },
+    {
+      "id": "systemd-ac04",
+      "result": "PASS",
+      "note": "worktree-guard@home-tom-github-{wellmanifest,subactor} timer+path active; last fire 14:20; reports in ~/.local/state/worktree-guard/"
+    },
+    {
+      "id": "wellmanifest-www-initiate",
+      "command": "install-worktree-guard.sh --target ~/github/wellmanifest/www --wire-hook",
+      "result": "PASS",
+      "note": "landing-page -> www; single checkout; scoped --once PASSES (0 errors). Local uncommitted copies only."
+    },
+    {
+      "id": "landing-page-php",
+      "command": "php -S 127.0.0.1:8099 -t ~/github/wellmanifest/www",
+      "result": "PASS",
+      "note": "GET / and ?org=wellmanifest 200, title WELLMANIFEST Hub, 37 cached projects, no PHP fatals. ?org=subactor 200, 67 projects. ?api=cache 200. ?org=www falls back to wellmanifest. :8000/:8010 are unrelated FastAPI 404s."
+    },
+    {
+      "id": "subactor-8781",
+      "result": "PARTIAL",
+      "note": "Live site is :8781 not :8789. / /compare /registry /marketplace 200. /legal 500 empty. /sitemap.xml and /robots.txt 404. Overlaps still block clean parallel work."
+    }
+  ],
+  "notInScope": [
+    "CI wiring of tests/worktree-overlap.test.sh (ticket-090)",
+    "package-manifest adopt entry (ticket-089)",
+    "Committing guard copies into wellmanifest/www or subactor repos",
+    "Fixing www-sub-actor /legal 500 (HOME=subactor, overlaps ticket-126/163)"
+  ]
+}

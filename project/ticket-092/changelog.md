@@ -13,6 +13,7 @@
   of a hard-coded `.githooks/`, and added `--wire-hook` to chain it into
   `pre-commit` idempotently. Two of the three first adopters had the fragment
   in a directory git never reads.
+- Recorded the 2026-08-19 retest matrix (`retest-2026-08-19.json`).
 - Stripped `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE` and the rest of git's
   scoping variables before invoking git. A hook inherits them, they override
   `git -C <path>`, and the checker saw one checkout instead of the workspace —

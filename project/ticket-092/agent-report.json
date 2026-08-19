@@ -1,8 +1,8 @@
 {
   "schema": "wellmanifest.agent/report/v1",
-  "workspaceRoot": ".",
-  "gitToplevel": ".",
-  "pwd": ".",
+  "workspaceRoot": "/home/tom/github/wellmanifest/.worktrees/ticket-worktree-overlap-hub",
+  "gitToplevel": "/home/tom/github/wellmanifest/.worktrees/ticket-worktree-overlap-hub",
+  "pwd": "/home/tom/github/wellmanifest/.worktrees/ticket-worktree-overlap-hub",
   "home": "wellmanifest",
   "shape": "domain_pack",
   "runtimeOwner": "wellmanifest",
@@ -30,6 +30,7 @@
     "project/ticket-092/changelog.md",
     "project/ticket-092/wellmanifest-overlap.json",
     "project/ticket-092/subactor-overlap.json",
+    "project/ticket-092/retest-2026-08-19.json",
     "project/ticket-092/agent-report.json"
   ],
   "allowedPaths": [
