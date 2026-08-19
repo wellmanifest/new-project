@@ -28,7 +28,9 @@
     "docs/WORKTREE_GUARD.md",
     "project/ticket-092/**",
     "TODO.md",
-    "project/TICKETS.md"
+    "project/TICKETS.md",
+    "governance/diagnostics.json",
+    ".github/workflows/ci.yml"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md",
@@ -37,7 +39,6 @@
     "AGENTS.md",
     "scripts/install-agent-hosts.sh",
     ".githooks/pre-commit",
-    "governance/diagnostics.json",
     "project/new-ticket.sh"
   ],
   "stacks": [
@@ -64,21 +65,23 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 8,
+      "maxImplementationFiles": 10,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Publish a standalone overlap checker and YAML runner that adopters copy via install-worktree-guard.sh. Keep workspace_lifecycle_check.py terminal-only. Do not touch files owned by ticket-089/090/091.",
+      "decision": "Publish a standalone overlap checker and YAML runner that adopters copy via install-worktree-guard.sh. Keep workspace_lifecycle_check.py terminal-only. Do not touch files owned by ticket-089/090/091. Amended 2026-08-19: emitting new GOV-* codes is not optional work — the repository's own validator fails with GOV-DIAGNOSTIC-001 on any code missing from governance/diagnostics.json, and ci.yml refuses to pass while a tests/*.test.sh exists that no step runs. Both files are therefore part of delivering this outcome, not adjacent scope. Budget raised 8 -> 10 for exactly those two files.",
       "components": [
         {
           "name": "overlap-checker",
           "paths": [
             "scripts/worktree_overlap_check.py",
             "tests/worktree-overlap.test.sh",
-            "error/GOV-WORKTREE-OVERLAP.md"
+            "error/GOV-WORKTREE-OVERLAP.md",
+            "governance/diagnostics.json",
+            ".github/workflows/ci.yml"
           ]
         },
         {
@@ -154,6 +157,14 @@
           "./tests/worktree-overlap.test.sh"
         ],
         "evidence": "Hook installed into git rev-parse --git-path hooks for unset, tracked and non-standard core.hooksPath; an overlapping commit is refused with GOV-WORKTREE-OVERLAP-FAIL, a disjoint one is accepted, an unrelated repository's conflict does not block, and re-wiring does not duplicate the call. A poisoned GIT_DIR environment must not change the checkout count."
+      },
+      {
+        "criterion": "AC-07",
+        "commands": [
+          "./tests/governance-validator.test.sh",
+          "bash -c 'for s in tests/*.test.sh; do grep -Fq \"bash $s\" .github/workflows/ci.yml || exit 1; done'"
+        ],
+        "evidence": "The three GOV-WORKTREE-OVERLAP codes are registered in the diagnostics catalog, so the validator reports no GOV-DIAGNOSTIC-001, and the workflow's suite-list assertion passes."
       }
     ]
   }

@@ -32,12 +32,9 @@ ticket-089/090/091.
 - [x] AC-06: The pre-commit trigger lands in the directory git actually reads
   and blocks an overlapping commit; verified across `core.hooksPath` unset,
   tracked and non-standard layouts, and in the three subactor pilots.
-
-## Known follow-up
-
-`.github/workflows/ci.yml` still has to run `tests/worktree-overlap.test.sh`.
-That path belongs to ticket-090, so wiring it here breaks the approved budget
-and the workstream scope rule. See [changelog.md](changelog.md).
+- [x] AC-07: The three `GOV-WORKTREE-OVERLAP` codes are registered in
+  `governance/diagnostics.json` and the suite is wired into `ci.yml`, so both
+  CI gates pass.
 
 ## Participants
 

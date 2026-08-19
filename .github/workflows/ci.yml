@@ -69,6 +69,8 @@ jobs:
         run: bash tests/rule-enforcement.test.sh
       - name: Test host-agnostic LLM instruction contract
         run: bash tests/agent-hosts.test.sh
+      - name: Test proactive worktree overlap guard
+        run: bash tests/worktree-overlap.test.sh
       - name: Assert every test suite is wired into this workflow
         run: |
           set -euo pipefail

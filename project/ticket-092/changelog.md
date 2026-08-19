@@ -19,17 +19,10 @@
   `git -C <path>`, and the checker saw one checkout instead of the workspace —
   so the gate passed on a real overlap. Covered by a regression test.
 
-## Required follow-up (not in this ticket's scope)
-
-`governance/diagnostics.json` must register `GOV-WORKTREE-OVERLAP-001`, `-002`
-and `-003`. `tests/governance-validator.test.sh` fails with `GOV-DIAGNOSTIC-001`
-until it does, which is why CI is red. That file is on this ticket's
-`forbiddenPaths` and belongs to ticket-091.
-
-`.github/workflows/ci.yml` must gain a step running
-`bash tests/worktree-overlap.test.sh`. The workflow asserts that every
-`tests/*.test.sh` is wired into it, so until that step exists this branch
-cannot pass CI. That file is declared by ticket-090's `allowedPaths`;
-adding it here raises `GOV-WORKSTREAM-004` and `GOV-BUDGET-001`
-(`maxImplementationFiles: 8`). It belongs in ticket-090's closure or in an
-explicitly dependent ticket.
+- Registered `GOV-WORKTREE-OVERLAP-001/002/003` in `governance/diagnostics.json`
+  and wired `tests/worktree-overlap.test.sh` into `ci.yml`. Both were CI
+  failures, not optional polish: the validator rejects any emitted code missing
+  from the catalog, and the workflow refuses to pass while a suite exists that
+  no step runs. Scope amended and the file budget raised 8 -> 10 for exactly
+  those two files; `governance/diagnostics.json` left `forbiddenPaths` for the
+  same reason.
