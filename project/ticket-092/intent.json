@@ -1,0 +1,152 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-092",
+  "summary": "Proactive worktree overlap guard",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": [
+      "wellmanifest/git-lifecycle",
+      "wellmanifest/ticket-lifecycle"
+    ]
+  },
+  "allowedPaths": [
+    "scripts/worktree_overlap_check.py",
+    "scripts/worktree_guard.py",
+    "scripts/install-worktree-guard.sh",
+    "worktree-guard.yaml",
+    "governance/worktree-guard.schema.json",
+    "tests/worktree-overlap.test.sh",
+    "error/GOV-WORKTREE-OVERLAP.md",
+    "docs/WORKTREE_GUARD.md",
+    "project/ticket-092/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "governance/package-manifest.json",
+    "scripts/governance_check.py",
+    "AGENTS.md",
+    "scripts/install-agent-hosts.sh",
+    ".githooks/pre-commit",
+    "governance/diagnostics.json",
+    "project/new-ticket.sh"
+  ],
+  "stacks": [
+    "python",
+    "bash"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [
+    "ticket-089",
+    "ticket-090",
+    "ticket-091"
+  ],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b154d51f1cfbccfbbb570e505fda3e9c46ccd028",
+    "targetBranch": "main",
+    "outcome": "Adopting repositories can install a pyqual-style worktree-guard.yaml that fail-closes undeclared overlapping writes across sibling worktrees, and a workspace can run the same check on a timer and on .worktrees changes",
+    "nonGoals": [
+      "No rewrite of package-manifest.json or governance_check.py in this ticket",
+      "No new wellmanifest-hosted daemon",
+      "No change to the terminal workspace_lifecycle_check default",
+      "No GitHub ruleset change"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Publish a standalone overlap checker and YAML runner that adopters copy via install-worktree-guard.sh. Keep workspace_lifecycle_check.py terminal-only. Do not touch files owned by ticket-089/090/091.",
+      "components": [
+        {
+          "name": "overlap-checker",
+          "paths": [
+            "scripts/worktree_overlap_check.py",
+            "tests/worktree-overlap.test.sh",
+            "error/GOV-WORKTREE-OVERLAP.md"
+          ]
+        },
+        {
+          "name": "yaml-runner",
+          "paths": [
+            "worktree-guard.yaml",
+            "governance/worktree-guard.schema.json",
+            "scripts/worktree_guard.py",
+            "scripts/install-worktree-guard.sh"
+          ]
+        },
+        {
+          "name": "docs",
+          "paths": [
+            "docs/WORKTREE_GUARD.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        "worktree-guard.yaml is a new adopted trigger file, like pyqual.yaml"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Delete the new files; no managed package-manifest entry was added"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./tests/worktree-overlap.test.sh"
+        ],
+        "evidence": "Synthetic fixture: shared app.py fails, disjoint paths pass, conflictsWith serialises, a stale ticket copy in a third worktree is not attributed, --identity-of narrows reporting without narrowing discovery, --report and --print-pyqual-stage emit the documented shapes, and the installer writes idempotent units."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 scripts/worktree_overlap_check.py --workspace-root ~/github/wellmanifest --format json"
+        ],
+        "evidence": "44 checkouts, 8 findings, all naming real overlapping paths"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 scripts/worktree_overlap_check.py --workspace-root ~/github/subactor --format json"
+        ],
+        "evidence": "114 checkouts, 11 findings in ~3.4s"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "./scripts/install-worktree-guard.sh --workspace ~/github/subactor --interval 300 --enable",
+          "systemctl --user list-timers 'worktree-guard@*'"
+        ],
+        "evidence": "Timer and path unit active for both workspace roots; the path unit was observed firing on a .worktrees change and the report file was rewritten"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "python3 ~/github/subactor/core/.governance/worktree_guard.py --root ~/github/subactor/core --once"
+        ],
+        "evidence": "scope=remote:github.com/subactor/core, 7 findings, while the workspace scan of the same tree reports 11 across all identities"
+      }
+    ]
+  }
+}

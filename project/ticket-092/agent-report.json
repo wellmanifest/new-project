@@ -1,0 +1,49 @@
+{
+  "schema": "wellmanifest.agent/report/v1",
+  "workspaceRoot": ".",
+  "gitToplevel": ".",
+  "pwd": ".",
+  "home": "wellmanifest",
+  "shape": "domain_pack",
+  "runtimeOwner": "wellmanifest",
+  "adopt": [
+    "wellmanifest/git-lifecycle",
+    "wellmanifest/ticket-lifecycle"
+  ],
+  "ticketId": "ticket-092",
+  "filesTouched": [
+    "scripts/worktree_overlap_check.py",
+    "scripts/worktree_guard.py",
+    "scripts/install-worktree-guard.sh",
+    "worktree-guard.yaml",
+    "governance/worktree-guard.schema.json",
+    "tests/worktree-overlap.test.sh",
+    "error/GOV-WORKTREE-OVERLAP.md",
+    "docs/WORKTREE_GUARD.md",
+    "TODO.md",
+    "project/TICKETS.md",
+    "project/ticket-092/README.md",
+    "project/ticket-092/preprompt.md",
+    "project/ticket-092/intent.json",
+    "project/ticket-092/ai-cursor.md",
+    "project/ticket-092/ai-cursor-logs.txt",
+    "project/ticket-092/changelog.md",
+    "project/ticket-092/wellmanifest-overlap.json",
+    "project/ticket-092/subactor-overlap.json",
+    "project/ticket-092/agent-report.json"
+  ],
+  "allowedPaths": [
+    "scripts/worktree_overlap_check.py",
+    "scripts/worktree_guard.py",
+    "scripts/install-worktree-guard.sh",
+    "worktree-guard.yaml",
+    "governance/worktree-guard.schema.json",
+    "tests/worktree-overlap.test.sh",
+    "error/GOV-WORKTREE-OVERLAP.md",
+    "docs/WORKTREE_GUARD.md",
+    "project/ticket-092/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "outcome": "completed"
+}
