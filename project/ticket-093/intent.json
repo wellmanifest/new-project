@@ -1,0 +1,79 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-093",
+  "summary": "Governance-check wrappers work on hub and adopter layouts",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "adopt": ["wellmanifest/new-project"]
+  },
+  "allowedPaths": [
+    "project/governance-check.sh",
+    "project/governance-check.bat",
+    "scripts/governance_check.py",
+    "project/ticket-093/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["bash"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f52a397126d26a5297862bd097baafe1c473c6bd",
+    "targetBranch": "main",
+    "outcome": "Hub clones run governance-check via scripts/governance_check.py; adopter clones keep using .governance/governance_check.py. The Python loader finds work-classification in either layout.",
+    "nonGoals": [
+      "Do not change required-checks schema or rulesets",
+      "Do not reopen ticket-089"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Detect adopter vs hub by the presence of .governance/governance_check.py. Hub falls back to scripts/governance_check.py and governance/*.json. The work-classification loader accepts the hub path when the adopter path is absent.",
+      "components": [
+        {
+          "name": "governance-check-wrappers",
+          "paths": [
+            "project/governance-check.sh",
+            "project/governance-check.bat",
+            "scripts/governance_check.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Restore the adopter-only wrapper paths."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["./project/governance-check.sh --help || true"],
+        "evidence": "project/ticket-093/ai-grok-logs.txt"
+      }
+    ]
+  }
+}
