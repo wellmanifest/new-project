@@ -1,0 +1,120 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-090",
+  "summary": "Host-agnostic LLM standard: GEMINI.md, Cursor rules, fail-closed hook",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "adopt": ["wellmanifest/new-project"]
+  },
+  "allowedPaths": [
+    "AGENTS.md",
+    "GEMINI.md",
+    "CLAUDE.md",
+    ".cursor/rules/new-project-standard.mdc",
+    ".githooks/pre-commit",
+    "scripts/install-agent-hosts.sh",
+    "tests/agent-hosts.test.sh",
+    ".github/workflows/ci.yml",
+    "template/files/AGENTS.template.md",
+    "project/ticket-089/README.md",
+    "project/ticket-089/changelog.md",
+    "project/ticket-090/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "governance/package-manifest.json",
+    "scripts/governance_check.py"
+  ],
+  "stacks": [
+    "bash"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3f73892fba0589a773cf15c27b649c1742d7d6ae",
+    "targetBranch": "main",
+    "outcome": "Any LLM host that can read a project instruction file or run git commit is bound to the same new-project contract: allocate via new-ticket.sh, stay on a ticket branch, stay inside allowedPaths. A fail-closed hook rejects unbound commits. An installer copies the same files into other clones and user-level host dirs.",
+    "nonGoals": [
+      "Do not change package-manifest.json in this ticket",
+      "Do not edit governance_check.py",
+      "Do not add a runtime daemon"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Ship the same short contract as GEMINI.md, CLAUDE.md and a Cursor alwaysApply rule, plus a git pre-commit hook that requires branch ticket-NNN with Status IN_PROGRESS. install-agent-hosts.sh materializes those files into a target clone and optional user-level host dirs. package-manifest adoption waits for leftover ticket-089 to close.",
+      "components": [
+        {
+          "name": "host-instruction-files",
+          "paths": [
+            "GEMINI.md",
+            "CLAUDE.md",
+            ".cursor/rules/new-project-standard.mdc",
+            "AGENTS.md",
+            "template/files/AGENTS.template.md"
+          ]
+        },
+        {
+          "name": "fail-closed-hook",
+          "paths": [
+            ".githooks/pre-commit",
+            "scripts/install-agent-hosts.sh"
+          ]
+        },
+        {
+          "name": "host-contract-tests",
+          "paths": [
+            "tests/agent-hosts.test.sh",
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "New optional installer scripts/install-agent-hosts.sh",
+        "New git hook path .githooks/pre-commit"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert ticket-090 files and unset core.hooksPath where the installer was run."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./tests/agent-hosts.test.sh"
+        ],
+        "evidence": "project/ticket-090/ai-grok-logs.txt"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "project/ticket-090/ai-grok-logs.txt"
+      }
+    ]
+  }
+}
