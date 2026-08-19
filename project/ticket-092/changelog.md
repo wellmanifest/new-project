@@ -23,6 +23,15 @@
   and wired `tests/worktree-overlap.test.sh` into `ci.yml`. Both were CI
   failures, not optional polish: the validator rejects any emitted code missing
   from the catalog, and the workflow refuses to pass while a suite exists that
-  no step runs. Scope amended and the file budget raised 8 -> 10 for exactly
-  those two files; `governance/diagnostics.json` left `forbiddenPaths` for the
-  same reason.
+  no step runs. Scope amended and the file budget raised 8 -> 9;
+  `governance/diagnostics.json` left `forbiddenPaths` for the same reason.
+- Dropped `governance/worktree-guard.schema.json`. The hub policy caps a ticket
+  at 9 implementation files and the two CI fixes made 10. Nothing references
+  the schema and `worktree_guard.py` already rejects an unknown `schema:` value
+  at load time, so it is the one file that can wait.
+
+## Required follow-up (not in this ticket's scope)
+
+A dependent ticket should re-add `governance/worktree-guard.schema.json` and
+register it in `governance/package-manifest.json`, once this ticket frees the
+workstream slot.

@@ -36,6 +36,12 @@ ticket-089/090/091.
   `governance/diagnostics.json` and the suite is wired into `ci.yml`, so both
   CI gates pass.
 
+## Known follow-up
+
+`governance/worktree-guard.schema.json` is deferred: the hub policy caps a
+ticket at 9 implementation files. Nothing references it. See
+[changelog.md](changelog.md).
+
 ## Participants
 
 - Human participant: unresolved; no user-* file was created by this script.

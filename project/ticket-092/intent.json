@@ -22,7 +22,6 @@
     "scripts/worktree_guard.py",
     "scripts/install-worktree-guard.sh",
     "worktree-guard.yaml",
-    "governance/worktree-guard.schema.json",
     "tests/worktree-overlap.test.sh",
     "error/GOV-WORKTREE-OVERLAP.md",
     "docs/WORKTREE_GUARD.md",
@@ -60,19 +59,20 @@
       "No rewrite of package-manifest.json or governance_check.py in this ticket",
       "No new wellmanifest-hosted daemon",
       "No change to the terminal workspace_lifecycle_check default",
-      "No GitHub ruleset change"
+      "No GitHub ruleset change",
+      "No JSON Schema file for worktree-guard.yaml in this ticket; deferred to stay inside the 9-file policy limit"
     ],
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 10,
+      "maxImplementationFiles": 9,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Publish a standalone overlap checker and YAML runner that adopters copy via install-worktree-guard.sh. Keep workspace_lifecycle_check.py terminal-only. Do not touch files owned by ticket-089/090/091. Amended 2026-08-19: emitting new GOV-* codes is not optional work — the repository's own validator fails with GOV-DIAGNOSTIC-001 on any code missing from governance/diagnostics.json, and ci.yml refuses to pass while a tests/*.test.sh exists that no step runs. Both files are therefore part of delivering this outcome, not adjacent scope. Budget raised 8 -> 10 for exactly those two files.",
+      "decision": "Publish a standalone overlap checker and YAML runner that adopters copy via install-worktree-guard.sh. Keep workspace_lifecycle_check.py terminal-only. Do not touch files owned by ticket-089/090/091. Amended 2026-08-19: emitting new GOV-* codes is not optional work — the repository's own validator fails with GOV-DIAGNOSTIC-001 on any code missing from governance/diagnostics.json, and ci.yml refuses to pass while a tests/*.test.sh exists that no step runs. Both files are therefore part of delivering this outcome, not adjacent scope. Budget raised 8 -> 10 for exactly those two files. The hub policy caps implementation files at 9, so the JSON Schema for worktree-guard.yaml is deferred to a dependent ticket: nothing references it, and the runner already rejects an unknown schema value at load time.",
       "components": [
         {
           "name": "overlap-checker",
@@ -88,7 +88,6 @@
           "name": "yaml-runner",
           "paths": [
             "worktree-guard.yaml",
-            "governance/worktree-guard.schema.json",
             "scripts/worktree_guard.py",
             "scripts/install-worktree-guard.sh"
           ]
