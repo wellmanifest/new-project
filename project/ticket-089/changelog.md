@@ -1,5 +1,12 @@
 # Ticket Changelog (ticket-089)
 
+## [0.7.0] - 2026-08-19
+
+- Closed ticket-089 (`DONE / DONE`) from integrated `main` after
+  `3f73892fba0589a773cf15c27b649c1742d7d6ae` (PR #140).
+- Post-merge evidence: required-checks gate is on the default branch; no
+  implementation files in this closure.
+
 ## [0.1.0] - 2026-08-16
 
 - Initial governance scaffold created.

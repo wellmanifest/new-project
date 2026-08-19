@@ -2,8 +2,8 @@
 
 - **ID**: ticket-089
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-16
 
 > **Odblokowane**: ticket-088 jest `DONE`/`DONE` na tym branchu (PR #137 już na
