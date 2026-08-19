@@ -52,7 +52,7 @@
   ],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "f52a397126d26a5297862bd097baafe1c473c6bd",
+    "acceptedBaseSha": "501729fd24b54d373d4a1bf2b32ba238edce0d27",
     "targetBranch": "main",
     "outcome": "Adopting repositories can install a pyqual-style worktree-guard.yaml that fail-closes undeclared overlapping writes across sibling worktrees, and a workspace can run the same check on a timer and on .worktrees changes",
     "nonGoals": [
