@@ -46,6 +46,11 @@
 - Bramka nie wybiera już po cichu jednego kształtu: obecność obu kluczy
   kończy się komunikatem `exactly one shape`.
 
+## [0.7.0] - 2026-08-18
+
+- Leftover close after PR #140 landed on `main`. Implementation already
+  integrated; ticket-090 is the active governance ticket.
+
 ## [0.6.0] - 2026-08-18
 
 - Odświeżono digest `CONTRIBUTING.md` w `dsl-manifest.json` (`DSL-HASH-001`).

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Fail-closed: a commit must be bound to an IN_PROGRESS ticket-NNN.
+# Host-agnostic — Gemini, Claude, Cursor, and humans all hit this hook.
+
+set -euo pipefail
+
+root="$(git rev-parse --show-toplevel)"
+branch="$(git symbolic-ref --short HEAD 2>/dev/null || true)"
+
+if [[ -z "$branch" || "$branch" == "HEAD" ]]; then
+  echo "GOV-AGENT-HOST-001: detached HEAD is not bound to ticket-NNN." >&2
+  exit 1
+fi
+
+if [[ ! "$branch" =~ ticket[-/]([0-9]{3}) ]]; then
+  echo "GOV-AGENT-HOST-001: branch '$branch' is not bound to ticket-NNN." >&2
+  echo "  Allocate with ./project/new-ticket.sh and commit on a ticket branch." >&2
+  exit 1
+fi
+
+ticket="ticket-${BASH_REMATCH[1]}"
+readme="$root/project/$ticket/README.md"
+
+if [[ ! -f "$readme" ]]; then
+  echo "GOV-AGENT-HOST-002: $readme is missing." >&2
+  echo "  Allocate with ./project/new-ticket.sh; do not invent a ticket number." >&2
+  exit 1
+fi
+
+if ! grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*IN_PROGRESS([[:space:]]|$)' "$readme"; then
+  echo "GOV-AGENT-HOST-003: $ticket is not IN_PROGRESS." >&2
+  echo "  Return the ticket to IN_PROGRESS before changing implementation files." >&2
+  exit 1
+fi
+
+exit 0

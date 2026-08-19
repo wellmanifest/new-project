@@ -99,3 +99,12 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
        `error/{code}.md` documents. Protobuf and JSON Schema models describe
        transport shape only; they never grant authority or redefine operation
        semantics. Run the managed gate after every graph change.
+   22. **HOST-AGNOSTIC STANDARD**: Every LLM host loads the same fail-closed
+       contract. Adopters and this hub ship `GEMINI.md` (Gemini/Antigravity),
+       `CLAUDE.md` (Claude Code), `.cursor/rules/new-project-standard.mdc`
+       (Cursor), and `.githooks/pre-commit`. An agent MUST run
+       `./scripts/install-agent-hosts.sh` once per clone (and `--user` on a
+       developer machine) before the first commit. The hook rejects commits
+       whose branch is not bound to an `IN_PROGRESS` `ticket-NNN`. Markdown
+       is not a substitute for the hook. Do not write on `main` or a dirty
+       primary checkout.

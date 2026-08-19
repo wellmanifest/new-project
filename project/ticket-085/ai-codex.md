@@ -58,10 +58,19 @@ adopt `cqrs` through their own bounded tickets.
   Linux test contracts; moved the ticket to deterministic validation.
 - Confirmed `origin/main` remains the accepted base, no other governance ticket
   is active, and entered protected publication with the ticket still active.
+- Goal opened PR #134 at exact head `cbdc725…` after all local suites passed;
+  hosted Linux and Windows checks passed on the same commit.
+- Protected run `31842958666` obtained exact-head approval from
+  `ifuri-validator-agent[bot]`, merged the PR as `ac8730a…` and deleted its
+  temporary remote branch.
+- Created this governance-only `DONE / DONE` closure from integrated `main`.
+- Inspected integrated `main` after merge: hosted run `31843109800` passed
+  `test` and `windows-governance` on exact SHA `ac8730a…`.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- None; the CQRS domain contract is integrated and this implementation ticket
+  is complete. Immutable standard release remains a separate bounded slice.
 - New authority is still required for destructive action, secret access, new
   external coordination or material objective expansion. Protected delivery
   may be invoked without another prompt when publication is in scope; its
