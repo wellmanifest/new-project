@@ -64,6 +64,8 @@ class Checkout:
     head: str | None
     branch: str | None
     dirty: bool
+    pending: bool
+    dirty_paths: tuple[str, ...]
     changed_paths: tuple[str, ...]
     tickets: tuple[TicketScope, ...]
 
@@ -227,7 +229,7 @@ def default_branch(path: Path) -> str:
     return "main"
 
 
-def changed_paths(path: Path, ignore: tuple[str, ...]) -> tuple[str, ...]:
+def dirty_paths(path: Path, ignore: tuple[str, ...]) -> tuple[str, ...]:
     names: set[str] = set()
     porcelain = run_git(path, "status", "--porcelain=v1", "--untracked-files=all")
     for line in porcelain.splitlines():
@@ -237,18 +239,126 @@ def changed_paths(path: Path, ignore: tuple[str, ...]) -> tuple[str, ...]:
         raw = match.group(1).strip()
         if raw:
             names.add(raw)
-    merge_base = None
-    branch = default_branch(path)
-    for candidate in (f"origin/{branch}", branch):
-        try:
-            merge_base = run_git(path, "merge-base", "HEAD", candidate)
+    return tuple(sorted(name for name in names if name and not path_ignored(name, ignore)))
+
+
+def committed_against(
+    path: Path, base_ref: str, ignore: tuple[str, ...]
+) -> tuple[str, ...]:
+    """Paths this checkout has committed since `base_ref`."""
+    try:
+        raw = run_git(path, "diff", "--name-only", f"{base_ref}..HEAD")
+    except AuditError:
+        return ()
+    return tuple(
+        sorted(
+            {
+                line
+                for line in raw.splitlines()
+                if line and not path_ignored(line, ignore)
+            }
+        )
+    )
+
+
+def merge_base(path: Path, left: str, right: str) -> str | None:
+    try:
+        return run_git(path, "merge-base", left, right) or None
+    except AuditError:
+        return None
+
+
+def is_ancestor(path: Path, older: str, newer: str) -> bool:
+    try:
+        run_git(path, "merge-base", "--is-ancestor", older, newer)
+        return True
+    except AuditError:
+        return False
+
+
+def merge_tree_conflicts(path: Path, left: str, right: str) -> tuple[str, ...] | None:
+    """Paths git itself cannot merge, or None when git cannot answer.
+
+    Touching the same path is only a *proxy* for conflicting: two branches often
+    edit different regions and merge cleanly, while a stacked branch shares the
+    path with its own ancestor and cannot conflict at all. `git merge-tree`
+    performs the real merge in memory and reports exactly what breaks, so the
+    verdict is ground truth rather than a heuristic. Older git without
+    --write-tree returns None and the caller falls back to path intersection.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(path), "merge-tree", "--write-tree", "--name-only", left, right],
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=60,
+            env=detached_git_env(),
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode == 0:
+        return ()
+    if result.returncode != 1:
+        return None
+    lines = result.stdout.splitlines()
+    conflicted: list[str] = []
+    for line in lines[1:]:
+        if not line.strip():
             break
-        except AuditError:
-            continue
-    if merge_base:
-        for line in run_git(path, "diff", "--name-only", merge_base, "HEAD").splitlines():
-            if line:
-                names.add(line)
+        conflicted.append(line.strip())
+    return tuple(sorted(set(conflicted)))
+
+
+def contested_paths(
+    first: "Checkout", second: "Checkout", ignore: tuple[str, ...]
+) -> tuple[str, ...]:
+    """Paths these two checkouts genuinely contend for.
+
+    Uncommitted work is invisible to any merge, so a path dirty on one side and
+    touched on the other is contested by definition. Committed work is settled
+    by asking git to merge the two heads.
+    """
+    dirty_overlap = {
+        name
+        for name in set(first.dirty_paths) | set(second.dirty_paths)
+        if name in set(first.changed_paths) and name in set(second.changed_paths)
+    }
+    conflicts: set[str] = set()
+    if first.head and second.head and first.head != second.head:
+        if not is_ancestor(first.path, first.head, second.head) and not is_ancestor(
+            first.path, second.head, first.head
+        ):
+            reported = merge_tree_conflicts(first.path, first.head, second.head)
+            if reported is None:
+                # No usable merge-tree: fall back to the path-intersection proxy.
+                conflicts = set(first.changed_paths) & set(second.changed_paths)
+            else:
+                conflicts = set(reported)
+    return tuple(
+        sorted(
+            name
+            for name in dirty_overlap | conflicts
+            if not path_ignored(name, ignore)
+        )
+    )
+
+
+def changed_paths(path: Path, ignore: tuple[str, ...]) -> tuple[str, ...]:
+    """Everything this checkout has touched relative to the default branch.
+
+    Used for reporting and for attributing a ticket to the checkout writing it,
+    never for deciding whether two checkouts collide.
+    """
+    names: set[str] = set(dirty_paths(path, ignore))
+    branch = default_branch(path)
+    base = None
+    for candidate in (f"origin/{branch}", branch):
+        base = merge_base(path, "HEAD", candidate)
+        if base:
+            break
+    if base:
+        names.update(committed_against(path, base, ignore))
     return tuple(sorted(name for name in names if name and not path_ignored(name, ignore)))
 
 
@@ -295,6 +405,24 @@ def ticket_scopes(root: Path) -> tuple[TicketScope, ...]:
     return tuple(scopes)
 
 
+def has_pending_work(path: Path, dirty: bool) -> bool:
+    """Is this checkout actually a writer?
+
+    A checkout whose HEAD is already contained in the default branch, with a
+    clean tree, is a leftover — merged and forgotten. It conflicts with nothing
+    because it is contributing nothing, and pairing it with live branches buries
+    the real findings. Leftovers are workspace_lifecycle_check.py's job.
+    """
+    if dirty:
+        return True
+    branch = default_branch(path)
+    for candidate in (f"origin/{branch}", branch):
+        if merge_base(path, "HEAD", candidate) is None:
+            continue
+        return not is_ancestor(path, "HEAD", candidate)
+    return True
+
+
 def inspect_checkout(path: Path, ignore: tuple[str, ...]) -> Checkout:
     common = Path(run_git(path, "rev-parse", "--path-format=absolute", "--git-common-dir")).resolve()
     try:
@@ -303,6 +431,7 @@ def inspect_checkout(path: Path, ignore: tuple[str, ...]) -> Checkout:
         head = None
     branch = run_git(path, "branch", "--show-current") or None
     dirty = bool(run_git(path, "status", "--porcelain=v1", "--untracked-files=all"))
+    pending = has_pending_work(path, dirty)
     return Checkout(
         path=path.resolve(),
         common_git_dir=common,
@@ -310,8 +439,12 @@ def inspect_checkout(path: Path, ignore: tuple[str, ...]) -> Checkout:
         head=head,
         branch=branch,
         dirty=dirty,
-        changed_paths=changed_paths(path, ignore),
-        tickets=ticket_scopes(path),
+        pending=pending,
+        # A leftover contributes nothing to any merge, so skip the three
+        # expensive reads it would only feed into comparisons that are skipped.
+        dirty_paths=dirty_paths(path, ignore) if pending else (),
+        changed_paths=changed_paths(path, ignore) if pending else (),
+        tickets=ticket_scopes(path) if pending else (),
     )
 
 
@@ -473,8 +606,12 @@ def overlap_findings(
         ordered = sorted(group, key=lambda item: str(item.path))
         owned = attributed_tickets(ordered)
         for index, first in enumerate(ordered):
+            if not first.pending:
+                continue
             for second in ordered[index + 1 :]:
-                shared = sorted(set(first.changed_paths) & set(second.changed_paths))
+                if not second.pending:
+                    continue
+                shared = list(contested_paths(first, second, ignore))
                 if shared:
                     findings.append(
                         Finding(
@@ -557,6 +694,7 @@ def report_payload(
             "warnings": sum(1 for item in findings if item.severity == "warning"),
             "findings": len(findings),
             "checkouts": len(checkouts),
+            "pendingCheckouts": sum(1 for item in checkouts if item.pending),
             "identitiesWithMultipleWorktrees": sorted(
                 identity for identity, count in groups.items() if count > 1
             ),

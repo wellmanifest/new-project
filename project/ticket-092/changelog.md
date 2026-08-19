@@ -29,6 +29,17 @@
   at 9 implementation files and the two CI fixes made 10. Nothing references
   the schema and `worktree_guard.py` already rejects an unknown `schema:` value
   at load time, so it is the one file that can wait.
+- Replaced the path-intersection heuristic with a real in-memory merge
+  (`git merge-tree --write-tree`). Sharing a path is a poor proxy for
+  conflicting: branches usually edit different regions and merge cleanly, and a
+  stacked branch shares every path with its own ancestor. The three
+  `www-sub-actor` branches the heuristic called a 41-file three-way collision
+  are, under a real merge, two clean pairs and one conflict in two ignored
+  files. Path intersection remains the fallback for git without `--write-tree`.
+- Stopped pairing leftovers. A checkout whose HEAD is already in the default
+  branch with a clean tree contributes nothing to any merge; in
+  `~/github/subactor` that is 20 writers out of 117 checkouts. Skipping their
+  reads also brought the scan back to ~3.5s and the pre-commit path to ~3.2s.
 
 ## Required follow-up (not in this ticket's scope)
 

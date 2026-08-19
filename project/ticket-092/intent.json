@@ -164,6 +164,13 @@
           "bash -c 'for s in tests/*.test.sh; do grep -Fq \"bash $s\" .github/workflows/ci.yml || exit 1; done'"
         ],
         "evidence": "The three GOV-WORKTREE-OVERLAP codes are registered in the diagnostics catalog, so the validator reports no GOV-DIAGNOSTIC-001, and the workflow's suite-list assertion passes."
+      },
+      {
+        "criterion": "AC-08",
+        "commands": [
+          "./tests/worktree-overlap.test.sh"
+        ],
+        "evidence": "Fixture proves the merge-based verdict: opposite ends of one file pass, the same lines fail naming only that file, a branch stacked on another is never paired with its ancestor, and a merged clean leftover is excluded from pendingCheckouts and from every finding. Cross-checked against git merge-tree on the live www-sub-actor branches."
       }
     ]
   }

@@ -35,6 +35,10 @@ ticket-089/090/091.
 - [x] AC-07: The three `GOV-WORKTREE-OVERLAP` codes are registered in
   `governance/diagnostics.json` and the suite is wired into `ci.yml`, so both
   CI gates pass.
+- [x] AC-08: The verdict is a real `git merge-tree` merge, not path
+  intersection: branches editing different regions of one file pass, a stacked
+  branch never conflicts with its ancestor, merged leftovers are not writers,
+  and two branches rewriting the same lines fail.
 
 ## Known follow-up
 

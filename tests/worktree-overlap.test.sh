@@ -380,4 +380,109 @@ git -C "$hookrepo" commit --quiet -m "no longer overlapping" > /dev/null 2>&1
   --target "$hookrepo" --wire-hook > /dev/null
 test "$(grep -c pre-commit-worktree-guard "$hookrepo/.githooks/pre-commit")" -eq 1
 
+# Touching the same path is only a proxy for conflicting. The verdict comes
+# from a real in-memory merge, so branches editing different regions of one
+# file pass, a stacked branch never conflicts with its own ancestor, and a
+# merged leftover checkout is not a writer at all.
+mspace="$fixture/mergespace"
+mrepo="$mspace/app"
+mkdir -p "$mspace/.worktrees"
+git init --quiet --initial-branch=main "$mrepo"
+git -C "$mrepo" config user.email overlap-test@example.invalid
+git -C "$mrepo" config user.name overlap-test
+printf 'top\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nbottom\n' > "$mrepo/wide.txt"
+git -C "$mrepo" add wide.txt
+git -C "$mrepo" commit --quiet -m initial
+git -C "$mrepo" remote add origin git@github.com:example/app.git
+base="$(git -C "$mrepo" rev-parse HEAD)"
+
+far_a="$mspace/.worktrees/app-far-a"
+far_b="$mspace/.worktrees/app-far-b"
+git -C "$mrepo" worktree add --quiet -b ticket/040 "$far_a"
+git -C "$mrepo" worktree add --quiet -b ticket/041 "$far_b"
+
+# Same file, opposite ends: git merges this without help.
+python3 - "$far_a/wide.txt" head <<'PY'
+import sys
+path, where = sys.argv[1], sys.argv[2]
+lines = open(path).read().split("\n")
+lines[0] = "top changed by A"
+open(path, "w").write("\n".join(lines))
+PY
+python3 - "$far_b/wide.txt" <<'PY'
+import sys
+path = sys.argv[1]
+lines = open(path).read().split("\n")
+lines[20] = "bottom changed by B"
+open(path, "w").write("\n".join(lines))
+PY
+git -C "$far_a" commit --quiet -am "A edits the top"
+git -C "$far_b" commit --quiet -am "B edits the bottom"
+
+python3 "$checker" --workspace-root "$mspace" --format json > "$fixture/regions.json"
+python3 - "$fixture/regions.json" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["status"] == "passed", report["findings"]
+PY
+
+# Same lines: this is a real conflict and must fail.
+printf 'top rewritten by A\n' > "$far_a/wide.txt"
+printf 'top rewritten by B differently\n' > "$far_b/wide.txt"
+git -C "$far_a" commit --quiet -am "A rewrites"
+git -C "$far_b" commit --quiet -am "B rewrites"
+if python3 "$checker" --workspace-root "$mspace" --format json > "$fixture/samelines.json"; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+python3 - "$fixture/samelines.json" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+finding = next(
+    item for item in report["findings"] if item["code"] == "GOV-WORKTREE-OVERLAP-001"
+)
+assert finding["evidence"]["overlappingPaths"] == ["wide.txt"], finding["evidence"]
+PY
+
+# A stacked branch cannot conflict with its own ancestor.
+git -C "$far_b" reset --hard --quiet "$base"
+stacked="$mspace/.worktrees/app-stacked"
+git -C "$mrepo" worktree add --quiet -b ticket/042 "$stacked" ticket/040
+printf 'top rewritten by A\nplus one more line\n' > "$stacked/wide.txt"
+git -C "$stacked" commit --quiet -am "stacked on top of A"
+python3 "$checker" --workspace-root "$mspace" --format json > "$fixture/stacked.json"
+python3 - "$fixture/stacked.json" "$far_a" "$stacked" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+pairs = {
+    frozenset((item["evidence"]["left"], item["evidence"]["right"]))
+    for item in report["findings"]
+    if item["code"] == "GOV-WORKTREE-OVERLAP-001"
+}
+assert frozenset((sys.argv[2], sys.argv[3])) not in pairs, report["findings"]
+PY
+
+# A merged, clean leftover is not a writer and must not be paired at all.
+leftover="$mspace/.worktrees/app-leftover"
+git -C "$mrepo" worktree add --quiet -b ticket/043 "$leftover" main
+python3 "$checker" --workspace-root "$mspace" --format json > "$fixture/leftover.json"
+python3 - "$fixture/leftover.json" "$leftover" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["summary"]["pendingCheckouts"] < report["summary"]["checkouts"]
+for item in report["findings"]:
+    evidence = item["evidence"]
+    assert sys.argv[2] not in (evidence.get("left"), evidence.get("right")), evidence
+PY
+
 echo 'worktree overlap guard: PASS'

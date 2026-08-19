@@ -23,11 +23,31 @@ same organisation folder. When an identity has two or more checkouts:
 
 | Code | Meaning |
 | :--- | :--- |
-| `GOV-WORKTREE-OVERLAP-001` | Dirty or unmerged paths intersect. `git status` plus `git diff` against the merge-base with the default branch. |
+| `GOV-WORKTREE-OVERLAP-001` | The two checkouts genuinely contend for a path. |
 | `GOV-WORKTREE-OVERLAP-002` | Two `IN_PROGRESS` `intent.json` files claim overlapping `allowedPaths` and neither lists the other in `conflictsWith`. |
 | `GOV-WORKTREE-OVERLAP-003` | The audit could not finish safely. |
 
-Two rules keep the signal honest:
+**Touching the same path is only a proxy for conflicting**, and a bad one. Two
+branches usually edit different regions of a file and merge without help; a
+stacked branch shares every path with its own ancestor and cannot conflict at
+all. So the verdict comes from `git merge-tree --write-tree`, an in-memory
+merge of the two heads: what it reports as conflicted is what will actually
+break. Uncommitted work is added on top, because no merge can see it. Without a
+git new enough for `--write-tree`, the check falls back to path intersection
+and over-reports.
+
+Measured on this workstation: the same three `www-sub-actor` branches that path
+intersection called a 41-file three-way collision are, under a real merge, two
+clean pairs and one conflict in two files — both of which are on the ignore
+list.
+
+Three rules keep the signal honest:
+
+- **Only writers are compared.** A checkout whose HEAD is already contained in
+  the default branch, with a clean tree, is a leftover: it contributes nothing
+  to any merge. In `~/github/subactor` that is the difference between 117
+  checkouts and 20 actual writers. Leftovers belong to
+  `workspace_lifecycle_check.py`, which is terminal.
 
 - **Ignored paths.** `TODO.md`, `project/TICKETS.md` and `project/ticket-*/**`
   are append-only or per-ticket by construction. Every intent declares them, so
@@ -171,14 +191,13 @@ Measured on this workstation, 2026-08-19:
 
 | Workspace | Checkouts | Scan | Findings |
 | :--- | ---: | ---: | ---: |
-| `~/github/wellmanifest` | 44 | ~3s | 8 |
-| `~/github/subactor` | 114 | ~3.4s | 11 |
+| `~/github/wellmanifest` | 46 (20 writers) | ~2s | 13 |
+| `~/github/subactor` | 117 (20 writers) | ~3.5s | 18 |
 
-A representative subactor finding is `src/frontend/src/App.tsx` and
-`src/php_app/index.php` dirty in both `www-sub-actor` (branch
-`ticket/157-fix-app-missing-imports`) and
-`.worktrees/www-sub-actor-ticket-126` — two branches rewriting the same React
-entry point.
+A representative subactor finding is `src/frontend/src/App.tsx`,
+`src/php_app/Modules.php` and `src/php_app/index.php`, which
+`ticket/126-api-sub-actor-readonly-token` and `ticket/169-admin-surface-boot`
+cannot merge — verified against `git merge-tree` on those two heads.
 
 ## Relation to other tooling
 
