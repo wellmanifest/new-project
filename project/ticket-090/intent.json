@@ -81,7 +81,8 @@
         {
           "name": "host-contract-tests",
           "paths": [
-            "tests/agent-hosts.test.sh"
+            "tests/agent-hosts.test.sh",
+            ".github/workflows/ci.yml"
           ]
         }
       ],
