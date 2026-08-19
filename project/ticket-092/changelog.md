@@ -9,9 +9,14 @@
   and a `--report` file for scans with nowhere to print.
 - Added a safe, idempotent `pyqual.yaml` stage installer that leaves the file
   byte-identical when it cannot verify the edit.
-- Strip inherited `GIT_*` hook environment so a pre-commit scan still sees
-  sibling worktrees, write the fragment into the effective hooks directory
-  (`git rev-parse --git-path hooks`), and add `--wire-hook`.
+- Resolved the pre-commit trigger from `git rev-parse --git-path hooks` instead
+  of a hard-coded `.githooks/`, and added `--wire-hook` to chain it into
+  `pre-commit` idempotently. Two of the three first adopters had the fragment
+  in a directory git never reads.
+- Stripped `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE` and the rest of git's
+  scoping variables before invoking git. A hook inherits them, they override
+  `git -C <path>`, and the checker saw one checkout instead of the workspace —
+  so the gate passed on a real overlap. Covered by a regression test.
 
 ## Required follow-up (not in this ticket's scope)
 

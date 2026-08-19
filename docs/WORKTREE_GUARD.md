@@ -41,6 +41,13 @@ Two rules keep the signal honest:
 
 Mere existence of a second worktree is allowed. Overlapping writes are not.
 
+**Hooks run with `GIT_DIR` exported.** Inherited by a subprocess, `GIT_DIR`,
+`GIT_WORK_TREE` and `GIT_INDEX_FILE` override `git -C <path>` and point every
+call back at the repository being committed. The checker would then see one
+checkout instead of the whole workspace and pass. Both scripts therefore strip
+those variables before invoking git. Anything else calling the checker from a
+hook context must do the same.
+
 ## Scope: repository vs workspace
 
 The two questions are different, so the answers are separate:
@@ -62,21 +69,37 @@ The two questions are different, so the answers are separate:
 ### Per repository — fail closed at the moment of writing
 
 ```bash
-./scripts/install-worktree-guard.sh --target /path/to/repo \
+./scripts/install-worktree-guard.sh --target /path/to/repo --wire-hook \
                                     --pyqual /path/to/repo/pyqual.yaml
 ```
 
 Installs `worktree-guard.yaml`, `.governance/worktree_overlap_check.py`,
 `.governance/worktree_guard.py`, `.governance/error/GOV-WORKTREE-OVERLAP.md`
-and a **chainable** `.githooks/pre-commit-worktree-guard`.
+and a **chainable** `pre-commit-worktree-guard`.
 
-It never rewrites `governance/package-manifest.json` or an existing
-`.githooks/pre-commit`. Chain it from your own hook:
+The hook goes into the directory git will actually read, taken from
+`git rev-parse --git-path hooks`, so it honours `core.hooksPath`. Hard-coding
+`.githooks/` installs a hook that never runs in any repository configured
+otherwise — which was true of two of the three first adopters here. When that
+directory turns out to be `.git/hooks` the installer says so: the hook works,
+but it is machine-local and not shared with anyone cloning the repository.
+
+`--wire-hook` chains the fragment into `pre-commit`, creating that file if it
+does not exist and appending to it if it does. It never overwrites, and running
+it twice does not duplicate the call. Without the flag the installer only
+prints the line to add:
 
 ```bash
-# .githooks/pre-commit
-"$(git rev-parse --show-toplevel)/.githooks/pre-commit-worktree-guard"
+# <hooks dir>/pre-commit
+"$(dirname "${BASH_SOURCE[0]}")/pre-commit-worktree-guard"
 ```
+
+The call is appended **last**, because the fragment `exec`s the runner and
+because a hand-written hook may already end in `exec`.
+
+Once wired, a commit into a repository with an undeclared overlap fails. The
+escape hatch is the normal one, `git commit --no-verify`, and it is the wrong
+answer: the overlap is still there at merge time.
 
 `--pyqual` inserts the stage textually, re-parses the result and compares the
 parse tree against the expected structure. If the file does not have the

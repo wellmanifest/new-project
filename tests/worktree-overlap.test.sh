@@ -310,4 +310,74 @@ report = json.load(open(sys.argv[1], encoding="utf-8"))
 assert report["scope"] == "remote:github.com/example/other", report["scope"]
 PY
 
+# git exports GIT_DIR (and friends) into hooks. Inherited, they override
+# `git -C <path>` and point every subprocess back at the committing repository,
+# which collapses the workspace to one checkout and passes the gate. The
+# checker must run git with those variables removed.
+printf '%s\n' poisoned > "$linked/app.py"
+printf '%s\n' poisoned-other > "$linked_b/app.py"
+# pipefail would abort on the checker's intentional exit 1, so the count is
+# taken from a pipeline allowed to report failure.
+clean_count="$(python3 "$checker" --workspace-root "$workspace" --format json \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["summary"]["checkouts"])' || true)"
+test -n "$clean_count"
+poisoned_report="$fixture/poisoned.json"
+if GIT_DIR="$primary/.git" GIT_WORK_TREE="$primary" GIT_INDEX_FILE="$primary/.git/index" \
+   python3 "$checker" --workspace-root "$workspace" --format json > "$poisoned_report"; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+python3 - "$poisoned_report" "$clean_count" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["summary"]["checkouts"] == int(sys.argv[2]), (
+    report["summary"]["checkouts"],
+    sys.argv[2],
+)
+assert "GOV-WORKTREE-OVERLAP-001" in {item["code"] for item in report["findings"]}
+PY
+git -C "$linked" checkout -- app.py
+git -C "$linked_b" checkout -- app.py
+
+# --wire-hook must reach the directory git actually reads, and the resulting
+# hook must refuse a commit that overlaps a sibling worktree.
+hookrepo="$fixture/hookspace/hooked"
+mkdir -p "$fixture/hookspace/.worktrees"
+git init --quiet --initial-branch=main "$hookrepo"
+git -C "$hookrepo" config user.email overlap-test@example.invalid
+git -C "$hookrepo" config user.name overlap-test
+git -C "$hookrepo" config core.hooksPath .githooks
+printf '%s\n' base > "$hookrepo/shared.txt"
+git -C "$hookrepo" add shared.txt
+git -C "$hookrepo" commit --quiet -m initial
+git -C "$hookrepo" remote add origin git@github.com:example/hooked.git
+git -C "$hookrepo" worktree add --quiet -b ticket/030 "$fixture/hookspace/.worktrees/hooked-a"
+"$repo_root/scripts/install-worktree-guard.sh" --source "$repo_root" \
+  --target "$hookrepo" --wire-hook > "$fixture/hookinstall.out"
+test -x "$hookrepo/.githooks/pre-commit"
+test -x "$hookrepo/.githooks/pre-commit-worktree-guard"
+
+printf '%s\n' here > "$hookrepo/shared.txt"
+printf '%s\n' there > "$fixture/hookspace/.worktrees/hooked-a/shared.txt"
+git -C "$hookrepo" add shared.txt
+if git -C "$hookrepo" commit -m "overlapping" > "$fixture/blocked.out" 2>&1; then
+  echo "pre-commit accepted an overlapping commit" >&2
+  cat "$fixture/blocked.out" >&2
+  exit 1
+fi
+grep -q 'GOV-WORKTREE-OVERLAP-FAIL' "$fixture/blocked.out"
+
+git -C "$fixture/hookspace/.worktrees/hooked-a" checkout --quiet -- shared.txt
+# Hook output goes to stderr; keep a passing suite quiet.
+git -C "$hookrepo" commit --quiet -m "no longer overlapping" > /dev/null 2>&1
+
+# Wiring twice must not duplicate the call.
+"$repo_root/scripts/install-worktree-guard.sh" --source "$repo_root" \
+  --target "$hookrepo" --wire-hook > /dev/null
+test "$(grep -c pre-commit-worktree-guard "$hookrepo/.githooks/pre-commit")" -eq 1
+
 echo 'worktree overlap guard: PASS'

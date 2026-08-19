@@ -29,6 +29,9 @@ ticket-089/090/091.
   observed to fire for both workspace roots.
 - [x] AC-05: A repository-level run reports only its own repository identity, so
   an unrelated conflict cannot block a commit.
+- [x] AC-06: The pre-commit trigger lands in the directory git actually reads
+  and blocks an overlapping commit; verified across `core.hooksPath` unset,
+  tracked and non-standard layouts, and in the three subactor pilots.
 
 ## Known follow-up
 
