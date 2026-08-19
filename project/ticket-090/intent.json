@@ -21,6 +21,7 @@
     ".githooks/pre-commit",
     "scripts/install-agent-hosts.sh",
     "tests/agent-hosts.test.sh",
+    ".github/workflows/ci.yml",
     "template/files/AGENTS.template.md",
     "project/ticket-089/README.md",
     "project/ticket-089/changelog.md",

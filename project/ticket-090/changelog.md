@@ -1,5 +1,9 @@
 # Ticket Changelog (ticket-090)
 
+## [0.2.2] - 2026-08-19
+
+- Wire `tests/agent-hosts.test.sh` into hub `ci.yml` so the suite-list gate passes.
+
 ## [0.2.1] - 2026-08-19
 
 - Repository-relative paths in `agent-report.json` so `GOV-PATH-001` stays closed.
