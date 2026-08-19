@@ -32,7 +32,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "03cbe45568d24d0d2b6b2bc9a520d98a5de71a7c",
+    "acceptedBaseSha": "64017fe8bd3c06dfd7c5f972cf2b6ad9376cb021",
     "targetBranch": "main",
     "outcome": "Every opted-in Wellmanifest domain standard has one deterministic C/Q authority with mandatory event and error catalogs",
     "nonGoals": [
