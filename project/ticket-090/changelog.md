@@ -1,5 +1,9 @@
 # Ticket Changelog (ticket-090)
 
+## [0.2.1] - 2026-08-19
+
+- Repository-relative paths in `agent-report.json` so `GOV-PATH-001` stays closed.
+
 ## [0.2.0] - 2026-08-18
 
 - Added GEMINI.md, CLAUDE.md, Cursor alwaysApply rule, and fail-closed pre-commit hook.

@@ -1,8 +1,8 @@
 {
   "schema": "wellmanifest.agent/report/v1",
-  "workspaceRoot": "/home/tom/github/wellmanifest/.worktrees/new-project-agent-hosts",
-  "gitToplevel": "/home/tom/github/wellmanifest/.worktrees/new-project-agent-hosts",
-  "pwd": "/home/tom/github/wellmanifest/.worktrees/new-project-agent-hosts",
+  "workspaceRoot": ".",
+  "gitToplevel": ".",
+  "pwd": ".",
   "home": "wellmanifest",
   "shape": "domain_pack",
   "adopt": ["wellmanifest/new-project"],
