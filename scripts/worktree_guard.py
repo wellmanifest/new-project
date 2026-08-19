@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import time
@@ -15,6 +16,28 @@ from typing import Any
 
 SCHEMA = "wellmanifest.worktree-guard/v1"
 DEFAULT_INTERVAL = 60
+
+
+# git exports these into hooks. Inherited, they override `git -C <path>` and
+# point every subprocess back at the repository being committed, which silently
+# collapses the whole workspace into a single checkout and passes the gate.
+GIT_SCOPE_ENV = (
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_COMMON_DIR",
+    "GIT_INDEX_FILE",
+    "GIT_INDEX_VERSION",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+    "GIT_PREFIX",
+    "GIT_NAMESPACE",
+    "GIT_CEILING_DIRECTORIES",
+    "GIT_DISCOVERY_ACROSS_FILESYSTEM",
+)
+
+
+def detached_git_env() -> dict[str, str]:
+    return {k: v for k, v in os.environ.items() if k not in GIT_SCOPE_ENV}
 
 # Emitted by --print-pyqual-stage and consumed by install-worktree-guard.sh.
 # Kept here so the runner and the installer cannot drift apart.
@@ -93,6 +116,7 @@ def snapshot(root: Path, extra_roots: list[str]) -> str:
             text=True,
             check=False,
             timeout=15,
+            env=detached_git_env(),
         )
         material.append(result.stdout)
     except (OSError, subprocess.TimeoutExpired) as error:
@@ -134,12 +158,14 @@ def run_once(
     if scope == "repository" or (scope == "auto" and (root / ".git").exists()):
         command.extend(("--identity-of", str(root)))
     if report is None:
-        return subprocess.run(command, check=False).returncode
+        return subprocess.run(command, check=False, env=detached_git_env()).returncode
 
     # A scheduled scan has nowhere to print to, so it leaves a machine-readable
     # trail instead. The report is written whatever the verdict is; an empty or
     # stale file is how a broken timer becomes visible.
-    result = subprocess.run(command, check=False, capture_output=True, text=True)
+    result = subprocess.run(
+        command, check=False, capture_output=True, text=True, env=detached_git_env()
+    )
     report.parent.mkdir(parents=True, exist_ok=True)
     payload = result.stdout.strip() or json.dumps(
         {

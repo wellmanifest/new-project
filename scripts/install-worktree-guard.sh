@@ -25,6 +25,7 @@ Usage: ./scripts/install-worktree-guard.sh [options]
   --target DIR       Git clone that should receive the in-repo guard
   --workspace DIR    Workspace root to scan on a schedule (e.g. ~/github/subactor)
   --pyqual FILE      pyqual.yaml to extend with the worktree-overlap stage
+  --wire-hook        Chain the fragment into the target's pre-commit hook
   --interval SECONDS Timer period for --workspace (default 300)
   --enable           systemctl --user enable --now the generated units
   --watch            Print the foreground watch command for the target
@@ -35,7 +36,10 @@ Usage: ./scripts/install-worktree-guard.sh [options]
   .governance/worktree_overlap_check.py
   .governance/worktree_guard.py
   .governance/error/GOV-WORKTREE-OVERLAP.md
-  .githooks/pre-commit-worktree-guard   (chainable; does not replace pre-commit)
+  <effective hooks dir>/pre-commit-worktree-guard
+      The directory comes from `git rev-parse --git-path hooks`, so it honours
+      core.hooksPath. Chainable; an existing pre-commit is never replaced.
+      With --wire-hook the call is added to pre-commit (created if absent).
 
 --workspace installs:
   $XDG_DATA_HOME/worktree-guard/{worktree_overlap_check.py,worktree_guard.py,worktree-guard.yaml}
@@ -51,6 +55,7 @@ PYQUAL=""
 INTERVAL=300
 ENABLE=false
 WATCH=false
+WIRE_HOOK=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -66,6 +71,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --enable) ENABLE=true; shift ;;
+    --wire-hook) WIRE_HOOK=true; shift ;;
     --watch) WATCH=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1" >&2; usage >&2; exit 2 ;;
@@ -97,13 +103,19 @@ require error/GOV-WORKTREE-OVERLAP.md
 
 install_repo() {
   local target="$1"
-  mkdir -p "$target/.governance/error" "$target/.githooks"
+  # Ask git where it will actually look. Writing to a hard-coded .githooks/
+  # installs a hook that never runs whenever core.hooksPath says otherwise.
+  local hooks_dir
+  hooks_dir="$(cd "$target" && git rev-parse --git-path hooks)"
+  [[ "$hooks_dir" == /* ]] || hooks_dir="$target/$hooks_dir"
+
+  mkdir -p "$target/.governance/error" "$hooks_dir"
   install -m 0755 "$SOURCE/scripts/worktree_overlap_check.py" "$target/.governance/worktree_overlap_check.py"
   install -m 0755 "$SOURCE/scripts/worktree_guard.py" "$target/.governance/worktree_guard.py"
   install -m 0644 "$SOURCE/worktree-guard.yaml" "$target/worktree-guard.yaml"
   install -m 0644 "$SOURCE/error/GOV-WORKTREE-OVERLAP.md" "$target/.governance/error/GOV-WORKTREE-OVERLAP.md"
 
-  cat > "$target/.githooks/pre-commit-worktree-guard" <<'HOOK'
+  cat > "$hooks_dir/pre-commit-worktree-guard" <<'HOOK'
 #!/usr/bin/env bash
 # Chainable pre-commit fragment. Call it from .githooks/pre-commit; it is not
 # a replacement for that hook and never edits it.
@@ -115,8 +127,50 @@ for runner in "$root/.governance/worktree_guard.py" "$root/scripts/worktree_guar
   fi
 done
 HOOK
-  chmod 0755 "$target/.githooks/pre-commit-worktree-guard"
+  chmod 0755 "$hooks_dir/pre-commit-worktree-guard"
   echo "repo:      installed into $target"
+  echo "hooks:     $hooks_dir"
+  case "$hooks_dir" in
+    */.git/hooks)
+      echo "hooks:     WARNING this directory is not tracked, so the hook is"
+      echo "hooks:     machine-local. Set core.hooksPath to a tracked directory"
+      echo "hooks:     to share it: git -C $target config core.hooksPath .githooks"
+      ;;
+  esac
+
+  local hook="$hooks_dir/pre-commit"
+  if [[ "$WIRE_HOOK" != true ]]; then
+    if [[ -f "$hook" ]] && grep -Fq pre-commit-worktree-guard "$hook"; then
+      echo "hooks:     pre-commit already calls the guard"
+    else
+      echo "hooks:     not wired. Re-run with --wire-hook, or add to $hook:"
+      echo '             "$(git rev-parse --show-toplevel)"/'"$(basename "$hooks_dir")"'/pre-commit-worktree-guard'
+    fi
+    return
+  fi
+
+  if [[ -f "$hook" ]] && grep -Fq pre-commit-worktree-guard "$hook"; then
+    echo "hooks:     pre-commit already calls the guard, left unchanged"
+    return
+  fi
+  if [[ ! -f "$hook" ]]; then
+    cat > "$hook" <<'PRECOMMIT'
+#!/usr/bin/env bash
+set -euo pipefail
+PRECOMMIT
+    chmod 0755 "$hook"
+    echo "hooks:     created $hook"
+  else
+    echo "hooks:     appending to the existing $hook"
+  fi
+  # Appended last so an earlier `exec` in a hand-written hook is not silently
+  # bypassed; the fragment itself execs, so nothing may follow it.
+  cat >> "$hook" <<'CHAIN'
+
+# worktree overlap guard (wellmanifest/new-project) - keep this last
+"$(dirname "${BASH_SOURCE[0]}")/pre-commit-worktree-guard"
+CHAIN
+  echo "hooks:     wired $hook"
 }
 
 install_workspace() {

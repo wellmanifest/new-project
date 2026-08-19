@@ -9,6 +9,9 @@
   and a `--report` file for scans with nowhere to print.
 - Added a safe, idempotent `pyqual.yaml` stage installer that leaves the file
   byte-identical when it cannot verify the edit.
+- Strip inherited `GIT_*` hook environment so a pre-commit scan still sees
+  sibling worktrees, write the fragment into the effective hooks directory
+  (`git rev-parse --git-path hooks`), and add `--wire-hook`.
 
 ## Required follow-up (not in this ticket's scope)
 

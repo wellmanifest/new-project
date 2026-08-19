@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -71,6 +72,28 @@ class AuditError(RuntimeError):
     """The overlap audit could not complete safely."""
 
 
+# git exports these into hooks. Inherited, they override `git -C <path>` and
+# point every subprocess back at the repository being committed, which silently
+# collapses the whole workspace into a single checkout and passes the gate.
+GIT_SCOPE_ENV = (
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_COMMON_DIR",
+    "GIT_INDEX_FILE",
+    "GIT_INDEX_VERSION",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+    "GIT_PREFIX",
+    "GIT_NAMESPACE",
+    "GIT_CEILING_DIRECTORIES",
+    "GIT_DISCOVERY_ACROSS_FILESYSTEM",
+)
+
+
+def detached_git_env() -> dict[str, str]:
+    return {k: v for k, v in os.environ.items() if k not in GIT_SCOPE_ENV}
+
+
 def run_git(root: Path, *arguments: str) -> str:
     try:
         result = subprocess.run(
@@ -79,6 +102,7 @@ def run_git(root: Path, *arguments: str) -> str:
             check=False,
             text=True,
             timeout=20,
+            env=detached_git_env(),
         )
     except (OSError, subprocess.TimeoutExpired) as error:
         raise AuditError(f"git failed for {root}: {error}") from error
