@@ -21,6 +21,11 @@
 
 ## Required follow-up (not in this ticket's scope)
 
+`governance/diagnostics.json` must register `GOV-WORKTREE-OVERLAP-001`, `-002`
+and `-003`. `tests/governance-validator.test.sh` fails with `GOV-DIAGNOSTIC-001`
+until it does, which is why CI is red. That file is on this ticket's
+`forbiddenPaths` and belongs to ticket-091.
+
 `.github/workflows/ci.yml` must gain a step running
 `bash tests/worktree-overlap.test.sh`. The workflow asserts that every
 `tests/*.test.sh` is wired into it, so until that step exists this branch
