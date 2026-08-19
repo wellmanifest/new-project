@@ -32,6 +32,12 @@
 
 ## Required follow-up (not in this ticket's scope)
 
-A dependent ticket should re-add `governance/worktree-guard.schema.json` and
-register it in `governance/package-manifest.json`, once this ticket frees the
-workstream slot.
+A dependent ticket should, once this ticket frees the workstream slot:
+
+- re-add `governance/worktree-guard.schema.json`;
+- add `error/GOV-WORKTREE-OVERLAP.md` to `governance/package-manifest.json` as a
+  managed file and then point the three catalog entries' `documentation` at it.
+  `tests/adoption-lock.test.sh` requires every non-null `documentation` path to
+  exist inside an adopter's `.governance/`, so the entries carry `null` until
+  the document is actually shipped by the package. Adopters that run
+  `install-worktree-guard.sh` already receive it.

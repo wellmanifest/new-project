@@ -329,17 +329,17 @@
     "GOV-WORKTREE-OVERLAP-001": {
       "message": "Two worktrees of the same repository are changing the same paths.",
       "remediation": "Stop one writer, declare conflictsWith, or move the overlapping paths to a single ticket / integration workstream before merge.",
-      "documentation": "error/GOV-WORKTREE-OVERLAP.md"
+      "documentation": null
     },
     "GOV-WORKTREE-OVERLAP-002": {
       "message": "IN_PROGRESS tickets in sibling worktrees claim overlapping allowedPaths without conflictsWith.",
       "remediation": "Add conflictsWith on both intents, serialize one ticket to BACKLOG/PLAN/BLOCKED, or narrow allowedPaths so they no longer overlap.",
-      "documentation": "error/GOV-WORKTREE-OVERLAP.md"
+      "documentation": null
     },
     "GOV-WORKTREE-OVERLAP-003": {
       "message": "The worktree overlap audit could not be completed safely.",
       "remediation": "Repair repository metadata or narrow the explicit workspace root before relying on the guard.",
-      "documentation": "error/GOV-WORKTREE-OVERLAP.md"
+      "documentation": null
     }
   }
 }
