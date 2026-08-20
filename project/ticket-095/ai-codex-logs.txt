@@ -1,0 +1,19 @@
+[2026-08-20T10:30:00Z] [SCOPE] [provider:codex] Audited dsl, code-dsl, autonomy, git-lifecycle, env-dsl, merge, new-project, policy-dsl, poa, performance, project-ssot, ssot, ticket-lifecycle, twin-lifecycle and validation-attestation.
+[2026-08-20T10:31:00Z] [EXEC] [provider:codex] $ ./project/governance-check.sh --actor agent  # in each governed checkout
+[2026-08-20T10:31:01Z] [RESULT] GOV-PASS: dsl, code-dsl, autonomy, git-lifecycle, env-dsl, merge, new-project, policy-dsl, poa, ticket-lifecycle, twin-lifecycle, validation-attestation.
+[2026-08-20T10:31:02Z] [RESULT] performance: GOV-ARCHITECTURE-001 and GOV-BASE-001; ssot/project-ssot: no governance gate.
+[2026-08-20T10:32:00Z] [EXEC] [provider:codex] $ python3 dsl/src/dsl_check.py validate|standards --root <repo> <manifest>
+[2026-08-20T10:32:01Z] [RESULT] Eight of eight manifests PASS both validate and standards: dsl, code-dsl, autonomy, env-dsl, new-project, policy-dsl, project-ssot, ssot.
+[2026-08-20T10:33:00Z] [EXEC] [provider:codex] $ python3 -m unittest discover -s tests -v / python3 standard/conformance.py --all
+[2026-08-20T10:33:01Z] [RESULT] PASS: dsl self-test; code-dsl 9; autonomy 35+self-test; git-lifecycle; env-dsl 12+self-test; merge+CQRS; new-project required-checks; poa; project-ssot 37; ssot 19; ticket-lifecycle; twin-lifecycle; validation-attestation 15+self-test.
+[2026-08-20T10:33:02Z] [RESULT] policy-dsl: 40 PASS, 1 ERROR: saas-start amount_monthly_minor expected 9700, got 5000 from live www-sub-actor plans.json.
+[2026-08-20T10:34:00Z] [EXEC] [provider:codex] $ python3 dsl/src/dsl_check.py gate --root dsl dsl/profiles/dsl-manifest.json
+[2026-08-20T10:34:01Z] [RESULT] DSL-FINDINGS-002: required findings producer has no report; current protected DSL CI does not execute this gate.
+[2026-08-20T10:35:00Z] [EXEC] [provider:codex] $ gh api repos/wellmanifest/<repo>/rulesets; gh api repos/wellmanifest/<repo>/branches/main/protection
+[2026-08-20T10:35:01Z] [RESULT] Domain check required: autonomy, git-lifecycle, merge, poa, ticket-lifecycle, twin-lifecycle, validation-attestation. Hub new-project is protected. DSL is partially protected. Other audited domain packs lack a required domain check.
+[2026-08-20T10:36:00Z] [EXEC] [provider:codex] $ python3 .governance/check_required_checks.py --source .governance/required-checks.json --workflow <actual-workflow>
+[2026-08-20T10:36:01Z] [RESULT] FAIL in representative autonomy, policy-dsl, git-lifecycle and poa checks: adopter instance still declares new-project/test/windows-governance instead of target workflow contexts.
+[2026-08-20T10:37:00Z] [EVIDENCE] new-project v0.18.1 tag=16f7aea148a7f979e5c5abdfd4bc112224904d36; audited main=3f68b8d17bb021552199cbc9bf2c15dd23dc430c; 69 commits ahead.
+[2026-08-20T10:38:00Z] [EVIDENCE] Audited checkout SHAs: dsl=0e088f9efa06, code-dsl=029eccd5b352, autonomy=93ddd2d111e3, git-lifecycle=c01a82287094, env-dsl=ac182fac436c, merge=463093392751, policy-dsl=30c9491230b2, poa=03c2963831f0, performance=b9dfa473cf30, project-ssot=9d5921e7177c, ssot=b8e328e9828c, ticket-lifecycle=40848c814e95, twin-lifecycle=d556831ee109, validation-attestation=7ce2b2b4afb1.
+[2026-08-20T11:05:39Z] [EXEC] [provider:codex] $ python3 -m json.tool project/ticket-095/intent.json; git diff --cached --check; ./project/governance-check.sh --actor agent
+[2026-08-20T11:05:39Z] [RESULT] Intent PASS; diff check PASS; GOV-PASS (0 errors, 0 warnings).

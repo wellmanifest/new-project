@@ -1,0 +1,96 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-095",
+  "summary": "Audit enforceability of Wellmanifest standards",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "docs/STANDARD_CONFORMANCE.md",
+    "project/ticket-095/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3f68b8d17bb021552199cbc9bf2c15dd23dc430c",
+    "targetBranch": "main",
+    "outcome": "Maintainers have one evidence-backed matrix and an enforceable target contract for all 15 Wellmanifest standards repositories.",
+    "nonGoals": [
+      "No mutation of the 15 audited repositories",
+      "No GitHub ruleset changes",
+      "No release or adopter upgrade in this documentation ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the current audit and the normative minimum enforcement contract in one central hub document. Separate observed local conformance, CI execution, protected-branch enforcement and live adopter data so no green layer can overclaim another.",
+      "components": [
+        {
+          "name": "standard-conformance-documentation",
+          "paths": [
+            "docs/STANDARD_CONFORMANCE.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the documentation and ticket records; no runtime or repository policy changes are made."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./project/governance-check.sh --actor agent",
+          "python3 -m json.tool project/ticket-095/intent.json",
+          "git diff --check"
+        ],
+        "evidence": "The repository matrix lists all 15 requested repositories and separates local, CI and main protection."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Executed test, manifest and GitHub protection evidence is summarized in project/ticket-095/ai-codex-logs.txt."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "git diff --check"
+        ],
+        "evidence": "The confirmed defects and their reproduction evidence are documented under Potwierdzone defekty."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python3 -m json.tool project/ticket-095/intent.json"
+        ],
+        "evidence": "The minimum target contract and ordered rollout are documented without changing audited repositories."
+      }
+    ]
+  }
+}
