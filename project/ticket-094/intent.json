@@ -37,7 +37,7 @@
       "No new diagnostic codes",
       "No adoption lock regeneration beyond the new managed file"
     ],
-    "complexity": "XS",
+    "complexity": "S",
     "estimatedMinutes": 20,
     "budgets": {
       "maxImplementationFiles": 3,
