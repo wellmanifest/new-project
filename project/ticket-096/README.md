@@ -2,8 +2,8 @@
 
 - **ID**: ticket-096
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-20
 
 ## Cel i Zakres
@@ -28,7 +28,7 @@ rewriting any other hook logic.
       a disjoint commit and repeated installation remain successful/idempotent.
 - [x] AC-04: Existing created-hook, custom `core.hooksPath`, workspace and
       merge-based overlap fixtures remain green on Linux and Windows gates.
-- [ ] AC-05: Governance, the focused overlap suite and the complete hub test
+- [x] AC-05: Governance, the focused overlap suite and the complete hub test
       contract pass before exact-head Validator review.
 
 ## Ryzyka i Uwagi
@@ -36,6 +36,15 @@ rewriting any other hook logic.
 - Only a final effective line equal to `exit 0` is relocated. The installer
   does not attempt to parse arbitrary shell control flow or bypass deliberate
   early exits.
+
+## Publication evidence
+
+- Pull request: `wellmanifest/new-project#154`
+- Frozen and approved head: `e8ecac81198f5b8c53be7c9b79fe800ceaf49657`
+- Validator review: `4988111707`
+- Merge commit: `e0148f799a555bd1bc4acfc1f454722e4ca022b1`
+  (merged `2026-08-20T22:38:00Z`)
+- Remote implementation branch: deleted by protected delivery.
 
 ## Uczestnicy
 

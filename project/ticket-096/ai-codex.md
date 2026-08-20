@@ -37,12 +37,14 @@ standard's own full hook.
   the chain immediately before it. Other hooks keep append-last behavior;
   repeated installation remains idempotent.
 - Bash syntax, exact-base governance, the focused fixture and all eleven Linux
-  shell suites pass. Publication now waits for hosted Linux/Windows and the
-  independent exact-head Validator boundary.
+  shell suites pass. Hosted Linux/Windows checks passed; Validator review
+  `4988111707` approved exact head `e8ecac81198f5b8c53be7c9b79fe800ceaf49657`
+  and protected delivery merged it as
+  `e0148f799a555bd1bc4acfc1f454722e4ca022b1`.
 
 ## Blockers
 
-- None inside the recorded intent; protected publication is in progress.
+- None; the installer repair ticket is terminal `DONE / DONE`.
 - New authority is still required for destructive action, secret access, new
   external coordination or material objective expansion. Protected delivery
   may be invoked without another prompt when publication is in scope; its
