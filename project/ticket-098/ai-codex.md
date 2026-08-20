@@ -29,6 +29,12 @@ policy requires `DONE / DONE` to be written only after trusted merge. Using
 - Bound the regression to integrated standard base
   `36071e6e90636b464725af1c07718572edd0bf3d` and the reproduced Core closure
   failure.
+- Changed ticket status authority from the working tree to Git's staged
+  snapshot, closing the mismatch bypass.
+- Added a narrow `DONE` closure mode: the ticket README must be staged and
+  every staged path must be an addition/modification under that ticket, TODO or
+  the ticket index; deletions, renames, copies and every other path fail closed.
+- Bash syntax, focused host fixtures and all eleven Linux hub suites pass.
 
 ## Blockers
 

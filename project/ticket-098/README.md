@@ -21,14 +21,14 @@ behavior and the worktree-overlap guard remains chained last by adopters.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: The autonomous repair request is recorded as bounded session
+- [x] AC-01: The autonomous repair request is recorded as bounded session
       authorization without creating human-owned content.
-- [ ] AC-02: The hook reads ticket status from the Git index, preventing a
+- [x] AC-02: The hook reads ticket status from the Git index, preventing a
       staged/worktree status mismatch from bypassing the boundary.
-- [ ] AC-03: A `DONE` ticket can commit its own closure evidence plus TODO and
+- [x] AC-03: A `DONE` ticket can commit its own closure evidence plus TODO and
       ticket index, but implementation, foreign-ticket paths and deletions are
       rejected with stable `GOV-AGENT-HOST-003` diagnostics.
-- [ ] AC-04: Existing main, missing-ticket, BACKLOG and IN_PROGRESS fixtures
+- [x] AC-04: Existing main, missing-ticket, BACKLOG and IN_PROGRESS fixtures
       retain their behavior; repeated installer adoption copies the fixed hook.
 - [ ] AC-05: Focused and full hub suites, Bash syntax and exact-base governance
       pass before exact-head Validator review.
