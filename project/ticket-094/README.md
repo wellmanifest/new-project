@@ -2,8 +2,8 @@
 
 - **ID**: ticket-094
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-20
 
 ## Cel i Zakres
@@ -13,10 +13,10 @@ w limit 9 plików implementacyjnych: dostarczenie `error/GOV-WORKTREE-OVERLAP.md
 adopterom i przywrócenie schematu JSON dla `worktree-guard.yaml`.
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [ ] AC-01: Zbudowany adopter zawiera `.governance/error/GOV-WORKTREE-OVERLAP.md`,
+- [x] AC-01: Zbudowany adopter zawiera `.governance/error/GOV-WORKTREE-OVERLAP.md`,
   dzięki czemu trzy wpisy katalogu wskazują na niego zamiast nieść `null`.
-- [ ] AC-02: Katalog diagnostyk nadal rejestruje każdy emitowany kod.
-- [ ] AC-03: `governance/worktree-guard.schema.json` istnieje ponownie i parsuje się.
+- [x] AC-02: Katalog diagnostyk nadal rejestruje każdy emitowany kod.
+- [x] AC-03: `governance/worktree-guard.schema.json` istnieje ponownie i parsuje się.
 
 ## Ryzyka i Uwagi
 - Kolejność jest wymuszona: `tests/adoption-lock.test.sh` wymaga, by każda
