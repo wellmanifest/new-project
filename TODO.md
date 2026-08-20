@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-095`](project/ticket-095/README.md) — audyt stosowania i
+  egzekwowalności 15 standardów Wellmanifest, macierz dowodów oraz docelowy
+  kontrakt naprawczy. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  `SERVICE / P1 / requested`; workstream: `governance`.
+
 - [ ] [`ticket-092`](project/ticket-092/README.md) — proaktywny
   `worktree-guard.yaml` (jak `pyqual.yaml`): fail-closed przy nachodzących
   zmianach w dwóch worktree tego samego repo. Stan: `IN_PROGRESS / EDIT`;
