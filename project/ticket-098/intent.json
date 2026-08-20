@@ -1,0 +1,72 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-098",
+  "summary": "Allow staged governance-only closures through the host hook",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    ".githooks/pre-commit",
+    "tests/agent-hosts.test.sh",
+    "project/ticket-098/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "36071e6e90636b464725af1c07718572edd0bf3d",
+    "targetBranch": "main",
+    "outcome": "Host hooks admit only index-bound governance closures while implementation remains restricted to IN_PROGRESS tickets",
+    "nonGoals": [
+      "Do not allow generated artifacts or source changes in a DONE closure",
+      "Do not weaken ticket branch or missing-ticket checks",
+      "Do not bypass the worktree-overlap guard",
+      "Do not merge directly"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Read status and changed paths from the staged snapshot, with a closed governance-only allowlist for DONE tickets",
+      "components": [
+        {
+          "name": "agent-host-commit-boundary",
+          "paths": [".githooks/pre-commit", "tests/agent-hosts.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Restore the IN_PROGRESS-only hook; governance closures will again fail closed pending a compliant replacement"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-04",
+        "commands": ["bash tests/agent-hosts.test.sh", "bash -n .githooks/pre-commit tests/agent-hosts.test.sh"],
+        "evidence": "project/ticket-098/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": ["for test in tests/*.test.sh; do bash $test; done", "./project/governance-check.sh --actor agent --base 36071e6e90636b464725af1c07718572edd0bf3d --head HEAD"],
+        "evidence": "project/ticket-098/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
