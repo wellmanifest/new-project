@@ -163,13 +163,46 @@ PRECOMMIT
   else
     echo "hooks:     appending to the existing $hook"
   fi
-  # Appended last so an earlier `exec` in a hand-written hook is not silently
-  # bypassed; the fragment itself execs, so nothing may follow it.
-  cat >> "$hook" <<'CHAIN'
+  # Keep the fragment last so an earlier `exec` in a hand-written hook is not
+  # silently bypassed; the fragment itself execs, so nothing may follow it.
+  # A final explicit success is the one safe exception: appending after
+  # `exit 0` creates dead code, so insert immediately before that exact final
+  # effective command and preserve the exit after the chain.
+  local terminal_success_line
+  terminal_success_line="$(awk '
+    {
+      text = $0
+      sub(/^[[:space:]]+/, "", text)
+      sub(/[[:space:]]+$/, "", text)
+      if (text != "" && text !~ /^#/) {
+        last_line = NR
+        last_text = text
+      }
+    }
+    END {
+      if (last_text == "exit 0") print last_line
+    }
+  ' "$hook")"
+  if [[ -n "$terminal_success_line" ]]; then
+    local staged_hook
+    staged_hook="$(mktemp "${hook}.XXXXXX")"
+    awk -v insertion="$terminal_success_line" '
+      NR == insertion {
+        print ""
+        print "# worktree overlap guard (wellmanifest/new-project) - keep this last"
+        print "\"$(dirname \"${BASH_SOURCE[0]}\")/pre-commit-worktree-guard\""
+      }
+      { print }
+    ' "$hook" > "$staged_hook"
+    chmod 0755 "$staged_hook"
+    mv "$staged_hook" "$hook"
+  else
+    cat >> "$hook" <<'CHAIN'
 
 # worktree overlap guard (wellmanifest/new-project) - keep this last
 "$(dirname "${BASH_SOURCE[0]}")/pre-commit-worktree-guard"
 CHAIN
+  fi
   echo "hooks:     wired $hook"
 }
 

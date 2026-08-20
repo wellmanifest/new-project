@@ -1,0 +1,10 @@
+2026-08-20T22:27:00Z PLAN ticket-096 allocated through project/new-ticket.sh
+2026-08-20T22:27:00Z BASE 358f7b40d51bb205ffe4cc93e25c3d07cc9e0682
+2026-08-20T22:27:00Z REPRO Core full pre-commit ended with exit 0; installer appended the guard after unreachable terminal success
+2026-08-20T22:29:00Z RED ./tests/worktree-overlap.test.sh exit=1 after terminal-success regression fixture
+2026-08-20T22:30:00Z GREEN ./tests/worktree-overlap.test.sh => worktree overlap guard: PASS
+2026-08-20T22:30:00Z GREEN bash -n scripts/install-worktree-guard.sh tests/worktree-overlap.test.sh
+2026-08-20T22:30:00Z GREEN governance exact-base => GOV-PASS (0 errors, 0 warnings)
+2026-08-20T22:30:00Z NOT-A-GATE ./project.sh exit=126 because the hub seed alias is intentionally non-executable; replaced with the CI Linux suite loop
+2026-08-20T22:32:00Z GREEN all 11 tests/*.test.sh suites passed, including worktree overlap guard: PASS
+2026-08-20T22:34:00Z GOV-DELIVERY-001 hosted exact-head gate rejected estimatedMinutes=15 for XS hard limit=10; corrected without widening scope

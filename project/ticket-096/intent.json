@@ -1,0 +1,74 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-096",
+  "summary": "Keep the overlap guard reachable after terminal pre-commit success",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/install-worktree-guard.sh",
+    "tests/worktree-overlap.test.sh",
+    "project/ticket-096/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "358f7b40d51bb205ffe4cc93e25c3d07cc9e0682",
+    "targetBranch": "main",
+    "outcome": "The installed overlap guard remains reachable when composed with an existing pre-commit hook that ends in terminal success",
+    "nonGoals": [
+      "Do not interpret arbitrary shell control flow",
+      "Do not replace an existing pre-commit hook",
+      "Do not change the overlap verdict or workspace scheduler",
+      "Do not merge directly"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Recognize only a final effective exit 0 line and insert the guard chain immediately before it; append for all other hooks",
+      "components": [
+        {
+          "name": "worktree-guard-installer",
+          "paths": [
+            "scripts/install-worktree-guard.sh",
+            "tests/worktree-overlap.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the installer and regression fixture; adopter hooks are not modified by this repository change"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "./tests/worktree-overlap.test.sh",
+          "./project/governance-check.sh --actor agent --base 358f7b40d51bb205ffe4cc93e25c3d07cc9e0682 --head HEAD",
+          "for suite in tests/*.test.sh; do bash \"$suite\"; done"
+        ],
+        "evidence": "project/ticket-096/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
