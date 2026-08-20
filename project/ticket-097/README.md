@@ -3,7 +3,7 @@
 - **ID**: ticket-097
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-20
 
 ## Cel i Zakres
@@ -27,7 +27,7 @@ is interpreted.
       suffix before terminal `exit 0` and reports the repair.
 - [x] AC-03: Correctly wired hooks and non-legacy existing calls remain
       idempotent and byte-stable.
-- [ ] AC-04: The focused real-commit fixture, all hub suites, Bash syntax and
+- [x] AC-04: The focused real-commit fixture, all hub suites, Bash syntax and
       exact-base governance pass before protected publication.
 
 ## Ryzyka i Uwagi

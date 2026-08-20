@@ -34,6 +34,8 @@ call still follows terminal `exit 0`.
   exactly one standard comment and a preceding effective `exit 0`.
 - Correctly wired and non-legacy hooks keep the existing idempotent path. Bash
   syntax, the focused fixture and all eleven Linux hub suites pass.
+- Exact-base governance passes with zero errors and zero warnings; publication
+  now waits at the protected exact-head boundary.
 
 ## Blockers
 

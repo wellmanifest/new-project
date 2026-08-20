@@ -9,3 +9,4 @@
 - Added a narrow legacy-suffix recognizer, relocated the existing invocation
   before terminal success and covered migration plus idempotency in the real
   commit fixture.
+- Passed exact-base governance and advanced to protected publication.
