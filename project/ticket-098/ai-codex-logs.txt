@@ -1,0 +1,6 @@
+2026-08-20T23:44:00Z PLAN ticket-098 allocated through project/new-ticket.sh
+2026-08-20T23:44:00Z BASE 36071e6e90636b464725af1c07718572edd0bf3d
+2026-08-20T23:44:00Z REPRO Core governance-only ticket020 closure passes governance-check but pre-commit rejects DONE with GOV-AGENT-HOST-003
+2026-08-20T23:46:00Z RED agent-hosts staged BACKLOG with unstaged IN_PROGRESS committed unexpectedly; exit=1
+2026-08-20T23:47:00Z GREEN bash syntax and agent-hosts staged-status/closure fixtures
+2026-08-20T23:48:00Z GREEN all 11 tests/*.test.sh Linux suites

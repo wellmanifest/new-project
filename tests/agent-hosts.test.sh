@@ -55,6 +55,48 @@ sed -i 's/BACKLOG/IN_PROGRESS/' "$tmp/adopter/project/ticket-001/README.md"
 git -C "$tmp/adopter" add project/ticket-001/README.md README.md
 git -C "$tmp/adopter" commit -qm "bound to ticket-001" || fail "IN_PROGRESS ticket branch must commit"
 
+# Status authority comes from the staged snapshot. An unstaged IN_PROGRESS
+# working-tree value must not authorize a staged BACKLOG ticket plus source.
+sed -i 's/IN_PROGRESS/BACKLOG/' "$tmp/adopter/project/ticket-001/README.md"
+git -C "$tmp/adopter" add project/ticket-001/README.md
+sed -i 's/BACKLOG/IN_PROGRESS/' "$tmp/adopter/project/ticket-001/README.md"
+echo "staged bypass" >> "$tmp/adopter/README.md"
+git -C "$tmp/adopter" add README.md
+if git -C "$tmp/adopter" commit -qm "staged status bypass"; then
+  fail "unstaged IN_PROGRESS must not override staged BACKLOG"
+fi
+git -C "$tmp/adopter" reset -q --hard HEAD
+
+# A terminal ticket may publish only its own closure evidence and the two
+# repository-level governance indexes.
+sed -i 's/IN_PROGRESS/DONE/' "$tmp/adopter/project/ticket-001/README.md"
+printf '%s\n' '# TODO' '- [x] ticket-001: DONE / DONE' > "$tmp/adopter/TODO.md"
+mkdir -p "$tmp/adopter/project"
+printf '%s\n' '# Tickets' '- ticket-001' > "$tmp/adopter/project/TICKETS.md"
+git -C "$tmp/adopter" add project/ticket-001/README.md TODO.md project/TICKETS.md
+git -C "$tmp/adopter" commit -qm "close ticket-001" || fail "DONE governance-only closure must commit"
+
+echo "implementation after close" >> "$tmp/adopter/README.md"
+git -C "$tmp/adopter" add README.md
+if git -C "$tmp/adopter" commit -qm "closed implementation"; then
+  fail "DONE ticket must reject implementation"
+fi
+git -C "$tmp/adopter" reset -q --hard HEAD
+
+mkdir -p "$tmp/adopter/project/ticket-002"
+printf '%s\n' '# Foreign ticket' '- **Status**: DONE' > "$tmp/adopter/project/ticket-002/README.md"
+git -C "$tmp/adopter" add project/ticket-002/README.md
+if git -C "$tmp/adopter" commit -qm "foreign closure"; then
+  fail "DONE ticket must reject foreign ticket evidence"
+fi
+git -C "$tmp/adopter" reset -q --hard HEAD
+
+git -C "$tmp/adopter" rm -q TODO.md
+if git -C "$tmp/adopter" commit -qm "delete closure index"; then
+  fail "DONE ticket must reject deletions"
+fi
+git -C "$tmp/adopter" reset -q --hard HEAD
+
 user_home="$tmp/home"
 mkdir -p "$user_home"
 HOME="$user_home" "$root/scripts/install-agent-hosts.sh" --source "$root" --user
