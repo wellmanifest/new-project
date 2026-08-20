@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-097`](project/ticket-097/README.md) — naprawiać istniejące
+  instalacje, w których idempotentny installer pozostawił wywołanie worktree
+  guard po terminalnym `exit 0`. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  `BUG / P1 / regression`; workstream: `governance`; zależy od `ticket-096`.
+
 - [x] [`ticket-096`](project/ticket-096/README.md) — zachować wykonywalność
   worktree guard po złożeniu z istniejącym hookiem kończącym się `exit 0`.
   Stan: `DONE / DONE`; klasyfikacja: `BUG / P1 / regression`; workstream:

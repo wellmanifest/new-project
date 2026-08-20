@@ -101,6 +101,72 @@ require scripts/worktree_guard.py
 require worktree-guard.yaml
 require error/GOV-WORKTREE-OVERLAP.md
 
+repair_legacy_unreachable_guard() {
+  local hook="$1"
+  local staged_hook
+  local status
+  staged_hook="$(mktemp "${hook}.XXXXXX")"
+  if awk '
+    function normalized(value) {
+      sub(/^[[:space:]]+/, "", value)
+      sub(/[[:space:]]+$/, "", value)
+      return value
+    }
+    {
+      lines[NR] = $0
+      text = normalized($0)
+      if (text != "" && text !~ /^#/) {
+        effective_count += 1
+        effective_line[effective_count] = NR
+        effective_text[effective_count] = text
+        if (index(text, "pre-commit-worktree-guard") > 0) {
+          guard_count += 1
+          guard_effective = effective_count
+          guard_line = NR
+        }
+      }
+    }
+    END {
+      legacy_comment = "# worktree overlap guard (wellmanifest/new-project) - keep this last"
+      if (guard_count != 1 || guard_effective != effective_count || guard_line != NR) exit 3
+      if (effective_count < 2 || effective_text[effective_count - 1] != "exit 0") exit 3
+      exit_line = effective_line[effective_count - 1]
+      comment_count = 0
+      for (line = exit_line + 1; line < guard_line; line += 1) {
+        text = normalized(lines[line])
+        if (text == "") continue
+        if (text == legacy_comment) {
+          comment_count += 1
+          continue
+        }
+        exit 3
+      }
+      if (comment_count != 1) exit 3
+      for (line = 1; line <= exit_line; line += 1) {
+        if (line == exit_line) {
+          print ""
+          print legacy_comment
+          print lines[guard_line]
+        }
+        print lines[line]
+      }
+    }
+  ' "$hook" > "$staged_hook"; then
+    chmod 0755 "$staged_hook"
+    mv "$staged_hook" "$hook"
+    echo "hooks:     repaired unreachable pre-commit guard call"
+    return 0
+  else
+    status=$?
+    rm -f "$staged_hook"
+    if [[ "$status" -eq 3 ]]; then
+      return 1
+    fi
+    echo "hooks:     failed to inspect existing pre-commit (awk exit $status)" >&2
+    return "$status"
+  fi
+}
+
 install_repo() {
   local target="$1"
   # Ask git where it will actually look. Writing to a hard-coded .githooks/
@@ -150,6 +216,9 @@ HOOK
   fi
 
   if [[ -f "$hook" ]] && grep -Fq pre-commit-worktree-guard "$hook"; then
+    if repair_legacy_unreachable_guard "$hook"; then
+      return
+    fi
     echo "hooks:     pre-commit already calls the guard, left unchanged"
     return
   fi
