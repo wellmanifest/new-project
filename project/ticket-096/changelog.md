@@ -1,5 +1,10 @@
 # Ticket Changelog (ticket-096)
 
+## [0.1.1] - 2026-08-21
+
+- Recorded exact-head Validator approval, protected merge and remote branch
+  deletion; the integrated installer repair is now `DONE / DONE`.
+
 ## [0.1.0] - 2026-08-20
 
 - Initial governance scaffold created.
