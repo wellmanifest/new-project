@@ -2,8 +2,8 @@
 
 - **ID**: ticket-097
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-20
 
 ## Cel i Zakres
@@ -35,6 +35,15 @@ is interpreted.
 - The installer must not infer reachability for arbitrary early exits. The
   migration is restricted to the exact suffix previously emitted by this
   standard and fails closed to "left unchanged" outside that shape.
+
+## Publication evidence
+
+- Pull request: `wellmanifest/new-project#156`
+- Frozen and approved head: `293bc59aefe2e357f192ab53ed19a466db7709f3`
+- Validator review: `4988356774`
+- Merge commit: `c34ab3bccbef3347db8633e2c6af3c998e029ca4`
+  (merged `2026-08-20T23:18:17Z`)
+- Remote implementation branch: deleted by protected delivery.
 
 ## Uczestnicy
 

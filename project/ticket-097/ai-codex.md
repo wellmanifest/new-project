@@ -34,12 +34,14 @@ call still follows terminal `exit 0`.
   exactly one standard comment and a preceding effective `exit 0`.
 - Correctly wired and non-legacy hooks keep the existing idempotent path. Bash
   syntax, the focused fixture and all eleven Linux hub suites pass.
-- Exact-base governance passes with zero errors and zero warnings; publication
-  now waits at the protected exact-head boundary.
+- Exact-base governance and hosted checks passed. Validator review
+  `4988356774` approved exact head `293bc59aefe2e357f192ab53ed19a466db7709f3`;
+  protected delivery merged it as
+  `c34ab3bccbef3347db8633e2c6af3c998e029ca4`.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- None; the legacy hook migration ticket is terminal `DONE / DONE`.
 - New authority is still required for destructive action, secret access, new
   external coordination or material objective expansion. Protected delivery
   may be invoked without another prompt when publication is in scope; its
