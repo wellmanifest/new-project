@@ -1,0 +1,75 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-097",
+  "summary": "Repair previously unreachable worktree hook chains",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/install-worktree-guard.sh",
+    "tests/worktree-overlap.test.sh",
+    "project/ticket-097/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": ["ticket-096"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d7657f8228ef48d387e3e504761d4dd7374f2bbd",
+    "targetBranch": "main",
+    "outcome": "Existing adopters are repaired by an idempotent installer rerun when a legacy generated guard call is unreachable after terminal success",
+    "nonGoals": [
+      "Do not interpret arbitrary shell control flow",
+      "Do not replace an adopter's pre-commit hook",
+      "Do not modify target repositories in this standard ticket",
+      "Do not merge directly"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Recognize only the exact legacy suffix emitted by this installer and relocate its existing invocation before terminal exit 0",
+      "components": [
+        {
+          "name": "worktree-guard-installer",
+          "paths": [
+            "scripts/install-worktree-guard.sh",
+            "tests/worktree-overlap.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the migration recognizer; ticket-096 behavior for new installations remains intact"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "bash -n scripts/install-worktree-guard.sh tests/worktree-overlap.test.sh",
+          "./tests/worktree-overlap.test.sh",
+          "for test_script in tests/*.test.sh; do bash $test_script; done",
+          "./project/governance-check.sh --actor agent --base d7657f8228ef48d387e3e504761d4dd7374f2bbd --head HEAD"
+        ],
+        "evidence": "project/ticket-097/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
