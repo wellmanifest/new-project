@@ -11,7 +11,7 @@
 
 - [ ] [`ticket-095`](project/ticket-095/README.md) — audyt stosowania i
   egzekwowalności 15 standardów Wellmanifest, macierz dowodów oraz docelowy
-  kontrakt naprawczy. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  kontrakt naprawczy. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
   `SERVICE / P1 / requested`; workstream: `governance`.
 
 - [ ] [`ticket-092`](project/ticket-092/README.md) — proaktywny

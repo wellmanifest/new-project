@@ -3,7 +3,7 @@
 - **ID**: ticket-095
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-20
 
 ## Cel i Zakres
@@ -17,13 +17,13 @@ remediacji; ten ticket nie zmienia badanych repozytoriów ani ich rulesetów.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Macierz obejmuje wszystkie 15 repozytoriów i odróżnia walidator
+- [x] AC-01: Macierz obejmuje wszystkie 15 repozytoriów i odróżnia walidator
   lokalny, CI, ochronę `main` oraz zgodność danych runtime.
-- [ ] AC-02: Wnioski są oparte na wykonanych governance gates, testach
+- [x] AC-02: Wnioski są oparte na wykonanych governance gates, testach
   conformance, DSL manifests i odczycie aktywnych reguł GitHub.
-- [ ] AC-03: Dokument wskazuje reprodukowalne defekty, w tym drift danych
+- [x] AC-03: Dokument wskazuje reprodukowalne defekty, w tym drift danych
   `policy-dsl`, nieprzenośne URI oraz nieprawdziwe required-checks adopterów.
-- [ ] AC-04: Docelowy kontrakt i kolejność remediacji są wystarczająco ścisłe,
+- [x] AC-04: Docelowy kontrakt i kolejność remediacji są wystarczająco ścisłe,
   aby kolejne tickety mogły wdrażać poprawki bez zgadywania.
 
 ## Ryzyka i Uwagi
