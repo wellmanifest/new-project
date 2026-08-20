@@ -15,6 +15,7 @@
     { "source": "error/GOV-TICKET-001.md", "target": ".governance/error/GOV-TICKET-001.md", "strategy": "managed", "executable": false },
     { "source": "error/GOV-TICKET-ALLOCATION.md", "target": ".governance/error/GOV-TICKET-ALLOCATION.md", "strategy": "managed", "executable": false },
     { "source": "error/GOV-WORKSPACE-LIFECYCLE.md", "target": ".governance/error/GOV-WORKSPACE-LIFECYCLE.md", "strategy": "managed", "executable": false },
+    { "source": "error/GOV-WORKTREE-OVERLAP.md", "target": ".governance/error/GOV-WORKTREE-OVERLAP.md", "strategy": "managed", "executable": false },
     { "source": "governance/required-checks.json", "target": ".governance/required-checks.json", "strategy": "extendable", "executable": false },
     { "source": "governance/required-checks.schema.json", "target": ".governance/required-checks.schema.json", "strategy": "managed", "executable": false },
     { "source": "governance/decision-record.schema.json", "target": ".governance/decision-record.schema.json", "strategy": "managed", "executable": false },

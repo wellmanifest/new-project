@@ -1,0 +1,103 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-094",
+  "summary": "Ship the worktree guard schema and error document to adopters",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "governance/worktree-guard.schema.json",
+    "governance/package-manifest.json",
+    "governance/diagnostics.json",
+    "project/ticket-094/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "scripts/governance_check.py",
+    "AGENTS.md",
+    "project/new-ticket.sh"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b8144566c0869b038b08d7ea2ffd64fd8f3973e8",
+    "targetBranch": "main",
+    "outcome": "An adopter that hits GOV-WORKTREE-OVERLAP receives the document that explains it, and the guard's YAML has a schema again",
+    "nonGoals": [
+      "No change to the overlap checker itself",
+      "No new diagnostic codes",
+      "No adoption lock regeneration beyond the new managed file"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "ticket-092 shipped the guard but stopped at the 9-file policy limit, leaving two loose ends recorded in its changelog. error/GOV-WORKTREE-OVERLAP.md was the only document under error/ that package-manifest.json did not ship, so the catalog entries had to carry documentation: null - tests/adoption-lock.test.sh requires every non-null documentation path to exist inside an adopter's .governance/. Shipping the file first and pointing the catalog at it second is the only order that keeps that test true.",
+      "components": [
+        {
+          "name": "adopter-package",
+          "paths": [
+            "governance/package-manifest.json",
+            "governance/diagnostics.json"
+          ]
+        },
+        {
+          "name": "guard-schema",
+          "paths": [
+            "governance/worktree-guard.schema.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "adopters receive .governance/error/GOV-WORKTREE-OVERLAP.md"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Remove the manifest entry and set the three documentation fields back to null"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./tests/adoption-lock.test.sh"
+        ],
+        "evidence": "A built adopter contains .governance/error/GOV-WORKTREE-OVERLAP.md, so the three catalog entries may reference it"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./tests/governance-validator.test.sh"
+        ],
+        "evidence": "The diagnostic catalog still registers every emitted code"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 -c \"import json,sys; json.load(open('governance/worktree-guard.schema.json'))\""
+        ],
+        "evidence": "worktree-guard.yaml has a schema again and it parses"
+      }
+    ]
+  }
+}
