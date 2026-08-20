@@ -104,6 +104,7 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-094** | [`README.md`](./ticket-094/README.md) | [`preprompt.md`](./ticket-094/preprompt.md) | - |  [`ai-claude.md`](./ticket-094/ai-claude.md) |  [`ai-claude-logs.txt`](./ticket-094/ai-claude-logs.txt) | [`changelog.md`](./ticket-094/changelog.md) |
 | **ticket-095** | [`README.md`](./ticket-095/README.md) | [`preprompt.md`](./ticket-095/preprompt.md) | - |  [`ai-codex.md`](./ticket-095/ai-codex.md) |  [`ai-codex-logs.txt`](./ticket-095/ai-codex-logs.txt) | [`changelog.md`](./ticket-095/changelog.md) |
 | **ticket-096** | [`README.md`](./ticket-096/README.md) | [`preprompt.md`](./ticket-096/preprompt.md) | - |  [`ai-codex.md`](./ticket-096/ai-codex.md) |  [`ai-codex-logs.txt`](./ticket-096/ai-codex-logs.txt) | [`changelog.md`](./ticket-096/changelog.md) |
+| **ticket-097** | [`README.md`](./ticket-097/README.md) | [`preprompt.md`](./ticket-097/preprompt.md) | - |  [`ai-codex.md`](./ticket-097/ai-codex.md) |  [`ai-codex-logs.txt`](./ticket-097/ai-codex-logs.txt) | [`changelog.md`](./ticket-097/changelog.md) |
 <!-- AUTO:TICKET_INDEX:END -->
 
 ---

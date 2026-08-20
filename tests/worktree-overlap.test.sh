@@ -387,6 +387,26 @@ git -C "$hookrepo" commit --quiet -m "no longer overlapping" > /dev/null 2>&1
   --target "$hookrepo" --wire-hook > /dev/null
 test "$(grep -c pre-commit-worktree-guard "$hookrepo/.githooks/pre-commit")" -eq 1
 
+# Before ticket-096, the installer emitted this exact legacy suffix: the
+# generated guard call exists, but follows terminal success and is unreachable.
+# Re-running the installer must migrate that known shape, not stop at the
+# idempotency check and report a false success.
+printf '%s\n' \
+  '#!/usr/bin/env bash' \
+  'set -euo pipefail' \
+  'exit 0' \
+  '' \
+  '# worktree overlap guard (wellmanifest/new-project) - keep this last' \
+  '"$(dirname "${BASH_SOURCE[0]}")/pre-commit-worktree-guard"' \
+  > "$hookrepo/.githooks/pre-commit"
+"$repo_root/scripts/install-worktree-guard.sh" --source "$repo_root" \
+  --target "$hookrepo" --wire-hook > "$fixture/legacy-repair.out"
+grep -q 'repaired unreachable pre-commit guard call' "$fixture/legacy-repair.out"
+test "$(grep -c pre-commit-worktree-guard "$hookrepo/.githooks/pre-commit")" -eq 1
+test "$(tail -n 1 "$hookrepo/.githooks/pre-commit")" = 'exit 0'
+test "$(grep -n 'pre-commit-worktree-guard' "$hookrepo/.githooks/pre-commit" | cut -d: -f1)" \
+  -lt "$(grep -n '^exit 0$' "$hookrepo/.githooks/pre-commit" | cut -d: -f1)"
+
 # Touching the same path is only a proxy for conflicting. The verdict comes
 # from a real in-memory merge, so branches editing different regions of one
 # file pass, a stacked branch never conflicts with its own ancestor, and a

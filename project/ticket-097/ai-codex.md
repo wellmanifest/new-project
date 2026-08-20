@@ -29,6 +29,11 @@ call still follows terminal `exit 0`.
   from the request to execute this work.
 - Bound the migration to integrated base
   `d7657f8228ef48d387e3e504761d4dd7374f2bbd` and ticket-096.
+- Added a red regression for the exact suffix emitted before ticket-096, then
+  implemented a bounded AWK migration which requires one final guard call,
+  exactly one standard comment and a preceding effective `exit 0`.
+- Correctly wired and non-legacy hooks keep the existing idempotent path. Bash
+  syntax, the focused fixture and all eleven Linux hub suites pass.
 
 ## Blockers
 

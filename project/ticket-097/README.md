@@ -3,7 +3,7 @@
 - **ID**: ticket-097
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-20
 
 ## Cel i Zakres
@@ -21,11 +21,11 @@ is interpreted.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Bounded session authorization and the dependency on integrated
+- [x] AC-01: Bounded session authorization and the dependency on integrated
       ticket-096 are recorded without human-owned content.
-- [ ] AC-02: Re-running `--wire-hook` relocates exactly one known legacy guard
+- [x] AC-02: Re-running `--wire-hook` relocates exactly one known legacy guard
       suffix before terminal `exit 0` and reports the repair.
-- [ ] AC-03: Correctly wired hooks and non-legacy existing calls remain
+- [x] AC-03: Correctly wired hooks and non-legacy existing calls remain
       idempotent and byte-stable.
 - [ ] AC-04: The focused real-commit fixture, all hub suites, Bash syntax and
       exact-base governance pass before protected publication.
