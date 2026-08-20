@@ -1,5 +1,13 @@
 # ticket-094 changelog
 
+## Closure - 2026-08-20
+
+- Closed ticket-094 (`DONE / DONE`) from integrated `main` after PR #150.
+- Post-merge evidence on the default branch: the `error/GOV-WORKTREE-OVERLAP.md`
+  entry in `governance/package-manifest.json`, the three catalog entries
+  pointing at it, and `governance/worktree-guard.schema.json`.
+- No implementation files in this closure.
+
 - Added `error/GOV-WORKTREE-OVERLAP.md` to `governance/package-manifest.json`.
   It was the only document under `error/` that adopters never received, which
   is why ticket-092 had to leave the three catalog entries' `documentation` as
