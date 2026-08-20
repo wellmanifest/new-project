@@ -17,3 +17,5 @@
 [2026-08-20T10:38:00Z] [EVIDENCE] Audited checkout SHAs: dsl=0e088f9efa06, code-dsl=029eccd5b352, autonomy=93ddd2d111e3, git-lifecycle=c01a82287094, env-dsl=ac182fac436c, merge=463093392751, policy-dsl=30c9491230b2, poa=03c2963831f0, performance=b9dfa473cf30, project-ssot=9d5921e7177c, ssot=b8e328e9828c, ticket-lifecycle=40848c814e95, twin-lifecycle=d556831ee109, validation-attestation=7ce2b2b4afb1.
 [2026-08-20T11:05:39Z] [EXEC] [provider:codex] $ python3 -m json.tool project/ticket-095/intent.json; git diff --cached --check; ./project/governance-check.sh --actor agent
 [2026-08-20T11:05:39Z] [RESULT] Intent PASS; diff check PASS; GOV-PASS (0 errors, 0 warnings).
+2026-08-20T11:48:16Z VALIDATOR review=4982302289 head=38850261b668c254c0f400a072456f935d0b6fe3 state=APPROVED
+2026-08-20T11:48:33Z MERGE pr=152 merge=a0ea533efa9e4ff37753e4a9d1c19634763a1bac branch_deleted=true

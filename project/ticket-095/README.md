@@ -2,8 +2,8 @@
 
 - **ID**: ticket-095
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-20
 
 ## Cel i Zakres
@@ -33,6 +33,15 @@ remediacji; ten ticket nie zmienia badanych repozytoriów ani ich rulesetów.
   porównywalny.
 - Zielony test lokalny nie dowodzi, że GitHub wymaga go przed merge. Zielona
   governance nie dowodzi conformance domeny. Te warstwy są raportowane osobno.
+
+## Publication evidence
+
+- Pull request: `wellmanifest/new-project#152`
+- Frozen and approved head: `38850261b668c254c0f400a072456f935d0b6fe3`
+- Validator review: `4982302289`
+- Merge commit: `a0ea533efa9e4ff37753e4a9d1c19634763a1bac`
+  (merged `2026-08-20T11:48:33Z`)
+- Remote implementation branch: deleted by protected delivery.
 
 ## Uczestnicy
 
