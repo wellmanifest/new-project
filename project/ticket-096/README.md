@@ -3,7 +3,7 @@
 - **ID**: ticket-096
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-20
 
 ## Cel i Zakres
@@ -20,13 +20,13 @@ rewriting any other hook logic.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: The autonomous repair request is recorded as bounded session
+- [x] AC-01: The autonomous repair request is recorded as bounded session
       authorization without creating a human-owned participant file.
-- [ ] AC-02: Wiring a pre-existing hook whose last effective command is
+- [x] AC-02: Wiring a pre-existing hook whose last effective command is
       `exit 0` places exactly one guard invocation before that exit.
-- [ ] AC-03: A real overlapping commit is rejected through that composed hook;
+- [x] AC-03: A real overlapping commit is rejected through that composed hook;
       a disjoint commit and repeated installation remain successful/idempotent.
-- [ ] AC-04: Existing created-hook, custom `core.hooksPath`, workspace and
+- [x] AC-04: Existing created-hook, custom `core.hooksPath`, workspace and
       merge-based overlap fixtures remain green on Linux and Windows gates.
 - [ ] AC-05: Governance, the focused overlap suite and the complete hub test
       contract pass before exact-head Validator review.

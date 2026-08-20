@@ -31,10 +31,18 @@ standard's own full hook.
 - Bound the repair to integrated base
   `358f7b40d51bb205ffe4cc93e25c3d07cc9e0682` and the reproduced Core
   composition failure.
+- Added a terminal-success regression to the existing real-commit fixture; it
+  failed before the repair and now proves a conflicting commit is rejected.
+- The installer finds only the final effective command `exit 0` and inserts
+  the chain immediately before it. Other hooks keep append-last behavior;
+  repeated installation remains idempotent.
+- Bash syntax, exact-base governance, the focused fixture and all eleven Linux
+  shell suites pass. Publication now waits for hosted Linux/Windows and the
+  independent exact-head Validator boundary.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- None inside the recorded intent; protected publication is in progress.
 - New authority is still required for destructive action, secret access, new
   external coordination or material objective expansion. Protected delivery
   may be invoked without another prompt when publication is in scope; its

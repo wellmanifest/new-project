@@ -65,7 +65,7 @@
         "commands": [
           "./tests/worktree-overlap.test.sh",
           "./project/governance-check.sh --actor agent --base 358f7b40d51bb205ffe4cc93e25c3d07cc9e0682 --head HEAD",
-          "./project.sh"
+          "for suite in tests/*.test.sh; do bash \"$suite\"; done"
         ],
         "evidence": "project/ticket-096/ai-codex-logs.txt"
       }

@@ -356,10 +356,17 @@ git -C "$hookrepo" add shared.txt
 git -C "$hookrepo" commit --quiet -m initial
 git -C "$hookrepo" remote add origin git@github.com:example/hooked.git
 git -C "$hookrepo" worktree add --quiet -b ticket/030 "$fixture/hookspace/.worktrees/hooked-a"
+mkdir -p "$hookrepo/.githooks"
+printf '%s\n' '#!/usr/bin/env bash' 'set -euo pipefail' 'exit 0' \
+  > "$hookrepo/.githooks/pre-commit"
+chmod 0755 "$hookrepo/.githooks/pre-commit"
 "$repo_root/scripts/install-worktree-guard.sh" --source "$repo_root" \
   --target "$hookrepo" --wire-hook > "$fixture/hookinstall.out"
 test -x "$hookrepo/.githooks/pre-commit"
 test -x "$hookrepo/.githooks/pre-commit-worktree-guard"
+test "$(tail -n 1 "$hookrepo/.githooks/pre-commit")" = 'exit 0'
+test "$(grep -n 'pre-commit-worktree-guard' "$hookrepo/.githooks/pre-commit" | cut -d: -f1)" \
+  -lt "$(grep -n '^exit 0$' "$hookrepo/.githooks/pre-commit" | cut -d: -f1)"
 
 printf '%s\n' here > "$hookrepo/shared.txt"
 printf '%s\n' there > "$fixture/hookspace/.worktrees/hooked-a/shared.txt"

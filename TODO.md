@@ -11,7 +11,7 @@
 
 - [ ] [`ticket-096`](project/ticket-096/README.md) — zachować wykonywalność
   worktree guard po złożeniu z istniejącym hookiem kończącym się `exit 0`.
-  Stan: `IN_PROGRESS / EDIT`; klasyfikacja: `BUG / P1 / regression`;
+  Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja: `BUG / P1 / regression`;
   workstream: `governance`.
 
 - [x] [`ticket-095`](project/ticket-095/README.md) — audyt stosowania i
