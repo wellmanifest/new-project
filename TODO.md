@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-096`](project/ticket-096/README.md) — zachować wykonywalność
+  worktree guard po złożeniu z istniejącym hookiem kończącym się `exit 0`.
+  Stan: `IN_PROGRESS / EDIT`; klasyfikacja: `BUG / P1 / regression`;
+  workstream: `governance`.
+
 - [x] [`ticket-095`](project/ticket-095/README.md) — audyt stosowania i
   egzekwowalności 15 standardów Wellmanifest, macierz dowodów oraz docelowy
   kontrakt naprawczy. Stan: `DONE / DONE`; klasyfikacja:

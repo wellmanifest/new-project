@@ -1,0 +1,3 @@
+2026-08-20T22:27:00Z PLAN ticket-096 allocated through project/new-ticket.sh
+2026-08-20T22:27:00Z BASE 358f7b40d51bb205ffe4cc93e25c3d07cc9e0682
+2026-08-20T22:27:00Z REPRO Core full pre-commit ended with exit 0; installer appended the guard after unreachable terminal success
