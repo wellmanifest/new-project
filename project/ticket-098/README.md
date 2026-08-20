@@ -2,8 +2,8 @@
 
 - **ID**: ticket-098
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-20
 
 ## Cel i Zakres
@@ -30,7 +30,7 @@ behavior and the worktree-overlap guard remains chained last by adopters.
       rejected with stable `GOV-AGENT-HOST-003` diagnostics.
 - [x] AC-04: Existing main, missing-ticket, BACKLOG and IN_PROGRESS fixtures
       retain their behavior; repeated installer adoption copies the fixed hook.
-- [ ] AC-05: Focused and full hub suites, Bash syntax and exact-base governance
+- [x] AC-05: Focused and full hub suites, Bash syntax and exact-base governance
       pass before exact-head Validator review.
 
 ## Ryzyka i Uwagi

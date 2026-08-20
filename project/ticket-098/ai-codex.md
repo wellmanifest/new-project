@@ -35,6 +35,10 @@ policy requires `DONE / DONE` to be written only after trusted merge. Using
   every staged path must be an addition/modification under that ticket, TODO or
   the ticket index; deletions, renames, copies and every other path fail closed.
 - Bash syntax, focused host fixtures and all eleven Linux hub suites pass.
+- GitHub `test` and `windows-governance` checks passed at exact head
+  `ac711a512a9b8078e044d33886559c548b9ee80c`.
+- Independent Validator approval `4988534590` accepted that exact head and
+  merged PR #158 as `b4fbf6bd5aa9218815191511e827db95b2fc5b74`.
 
 ## Blockers
 
