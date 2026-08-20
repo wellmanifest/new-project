@@ -33,7 +33,7 @@
       "Do not merge directly"
     ],
     "complexity": "XS",
-    "estimatedMinutes": 15,
+    "estimatedMinutes": 10,
     "budgets": {
       "maxImplementationFiles": 2,
       "maxAffectedComponents": 1,
