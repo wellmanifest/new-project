@@ -1,0 +1,102 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-099",
+  "summary": "Ship the worktree guard as a managed file and fail closed without its runner",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "governance/package-manifest.json",
+    "scripts/install-worktree-guard.sh",
+    "tests/adoption-lock.test.sh",
+    "project/ticket-099/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    "scripts/governance_check.py",
+    "AGENTS.md"
+  ],
+  "stacks": [
+    "python",
+    "bash"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "cf8803082246e82a45a75c36eaa07ecf16194b2a",
+    "targetBranch": "main",
+    "outcome": "An adopter holds the guard as a tracked file, and a hook whose runner is gone refuses the commit instead of passing it",
+    "nonGoals": [
+      "No change to the overlap checker",
+      "No new diagnostic codes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "install-worktree-guard.sh copied the runner in as untracked files. Twice in one day a git clean removed them from subactor/core and subactor/www-sub-actor while the wired pre-commit survived, leaving a gate that looked installed and enforced nothing - it exited zero with no runner to exec. Shipping the guard through package-manifest.json makes an adopter hold it as a tracked, versioned file, and the fragment now exits non-zero with remediation when the runner is absent. The adoption fixture copies the repository root config too, because a fixture that omits what the package ships tests a standard that does not exist.",
+      "components": [
+        {
+          "name": "adopter-package",
+          "paths": [
+            "governance/package-manifest.json",
+            "tests/adoption-lock.test.sh"
+          ]
+        },
+        {
+          "name": "installer",
+          "paths": [
+            "scripts/install-worktree-guard.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "adopters receive .governance/worktree_guard.py, .governance/worktree_overlap_check.py and worktree-guard.yaml"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Remove the three manifest entries and restore the fragment's silent exit"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./tests/adoption-lock.test.sh"
+        ],
+        "evidence": "A built adopter contains the guard runner, checker and config as managed files"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./scripts/install-worktree-guard.sh --target <repo> --wire-hook"
+        ],
+        "evidence": "With the runner present the fragment exits 0; with it deleted the fragment exits 1 and names the remediation, instead of the silent pass observed twice today"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./tests/worktree-overlap.test.sh"
+        ],
+        "evidence": "The guard suite still passes"
+      }
+    ]
+  }
+}

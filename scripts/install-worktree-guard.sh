@@ -192,6 +192,13 @@ for runner in "$root/.governance/worktree_guard.py" "$root/scripts/worktree_guar
     exec python3 "$runner" --root "$root" --once
   fi
 done
+# Reaching here means the hook is wired but its runner is gone. Exiting zero
+# would leave a gate that looks installed and enforces nothing - observed twice
+# in one day after an untracked copy was cleaned away. Fail closed and say why.
+echo "worktree-guard: the hook is wired but worktree_guard.py is missing." >&2
+echo "  Reinstall it, or remove this hook if the guard is no longer wanted:" >&2
+echo "    ./scripts/install-worktree-guard.sh --target $root --wire-hook" >&2
+exit 1
 HOOK
   chmod 0755 "$hooks_dir/pre-commit-worktree-guard"
   echo "repo:      installed into $target"
