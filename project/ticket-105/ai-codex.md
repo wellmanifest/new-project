@@ -26,6 +26,8 @@ commitu.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- Advanced all release carriers and active test assertions to `0.18.4`; all 11
+  suites, Ruff, diff hygiene and exact-base governance pass.
 
 ## Blockers
 

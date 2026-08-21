@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.18.4] - 2026-08-21
+
+### Managed text hygiene
+
+- Remove trailing whitespace from the managed `AGENTS.md` source so adopters
+  pass diff-hygiene checks after an upgrade.
+- Add a manifest-driven regression that rejects trailing horizontal whitespace
+  in every `managed` or `extendable` package source.
+
 ## [0.18.3] - 2026-08-21
 
 ### Digest-bound managed target takeover

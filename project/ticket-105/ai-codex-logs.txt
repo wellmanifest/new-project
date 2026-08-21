@@ -1,0 +1,6 @@
+2026-08-21 accepted_base=1e51d2ec4932c00c1bc568558c5bae397da952c9
+2026-08-21 release_candidate=0.18.4 tests="11/11 tests/*.test.sh" result=PASS
+2026-08-21 ruff="python3 -m ruff check scripts tests" result=PASS
+2026-08-21 diff_check="git diff --check" result=PASS
+2026-08-21 governance="exact-base governance_check.py" errors=0 warnings=0
+2026-08-21 prepublication tag_v0.18.4=ABSENT github_release_v0.18.4=ABSENT
