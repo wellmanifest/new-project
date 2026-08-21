@@ -35,6 +35,8 @@ explicit exact-path, exact-base-digest takeover authorization in the ticket DSL.
   matching takeover exists.
 - Added positive, missing, wrong-digest, unused and duplicate regression cases;
   the full deterministic validator suite passes.
+- Completed all 11 standard suites, Ruff and exact-base governance with zero
+  findings; entered protected publication.
 
 ## Blockers
 

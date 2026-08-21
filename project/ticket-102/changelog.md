@@ -6,3 +6,4 @@
 - No human participant identity or content was generated.
 - Bound the regression to digest-authorized managed target takeover semantics.
 - Added the DSL/schema field, deterministic verifier and fail-closed fixtures.
+- Passed the complete validation matrix and entered Validator-gated publication.

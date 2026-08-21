@@ -3,7 +3,7 @@
 - **ID**: ticket-102
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-21
 
 ## Cel i Zakres
@@ -19,13 +19,19 @@ binds the exact SHA-256 digest observed at its accepted Git base.
   unused declarations fail closed.
 - [x] AC-03: Head managed hash, lock binding and ordinary scope gates remain
   unchanged.
-- [ ] AC-04: Full governance validator and exact-base governance pass.
+- [x] AC-04: Full governance validator and exact-base governance pass.
 - [ ] AC-05: The change is delivered by exact-head Validator approval.
 
 ## Ryzyka i Uwagi
 
 - Risk: a broad exception could launder target content; mitigation is exact
   path, exact base digest, accepted-base Git observation and mandatory use.
+
+## Validation evidence
+
+- 11/11 `tests/*.test.sh`: PASS.
+- Ruff: PASS.
+- Exact-base governance from `f08457c8`: 0 errors, 0 warnings.
 
 ## Uczestnicy
 
