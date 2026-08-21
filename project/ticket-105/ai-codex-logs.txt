@@ -4,3 +4,6 @@
 2026-08-21 diff_check="git diff --check" result=PASS
 2026-08-21 governance="exact-base governance_check.py" errors=0 warnings=0
 2026-08-21 prepublication tag_v0.18.4=ABSENT github_release_v0.18.4=ABSENT
+2026-08-21 validator_head=ceb4e5f1aac0567ef37ce39b0b6140ff7034844e pr=172 result=APPROVE
+2026-08-21 merge_sha=ecf0792c0da7c2d3949c2875f6cd4547537cfb6d clean_main_tests=PASS
+2026-08-21 goal_publish=SUCCESS tag=v0.18.4 peeled_sha=ecf0792c0da7c2d3949c2875f6cd4547537cfb6d github_release=PUBLISHED

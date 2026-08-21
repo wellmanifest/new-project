@@ -2,8 +2,8 @@
 
 - **ID**: ticket-105
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-21
 
 ## Cel i Zakres
@@ -17,8 +17,8 @@ asercje wersji.
 - [x] AC-02: Changelog opisuje higienę zarządzanych tekstów jako patch.
 - [x] AC-03: Wszystkie testy, Ruff, diff hygiene i exact-base governance
   przechodzą.
-- [ ] AC-04: Validator zatwierdza i scala dokładny head wydania.
-- [ ] AC-05: Czysty `main`, tag i GitHub Release `v0.18.4` wskazują merge commit.
+- [x] AC-04: Validator zatwierdza i scala dokładny head wydania.
+- [x] AC-05: Czysty `main`, tag i GitHub Release `v0.18.4` wskazują merge commit.
 
 ## Ryzyka i Uwagi
 - Tag i release są niezmienne, dlatego publikacja następuje dopiero po trusted
@@ -30,6 +30,14 @@ asercje wersji.
 - Ruff i `git diff --check`: PASS.
 - Exact-base governance od `1e51d2ec`: 0 errors, 0 warnings.
 - Tag i GitHub Release `v0.18.4` są nieobecne przed publikacją.
+
+## Final evidence
+
+- Validator merged exact head `ceb4e5f1` as
+  `ecf0792c0da7c2d3949c2875f6cd4547537cfb6d`.
+- Clean-main 11/11 suites, Ruff, diff hygiene and governance: PASS.
+- Goal publication: SUCCESS; peeled `v0.18.4` equals the merge commit and the
+  GitHub Release is published.
 
 ## Uczestnicy
 
