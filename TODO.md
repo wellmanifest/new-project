@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-101`](project/ticket-101/README.md) — opublikować zintegrowaną
+  własność generated artifact receipt jako immutable `new-project 0.18.2`.
+  Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
+  `SERVICE / P1 / requested`; workstream: `governance`; zależy od
+  `ticket-100`; oczekuje exact-head Validator approval.
+
 - [x] [`ticket-100`](project/ticket-100/README.md) — traktować dokładny,
   deterministycznie generowany `config/artifact-registry.json` jako governance
   carrier także w DONE closure, bez otwierania całego `config/**`. Stan:

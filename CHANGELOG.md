@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-08-21
+
+### Generated artifact receipt ownership
+
+- Treat the exact `config/artifact-registry.json` receipt as governance
+  metadata so managed-document builds do not falsely cross workstream scope.
+- Permit that exact receipt in governance-only DONE closures while retaining
+  fail-closed rejection for adjacent `config/**` files and implementation.
+
 ## [0.18.1] - 2026-08-14
 
 ### Generated bootstrap placeholder secret scan
