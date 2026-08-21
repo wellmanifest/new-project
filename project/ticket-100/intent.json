@@ -1,0 +1,78 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-100",
+  "summary": "Treat generated artifact receipts as governance carriers",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    ".githooks/pre-commit",
+    "tests/governance-validator.test.sh",
+    "tests/agent-hosts.test.sh",
+    "project/ticket-100/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "44a7bdd2e950a9758d78bc69aae5053358507706",
+    "targetBranch": "main",
+    "outcome": "Treat the exact generated artifact registry receipt as bounded governance metadata in implementation and terminal closure diffs",
+    "nonGoals": [
+      "Do not exempt config/** or arbitrary generated files",
+      "Do not bypass target artifact validation",
+      "Do not change package version, release metadata or dependencies"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Recognize one exact generated receipt path as governance metadata and keep the terminal hook allowlist explicit rather than trusting arbitrary manifest extensions",
+      "components": [
+        {
+          "name": "manifest-contract",
+          "paths": ["governance/manifest.default.json", "governance/manifest.hub.json"]
+        },
+        {
+          "name": "closure-contract",
+          "paths": [".githooks/pre-commit", "tests/governance-validator.test.sh", "tests/agent-hosts.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Classify config/artifact-registry.json as an exact generated governance carrier"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Remove the exact path from both manifests and the DONE closure allowlist"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "bash tests/governance-validator.test.sh",
+          "bash tests/agent-hosts.test.sh",
+          "bash tests/adoption-lock.test.sh",
+          "./project/governance-check.sh --actor agent --base 44a7bdd2e950a9758d78bc69aae5053358507706 --head HEAD"
+        ],
+        "evidence": "project/ticket-100/ai-codex-logs.txt"
+      }
+    ]
+  }
+}

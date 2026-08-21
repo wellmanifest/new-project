@@ -68,13 +68,25 @@ fi
 git -C "$tmp/adopter" reset -q --hard HEAD
 
 # A terminal ticket may publish only its own closure evidence and the two
-# repository-level governance indexes.
+# repository-level governance indexes plus the exact generated artifact receipt.
 sed -i 's/IN_PROGRESS/DONE/' "$tmp/adopter/project/ticket-001/README.md"
 printf '%s\n' '# TODO' '- [x] ticket-001: DONE / DONE' > "$tmp/adopter/TODO.md"
 mkdir -p "$tmp/adopter/project"
 printf '%s\n' '# Tickets' '- ticket-001' > "$tmp/adopter/project/TICKETS.md"
-git -C "$tmp/adopter" add project/ticket-001/README.md TODO.md project/TICKETS.md
+mkdir -p "$tmp/adopter/config"
+printf '%s\n' '{"schema":"fixture.artifact-registry/v1"}' > \
+  "$tmp/adopter/config/artifact-registry.json"
+git -C "$tmp/adopter" add project/ticket-001/README.md TODO.md project/TICKETS.md \
+  config/artifact-registry.json
 git -C "$tmp/adopter" commit -qm "close ticket-001" || fail "DONE governance-only closure must commit"
+
+printf '%s\n' 'terminal evidence update' >> "$tmp/adopter/project/ticket-001/README.md"
+printf '%s\n' '{"schema":"fixture.other/v1"}' > "$tmp/adopter/config/other-generated.json"
+git -C "$tmp/adopter" add project/ticket-001/README.md config/other-generated.json
+if git -C "$tmp/adopter" commit -qm "foreign generated closure"; then
+  fail "DONE closure must reject non-receipt config paths"
+fi
+git -C "$tmp/adopter" reset -q --hard HEAD
 
 echo "implementation after close" >> "$tmp/adopter/README.md"
 git -C "$tmp/adopter" add README.md

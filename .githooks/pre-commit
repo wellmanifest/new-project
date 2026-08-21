@@ -51,7 +51,7 @@ if grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*DONE([[:space:]]|$)' <<<"
   fi
   for path in "${staged_paths[@]}"; do
     case "$path" in
-      "project/$ticket/"*|TODO.md|project/TICKETS.md) ;;
+      "project/$ticket/"*|TODO.md|project/TICKETS.md|config/artifact-registry.json) ;;
       *)
         echo "GOV-AGENT-HOST-003: $ticket DONE closure contains non-closure path '$path'." >&2
         echo "  Keep implementation on an IN_PROGRESS ticket; closure is governance-only." >&2

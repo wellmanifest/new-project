@@ -25,7 +25,8 @@
   "governancePaths": [
     "TODO.md",
     "project/TICKETS.md",
-    "project/ticket-*/**"
+    "project/ticket-*/**",
+    "config/artifact-registry.json"
   ],
   "trustedApprovalSources": [
     "github-review",
