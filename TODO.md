@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-100`](project/ticket-100/README.md) — traktować dokładny,
+  deterministycznie generowany `config/artifact-registry.json` jako governance
+  carrier także w DONE closure, bez otwierania całego `config/**`. Stan:
+  `IN_PROGRESS / EDIT`; klasyfikacja: `BUG / P1 / regression`; workstream:
+  `governance`.
+
 - [x] [`ticket-097`](project/ticket-097/README.md) — naprawiać istniejące
   instalacje, w których idempotentny installer pozostawił wywołanie worktree
   guard po terminalnym `exit 0`. Stan: `DONE / DONE`; klasyfikacja:
