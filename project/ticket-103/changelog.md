@@ -7,3 +7,4 @@
 - Bound patch release 0.18.3 to integrated ticket-102.
 - Prepared version carriers, active assertions and release notes.
 - Passed full validation and entered Validator-gated publication.
+- Published immutable tag and release `v0.18.3` from merge `04ced312`.

@@ -2,8 +2,8 @@
 
 - **ID**: ticket-103
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-21
 
 ## Cel i Zakres
@@ -22,12 +22,19 @@ Publish the integrated ticket-102 takeover contract as immutable
 - Ruff: PASS.
 - Exact-base governance from `5c337309`: 0 errors, 0 warnings.
 - Tag and release `v0.18.3` absent before publication.
-- [ ] AC-04: Validator approves and merges the exact release head.
-- [ ] AC-05: Clean main, tag and GitHub Release `v0.18.3` bind the merge commit.
+- [x] AC-04: Validator approves and merges the exact release head.
+- [x] AC-05: Clean main, tag and GitHub Release `v0.18.3` bind the merge commit.
 
 ## Ryzyka i Uwagi
 
 - Tag and release are immutable and follow trusted merge plus clean-main retest.
+
+## Final evidence
+
+- Validator merged exact head `6e129086` as
+  `04ced312af75e478ac2ceea38c29c59c6d484270`.
+- Clean-main 11/11 suites and Ruff: PASS.
+- Goal direct-main publication: SUCCESS; peeled tag `v0.18.3` equals the merge.
 
 ## Uczestnicy
 
