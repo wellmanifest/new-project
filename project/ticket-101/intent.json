@@ -1,0 +1,61 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-101",
+  "summary": "Release generated receipt ownership as new-project 0.18.2",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-101/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": ["ticket-100"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4c2a8567821d04dd593294a040f88335c3474924",
+    "targetBranch": "main",
+    "outcome": "Publish integrated generated receipt ownership as immutable new-project 0.18.2",
+    "nonGoals": [
+      "Do not change ticket-100 behavior after integration",
+      "Do not publish before exact-head approval and clean main retest",
+      "Do not move prior tags or adopt the release in Platform here"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {"maxImplementationFiles": 6, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Publish the integrated backward-compatible ownership fix as a mechanical patch release",
+      "components": [
+        {"name": "release-version", "paths": ["VERSION", "governance/manifest.default.json", "governance/manifest.hub.json"]},
+        {"name": "release-tests", "paths": ["tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]},
+        {"name": "release-notes", "paths": ["CHANGELOG.md"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": ["Advance immutable standard version from 0.18.1 to 0.18.2"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Before publication revert preparation; after publication create a newer release"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-03", "commands": ["for suite in tests/*.test.sh; do bash $suite; done", "ruff check scripts", "./project/governance-check.sh --actor agent --base 4c2a8567821d04dd593294a040f88335c3474924 --head HEAD"], "evidence": "project/ticket-101/ai-codex-logs.txt"},
+      {"criterion": "AC-05", "commands": ["goal -a --delivery-mode direct-main --force-publish", "git ls-remote --tags origin v0.18.2", "gh release view v0.18.2 --repo wellmanifest/new-project"], "evidence": "project/ticket-101/ai-codex-logs.txt"}
+    ]
+  }
+}

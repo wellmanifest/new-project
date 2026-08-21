@@ -1,0 +1,40 @@
+# Ticket 101: Release generated receipt ownership as new-project 0.18.2
+
+- **ID**: ticket-101
+- **Owner**: unresolved:human
+- **Status**: IN_PROGRESS
+- **Workflow state**: EDIT
+- **Utworzono**: 2026-08-21
+
+## Cel i Zakres
+
+Opublikować zintegrowaną poprawkę własności generated artifact receipt z
+ticket-100 jako immutable `new-project 0.18.2`. Wydanie zmienia wyłącznie
+nośniki wersji, aktywne asercje i changelog; nie zmienia semantyki poprawki po
+jej merge.
+
+## Kryteria Odbioru (Acceptance Criteria)
+
+- [ ] AC-01: `VERSION`, oba manifesty i aktywne asercje deklarują `0.18.2`.
+- [ ] AC-02: Changelog opisuje exact generated receipt ownership jako patch.
+- [ ] AC-03: Wszystkie suite'y, Ruff, secret scan i governance przechodzą.
+- [ ] AC-04: PR otrzymuje trusted exact-head approval i merge bez zmiany drzewa.
+- [ ] AC-05: Czysty `main`, tag i GitHub Release `v0.18.2` wskazują dokładny
+  zintegrowany merge.
+
+## Ryzyka i Uwagi
+
+- Tag i release są niemutowalne; powstaną dopiero po trusted merge i reteście.
+- Adopcja w Platform jest osobnym target-owned ticketem.
+
+## Uczestnicy
+
+- Human participant: unresolved; `user-*` is created only by its human owner
+  or a trusted intake boundary.
+- Agent participant: `ai-codex.md`
+
+## Granica katalogu
+
+Ten katalog przechowuje governance, decyzje, logi i dowody. Kod wykonywalny,
+skrypty badawcze i testy należą do zwykłych katalogów źródłowych repozytorium,
+nie do `project/ticket-101/`.
