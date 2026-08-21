@@ -2,8 +2,8 @@
 
 - **ID**: ticket-101
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-21
 
 ## Cel i Zakres
@@ -18,8 +18,8 @@ jej merge.
 - [x] AC-01: `VERSION`, oba manifesty i aktywne asercje deklarują `0.18.2`.
 - [x] AC-02: Changelog opisuje exact generated receipt ownership jako patch.
 - [x] AC-03: Wszystkie suite'y, Ruff, secret scan i governance przechodzą.
-- [ ] AC-04: PR otrzymuje trusted exact-head approval i merge bez zmiany drzewa.
-- [ ] AC-05: Czysty `main`, tag i GitHub Release `v0.18.2` wskazują dokładny
+- [x] AC-04: PR otrzymuje trusted exact-head approval i merge bez zmiany drzewa.
+- [x] AC-05: Czysty `main`, tag i GitHub Release `v0.18.2` wskazują dokładny
   zintegrowany merge.
 
 ## Ryzyka i Uwagi
@@ -36,6 +36,15 @@ jej merge.
 - Ruff 0.15.21: PASS po usunięciu jednego nieużywanego importu z bazy.
 - Exact-base governance: 0 błędów, 0 ostrzeżeń.
 - Tag ani release `v0.18.2` nie istnieją przed publikacją.
+
+## Dowody końcowe
+
+- Validator-agent zaakceptował exact head `c65e798f` i zmergował PR #164 jako
+  `5c9aef9339aef3616973beaee8ff65c713da04d2`.
+- Retest czystego `main`: 11/11 suite'ów i Ruff 0.15.21: PASS.
+- `goal -a --delivery-mode direct-main --force-publish`: SUCCESS.
+- Annotated tag `v0.18.2` po dereferencji wskazuje dokładnie merge commit
+  `5c9aef9339aef3616973beaee8ff65c713da04d2`; GitHub Release utworzony.
 
 ## Uczestnicy
 
