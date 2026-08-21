@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.18.3] - 2026-08-21
+
+### Digest-bound managed target takeover
+
+- Authorize a changed pre-existing target entering managed ownership only with
+  its exact path and SHA-256 digest from the accepted Git base.
+- Reject missing, malformed, duplicate, mismatched and unused takeover
+  declarations while preserving immutable head-lock verification.
+- Add deterministic rule traceability and positive/fail-closed takeover tests.
+
 ## [0.18.2] - 2026-08-21
 
 ### Generated artifact receipt ownership
