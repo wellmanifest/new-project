@@ -563,6 +563,12 @@
       "enforcement": "manual",
       "reason": "Tool allowlist for interactive agents is runtime policy, not governance_check."
     },
+    "C-TOOLS-008": {
+      "codes": [
+        "GOV-SYNC-001"
+      ],
+      "enforcement": "deterministic"
+    },
     "C-VALIDATION-001": {
       "codes": [
         "GOV-INTENT-001"

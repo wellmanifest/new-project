@@ -1,0 +1,87 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-102",
+  "summary": "Allow proven managed target takeover during adoption",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/governance_check.py",
+    "governance/intent.schema.json",
+    "governance/rule-enforcement.json",
+    "tests/governance-validator.test.sh",
+    "CONTRIBUTING.md",
+    "project/ticket-102/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f08457c8c262f361f03110d4cea23c0301b0f43c",
+    "targetBranch": "main",
+    "outcome": "An upgrade may transfer a changed pre-existing target into managed ownership only when the ticket declares its exact base SHA-256 digest",
+    "nonGoals": [
+      "Do not generally allow replacement of pre-existing target files",
+      "Do not fetch external provenance during deterministic validation",
+      "Do not weaken head lock or managed payload hash verification",
+      "Do not include the follow-up release or Platform adoption"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend standardAdoption with an optional, exact-path managedTargetTakeovers list whose baseDigest is verified against the accepted Git base and must be consumed exactly once",
+      "components": [
+        {
+          "name": "adoption-validator",
+          "paths": ["scripts/governance_check.py", "tests/governance-validator.test.sh"]
+        },
+        {
+          "name": "intent-contract",
+          "paths": [
+            "governance/intent.schema.json",
+            "governance/rule-enforcement.json",
+            "CONTRIBUTING.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "new-project.intent/v3 standardAdoption optionally accepts managedTargetTakeovers[{path,baseDigest}]"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the contract and validator change; pre-existing changed targets return to fail-closed rejection"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "project/ticket-102/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base f08457c8c262f361f03110d4cea23c0301b0f43c --head HEAD --actor agent"],
+        "evidence": "project/ticket-102/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
