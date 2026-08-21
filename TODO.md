@@ -9,6 +9,10 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-103`](project/ticket-103/README.md) — publish digest-bound
+  managed target takeover as immutable `new-project 0.18.3`. Stan:
+  `IN_PROGRESS / EDIT`; workstream: `governance`; depends on `ticket-102`.
+
 - [x] [`ticket-102`](project/ticket-102/README.md) — allow a changed,
   pre-existing target to enter managed ownership only through an exact-path,
   exact-base-digest declaration. Stan: `DONE / DONE`; klasyfikacja:
