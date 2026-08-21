@@ -15,6 +15,7 @@
     "governance/manifest.hub.json",
     "tests/adoption-lock.test.sh",
     "tests/governance-validator.test.sh",
+    "scripts/worktree_overlap_check.py",
     "project/ticket-101/**",
     "TODO.md",
     "project/TICKETS.md"
@@ -31,19 +32,19 @@
     "targetBranch": "main",
     "outcome": "Publish integrated generated receipt ownership as immutable new-project 0.18.2",
     "nonGoals": [
-      "Do not change ticket-100 behavior after integration",
+      "Do not change ticket-100 behavior after integration; only remove the base's unused import required by the release lint gate",
       "Do not publish before exact-head approval and clean main retest",
       "Do not move prior tags or adopt the release in Platform here"
     ],
     "complexity": "S",
     "estimatedMinutes": 30,
-    "budgets": {"maxImplementationFiles": 6, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "budgets": {"maxImplementationFiles": 7, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
     "architecture": {
       "status": "accepted",
       "decision": "Publish the integrated backward-compatible ownership fix as a mechanical patch release",
       "components": [
         {"name": "release-version", "paths": ["VERSION", "governance/manifest.default.json", "governance/manifest.hub.json"]},
-        {"name": "release-tests", "paths": ["tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]},
+        {"name": "release-tests", "paths": ["tests/adoption-lock.test.sh", "tests/governance-validator.test.sh", "scripts/worktree_overlap_check.py"]},
         {"name": "release-notes", "paths": ["CHANGELOG.md"]}
       ],
       "responsibilityChanges": false,

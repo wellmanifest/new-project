@@ -19,6 +19,12 @@ dokładnego merge SHA.
 3. Opublikować PR przez Validator.
 4. Na czystym merge `main` ponowić testy i opublikować immutable tag/release.
 
+## Plan correction
+
+Pełny test ujawnił bazowy `F401` po ticket-099. Usunięcie jednego nieużywanego
+importu jest bezskutkowym, bezpiecznym warunkiem wydania; zostaje jawnie dodane
+do scope i tego samego komponentu testowego przed commitem implementacji.
+
 ## Actual changes
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`

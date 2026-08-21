@@ -26,6 +26,9 @@ jej merge.
 
 - Tag i release są niemutowalne; powstaną dopiero po trusted merge i reteście.
 - Adopcja w Platform jest osobnym target-owned ticketem.
+- Czysty base po ticket-099 zawiera nieużywany import `sys` wykrywany przez
+  przypięty Ruff; release usuwa wyłącznie ten bezskutkowy import, aby nie
+  publikować standardu z czerwoną bramką.
 
 ## Uczestnicy
 
