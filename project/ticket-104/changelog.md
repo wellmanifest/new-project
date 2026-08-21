@@ -8,3 +8,4 @@
   whitespace assertion.
 - Added the failing-then-passing package source scan and removed the whitespace
   delivered to adopter `AGENTS.md` files.
+- Closed after exact-head Validator approval and merge of PR #170.

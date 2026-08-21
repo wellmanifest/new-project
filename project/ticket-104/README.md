@@ -2,8 +2,8 @@
 
 - **ID**: ticket-104
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-21
 
 ## Cel i Zakres
@@ -18,7 +18,7 @@ strategii `managed` lub `extendable`.
   rozszerzalnym źródle wymienionym w `governance/package-manifest.json`.
 - [x] AC-03: Pełny zestaw testów, Ruff, governance i `git diff --check`
   przechodzą bez błędów.
-- [ ] AC-04: Validator-agent zatwierdza dokładny head PR i scala zmianę.
+- [x] AC-04: Validator-agent zatwierdza dokładny head PR i scala zmianę.
 
 ## Ryzyka i Uwagi
 - Risk: skan mógłby objąć plik binarny; aktualny manifest zawiera wyłącznie
@@ -30,6 +30,8 @@ strategii `managed` lub `extendable`.
 - 11/11 `tests/*.test.sh`: PASS.
 - Ruff oraz `git diff --check`: PASS.
 - Exact-base governance od `7bed5902`: 0 errors, 0 warnings.
+- Validator-agent approved exact head `270a7286`; PR #170 merged as
+  `fb318a6a9994fc8f6931f89c302275fce2a525e2`.
 
 ## Uczestnicy
 
