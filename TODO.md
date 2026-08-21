@@ -9,11 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-102`](project/ticket-102/README.md) — allow a changed,
+- [x] [`ticket-102`](project/ticket-102/README.md) — allow a changed,
   pre-existing target to enter managed ownership only through an exact-path,
-  exact-base-digest declaration. Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
+  exact-base-digest declaration. Stan: `DONE / DONE`; klasyfikacja:
   `BUG / P1 / regression`; workstream: `governance`; found by Platform 0.18.2
-  adoption pilot; awaiting exact-head Validator approval.
+  adoption pilot; PR #166 merged as `5cf4c869` after exact-head Validator approval.
 
 - [x] [`ticket-101`](project/ticket-101/README.md) — opublikować zintegrowaną
   własność generated artifact receipt jako immutable `new-project 0.18.2`.

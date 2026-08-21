@@ -7,3 +7,4 @@
 - Bound the regression to digest-authorized managed target takeover semantics.
 - Added the DSL/schema field, deterministic verifier and fail-closed fixtures.
 - Passed the complete validation matrix and entered Validator-gated publication.
+- Merged PR #166 after exact-head approval as `5cf4c8693c39b94a6bce9968434619dfbc5f6ff8`.

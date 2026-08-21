@@ -2,8 +2,8 @@
 
 - **ID**: ticket-102
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-21
 
 ## Cel i Zakres
@@ -20,7 +20,7 @@ binds the exact SHA-256 digest observed at its accepted Git base.
 - [x] AC-03: Head managed hash, lock binding and ordinary scope gates remain
   unchanged.
 - [x] AC-04: Full governance validator and exact-base governance pass.
-- [ ] AC-05: The change is delivered by exact-head Validator approval.
+- [x] AC-05: The change is delivered by exact-head Validator approval.
 
 ## Ryzyka i Uwagi
 
@@ -32,6 +32,8 @@ binds the exact SHA-256 digest observed at its accepted Git base.
 - 11/11 `tests/*.test.sh`: PASS.
 - Ruff: PASS.
 - Exact-base governance from `f08457c8`: 0 errors, 0 warnings.
+- Validator-agent approved exact head `a569239f`; PR #166 merged as
+  `5cf4c8693c39b94a6bce9968434619dfbc5f6ff8`.
 
 ## Uczestnicy
 
