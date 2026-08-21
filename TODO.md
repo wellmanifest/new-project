@@ -12,8 +12,8 @@
 - [ ] [`ticket-100`](project/ticket-100/README.md) — traktować dokładny,
   deterministycznie generowany `config/artifact-registry.json` jako governance
   carrier także w DONE closure, bez otwierania całego `config/**`. Stan:
-  `IN_PROGRESS / EDIT`; klasyfikacja: `BUG / P1 / regression`; workstream:
-  `governance`.
+  `IN_PROGRESS / PUBLICATION`; klasyfikacja: `BUG / P1 / regression`;
+  workstream: `governance`; oczekuje exact-head Validator approval.
 
 - [x] [`ticket-097`](project/ticket-097/README.md) — naprawiać istniejące
   instalacje, w których idempotentny installer pozostawił wywołanie worktree

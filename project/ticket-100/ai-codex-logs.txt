@@ -1,0 +1,10 @@
+COMMAND bash tests/governance-validator.test.sh
+diagnostic-catalog: 68 codes, 0 findings
+governance validator: PASS
+
+COMMAND bash tests/agent-hosts.test.sh
+GOV-AGENT-HOST-003: ticket-001 DONE closure contains non-closure path 'config/other-generated.json'.
+agent-hosts.test.sh OK
+
+COMMAND bash tests/adoption-lock.test.sh
+adoption lock: PASS

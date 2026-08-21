@@ -59,6 +59,10 @@ Draft202012Validator(schemas['diagnostics.schema.json']).validate(
 Draft202012Validator(schemas['manifest.schema.json']).validate(
     json.load(open(root / 'governance/manifest.default.json', encoding='utf-8'))
 )
+default_manifest = json.load(open(
+    root / 'governance/manifest.default.json', encoding='utf-8'
+))
+assert 'config/artifact-registry.json' in default_manifest['governancePaths']
 manifest_validator = Draft202012Validator(schemas['manifest.schema.json'])
 for valid_domain_contracts in (
     {'mode': 'none'},
@@ -84,6 +88,7 @@ hub_manifest = json.load(open(
     root / 'governance/manifest.hub.json', encoding='utf-8'
 ))
 Draft202012Validator(schemas['manifest.schema.json']).validate(hub_manifest)
+assert 'config/artifact-registry.json' in hub_manifest['governancePaths']
 assert hub_manifest['standard']['version'] == '0.18.1'
 assert hub_manifest['coordination']['workstreams'] == {
     'governance': {'ownedPaths': ['**']},
@@ -1918,6 +1923,19 @@ planned_unowned="$fixture/planned-unowned"
 make_fixture "$planned_unowned"
 sed -i 's#"allowedPaths": \["src/\*\*"\]#"allowedPaths": ["sdk/**"]#' "$planned_unowned/project/ticket-002/intent.json"
 expect_code GOV-WORKSTREAM-003 run_check "$planned_unowned" --changed-file TODO.md
+
+generated_receipt="$fixture/generated-receipt"
+make_fixture "$generated_receipt"
+mkdir -p "$generated_receipt/config"
+printf '%s\n' '{"schema":"fixture.receipt/v1"}' > \
+  "$generated_receipt/config/artifact-registry.json"
+run_check "$generated_receipt" --changed-file config/artifact-registry.json \
+  > "$fixture/generated-receipt.out"
+grep -q '^GOV-PASS:' "$fixture/generated-receipt.out"
+printf '%s\n' '{"schema":"fixture.other/v1"}' > \
+  "$generated_receipt/config/other-generated.json"
+expect_code GOV-SCOPE-001 run_check "$generated_receipt" \
+  --changed-file config/other-generated.json
 
 governance_root_contracts="$fixture/governance-root-contracts"
 make_fixture "$governance_root_contracts"

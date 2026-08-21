@@ -24,6 +24,11 @@ governance-only closure, bez otwierania całego `config/**`.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- Dodałem dokładny `config/artifact-registry.json` do default i hub
+  `governancePaths`, bez wildcardu `config/**`.
+- Rozszerzyłem fail-closed DONE closure o tę samą jedną ścieżkę.
+- Dodałem regresje pozytywne i negatywne dla scope/workstream oraz hooka.
+- Pełne testy validatora, agent-hostów i adoption lock przechodzą.
 
 ## Blockers
 

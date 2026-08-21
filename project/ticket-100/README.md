@@ -3,7 +3,7 @@
 - **ID**: ticket-100
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-21
 
 ## Cel i Zakres
@@ -19,14 +19,23 @@ deterministycznego `artifacts:check`.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Default i hub manifest klasyfikują wyłącznie
+- [x] AC-01: Default i hub manifest klasyfikują wyłącznie
   `config/artifact-registry.json` jako governance carrier.
-- [ ] AC-02: Ticket dowolnego workstreamu może dołączyć wygenerowany receipt
+- [x] AC-02: Ticket dowolnego workstreamu może dołączyć wygenerowany receipt
   bez fałszywego `GOV-WORKSTREAM-003` i bez przejęcia dowolnego `config/**`.
-- [ ] AC-03: DONE closure może zmienić dokładny receipt razem z własnym README
+- [x] AC-03: DONE closure może zmienić dokładny receipt razem z własnym README
   i indeksami, ale nadal odrzuca inny plik `config/`, źródło i usunięcie.
-- [ ] AC-04: Pełne testy governance validatora, agent-hostów i adoption lock
+- [x] AC-04: Pełne testy governance validatora, agent-hostów i adoption lock
   przechodzą wraz z exact-base governance gate.
+
+## Dowody walidacji
+
+- `tests/governance-validator.test.sh`: PASS; exact receipt przechodzi jako
+  governance carrier, sąsiedni `config/other-generated.json` pozostaje
+  `GOV-SCOPE-001`.
+- `tests/agent-hosts.test.sh`: PASS; DONE closure przyjmuje exact receipt i
+  odrzuca inny `config/` kodem `GOV-AGENT-HOST-003`.
+- `tests/adoption-lock.test.sh`: PASS; pakiet adopcyjny pozostaje spójny.
 
 ## Ryzyka i Uwagi
 
