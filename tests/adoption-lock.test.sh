@@ -18,6 +18,9 @@ cp "$repo_root/template/files/new-project-governance.workflow.yml" \
   "$standard/template/files/new-project-governance.workflow.yml"
 cp "$repo_root/project.sh" "$repo_root/project.bat" "$standard/"
 cp "$repo_root/VERSION" "$standard/VERSION"
+# The package ships the guard config from the repository root, so the fixture
+# that stands in for a published standard has to carry it too.
+cp "$repo_root/worktree-guard.yaml" "$standard/worktree-guard.yaml"
 git -C "$standard" init -q
 git -C "$standard" config user.email test@new-project.local
 git -C "$standard" config user.name new-project-test
