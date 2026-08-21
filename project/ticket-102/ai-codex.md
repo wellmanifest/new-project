@@ -27,6 +27,14 @@ explicit exact-path, exact-base-digest takeover authorization in the ticket DSL.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- Added optional `managedTargetTakeovers` entries with strict exact-path and
+  lowercase SHA-256 syntax, duplicate rejection and no initial-adoption use.
+- Bound every declaration to bytes read from the accepted Git base and require
+  every declaration to be consumed by one changed, newly managed target.
+- Preserved immutable head-lock verification and the default rejection when no
+  matching takeover exists.
+- Added positive, missing, wrong-digest, unused and duplicate regression cases;
+  the full deterministic validator suite passes.
 
 ## Blockers
 

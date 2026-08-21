@@ -1398,6 +1398,9 @@ package = {
 package_path = root / '.governance/package-manifest.json'
 package_path.write_text(json.dumps(package, indent=2) + '\n', encoding='utf-8')
 
+(root / 'src').mkdir(exist_ok=True)
+(root / 'src/pilot.js').write_text('target-owned pilot v1\n', encoding='utf-8')
+
 def write_lock(revision, version):
     targets = [item['target'] for item in package['files']]
     lock = {
@@ -1442,6 +1445,10 @@ intent['delivery']['standardAdoption'] = {
     'sourceRepository': 'wellmanifest/new-project',
     'fromRevision': 'a' * 40,
     'toRevision': 'b' * 40,
+    'managedTargetTakeovers': [{
+        'path': 'src/pilot.js',
+        'baseDigest': hashlib.sha256((root / 'src/pilot.js').read_bytes()).hexdigest(),
+    }],
 }
 intent_path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
 
@@ -1451,7 +1458,11 @@ manifest['standard']['version'] = '0.13.0'
 manifest_path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
 (root / 'AGENTS.md').write_text('managed agents v2\n', encoding='utf-8')
 (root / 'scripts').mkdir(exist_ok=True)
-new_targets = ['scripts/runtime.sh', *[f'src/standard-{index}.js' for index in range(1, 7)]]
+new_targets = [
+    'scripts/runtime.sh',
+    'src/pilot.js',
+    *[f'src/standard-{index}.js' for index in range(1, 7)],
+]
 for target in new_targets:
     path = root / target
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -1492,6 +1503,75 @@ if ! run_check "$atomic_adoption" --base "$atomic_base" > "$fixture/atomic-adopt
   exit 1
 fi
 grep -q '^GOV-PASS:' "$fixture/atomic-adoption.out"
+
+atomic_takeover_missing="$fixture/atomic-adoption-takeover-missing"
+cp -R "$atomic_adoption" "$atomic_takeover_missing"
+python3 - "$atomic_takeover_missing/project/ticket-002/intent.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+del intent['delivery']['standardAdoption']['managedTargetTakeovers']
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_takeover_missing" add project/ticket-002/intent.json
+git -C "$atomic_takeover_missing" commit -qm 'omit managed target takeover'
+expect_code GOV-SYNC-001 run_check "$atomic_takeover_missing" --base "$atomic_base"
+
+atomic_takeover_wrong="$fixture/atomic-adoption-takeover-wrong"
+cp -R "$atomic_adoption" "$atomic_takeover_wrong"
+python3 - "$atomic_takeover_wrong/project/ticket-002/intent.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+intent['delivery']['standardAdoption']['managedTargetTakeovers'][0]['baseDigest'] = '0' * 64
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_takeover_wrong" add project/ticket-002/intent.json
+git -C "$atomic_takeover_wrong" commit -qm 'bind wrong managed target digest'
+expect_code GOV-SYNC-001 run_check "$atomic_takeover_wrong" --base "$atomic_base"
+
+atomic_takeover_unused="$fixture/atomic-adoption-takeover-unused"
+cp -R "$atomic_adoption" "$atomic_takeover_unused"
+python3 - "$atomic_takeover_unused/project/ticket-002/intent.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+intent['delivery']['standardAdoption']['managedTargetTakeovers'].append({
+    'path': 'AGENTS.md',
+    'baseDigest': '0' * 64,
+})
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_takeover_unused" add project/ticket-002/intent.json
+git -C "$atomic_takeover_unused" commit -qm 'declare unused managed target takeover'
+expect_code GOV-SYNC-001 run_check "$atomic_takeover_unused" --base "$atomic_base"
+
+atomic_takeover_duplicate="$fixture/atomic-adoption-takeover-duplicate"
+cp -R "$atomic_adoption" "$atomic_takeover_duplicate"
+python3 - "$atomic_takeover_duplicate/project/ticket-002/intent.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+intent['delivery']['standardAdoption']['managedTargetTakeovers'].append(
+    dict(intent['delivery']['standardAdoption']['managedTargetTakeovers'][0])
+)
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_takeover_duplicate" add project/ticket-002/intent.json
+git -C "$atomic_takeover_duplicate" commit -qm 'duplicate managed target takeover'
+expect_code GOV-INTENT-002 run_check "$atomic_takeover_duplicate" --base "$atomic_base"
 
 atomic_bad_hash="$fixture/atomic-adoption-bad-hash"
 cp -R "$atomic_adoption" "$atomic_bad_hash"

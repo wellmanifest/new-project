@@ -3,7 +3,7 @@
 - **ID**: ticket-102
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-21
 
 ## Cel i Zakres
@@ -15,9 +15,9 @@ binds the exact SHA-256 digest observed at its accepted Git base.
 ## Kryteria Odbioru (Acceptance Criteria)
 - [x] AC-01: The Platform 0.18.2 pilot reproduces `GOV-SYNC-001` for a real
   pre-existing worktree guard target.
-- [ ] AC-02: A matching digest-bound takeover passes while missing, wrong and
+- [x] AC-02: A matching digest-bound takeover passes while missing, wrong and
   unused declarations fail closed.
-- [ ] AC-03: Head managed hash, lock binding and ordinary scope gates remain
+- [x] AC-03: Head managed hash, lock binding and ordinary scope gates remain
   unchanged.
 - [ ] AC-04: Full governance validator and exact-base governance pass.
 - [ ] AC-05: The change is delivered by exact-head Validator approval.
