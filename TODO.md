@@ -9,10 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-104`](project/ticket-104/README.md) — reject trailing whitespace
+- [x] [`ticket-104`](project/ticket-104/README.md) — reject trailing whitespace
   in every `managed` or `extendable` package source after the Platform adoption
-  pilot found it in generated `AGENTS.md`. Stan: `IN_PROGRESS / PUBLICATION`;
-  klasyfikacja: `BUG / P1 / regression`; workstream: `governance`.
+  pilot found it in generated `AGENTS.md`. Stan: `DONE / DONE`; klasyfikacja:
+  `BUG / P1 / regression`; workstream: `governance`; PR #170 merged as
+  `fb318a6a` after exact-head Validator approval.
 
 - [x] [`ticket-103`](project/ticket-103/README.md) — publish digest-bound
   managed target takeover as immutable `new-project 0.18.3`. Stan:
