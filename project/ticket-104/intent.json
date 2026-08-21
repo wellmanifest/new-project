@@ -1,0 +1,78 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-104",
+  "summary": "Reject trailing whitespace in managed text artifacts",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "template/files/AGENTS.template.md",
+    "tests/agent-hosts.test.sh",
+    "project/ticket-104/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7bed59025d4472c7a068a53765311975f880b1c3",
+    "targetBranch": "main",
+    "outcome": "Managed text artifacts delivered by the standard contain no trailing horizontal whitespace",
+    "nonGoals": [
+      "Do not alter prose semantics in the managed agent contract",
+      "Do not change adoption or merge authorization behavior",
+      "Do not include the follow-up immutable release"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Remove the source defect and make the existing agent-host contract test scan every managed or extendable package source for trailing horizontal whitespace",
+      "components": [
+        {
+          "name": "managed-agent-contract",
+          "paths": [
+            "template/files/AGENTS.template.md",
+            "tests/agent-hosts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the source cleanup and package-wide whitespace assertion"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/agent-hosts.test.sh"],
+        "evidence": "project/ticket-104/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["git diff --check 7bed59025d4472c7a068a53765311975f880b1c3...HEAD"],
+        "evidence": "project/ticket-104/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
