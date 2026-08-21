@@ -1,0 +1,5 @@
+TAG_PRECHECK v0.18.2=ABSENT
+RELEASE_PRECHECK v0.18.2=ABSENT
+FULL_SUITES tests/*.test.sh=PASS count=11
+RUFF version=0.15.21 result=PASS
+GOVERNANCE errors=0 warnings=0 result=PASS

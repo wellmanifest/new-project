@@ -3,7 +3,7 @@
 - **ID**: ticket-101
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-21
 
 ## Cel i Zakres
@@ -15,9 +15,9 @@ jej merge.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: `VERSION`, oba manifesty i aktywne asercje deklarują `0.18.2`.
-- [ ] AC-02: Changelog opisuje exact generated receipt ownership jako patch.
-- [ ] AC-03: Wszystkie suite'y, Ruff, secret scan i governance przechodzą.
+- [x] AC-01: `VERSION`, oba manifesty i aktywne asercje deklarują `0.18.2`.
+- [x] AC-02: Changelog opisuje exact generated receipt ownership jako patch.
+- [x] AC-03: Wszystkie suite'y, Ruff, secret scan i governance przechodzą.
 - [ ] AC-04: PR otrzymuje trusted exact-head approval i merge bez zmiany drzewa.
 - [ ] AC-05: Czysty `main`, tag i GitHub Release `v0.18.2` wskazują dokładny
   zintegrowany merge.
@@ -29,6 +29,13 @@ jej merge.
 - Czysty base po ticket-099 zawiera nieużywany import `sys` wykrywany przez
   przypięty Ruff; release usuwa wyłącznie ten bezskutkowy import, aby nie
   publikować standardu z czerwoną bramką.
+
+## Dowody przed publikacją
+
+- 11/11 `tests/*.test.sh`: PASS.
+- Ruff 0.15.21: PASS po usunięciu jednego nieużywanego importu z bazy.
+- Exact-base governance: 0 błędów, 0 ostrzeżeń.
+- Tag ani release `v0.18.2` nie istnieją przed publikacją.
 
 ## Uczestnicy
 
