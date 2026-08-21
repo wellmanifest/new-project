@@ -1,0 +1,7 @@
+2026-08-21 accepted_base=7bed59025d4472c7a068a53765311975f880b1c3
+2026-08-21 red_test="managed package sources contain trailing whitespace: template/files/AGENTS.template.md:82" exit=1
+2026-08-21 tests="11/11 tests/*.test.sh" result=PASS
+2026-08-21 ruff="python3 -m ruff check scripts tests" result=PASS
+2026-08-21 diff_check="git diff --check 7bed5902...HEAD" result=PASS
+2026-08-21 governance="exact-base governance_check.py" errors=0 warnings=0
+2026-08-21 plan_correction="XS policy admits fewer files than the already bounded two-file implementation; changed only complexity to S" error=GOV-DELIVERY-001

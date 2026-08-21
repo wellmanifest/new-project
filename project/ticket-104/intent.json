@@ -31,8 +31,8 @@
       "Do not change adoption or merge authorization behavior",
       "Do not include the follow-up immutable release"
     ],
-    "complexity": "XS",
-    "estimatedMinutes": 15,
+    "complexity": "S",
+    "estimatedMinutes": 20,
     "budgets": {
       "maxImplementationFiles": 2,
       "maxAffectedComponents": 1,
