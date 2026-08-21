@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-105",
+  "summary": "Release managed text hygiene as new-project 0.18.4",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-105/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": ["ticket-104"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "1e51d2ec4932c00c1bc568558c5bae397da952c9",
+    "targetBranch": "main",
+    "outcome": "Publish integrated managed text hygiene as immutable new-project 0.18.4",
+    "nonGoals": [
+      "Do not change ticket-104 behavior after integration",
+      "Do not publish before exact-head approval and clean main retest",
+      "Do not adopt the release in Platform inside this ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Publish the integrated package-wide managed text hygiene assertion as a mechanical patch release",
+      "components": [
+        {"name": "release-version", "paths": ["VERSION", "governance/manifest.default.json", "governance/manifest.hub.json"]},
+        {"name": "release-tests", "paths": ["tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]},
+        {"name": "release-notes", "paths": ["CHANGELOG.md"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": ["Advance immutable standard version from 0.18.3 to 0.18.4"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Before publication revert preparation; after publication create a newer release"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "for suite in tests/*.test.sh; do bash $suite; done",
+          "python3 -m ruff check scripts tests",
+          "python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base 1e51d2ec4932c00c1bc568558c5bae397da952c9 --head HEAD --actor agent"
+        ],
+        "evidence": "project/ticket-105/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish",
+          "git ls-remote --tags origin v0.18.4",
+          "gh release view v0.18.4 --repo wellmanifest/new-project"
+        ],
+        "evidence": "project/ticket-105/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
