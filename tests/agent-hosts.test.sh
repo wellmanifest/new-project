@@ -17,6 +17,27 @@ grep -Fq 'new-ticket.sh' "$root/GEMINI.md" || fail "GEMINI.md must require new-t
 grep -Fq 'new-ticket.sh' "$root/CLAUDE.md" || fail "CLAUDE.md must require new-ticket.sh"
 grep -Fq 'alwaysApply: true' "$root/.cursor/rules/new-project-standard.mdc" || fail "Cursor rule must alwaysApply"
 
+python3 - "$root" <<'PY'
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+package = json.loads((root / "governance/package-manifest.json").read_text())
+findings = []
+for entry in package["files"]:
+    if entry["strategy"] not in {"managed", "extendable"}:
+        continue
+    source = root / entry["source"]
+    for number, line in enumerate(source.read_bytes().splitlines(), start=1):
+        if line.endswith((b" ", b"\t")):
+            findings.append(f"{entry['source']}:{number}")
+if findings:
+    print("managed package sources contain trailing whitespace:", file=sys.stderr)
+    print("\n".join(findings), file=sys.stderr)
+    raise SystemExit(1)
+PY
+
 git init -q "$tmp/adopter"
 git -C "$tmp/adopter" config user.email "test@example.com"
 git -C "$tmp/adopter" config user.name "Test"

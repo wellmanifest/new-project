@@ -11,7 +11,7 @@
 
 - [ ] [`ticket-104`](project/ticket-104/README.md) — reject trailing whitespace
   in every `managed` or `extendable` package source after the Platform adoption
-  pilot found it in generated `AGENTS.md`. Stan: `IN_PROGRESS / EDIT`;
+  pilot found it in generated `AGENTS.md`. Stan: `IN_PROGRESS / PUBLICATION`;
   klasyfikacja: `BUG / P1 / regression`; workstream: `governance`.
 
 - [x] [`ticket-103`](project/ticket-103/README.md) — publish digest-bound

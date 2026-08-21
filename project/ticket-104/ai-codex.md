@@ -27,6 +27,8 @@ pakietu, nie tylko bieżącą linię.
   from the request to execute this work.
 - Reproduced the defect at `template/files/AGENTS.template.md:82` and confirmed
   that it is the only affected package source at the accepted base.
+- Added a manifest-driven byte-level regression, removed the source defect and
+  passed all 11 shell suites, Ruff, diff hygiene and exact-base governance.
 
 ## Blockers
 
