@@ -11,7 +11,8 @@
 
 - [ ] [`ticket-103`](project/ticket-103/README.md) — publish digest-bound
   managed target takeover as immutable `new-project 0.18.3`. Stan:
-  `IN_PROGRESS / EDIT`; workstream: `governance`; depends on `ticket-102`.
+  `IN_PROGRESS / PUBLICATION`; workstream: `governance`; depends on
+  `ticket-102`; awaiting exact-head Validator approval.
 
 - [x] [`ticket-102`](project/ticket-102/README.md) — allow a changed,
   pre-existing target to enter managed ownership only through an exact-path,

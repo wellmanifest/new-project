@@ -23,6 +23,10 @@ takeover contract until it is published as an immutable standard revision.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- Advanced version carriers and active assertions to `0.18.3`.
+- Added patch release notes for digest-bound managed target takeover.
+- Completed all 11 standard suites, Ruff and exact-base governance; entered
+  protected publication.
 
 ## Blockers
 
