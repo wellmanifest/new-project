@@ -79,7 +79,7 @@ Before any multi-step implementation, an agent must:
    Freeze: re-read `gh pr view <N> --json headRefOid` immediately before
    dispatch; do not push after freeze until approve or fail. MUST NOT ask the
    human to “use the validator”, MUST NOT self-approve, and MUST NOT treat
-   chat/Markdown as merge approval. Normative: 
+   chat/Markdown as merge approval. Normative:
    `subactor/validator-agent/docs/PUBLICATION_FREEZE.md`.
 12. Require merge approval evidence to bind repository, PR, current HEAD,
    active ticket and actor. The protected resolver creates that evidence
