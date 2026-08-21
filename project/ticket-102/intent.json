@@ -11,6 +11,7 @@
   "allowedPaths": [
     "scripts/governance_check.py",
     "governance/intent.schema.json",
+    "governance/rule-enforcement.json",
     "tests/governance-validator.test.sh",
     "CONTRIBUTING.md",
     "project/ticket-102/**",
@@ -35,7 +36,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 4,
+      "maxImplementationFiles": 5,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
@@ -50,7 +51,11 @@
         },
         {
           "name": "intent-contract",
-          "paths": ["governance/intent.schema.json", "CONTRIBUTING.md"]
+          "paths": [
+            "governance/intent.schema.json",
+            "governance/rule-enforcement.json",
+            "CONTRIBUTING.md"
+          ]
         }
       ],
       "responsibilityChanges": false,
