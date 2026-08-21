@@ -33,7 +33,7 @@
       "Do not include the follow-up release or Platform adoption"
     ],
     "complexity": "S",
-    "estimatedMinutes": 35,
+    "estimatedMinutes": 30,
     "budgets": {
       "maxImplementationFiles": 4,
       "maxAffectedComponents": 2,
