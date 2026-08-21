@@ -7,3 +7,5 @@
 - Added exact generated artifact receipt ownership to default/hub manifests and
   terminal closure without allowing adjacent configuration paths.
 - Added positive and fail-closed regression coverage.
+- Published through PR #162 after exact-head Validator approval and recorded
+  merge commit `73dba483aef2f03374a37c060e452476100d294a`.

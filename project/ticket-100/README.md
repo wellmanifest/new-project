@@ -2,8 +2,8 @@
 
 - **ID**: ticket-100
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-21
 
 ## Cel i Zakres
@@ -36,6 +36,9 @@ deterministycznego `artifacts:check`.
 - `tests/agent-hosts.test.sh`: PASS; DONE closure przyjmuje exact receipt i
   odrzuca inny `config/` kodem `GOV-AGENT-HOST-003`.
 - `tests/adoption-lock.test.sh`: PASS; pakiet adopcyjny pozostaje spójny.
+- Exact-head Validator zatwierdził
+  `ba8bbaa50cd6d3647193b0840d0aa81394a67dc6`, a PR #162 został scalony jako
+  `73dba483aef2f03374a37c060e452476100d294a`.
 
 ## Ryzyka i Uwagi
 

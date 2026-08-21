@@ -8,3 +8,7 @@ agent-hosts.test.sh OK
 
 COMMAND bash tests/adoption-lock.test.sh
 adoption lock: PASS
+PUBLICATION PR=162
+APPROVED_HEAD=ba8bbaa50cd6d3647193b0840d0aa81394a67dc6
+MERGE_COMMIT=73dba483aef2f03374a37c060e452476100d294a
+POST_MERGE_STATE=integrated
