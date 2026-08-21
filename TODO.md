@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-105`](project/ticket-105/README.md) — publish integrated managed
+  text hygiene as immutable `new-project 0.18.4`. Stan:
+  `IN_PROGRESS / PUBLICATION`; workstream: `governance`; depends on
+  `ticket-104`; pre-publication validation passes.
+
 - [x] [`ticket-104`](project/ticket-104/README.md) — reject trailing whitespace
   in every `managed` or `extendable` package source after the Platform adoption
   pilot found it in generated `AGENTS.md`. Stan: `DONE / DONE`; klasyfikacja:
