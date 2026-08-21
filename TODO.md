@@ -9,11 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-101`](project/ticket-101/README.md) — opublikować zintegrowaną
+- [x] [`ticket-101`](project/ticket-101/README.md) — opublikować zintegrowaną
   własność generated artifact receipt jako immutable `new-project 0.18.2`.
-  Stan: `IN_PROGRESS / PUBLICATION`; klasyfikacja:
+  Stan: `DONE / DONE`; klasyfikacja:
   `SERVICE / P1 / requested`; workstream: `governance`; zależy od
-  `ticket-100`; oczekuje exact-head Validator approval.
+  `ticket-100`; PR #164 scalono jako `5c9aef93`, a tag i release `v0.18.2`
+  opublikowano z tego dokładnego merge commit.
 
 - [x] [`ticket-100`](project/ticket-100/README.md) — traktować dokładny,
   deterministycznie generowany `config/artifact-registry.json` jako governance
