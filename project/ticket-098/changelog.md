@@ -8,3 +8,4 @@
   governance-only `DONE` closures.
 - Added regression coverage for staged/worktree mismatch, valid closure,
   implementation, foreign-ticket and deletion rejection.
+- Closed after exact-head Validator approval and protected merge of PR #158.
