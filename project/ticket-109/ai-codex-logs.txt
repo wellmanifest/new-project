@@ -1,2 +1,5 @@
 2026-08-23 plan base=a3945be1f25726bf714eecd1ebbba45dbced34ba plan_commit=ca86fea
 2026-08-23 prepublication tests=10/10 result=PASS ruff=PASS diff_check=PASS governance=GOV-PASS base=a3945be1f25726bf714eecd1ebbba45dbced34ba
+2026-08-23 validator pr=180 head=0f1ba61a6d91e742988af5bcda07650b991359d4 review=5001265454 run=32605154146 merge=5cc475f6200df9f8c1d045240277c6eaa2f9a642
+2026-08-23 clean_main head=5cc475f6200df9f8c1d045240277c6eaa2f9a642 tests=10/10 ruff=PASS diff_check=PASS governance=GOV-PASS
+2026-08-23 goal version=2.1.300 mode=direct-main force_publish=true result=SUCCESS tag=v0.18.5 peeled=5cc475f6200df9f8c1d045240277c6eaa2f9a642 release=draft:false,prerelease:false
