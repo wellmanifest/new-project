@@ -518,7 +518,9 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
   - [x] `governance/package-manifest.json` rozsyła `CLAUDE.md`, `GEMINI.md`, regułę Cursora, `.githooks/pre-commit` oraz sam kontrakt i walidator jako managed.
   - [x] `scripts/install-agent-hosts.sh` aktywuje kontrakt w miejscu zamiast kopiować plik na samego siebie; bootstrap dostarcza również kontrakt.
   - [ ] Hosty `aider` i `copilot` przeniesione do slice'u CI (nie mieściły się w budżecie dziewięciu plików).
-- [ ] **Egzekucja w CI** (slice zależny od dystrybucji):
-  - [ ] Job `governance / enforce` w `template/files/new-project-governance.workflow.yml` uruchamia `governance_check.py` u wszystkich adopterów.
-  - [ ] `governance/rule-enforcement.json` mapuje regułę hosta na kody deterministyczne zamiast pozostawiać ją nieopisaną.
+- [x] **Egzekucja w CI** (ticket-108):
+  - [x] Job `governance / enforce` w `template/files/new-project-governance.workflow.yml` uruchamia `governance_check.py`; zmierzono, że brama przechodzi w 24 z 25 adopterów.
+  - [x] `audit_diagnostics.py` skanuje `.githooks`, a `audit_rule_enforcement.py` zna `agent_host_check.py`; reguły `C-HOST-001..003` mapują sześć kodów.
+  - [ ] Wymaganie `governance / enforce` w rulesetach adopterów — decyzja poza repozytorium.
+  - [ ] `required-checks.json` generowany per repozytorium zamiast kopii huba (blokuje krok required-checks w jobie).
 

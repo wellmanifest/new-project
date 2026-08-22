@@ -36,6 +36,10 @@ VALIDATOR_PATHS = (
     Path("scripts/branch_lifecycle_check.py"),
     Path("scripts/workspace_lifecycle_check.py"),
     Path("scripts/remediation_intent.py"),
+    # ticket-108: agent_host_check.py emits GOV-AGENT-HOST-004..006 and
+    # GOV-PACKAGING-001..003. Leaving it out of this list meant a deterministic
+    # validator existed whose codes no normative rule was required to claim.
+    Path("scripts/agent_host_check.py"),
 )
 
 GOV_CODE = re.compile(r'"(GOV-[A-Z]+(?:-[A-Z]+)*-[0-9]{3})"')
