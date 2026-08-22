@@ -530,3 +530,6 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
   - [x] Zaktualizować mechaniczne nośniki wersji i aktywne asercje.
   - [x] Przejść exact-head Validator merge; pełny kontrakt lokalny już PASS.
   - [x] Opublikować niezmienne `v0.18.5` z ponownie przetestowanego merge SHA.
+- [ ] **Kompozycja zarządzanych bramek pre-commit** (ticket-110):
+  - [ ] Każdy dozwolony sukces lifecycle uruchamia repozytoryjny worktree guard.
+  - [ ] Negatywny werdykt lub brak runnera blokuje commit w teście regresyjnym.

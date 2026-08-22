@@ -1,0 +1,87 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-110",
+  "summary": "Compose managed ticket and worktree pre-commit gates",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    ".githooks/pre-commit",
+    "tests/agent-hosts.test.sh",
+    "project/ticket-110/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "cd9a15aa3212a6520059e58f821aabb341a6f839",
+    "targetBranch": "main",
+    "outcome": "The managed host hook preserves ticket lifecycle enforcement and always runs the repository-scoped worktree overlap guard before admitting an IN_PROGRESS or governance-only DONE commit.",
+    "nonGoals": [
+      "Changing the overlap algorithm or its workspace discovery rules",
+      "Weakening ticket branch, staged status or DONE closure validation",
+      "Upgrading adopters before a corrected immutable standard release exists",
+      "Merging directly without exact-head trusted approval"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Centralize successful hook termination in a fail-closed worktree guard function that resolves the packaged adopter runner first and the source-hub runner second, then exercise both lifecycle success paths with a deterministic fixture.",
+      "components": [
+        {
+          "name": "managed-precommit-boundary",
+          "paths": [
+            ".githooks/pre-commit",
+            "tests/agent-hosts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Successful managed pre-commit paths now require a passing repository-scoped worktree guard"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket branch; adopters remain on their previous immutable standard revision until an explicit adoption."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01..02",
+        "commands": [
+          "bash tests/agent-hosts.test.sh",
+          "bash -n .githooks/pre-commit tests/agent-hosts.test.sh"
+        ],
+        "evidence": "project/ticket-110/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "for test in tests/*.test.sh; do bash $test; done",
+          "./project/governance-check.sh --actor agent --base cd9a15aa3212a6520059e58f821aabb341a6f839 --head HEAD"
+        ],
+        "evidence": "project/ticket-110/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
