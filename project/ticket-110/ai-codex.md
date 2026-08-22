@@ -19,7 +19,9 @@ to regresja dystrybucyjna: aktualizacja może usunąć działającą ochronę ad
    negatywnego werdyktu guarda i braku runnera.
 2. Zastąpić terminalne sukcesy jedną funkcją, która wybiera wyłącznie
    pakietowy lub źródłowy runner i propaguje jego kod wyjścia.
-3. Uruchomić test komponentu, pełny zestaw shellowy i governance na dokładnym
+3. Zadeklarować runtime hooka w kontrakcie hostów i wyprowadzić z niego
+   atomowy bootstrap oraz kontrolę aktywacji.
+4. Uruchomić test komponentu, pełny zestaw shellowy i governance na dokładnym
    base/head; publikować wyłącznie przez Validator App.
 
 ## Actual changes

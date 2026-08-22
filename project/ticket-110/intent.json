@@ -10,6 +10,9 @@
   },
   "allowedPaths": [
     ".githooks/pre-commit",
+    "governance/agent-hosts.json",
+    "governance/agent-hosts.schema.json",
+    "scripts/install-agent-hosts.sh",
     "tests/agent-hosts.test.sh",
     "project/ticket-110/**",
     "TODO.md",
@@ -33,28 +36,32 @@
       "Merging directly without exact-head trusted approval"
     ],
     "complexity": "S",
-    "estimatedMinutes": 25,
+    "estimatedMinutes": 35,
     "budgets": {
-      "maxImplementationFiles": 2,
-      "maxAffectedComponents": 1,
-      "maxPublicInterfaceChanges": 1,
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Centralize successful hook termination in a fail-closed worktree guard function that resolves the packaged adopter runner first and the source-hub runner second, then exercise both lifecycle success paths with a deterministic fixture.",
+      "decision": "Centralize successful hook termination in a fail-closed worktree guard function. Declare its runtime files in the host contract so bootstrap derives and installs the complete executable closure from the package manifest instead of copying a hook that cannot run.",
       "components": [
         {
           "name": "managed-precommit-boundary",
           "paths": [
             ".githooks/pre-commit",
+            "governance/agent-hosts.json",
+            "governance/agent-hosts.schema.json",
+            "scripts/install-agent-hosts.sh",
             "tests/agent-hosts.test.sh"
           ]
         }
       ],
       "responsibilityChanges": false,
       "interfaceChanges": [
-        "Successful managed pre-commit paths now require a passing repository-scoped worktree guard"
+        "Successful managed pre-commit paths now require a passing repository-scoped worktree guard",
+        "The host contract declares the hook runtime files that bootstrap must install and activation must verify"
       ],
       "dataChanges": [],
       "ui": {

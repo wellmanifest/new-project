@@ -17,6 +17,8 @@ równoległymi procesami dotykającymi tego samego zakresu.
 Ticket komponuje obie deterministyczne bramki w jednym źródłowym hooku. Każda
 dozwolona ścieżka ticketowa musi przed sukcesem uruchomić repozytoryjny
 `worktree_guard.py`; brak runnera albo negatywny werdykt pozostają fail-closed.
+Kontrakt hostów deklaruje kompletny runtime hooka, dzięki czemu bootstrap nie
+może już skopiować samego hooka bez runnera, checkera i konfiguracji.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
