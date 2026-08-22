@@ -10,13 +10,24 @@ target="$fixture/target"
 mkdir -p "$standard" "$target"
 cp -R "$repo_root/governance" "$repo_root/project" "$repo_root/scripts" "$standard/"
 cp -R "$repo_root/error" "$standard/"
-mkdir -p "$standard/template/files"
-cp "$repo_root/template/files/AGENTS.template.md" "$standard/template/files/AGENTS.template.md"
-cp "$repo_root/template/files/remediation-intent.template.dsl.json" \
-  "$standard/template/files/remediation-intent.template.dsl.json"
-cp "$repo_root/template/files/new-project-governance.workflow.yml" \
-  "$standard/template/files/new-project-governance.workflow.yml"
-cp "$repo_root/project.sh" "$repo_root/project.bat" "$standard/"
+# Copy every source the package manifest names, instead of a hand-written list
+# that silently falls behind whenever the package gains a file. ticket-107 added
+# four host sources and this fixture would have kept passing while adoption of
+# them was broken.
+python3 - "$repo_root" "$standard" <<'PY'
+import json
+import shutil
+import sys
+from pathlib import Path
+
+repo_root, standard = Path(sys.argv[1]), Path(sys.argv[2])
+manifest = json.loads((repo_root / "governance/package-manifest.json").read_text())
+for item in manifest["files"]:
+    source = repo_root / item["source"]
+    destination = standard / item["source"]
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, destination)
+PY
 cp "$repo_root/VERSION" "$standard/VERSION"
 # The package ships the guard config from the repository root, so the fixture
 # that stands in for a published standard has to carry it too.

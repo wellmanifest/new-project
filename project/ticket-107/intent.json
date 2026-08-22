@@ -12,15 +12,13 @@
     "project/ticket-107/**",
     "TODO.md",
     "project/TICKETS.md",
-    ".aider.conf.yml",
-    "governance/agent-hosts.json",
     "governance/package-manifest.json",
     "scripts/install-agent-hosts.sh",
     "template/files/CLAUDE.template.md",
     "template/files/GEMINI.template.md",
-    "template/files/aider.template.yml",
     "template/files/cursor-rule.template.mdc",
-    "tests/agent-hosts.test.sh"
+    "tests/agent-hosts.test.sh",
+    "tests/adoption-lock.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -38,7 +36,7 @@
     "nonGoals": [
       "Adding the governance / enforce CI job; that is the next dependent slice.",
       "Upgrading any adopter; adoption stays an explicit per-repository transaction.",
-      "Adding the Copilot host, which does not fit this slice's file budget."
+      "Adding the aider and Copilot hosts, which do not fit this slice's file budget."
     ],
     "complexity": "S",
     "estimatedMinutes": 25,
@@ -53,32 +51,31 @@
       "decision": "Ship the host files through the package manifest that already carries AGENTS.md, so distribution and digest pinning reuse one mechanism. Drive the installer from the contract and the manifest instead of a hardcoded file list, and make an in-place activation distinct from a bootstrap into a different checkout.",
       "components": [
         {
-          "name": "host-contract",
-          "paths": [
-            "governance/agent-hosts.json"
-          ]
-        },
-        {
           "name": "host-distribution",
           "paths": [
             "governance/package-manifest.json",
-            "template/files/*.template.*",
-            ".aider.conf.yml"
+            "template/files/*.template.*"
           ]
         },
         {
           "name": "host-installer",
           "paths": [
-            "scripts/install-agent-hosts.sh",
-            "tests/agent-hosts.test.sh"
+            "scripts/install-agent-hosts.sh"
+          ]
+        },
+        {
+          "name": "host-tests",
+          "paths": [
+            "tests/agent-hosts.test.sh",
+            "tests/adoption-lock.test.sh"
           ]
         }
       ],
       "responsibilityChanges": false,
       "interfaceChanges": [
-        "adopters receive CLAUDE.md, GEMINI.md, the Cursor rule, .aider.conf.yml and .githooks/pre-commit as managed files",
-        "install-agent-hosts.sh gains --check and in-place activation, and reads its file list from the contract",
-        "the aider host joins the contract"
+        "adopters receive CLAUDE.md, GEMINI.md, the Cursor rule, .githooks/pre-commit, the host contract and its validator as managed files",
+        "install-agent-hosts.sh gains --check and in-place activation, and reads its file list from the contract and the package manifest",
+        "the adoption fixture derives its package sources from package-manifest.json instead of a hand-written list"
       ],
       "dataChanges": [],
       "ui": {
@@ -102,7 +99,7 @@
         "commands": [
           "bash tests/adoption-lock.test.sh"
         ],
-        "evidence": "Adoption resolves every new package source and locks its digest."
+        "evidence": "The adoption fixture copies every source named by the package manifest and locks each new digest."
       },
       {
         "criterion": "AC-3",

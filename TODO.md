@@ -514,9 +514,10 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
 - [x] **Punkty styku z paczkami (`GOV-PACKAGING-001..003`)**:
   - [x] Walidator czyta `[tool.wellmanifest]` z `pyproject.toml` i klucz `wellmanifest` z `package.json`, porównuje wersję i rewizję z `manifest.lock.json` i wymaga lifecycle bindingu (`scripts.prepare`, `pytest addopts`).
   - [x] Runbooki `error/GOV-AGENT-HOST.md` i `error/GOV-PACKAGING.md` opisują dokładną remediację.
-- [ ] **Dystrybucja kontraktu do adopterów** (slice zależny od ticket-106):
-  - [ ] `governance/package-manifest.json` rozsyła `CLAUDE.md`, `GEMINI.md`, regułę Cursora, `.aider.conf.yml`, instrukcje Copilota i `.githooks/pre-commit` jako managed.
-  - [ ] `scripts/install-agent-hosts.sh` aktywuje kontrakt w miejscu zamiast kopiować plik na samego siebie.
+- [x] **Dystrybucja kontraktu do adopterów** (ticket-107):
+  - [x] `governance/package-manifest.json` rozsyła `CLAUDE.md`, `GEMINI.md`, regułę Cursora, `.githooks/pre-commit` oraz sam kontrakt i walidator jako managed.
+  - [x] `scripts/install-agent-hosts.sh` aktywuje kontrakt w miejscu zamiast kopiować plik na samego siebie; bootstrap dostarcza również kontrakt.
+  - [ ] Hosty `aider` i `copilot` przeniesione do slice'u CI (nie mieściły się w budżecie dziewięciu plików).
 - [ ] **Egzekucja w CI** (slice zależny od dystrybucji):
   - [ ] Job `governance / enforce` w `template/files/new-project-governance.workflow.yml` uruchamia `governance_check.py` u wszystkich adopterów.
   - [ ] `governance/rule-enforcement.json` mapuje regułę hosta na kody deterministyczne zamiast pozostawiać ją nieopisaną.

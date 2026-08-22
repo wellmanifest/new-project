@@ -1,0 +1,4 @@
+2026-08-22 bootstrap_defect=contract_not_copied action=include_contract_source
+2026-08-22 bootstrap_defect=local_masks_exit_status action=split_declaration
+2026-08-22 fixture_defect=hardcoded_package_sources action=derive_from_manifest
+2026-08-22 budget files=7 limit=9 deferred=aider,copilot
