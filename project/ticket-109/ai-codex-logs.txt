@@ -1,0 +1,2 @@
+2026-08-23 plan base=a3945be1f25726bf714eecd1ebbba45dbced34ba plan_commit=ca86fea
+2026-08-23 prepublication tests=10/10 result=PASS ruff=PASS diff_check=PASS governance=GOV-PASS base=a3945be1f25726bf714eecd1ebbba45dbced34ba

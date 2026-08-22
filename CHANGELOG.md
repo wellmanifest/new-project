@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.18.5] - 2026-08-23
+
+### Host-agnostic governance enforcement
+
+- Distribute one deterministic host contract, instruction surfaces and
+  fail-closed Git hook to adopters as managed package artifacts.
+- Validate host materialization, hook activation and package lifecycle
+  bindings through the ordinary governance gate.
+- Add `governance / enforce` to the managed adopter workflow so the full
+  governance validator runs in CI instead of checking remote branch lifecycle
+  alone.
+- Extend diagnostic and rule-enforcement audits to cover Git hooks and the
+  host-contract validator.
+
 ## [0.18.4] - 2026-08-21
 
 ### Managed text hygiene

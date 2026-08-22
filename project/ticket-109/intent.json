@@ -1,0 +1,93 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-109",
+  "summary": "Publish adopter governance enforcement as new-project 0.18.5",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-109/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": ["ticket-106", "ticket-107", "ticket-108"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a3945be1f25726bf714eecd1ebbba45dbced34ba",
+    "targetBranch": "main",
+    "outcome": "Publish the integrated host-agnostic adopter governance enforcement as immutable wellmanifest/new-project 0.18.5.",
+    "nonGoals": [
+      "Do not change the integrated behavior of tickets 106 through 108.",
+      "Do not publish before exact-head approval and a clean-main retest.",
+      "Do not adopt the release in any target repository inside this ticket.",
+      "Do not move or overwrite any prior release tag."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Advance only the canonical release carriers and active assertions, then publish the exact trusted merge commit as an immutable patch release.",
+      "components": [
+        {
+          "name": "release-version",
+          "paths": ["VERSION", "governance/manifest.default.json", "governance/manifest.hub.json"]
+        },
+        {
+          "name": "release-tests",
+          "paths": ["tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]
+        },
+        {
+          "name": "release-notes",
+          "paths": ["CHANGELOG.md"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": ["Advance the immutable standard version from 0.18.4 to 0.18.5."],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Before publication revert the preparation; after publication create a newer release and never move v0.18.5."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "for suite in tests/*.test.sh; do bash $suite; done",
+          "python3 -m ruff check scripts tests",
+          "git diff --check",
+          "./project/governance-check.sh --actor agent --base a3945be1f25726bf714eecd1ebbba45dbced34ba --head HEAD"
+        ],
+        "evidence": "project/ticket-109/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish",
+          "git ls-remote --tags origin v0.18.5",
+          "gh release view v0.18.5 --repo wellmanifest/new-project"
+        ],
+        "evidence": "project/ticket-109/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
