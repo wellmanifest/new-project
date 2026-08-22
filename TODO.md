@@ -505,6 +505,8 @@
 
 ## 🔒 Etap 5: Egzekwowalny kontrakt host-agnostyczny (ticket-106)
 
+Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
+
 - [x] **Warstwa kontrolna kontraktu hostów (`GOV-AGENT-HOST-004..006`)**:
   - [x] Zadeklarowano hosty, hooka i bindingi pakietowe w `governance/agent-hosts.json` wraz ze schematem.
   - [x] Dodano `scripts/agent_host_check.py` i wpięto go w `scripts/governance_check.py`, więc brama wykrywa nieaktywny `core.hooksPath`, brakujący plik hosta i hooka bez bitu wykonywalności.
