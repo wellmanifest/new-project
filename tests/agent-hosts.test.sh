@@ -49,7 +49,24 @@ git -C "$tmp/adopter" commit -qm "seed"
 [[ -f "$tmp/adopter/GEMINI.md" ]] || fail "installer must copy GEMINI.md"
 [[ -f "$tmp/adopter/CLAUDE.md" ]] || fail "installer must copy CLAUDE.md"
 [[ -x "$tmp/adopter/.githooks/pre-commit" ]] || fail "installer must copy executable hook"
+[[ -f "$tmp/adopter/.governance/worktree_guard.py" ]] || fail "installer must copy worktree guard"
 [[ "$(git -C "$tmp/adopter" config --get core.hooksPath)" == ".githooks" ]] || fail "installer must set core.hooksPath"
+
+# Replace the real runner with a deterministic spy. The overlap algorithm has
+# its own suite; this fixture proves the managed lifecycle hook composes it into
+# every successful path and propagates a negative verdict.
+cat > "$tmp/adopter/.governance/worktree_guard.py" <<'PY'
+from pathlib import Path
+import sys
+
+root = Path(__file__).resolve().parents[1]
+counter = root / ".guard-invocations"
+count = int(counter.read_text(encoding="utf-8")) if counter.exists() else 0
+counter.write_text(str(count + 1), encoding="utf-8")
+if (root / ".guard-fail").exists():
+    print("GOV-WORKTREE-OVERLAP-FAIL: deterministic fixture rejection", file=sys.stderr)
+    raise SystemExit(1)
+PY
 
 echo "change" >> "$tmp/adopter/README.md"
 git -C "$tmp/adopter" add README.md
@@ -74,7 +91,19 @@ fi
 
 sed -i 's/BACKLOG/IN_PROGRESS/' "$tmp/adopter/project/ticket-001/README.md"
 git -C "$tmp/adopter" add project/ticket-001/README.md README.md
+
+touch "$tmp/adopter/.guard-fail"
+if git -C "$tmp/adopter" commit -qm "overlap verdict bypass" 2> "$tmp/guard-fail.err"; then
+  fail "negative worktree guard verdict must reject an IN_PROGRESS commit"
+fi
+grep -Fq 'GOV-WORKTREE-OVERLAP-FAIL' "$tmp/guard-fail.err" \
+  || fail "negative guard verdict must remain visible"
+[[ "$(cat "$tmp/adopter/.guard-invocations")" == "1" ]] \
+  || fail "IN_PROGRESS path must invoke the guard before rejecting"
+rm "$tmp/adopter/.guard-fail"
 git -C "$tmp/adopter" commit -qm "bound to ticket-001" || fail "IN_PROGRESS ticket branch must commit"
+[[ "$(cat "$tmp/adopter/.guard-invocations")" == "2" ]] \
+  || fail "IN_PROGRESS success must invoke the guard"
 
 # Status authority comes from the staged snapshot. An unstaged IN_PROGRESS
 # working-tree value must not authorize a staged BACKLOG ticket plus source.
@@ -100,6 +129,20 @@ printf '%s\n' '{"schema":"fixture.artifact-registry/v1"}' > \
 git -C "$tmp/adopter" add project/ticket-001/README.md TODO.md project/TICKETS.md \
   config/artifact-registry.json
 git -C "$tmp/adopter" commit -qm "close ticket-001" || fail "DONE governance-only closure must commit"
+[[ "$(cat "$tmp/adopter/.guard-invocations")" == "3" ]] \
+  || fail "DONE governance-only success must invoke the guard"
+
+# A managed hook without either packaged or source runner must fail closed.
+mv "$tmp/adopter/.governance/worktree_guard.py" "$tmp/worktree_guard.py.saved"
+printf '%s\n' 'runner loss evidence' >> "$tmp/adopter/project/ticket-001/README.md"
+git -C "$tmp/adopter" add project/ticket-001/README.md
+if git -C "$tmp/adopter" commit -qm "missing worktree runner" 2> "$tmp/missing-runner.err"; then
+  fail "missing worktree guard runner must reject a DONE closure"
+fi
+grep -Fq 'cannot find worktree_guard.py' "$tmp/missing-runner.err" \
+  || fail "missing runner rejection must include remediation"
+git -C "$tmp/adopter" reset -q --hard HEAD
+mv "$tmp/worktree_guard.py.saved" "$tmp/adopter/.governance/worktree_guard.py"
 
 printf '%s\n' 'terminal evidence update' >> "$tmp/adopter/project/ticket-001/README.md"
 printf '%s\n' '{"schema":"fixture.other/v1"}' > "$tmp/adopter/config/other-generated.json"
