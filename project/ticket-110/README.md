@@ -2,8 +2,8 @@
 
 - **ID**: ticket-110
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-22
 
 ## Cel i Zakres
@@ -47,6 +47,16 @@ z guardem w limicie klasy S, nie modyfikując aktywnego hooka huba.
   exact headzie po ostatecznym zawężeniu.
 - `./project/governance-check.sh --actor agent --base cd9a15a... --head HEAD`:
   `GOV-PASS`, 0 errors, 0 warnings.
+
+## Publication evidence
+
+- Pull request: `wellmanifest/new-project#182`.
+- Frozen and approved head: `0539842503164111166aa32aa992fd9c78219a44`.
+- Trusted approval: `ifuri-validator-agent[bot]`, review `5001307397`.
+- Validator run: `32606544025`.
+- Merge commit: `a56730623b06b4390ff1002aacf07082226e6a81`.
+- Remaining work: compose the dedicated payload with its worktree-guard runtime
+  in the explicitly dependent next ticket; do not release before it lands.
 
 ## Uczestnicy
 

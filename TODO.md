@@ -530,7 +530,7 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
   - [x] Zaktualizować mechaniczne nośniki wersji i aktywne asercje.
   - [x] Przejść exact-head Validator merge; pełny kontrakt lokalny już PASS.
   - [x] Opublikować niezmienne `v0.18.5` z ponownie przetestowanego merge SHA.
-- [ ] **Rozdzielenie zarządzanego payloadu pre-commit** (ticket-110):
+- [x] **Rozdzielenie zarządzanego payloadu pre-commit** (ticket-110):
   - [x] Dedykowany szablon zachowuje bieżącą logikę lifecycle.
   - [x] Manifest adopcji nie używa już aktywnego hooka huba jako źródła.
   - [x] Exact-head governance PASS; publikacja pozostaje w Validator App.
