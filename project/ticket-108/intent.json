@@ -1,0 +1,117 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-108",
+  "summary": "Run the governance gate in adopter CI",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-108/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CONTRIBUTING.md",
+    "error/GOV-AGENT-HOST.md",
+    "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
+    "scripts/audit_diagnostics.py",
+    "scripts/audit_rule_enforcement.py",
+    "template/files/new-project-governance.workflow.yml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-106",
+    "ticket-107"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "340254ab22ce10d288297fcea1bc91b4d489851f",
+    "targetBranch": "main",
+    "outcome": "The managed adopter workflow runs the governance gate that every adopter already carries, and the two audits that decide whether a code is catalogued and rule-bound can no longer miss a validator because it was absent from a hand-written list.",
+    "nonGoals": [
+      "Asserting required-check names in adopter CI; their required-checks.json still declares the hub's workflow, so that step would fail in 20 repositories and belongs to the slice that generates the declaration per repository.",
+      "Upgrading any adopter; the workflow reaches a repository only through adoption.",
+      "Adding the aider and Copilot hosts deferred from ticket-107."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add the enforce job to the managed workflow template so one edit reaches every adopter through its next adoption, and derive both audit surfaces from the artefacts they are supposed to cover instead of from literal tuples.",
+      "components": [
+        {
+          "name": "adopter-ci",
+          "paths": [
+            "template/files/new-project-governance.workflow.yml"
+          ]
+        },
+        {
+          "name": "audit-surfaces",
+          "paths": [
+            "scripts/audit_diagnostics.py",
+            "scripts/audit_rule_enforcement.py"
+          ]
+        },
+        {
+          "name": "policy-catalog",
+          "paths": [
+            "CONTRIBUTING.md",
+            "governance/rule-enforcement.json",
+            "governance/diagnostics.json",
+            "error/GOV-AGENT-HOST.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "the managed adopter workflow publishes a second check named governance / enforce",
+        "C-HOST-001..003 are normative rules mapped to deterministic codes",
+        "GOV-AGENT-HOST-001..003 are registered diagnostics"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket branch. No adopter changes on merge alone, because the workflow reaches a repository only through an explicit adoption transaction."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-1",
+        "commands": [
+          "python3 scripts/audit_diagnostics.py --root .",
+          "python3 scripts/audit_rule_enforcement.py --root ."
+        ],
+        "evidence": "77 codes with zero findings, and 178 rules with 0 unmapped and 0 unclaimed."
+      },
+      {
+        "criterion": "AC-2",
+        "commands": [
+          "bash tests/adoption-lock.test.sh"
+        ],
+        "evidence": "The managed workflow template still adopts and locks cleanly."
+      },
+      {
+        "criterion": "AC-3",
+        "commands": [
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "GOV-PASS on the ticket branch."
+      }
+    ]
+  }
+}
