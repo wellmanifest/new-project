@@ -26,7 +26,7 @@ z guardem w limicie klasy S, nie modyfikując aktywnego hooka huba.
 - [x] AC-02: `bash tests/agent-hosts.test.sh` i
   `bash tests/adoption-lock.test.sh` potwierdzają niezmienione zachowanie
   bootstrapu i poprawny digest nowego źródła.
-- [ ] AC-03: pełny zestaw testów i governance gate przechodzą na exact base/head.
+- [x] AC-03: pełny zestaw testów i governance gate przechodzą na exact base/head.
 
 ## Ryzyka i Uwagi
 
@@ -43,8 +43,10 @@ z guardem w limicie klasy S, nie modyfikując aktywnego hooka huba.
 
 - `bash tests/agent-hosts.test.sh`: PASS.
 - `bash tests/adoption-lock.test.sh`: PASS.
-- `set -e; for test in tests/*.test.sh; do bash "$test"; done`: 10/10 PASS
-  przed ostatecznym zawężeniem; exact-head powtórka pozostaje do wykonania.
+- `set -e; for test in tests/*.test.sh; do bash "$test"; done`: 10/10 PASS na
+  exact headzie po ostatecznym zawężeniu.
+- `./project/governance-check.sh --actor agent --base cd9a15a... --head HEAD`:
+  `GOV-PASS`, 0 errors, 0 warnings.
 
 ## Uczestnicy
 

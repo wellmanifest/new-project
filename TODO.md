@@ -533,4 +533,4 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
 - [ ] **Rozdzielenie zarządzanego payloadu pre-commit** (ticket-110):
   - [x] Dedykowany szablon zachowuje bieżącą logikę lifecycle.
   - [x] Manifest adopcji nie używa już aktywnego hooka huba jako źródła.
-  - [ ] Exact-head governance i publikacja przez Validator App.
+  - [x] Exact-head governance PASS; publikacja pozostaje w Validator App.
