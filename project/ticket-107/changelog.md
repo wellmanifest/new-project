@@ -1,5 +1,10 @@
 # Ticket Changelog (ticket-107)
 
+## [1.0.0] - 2026-08-22
+
+- Published through `wellmanifest/new-project#176`, approved at the frozen head
+  and merged as `9328b7e`.
+
 ## [0.2.0] - 2026-08-22
 
 - `governance/package-manifest.json` ships the host instruction files, the

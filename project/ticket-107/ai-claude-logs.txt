@@ -2,3 +2,6 @@
 2026-08-22 bootstrap_defect=local_masks_exit_status action=split_declaration
 2026-08-22 fixture_defect=hardcoded_package_sources action=derive_from_manifest
 2026-08-22 budget files=7 limit=9 deferred=aider,copilot
+2026-08-22 validator_head=877e2f18ee055bbd4f09ac10ac7ec0f7d9c07371 pr=176 result=APPROVE
+2026-08-22 merge_sha=9328b7ef2247cc3c6e66b76ae58e4ea1cf08aed3 clean_main_gate=PASS
+2026-08-22 adopter_enforce_simulation pass=24 fail=1 fail_repo=performance code=GOV-BASE-001
