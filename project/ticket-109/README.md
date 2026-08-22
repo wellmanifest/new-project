@@ -2,8 +2,8 @@
 
 - **ID**: ticket-109
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-22
 
 ## Cel i Zakres
@@ -21,8 +21,8 @@ asercje wersji i changelog; nie zmienia zachowania zintegrowanej bramki.
       kompatybilny patch.
 - [x] AC-03: wszystkie zestawy `tests/*.test.sh`, Ruff, diff hygiene i
       exact-base governance przechodzą przed merge.
-- [ ] AC-04: Validator zatwierdza i scala dokładny head przygotowania release.
-- [ ] AC-05: po ponownym teście czystego merge SHA Goal tworzy wcześniej
+- [x] AC-04: Validator zatwierdza i scala dokładny head przygotowania release.
+- [x] AC-05: po ponownym teście czystego merge SHA Goal tworzy wcześniej
       nieistniejące tag i GitHub Release `v0.18.5`, bez przesuwania starego taga.
 
 ## Ryzyka i Uwagi
@@ -37,6 +37,16 @@ asercje wersji i changelog; nie zmienia zachowania zintegrowanej bramki.
 - Diff hygiene: PASS.
 - Exact-base governance od `a3945be`: `GOV-PASS`.
 - Tag i GitHub Release `v0.18.5` pozostają nieobecne przed publikacją.
+
+## Final evidence
+
+- Pull request: `wellmanifest/new-project#180`.
+- Frozen implementation head: `0f1ba61a6d91e742988af5bcda07650b991359d4`.
+- Validator approval: review `5001265454`, run `32605154146`.
+- Merge commit: `5cc475f6200df9f8c1d045240277c6eaa2f9a642`.
+- Clean-main 10/10 suites, Ruff, diff hygiene and governance: PASS.
+- Goal `2.1.300` published `v0.18.5`; its peeled tag equals the merge commit.
+- GitHub Release is published, non-draft and not a prerelease.
 
 ## Uczestnicy
 

@@ -29,10 +29,12 @@ potrzebny jest mechaniczny patch `0.18.5` obejmujący dokładnie ten payload.
   separate implementation commit after the plan-only commit.
 - The complete hub test contract, Ruff, diff hygiene and exact-base governance
   pass before publication.
+- Validator approved and merged exact head `0f1ba61`; clean `main@5cc475f` was
+  fully retested before Goal created the immutable tag and GitHub Release.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- None; the release outcome and immutable publication evidence are complete.
 - New authority is still required for destructive action, secret access, new
   external coordination or material objective expansion. Protected delivery
   may be invoked without another prompt when publication is in scope; its
