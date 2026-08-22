@@ -2,8 +2,8 @@
 
 - **ID**: ticket-108
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-23
 
 ## Cel i Zakres
@@ -36,6 +36,17 @@ domykają mapowanie.
   nadal adoptuje się i zapisuje digest.
 - [x] AC-03: `./project/governance-check.sh --actor agent` → `GOV-PASS`.
 
+## Publication evidence
+
+- Pull request: `wellmanifest/new-project#178`.
+- Frozen and approved head: `dc2407ea4bbfc6dfae3a77f4118274f89424cad6`.
+- Trusted approval: `ifuri-validator-agent[bot]`, review `5001242554`.
+- Validator run: `32604386470`.
+- Merge commit: `5aefa917364df6432d5e3a243145c7fcfa54a2a5`.
+- Post-merge limitation: the standard now emits `governance / enforce`, but
+  each adopter still needs an explicit adoption and protected-check binding
+  before this signal is a merge-blocking authority boundary.
+
 ## Ryzyka i Uwagi
 
 - Risk 1: job `governance / enforce` nie jest wymaganym checkiem u adopterów,
@@ -55,6 +66,7 @@ domykają mapowanie.
 - Human participant: unresolved; `user-*` is created only by its human owner
   or a trusted intake boundary.
 - Agent participant: `ai-claude.md`
+- Closure verifier: `ai-codex.md`
 
 ## Granica katalogu
 

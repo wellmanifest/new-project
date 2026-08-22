@@ -1,5 +1,11 @@
 # Ticket Changelog (ticket-108)
 
+## [0.3.0] - 2026-08-23
+
+- Recorded exact-head Validator approval, merge and the remaining adopter
+  adoption/ruleset boundary from the integrated default branch.
+- Closed the ticket as `DONE / DONE` without carrying implementation changes.
+
 ## [0.2.0] - 2026-08-23
 
 - The managed adopter workflow gained `governance / enforce`, which runs the

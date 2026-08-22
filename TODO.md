@@ -521,6 +521,7 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
 - [x] **Egzekucja w CI** (ticket-108):
   - [x] Job `governance / enforce` w `template/files/new-project-governance.workflow.yml` uruchamia `governance_check.py`; zmierzono, że brama przechodzi w 24 z 25 adopterów.
   - [x] `audit_diagnostics.py` skanuje `.githooks`, a `audit_rule_enforcement.py` zna `agent_host_check.py`; reguły `C-HOST-001..003` mapują sześć kodów.
+  - [x] Źródło standardu zmergowane jako PR `#178` po exact-head approval
+        `5001242554`; merge `5aefa91`.
   - [ ] Wymaganie `governance / enforce` w rulesetach adopterów — decyzja poza repozytorium.
   - [ ] `required-checks.json` generowany per repozytorium zamiast kopii huba (blokuje krok required-checks w jobie).
-
