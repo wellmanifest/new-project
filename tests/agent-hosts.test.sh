@@ -166,10 +166,16 @@ git init -q "$fixture"
 git -C "$fixture" config user.email "test@example.com"
 git -C "$fixture" config user.name "Test"
 cp "$root/governance/agent-hosts.json" "$fixture/.governance/agent-hosts.json"
-for host in AGENTS.md CLAUDE.md GEMINI.md; do
-  printf '%s\n' "stub" > "$fixture/$host"
-done
-printf '%s\n' "stub" > "$fixture/.cursor/rules/new-project-standard.mdc"
+# Derive the fixture's host files from the contract, so adding a host to
+# agent-hosts.json cannot silently leave this fixture behind.
+while read -r host_file; do
+  mkdir -p "$fixture/$(dirname "$host_file")"
+  printf '%s\n' "stub" > "$fixture/$host_file"
+done < <(python3 -c '
+import json, sys
+contract = json.load(open(sys.argv[1], encoding="utf-8"))
+print("\n".join(host["file"] for host in contract["hosts"]))
+' "$fixture/.governance/agent-hosts.json")
 printf '%s\n' '#!/usr/bin/env bash' > "$fixture/.githooks/pre-commit"
 chmod +x "$fixture/.githooks/pre-commit"
 cat > "$fixture/.governance/manifest.lock.json" <<'LOCK'
@@ -198,6 +204,12 @@ git -C "$fixture" config core.hooksPath .githooks
 mv "$fixture/GEMINI.md" "$fixture/GEMINI.md.bak"
 assert_has "$(codes "$fixture")" "GOV-AGENT-HOST-004" "missing host file"
 mv "$fixture/GEMINI.md.bak" "$fixture/GEMINI.md"
+
+# Bootstrap into a fresh clone must deliver the contract too, not only the
+# instruction files: without it the target cannot be activated at all.
+[[ -f "$tmp/adopter/.governance/agent-hosts.json" ]] || fail "bootstrap must copy the host contract"
+[[ -f "$tmp/adopter/.cursor/rules/new-project-standard.mdc" ]] \
+  || fail "bootstrap must copy every declared host file"
 
 # A hook that cannot execute is the same defect as a hook that is absent.
 chmod -x "$fixture/.githooks/pre-commit"
