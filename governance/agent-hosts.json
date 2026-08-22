@@ -3,12 +3,7 @@
   "note": "Single source of truth for the host-agnostic agent contract (AGENTS.md rule 22). scripts/agent_host_check.py proves these files are present, that the fail-closed hook is installed and active, and that the packaging metadata a repository already carries actually runs the gate. Instruction files are advisory to a model; the hook, the CI job and the packaging lifecycle bindings declared here are the parts that are not. Adding a host here without adding it to governance/package-manifest.json makes the requirement unshippable, so both change together.",
   "hook": {
     "path": ".githooks/pre-commit",
-    "hooksPathConfig": ".githooks",
-    "runtimeFiles": [
-      ".governance/worktree_guard.py",
-      ".governance/worktree_overlap_check.py",
-      "worktree-guard.yaml"
-    ]
+    "hooksPathConfig": ".githooks"
   },
   "hosts": [
     {

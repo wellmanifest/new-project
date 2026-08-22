@@ -1,4 +1,4 @@
-# Ticket 110: Compose managed ticket and worktree pre-commit gates
+# Ticket 110: Separate the managed adopter pre-commit payload
 
 - **ID**: ticket-110
 - **Owner**: unresolved:human
@@ -8,50 +8,43 @@
 
 ## Cel i Zakres
 
-Zarządzany `.githooks/pre-commit` kończy poprawną ścieżkę `IN_PROGRESS` lub
-governance-only `DONE` przez `exit 0`, zanim uruchomi worktree guard. Ponieważ
-ten sam hook jest od wersji 0.18.5 rozsyłany jako plik `managed`, adopcja może
-nadpisać poprawnie skomponowany hook adoptera i wyłączyć ochronę przed
-równoległymi procesami dotykającymi tego samego zakresu.
+`.githooks/pre-commit` pełnił dwie role naraz: był aktywnym hookiem huba i
+źródłem pliku `managed` dla adopterów. Próba skomponowania go z worktree guardem
+ujawniła, że zmiana dystrybuowanego payloadu natychmiast zmienia również bramkę
+wykonującą commit w repozytorium źródłowym. Przy istniejących, brudnych worktree
+huba tworzy to paradoks samomodyfikującej się kontroli.
 
-Ticket komponuje obie deterministyczne bramki w jednym źródłowym hooku. Każda
-dozwolona ścieżka ticketowa musi przed sukcesem uruchomić repozytoryjny
-`worktree_guard.py`; brak runnera albo negatywny werdykt pozostają fail-closed.
-Kontrakt hostów deklaruje kompletny runtime hooka, dzięki czemu bootstrap nie
-może już skopiować samego hooka bez runnera, checkera i konfiguracji.
-Zarządzany payload otrzymuje osobny plik źródłowy: aktywny hook huba nie jest
-jednocześnie szablonem adopcyjnym. Pozwala to naprawić adopterów bez usuwania
-brudnych, historycznych worktree huba ani omijania jego lokalnych zasad.
+Ten slice rozdziela odpowiedzialności bez zmiany zachowania: dodaje dedykowany
+szablon payloadu o tej samej logice lifecycle i przełącza na niego manifest
+pakietu. Następny, zależny ticket może bezpiecznie skomponować payload adoptera
+z guardem w limicie klasy S, nie modyfikując aktywnego hooka huba.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [x] AC-01: poprawny commit `IN_PROGRESS` uruchamia worktree guard przed
-  sukcesem, a jego negatywny werdykt blokuje commit.
-- [x] AC-02: poprawna governance-only ścieżka `DONE` również uruchamia guard;
-  brak `.governance/worktree_guard.py` i `scripts/worktree_guard.py` blokuje
-  commit z jawną remediacją.
-- [ ] AC-03: `bash tests/agent-hosts.test.sh`, pełny zestaw testów shellowych i
-  governance gate przechodzą.
+- [x] AC-01: manifest dystrybuuje dedykowany
+  `template/files/pre-commit.template.sh` jako `.githooks/pre-commit`.
+- [x] AC-02: `bash tests/agent-hosts.test.sh` i
+  `bash tests/adoption-lock.test.sh` potwierdzają niezmienione zachowanie
+  bootstrapu i poprawny digest nowego źródła.
+- [ ] AC-03: pełny zestaw testów i governance gate przechodzą na exact base/head.
 
 ## Ryzyka i Uwagi
 
-- Risk 1: źródłowe repozytorium trzyma runner w `scripts/`, a adopter w
-  `.governance/`; hook wybiera wyłącznie te dwie jawne lokalizacje i odrzuca
-  brak obu.
-- Risk 2: rzeczywisty konflikt w istniejących worktree może zablokować commit
-  implementacji. To oczekiwane zachowanie; konflikt musi zostać usunięty lub
-  zgodnie zadeklarowany, a nie ominięty przez `--no-verify`.
-- Risk 3: aktywny hook huba pozostaje lifecycle-only, dopóki osierocone dirty
-  worktree nie zostaną odzyskane albo jawnie skwarantannowane przez właściciela.
-  Ticket naprawia dystrybuowany standard; nie ukrywa tego lokalnego długu.
+- Risk 1: ten ticket celowo nie komponuje jeszcze worktree guarda; atomowa
+  kompozycja runtime jest zakresem bezpośrednio zależnego ticketu.
+- Risk 2: aktywny hook huba pozostaje lifecycle-only. Historyczne dirty
+  worktree muszą zostać odzyskane albo skwarantannowane decyzją właściciela;
+  runbook zabrania ich automatycznego usuwania.
+- Risk 3: pierwsza, sześcioplikowa próba została odrzucona przez
+  `GOV-BUDGET-001`. Zakres został podzielony zamiast sztucznego zwiększania
+  budżetu lub użycia `--no-verify`.
 
 ## Evidence before publication
 
-- `bash tests/agent-hosts.test.sh`: PASS; spy potwierdza wywołanie guarda dla
-  `IN_PROGRESS` i `DONE`, negatywny werdykt oraz brak runnera blokują commit.
-- `set -e; for test in tests/*.test.sh; do bash "$test"; done`: 10/10 PASS.
-- Pierwszy przebieg bez `set -e` ujawnił, że zwykła pętla może zamaskować
-  wcześniejszą porażkę kodem ostatniego testu; obowiązujący zapis jest fail-fast.
+- `bash tests/agent-hosts.test.sh`: PASS.
+- `bash tests/adoption-lock.test.sh`: PASS.
+- `set -e; for test in tests/*.test.sh; do bash "$test"; done`: 10/10 PASS
+  przed ostatecznym zawężeniem; exact-head powtórka pozostaje do wykonania.
 
 ## Uczestnicy
 

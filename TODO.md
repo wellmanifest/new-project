@@ -530,6 +530,7 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
   - [x] Zaktualizować mechaniczne nośniki wersji i aktywne asercje.
   - [x] Przejść exact-head Validator merge; pełny kontrakt lokalny już PASS.
   - [x] Opublikować niezmienne `v0.18.5` z ponownie przetestowanego merge SHA.
-- [ ] **Kompozycja zarządzanych bramek pre-commit** (ticket-110):
-  - [x] Każdy dozwolony sukces lifecycle uruchamia repozytoryjny worktree guard.
-  - [x] Negatywny werdykt lub brak runnera blokuje commit w teście regresyjnym.
+- [ ] **Rozdzielenie zarządzanego payloadu pre-commit** (ticket-110):
+  - [x] Dedykowany szablon zachowuje bieżącą logikę lifecycle.
+  - [x] Manifest adopcji nie używa już aktywnego hooka huba jako źródła.
+  - [ ] Exact-head governance i publikacja przez Validator App.

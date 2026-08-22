@@ -1,7 +1,7 @@
 {
   "schema": "new-project.intent/v3",
   "ticket": "ticket-110",
-  "summary": "Compose managed ticket and worktree pre-commit gates",
+  "summary": "Separate the managed adopter pre-commit payload",
   "workstream": "governance",
   "classification": {
     "kind": "BUG",
@@ -9,12 +9,8 @@
     "origin": "regression"
   },
   "allowedPaths": [
-    "governance/agent-hosts.json",
-    "governance/agent-hosts.schema.json",
     "governance/package-manifest.json",
-    "scripts/install-agent-hosts.sh",
     "template/files/pre-commit.template.sh",
-    "tests/agent-hosts.test.sh",
     "project/ticket-110/**",
     "TODO.md",
     "project/TICKETS.md"
@@ -29,42 +25,37 @@
   "delivery": {
     "acceptedBaseSha": "cd9a15aa3212a6520059e58f821aabb341a6f839",
     "targetBranch": "main",
-    "outcome": "The managed host hook preserves ticket lifecycle enforcement and always runs the repository-scoped worktree overlap guard before admitting an IN_PROGRESS or governance-only DONE commit.",
+    "outcome": "The adopter pre-commit payload has a dedicated managed source, so its runtime can evolve independently from the standard hub's executing local hook.",
     "nonGoals": [
-      "Changing the overlap algorithm or its workspace discovery rules",
-      "Weakening ticket branch, staged status or DONE closure validation",
-      "Upgrading adopters before a corrected immutable standard release exists",
+      "Composing the worktree guard in this slice; that is the explicitly dependent follow-up",
+      "Changing lifecycle validation behavior",
+      "Removing or cleaning dirty historical worktrees",
+      "Publishing a standard release before the dependent composition ticket lands",
       "Merging directly without exact-head trusted approval"
     ],
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 6,
-      "maxAffectedComponents": 2,
-      "maxPublicInterfaceChanges": 2,
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Separate the adopter payload from the hub's active hook, then centralize successful payload termination in a fail-closed worktree guard function. Declare its runtime files in the host contract so bootstrap derives and installs the complete executable closure from the package manifest instead of copying a hook that cannot run.",
+      "decision": "Copy the current lifecycle hook into a dedicated adopter template and point the managed package entry at it, leaving the hub's live hook untouched.",
       "components": [
         {
-          "name": "managed-precommit-boundary",
+          "name": "managed-precommit-payload",
           "paths": [
-            "governance/agent-hosts.json",
-            "governance/agent-hosts.schema.json",
             "governance/package-manifest.json",
-            "scripts/install-agent-hosts.sh",
-            "template/files/pre-commit.template.sh",
-            "tests/agent-hosts.test.sh"
+            "template/files/pre-commit.template.sh"
           ]
         }
       ],
       "responsibilityChanges": false,
       "interfaceChanges": [
-        "Successful managed pre-commit paths now require a passing repository-scoped worktree guard",
-        "The host contract declares the hook runtime files that bootstrap must install and activation must verify",
-        "The managed adopter hook has a dedicated source template instead of doubling as the hub's live hook"
+        "The managed adopter hook source is independent from the hub's live hook"
       ],
       "dataChanges": [],
       "ui": {
@@ -72,15 +63,15 @@
         "states": [],
         "evidence": []
       },
-      "rollback": "Revert the ticket branch; adopters remain on their previous immutable standard revision until an explicit adoption."
+      "rollback": "Point the package entry back at .githooks/pre-commit and remove the dedicated template; adopter behavior remains unchanged in either form."
     },
     "runtimeDependencies": [],
     "validation": [
       {
         "criterion": "AC-01",
         "commands": [
-          "bash tests/agent-hosts.test.sh",
-          "bash -n .githooks/pre-commit tests/agent-hosts.test.sh"
+          "bash -n template/files/pre-commit.template.sh",
+          "bash tests/adoption-lock.test.sh"
         ],
         "evidence": "project/ticket-110/ai-codex-logs.txt"
       },

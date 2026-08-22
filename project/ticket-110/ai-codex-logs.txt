@@ -1,4 +1,4 @@
-2026-08-22T23:45:06Z REPRO managed hook exits before the separately packaged worktree guard; adopter upgrade would overwrite a composed hook
-2026-08-22T23:45:06Z DISCOVERY install-agent-hosts bootstraps the hook without worktree_guard.py, worktree_overlap_check.py or worktree-guard.yaml
-2026-08-22T23:45:06Z PASS bash tests/agent-hosts.test.sh; IN_PROGRESS=guarded, DONE=guarded, negative verdict=blocked, missing runner=blocked
-2026-08-22T23:45:06Z PASS fail-fast 10/10 tests/*.test.sh and governance-validator diagnostic catalog 77/0
+2026-08-22T23:45:06Z REPRO active hub hook and managed adopter payload share one source path
+2026-08-22T23:45:06Z GUARD composed prototype rejected eight existing hub worktree overlaps; no dirty data removed and no hook bypass used
+2026-08-22T23:45:06Z GOVERNANCE GOV-BUDGET-001 rejected the six-file prototype; outcome split into payload separation and a dependent composition slice
+2026-08-22T23:45:06Z PASS agent-hosts and adoption-lock tests preserve lifecycle behavior with dedicated managed source

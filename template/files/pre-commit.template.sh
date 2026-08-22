@@ -1,24 +1,12 @@
 #!/usr/bin/env bash
-# Managed adopter hook: bind implementation to a ticket and require the
-# repository-scoped worktree guard before every successful commit.
+# Managed adopter hook: bind implementation to an active ticket. The payload
+# is separate from the hub's live hook so later runtime composition does not
+# mutate the standard source's own enforcement while it is executing.
 
 set -euo pipefail
 
 root="$(git rev-parse --show-toplevel)"
 branch="$(git symbolic-ref --short HEAD 2>/dev/null || true)"
-
-run_worktree_guard() {
-  local runner="$root/.governance/worktree_guard.py"
-  if [[ -f "$runner" ]]; then
-    python3 "$runner" --root "$root" --once
-    return
-  fi
-
-  echo "worktree-guard: the managed pre-commit hook cannot find worktree_guard.py." >&2
-  echo "  Restore the managed package or reinstall the repository guard:" >&2
-  echo "    ./scripts/install-worktree-guard.sh --target $root --wire-hook" >&2
-  return 1
-}
 
 if [[ -z "$branch" || "$branch" == "HEAD" ]]; then
   echo "GOV-AGENT-HOST-001: detached HEAD is not bound to ticket-NNN." >&2
@@ -41,7 +29,6 @@ if ! staged_readme="$(git show ":$readme_rel" 2>/dev/null)"; then
 fi
 
 if grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*IN_PROGRESS([[:space:]]|$)' <<<"$staged_readme"; then
-  run_worktree_guard
   exit 0
 fi
 
@@ -72,7 +59,6 @@ if grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*DONE([[:space:]]|$)' <<<"
         ;;
     esac
   done
-  run_worktree_guard
   exit 0
 fi
 
