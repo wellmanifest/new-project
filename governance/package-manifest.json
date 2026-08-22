@@ -42,6 +42,8 @@
     { "source": "project/new-ticket.sh", "target": "project/new-ticket.sh", "strategy": "managed", "executable": true },
     { "source": "project/readme.sh", "target": "project/readme.sh", "strategy": "managed", "executable": true },
     { "source": "governance/manifest.default.json", "target": ".governance/manifest.base.json", "strategy": "managed", "executable": false },
-    { "source": "governance/manifest.default.json", "target": ".governance/manifest.json", "strategy": "extendable", "executable": false }
+    { "source": "governance/manifest.default.json", "target": ".governance/manifest.json", "strategy": "extendable", "executable": false },
+    { "source": "error/GOV-AGENT-HOST.md", "target": ".governance/error/GOV-AGENT-HOST.md", "strategy": "managed", "executable": false },
+    { "source": "error/GOV-PACKAGING.md", "target": ".governance/error/GOV-PACKAGING.md", "strategy": "managed", "executable": false }
   ]
 }
