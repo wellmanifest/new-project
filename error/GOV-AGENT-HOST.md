@@ -1,0 +1,63 @@
+# GOV-AGENT-HOST: kontrakt host-agnostyczny nie jest aktywny
+
+Kody katalogowe: `GOV-AGENT-HOST-004`, `GOV-AGENT-HOST-005`,
+`GOV-AGENT-HOST-006` — emitowane przez `scripts/agent_host_check.py`.
+
+Ten sam runbook obsługuje `GOV-AGENT-HOST-001`, `GOV-AGENT-HOST-002` i
+`GOV-AGENT-HOST-003` emitowane przez `.githooks/pre-commit`. Nie są jeszcze
+zarejestrowane w `governance/diagnostics.json`, bo `scripts/audit_diagnostics.py`
+nie skanuje katalogu `.githooks`; rejestracja wchodzi razem z rozszerzeniem
+audytu.
+
+## Situation
+
+`001`–`003` pojawiają się przy commicie: branch nie jest związany z ticketem
+`IN_PROGRESS`, brakuje `project/ticket-NNN/README.md` w stagowanej migawce albo
+governance-only closure narusza swoje granice.
+
+`004`–`006` pojawiają się w bramie: brakuje pliku instrukcji deklarowanego przez
+`agent-hosts.json`, hook nie istnieje lub nie jest wykonywalny, albo
+`core.hooksPath` nie wskazuje na katalog zarządzanego hooka.
+
+## Meaning
+
+Plik instrukcji (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, reguła Cursora,
+`.aider.conf.yml`, instrukcje Copilota) jest sugestią dla modelu — każdy host
+może go zignorować. Jedyne warstwy, które nie są sugestią, to hook gita,
+`governance / enforce` w CI oraz lifecycle paczek. `GOV-AGENT-HOST-006`
+oznacza, że repozytorium wygląda na zgodne, ale żaden commit nie jest w
+rzeczywistości sprawdzany.
+
+## Safe resolution
+
+1. Aktywuj hooka w klonie: `git config core.hooksPath .githooks` oraz
+   `chmod +x .githooks/pre-commit`. Wartość `core.hooksPath` pochodzi z
+   `agent-hosts.json` (`hook.hooksPathConfig`), nie z konwencji.
+2. Gdy brakuje plików hostów, zbootstrapuj je z huba:
+   `./scripts/install-agent-hosts.sh --source <hub> --target <repo>`, albo
+   zaadoptuj bieżącą wersję standardu (`scripts/create_adoption_lock.py`).
+3. Dla `001`–`003` zaalokuj ticket przez `./project/new-ticket.sh`, przełącz się
+   na branch zawierający `ticket-NNN` i ustaw status `IN_PROGRESS`.
+4. Potwierdź stan: `python3 scripts/agent_host_check.py --root .`.
+
+## Verification
+
+- `python3 scripts/agent_host_check.py --root .` kończy się kodem 0.
+- `git config --get core.hooksPath` zwraca wartość z `agent-hosts.json`.
+- Próbny commit na branchu bez ticketu jest odrzucony przez hook.
+- `./project/governance-check.sh` nie zgłasza kodów `GOV-AGENT-HOST-*`.
+
+## Do not
+
+- Nie usuwaj hooka ani nie commituj z `--no-verify`, żeby przejść bramę.
+- Nie dopisuj reguły do Markdown zamiast naprawy mechanizmu; Markdown nie jest
+  substytutem hooka.
+- Nie ustawiaj `core.hooksPath` na katalog spoza standardu.
+- Nie edytuj plików hostów lokalnie — są zarządzane digestem i drift wykryje
+  `GOV-SYNC-001`.
+
+## Related rules
+
+- `AGENTS.md` rule 22 (HOST-AGNOSTIC STANDARD)
+- `C-HOST-001`, `C-HOST-002`
+- `GOV-SYNC-001` (drift zarządzanych plików hostów)

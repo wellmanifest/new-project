@@ -500,3 +500,22 @@
 - [x] **Wprowadzenie Reguły Generowania Diagramów (`P-DOCS-001` & `C-DOCS-001`)**:
   - [x] Dodano regułę `P-DOCS-001` w `POLICY.md` oraz `C-DOCS-001` w `CONTRIBUTING.md` zobowiązującą Agentów AI do tworzenia wizualnych diagramów (Mermaid/Markdown) w katalogu `docs/` każdego docelowego repozytorium (np. `docs/ARCHITECTURE.md`, `docs/LOGIC_FLOW.md`).
   - [x] Zaktualizowano instrukcje dla agentów w `AGENTS.md` oraz w przewodniku `README.md`.
+
+---
+
+## 🔒 Etap 5: Egzekwowalny kontrakt host-agnostyczny (ticket-106)
+
+- [x] **Warstwa kontrolna kontraktu hostów (`GOV-AGENT-HOST-004..006`)**:
+  - [x] Zadeklarowano hosty, hooka i bindingi pakietowe w `governance/agent-hosts.json` wraz ze schematem.
+  - [x] Dodano `scripts/agent_host_check.py` i wpięto go w `scripts/governance_check.py`, więc brama wykrywa nieaktywny `core.hooksPath`, brakujący plik hosta i hooka bez bitu wykonywalności.
+  - [x] Rozszerzono `scripts/audit_diagnostics.py` o katalog `.githooks`; zarejestrowano `GOV-AGENT-HOST-001..003` emitowane przez hooka.
+- [x] **Punkty styku z paczkami (`GOV-PACKAGING-001..003`)**:
+  - [x] Walidator czyta `[tool.wellmanifest]` z `pyproject.toml` i klucz `wellmanifest` z `package.json`, porównuje wersję i rewizję z `manifest.lock.json` i wymaga lifecycle bindingu (`scripts.prepare`, `pytest addopts`).
+  - [x] Runbooki `error/GOV-AGENT-HOST.md` i `error/GOV-PACKAGING.md` opisują dokładną remediację.
+- [ ] **Dystrybucja kontraktu do adopterów** (slice zależny od ticket-106):
+  - [ ] `governance/package-manifest.json` rozsyła `CLAUDE.md`, `GEMINI.md`, regułę Cursora, `.aider.conf.yml`, instrukcje Copilota i `.githooks/pre-commit` jako managed.
+  - [ ] `scripts/install-agent-hosts.sh` aktywuje kontrakt w miejscu zamiast kopiować plik na samego siebie.
+- [ ] **Egzekucja w CI** (slice zależny od dystrybucji):
+  - [ ] Job `governance / enforce` w `template/files/new-project-governance.workflow.yml` uruchamia `governance_check.py` u wszystkich adopterów.
+  - [ ] `governance/rule-enforcement.json` mapuje regułę hosta na kody deterministyczne zamiast pozostawiać ją nieopisaną.
+

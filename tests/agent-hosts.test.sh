@@ -137,4 +137,131 @@ HOME="$user_home" "$root/scripts/install-agent-hosts.sh" --source "$root" --user
 grep -Fq 'wellmanifest/new-project host contract' "$user_home/.gemini/GEMINI.md" || fail "--user must install Gemini pointer"
 grep -Fq 'wellmanifest/new-project host contract' "$user_home/.claude/CLAUDE.md" || fail "--user must install Claude pointer"
 
+# --- ticket-106: deterministic host and packaging validator -------------------
+
+checker="$root/scripts/agent_host_check.py"
+[[ -f "$checker" ]] || fail "agent_host_check.py must exist"
+
+# The validator exits non-zero on findings, which is the behaviour under test;
+# capture the report first so pipefail does not abort the suite.
+codes() {
+  local report="$tmp/agent-host-report.json"
+  python3 "$checker" --root "$1" --actor "${2:-agent}" --format json > "$report" || true
+  python3 -c 'import json,sys; print(" ".join(f["code"] for f in json.load(open(sys.argv[1]))["findings"]))' "$report"
+}
+
+assert_has() {
+  local haystack="$1" needle="$2" context="$3"
+  [[ "$haystack" == *"$needle"* ]] || fail "$context: expected $needle in '$haystack'"
+}
+
+assert_lacks() {
+  local haystack="$1" needle="$2" context="$3"
+  [[ "$haystack" != *"$needle"* ]] || fail "$context: unexpected $needle in '$haystack'"
+}
+
+fixture="$tmp/fixture"
+mkdir -p "$fixture/.governance" "$fixture/.cursor/rules" "$fixture/.githooks"
+git init -q "$fixture"
+git -C "$fixture" config user.email "test@example.com"
+git -C "$fixture" config user.name "Test"
+cp "$root/governance/agent-hosts.json" "$fixture/.governance/agent-hosts.json"
+for host in AGENTS.md CLAUDE.md GEMINI.md; do
+  printf '%s\n' "stub" > "$fixture/$host"
+done
+printf '%s\n' "stub" > "$fixture/.cursor/rules/new-project-standard.mdc"
+printf '%s\n' '#!/usr/bin/env bash' > "$fixture/.githooks/pre-commit"
+chmod +x "$fixture/.githooks/pre-commit"
+cat > "$fixture/.governance/manifest.lock.json" <<'LOCK'
+{
+  "schema": "new-project.lock/v1",
+  "standard": {
+    "id": "wellmanifest/new-project",
+    "publicationStatus": "published",
+    "sourceRepository": "wellmanifest/new-project",
+    "sourceRevision": "1111111111111111111111111111111111111111",
+    "version": "9.9.9"
+  },
+  "managedFiles": {}
+}
+LOCK
+
+# An unset core.hooksPath means no commit in this clone is actually gated.
+assert_has "$(codes "$fixture")" "GOV-AGENT-HOST-006" "unset hooksPath"
+# CI checkouts never run local hooks, so that finding must not fire there.
+assert_lacks "$(codes "$fixture" ci)" "GOV-AGENT-HOST-006" "ci actor"
+
+git -C "$fixture" config core.hooksPath .githooks
+[[ -z "$(codes "$fixture")" ]] || fail "activated fixture must pass: $(codes "$fixture")"
+
+# A missing host instruction file fails closed.
+mv "$fixture/GEMINI.md" "$fixture/GEMINI.md.bak"
+assert_has "$(codes "$fixture")" "GOV-AGENT-HOST-004" "missing host file"
+mv "$fixture/GEMINI.md.bak" "$fixture/GEMINI.md"
+
+# A hook that cannot execute is the same defect as a hook that is absent.
+chmod -x "$fixture/.githooks/pre-commit"
+assert_has "$(codes "$fixture")" "GOV-AGENT-HOST-005" "non-executable hook"
+chmod +x "$fixture/.githooks/pre-commit"
+
+# A stack marker with no governance declaration and no lifecycle binding.
+cat > "$fixture/pyproject.toml" <<'TOML'
+[project]
+name = "fixture"
+version = "0.1.0"
+TOML
+observed="$(codes "$fixture")"
+assert_has "$observed" "GOV-PACKAGING-001" "undeclared pyproject"
+assert_has "$observed" "GOV-PACKAGING-003" "unbound pytest lifecycle"
+
+# A declaration that drifted away from the adoption lock.
+cat > "$fixture/pyproject.toml" <<'TOML'
+[project]
+name = "fixture"
+version = "0.1.0"
+
+[tool.wellmanifest]
+standard = "0.0.1"
+revision = "1111111111111111111111111111111111111111"
+gate = "project/governance-check.sh"
+
+[tool.pytest.ini_options]
+addopts = "-p wellmanifest_governance"
+TOML
+mkdir -p "$fixture/project"
+printf '%s\n' '#!/usr/bin/env bash' > "$fixture/project/governance-check.sh"
+observed="$(codes "$fixture")"
+assert_has "$observed" "GOV-PACKAGING-002" "drifted standard version"
+assert_lacks "$observed" "GOV-PACKAGING-003" "bound pytest lifecycle"
+
+# The same declaration in agreement with the lock passes.
+sed -i 's/standard = "0.0.1"/standard = "9.9.9"/' "$fixture/pyproject.toml"
+[[ -z "$(codes "$fixture")" ]] || fail "aligned pyproject must pass: $(codes "$fixture")"
+
+# npm is the one ecosystem that can install the hook without being asked.
+cat > "$fixture/package.json" <<'JSON'
+{
+  "name": "fixture",
+  "version": "0.1.0",
+  "wellmanifest": {
+    "standard": "9.9.9",
+    "revision": "1111111111111111111111111111111111111111",
+    "gate": "project/governance-check.sh"
+  }
+}
+JSON
+assert_has "$(codes "$fixture")" "GOV-PACKAGING-003" "missing npm prepare"
+python3 - "$fixture/package.json" <<'PYNPM'
+import json, sys
+path = sys.argv[1]
+document = json.load(open(path, encoding="utf-8"))
+document["scripts"] = {"prepare": "./scripts/install-agent-hosts.sh"}
+json.dump(document, open(path, "w", encoding="utf-8"), indent=2)
+PYNPM
+[[ -z "$(codes "$fixture")" ]] || fail "aligned package.json must pass: $(codes "$fixture")"
+
+# Every code the validator can emit must be registered in the catalog.
+python3 "$root/scripts/audit_diagnostics.py" --root "$root" >/dev/null \
+  || fail "diagnostics catalog must cover every emitted code"
+
 echo "agent-hosts.test.sh OK"
