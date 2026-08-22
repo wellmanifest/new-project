@@ -2,8 +2,8 @@
 
 - **ID**: ticket-107
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-22
 
 ## Cel i Zakres
@@ -53,6 +53,14 @@ repozytorium nie mogło zainstalować własnego kontraktu.
   Wersja z ręczną listą przechodziłaby dalej, mimo że adopcja czterech nowych
   źródeł była zepsuta. To ta sama klasa ślepej plamki, która ukryła kody hooka
   przed audytem diagnostyk; obie listy są teraz wyprowadzane ze źródła.
+
+## Publication evidence
+
+- Pull request: `wellmanifest/new-project#176`
+- Frozen and approved head: `877e2f18ee055bbd4f09ac10ac7ec0f7d9c07371`
+- Merge commit: `9328b7ef2247cc3c6e66b76ae58e4ea1cf08aed3`
+- Trusted approval: `ifuri-validator-agent[bot]`, converged at the exact head.
+- Post-merge on `main`: `./project/governance-check.sh --actor agent` → `GOV-PASS`.
 
 ## Uczestnicy
 

@@ -514,7 +514,7 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
 - [x] **Punkty styku z paczkami (`GOV-PACKAGING-001..003`)**:
   - [x] Walidator czyta `[tool.wellmanifest]` z `pyproject.toml` i klucz `wellmanifest` z `package.json`, porównuje wersję i rewizję z `manifest.lock.json` i wymaga lifecycle bindingu (`scripts.prepare`, `pytest addopts`).
   - [x] Runbooki `error/GOV-AGENT-HOST.md` i `error/GOV-PACKAGING.md` opisują dokładną remediację.
-- [x] **Dystrybucja kontraktu do adopterów** (ticket-107):
+- [x] **Dystrybucja kontraktu do adopterów** (ticket-107, `#176`, merge `9328b7e`):
   - [x] `governance/package-manifest.json` rozsyła `CLAUDE.md`, `GEMINI.md`, regułę Cursora, `.githooks/pre-commit` oraz sam kontrakt i walidator jako managed.
   - [x] `scripts/install-agent-hosts.sh` aktywuje kontrakt w miejscu zamiast kopiować plik na samego siebie; bootstrap dostarcza również kontrakt.
   - [ ] Hosty `aider` i `copilot` przeniesione do slice'u CI (nie mieściły się w budżecie dziewięciu plików).
