@@ -2,8 +2,8 @@
 
 - **ID**: ticket-106
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-22
 
 ## Cel i Zakres
@@ -77,6 +77,16 @@ Kolejność merge jest istotna, bo każdy slice zakłada poprzedni:
    `GOV-AGENT-HOST-001..003`, reguła `C-HOST-*` w `CONTRIBUTING.md` i jej
    mapowanie w `governance/rule-enforcement.json`, dokumentacja praktyki
    w `docs/`. Gotowe pliki: `slice3/` w katalogu roboczym sesji.
+
+## Publication evidence
+
+- Pull request: `wellmanifest/new-project#174`
+- Frozen and approved head: `94e8097a9eab8490d765dd8682d9d3961f3d3aa4`
+- Merge commit: `1dff15b5078056adaf3899c5675ff7ee6ef7d134`
+- Trusted approval: `ifuri-validator-agent[bot]`, converged at the exact head
+  after two stable reads; the implementing agent did not review its own PR.
+- Post-merge on `main`: `./project/governance-check.sh --actor agent` → `GOV-PASS`,
+  `python3 scripts/agent_host_check.py --root .` → `GOV-AGENT-HOST-PASS`.
 
 ## Uczestnicy
 

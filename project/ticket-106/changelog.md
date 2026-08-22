@@ -1,5 +1,11 @@
 # Ticket Changelog (ticket-106)
 
+## [1.0.0] - 2026-08-22
+
+- Published through `wellmanifest/new-project#174`, approved by the Validator App
+  at the frozen head and merged as `1dff15b`.
+- Terminal closure created from the integrated default branch.
+
 ## [0.2.0] - 2026-08-22
 
 - Added `governance/agent-hosts.json` and its schema as the single source of

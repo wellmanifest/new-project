@@ -1,0 +1,6 @@
+2026-08-22 audit hooks_path_set=0/39 host_files_beyond_agents_md=1/39 packaging_declarations=0
+2026-08-22 gate_reject=GOV-BUDGET-001 implementation_files=17 limit=9 action=split_scope
+2026-08-22 ci_reject=GOV-INTENT-003 action=split_history plan=b690171 implementation=94e8097
+2026-08-22 checks head=94e8097 test=PASS windows-governance=PASS
+2026-08-22 validator_head=94e8097a9eab8490d765dd8682d9d3961f3d3aa4 pr=174 result=APPROVE
+2026-08-22 merge_sha=1dff15b5078056adaf3899c5675ff7ee6ef7d134 clean_main_gate=PASS
