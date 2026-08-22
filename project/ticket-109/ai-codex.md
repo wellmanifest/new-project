@@ -25,6 +25,10 @@ potrzebny jest mechaniczny patch `0.18.5` obejmujący dokładnie ten payload.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- Advanced all six declared release carriers/assertions to `0.18.5` in a
+  separate implementation commit after the plan-only commit.
+- The complete hub test contract, Ruff, diff hygiene and exact-base governance
+  pass before publication.
 
 ## Blockers
 

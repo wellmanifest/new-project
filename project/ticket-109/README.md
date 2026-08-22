@@ -15,11 +15,11 @@ Zmiana jest mechanicznym patch release: aktualizuje nośniki wersji, aktywne
 asercje wersji i changelog; nie zmienia zachowania zintegrowanej bramki.
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [ ] AC-01: `VERSION`, oba manifesty i aktywne asercje testowe wskazują
+- [x] AC-01: `VERSION`, oba manifesty i aktywne asercje testowe wskazują
       `0.18.5`.
-- [ ] AC-02: changelog opisuje host contract, dystrybucję i egzekucję CI jako
+- [x] AC-02: changelog opisuje host contract, dystrybucję i egzekucję CI jako
       kompatybilny patch.
-- [ ] AC-03: wszystkie zestawy `tests/*.test.sh`, Ruff, diff hygiene i
+- [x] AC-03: wszystkie zestawy `tests/*.test.sh`, Ruff, diff hygiene i
       exact-base governance przechodzą przed merge.
 - [ ] AC-04: Validator zatwierdza i scala dokładny head przygotowania release.
 - [ ] AC-05: po ponownym teście czystego merge SHA Goal tworzy wcześniej
@@ -29,6 +29,14 @@ asercje wersji i changelog; nie zmienia zachowania zintegrowanej bramki.
 - Tag i GitHub Release są nieodwracalne operacyjnie. Publikacja nastąpi dopiero
   po exact-head trusted merge i ponownym pełnym teście czystego `main`.
 - Ten ticket nie adoptuje wydania w żadnym target repo i nie zmienia rulesetów.
+
+## Pre-publication evidence
+
+- 10/10 zestawów `tests/*.test.sh`: PASS.
+- Ruff: `All checks passed!`.
+- Diff hygiene: PASS.
+- Exact-base governance od `a3945be`: `GOV-PASS`.
+- Tag i GitHub Release `v0.18.5` pozostają nieobecne przed publikacją.
 
 ## Uczestnicy
 

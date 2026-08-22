@@ -527,6 +527,6 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
   - [ ] `required-checks.json` generowany per repozytorium zamiast kopii huba (blokuje krok required-checks w jobie).
 
 - [ ] **Publikacja adoptowalnego wydania 0.18.5** (ticket-109):
-  - [ ] Zaktualizować mechaniczne nośniki wersji i aktywne asercje.
-  - [ ] Przejść pełny kontrakt testowy i exact-head Validator merge.
+  - [x] Zaktualizować mechaniczne nośniki wersji i aktywne asercje.
+  - [ ] Przejść exact-head Validator merge; pełny kontrakt lokalny już PASS.
   - [ ] Opublikować niezmienne `v0.18.5` z ponownie przetestowanego merge SHA.
