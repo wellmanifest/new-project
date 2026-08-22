@@ -1,6 +1,21 @@
 {
   "schema": "new-project.diagnostics/v2",
   "codes": {
+    "GOV-AGENT-HOST-001": {
+      "message": "Commit is not bound to an IN_PROGRESS ticket-NNN branch.",
+      "remediation": "Allocate through ./project/new-ticket.sh and commit on a branch whose name contains ticket-NNN.",
+      "documentation": "error/GOV-AGENT-HOST.md"
+    },
+    "GOV-AGENT-HOST-002": {
+      "message": "Staged snapshot has no ticket README for the branch ticket.",
+      "remediation": "Stage the allocated project/ticket-NNN/README.md; never invent a ticket number.",
+      "documentation": "error/GOV-AGENT-HOST.md"
+    },
+    "GOV-AGENT-HOST-003": {
+      "message": "Governance-only DONE closure violates its bounded evidence.",
+      "remediation": "Stage the terminal ticket evidence alone; a closure may only add or modify bounded governance files.",
+      "documentation": "error/GOV-AGENT-HOST.md"
+    },
     "GOV-AGENT-HOST-004": {
       "message": "A declared LLM host instruction file is missing or the host contract is unreadable.",
       "remediation": "Bootstrap with ./scripts/install-agent-hosts.sh --source <hub> --target <repo>, or adopt the current standard package.",

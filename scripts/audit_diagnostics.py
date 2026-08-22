@@ -21,6 +21,10 @@ RUNTIME_DIRECTORIES = (
     Path("template/files"),
     Path(".github/workflows"),
 )
+# Git hooks are executable contract surface but carry no file suffix, so they
+# are collected separately; ticket-106 added them after GOV-AGENT-HOST codes
+# emitted by .githooks/pre-commit escaped the catalog entirely.
+RUNTIME_UNSUFFIXED_DIRECTORIES = (Path(".githooks"),)
 RUNBOOK_SECTIONS = (
     "## Situation",
     "## Meaning",
@@ -41,6 +45,13 @@ def runtime_paths(root: Path) -> tuple[Path, ...]:
             path.relative_to(root)
             for path in absolute.iterdir()
             if path.is_file() and path.suffix in RUNTIME_SUFFIXES
+        )
+    for directory in RUNTIME_UNSUFFIXED_DIRECTORIES:
+        absolute = root / directory
+        if not absolute.is_dir():
+            continue
+        paths.update(
+            path.relative_to(root) for path in absolute.iterdir() if path.is_file()
         )
     return tuple(sorted(paths, key=str))
 

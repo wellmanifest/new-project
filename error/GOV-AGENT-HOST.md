@@ -1,13 +1,12 @@
 # GOV-AGENT-HOST: kontrakt host-agnostyczny nie jest aktywny
 
-Kody katalogowe: `GOV-AGENT-HOST-004`, `GOV-AGENT-HOST-005`,
-`GOV-AGENT-HOST-006` — emitowane przez `scripts/agent_host_check.py`.
-
-Ten sam runbook obsługuje `GOV-AGENT-HOST-001`, `GOV-AGENT-HOST-002` i
-`GOV-AGENT-HOST-003` emitowane przez `.githooks/pre-commit`. Nie są jeszcze
-zarejestrowane w `governance/diagnostics.json`, bo `scripts/audit_diagnostics.py`
-nie skanuje katalogu `.githooks`; rejestracja wchodzi razem z rozszerzeniem
-audytu.
+Kody: `GOV-AGENT-HOST-001`, `GOV-AGENT-HOST-002`, `GOV-AGENT-HOST-003`
+emitowane przez `.githooks/pre-commit`, oraz `GOV-AGENT-HOST-004`,
+`GOV-AGENT-HOST-005`, `GOV-AGENT-HOST-006` emitowane przez
+`scripts/agent_host_check.py`. Wszystkie sześć jest zarejestrowanych w
+`governance/diagnostics.json`; `scripts/audit_diagnostics.py` skanuje teraz
+również `.githooks`, więc kod emitowany przez hooka nie może już wypaść z
+katalogu niezauważony.
 
 ## Situation
 
