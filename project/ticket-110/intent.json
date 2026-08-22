@@ -9,10 +9,11 @@
     "origin": "regression"
   },
   "allowedPaths": [
-    ".githooks/pre-commit",
     "governance/agent-hosts.json",
     "governance/agent-hosts.schema.json",
+    "governance/package-manifest.json",
     "scripts/install-agent-hosts.sh",
+    "template/files/pre-commit.template.sh",
     "tests/agent-hosts.test.sh",
     "project/ticket-110/**",
     "TODO.md",
@@ -36,24 +37,25 @@
       "Merging directly without exact-head trusted approval"
     ],
     "complexity": "S",
-    "estimatedMinutes": 35,
+    "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 5,
+      "maxImplementationFiles": 6,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Centralize successful hook termination in a fail-closed worktree guard function. Declare its runtime files in the host contract so bootstrap derives and installs the complete executable closure from the package manifest instead of copying a hook that cannot run.",
+      "decision": "Separate the adopter payload from the hub's active hook, then centralize successful payload termination in a fail-closed worktree guard function. Declare its runtime files in the host contract so bootstrap derives and installs the complete executable closure from the package manifest instead of copying a hook that cannot run.",
       "components": [
         {
           "name": "managed-precommit-boundary",
           "paths": [
-            ".githooks/pre-commit",
             "governance/agent-hosts.json",
             "governance/agent-hosts.schema.json",
+            "governance/package-manifest.json",
             "scripts/install-agent-hosts.sh",
+            "template/files/pre-commit.template.sh",
             "tests/agent-hosts.test.sh"
           ]
         }
@@ -61,7 +63,8 @@
       "responsibilityChanges": false,
       "interfaceChanges": [
         "Successful managed pre-commit paths now require a passing repository-scoped worktree guard",
-        "The host contract declares the hook runtime files that bootstrap must install and activation must verify"
+        "The host contract declares the hook runtime files that bootstrap must install and activation must verify",
+        "The managed adopter hook has a dedicated source template instead of doubling as the hub's live hook"
       ],
       "dataChanges": [],
       "ui": {
@@ -74,7 +77,7 @@
     "runtimeDependencies": [],
     "validation": [
       {
-        "criterion": "AC-01..02",
+        "criterion": "AC-01",
         "commands": [
           "bash tests/agent-hosts.test.sh",
           "bash -n .githooks/pre-commit tests/agent-hosts.test.sh"
@@ -82,9 +85,16 @@
         "evidence": "project/ticket-110/ai-codex-logs.txt"
       },
       {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "project/ticket-110/ai-codex-logs.txt"
+      },
+      {
         "criterion": "AC-03",
         "commands": [
-          "for test in tests/*.test.sh; do bash $test; done",
+          "set -e; for test in tests/*.test.sh; do bash $test; done",
           "./project/governance-check.sh --actor agent --base cd9a15aa3212a6520059e58f821aabb341a6f839 --head HEAD"
         ],
         "evidence": "project/ticket-110/ai-codex-logs.txt"

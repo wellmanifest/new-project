@@ -17,21 +17,29 @@ to regresja dystrybucyjna: aktualizacja może usunąć działającą ochronę ad
 
 1. Zapisać reprodukcję dla poprawnego `IN_PROGRESS`, poprawnego `DONE`,
    negatywnego werdyktu guarda i braku runnera.
-2. Zastąpić terminalne sukcesy jedną funkcją, która wybiera wyłącznie
-   pakietowy lub źródłowy runner i propaguje jego kod wyjścia.
+2. Oddzielić zarządzany payload adoptera od aktywnego hooka huba i zastąpić w
+   payloadzie terminalne sukcesy funkcją propagującą werdykt guarda.
 3. Zadeklarować runtime hooka w kontrakcie hostów i wyprowadzić z niego
    atomowy bootstrap oraz kontrolę aktywacji.
 4. Uruchomić test komponentu, pełny zestaw shellowy i governance na dokładnym
-   base/head; publikować wyłącznie przez Validator App.
+   base/head w trybie fail-fast; publikować wyłącznie przez Validator App.
 
 ## Actual changes
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- Hook lifecycle uruchamia worktree guard przed każdym dozwolonym sukcesem.
+- Kontrakt hostów deklaruje trzy pliki runtime; bootstrap wyprowadza ich kopię
+  z manifestu pakietu, a aktywacja sprawdza ich obecność.
+- Test spy pokrywa obie ścieżki sukcesu, propagację porażki i brak runnera;
+  pełny zestaw 10 testów shellowych przeszedł w trybie fail-fast.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- Lokalny commit implementacji jest prawidłowo blokowany przez istniejący,
+  niezależny overlap w starych, brudnych worktree huba; żadnego cudzego stanu
+  nie usunięto i nie użyto `--no-verify`. Payload adoptera został rozdzielony
+  od aktywnego hooka huba, więc publikacja nie wymaga naruszania tych danych.
 - New authority is still required for destructive action, secret access, new
   external coordination or material objective expansion. Protected delivery
   may be invoked without another prompt when publication is in scope; its
