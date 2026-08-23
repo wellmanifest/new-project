@@ -9,6 +9,8 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-115`](project/ticket-115/README.md) — fix Windows pre-commit executable check and publish `new-project 0.18.6`. Stan: `IN_PROGRESS / EDIT`; workstream: `governance`.
+
 - [x] [`ticket-105`](project/ticket-105/README.md) — publish integrated managed
   text hygiene as immutable `new-project 0.18.4`. Stan: `DONE / DONE`;
   workstream: `governance`; depends on `ticket-104`; PR #172 merged as

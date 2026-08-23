@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.18.6] - 2026-08-23
+
+### Windows pre-commit executable check fix
+
+- Guard the POSIX executable check on `.githooks/pre-commit` in `agent_host_check.py` with `os.name != 'nt'`, preventing false-positive test failures on Windows CI.
+
 ## [0.18.5] - 2026-08-23
 
 ### Host-agnostic governance enforcement
