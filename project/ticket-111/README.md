@@ -2,8 +2,8 @@
 
 - **ID**: ticket-111
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-23
 
 ## Cel i Zakres
@@ -32,6 +32,14 @@ elementu brakuje.
 - `bash tests/adoption-lock.test.sh`: PASS.
 - Fail-fast `tests/*.test.sh`: 10/10 PASS.
 - Governance `ecafbb4..0b9b7e4`: `GOV-PASS`, 0 errors, 0 warnings.
+
+## Publication evidence
+
+- Pull request: `wellmanifest/new-project#184`.
+- Frozen and approved head: `d9b9f73e0982149fcf29b06bc7fd861374d704f3`.
+- Trusted approval: `ifuri-validator-agent[bot]`, review `5001321909`.
+- Validator run: `32606993265`.
+- Merge commit: `638d0ef030e3fbaa9d132f99e6ee9affe9d53f12`.
 
 ## Ryzyka i Uwagi
 

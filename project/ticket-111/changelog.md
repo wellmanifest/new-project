@@ -1,5 +1,10 @@
 # Ticket Changelog (ticket-111)
 
+## [0.3.0] - 2026-08-23
+
+- Recorded exact-head approval and merge from integrated `main`.
+- Closed the runtime composition as `DONE / DONE`.
+
 ## [0.2.0] - 2026-08-23
 
 - Declared the managed hook runtime in the host contract and schema.
