@@ -1,0 +1,101 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-111",
+  "summary": "Compose managed pre-commit with worktree guard runtime",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "governance/agent-hosts.json",
+    "governance/agent-hosts.schema.json",
+    "scripts/install-agent-hosts.sh",
+    "template/files/pre-commit.template.sh",
+    "tests/agent-hosts.test.sh",
+    "project/ticket-111/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-110"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ecafbb4028086d8a0571b5689af5a5d3c5ee3f61",
+    "targetBranch": "main",
+    "outcome": "The dedicated managed adopter hook always runs its declared repository-scoped worktree guard before admitting an IN_PROGRESS or governance-only DONE commit, and host bootstrap installs that runtime atomically.",
+    "nonGoals": [
+      "Changing the overlap algorithm or cleaning historical worktrees",
+      "Changing the hub's active .githooks/pre-commit",
+      "Publishing a release in this ticket",
+      "Merging directly without exact-head trusted approval"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add runtimeFiles to the host contract, derive bootstrap and activation checks from that list, and invoke the packaged guard from both successful lifecycle branches in the dedicated adopter template.",
+      "components": [
+        {
+          "name": "managed-precommit-runtime",
+          "paths": [
+            "template/files/pre-commit.template.sh",
+            "governance/agent-hosts.json",
+            "governance/agent-hosts.schema.json"
+          ]
+        },
+        {
+          "name": "host-bootstrap-validation",
+          "paths": [
+            "scripts/install-agent-hosts.sh",
+            "tests/agent-hosts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "The host contract declares hook runtimeFiles and successful managed commits require their guard verdict"
+      ],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the ticket branch before release; existing adopters remain on the prior immutable standard revision."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/agent-hosts.test.sh",
+          "bash -n template/files/pre-commit.template.sh tests/agent-hosts.test.sh"
+        ],
+        "evidence": "project/ticket-111/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/agent-hosts.test.sh"],
+        "evidence": "project/ticket-111/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "set -e; for test in tests/*.test.sh; do bash $test; done",
+          "./project/governance-check.sh --actor agent --base ecafbb4028086d8a0571b5689af5a5d3c5ee3f61 --head HEAD"
+        ],
+        "evidence": "project/ticket-111/ai-codex-logs.txt"
+      }
+    ]
+  }
+}

@@ -534,3 +534,6 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
   - [x] Dedykowany szablon zachowuje bieżącą logikę lifecycle.
   - [x] Manifest adopcji nie używa już aktywnego hooka huba jako źródła.
   - [x] Exact-head governance PASS; publikacja pozostaje w Validator App.
+- [ ] **Kompozycja payloadu z worktree guardem** (ticket-111):
+  - [ ] Host contract deklaruje i bootstrapuje pełny runtime hooka.
+  - [ ] Każdy dozwolony sukces lifecycle wymaga pozytywnego werdyktu guarda.
