@@ -1,5 +1,9 @@
 # Ticket Changelog (ticket-112)
 
+## [1.0.0] - 2026-08-23
+
+- Published through `#186`, merged as `6c7caa2`.
+
 ## [0.2.0] - 2026-08-23
 
 - Added `scripts/generate_required_checks.py`, distributed to adopters as
