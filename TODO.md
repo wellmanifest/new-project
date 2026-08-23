@@ -517,7 +517,7 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
 - [x] **Dystrybucja kontraktu do adopterów** (ticket-107, `#176`, merge `9328b7e`):
   - [x] `governance/package-manifest.json` rozsyła `CLAUDE.md`, `GEMINI.md`, regułę Cursora, `.githooks/pre-commit` oraz sam kontrakt i walidator jako managed.
   - [x] `scripts/install-agent-hosts.sh` aktywuje kontrakt w miejscu zamiast kopiować plik na samego siebie; bootstrap dostarcza również kontrakt.
-  - [ ] Hosty `aider` i `copilot` przeniesione do slice'u CI (nie mieściły się w budżecie dziewięciu plików).
+  - [x] Hosty `aider` i `copilot` dodane w ticket-113; kontrakt obejmuje sześć hostów.
 - [x] **Egzekucja w CI** (ticket-108):
   - [x] Job `governance / enforce` w `template/files/new-project-governance.workflow.yml` uruchamia `governance_check.py`; zmierzono, że brama przechodzi w 24 z 25 adopterów.
   - [x] `audit_diagnostics.py` skanuje `.githooks`, a `audit_rule_enforcement.py` zna `agent_host_check.py`; reguły `C-HOST-001..003` mapują sześć kodów.
