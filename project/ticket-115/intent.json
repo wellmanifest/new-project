@@ -1,0 +1,88 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-115",
+  "summary": "Fix Windows pre-commit executable check and publish 0.18.6",
+  "workstream": "governance",
+  "classification": {
+    "kind": "DEFECT",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-115/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/agent_host_check.py",
+    "VERSION",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json",
+    "CHANGELOG.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "735edc3ecd7ffa69e4936bbfdcaa794846a678bb",
+    "targetBranch": "main",
+    "outcome": "Fix agent_host_check.py so it skips POSIX execution bit verification on Windows (os.name != 'nt') where NTFS lacks POSIX execute permissions on extensionless files, and release standard 0.18.6.",
+    "nonGoals": [
+      "Changing the hook contract semantics on POSIX platforms.",
+      "Modifying any other validator rules."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Guard the stat().st_mode & 0o111 check with os.name != 'nt' in agent_host_check.py.",
+      "components": [
+        {
+          "name": "agent-host-validator",
+          "paths": [
+            "scripts/agent_host_check.py"
+          ]
+        },
+        {
+          "name": "release-carriers",
+          "paths": [
+            "VERSION",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json",
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        "Bump standard version from 0.18.5 to 0.18.6"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the change and remain on 0.18.5."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-1",
+        "commands": [
+          "bash tests/agent-hosts.test.sh",
+          "bash tests/adoption-lock.test.sh"
+        ],
+        "evidence": "agent-hosts and adoption-lock suites pass."
+      }
+    ]
+  }
+}
