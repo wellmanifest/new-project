@@ -1,5 +1,9 @@
 # Ticket Changelog (ticket-114)
 
+## [1.0.0] - 2026-08-23
+
+- Published through `#190`, merged as `72ef1ff`.
+
 ## [0.2.0] - 2026-08-23
 
 - Added `scripts/fleet_report.py`, a read-only workspace tool that reports each

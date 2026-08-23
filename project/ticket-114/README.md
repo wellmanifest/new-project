@@ -2,8 +2,8 @@
 
 - **ID**: ticket-114
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-23
 
 ## Cel i Zakres
@@ -46,6 +46,14 @@ stanie dziesięć repozytoriów.
   brak daje `unregistered` zamiast błędu.
 - Risk 3: „wydań wstecz" liczy się względem tagów huba, więc adopter na wersji
   bez tagu dostaje `?`, a nie fałszywe zero.
+
+## Publication evidence
+
+- Pull request: `wellmanifest/new-project#190`
+- Merge commit: `72ef1ffb6e0d0c14f6682a3f0273dead9d9c9257`
+- Trusted approval: `ifuri-validator-agent[bot]` at the exact frozen head.
+- Post-merge on `main`: `./project/governance-check.sh --actor agent` → `GOV-PASS`,
+  and all twelve `tests/*.test.sh` suites pass.
 
 ## Uczestnicy
 

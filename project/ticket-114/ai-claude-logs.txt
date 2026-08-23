@@ -1,3 +1,4 @@
 2026-08-23 fleet adopters=25 current=1 behind_median=7 gate_in_ci=7 hosts=1 checks_true=1 drift=0
 2026-08-23 claimed_not_pinned=10
 2026-08-23 registry_path=option reason=no_hardcoded_home_path_in_hub_script
+2026-08-23 merge_sha=72ef1ffb6e0d0c14f6682a3f0273dead9d9c9257 clean_main_gate=PASS suites=12
