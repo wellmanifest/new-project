@@ -2,3 +2,4 @@
 2026-08-23 parser_defect=reusable_caller_name_guessed action=report_not_guess
 2026-08-23 crosscheck source=validator_registry agree=21 differ=3 of=24
 2026-08-23 fleet declaration_truthful=1 of 25 repo=twin-lifecycle
+2026-08-23 merge_sha=6c7caa25dfcc446e2d2ea892aa081df0e228ceb8 clean_main_gate=PASS

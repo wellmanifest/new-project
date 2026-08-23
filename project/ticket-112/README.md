@@ -2,8 +2,8 @@
 
 - **ID**: ticket-112
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-23
 
 ## Cel i Zakres
@@ -53,6 +53,14 @@ przypadkiem nazwy prefiksowanej przez caller (`logs`).
 - Risk 3: uruchomienie na całej flocie pokazuje `1 of 25 agree`. Tym jednym jest
   `twin-lifecycle`, poprawiony ręcznie podczas pilota — niezależne potwierdzenie,
   że ręczna deklaracja była prawidłowa.
+
+## Publication evidence
+
+- Pull request: `wellmanifest/new-project#186`
+- Frozen and approved head: `f0922b0449a5cf8bc8af9dcf83d1f77cf710f36e`
+- Merge commit: `6c7caa25dfcc446e2d2ea892aa081df0e228ceb8`
+- Trusted approval: `ifuri-validator-agent[bot]`.
+- Post-merge on `main`: `./project/governance-check.sh --actor agent` → `GOV-PASS`.
 
 ## Uczestnicy
 
