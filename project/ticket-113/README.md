@@ -2,8 +2,8 @@
 
 - **ID**: ticket-113
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-23
 
 ## Cel i Zakres
@@ -40,6 +40,14 @@ Po tej zmianie kontrakt obejmuje sześć hostów: `generic` (`AGENTS.md`),
 - Risk 2: `agent_host_check.py` wymaga odtąd obu plików. Adopter dostaje je tą
   samą transakcją adopcyjną co zaktualizowany kontrakt, więc jedno nie może
   wyprzedzić drugiego.
+
+## Publication evidence
+
+- Pull request: `wellmanifest/new-project#188`
+- Merge commit: `0a32253e`
+- Trusted approval: `ifuri-validator-agent[bot]` at the exact frozen head.
+- Post-merge on `main`: `./project/governance-check.sh --actor agent` → `GOV-PASS`,
+  `python3 scripts/agent_host_check.py --root .` → `GOV-AGENT-HOST-PASS`.
 
 ## Uczestnicy
 

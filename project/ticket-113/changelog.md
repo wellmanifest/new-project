@@ -1,5 +1,9 @@
 # Ticket Changelog (ticket-113)
 
+## [1.0.0] - 2026-08-23
+
+- Published through `#188`, merged as `0a32253e`.
+
 ## [0.2.0] - 2026-08-23
 
 - The `aider` and `copilot` hosts join `governance/agent-hosts.json`, and their
