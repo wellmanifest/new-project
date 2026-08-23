@@ -1,2 +1,3 @@
 2026-08-23 hosts=6 added=aider,copilot package_entries=55
 2026-08-23 test_edit_needed=none reason=fixture_derives_from_contract_since_ticket_107
+2026-08-23 merge_sha=0a32253e clean_main_gate=PASS hosts=6
