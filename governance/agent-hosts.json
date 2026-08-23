@@ -41,6 +41,21 @@
       "readers": [
         "Cursor"
       ]
+    },
+    {
+      "id": "aider",
+      "file": ".aider.conf.yml",
+      "readers": [
+        "aider"
+      ]
+    },
+    {
+      "id": "copilot",
+      "file": ".github/copilot-instructions.md",
+      "readers": [
+        "GitHub Copilot",
+        "Copilot Chat in VS Code and JetBrains"
+      ]
     }
   ],
   "packaging": {
