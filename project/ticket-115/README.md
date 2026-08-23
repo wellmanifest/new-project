@@ -2,8 +2,8 @@
 
 - **ID**: ticket-115
 - **Owner**: agent:gemini under SESSION_EXECUTION_AUTHORIZATION
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Created**: 2026-08-23
 
 ## Goal and scope
@@ -13,9 +13,17 @@ Publish standard release `0.18.6`.
 
 ## Acceptance criteria
 
-- [ ] AC-01: `bash tests/agent-hosts.test.sh` passes.
-- [ ] AC-02: `bash tests/adoption-lock.test.sh` passes.
-- [ ] AC-03: Governance gate passes on exact head.
+- [x] AC-01: `bash tests/agent-hosts.test.sh` passes.
+- [x] AC-02: `bash tests/adoption-lock.test.sh` passes.
+- [x] AC-03: Governance gate passes on exact head.
+
+## Publication evidence
+
+- Pull request: `wellmanifest/new-project#192`
+- Frozen and approved head: `26a320e5fc6990633625411d13b074ff0446bdeb`
+- Merge commit: `01397097ac53a01b2dd544f0b5908d22d1b526d5`
+- Tag & Release: `v0.18.6`
+- Validator approval: review `5002443390`, run `32641347755`.
 
 ## Participants
 
