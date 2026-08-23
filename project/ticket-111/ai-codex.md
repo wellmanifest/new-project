@@ -33,8 +33,14 @@ a bootstrap nie może kopiować hooka bez jego wykonywalnego domknięcia.
 
 ## Blockers
 
-- None inside the recorded intent; proceed without a second confirmation.
+- Brak blockerów dla zamknięcia zintegrowanej kompozycji runtime.
 - New authority is still required for destructive action, secret access, new
   external coordination or material objective expansion. Protected delivery
   may be invoked without another prompt when publication is in scope; its
   exact-head trusted approval remains independent evidence.
+
+## Publication
+
+- Validator run `32606993265` zatwierdził dokładny head `d9b9f73` review
+  `5001321909`, a Validator App scalił PR #184 jako `638d0ef`.
+- Closure jest governance-only na zintegrowanym `main`.
