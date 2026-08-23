@@ -1,5 +1,11 @@
 # Ticket Changelog (ticket-111)
 
+## [0.2.0] - 2026-08-23
+
+- Declared the managed hook runtime in the host contract and schema.
+- Made bootstrap and activation enforce the complete runtime set.
+- Guarded both lifecycle success paths with deterministic failure coverage.
+
 ## [0.1.0] - 2026-08-23
 
 - Initial governance scaffold created.

@@ -24,6 +24,12 @@ a bootstrap nie może kopiować hooka bez jego wykonywalnego domknięcia.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- `runtimeFiles` w kontrakcie obejmuje runner, checker i konfigurację; schema
+  wymaga niepustej, unikalnej listy.
+- Bootstrap i aktywacja wyprowadzają wymagane pliki z kontraktu.
+- Dedykowany payload uruchamia guard przed sukcesem `IN_PROGRESS` i `DONE`.
+- Spy testuje oba sukcesy, negatywny werdykt i brak runnera; 10/10 suite oraz
+  exact-base governance przeszły.
 
 ## Blockers
 

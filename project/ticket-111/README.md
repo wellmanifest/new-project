@@ -19,11 +19,19 @@ elementu brakuje.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: poprawne ścieżki `IN_PROGRESS` i `DONE` uruchamiają guard; jego
+- [x] AC-01: poprawne ścieżki `IN_PROGRESS` i `DONE` uruchamiają guard; jego
   negatywny werdykt blokuje commit.
-- [ ] AC-02: brak zadeklarowanego runnera blokuje commit i aktywację hosta z
+- [x] AC-02: brak zadeklarowanego runnera blokuje commit i aktywację hosta z
   jawną remediacją.
-- [ ] AC-03: bootstrap jest atomowy, pełne testy i exact-base governance PASS.
+- [x] AC-03: bootstrap jest atomowy, pełne testy i exact-base governance PASS.
+
+## Evidence before publication
+
+- `bash tests/agent-hosts.test.sh`: PASS; spy potwierdza trzy wywołania guarda,
+  propagację negatywnego werdyktu i fail-closed brak runnera.
+- `bash tests/adoption-lock.test.sh`: PASS.
+- Fail-fast `tests/*.test.sh`: 10/10 PASS.
+- Governance `ecafbb4..0b9b7e4`: `GOV-PASS`, 0 errors, 0 warnings.
 
 ## Ryzyka i Uwagi
 
