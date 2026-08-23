@@ -193,3 +193,108 @@ PY
 echo "both-shapes declaration correctly failed"
 
 echo "required-checks tests: PASS"
+
+# --- ticket-112: derive the declaration from the repository's own workflows ---
+
+generator="$ROOT/scripts/generate_required_checks.py"
+[[ -f "$generator" ]] || { echo "FAIL: generate_required_checks.py must exist" >&2; exit 1; }
+
+derive() {
+  python3 "$generator" --format json "$1" \
+    | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin)[0]))'
+}
+
+fixture="$TMP/derive"
+mkdir -p "$fixture/.github/workflows" "$fixture/.governance"
+git init -q "$fixture"
+git -C "$fixture" remote add origin git@github.com:wellmanifest/fixture.git
+cat > "$fixture/.github/workflows/ci.yml" <<'YAML'
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: true
+  windows-governance:
+    name: governance / windows
+    runs-on: windows-latest
+    steps:
+      - run: true
+YAML
+cat > "$fixture/.governance/required-checks.json" <<'JSON'
+{
+  "schema": "new-project.required-checks/v1",
+  "version": 1,
+  "repository": "wellmanifest/new-project",
+  "workflowFile": ".github/workflows/ci.yml",
+  "requiredCheckNames": ["test", "windows-governance"]
+}
+JSON
+
+observed="$(derive "$fixture")"
+# The trigger keys of on: share the job indentation and must not become checks.
+python3 - "$observed" <<'PY'
+import json, sys
+entry = json.loads(sys.argv[1])
+assert entry["derivedNames"] == ["governance / windows", "test"], entry["derivedNames"]
+assert entry["derived"]["repository"] == "wellmanifest/fixture", entry["derived"]
+assert entry["agrees"] is False, "the hub's declaration must not be accepted as this repository's"
+PY
+
+# A job calling a reusable workflow publishes "<caller> / <callee job>", and the
+# callee lives elsewhere, so the name is reported rather than guessed.
+cat > "$fixture/.github/workflows/governance.yml" <<'YAML'
+name: governance
+on:
+  pull_request:
+jobs:
+  governance:
+    uses: wellmanifest/new-project/.github/workflows/governance.yml@0000000000000000000000000000000000000000
+YAML
+observed="$(derive "$fixture")"
+python3 - "$observed" <<'PY'
+import json, sys
+entry = json.loads(sys.argv[1])
+assert "governance" not in entry["derivedNames"], entry["derivedNames"]
+assert entry["reusableWorkflowCallers"] == ["governance"], entry["reusableWorkflowCallers"]
+PY
+
+# --write must refuse a repository whose names cannot be fully derived.
+python3 "$generator" --write --format json "$fixture" > /dev/null
+python3 - "$fixture" <<'PY'
+import json, sys, pathlib
+document = json.loads((pathlib.Path(sys.argv[1]) / ".governance/required-checks.json").read_text())
+assert document["repository"] == "wellmanifest/new-project", "caller present: must not rewrite"
+PY
+
+# Without callers, --write replaces the inherited declaration with the truth.
+rm "$fixture/.github/workflows/governance.yml"
+python3 "$generator" --write --format json "$fixture" > /dev/null
+python3 - "$fixture" <<'PY'
+import json, sys, pathlib
+document = json.loads((pathlib.Path(sys.argv[1]) / ".governance/required-checks.json").read_text())
+assert document["repository"] == "wellmanifest/fixture", document
+names = sorted(check["name"] for check in document["requiredChecks"])
+assert names == ["governance / windows", "test"], names
+PY
+
+# A check the repository excludes as circular stays excluded.
+python3 - "$fixture" <<'PY'
+import json, pathlib, sys
+path = pathlib.Path(sys.argv[1]) / ".governance/required-checks.json"
+document = json.loads(path.read_text())
+document["circularGovernanceChecksIgnoredByValidator"] = ["test"]
+path.write_text(json.dumps(document, indent=2) + "\n")
+PY
+observed="$(derive "$fixture")"
+python3 - "$observed" <<'PY'
+import json, sys
+entry = json.loads(sys.argv[1])
+assert entry["derivedNames"] == ["governance / windows"], entry["derivedNames"]
+PY
+
+echo "required-checks generator: PASS"

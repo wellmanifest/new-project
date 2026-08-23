@@ -1,0 +1,107 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-112",
+  "summary": "Derive required-checks from the repository workflows",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-112/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/package-manifest.json",
+    "scripts/generate_required_checks.py",
+    "tests/required-checks.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-108"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2ee3a1d4e1e124e7abfc8250499c4fc00f39acbf",
+    "targetBranch": "main",
+    "outcome": "An adopter can replace the hub's inherited required-checks declaration with the one its own workflows publish, instead of discovering the falsehood as a GOV-SYNC-001 during its next upgrade and correcting it by hand.",
+    "nonGoals": [
+      "Rewriting any adopter's declaration from this hub; the file is target-owned and the tool reports by default.",
+      "Guessing the context names of jobs that call a reusable workflow; those are reported for confirmation and --write refuses such a repository.",
+      "Making governance / enforce a required check in any ruleset."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Derive the declaration from the job names the repository's own pull-request workflows publish, which is the only primary source. Report by default and write only when every name is derivable, because a reusable-workflow caller's context name is completed by a workflow in another repository.",
+      "components": [
+        {
+          "name": "required-checks-generator",
+          "paths": [
+            "scripts/generate_required_checks.py",
+            "tests/required-checks.test.sh"
+          ]
+        },
+        {
+          "name": "distribution",
+          "paths": [
+            "governance/package-manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "scripts/generate_required_checks.py is a new tool distributed to adopters"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket branch; no adopter declaration is touched by this change."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-1",
+        "commands": [
+          "bash tests/required-checks.test.sh"
+        ],
+        "evidence": "Trigger keys are not mistaken for jobs, callers are reported rather than guessed, --write refuses a repository with a caller, and a circular exclusion stays excluded."
+      },
+      {
+        "criterion": "AC-2",
+        "commands": [
+          "python3 scripts/generate_required_checks.py ."
+        ],
+        "evidence": "The hub agrees with its own declaration, including its circular exclusion."
+      },
+      {
+        "criterion": "AC-3",
+        "commands": [
+          "bash tests/adoption-lock.test.sh"
+        ],
+        "evidence": "The new package source adopts and locks cleanly."
+      },
+      {
+        "criterion": "AC-4",
+        "commands": [
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "GOV-PASS on the ticket branch."
+      }
+    ]
+  }
+}
