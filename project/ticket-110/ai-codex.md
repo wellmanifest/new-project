@@ -33,9 +33,16 @@ wykryła historyczne dirty worktree, których nie wolno automatycznie usunąć.
 
 ## Blockers
 
-- Brak blockerów dla separacji payloadu.
-- Kompozycja worktree guarda pozostaje jawnie zależnym następnym ticketem.
+- Brak blockerów dla zamknięcia zintegrowanej separacji payloadu.
+- Kompozycja worktree guarda pozostaje jawnie zależnym następnym ticketem;
+  wydanie standardu przed jego integracją jest niedozwolone przez non-goal.
 - New authority is still required for destructive action, secret access, new
   external coordination or material objective expansion. Protected delivery
   may be invoked without another prompt when publication is in scope; its
   exact-head trusted approval remains independent evidence.
+
+## Publication
+
+- Validator run `32606544025` zatwierdził dokładny head `0539842` review
+  `5001307397`, po czym Validator App scalił PR #182 jako `a567306`.
+- Closure zmienia wyłącznie governance terminalne na zintegrowanym `main`.

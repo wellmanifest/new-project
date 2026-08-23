@@ -1,5 +1,11 @@
 # Ticket Changelog (ticket-110)
 
+## [0.3.0] - 2026-08-23
+
+- Recorded exact-head Validator approval, merge and the dependent runtime
+  composition boundary from integrated `main`.
+- Closed the ticket as `DONE / DONE` with governance-only evidence.
+
 ## [0.2.0] - 2026-08-23
 
 - Added a dedicated managed pre-commit payload with unchanged lifecycle logic.
