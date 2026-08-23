@@ -4,9 +4,9 @@
   "summary": "Fix Windows pre-commit executable check and publish 0.18.6",
   "workstream": "governance",
   "classification": {
-    "kind": "DEFECT",
+    "kind": "BUG",
     "priority": "P1",
-    "origin": "health"
+    "origin": "regression"
   },
   "allowedPaths": [
     "project/ticket-115/**",
@@ -16,7 +16,9 @@
     "VERSION",
     "governance/manifest.hub.json",
     "governance/manifest.default.json",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -36,9 +38,9 @@
     "complexity": "S",
     "estimatedMinutes": 15,
     "budgets": {
-      "maxImplementationFiles": 5,
-      "maxAffectedComponents": 2,
-      "maxPublicInterfaceChanges": 1,
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
@@ -58,6 +60,13 @@
             "governance/manifest.hub.json",
             "governance/manifest.default.json",
             "CHANGELOG.md"
+          ]
+        },
+        {
+          "name": "release-tests",
+          "paths": [
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh"
           ]
         }
       ],
