@@ -1,0 +1,4 @@
+2026-08-23 parser_defect=on_keys_read_as_jobs action=restrict_to_jobs_section
+2026-08-23 parser_defect=reusable_caller_name_guessed action=report_not_guess
+2026-08-23 crosscheck source=validator_registry agree=21 differ=3 of=24
+2026-08-23 fleet declaration_truthful=1 of 25 repo=twin-lifecycle

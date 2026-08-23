@@ -26,7 +26,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "638d0ef030e3fbaa9d132f99e6ee9affe9d53f12",
+    "acceptedBaseSha": "2ee3a1d4e1e124e7abfc8250499c4fc00f39acbf",
     "targetBranch": "main",
     "outcome": "An adopter can replace the hub's inherited required-checks declaration with the one its own workflows publish, instead of discovering the falsehood as a GOV-SYNC-001 during its next upgrade and correcting it by hand.",
     "nonGoals": [

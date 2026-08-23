@@ -524,7 +524,8 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
   - [x] Źródło standardu zmergowane jako PR `#178` po exact-head approval
         `5001242554`; merge `5aefa91`.
   - [ ] Wymaganie `governance / enforce` w rulesetach adopterów — decyzja poza repozytorium.
-  - [ ] `required-checks.json` generowany per repozytorium zamiast kopii huba (blokuje krok required-checks w jobie).
+  - [x] `required-checks.json` generowany per repozytorium zamiast kopii huba (ticket-112): `scripts/generate_required_checks.py` wyprowadza deklarację z workflow repozytorium i jest rozsyłany adopterom.
+  - [ ] Rollout poprawnej deklaracji do 24 pozostałych adopterów — wymaga ticketu w każdym z nich.
 
 - [x] **Publikacja adoptowalnego wydania 0.18.5** (ticket-109):
   - [x] Zaktualizować mechaniczne nośniki wersji i aktywne asercje.
