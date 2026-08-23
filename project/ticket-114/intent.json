@@ -1,0 +1,101 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-114",
+  "summary": "Report fleet drift from the adoption locks",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-114/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    "scripts/fleet_report.py",
+    "tests/fleet-report.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-112"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7416458e4ba9689df794bd13c87f8f4ea4cbec67",
+    "targetBranch": "main",
+    "outcome": "One command answers how far each adopter has drifted from the published standard, which of them actually run the gate, and which follow the standard on paper without pinning anything. Every fact already exists in the workspace and nothing collected it.",
+    "nonGoals": [
+      "Changing any adopter; the report is read-only.",
+      "Running in CI on a hosted runner, which has no access to the sibling repositories.",
+      "Replacing check_required_checks.py, which validates one repository against its own workflows."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Read each adopter's own adoption lock, managed digests, workflows and declaration, and compare the adopted version against the hub's published tags. Classify three states rather than two, because 'follows the standard without an adoption lock' looks compliant and is the state worth naming.",
+      "components": [
+        {
+          "name": "fleet-report",
+          "paths": [
+            "scripts/fleet_report.py"
+          ]
+        },
+        {
+          "name": "fleet-report-tests",
+          "paths": [
+            "tests/fleet-report.test.sh",
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "scripts/fleet_report.py is a new workspace-level read-only tool",
+        "ci.yml runs the new suite, as its own wiring assertion requires"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket branch; the tool writes nothing."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-1",
+        "commands": [
+          "bash tests/fleet-report.test.sh"
+        ],
+        "evidence": "A synthetic workspace proves releases-behind, digest drift, the claimed-but-unpinned state and the threshold gate."
+      },
+      {
+        "criterion": "AC-2",
+        "commands": [
+          "python3 scripts/check_required_checks.py"
+        ],
+        "evidence": "The new CI step publishes no new check name, so the declaration stays true."
+      },
+      {
+        "criterion": "AC-3",
+        "commands": [
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "GOV-PASS on the ticket branch."
+      }
+    ]
+  }
+}
