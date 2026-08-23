@@ -538,3 +538,7 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
 - [x] **Kompozycja payloadu z worktree guardem** (ticket-111):
   - [x] Host contract deklaruje i bootstrapuje pełny runtime hooka.
   - [x] Każdy dozwolony sukces lifecycle wymaga pozytywnego werdyktu guarda.
+
+- [x] **Raport driftu floty** (ticket-114): `scripts/fleet_report.py` zbiera z locków adopterów przyjętą wersję, dystans do wydanego standardu, drift digestów, obecność bramy w CI i prawdziwość deklaracji required-checks.
+  - [ ] Rollout: 24 adopterów pozostaje za standardem; każde podniesienie wymaga ticketu w swoim repozytorium.
+
