@@ -4,10 +4,10 @@
 - **Role**: Standard Maintainer
 - **Authorization**: `SESSION_EXECUTION_AUTHORIZATION`
 
-## Plan
+## Outcome
 
-1. Fix `scripts/agent_host_check.py` line 100 with `os.name != 'nt'`.
-2. Bump `VERSION`, `governance/manifest.hub.json`, `governance/manifest.default.json` to `0.18.6`.
-3. Update `CHANGELOG.md` and `TODO.md`.
-4. Run full test suite.
-5. Create PR, wait for CI, and merge.
+- Fixed `scripts/agent_host_check.py` line 100 with `os.name != 'nt'`.
+- Bumped `VERSION`, `governance/manifest.hub.json`, `governance/manifest.default.json` to `0.18.6`.
+- Updated `tests/adoption-lock.test.sh` and `tests/governance-validator.test.sh`.
+- Approved by Validator agent via review 5002443390 and merged to main as 0139709.
+- Published tag `v0.18.6` and GitHub release.
