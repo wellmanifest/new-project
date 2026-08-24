@@ -1,0 +1,74 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-116",
+  "summary": "Document GOV-INTENT runbook in diagnostics",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "error/GOV-INTENT.md",
+    "governance/diagnostics.json",
+    "project/ticket-116/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "38e1422855549ec535b1c48b9a629b4c6d487abb",
+    "targetBranch": "main",
+    "outcome": "Document GOV-INTENT runbook in error/GOV-INTENT.md and reference in governance/diagnostics.json.",
+    "nonGoals": [
+      "No governance checker logic modifications",
+      "No schema breaking changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add error/GOV-INTENT.md following standard runbook schema and link from governance/diagnostics.json.",
+      "components": [
+        {
+          "name": "governance-runbook",
+          "paths": [
+            "error/GOV-INTENT.md",
+            "governance/diagnostics.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit adding error/GOV-INTENT.md and updating diagnostics.json."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-116/ai-antigravity-logs.txt"
+      }
+    ]
+  }
+}

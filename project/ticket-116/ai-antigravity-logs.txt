@@ -1,0 +1,1 @@
+2026-08-24T11:27:00Z GOVERNANCE: ./project/governance-check.sh passed with 0 errors and 0 warnings.
