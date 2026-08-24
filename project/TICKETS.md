@@ -122,6 +122,7 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-112** | [`README.md`](./ticket-112/README.md) | [`preprompt.md`](./ticket-112/preprompt.md) | - |  [`ai-claude.md`](./ticket-112/ai-claude.md) |  [`ai-claude-logs.txt`](./ticket-112/ai-claude-logs.txt) | [`changelog.md`](./ticket-112/changelog.md) |
 | **ticket-113** | [`README.md`](./ticket-113/README.md) | [`preprompt.md`](./ticket-113/preprompt.md) | - |  [`ai-claude.md`](./ticket-113/ai-claude.md) |  [`ai-claude-logs.txt`](./ticket-113/ai-claude-logs.txt) | [`changelog.md`](./ticket-113/changelog.md) |
 | **ticket-114** | [`README.md`](./ticket-114/README.md) | [`preprompt.md`](./ticket-114/preprompt.md) | - |  [`ai-claude.md`](./ticket-114/ai-claude.md) |  [`ai-claude-logs.txt`](./ticket-114/ai-claude-logs.txt) | [`changelog.md`](./ticket-114/changelog.md) |
+| **ticket-115** | [`README.md`](./ticket-115/README.md) | [`preprompt.md`](./ticket-115/preprompt.md) | - |  [`ai-gemini.md`](./ticket-115/ai-gemini.md) |  [`ai-gemini-logs.txt`](./ticket-115/ai-gemini-logs.txt) | [`changelog.md`](./ticket-115/changelog.md) |
 <!-- AUTO:TICKET_INDEX:END -->
 
 ---
