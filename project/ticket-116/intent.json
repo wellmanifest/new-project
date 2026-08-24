@@ -34,7 +34,7 @@
     "complexity": "S",
     "estimatedMinutes": 15,
     "budgets": {
-      "maxImplementationFiles": 2,
+      "maxImplementationFiles": 3,
       "maxAffectedComponents": 1,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
@@ -47,7 +47,8 @@
           "name": "governance-runbook",
           "paths": [
             "error/GOV-INTENT.md",
-            "governance/diagnostics.json"
+            "governance/diagnostics.json",
+            "governance/package-manifest.json"
           ]
         }
       ],
