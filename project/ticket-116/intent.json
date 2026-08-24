@@ -11,6 +11,7 @@
   "allowedPaths": [
     "error/GOV-INTENT.md",
     "governance/diagnostics.json",
+    "governance/package-manifest.json",
     "project/ticket-116/**",
     "TODO.md",
     "project/TICKETS.md"

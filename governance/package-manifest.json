@@ -16,6 +16,7 @@
     { "source": "error/GOV-TICKET-ALLOCATION.md", "target": ".governance/error/GOV-TICKET-ALLOCATION.md", "strategy": "managed", "executable": false },
     { "source": "error/GOV-WORKSPACE-LIFECYCLE.md", "target": ".governance/error/GOV-WORKSPACE-LIFECYCLE.md", "strategy": "managed", "executable": false },
     { "source": "error/GOV-WORKTREE-OVERLAP.md", "target": ".governance/error/GOV-WORKTREE-OVERLAP.md", "strategy": "managed", "executable": false },
+    { "source": "error/GOV-INTENT.md", "target": ".governance/error/GOV-INTENT.md", "strategy": "managed", "executable": false },
     { "source": "scripts/worktree_overlap_check.py", "target": ".governance/worktree_overlap_check.py", "strategy": "managed", "executable": true },
     { "source": "scripts/worktree_guard.py", "target": ".governance/worktree_guard.py", "strategy": "managed", "executable": true },
     { "source": "worktree-guard.yaml", "target": "worktree-guard.yaml", "strategy": "managed", "executable": false },
