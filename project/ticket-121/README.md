@@ -2,8 +2,8 @@
 
 - **ID**: ticket-121
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-25
 
 ## Cel i Zakres
@@ -24,6 +24,14 @@ przekazujac jawna baze oraz aktualny zbior zmienionych plikow.
   zarzadzany gate, nie uruchamia pytest i propaguje pelne stdout/stderr.
 - Bledna baza w lokalnym worktree. Mitygacja: jawny override srodowiskowy,
   GitHub base ref, merge-base `origin/main` oraz staged/working diff.
+
+## Publication evidence
+
+- Release PR: `wellmanifest/new-project#207`
+- Frozen Validator-approved head: `1e4f0aa00142f3d33d50914ef71e496a374eca4d`
+- Trusted merge: `d958cd2e06f61551b1ab469ba66c8302cdd02af7`
+- Validator run: `subactor/validator-agent#32887449868`
+- Direct PR latency: `104s`, SLO `300s` met.
 
 ## Uczestnicy
 

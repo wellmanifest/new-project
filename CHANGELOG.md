@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.18.9] - 2026-08-25
+
+### Pytest governance lifecycle plugin
+
+- Ship the managed `wellmanifest_governance` pytest plugin referenced by
+  Python adopter configurations.
+- Run the deterministic repository governance gate once before pytest
+  collection with explicit base and changed-path evidence.
+- Fail closed on invalid governance results without adding a runtime
+  dependency, with Linux and Windows CI coverage.
+
 ## [0.18.8] - 2026-08-25
 
 ### Manifest-declared terminal closure enforcement
