@@ -20,6 +20,10 @@ oddzielnym nośnikiem wydania i nie rozszerza funkcjonalności standardu.
 4. Wypchnąć PR, zamrozić SHA i przekazać go niezależnemu validatorowi.
 5. Po scaleniu utworzyć tag i GitHub Release `v0.18.9`.
 
+Test adopcji wykazał, że wersja jest również kontraktem manifestów i fixture'ów.
+Zakres release obejmuje więc dwa manifesty standardu oraz ich testy spójności;
+nie zmienia to zachowania runtime.
+
 ## Actual changes
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`

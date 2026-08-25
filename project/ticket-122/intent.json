@@ -12,7 +12,11 @@
     "project/ticket-122/**",
     "TODO.md",
     "project/TICKETS.md",
-    "VERSION"
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
