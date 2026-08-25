@@ -26,6 +26,11 @@ downstream Goal upgrade can bind them.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- Advanced `VERSION`, hub/default manifests and release assertions to 0.18.10.
+- Added one changelog section covering all integrated behavior since 0.18.9:
+  change leases, normative fencing rules and managed target restoration.
+- Ran release-carrier assertions, focused adoption/governance suites and every
+  Linux CI shell suite successfully.
 
 ## Blockers
 

@@ -17,9 +17,10 @@ HOME `wellmanifest`, SHAPE `domain_pack`, ADOPT `wellmanifest/new-project`.
 
 ## Acceptance criteria
 
-- [ ] AC-01: Canonical release carriers and test assertions move from 0.18.9
+- [x] AC-01: Canonical release carriers and test assertions move from 0.18.9
   to 0.18.10 with a complete changelog entry for integrated tickets 123-125.
-- [ ] AC-02: Every Linux test suite and exact-base governance pass.
+- [ ] AC-02: Every Linux test suite passes; exact-base governance is pending
+  the committed release head.
 - [ ] AC-03: Hosted Linux/Windows checks and independent Validator approve the
   same frozen PR head, which Validator merges.
 - [ ] AC-04: Annotated tag `v0.18.10` and final GitHub Release point to that

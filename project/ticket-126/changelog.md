@@ -1,5 +1,12 @@
 # Ticket Changelog (ticket-126)
 
+## [0.2.0] - 2026-08-25
+
+- Advance the six canonical release carriers and assertions to 0.18.10.
+- Describe integrated change-lease, normative fencing and managed restoration
+  behavior in the public changelog.
+- Record focused release checks and all Linux CI suites passing.
+
 ## [0.1.0] - 2026-08-25
 
 - Initial governance scaffold created.
