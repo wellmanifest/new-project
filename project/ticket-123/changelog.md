@@ -6,3 +6,5 @@
 - No human participant identity or content was generated.
 - Recorded the bounded change-lease domain-pack scope and exact integrated
   base before implementation.
+- Replaced a prose-only host-instruction edit with direct integration into the
+  deterministic governance checker without increasing the file budget.

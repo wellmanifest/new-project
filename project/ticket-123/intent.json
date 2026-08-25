@@ -18,9 +18,9 @@
     "tests/change-lease.test.sh",
     "governance/package-manifest.json",
     "error/GOV-CHANGE-LEASE.md",
+    "scripts/governance_check.py",
     "POLICY.md",
     "CONTRIBUTING.md",
-    "AGENTS.md",
     "docs/GOVERNANCE_ENFORCEMENT.md"
   ],
   "forbiddenPaths": [
@@ -58,9 +58,9 @@
       "decision": "Define one closed lease/transition/receipt contract with optimistic concurrency and fencing; keep the effectful runtime in adopters and make the standard checker fail closed.",
       "components": [
         {"name": "change-lease-contract", "paths": ["subprojects/change-lease/**"]},
-        {"name": "change-lease-checker", "paths": ["scripts/change_lease_check.py", "tests/change-lease.test.sh"]},
+        {"name": "change-lease-checker", "paths": ["scripts/change_lease_check.py", "scripts/governance_check.py", "tests/change-lease.test.sh"]},
         {"name": "adoption-payload", "paths": ["governance/package-manifest.json", "error/GOV-CHANGE-LEASE.md"]},
-        {"name": "normative-policy", "paths": ["POLICY.md", "CONTRIBUTING.md", "AGENTS.md", "docs/GOVERNANCE_ENFORCEMENT.md"]}
+        {"name": "normative-policy", "paths": ["POLICY.md", "CONTRIBUTING.md", "docs/GOVERNANCE_ENFORCEMENT.md"]}
       ],
       "responsibilityChanges": false,
       "interfaceChanges": ["wellmanifest.change-lease/v1", "change_lease_check.py validate/transition/trace"],

@@ -18,7 +18,8 @@ kontroler bez wymyślania własnej semantyki CAS, freeze i supersede.
 1. Zdefiniować zamknięty kontrakt lease, transition request i receipt.
 2. Dodać checker stanu oraz śladów przejść z kodem `GOV-CHANGE-LEASE-001`.
 3. Udokumentować reguły single-writer, publication freeze, supersede i cleanup.
-4. Rozsyłać schema/checker/runbook przez manifest paczki do adopterów.
+4. Wpiąć checker w kanoniczny governance gate i rozsyłać
+   schema/checker/runbook przez manifest paczki do adopterów.
 5. Przetestować happy path, wyścig dwóch agentów, stale token, freeze oraz
    terminalne zamknięcie; uruchomić pełną governance i protected delivery.
 
