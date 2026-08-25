@@ -18,6 +18,7 @@
     "tests/change-lease.test.sh",
     "governance/package-manifest.json",
     "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
     "error/GOV-CHANGE-LEASE.md",
     "scripts/governance_check.py"
   ],
@@ -46,7 +47,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 8,
+      "maxImplementationFiles": 9,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
@@ -57,7 +58,7 @@
       "components": [
         {"name": "change-lease-contract", "paths": ["subprojects/change-lease/**"]},
         {"name": "change-lease-checker", "paths": ["scripts/change_lease_check.py", "scripts/governance_check.py", "tests/change-lease.test.sh"]},
-        {"name": "adoption-payload", "paths": ["governance/package-manifest.json", "governance/diagnostics.json", "error/GOV-CHANGE-LEASE.md"]}
+        {"name": "adoption-payload", "paths": ["governance/package-manifest.json", "governance/diagnostics.json", "governance/rule-enforcement.json", "error/GOV-CHANGE-LEASE.md"]}
       ],
       "responsibilityChanges": false,
       "interfaceChanges": ["wellmanifest.change-lease/v1", "change_lease_check.py validate/transition/trace"],
