@@ -588,6 +588,7 @@ def overlap_findings(
     checkouts: list[Checkout],
     ignore: tuple[str, ...] = DEFAULT_IGNORE,
     only_identity: str | None = None,
+    focus_checkout: Path | None = None,
 ) -> list[Finding]:
     findings: list[Finding] = []
     groups: dict[str, list[Checkout]] = {}
@@ -609,6 +610,11 @@ def overlap_findings(
                 continue
             for second in ordered[index + 1 :]:
                 if not second.pending:
+                    continue
+                if focus_checkout is not None and focus_checkout not in {
+                    first.path.resolve(),
+                    second.path.resolve(),
+                }:
                     continue
                 shared = list(contested_paths(first, second, ignore))
                 if shared:
@@ -737,6 +743,15 @@ def main(argv: list[str] | None = None) -> int:
             "Use for a repository-level gate; omit for a workspace scan."
         ),
     )
+    parser.add_argument(
+        "--focus-checkout",
+        type=Path,
+        default=None,
+        help=(
+            "Report only conflicts involving this checkout. Use for a local "
+            "commit gate; omit for a repository-wide or workspace audit."
+        ),
+    )
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument(
         "--ignore",
@@ -751,8 +766,13 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.identity_of is not None:
             only_identity = repository_identity(args.identity_of.expanduser().resolve())
+        focus_checkout = (
+            args.focus_checkout.expanduser().resolve()
+            if args.focus_checkout is not None
+            else None
+        )
         checkouts = discover_checkouts(args.workspace_root.expanduser().resolve(), ignore)
-        findings = overlap_findings(checkouts, ignore, only_identity)
+        findings = overlap_findings(checkouts, ignore, only_identity, focus_checkout)
     except AuditError as error:
         findings = [
             Finding(
