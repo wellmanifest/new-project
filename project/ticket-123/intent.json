@@ -43,7 +43,7 @@
       "Do not clean existing adopter branches or worktrees",
       "Do not release a new immutable version in this implementation ticket"
     ],
-    "complexity": "M",
+    "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
       "maxImplementationFiles": 8,
