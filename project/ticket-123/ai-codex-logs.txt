@@ -13,3 +13,7 @@
   All test suites passed.
   ./project/governance-check.sh --actor agent --base b910667c8e0d74c31af57404e222b047cbef5ad7
   GOV-PASS: passed (0 errors, 0 warnings)
+2026-08-25T22:35:44+02:00 TERMINAL MERGE RECEIPT
+  PR wellmanifest/new-project#210 approved at exact head
+  33f61edee04a7a67c468cc9fe32131b0f0201fb1 by validator run 32896094347.
+  Merge commit ccee6581a7c65a8d83eec2ffb73daa676d2abe3b observed on origin/main.
