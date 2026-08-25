@@ -2,8 +2,8 @@
 
 - **ID**: ticket-126
 - **Owner**: agent:codex under SESSION_EXECUTION_AUTHORIZATION
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-25
 
 ## Goal and scope
@@ -20,9 +20,9 @@ HOME `wellmanifest`, SHAPE `domain_pack`, ADOPT `wellmanifest/new-project`.
 - [x] AC-01: Canonical release carriers and test assertions move from 0.18.9
   to 0.18.10 with a complete changelog entry for integrated tickets 123-125.
 - [x] AC-02: Every Linux test suite and exact-base governance pass.
-- [ ] AC-03: Hosted Linux/Windows checks and independent Validator approve the
+- [x] AC-03: Hosted Linux/Windows checks and independent Validator approve the
   same frozen PR head, which Validator merges.
-- [ ] AC-04: Annotated tag `v0.18.10` and final GitHub Release point to that
+- [x] AC-04: Annotated tag `v0.18.10` and final GitHub Release point to that
   trusted merge commit.
 
 ## Risks and notes
@@ -31,6 +31,18 @@ HOME `wellmanifest`, SHAPE `domain_pack`, ADOPT `wellmanifest/new-project`.
   tickets 123-125.
 - Downstream adoption and runtime controller integration remain target-owned
   work in Subactor Orchestrator.
+
+## Publication evidence
+
+- Release PR: `wellmanifest/new-project#216`
+- Frozen Validator-approved head: `26eca2dc6175281efd05de30f596091282343f2f`
+- Validator run: `subactor/validator-agent#32903336242`
+- Trusted merge: `4e0b7d6d888f1b4771781d25fa977f15725bcce5`
+- Annotated tag: `v0.18.10` (peels to the trusted merge)
+- GitHub Release: `https://github.com/wellmanifest/new-project/releases/tag/v0.18.10`
+- Published: `2026-08-25T21:54:57Z`
+- Closure delivery mode: governed `pull-request`; registry publication is
+  disabled.
 
 ## Uczestnicy
 
