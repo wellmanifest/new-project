@@ -3,7 +3,7 @@
 - **ID**: ticket-124
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-25
 
 ## Cel i Zakres
@@ -13,11 +13,11 @@ exact-head publication freeze oraz merge receipt przed close/GC. Audyt
 enforcement ma uwzględniać kody emitowane przez companion checker.
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [ ] AC-01: `POLICY.md` i `CONTRIBUTING.md` zawierają siedem zamkniętych reguł
+- [x] AC-01: `POLICY.md` i `CONTRIBUTING.md` zawierają siedem zamkniętych reguł
       `P-LEASE-*` i `C-LEASE-*` bez rozszerzania authority runtime.
-- [ ] AC-02: Wszystkie reguły mapują się deterministycznie do kodów
+- [x] AC-02: Wszystkie reguły mapują się deterministycznie do kodów
       `GOV-CHANGE-LEASE-*`, a audyt raportuje 0 unmapped i 0 unclaimed.
-- [ ] AC-03: Rule-enforcement tests i governance hub przechodzą na dokładnej
+- [x] AC-03: Rule-enforcement tests i governance hub przechodzą na dokładnej
       bazie `67a3421bc390c4285a094a631e7a7b7e8180720e`.
 
 ## Ryzyka i Uwagi

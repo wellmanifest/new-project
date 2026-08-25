@@ -1,0 +1,9 @@
+2026-08-25T22:42:00+02:00 AC-01 PASS
+  Policy DSL parsed P-LEASE-001..004 and C-LEASE-001..003.
+2026-08-25T22:42:00+02:00 AC-02 PASS
+  python3 scripts/audit_rule_enforcement.py --root . --require-complete
+  rule-enforcement: 185 rules, 68 codes, 0 unmapped, 0 unclaimed.
+2026-08-25T22:42:00+02:00 AC-03 PASS
+  bash tests/rule-enforcement.test.sh
+  rule enforcement traceability: PASS
+  hub governance: GOV-PASS (0 errors, 0 warnings)

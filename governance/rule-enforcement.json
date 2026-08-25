@@ -2,6 +2,34 @@
   "schema": "new-project.rule-enforcement/v1",
   "note": "Maps a normative RULE to the deterministic GOV-* codes that enforce it. Both sides are derived by scripts/audit_rule_enforcement.py: rules from POLICY.md and CONTRIBUTING.md, codes from the deterministic governance, branch-lifecycle and workspace-lifecycle validators. Only this association is written by hand. A rule that no mechanism can enforce is declared enforcement: manual with a reason, so the gap is visible rather than absent. Ticket-034 filled the initial complete map; manual entries are candidates for future GOV-* codes.",
   "rules": {
+    "C-LEASE-001": {
+      "codes": ["GOV-CHANGE-LEASE-001", "GOV-CHANGE-LEASE-002"],
+      "enforcement": "deterministic"
+    },
+    "C-LEASE-002": {
+      "codes": ["GOV-CHANGE-LEASE-002", "GOV-CHANGE-LEASE-003"],
+      "enforcement": "deterministic"
+    },
+    "C-LEASE-003": {
+      "codes": ["GOV-CHANGE-LEASE-002", "GOV-CHANGE-LEASE-003", "GOV-CHANGE-LEASE-004"],
+      "enforcement": "deterministic"
+    },
+    "P-LEASE-001": {
+      "codes": ["GOV-CHANGE-LEASE-001", "GOV-CHANGE-LEASE-002"],
+      "enforcement": "deterministic"
+    },
+    "P-LEASE-002": {
+      "codes": ["GOV-CHANGE-LEASE-002"],
+      "enforcement": "deterministic"
+    },
+    "P-LEASE-003": {
+      "codes": ["GOV-CHANGE-LEASE-003"],
+      "enforcement": "deterministic"
+    },
+    "P-LEASE-004": {
+      "codes": ["GOV-CHANGE-LEASE-003", "GOV-CHANGE-LEASE-004"],
+      "enforcement": "deterministic"
+    },
     "C-ANALYSIS-001": {
       "codes": [],
       "enforcement": "manual",
