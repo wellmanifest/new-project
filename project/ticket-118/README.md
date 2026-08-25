@@ -14,10 +14,10 @@ copying managed governance files from an unpublished commit.
 
 ## Acceptance criteria
 
-- [ ] AC-01: The focused worktree overlap regression passes.
-- [ ] AC-02: The immutable adoption lock suite passes for version `0.18.7`.
-- [ ] AC-03: Exact-head governance and the governance validator pass.
-- [ ] AC-04: An annotated `v0.18.7` tag and final GitHub Release point at the trusted merged release commit.
+- [x] AC-01: The focused worktree overlap regression passes.
+- [x] AC-02: The immutable adoption lock suite passes for version `0.18.7`.
+- [x] AC-03: Exact-head governance and the governance validator pass.
+- [x] AC-04: An annotated `v0.18.7` tag and final GitHub Release point at the trusted merged release commit.
 
 ## Risks and notes
 
