@@ -12,7 +12,8 @@ katalogu niezauważony.
 
 `001`–`003` pojawiają się przy commicie: branch nie jest związany z ticketem
 `IN_PROGRESS`, brakuje `project/ticket-NNN/README.md` w stagowanej migawce albo
-governance-only closure narusza swoje granice.
+governance-only closure w statusie zadeklarowanym przez
+`ticket.closedStatuses` narusza swoje granice.
 
 `004`–`006` pojawiają się w bramie: brakuje pliku instrukcji deklarowanego przez
 `agent-hosts.json`, hook nie istnieje lub nie jest wykonywalny, albo
@@ -36,7 +37,9 @@ rzeczywistości sprawdzany.
    `./scripts/install-agent-hosts.sh --source <hub> --target <repo>`, albo
    zaadoptuj bieżącą wersję standardu (`scripts/create_adoption_lock.py`).
 3. Dla `001`–`003` zaalokuj ticket przez `./project/new-ticket.sh`, przełącz się
-   na branch zawierający `ticket-NNN` i ustaw status `IN_PROGRESS`.
+   na branch zawierający `ticket-NNN` i ustaw status `IN_PROGRESS`. Przy
+   terminalnym zamknięciu użyj statusu zadeklarowanego w
+   `ticket.closedStatuses` oraz staguj wyłącznie ograniczone dowody governance.
 4. Potwierdź stan: `python3 scripts/agent_host_check.py --root .`.
 
 ## Verification

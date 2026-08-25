@@ -1,0 +1,125 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-119",
+  "summary": "Honor manifest-declared terminal closure statuses",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    ".githooks/pre-commit",
+    "template/files/pre-commit.template.sh",
+    "tests/agent-hosts.test.sh",
+    "governance/diagnostics.json",
+    "error/GOV-AGENT-HOST.md",
+    "project/ticket-119/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "bash",
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "adopt": [
+      "wellmanifest/new-project"
+    ]
+  },
+  "delivery": {
+    "acceptedBaseSha": "4246a94ab3fbbd7fd7ea782bf3c16c0d0e302dff",
+    "targetBranch": "main",
+    "outcome": "Every terminal status already declared by the new-project manifests is enforceable as the same bounded governance-only closure in the hub and in managed adopters.",
+    "nonGoals": [
+      "Do not add or rename lifecycle statuses",
+      "Do not widen the closure path allowlist",
+      "Do not modify governance_check.py"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the existing fail-closed hook structure and recognize DONE or CANCELLED at its terminal branch. Couple the managed behavior to the manifest vocabulary through a regression that exercises both declared closed statuses.",
+      "components": [
+        {
+          "name": "hub-lifecycle-hook",
+          "paths": [
+            ".githooks/pre-commit"
+          ]
+        },
+        {
+          "name": "managed-adopter-hook",
+          "paths": [
+            "template/files/pre-commit.template.sh",
+            "tests/agent-hosts.test.sh"
+          ]
+        },
+        {
+          "name": "host-diagnostics",
+          "paths": [
+            "governance/diagnostics.json",
+            "error/GOV-AGENT-HOST.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "CANCELLED becomes an enforceable terminal closure exactly as already declared by the public governance manifest."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the five implementation files; this restores the previous DONE-only behavior without migrating persisted data."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "project/ticket-119/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "project/ticket-119/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "project/ticket-119/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "bash tests/governance-validator.test.sh",
+          "python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base 4246a94ab3fbbd7fd7ea782bf3c16c0d0e302dff --head HEAD --actor agent --format text"
+        ],
+        "evidence": "project/ticket-119/ai-codex-logs.txt"
+      }
+    ]
+  }
+}

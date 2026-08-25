@@ -17,6 +17,30 @@ grep -Fq 'new-ticket.sh' "$root/GEMINI.md" || fail "GEMINI.md must require new-t
 grep -Fq 'new-ticket.sh' "$root/CLAUDE.md" || fail "CLAUDE.md must require new-ticket.sh"
 grep -Fq 'alwaysApply: true' "$root/.cursor/rules/new-project-standard.mdc" || fail "Cursor rule must alwaysApply"
 
+mapfile -t closed_statuses < <(python3 - "$root" <<'PY'
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+hub = json.loads((root / "governance/manifest.hub.json").read_text())
+default = json.loads((root / "governance/manifest.default.json").read_text())
+hub_statuses = hub["ticket"]["closedStatuses"]
+default_statuses = default["ticket"]["closedStatuses"]
+if hub_statuses != default_statuses:
+    raise SystemExit("hub and adopter manifests declare different closedStatuses")
+print("\n".join(hub_statuses))
+PY
+)
+[[ "${closed_statuses[*]}" == "DONE CANCELLED" ]] \
+  || fail "terminal hook regression must cover every declared closed status"
+for closed_status in "${closed_statuses[@]}"; do
+  grep -Fq "$closed_status" "$root/.githooks/pre-commit" \
+    || fail "hub hook must recognize declared terminal status $closed_status"
+  grep -Fq "$closed_status" "$root/template/files/pre-commit.template.sh" \
+    || fail "adopter hook must recognize declared terminal status $closed_status"
+done
+
 python3 - "$root" <<'PY'
 import json
 import pathlib
@@ -170,6 +194,32 @@ git -C "$tmp/adopter" reset -q --hard HEAD
 git -C "$tmp/adopter" rm -q TODO.md
 if git -C "$tmp/adopter" commit -qm "delete closure index"; then
   fail "DONE ticket must reject deletions"
+fi
+git -C "$tmp/adopter" reset -q --hard HEAD
+
+# CANCELLED is the second manifest-declared terminal status. It must receive
+# exactly the same bounded closure behavior as the DONE path above.
+git -C "$tmp/adopter" checkout -qb ticket/002-cancelled
+mkdir -p "$tmp/adopter/project/ticket-002"
+printf '%s\n' '# Ticket 002' '- **Status**: IN_PROGRESS' > \
+  "$tmp/adopter/project/ticket-002/README.md"
+git -C "$tmp/adopter" add project/ticket-002/README.md
+git -C "$tmp/adopter" commit -qm "open ticket-002" \
+  || fail "IN_PROGRESS ticket preceding cancellation must commit"
+[[ "$(cat "$tmp/adopter/.guard-invocations")" == "4" ]] \
+  || fail "second IN_PROGRESS success must invoke the guard"
+
+sed -i 's/IN_PROGRESS/CANCELLED/' "$tmp/adopter/project/ticket-002/README.md"
+git -C "$tmp/adopter" add project/ticket-002/README.md
+git -C "$tmp/adopter" commit -qm "cancel ticket-002" \
+  || fail "CANCELLED governance-only closure must commit"
+[[ "$(cat "$tmp/adopter/.guard-invocations")" == "5" ]] \
+  || fail "CANCELLED governance-only success must invoke the guard"
+
+echo "implementation after cancellation" >> "$tmp/adopter/README.md"
+git -C "$tmp/adopter" add README.md
+if git -C "$tmp/adopter" commit -qm "cancelled implementation"; then
+  fail "CANCELLED ticket must reject implementation"
 fi
 git -C "$tmp/adopter" reset -q --hard HEAD
 
