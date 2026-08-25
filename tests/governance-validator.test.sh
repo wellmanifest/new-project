@@ -2252,7 +2252,7 @@ python3 - "$change_lease_dir/lease.json" <<'PY'
 import json, sys
 p = sys.argv[1]
 d = json.load(open(p, encoding="utf-8"))
-d.update(phase="publication_frozen", leaseRevision=4, fencingToken=10, publicationFrozen=True, headSha="c" * 40)
+d.update({"phase": "publication_frozen", "leaseRevision": 4, "fencingToken": 10, "publicationFrozen": True, "headSha": "c" * 40})
 open(p, "w", encoding="utf-8").write(json.dumps(d))
 PY
 cat > "$change_lease_dir/stale.json" <<'JSON'
@@ -2269,7 +2269,7 @@ python3 - "$change_lease_dir/freeze-receipt.json" > "$change_lease_dir/trace.jso
 import json, sys
 r = json.load(open(sys.argv[1], encoding="utf-8"))
 print(json.dumps(r))
-r.update(requestId="request-dispatch", previousRevision=4, leaseRevision=5, previousFencingToken=10, fencingToken=11, action="dispatch-validation", phaseBefore="publication_frozen", phaseAfter="dispatching", receiptRef="receipt://change-lease/lease-1/request-dispatch")
+r.update({"requestId": "request-dispatch", "previousRevision": 4, "leaseRevision": 5, "previousFencingToken": 10, "fencingToken": 11, "action": "dispatch-validation", "phaseBefore": "publication_frozen", "phaseAfter": "dispatching", "receiptRef": "receipt://change-lease/lease-1/request-dispatch"})
 print(json.dumps(r))
 PY
 python3 "$change_lease_checker" trace "$change_lease_dir/trace.jsonl" | grep -q GOV-CHANGE-LEASE-PASS
