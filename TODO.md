@@ -554,3 +554,11 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
 
 - [x] **Raport driftu floty** (ticket-114): `scripts/fleet_report.py` zbiera z locków adopterów przyjętą wersję, dystans do wydanego standardu, drift digestów, obecność bramy w CI i prawdziwość deklaracji required-checks.
   - [ ] Rollout: 24 adopterów pozostaje za standardem; każde podniesienie wymaga ticketu w swoim repozytorium.
+
+## Multi-agent change lease (ticket-123)
+
+- [ ] Opublikować zamknięty kontrakt lease/transition/receipt z CAS i fencing.
+- [ ] Egzekwować publication freeze, stale-token rejection i terminalne supersede.
+- [ ] Dodać deterministyczne testy konkurencji oraz managed adoption payload.
+- [ ] Po integracji utworzyć osobny release ticket i osobne tickety runtime w
+      systemach adoptujących.

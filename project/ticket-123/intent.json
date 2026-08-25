@@ -1,0 +1,93 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-123",
+  "summary": "Standardize multi-agent change leases and publication fencing",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P0",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-123/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "subprojects/change-lease/README.md",
+    "subprojects/change-lease/change-lease.schema.json",
+    "scripts/change_lease_check.py",
+    "tests/governance-validator.test.sh",
+    "governance/package-manifest.json",
+    "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
+    "error/GOV-CHANGE-LEASE.md",
+    "scripts/governance_check.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python", "shell", "json-schema"],
+  "dependsOn": ["ticket-122"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "adopt": ["wellmanifest/new-project", "wellmanifest/poa", "wellmanifest/logs", "wellmanifest/dsl"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "b910667c8e0d74c31af57404e222b047cbef5ad7",
+    "targetBranch": "main",
+    "outcome": "Publish an adoptable multi-agent change-lease contract that deterministically fences repository and publication mutations.",
+    "nonGoals": [
+      "Do not implement or host the runtime controller in wellmanifest",
+      "Do not grant GitHub authority or distribute credentials",
+      "Do not clean existing adopter branches or worktrees",
+      "Do not release a new immutable version in this implementation ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Define one closed lease/transition/receipt contract with optimistic concurrency and fencing; keep the effectful runtime in adopters and make the standard checker fail closed.",
+      "components": [
+        {"name": "change-lease-contract", "paths": ["subprojects/change-lease/**"]},
+        {"name": "change-lease-checker", "paths": ["scripts/change_lease_check.py", "scripts/governance_check.py", "tests/governance-validator.test.sh"]},
+        {"name": "adoption-payload", "paths": ["governance/package-manifest.json", "governance/diagnostics.json", "governance/rule-enforcement.json", "error/GOV-CHANGE-LEASE.md"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["wellmanifest.change-lease/v1", "change_lease_check.py validate/transition/trace"],
+      "dataChanges": ["Adopters may persist closed lease, transition and receipt documents; no credentials or raw diffs are allowed."],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Remove the unversioned adopter rollout and retain previous new-project pins; existing Git and ticket lifecycle contracts remain valid."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/governance-validator.test.sh", "python3 scripts/change_lease_check.py --help"],
+        "evidence": "project/ticket-123/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "project/ticket-123/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["./project/governance-check.sh --actor agent --base b910667c8e0d74c31af57404e222b047cbef5ad7"],
+        "evidence": "project/ticket-123/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["./project/governance-check.sh --actor agent --base b910667c8e0d74c31af57404e222b047cbef5ad7", "for suite in tests/*.test.sh; do bash $suite; done"],
+        "evidence": "project/ticket-123/ai-codex-logs.txt"
+      }
+    ]
+  }
+}

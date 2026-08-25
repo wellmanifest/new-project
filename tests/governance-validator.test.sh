@@ -2235,4 +2235,49 @@ for mutation in schema-ref kind-order priority-order derivation rule-order \
   assert_classification_drift "$mutation"
 done
 
+# Multi-agent change-lease: accepted freeze, stale fencing, frozen-head
+# mutation and non-monotonic receipts are part of the mandatory CI suite.
+change_lease_dir="$fixture/change-lease"
+change_lease_checker="$repo_root/scripts/change_lease_check.py"
+mkdir -p "$change_lease_dir"
+cat > "$change_lease_dir/lease.json" <<'JSON'
+{"schema":"wellmanifest.change-lease/v1","leaseId":"lease-1","repositoryRef":"example/repo","targetBranch":"main","ticketId":"ticket-123","workstream":"governance","scopeHash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","branchRef":"ticket/123-change-lease","worktreeId":"wt-1","ownerActor":"coding-agent","ownerSession":"session-1","phase":"validating","leaseRevision":3,"fencingToken":9,"issuedAt":"2026-08-25T18:00:00Z","expiresAt":"2026-08-25T19:00:00Z","heartbeatAt":"2026-08-25T18:10:00Z","headSha":null,"pullRequest":14,"validatorRunId":null,"publicationFrozen":false,"planHash":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","previousReceiptRef":null,"eventSequence":3}
+JSON
+python3 "$change_lease_checker" validate "$change_lease_dir/lease.json" | grep -q GOV-CHANGE-LEASE-PASS
+cat > "$change_lease_dir/freeze.json" <<'JSON'
+{"schema":"wellmanifest.change-lease-transition/v1","requestId":"request-freeze","leaseId":"lease-1","action":"freeze-publication","expectedRevision":3,"expectedFencingToken":9,"expectedPhase":"validating","requestedBy":"coding-agent","idempotencyKey":"lease-1-freeze-3","targetHeadSha":"cccccccccccccccccccccccccccccccccccccccc","replacementReceiptRef":null,"authorityRef":"control://repository-change-controller","requestedAt":"2026-08-25T18:11:00Z"}
+JSON
+python3 "$change_lease_checker" transition --lease "$change_lease_dir/lease.json" --request "$change_lease_dir/freeze.json" > "$change_lease_dir/freeze-receipt.json"
+python3 - "$change_lease_dir/lease.json" <<'PY'
+import json, sys
+p = sys.argv[1]
+d = json.load(open(p, encoding="utf-8"))
+d.update({"phase": "publication_frozen", "leaseRevision": 4, "fencingToken": 10, "publicationFrozen": True, "headSha": "c" * 40})
+open(p, "w", encoding="utf-8").write(json.dumps(d))
+PY
+cat > "$change_lease_dir/stale.json" <<'JSON'
+{"schema":"wellmanifest.change-lease-transition/v1","requestId":"request-stale","leaseId":"lease-1","action":"dispatch-validation","expectedRevision":3,"expectedFencingToken":9,"expectedPhase":"publication_frozen","requestedBy":"validator-agent","idempotencyKey":"lease-1-dispatch-3","targetHeadSha":"cccccccccccccccccccccccccccccccccccccccc","replacementReceiptRef":null,"authorityRef":"control://repository-change-controller","requestedAt":"2026-08-25T18:12:00Z"}
+JSON
+if python3 "$change_lease_checker" transition --lease "$change_lease_dir/lease.json" --request "$change_lease_dir/stale.json" > "$change_lease_dir/stale-receipt.json"; then exit 1; fi
+grep -q GOV-CHANGE-LEASE-002 "$change_lease_dir/stale-receipt.json"
+cat > "$change_lease_dir/mutate.json" <<'JSON'
+{"schema":"wellmanifest.change-lease-transition/v1","requestId":"request-mutate","leaseId":"lease-1","action":"dispatch-validation","expectedRevision":4,"expectedFencingToken":10,"expectedPhase":"publication_frozen","requestedBy":"validator-agent","idempotencyKey":"lease-1-dispatch-4","targetHeadSha":"dddddddddddddddddddddddddddddddddddddddd","replacementReceiptRef":null,"authorityRef":"control://repository-change-controller","requestedAt":"2026-08-25T18:13:00Z"}
+JSON
+if python3 "$change_lease_checker" transition --lease "$change_lease_dir/lease.json" --request "$change_lease_dir/mutate.json" > "$change_lease_dir/mutate-receipt.json"; then exit 1; fi
+grep -q GOV-CHANGE-LEASE-003 "$change_lease_dir/mutate-receipt.json"
+python3 - "$change_lease_dir/freeze-receipt.json" > "$change_lease_dir/trace.jsonl" <<'PY'
+import json, sys
+r = json.load(open(sys.argv[1], encoding="utf-8"))
+print(json.dumps(r))
+r.update({"requestId": "request-dispatch", "previousRevision": 4, "leaseRevision": 5, "previousFencingToken": 10, "fencingToken": 11, "action": "dispatch-validation", "phaseBefore": "publication_frozen", "phaseAfter": "dispatching", "receiptRef": "receipt://change-lease/lease-1/request-dispatch"})
+print(json.dumps(r))
+PY
+python3 "$change_lease_checker" trace "$change_lease_dir/trace.jsonl" | grep -q GOV-CHANGE-LEASE-PASS
+python3 - "$change_lease_dir/freeze-receipt.json" >> "$change_lease_dir/trace.jsonl" <<'PY'
+import json, sys
+print(json.dumps(json.load(open(sys.argv[1], encoding="utf-8"))))
+PY
+if python3 "$change_lease_checker" trace "$change_lease_dir/trace.jsonl" > "$change_lease_dir/bad-trace.out"; then exit 1; fi
+grep -q GOV-CHANGE-LEASE-002 "$change_lease_dir/bad-trace.out"
+
 echo 'governance validator: PASS'
