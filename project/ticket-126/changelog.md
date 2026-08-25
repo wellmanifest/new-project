@@ -1,5 +1,12 @@
 # Ticket Changelog (ticket-126)
 
+## [0.3.0] - 2026-08-25
+
+- Record hosted Linux/Windows and exact-head Validator approval for PR #216.
+- Publish annotated `v0.18.10` and the final GitHub Release from trusted merge
+  `4e0b7d6d888f1b4771781d25fa977f15725bcce5`.
+- Close the release ticket with immutable tag/readback evidence.
+
 ## [0.2.0] - 2026-08-25
 
 - Advance the six canonical release carriers and assertions to 0.18.10.
