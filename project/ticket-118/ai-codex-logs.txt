@@ -7,3 +7,21 @@ status=PLAN_RECORDED
 2026-08-25 implementation
 release_carriers=VERSION,manifest.hub,manifest.default,CHANGELOG,adoption-lock-test,governance-validator-test
 status=IMPLEMENTED_PENDING_VALIDATION
+2026-08-25 publication
+implementation_pr=https://github.com/wellmanifest/new-project/pull/200
+approved_head=ddad5a05eb4e97eb9d6400011bd5783388ce36ac
+validator=ifuri-validator-agent
+hosted_checks=test:SUCCESS,windows-governance:SUCCESS
+merge_commit=c6cf798727229df252fadfe02c0da36757a40673
+tag=v0.18.7
+release=https://github.com/wellmanifest/new-project/releases/tag/v0.18.7
+published_at=2026-08-25T14:43:50Z
+status=DONE
+2026-08-25 terminal-closure-validation
+command=python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base origin/main --head HEAD --actor agent --format text
+output=GOV-PASS: passed (0 errors, 0 warnings)
+command=bash tests/governance-validator.test.sh
+output=diagnostic-catalog: 77 codes, 0 findings
+output=governance validator: PASS
+command=git diff --check
+output=PASS

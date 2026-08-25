@@ -2,8 +2,8 @@
 
 - **ID**: ticket-118
 - **Owner**: agent:codex under SESSION_EXECUTION_AUTHORIZATION
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Created**: 2026-08-25
 
 ## Goal and scope
@@ -23,6 +23,17 @@ copying managed governance files from an unpublished commit.
 
 - This ticket carries no new runtime behavior; it publishes ticket-117 only.
 - Downstream adoption remains a separate target-owned ticket.
+
+## Publication evidence
+
+- Implementation PR: `wellmanifest/new-project#200`
+- Frozen Validator-approved head: `ddad5a05eb4e97eb9d6400011bd5783388ce36ac`
+- Trusted merge: `c6cf798727229df252fadfe02c0da36757a40673`
+- Annotated tag: `v0.18.7` (peels to the trusted merge)
+- GitHub Release: `https://github.com/wellmanifest/new-project/releases/tag/v0.18.7`
+- Published: `2026-08-25T14:43:50Z`
+- Terminal governance validation: `GOV-PASS` (0 errors, 0 warnings)
+- Closure delivery mode: governed `pull-request`, registry publication disabled
 
 ## Participants
 
