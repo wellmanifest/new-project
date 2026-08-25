@@ -1,5 +1,13 @@
 # Ticket Changelog (ticket-125)
 
+## [0.2.0] - 2026-08-25
+
+- Add the strict `managedTargetRestorations` intent contract.
+- Verify exact accepted-base absence, old lock binding, new managed payload and
+  one-time consumption while preserving fail-closed behavior.
+- Cover positive restoration and adversarial invalid declaration cases.
+- Document the recovery boundary and record the full Linux CI result.
+
 ## [0.1.1] - 2026-08-25
 
 - Define a bounded recovery contract for base-declared managed targets absent

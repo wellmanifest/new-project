@@ -1,0 +1,14 @@
+2026-08-25T23:38:49+02:00 AC-01..03 PASS
+  jq empty governance/intent.schema.json project/ticket-125/intent.json
+  python3 -m py_compile scripts/governance_check.py
+  bash -n tests/governance-validator.test.sh
+  bash tests/governance-validator.test.sh
+  governance validator: PASS
+  Positive restoration and omitted, wrong, unused, duplicate, overlap,
+  existing-base and initial-adoption negative cases passed.
+2026-08-25T23:39:18+02:00 AC-04 PARTIAL PASS
+  python3 scripts/check_required_checks.py
+  for suite in tests/*.test.sh; do bash "$suite"; done
+  All 13 Linux shell suites passed.
+  git diff --check: PASS
+  Exact-base governance remains pending until implementation is committed.

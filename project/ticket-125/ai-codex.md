@@ -30,6 +30,15 @@ digest-bound restoration declared by the current ticket.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- Added strict `managedTargetRestorations[{path,baseDigest}]` validation without
+  changing the existing default failure for missing managed targets.
+- Required both base manifests to retain managed ownership, exact accepted-base
+  absence, exact old lock digest, exact new payload digest and one-time
+  declaration consumption.
+- Added positive and adversarial regression coverage for omitted, wrong,
+  duplicate, unused, overlapping and initial-adoption bindings.
+- Documented the recovery boundary and ran every Linux CI shell suite plus
+  schema, syntax and diff hygiene checks.
 
 ## Blockers
 

@@ -648,9 +648,40 @@ def placement_error(value: Any) -> str | None:
     return None
 
 
+def managed_target_bindings_error(
+    value: Any,
+    *,
+    field: str,
+    label: str,
+) -> tuple[list[str], str | None]:
+    if not isinstance(value, list):
+        return [], f"delivery standardAdoption {field} must be a list"
+    paths: list[str] = []
+    for binding in value:
+        if not isinstance(binding, dict) or set(binding) != {"path", "baseDigest"}:
+            return [], f"delivery standardAdoption managed target {label} fields are invalid"
+        path, digest = binding.get("path"), binding.get("baseDigest")
+        if (
+            not isinstance(path, str)
+            or not path
+            or not relative_pattern(path)
+            or any(character in path for character in "*?[")
+        ):
+            return [], f"delivery standardAdoption managed target {label} path is invalid"
+        if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+            return [], f"delivery standardAdoption managed target {label} digest is invalid"
+        paths.append(path)
+    if len(paths) != len(set(paths)):
+        return [], f"delivery standardAdoption managed target {label} paths must be unique"
+    return paths, None
+
+
 def standard_adoption_error(value: Any) -> str | None:
     required_fields = {"sourceRepository", "fromRevision", "toRevision"}
-    allowed_fields = required_fields | {"managedTargetTakeovers"}
+    allowed_fields = required_fields | {
+        "managedTargetTakeovers",
+        "managedTargetRestorations",
+    }
     if not isinstance(value, dict) or not required_fields <= set(value) <= allowed_fields:
         return "delivery standardAdoption fields are invalid"
     if value.get("sourceRepository") != "wellmanifest/new-project":
@@ -666,28 +697,24 @@ def standard_adoption_error(value: Any) -> str | None:
         return "delivery standardAdoption revisions must be full lowercase commit SHAs"
     if from_revision == to_revision:
         return "delivery standardAdoption revisions must differ"
-    takeovers = value.get("managedTargetTakeovers", [])
-    if not isinstance(takeovers, list):
-        return "delivery standardAdoption managedTargetTakeovers must be a list"
-    takeover_paths: list[str] = []
-    for takeover in takeovers:
-        if not isinstance(takeover, dict) or set(takeover) != {"path", "baseDigest"}:
-            return "delivery standardAdoption managed target takeover fields are invalid"
-        path, digest = takeover.get("path"), takeover.get("baseDigest")
-        if (
-            not isinstance(path, str)
-            or not path
-            or not relative_pattern(path)
-            or any(character in path for character in "*?[")
-        ):
-            return "delivery standardAdoption managed target takeover path is invalid"
-        if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
-            return "delivery standardAdoption managed target takeover digest is invalid"
-        takeover_paths.append(path)
-    if len(takeover_paths) != len(set(takeover_paths)):
-        return "delivery standardAdoption managed target takeover paths must be unique"
-    if from_revision is None and takeovers:
-        return "initial standard adoption cannot declare managed target takeovers"
+    takeover_paths, error = managed_target_bindings_error(
+        value.get("managedTargetTakeovers", []),
+        field="managedTargetTakeovers",
+        label="takeover",
+    )
+    if error:
+        return error
+    restoration_paths, error = managed_target_bindings_error(
+        value.get("managedTargetRestorations", []),
+        field="managedTargetRestorations",
+        label="restoration",
+    )
+    if error:
+        return error
+    if set(takeover_paths) & set(restoration_paths):
+        return "delivery standardAdoption managed target paths cannot be both takeover and restoration"
+    if from_revision is None and (takeover_paths or restoration_paths):
+        return "initial standard adoption cannot declare managed target bindings"
     return None
 
 
@@ -3030,6 +3057,7 @@ def load_standard_adoption_evidence(
     dict[str, str],
     bool,
     dict[str, str],
+    dict[str, str],
 ]:
     base_package_content = git_revision_file(root, base, ".governance/package-manifest.json")
     base_lock_content = git_revision_file(root, base, ".governance/manifest.lock.json")
@@ -3060,7 +3088,19 @@ def load_standard_adoption_evidence(
         item["path"]: item["baseDigest"]
         for item in adoption.get("managedTargetTakeovers", [])
     }
-    return base_strategies, head_strategies, base_hashes, head_hashes, initial, takeovers
+    restorations = {
+        item["path"]: item["baseDigest"]
+        for item in adoption.get("managedTargetRestorations", [])
+    }
+    return (
+        base_strategies,
+        head_strategies,
+        base_hashes,
+        head_hashes,
+        initial,
+        takeovers,
+        restorations,
+    )
 
 
 def verify_changed_managed_paths(
@@ -3073,9 +3113,11 @@ def verify_changed_managed_paths(
     head_hashes: dict[str, str],
     initial: bool,
     takeovers: dict[str, str],
+    restorations: dict[str, str],
 ) -> set[str]:
     exempt: set[str] = set()
     consumed_takeovers: set[str] = set()
+    consumed_restorations: set[str] = set()
     for raw_path in changed:
         if head_strategies.get(raw_path) != "managed":
             continue
@@ -3084,9 +3126,15 @@ def verify_changed_managed_paths(
             raise ValueError(f"head managed hash differs: {raw_path}")
         base_content = git_revision_file(root, base, raw_path)
         if raw_path in base_strategies:
-            if base_strategies[raw_path] != "managed" or base_content is None:
+            if base_strategies[raw_path] != "managed":
                 raise ValueError(f"managed strategy continuity differs: {raw_path}")
-            if content_digest(base_content) != base_hashes[raw_path]:
+            if base_content is None:
+                if restorations.get(raw_path) != base_hashes[raw_path]:
+                    raise ValueError(
+                        f"base managed target is absent without matching restoration digest: {raw_path}"
+                    )
+                consumed_restorations.add(raw_path)
+            elif content_digest(base_content) != base_hashes[raw_path]:
                 raise ValueError(f"base managed hash differs: {raw_path}")
         elif base_content is not None:
             if initial:
@@ -3103,6 +3151,12 @@ def verify_changed_managed_paths(
     unused_takeovers = sorted(set(takeovers) - consumed_takeovers)
     if unused_takeovers:
         raise ValueError(f"managed target takeover declarations were not consumed: {', '.join(unused_takeovers)}")
+    unused_restorations = sorted(set(restorations) - consumed_restorations)
+    if unused_restorations:
+        raise ValueError(
+            "managed target restoration declarations were not consumed: "
+            + ", ".join(unused_restorations)
+        )
     if not exempt:
         raise ValueError("no changed managed payload was verified")
     return exempt

@@ -16,14 +16,15 @@ ineligible for this recovery path.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: `standardAdoption` accepts only a strict optional
+- [x] AC-01: `standardAdoption` accepts only a strict optional
   `managedTargetRestorations[{path,baseDigest}]` contract on upgrades.
-- [ ] AC-02: A declaration passes only when the base package and lock declare
+- [x] AC-02: A declaration passes only when the base package and lock declare
   the path as managed, the accepted Git base lacks it, `baseDigest` equals the
   base lock, and the restored head bytes equal the new lock.
-- [ ] AC-03: Missing, wrong, duplicate, unused and existing-base declarations
+- [x] AC-03: Missing, wrong, duplicate, unused and existing-base declarations
   fail closed; undeclared missing managed targets keep returning `GOV-SYNC-001`.
-- [ ] AC-04: Full deterministic tests, lint and exact-base governance pass.
+- [ ] AC-04: Full deterministic tests and syntax checks pass; exact-base
+  governance is pending the committed implementation head.
 - [ ] AC-05: The exact PR head is independently approved and merged through
   Validator; release remains a separate bounded ticket.
 
