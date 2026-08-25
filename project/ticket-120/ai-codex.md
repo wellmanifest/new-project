@@ -29,6 +29,8 @@ trusted merge commit.
   closure changelog entry.
 - Verified the host lifecycle, immutable adoption lock and governance validator
   suites.
+- PR #204 received trusted exact-head approval and merged as `7eecfdd`; the
+  annotated `v0.18.8` tag and final GitHub Release point to that merge.
 
 ## Blockers
 
