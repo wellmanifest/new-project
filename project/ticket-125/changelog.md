@@ -6,7 +6,8 @@
 - Verify exact accepted-base absence, old lock binding, new managed payload and
   one-time consumption while preserving fail-closed behavior.
 - Cover positive restoration and adversarial invalid declaration cases.
-- Document the recovery boundary and record the full Linux CI result.
+- Document the recovery boundary and record the full Linux CI and exact-base
+  governance results; move the ticket to independent validation.
 
 ## [0.1.1] - 2026-08-25
 

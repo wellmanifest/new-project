@@ -11,4 +11,12 @@
   for suite in tests/*.test.sh; do bash "$suite"; done
   All 13 Linux shell suites passed.
   git diff --check: PASS
-  Exact-base governance remains pending until implementation is committed.
+2026-08-25T23:40:07+02:00 AC-04 PASS
+  Implementation commit: 9c5f428d03a7b0e65a1917ab84b6db5fb552cf2d
+  python3 scripts/governance_check.py --root . \
+    --manifest governance/manifest.hub.json \
+    --stack-profiles governance/stack-profiles.json \
+    --work-classification governance/work-classification.dsl.json \
+    --base 3e778b03b6b3771639be1b35c26fa651ffacb809 \
+    --head HEAD --actor agent --format text
+  GOV-PASS: passed (0 errors, 0 warnings)

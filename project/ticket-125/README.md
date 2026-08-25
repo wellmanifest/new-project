@@ -3,7 +3,7 @@
 - **ID**: ticket-125
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-25
 
 ## Cel i Zakres
@@ -23,8 +23,8 @@ ineligible for this recovery path.
   base lock, and the restored head bytes equal the new lock.
 - [x] AC-03: Missing, wrong, duplicate, unused and existing-base declarations
   fail closed; undeclared missing managed targets keep returning `GOV-SYNC-001`.
-- [ ] AC-04: Full deterministic tests and syntax checks pass; exact-base
-  governance is pending the committed implementation head.
+- [x] AC-04: Full deterministic tests, syntax checks and exact-base governance
+  pass.
 - [ ] AC-05: The exact PR head is independently approved and merged through
   Validator; release remains a separate bounded ticket.
 
