@@ -428,6 +428,15 @@ assert module.standard_adoption_error({
 }) is None
 assert module.standard_adoption_error({
     'sourceRepository': 'wellmanifest/new-project',
+    'fromRevision': None,
+    'toRevision': 'b' * 40,
+    'managedTargetRestorations': [{
+        'path': 'AGENTS.md',
+        'baseDigest': '0' * 64,
+    }],
+}) == 'initial standard adoption cannot declare managed target bindings'
+assert module.standard_adoption_error({
+    'sourceRepository': 'wellmanifest/new-project',
     'fromRevision': 'a' * 40,
     'toRevision': 'a' * 40,
 }) == 'delivery standardAdoption revisions must differ'
@@ -1392,6 +1401,7 @@ package = {
     'files': [
         {'source': 'template/files/AGENTS.template.md', 'target': 'AGENTS.md', 'strategy': 'managed', 'executable': False},
         {'source': 'governance/package-manifest.json', 'target': '.governance/package-manifest.json', 'strategy': 'managed', 'executable': False},
+        {'source': 'published/src/missing.js', 'target': 'src/missing.js', 'strategy': 'managed', 'executable': False},
         {'source': 'governance/manifest.default.json', 'target': '.governance/manifest.json', 'strategy': 'seed', 'executable': False},
     ],
 }
@@ -1413,7 +1423,11 @@ def write_lock(revision, version):
             'publicationStatus': 'published',
         },
         'managedFiles': {
-            target: hashlib.sha256((root / target).read_bytes()).hexdigest()
+            target: hashlib.sha256(
+                (root / target).read_bytes()
+                if (root / target).is_file()
+                else b'managed src/missing.js v1\n'
+            ).hexdigest()
             for target in targets
         },
     }
@@ -1449,6 +1463,10 @@ intent['delivery']['standardAdoption'] = {
         'path': 'src/pilot.js',
         'baseDigest': hashlib.sha256((root / 'src/pilot.js').read_bytes()).hexdigest(),
     }],
+    'managedTargetRestorations': [{
+        'path': 'src/missing.js',
+        'baseDigest': hashlib.sha256(b'managed src/missing.js v1\n').hexdigest(),
+    }],
 }
 intent_path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
 
@@ -1458,6 +1476,7 @@ manifest['standard']['version'] = '0.13.0'
 manifest_path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
 (root / 'AGENTS.md').write_text('managed agents v2\n', encoding='utf-8')
 (root / 'scripts').mkdir(exist_ok=True)
+(root / 'src/missing.js').write_text('managed src/missing.js v2\n', encoding='utf-8')
 new_targets = [
     'scripts/runtime.sh',
     'src/pilot.js',
@@ -1572,6 +1591,94 @@ PY
 git -C "$atomic_takeover_duplicate" add project/ticket-002/intent.json
 git -C "$atomic_takeover_duplicate" commit -qm 'duplicate managed target takeover'
 expect_code GOV-INTENT-002 run_check "$atomic_takeover_duplicate" --base "$atomic_base"
+
+atomic_restoration_missing="$fixture/atomic-adoption-restoration-missing"
+cp -R "$atomic_adoption" "$atomic_restoration_missing"
+python3 - "$atomic_restoration_missing/project/ticket-002/intent.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+del intent['delivery']['standardAdoption']['managedTargetRestorations']
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_restoration_missing" add project/ticket-002/intent.json
+git -C "$atomic_restoration_missing" commit -qm 'omit managed target restoration'
+expect_code GOV-SYNC-001 run_check "$atomic_restoration_missing" --base "$atomic_base"
+
+atomic_restoration_wrong="$fixture/atomic-adoption-restoration-wrong"
+cp -R "$atomic_adoption" "$atomic_restoration_wrong"
+python3 - "$atomic_restoration_wrong/project/ticket-002/intent.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+intent['delivery']['standardAdoption']['managedTargetRestorations'][0]['baseDigest'] = '0' * 64
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_restoration_wrong" add project/ticket-002/intent.json
+git -C "$atomic_restoration_wrong" commit -qm 'bind wrong managed restoration digest'
+expect_code GOV-SYNC-001 run_check "$atomic_restoration_wrong" --base "$atomic_base"
+
+atomic_restoration_unused="$fixture/atomic-adoption-restoration-unused"
+cp -R "$atomic_adoption" "$atomic_restoration_unused"
+base_agents_digest="$(git -C "$atomic_adoption" show "$atomic_base:AGENTS.md" | sha256sum | cut -d' ' -f1)"
+python3 - "$atomic_restoration_unused/project/ticket-002/intent.json" "$base_agents_digest" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+intent['delivery']['standardAdoption']['managedTargetRestorations'].append({
+    'path': 'AGENTS.md',
+    'baseDigest': sys.argv[2],
+})
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_restoration_unused" add project/ticket-002/intent.json
+git -C "$atomic_restoration_unused" commit -qm 'declare restoration for existing base target'
+expect_code GOV-SYNC-001 run_check "$atomic_restoration_unused" --base "$atomic_base"
+
+atomic_restoration_duplicate="$fixture/atomic-adoption-restoration-duplicate"
+cp -R "$atomic_adoption" "$atomic_restoration_duplicate"
+python3 - "$atomic_restoration_duplicate/project/ticket-002/intent.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+intent['delivery']['standardAdoption']['managedTargetRestorations'].append(
+    dict(intent['delivery']['standardAdoption']['managedTargetRestorations'][0])
+)
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_restoration_duplicate" add project/ticket-002/intent.json
+git -C "$atomic_restoration_duplicate" commit -qm 'duplicate managed target restoration'
+expect_code GOV-INTENT-002 run_check "$atomic_restoration_duplicate" --base "$atomic_base"
+
+atomic_binding_overlap="$fixture/atomic-adoption-binding-overlap"
+cp -R "$atomic_adoption" "$atomic_binding_overlap"
+python3 - "$atomic_binding_overlap/project/ticket-002/intent.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+intent['delivery']['standardAdoption']['managedTargetRestorations'].append(
+    dict(intent['delivery']['standardAdoption']['managedTargetTakeovers'][0])
+)
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_binding_overlap" add project/ticket-002/intent.json
+git -C "$atomic_binding_overlap" commit -qm 'overlap takeover and restoration'
+expect_code GOV-INTENT-002 run_check "$atomic_binding_overlap" --base "$atomic_base"
 
 atomic_bad_hash="$fixture/atomic-adoption-bad-hash"
 cp -R "$atomic_adoption" "$atomic_bad_hash"

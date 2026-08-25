@@ -59,6 +59,28 @@ spójny kontrakt. Nowy target musi być nieobecny w bazie oraz występować jako
 `managed` i zgadzać się z hashem head locka. Aktualizowany target musi mieć
 ciągłość `managed` i poprawny hash po obu stronach.
 
+Jeżeli pakiet i lock zaakceptowanej bazy deklarują target jako `managed`, lecz
+zaakceptowane drzewo Git nie zawiera pliku, upgrade nadal domyślnie kończy się
+`GOV-SYNC-001`. Naprawa wymaga jawnego wpisu:
+
+```json
+{
+  "managedTargetRestorations": [
+    {
+      "path": ".github/workflows/new-project-governance.yml",
+      "baseDigest": "<SHA-256 z bazowego manifest.lock.json>"
+    }
+  ]
+}
+```
+
+Restoration działa tylko przy upgrade. Ścieżka musi być `managed` w bazowym i
+docelowym package manifeście, być nieobecna w zaakceptowanym bazowym drzewie,
+wiązać dokładny digest bazowego locka, zgadzać się z nowym lockiem po
+odtworzeniu i zostać zużyta dokładnie raz. Obecność jakichkolwiek bazowych
+bajtów wyklucza restoration; taki przypadek pozostaje zwykłą ciągłością albo
+osobnym digest-bound `managedTargetTakeovers` dla nowego targetu.
+
 Podczas bootstrapu target `managed`, który istniał już w bazie, nie otrzymuje
 wyjątku. Jego zastąpienie pozostaje zwykłą zmianą i musi należeć do
 `allowedPaths`, workstreamu oraz budżetu ticketu. Zapobiega to przejęciu
