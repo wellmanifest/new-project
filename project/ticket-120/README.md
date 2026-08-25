@@ -2,8 +2,8 @@
 
 - **ID**: ticket-120
 - **Owner**: agent:codex under SESSION_EXECUTION_AUTHORIZATION
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-25
 
 ## Goal and scope
@@ -22,13 +22,23 @@ HOME `wellmanifest`, SHAPE `domain_pack`, ADOPT `wellmanifest/new-project`.
 - [x] AC-02: Host lifecycle, adoption-lock and governance validator suites pass.
 - [x] AC-03: Exact-head hub governance passes before protected publication;
   hosted checks remain required on the frozen PR head.
-- [ ] AC-04: Annotated tag `v0.18.8` and the final GitHub Release point to the
+- [x] AC-04: Annotated tag `v0.18.8` and the final GitHub Release point to the
   trusted merged release commit.
 
 ## Risks and notes
 
 - This ticket introduces no new hook behavior beyond integrated ticket-119.
 - Downstream adoption is target-owned and remains a separate Platform ticket.
+
+## Publication evidence
+
+- Release PR: `wellmanifest/new-project#204`
+- Frozen Validator-approved head: `d872d5926898440c48a261ead85536186af389ab`
+- Trusted merge: `7eecfddcde7e46a18a96f0dfd62a3024d3e9dfea`
+- Annotated tag: `v0.18.8` (peels to the trusted merge)
+- GitHub Release: `https://github.com/wellmanifest/new-project/releases/tag/v0.18.8`
+- Published: `2026-08-25T18:36:26Z`
+- Closure delivery mode: governed `pull-request`, registry publication disabled.
 
 ## Uczestnicy
 

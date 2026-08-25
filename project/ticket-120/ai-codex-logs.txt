@@ -10,3 +10,11 @@
 - Release implementation head: d056a72
 - governance_check.py (hub manifest, base 7588697, head d056a72): GOV-PASS
   (0 errors, 0 warnings)
+
+2026-08-25T18:36:26Z PUBLICATION
+- Goal release PR: wellmanifest/new-project#204
+- Frozen head: d872d5926898440c48a261ead85536186af389ab
+- Validator run 32884519413: approved exact head; latency SLO met
+- Trusted merge: 7eecfddcde7e46a18a96f0dfd62a3024d3e9dfea
+- Annotated v0.18.8 tag peel: 7eecfddcde7e46a18a96f0dfd62a3024d3e9dfea
+- Final release: https://github.com/wellmanifest/new-project/releases/tag/v0.18.8
