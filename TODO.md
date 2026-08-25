@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-126`](project/ticket-126/README.md) — publish integrated
+  change-lease fencing, normative operating rules and managed target
+  restoration as immutable `new-project 0.18.10`. Stan:
+  `IN_PROGRESS / EDIT`; klasyfikacja: `SERVICE / P1 / requested`; workstream:
+  `governance`; depends on tickets 123, 124 and 125.
+
 - [x] [`ticket-125`](project/ticket-125/README.md) — restore a target declared
   managed by the accepted package and lock but absent from the accepted Git
   tree only through an exact-path, exact-base-digest, once-consumed upgrade
