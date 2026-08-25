@@ -30,6 +30,12 @@ nie zmienia to zachowania runtime.
   from the request to execute this work.
 - Declared `ticket-121` as the prerequisite and limited implementation to
   `VERSION`.
+- Published the bounded release through protected pull request `#208` after
+  exact-head validation.
+- Verified that immutable tag `v0.18.9` resolves to integrated default-branch
+  SHA `6faa72b387f8198516c7fb01c5545d112bc0e7cf`.
+- Closed the ticket from the integrated default branch in a governance-only
+  receipt change; no standard or runtime artifact changed during closure.
 
 ## Blockers
 
