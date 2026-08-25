@@ -40,6 +40,9 @@ VALIDATOR_PATHS = (
     # GOV-PACKAGING-001..003. Leaving it out of this list meant a deterministic
     # validator existed whose codes no normative rule was required to claim.
     Path("scripts/agent_host_check.py"),
+    # The managed change-lease checker is independently loadable by governance;
+    # its transition diagnostics must remain claimed by normative rules.
+    Path("scripts/change_lease_check.py"),
 )
 
 GOV_CODE = re.compile(r'"(GOV-[A-Z]+(?:-[A-Z]+)*-[0-9]{3})"')

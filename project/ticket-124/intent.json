@@ -1,0 +1,70 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-124",
+  "summary": "Bind change lease operations to normative policy",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P0",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-124/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "governance/rule-enforcement.json",
+    "scripts/audit_rule_enforcement.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python", "policy-dsl"],
+  "dependsOn": ["ticket-123"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "adopt": ["wellmanifest/new-project", "wellmanifest/poa", "wellmanifest/logs", "wellmanifest/dsl"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "67a3421bc390c4285a094a631e7a7b7e8180720e",
+    "targetBranch": "main",
+    "outcome": "Bind the published change-lease contract to normative multi-agent operating rules and complete deterministic rule-to-code traceability.",
+    "nonGoals": [
+      "Do not change the change-lease schema or checker behavior",
+      "Do not implement the Subactor repository change controller",
+      "Do not add dependencies, credentials or GitHub authority",
+      "Do not release a new immutable version"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Declare repository lease acquisition, exact-head freeze and terminal receipt convergence as normative policy, then make every emitted companion-checker diagnostic discoverable by the existing enforcement audit.",
+      "components": [
+        {"name": "normative-change-lease-policy", "paths": ["POLICY.md", "CONTRIBUTING.md"]},
+        {"name": "change-lease-enforcement-trace", "paths": ["governance/rule-enforcement.json", "scripts/audit_rule_enforcement.py"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["P-LEASE-* and C-LEASE-* normative operating rules"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the dependent normative slice while retaining the already published ticket-123 contract and managed checker."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/rule-enforcement.test.sh"], "evidence": "project/ticket-124/ai-codex-logs.txt"},
+      {"criterion": "AC-02", "commands": ["python3 scripts/audit_rule_enforcement.py --root . --require-complete"], "evidence": "project/ticket-124/ai-codex-logs.txt"},
+      {"criterion": "AC-03", "commands": ["./project/governance-check.sh --actor agent --base 67a3421bc390c4285a094a631e7a7b7e8180720e"], "evidence": "project/ticket-124/ai-codex-logs.txt"}
+    ]
+  }
+}
