@@ -3,7 +3,7 @@
 - **ID**: ticket-120
 - **Owner**: agent:codex under SESSION_EXECUTION_AUTHORIZATION
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-25
 
 ## Goal and scope
@@ -17,9 +17,9 @@ HOME `wellmanifest`, SHAPE `domain_pack`, ADOPT `wellmanifest/new-project`.
 
 ## Acceptance criteria
 
-- [ ] AC-01: Canonical release carriers and version assertions move from
+- [x] AC-01: Canonical release carriers and version assertions move from
   `0.18.7` to `0.18.8` with a changelog entry for terminal closure enforcement.
-- [ ] AC-02: Host lifecycle, adoption-lock and governance validator suites pass.
+- [x] AC-02: Host lifecycle, adoption-lock and governance validator suites pass.
 - [ ] AC-03: Exact-head hub governance and hosted checks pass before merge.
 - [ ] AC-04: Annotated tag `v0.18.8` and the final GitHub Release point to the
   trusted merged release commit.

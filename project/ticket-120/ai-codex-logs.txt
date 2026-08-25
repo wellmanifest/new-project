@@ -1,0 +1,7 @@
+2026-08-25T18:35:00Z RELEASE_VALIDATION
+- Base: 7588697cb7a591ede4539bb43c17bed6b0de2d35
+- Version carrier consistency: PASS (all canonical assertions use 0.18.8)
+- bash tests/agent-hosts.test.sh: PASS
+- bash tests/adoption-lock.test.sh: PASS
+- bash tests/governance-validator.test.sh: PASS
+- diagnostic-catalog: 77 codes, 0 findings

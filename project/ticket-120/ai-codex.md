@@ -25,6 +25,10 @@ trusted merge commit.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- Bumped the six canonical release carriers to `0.18.8` and added the terminal
+  closure changelog entry.
+- Verified the host lifecycle, immutable adoption lock and governance validator
+  suites.
 
 ## Blockers
 

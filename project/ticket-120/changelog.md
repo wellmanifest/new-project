@@ -4,3 +4,4 @@
 
 - Initial governance scaffold created.
 - No human participant identity or content was generated.
+- Prepared the canonical `0.18.8` release carriers for integrated ticket-119.
