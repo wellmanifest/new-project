@@ -2,8 +2,8 @@
   python3 scripts/change_lease_check.py --help
   Closed lease/transition/receipt schema and CLI available.
 2026-08-25T20:17:00+02:00 AC-02 PASS
-  bash tests/change-lease.test.sh
-  change-lease tests: PASS
+  bash tests/governance-validator.test.sh
+  governance validator including change-lease cases: PASS
   Covered accepted freeze, stale CAS/fencing, frozen-head mutation,
   forbidden supersede and non-monotonic receipt trace.
 2026-08-25T20:18:00+02:00 AC-03 PASS
