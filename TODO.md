@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-119`](project/ticket-119/README.md) — honor both manifest-declared
+  terminal statuses in hub and managed adopter hooks. Stan:
+  `IN_PROGRESS / EDIT`; klasyfikacja: `BUG / P1 / regression`; workstream:
+  `governance`.
+
 - [x] [`ticket-115`](project/ticket-115/README.md) — fix Windows pre-commit executable check and publish `new-project 0.18.6`. Stan: `DONE / DONE`; workstream: `governance`.
 
 - [x] [`ticket-105`](project/ticket-105/README.md) — publish integrated managed
@@ -543,4 +548,3 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
 
 - [x] **Raport driftu floty** (ticket-114): `scripts/fleet_report.py` zbiera z locków adopterów przyjętą wersję, dystans do wydanego standardu, drift digestów, obecność bramy w CI i prawdziwość deklaracji required-checks.
   - [ ] Rollout: 24 adopterów pozostaje za standardem; każde podniesienie wymaga ticketu w swoim repozytorium.
-
