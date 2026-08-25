@@ -22,8 +22,8 @@ cleanup bez terminalnego receipt. Runtime kontrolera pozostaje poza
       przejścia, zmianę planu podczas freeze oraz close/supersede bez
       terminalnego dowodu replacementu.
 - [x] AC-03: Standard, stabilny kod błędu i checker są dystrybuowane adopterom
-      jako managed payload, a Policy/Contributing i mechaniczna macierz
-      enforcementu wymagają ich dla mutacji wieloagentowych.
+      jako managed payload; normatywne reguły adopcji są osobnym zależnym
+      slice, aby nie przekroczyć budżetu tej zmiany.
 - [x] AC-04: Testy pozytywne, konkurencyjne i adversarial oraz pełna governance
       repozytorium przechodzą na dokładnej bazie ticketu.
 

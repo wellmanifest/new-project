@@ -10,7 +10,8 @@
   deterministic governance checker without increasing the file budget.
 - Added the closed change-lease schema, CAS/fencing checker, transition receipt
   trace validation and adversarial tests.
-- Registered managed adoption payloads, stable diagnostics and deterministic
-  rule-to-code enforcement mappings.
+- Registered managed adoption payloads and stable diagnostics.
+- Split normative Policy/Contributing enforcement into a dependent ticket after
+  CI correctly rejected a 12-file slice that exceeded the approved M budget.
 - Recorded a complete green repository test run and governance receipt on the
   accepted base.

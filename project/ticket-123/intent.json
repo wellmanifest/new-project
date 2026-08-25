@@ -15,15 +15,11 @@
     "subprojects/change-lease/README.md",
     "subprojects/change-lease/change-lease.schema.json",
     "scripts/change_lease_check.py",
-    "scripts/audit_rule_enforcement.py",
     "tests/change-lease.test.sh",
     "governance/package-manifest.json",
     "governance/diagnostics.json",
-    "governance/rule-enforcement.json",
     "error/GOV-CHANGE-LEASE.md",
-    "scripts/governance_check.py",
-    "POLICY.md",
-    "CONTRIBUTING.md"
+    "scripts/governance_check.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -50,8 +46,8 @@
     "complexity": "M",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 12,
-      "maxAffectedComponents": 4,
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
     },
@@ -60,9 +56,8 @@
       "decision": "Define one closed lease/transition/receipt contract with optimistic concurrency and fencing; keep the effectful runtime in adopters and make the standard checker fail closed.",
       "components": [
         {"name": "change-lease-contract", "paths": ["subprojects/change-lease/**"]},
-        {"name": "change-lease-checker", "paths": ["scripts/change_lease_check.py", "scripts/audit_rule_enforcement.py", "scripts/governance_check.py", "tests/change-lease.test.sh"]},
-        {"name": "adoption-payload", "paths": ["governance/package-manifest.json", "governance/diagnostics.json", "governance/rule-enforcement.json", "error/GOV-CHANGE-LEASE.md"]},
-        {"name": "normative-policy", "paths": ["POLICY.md", "CONTRIBUTING.md"]}
+        {"name": "change-lease-checker", "paths": ["scripts/change_lease_check.py", "scripts/governance_check.py", "tests/change-lease.test.sh"]},
+        {"name": "adoption-payload", "paths": ["governance/package-manifest.json", "governance/diagnostics.json", "error/GOV-CHANGE-LEASE.md"]}
       ],
       "responsibilityChanges": false,
       "interfaceChanges": ["wellmanifest.change-lease/v1", "change_lease_check.py validate/transition/trace"],
