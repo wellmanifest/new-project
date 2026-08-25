@@ -299,6 +299,20 @@ assert {item["evidence"]["identity"] for item in scoped["findings"]} == {
 assert scoped["summary"]["checkouts"] == wide["summary"]["checkouts"]
 PY
 
+# A local commit gate answers only for conflicts involving the checkout being
+# committed. Existing conflicts between two sibling worktrees remain visible
+# to repository/workspace audits but cannot deadlock an unrelated third writer.
+python3 "$checker" --workspace-root "$workspace" --identity-of "$primary" \
+  --focus-checkout "$primary" --format json > "$fixture/focused-primary.json"
+python3 - "$fixture/focused-primary.json" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["status"] == "passed", report["findings"]
+assert report["summary"]["checkouts"] >= 3
+PY
+
 # The runner picks repository scope on its own when --root is a checkout.
 python3 "$guard" --root "$other" --config "$repo_root/worktree-guard.yaml" \
   --checker "$checker" --once --format json > "$fixture/auto-scope.json" || true

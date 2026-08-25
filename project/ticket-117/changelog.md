@@ -4,3 +4,4 @@
 
 - Initial governance scaffold created.
 - No human participant identity or content was generated.
+- Scoped local commit enforcement to findings involving the current checkout.

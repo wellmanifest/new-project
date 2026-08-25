@@ -21,8 +21,9 @@ commit while retaining exact overlap protection for the active writer.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
-- Implementation is intentionally deferred to a later commit after this
-  plan-only intent is recorded.
+- Added `--focus-checkout` and repository-gate propagation.
+- Added a regression for an unrelated sibling conflict.
+- Verified `worktree overlap guard: PASS`.
 
 ## Blockers
 
