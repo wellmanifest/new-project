@@ -10,3 +10,11 @@
 - bash tests/governance-validator.test.sh: PASS
 - governance_check.py (hub manifest, base 4246a94, head f4262e1): GOV-PASS
   (0 errors, 0 warnings)
+
+2026-08-25T18:23:56Z PUBLICATION
+- Goal pull-request delivery: wellmanifest/new-project#202
+- Frozen head: 3e780314c6eaa61432901892516f5b2085bad557
+- Required hosted checks: PASS
+- Validator run 32883398904: approved exact head; latency SLO met
+- Trusted merge: 2c7b79d09b9379b3ff05d4a72e4adec3683e4937
+- Remote head branch: deleted
