@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.18.10] - 2026-08-25
+
+### Autonomous change fencing and managed recovery
+
+- Distribute a closed multi-agent change-lease contract with compare-and-swap,
+  monotonic revisions, fencing tokens, publication freeze and terminal
+  receipts while keeping the effectful runtime in adopters.
+- Bind the lease contract to normative claim-before-effect, heartbeat,
+  exact-head publication and merge-receipt operating rules with deterministic
+  enforcement traceability.
+- Allow an upgrade to restore a base-declared managed target missing from the
+  accepted Git tree only through an exact-path, exact-base-lock-digest
+  declaration consumed once; existing base bytes remain ineligible.
+
 ## [0.18.9] - 2026-08-25
 
 ### Pytest governance lifecycle plugin
