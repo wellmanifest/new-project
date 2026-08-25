@@ -15,3 +15,5 @@
   CI correctly rejected a 12-file slice that exceeded the approved M budget.
 - Recorded a complete green repository test run and governance receipt on the
   accepted base.
+- Closed governance-only after exact-head Validator approval and merge commit
+  `ccee6581a7c65a8d83eec2ffb73daa676d2abe3b` reached `main`.

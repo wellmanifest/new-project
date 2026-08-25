@@ -557,8 +557,8 @@ Opublikowane jako `#174`, merge `1dff15b`. Slice'y zależne pozostają otwarte.
 
 ## Multi-agent change lease (ticket-123)
 
-- [ ] Opublikować zamknięty kontrakt lease/transition/receipt z CAS i fencing.
-- [ ] Egzekwować publication freeze, stale-token rejection i terminalne supersede.
-- [ ] Dodać deterministyczne testy konkurencji oraz managed adoption payload.
+- [x] Opublikować zamknięty kontrakt lease/transition/receipt z CAS i fencing.
+- [x] Egzekwować publication freeze, stale-token rejection i terminalne supersede.
+- [x] Dodać deterministyczne testy konkurencji oraz managed adoption payload.
 - [ ] Po integracji utworzyć osobny release ticket i osobne tickety runtime w
       systemach adoptujących.

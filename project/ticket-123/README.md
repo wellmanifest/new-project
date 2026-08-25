@@ -2,8 +2,8 @@
 
 - **ID**: ticket-123
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-25
 
 ## Cel i Zakres
@@ -34,6 +34,14 @@ cleanup bez terminalnego receipt. Runtime kontrolera pozostaje poza
   egzekwował token w zaufanym effect boundary.
 - Ryzyko: wygasający lease może przerwać poprawną pracę. Mitygacja: heartbeat
   tworzy nową rewizję bez rozszerzania scope, planu ani authority.
+
+## Dowód integracji
+
+- Pull request: `wellmanifest/new-project#210`
+- Zatwierdzony implementation HEAD: `33f61edee04a7a67c468cc9fe32131b0f0201fb1`
+- Merge commit: `ccee6581a7c65a8d83eec2ffb73daa676d2abe3b`
+- Merged at: `2026-08-25T20:35:44Z`
+- Validator run: `subactor/validator-agent#32896094347`
 
 ## Uczestnicy
 
