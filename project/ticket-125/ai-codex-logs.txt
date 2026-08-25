@@ -20,3 +20,12 @@
     --base 3e778b03b6b3771639be1b35c26fa651ffacb809 \
     --head HEAD --actor agent --format text
   GOV-PASS: passed (0 errors, 0 warnings)
+2026-08-25T23:42:47+02:00 AC-05 TERMINAL MERGE RECEIPT
+  PR: https://github.com/wellmanifest/new-project/pull/214
+  Exact head: 4f7429486df37b758f97f7deb9e6d6002d4e6e56
+  Required Linux and Windows checks: PASS
+  Validator run: https://github.com/subactor/validator-agent/actions/runs/32902342260
+  Independent approval: 5024509841
+  Merge commit: 55f63de5d7022839ccc04381f6e57d0a7cba53b2
+  Validator result: approved and explicitly merged; publication head stayed
+  unchanged through two stable post-approval reads.

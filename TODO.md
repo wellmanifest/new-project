@@ -9,11 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-125`](project/ticket-125/README.md) — restore a target declared
+- [x] [`ticket-125`](project/ticket-125/README.md) — restore a target declared
   managed by the accepted package and lock but absent from the accepted Git
   tree only through an exact-path, exact-base-digest, once-consumed upgrade
-  declaration. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
-  `BUG / P1 / regression`; workstream: `governance`.
+  declaration. Stan: `DONE / DONE`; klasyfikacja:
+  `BUG / P1 / regression`; workstream: `governance`; PR #214 passed Linux,
+  Windows and exact-head Validator approval, then merged as `55f63de5`.
 
 - [x] [`ticket-120`](project/ticket-120/README.md) — publish integrated terminal
   closure enforcement as immutable `new-project 0.18.8`. Stan:

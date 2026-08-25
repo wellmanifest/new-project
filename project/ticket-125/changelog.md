@@ -1,5 +1,11 @@
 # Ticket Changelog (ticket-125)
 
+## [0.3.0] - 2026-08-25
+
+- Record exact-head Validator approval and merge receipt for PR #214.
+- Close the implementation ticket; immutable release remains a separate
+  bounded ticket.
+
 ## [0.2.0] - 2026-08-25
 
 - Add the strict `managedTargetRestorations` intent contract.

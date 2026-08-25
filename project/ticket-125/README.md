@@ -2,8 +2,8 @@
 
 - **ID**: ticket-125
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-25
 
 ## Cel i Zakres
@@ -25,7 +25,7 @@ ineligible for this recovery path.
   fail closed; undeclared missing managed targets keep returning `GOV-SYNC-001`.
 - [x] AC-04: Full deterministic tests, syntax checks and exact-base governance
   pass.
-- [ ] AC-05: The exact PR head is independently approved and merged through
+- [x] AC-05: The exact PR head is independently approved and merged through
   Validator; release remains a separate bounded ticket.
 
 ## Ryzyka i Uwagi
