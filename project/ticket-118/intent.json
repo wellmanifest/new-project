@@ -1,0 +1,86 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-118",
+  "summary": "Publish focused worktree guard as new-project 0.18.7",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-118/**",
+    "project/TICKETS.md",
+    "VERSION",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json",
+    "CHANGELOG.md",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["shell", "python"],
+  "dependsOn": ["ticket-117"],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "481599caafcd4b5a81dd67ac2e8adba776dde1a9",
+    "targetBranch": "main",
+    "outcome": "Publish the integrated focused worktree commit guard as immutable new-project 0.18.7 so adopters can upgrade through Goal with a verified lock.",
+    "nonGoals": [
+      "No behavior changes beyond the already integrated ticket-117 implementation",
+      "No manual downstream copying or unpublished adoption",
+      "No changes to target-owned extendable governance files"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Increment the six canonical release carriers and publish only after exact-head CI and Validator approval.",
+      "components": [
+        {
+          "name": "release-carriers",
+          "paths": ["VERSION", "governance/manifest.hub.json", "governance/manifest.default.json", "CHANGELOG.md"]
+        },
+        {
+          "name": "release-tests",
+          "paths": ["tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": ["Bump standard version from 0.18.6 to 0.18.7"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Do not publish v0.18.7; adopters remain pinned to their previous immutable release."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/worktree-overlap.test.sh"],
+        "evidence": "project/ticket-118/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/adoption-lock.test.sh"],
+        "evidence": "project/ticket-118/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/governance-validator.test.sh", "python3 scripts/governance_check.py"],
+        "evidence": "project/ticket-118/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["verify annotated tag and final GitHub Release after trusted merge"],
+        "evidence": "project/ticket-118/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
