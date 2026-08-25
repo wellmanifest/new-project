@@ -1,0 +1,25 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-117",
+  "summary": "Scope local worktree commit guard to the current checkout",
+  "workstream": "integration",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/worktree_guard.py",
+    "scripts/worktree_overlap_check.py",
+    "tests/worktree-overlap.test.sh",
+    "project/ticket-117/**",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python", "shell"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
