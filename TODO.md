@@ -11,7 +11,7 @@
 
 - [ ] [`ticket-120`](project/ticket-120/README.md) — publish integrated terminal
   closure enforcement as immutable `new-project 0.18.8`. Stan:
-  `IN_PROGRESS / VALIDATION`; klasyfikacja: `SERVICE / P1 / requested`; workstream:
+  `IN_PROGRESS / PUBLICATION`; klasyfikacja: `SERVICE / P1 / requested`; workstream:
   `governance`; depends on `ticket-119`.
 
 - [x] [`ticket-119`](project/ticket-119/README.md) — honor both manifest-declared

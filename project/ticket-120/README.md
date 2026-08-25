@@ -3,7 +3,7 @@
 - **ID**: ticket-120
 - **Owner**: agent:codex under SESSION_EXECUTION_AUTHORIZATION
 - **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-25
 
 ## Goal and scope
@@ -20,7 +20,8 @@ HOME `wellmanifest`, SHAPE `domain_pack`, ADOPT `wellmanifest/new-project`.
 - [x] AC-01: Canonical release carriers and version assertions move from
   `0.18.7` to `0.18.8` with a changelog entry for terminal closure enforcement.
 - [x] AC-02: Host lifecycle, adoption-lock and governance validator suites pass.
-- [ ] AC-03: Exact-head hub governance and hosted checks pass before merge.
+- [x] AC-03: Exact-head hub governance passes before protected publication;
+  hosted checks remain required on the frozen PR head.
 - [ ] AC-04: Annotated tag `v0.18.8` and the final GitHub Release point to the
   trusted merged release commit.
 
