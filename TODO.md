@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-120`](project/ticket-120/README.md) — publish integrated terminal
+  closure enforcement as immutable `new-project 0.18.8`. Stan:
+  `IN_PROGRESS / EDIT`; klasyfikacja: `SERVICE / P1 / requested`; workstream:
+  `governance`; depends on `ticket-119`.
+
 - [x] [`ticket-119`](project/ticket-119/README.md) — honor both manifest-declared
   terminal statuses in hub and managed adopter hooks. Stan:
   `DONE / DONE`; klasyfikacja: `BUG / P1 / regression`; workstream:
