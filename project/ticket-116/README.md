@@ -2,8 +2,8 @@
 
 - **ID**: ticket-116
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-24
 
 ## Cel i Zakres
