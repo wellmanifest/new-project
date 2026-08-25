@@ -1,0 +1,9 @@
+2026-08-25 plan
+accepted_base=481599caafcd4b5a81dd67ac2e8adba776dde1a9
+source_ticket=ticket-117
+source_merge=cc6dc9ef3ffca50d6702028f989d79b6b5b2b10c
+target_version=0.18.7
+status=PLAN_RECORDED
+2026-08-25 implementation
+release_carriers=VERSION,manifest.hub,manifest.default,CHANGELOG,adoption-lock-test,governance-validator-test
+status=IMPLEMENTED_PENDING_VALIDATION
