@@ -8,3 +8,9 @@
   base before implementation.
 - Replaced a prose-only host-instruction edit with direct integration into the
   deterministic governance checker without increasing the file budget.
+- Added the closed change-lease schema, CAS/fencing checker, transition receipt
+  trace validation and adversarial tests.
+- Registered managed adoption payloads, stable diagnostics and deterministic
+  rule-to-code enforcement mappings.
+- Recorded a complete green repository test run and governance receipt on the
+  accepted base.

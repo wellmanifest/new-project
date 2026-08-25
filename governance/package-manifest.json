@@ -92,6 +92,24 @@
       "executable": false
     },
     {
+      "source": "error/GOV-CHANGE-LEASE.md",
+      "target": ".governance/error/GOV-CHANGE-LEASE.md",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
+      "source": "subprojects/change-lease/change-lease.schema.json",
+      "target": ".governance/change-lease.schema.json",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
+      "source": "scripts/change_lease_check.py",
+      "target": ".governance/change_lease_check.py",
+      "strategy": "managed",
+      "executable": true
+    },
+    {
       "source": "error/GOV-INTENT.md",
       "target": ".governance/error/GOV-INTENT.md",
       "strategy": "managed",

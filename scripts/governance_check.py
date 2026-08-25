@@ -3345,6 +3345,39 @@ def resolve_validation_base(
     return record.intent["delivery"]["acceptedBaseSha"]
 
 
+def check_change_lease(root: Path, report: Report) -> None:
+    candidates = [
+        root / "scripts" / "change_lease_check.py",
+        root / ".governance" / "change_lease_check.py",
+    ]
+    checker = next((path for path in candidates if path.is_file()), None)
+    if checker is None:
+        return
+    spec = importlib.util.spec_from_file_location("new_project_change_lease_check", checker)
+    if spec is None or spec.loader is None:
+        report.add(
+            "GOV-CHANGE-LEASE-001", "Could not load the managed change-lease checker.",
+            "Restore the managed checker from the pinned new-project package.", [rel(root, checker)],
+        )
+        return
+    module = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(module)
+        findings = module.validate_repository(root)
+    except Exception as error:
+        report.add(
+            "GOV-CHANGE-LEASE-001", f"Change-lease validation failed closed: {error}",
+            "Repair the managed checker or lease evidence before continuing.", [rel(root, checker)],
+        )
+        return
+    for item in findings:
+        report.add(
+            item["code"], item["message"],
+            "Read the authoritative lease and follow error/GOV-CHANGE-LEASE.md.",
+            evidence=item.get("evidence", {}),
+        )
+
+
 def run_governance_checks(
     args: argparse.Namespace,
     root: Path,
@@ -3368,6 +3401,7 @@ def run_governance_checks(
     check_stacks(root, manifest, profiles_path, report)
     check_ticket_content(root, directories, manifest["ticket"], report)
     check_coordination(root, manifest, records, changed, report)
+    check_change_lease(root, report)
     check_changed_content(root, changed, args.actor, args.trusted_human_change, report)
     return check_change_gate(
         root, manifest, records, changed, base, args.head, args.approval_source,

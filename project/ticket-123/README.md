@@ -3,7 +3,7 @@
 - **ID**: ticket-123
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-25
 
 ## Cel i Zakres
@@ -15,16 +15,16 @@ cleanup bez terminalnego receipt. Runtime kontrolera pozostaje poza
 `wellmanifest` i należy do systemu adoptującego.
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [ ] AC-01: Zamknięty schemat `wellmanifest.change-lease/v1` opisuje lease,
+- [x] AC-01: Zamknięty schemat `wellmanifest.change-lease/v1` opisuje lease,
       żądanie przejścia i receipt z CAS, fencing tokenem, exact head i
       publication freeze.
-- [ ] AC-02: Deterministyczny checker odrzuca stale revision/token, nielegalne
+- [x] AC-02: Deterministyczny checker odrzuca stale revision/token, nielegalne
       przejścia, zmianę planu podczas freeze oraz close/supersede bez
       terminalnego dowodu replacementu.
-- [ ] AC-03: Standard, stabilny kod błędu i checker są dystrybuowane adopterom
-      jako managed payload, a Policy/Contributing/Enforcement wymagają ich dla
-      mutacji wieloagentowych.
-- [ ] AC-04: Testy pozytywne, konkurencyjne i adversarial oraz pełna governance
+- [x] AC-03: Standard, stabilny kod błędu i checker są dystrybuowane adopterom
+      jako managed payload, a Policy/Contributing i mechaniczna macierz
+      enforcementu wymagają ich dla mutacji wieloagentowych.
+- [x] AC-04: Testy pozytywne, konkurencyjne i adversarial oraz pełna governance
       repozytorium przechodzą na dokładnej bazie ticketu.
 
 ## Ryzyka i Uwagi

@@ -91,6 +91,26 @@
       "remediation": "Reduce the slice or obtain fresh authorization for a larger bounded intent.",
       "documentation": null
     },
+    "GOV-CHANGE-LEASE-001": {
+      "message": "A change lease, transition request or receipt is malformed or not closed.",
+      "remediation": "Rebuild the document from the managed change-lease schema without undeclared fields.",
+      "documentation": "error/GOV-CHANGE-LEASE.md"
+    },
+    "GOV-CHANGE-LEASE-002": {
+      "message": "Change authority is stale or its receipt trace is not monotonic.",
+      "remediation": "Read the authoritative lease and retry with its exact revision, fencing token and phase.",
+      "documentation": "error/GOV-CHANGE-LEASE.md"
+    },
+    "GOV-CHANGE-LEASE-003": {
+      "message": "A change-lease transition violates the state machine or publication freeze.",
+      "remediation": "Keep the frozen HEAD immutable and request only a transition allowed from the current phase.",
+      "documentation": "error/GOV-CHANGE-LEASE.md"
+    },
+    "GOV-CHANGE-LEASE-004": {
+      "message": "Lease supersession lacks accepted terminal replacement evidence.",
+      "remediation": "Attach the exact accepted terminal receipt for the replacement lease before superseding.",
+      "documentation": "error/GOV-CHANGE-LEASE.md"
+    },
     "GOV-CLASS-000": {
       "message": "The work-classification contract is unavailable.",
       "remediation": "Restore the managed work-classification DSL from the pinned package before allocating a ticket.",
