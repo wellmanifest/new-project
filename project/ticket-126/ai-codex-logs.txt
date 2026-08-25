@@ -9,4 +9,8 @@
   for suite in tests/*.test.sh; do bash "$suite"; done
   All 13 Linux shell suites passed.
   git diff --check: PASS
-  Exact-base governance remains pending until the release payload is committed.
+2026-08-25T23:51:09+02:00 AC-02 PASS
+  Release payload commit: 6f5a6f1916dbf160b66158715f8e4c622a3d0b6c
+  ./project/governance-check.sh --actor agent \
+    --base 447a28525bee27552da96f674bde752d53856154
+  GOV-PASS: passed (0 errors, 0 warnings)

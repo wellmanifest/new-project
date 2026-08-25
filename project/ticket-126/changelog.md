@@ -5,7 +5,8 @@
 - Advance the six canonical release carriers and assertions to 0.18.10.
 - Describe integrated change-lease, normative fencing and managed restoration
   behavior in the public changelog.
-- Record focused release checks and all Linux CI suites passing.
+- Record focused release checks, all Linux CI suites and exact-base governance
+  passing; move the release to independent validation.
 
 ## [0.1.0] - 2026-08-25
 
