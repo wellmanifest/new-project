@@ -1,0 +1,2 @@
+2026-08-25 SESSION_EXECUTION_AUTHORIZATION: user requested autonomous completion and publication.
+2026-08-25 REPRODUCTION: Python adopters failed before collection with ModuleNotFoundError for wellmanifest_governance.
