@@ -1,0 +1,5 @@
+2026-08-25T21:00:00+02:00 SESSION_EXECUTION_AUTHORIZATION user requested autonomous completion and publication.
+2026-08-25T21:00:01+02:00 REPRODUCTION Python adopters failed before collection: ModuleNotFoundError wellmanifest_governance.
+2026-08-25T21:00:02+02:00 GOVERNANCE exact-base staged validation: GOV-PASS, 0 errors, 0 warnings.
+2026-08-25T21:00:03+02:00 TEST bash tests/pytest-plugin.test.sh: PASS positive and fail-closed paths.
+2026-08-25T21:00:04+02:00 TEST all Linux tests/*.test.sh: PASS.

@@ -69,6 +69,8 @@ jobs:
         run: bash tests/rule-enforcement.test.sh
       - name: Test host-agnostic LLM instruction contract
         run: bash tests/agent-hosts.test.sh
+      - name: Test pytest governance lifecycle plugin
+        run: bash tests/pytest-plugin.test.sh
       - name: Test proactive worktree overlap guard
         run: bash tests/worktree-overlap.test.sh
       - name: Test fleet drift report
