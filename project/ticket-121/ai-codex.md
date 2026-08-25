@@ -26,3 +26,16 @@ docelowych.
   from the request to execute this work.
 - Potwierdzono regresje na pieciu adopterach Subactor: pytest konczy sie
   `ModuleNotFoundError: wellmanifest_governance` przed kolekcja testow.
+- Dodano managed plugin bez nowych zaleznosci, z deterministycznym wyborem
+  bazy i zbiorem committed/staged/working/untracked paths.
+- Dodano izolowany test spy gate, negatywny werdykt i wymagany krok CI.
+- Exact-base governance: `GOV-PASS`; wszystkie linuksowe `tests/*.test.sh`
+  przeszly.
+
+## Blockers
+
+- None inside the recorded intent; proceed without a second confirmation.
+- New authority is still required for destructive action, secret access, new
+  external coordination or material objective expansion. Protected delivery
+  may be invoked without another prompt when publication is in scope; its
+  exact-head trusted approval remains independent evidence.

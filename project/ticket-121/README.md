@@ -3,7 +3,7 @@
 - **ID**: ticket-121
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-25
 
 ## Cel i Zakres
@@ -14,10 +14,10 @@ Plugin ma uruchamiac deterministyczna bramke repozytorium przed testami,
 przekazujac jawna baze oraz aktualny zbior zmienionych plikow.
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [ ] AC-01: Package manifest instaluje importowalny managed plugin.
-- [ ] AC-02: Plugin uruchamia gate raz, przekazuje baze i changed files oraz
+- [x] AC-01: Package manifest instaluje importowalny managed plugin.
+- [x] AC-02: Plugin uruchamia gate raz, przekazuje baze i changed files oraz
   zatrzymuje pytest przy negatywnym werdykcie.
-- [ ] AC-03: Test regresyjny jest wykonywany przez CI i przechodzi lokalnie.
+- [x] AC-03: Test regresyjny jest wykonywany przez CI i przechodzi lokalnie.
 
 ## Ryzyka i Uwagi
 - Rekurencja lub ukrycie bledu governance. Mitygacja: plugin wywoluje tylko
