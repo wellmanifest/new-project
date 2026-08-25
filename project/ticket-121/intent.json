@@ -1,0 +1,111 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-121",
+  "summary": "Ship the required pytest governance plugin",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P0",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    ".github/workflows/ci.yml",
+    "governance/package-manifest.json",
+    "project/TICKETS.md",
+    "project/ticket-121/**",
+    "template/files/wellmanifest_governance.py",
+    "tests/pytest-plugin.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python",
+    "shell"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "adopt": [
+      "wellmanifest/new-project"
+    ]
+  },
+  "delivery": {
+    "acceptedBaseSha": "5becab2d9aca87d544cb0cbcdd2d324f3482262f",
+    "targetBranch": "main",
+    "outcome": "Integrate the managed pytest governance plugin and its deterministic regression coverage.",
+    "nonGoals": [
+      "No target-repository-specific governance logic",
+      "No new runtime dependency",
+      "No bypass or weakening of the deterministic gate",
+      "No version bump or immutable release in this implementation ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Ship a root-level managed pytest plugin that invokes the repository gate with deterministic Git-derived base and changed-path evidence.",
+      "components": [
+        {
+          "name": "pytest-governance-plugin",
+          "paths": [
+            "template/files/wellmanifest_governance.py",
+            "governance/package-manifest.json"
+          ]
+        },
+        {
+          "name": "plugin-validation",
+          "paths": [
+            "tests/pytest-plugin.test.sh",
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Python adopters can import the required pytest plugin from the managed package payload."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Do not publish 0.18.9; adopters remain pinned to an earlier revision while Python pytest integration stays blocked."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/pytest-plugin.test.sh"
+        ],
+        "evidence": "project/ticket-121/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/pytest-plugin.test.sh"
+        ],
+        "evidence": "project/ticket-121/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/pytest-plugin.test.sh",
+          "bash tests/rule-enforcement.test.sh"
+        ],
+        "evidence": "project/ticket-121/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
