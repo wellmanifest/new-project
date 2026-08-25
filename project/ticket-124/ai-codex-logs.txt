@@ -7,3 +7,6 @@
   bash tests/rule-enforcement.test.sh
   rule enforcement traceability: PASS
   hub governance: GOV-PASS (0 errors, 0 warnings)
+2026-08-25T22:44:21+02:00 TERMINAL MERGE RECEIPT
+  Exact head 19a2ac7cfc8149dd5aced4058eda78a0496dd9bd approved by
+  validator run 32896963260 and merged as 5b4ef71224054a3b24c4d5bc56773f05ce0e34fa.
