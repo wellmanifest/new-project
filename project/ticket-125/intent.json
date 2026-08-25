@@ -1,0 +1,94 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-125",
+  "summary": "Recover declared managed targets missing from accepted base",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/governance_check.py",
+    "governance/intent.schema.json",
+    "tests/governance-validator.test.sh",
+    "docs/GOVERNANCE_ENFORCEMENT.md",
+    "project/ticket-125/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3e778b03b6b3771639be1b35c26fa651ffacb809",
+    "targetBranch": "main",
+    "outcome": "An upgrade may restore a base-declared managed target that is proven absent only through an exact-path, exact-base-lock-digest declaration consumed once",
+    "nonGoals": [
+      "Do not automatically forgive missing managed files",
+      "Do not overwrite any target bytes present in the accepted base",
+      "Do not weaken head lock or managed payload hash verification",
+      "Do not release a new standard version in this ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend standardAdoption with optional managedTargetRestorations entries whose exact path and baseDigest must match a base-managed lock entry absent from the accepted Git tree and be consumed exactly once",
+      "components": [
+        {
+          "name": "adoption-validator",
+          "paths": [
+            "scripts/governance_check.py",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "intent-contract",
+          "paths": [
+            "governance/intent.schema.json",
+            "docs/GOVERNANCE_ENFORCEMENT.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "new-project.intent/v3 standardAdoption optionally accepts managedTargetRestorations[{path,baseDigest}]"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the contract and validator change; every base-declared but absent managed target returns to fail-closed GOV-SYNC-001"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "project/ticket-125/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base 3e778b03b6b3771639be1b35c26fa651ffacb809 --head HEAD --actor agent"
+        ],
+        "evidence": "project/ticket-125/ai-codex-logs.txt"
+      }
+    ]
+  }
+}
