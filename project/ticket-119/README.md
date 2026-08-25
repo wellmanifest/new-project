@@ -3,7 +3,7 @@
 - **ID**: ticket-119
 - **Owner**: agent:codex under SESSION_EXECUTION_AUTHORIZATION
 - **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-25
 
 ## Goal and scope
@@ -25,7 +25,7 @@ HOME `wellmanifest`, SHAPE `domain_pack`, ADOPT `wellmanifest/new-project`.
   the worktree guard, and still rejects implementation after closure.
 - [x] AC-03: Diagnostics and remediation refer to manifest-declared terminal
   closure rather than implying that `DONE` is the only closed status.
-- [ ] AC-04: Focused host tests and exact-head hub governance pass.
+- [x] AC-04: Focused host tests and exact-head hub governance pass.
 
 ## Risks and notes
 

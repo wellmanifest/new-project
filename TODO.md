@@ -11,7 +11,7 @@
 
 - [ ] [`ticket-119`](project/ticket-119/README.md) — honor both manifest-declared
   terminal statuses in hub and managed adopter hooks. Stan:
-  `IN_PROGRESS / VALIDATION`; klasyfikacja: `BUG / P1 / regression`; workstream:
+  `IN_PROGRESS / PUBLICATION`; klasyfikacja: `BUG / P1 / regression`; workstream:
   `governance`.
 
 - [x] [`ticket-115`](project/ticket-115/README.md) — fix Windows pre-commit executable check and publish `new-project 0.18.6`. Stan: `DONE / DONE`; workstream: `governance`.
