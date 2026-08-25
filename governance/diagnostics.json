@@ -12,7 +12,7 @@
       "documentation": "error/GOV-AGENT-HOST.md"
     },
     "GOV-AGENT-HOST-003": {
-      "message": "Governance-only DONE closure violates its bounded evidence.",
+      "message": "Governance-only terminal closure violates its bounded evidence.",
       "remediation": "Stage the terminal ticket evidence alone; a closure may only add or modify bounded governance files.",
       "documentation": "error/GOV-AGENT-HOST.md"
     },

@@ -30,6 +30,12 @@ exception.
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
 - Confirmed the manifest/hook mismatch in both hub and adopter sources.
+- Updated both hook payloads to share the `DONE|CANCELLED` terminal branch and
+  status-neutral fail-closed diagnostics.
+- Coupled hub/default manifest declarations to the host regression and added a
+  real `CANCELLED` commit followed by a rejected implementation attempt.
+- Updated diagnostic catalog and remediation documentation to name
+  `ticket.closedStatuses` as the authority.
 
 ## Blockers
 

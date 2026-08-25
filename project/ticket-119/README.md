@@ -3,7 +3,7 @@
 - **ID**: ticket-119
 - **Owner**: agent:codex under SESSION_EXECUTION_AUTHORIZATION
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-08-25
 
 ## Goal and scope
@@ -19,11 +19,11 @@ HOME `wellmanifest`, SHAPE `domain_pack`, ADOPT `wellmanifest/new-project`.
 
 ## Acceptance criteria
 
-- [ ] AC-01: The hub and managed adopter hooks accept governance-only closure
+- [x] AC-01: The hub and managed adopter hooks accept governance-only closure
   for `DONE` and `CANCELLED` and apply identical path/deletion restrictions.
-- [ ] AC-02: The host lifecycle regression proves `CANCELLED` succeeds, invokes
+- [x] AC-02: The host lifecycle regression proves `CANCELLED` succeeds, invokes
   the worktree guard, and still rejects implementation after closure.
-- [ ] AC-03: Diagnostics and remediation refer to manifest-declared terminal
+- [x] AC-03: Diagnostics and remediation refer to manifest-declared terminal
   closure rather than implying that `DONE` is the only closed status.
 - [ ] AC-04: Focused host tests and exact-head hub governance pass.
 

@@ -46,28 +46,28 @@ if grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*IN_PROGRESS([[:space:]]|$
   exit 0
 fi
 
-if grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*DONE([[:space:]]|$)' <<<"$staged_readme"; then
+if grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*(DONE|CANCELLED)([[:space:]]|$)' <<<"$staged_readme"; then
   if git diff --cached --quiet -- "$readme_rel"; then
-    echo "GOV-AGENT-HOST-003: $ticket DONE closure does not stage its ticket README." >&2
+    echo "GOV-AGENT-HOST-003: $ticket terminal closure does not stage its ticket README." >&2
     echo "  Stage the terminal ticket evidence in the same governance-only commit." >&2
     exit 1
   fi
   if ! git diff --cached --quiet --diff-filter=DRC --; then
-    echo "GOV-AGENT-HOST-003: $ticket DONE closure contains a deletion, rename or copy." >&2
+    echo "GOV-AGENT-HOST-003: $ticket terminal closure contains a deletion, rename or copy." >&2
     echo "  A terminal closure may only add or modify its bounded governance evidence." >&2
     exit 1
   fi
 
   mapfile -d '' -t staged_paths < <(git diff --cached --name-only -z --diff-filter=AM --)
   if [[ "${#staged_paths[@]}" -eq 0 ]]; then
-    echo "GOV-AGENT-HOST-003: $ticket DONE closure has no staged governance evidence." >&2
+    echo "GOV-AGENT-HOST-003: $ticket terminal closure has no staged governance evidence." >&2
     exit 1
   fi
   for path in "${staged_paths[@]}"; do
     case "$path" in
       "project/$ticket/"*|TODO.md|project/TICKETS.md|config/artifact-registry.json) ;;
       *)
-        echo "GOV-AGENT-HOST-003: $ticket DONE closure contains non-closure path '$path'." >&2
+        echo "GOV-AGENT-HOST-003: $ticket terminal closure contains non-closure path '$path'." >&2
         echo "  Keep implementation on an IN_PROGRESS ticket; closure is governance-only." >&2
         exit 1
         ;;
@@ -77,6 +77,6 @@ if grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*DONE([[:space:]]|$)' <<<"
   exit 0
 fi
 
-echo "GOV-AGENT-HOST-003: $ticket is neither IN_PROGRESS nor a valid staged DONE closure." >&2
+echo "GOV-AGENT-HOST-003: $ticket is neither IN_PROGRESS nor a valid staged terminal closure." >&2
 echo "  Return implementation to IN_PROGRESS or stage only terminal closure evidence." >&2
 exit 1
