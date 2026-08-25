@@ -123,6 +123,8 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-113** | [`README.md`](./ticket-113/README.md) | [`preprompt.md`](./ticket-113/preprompt.md) | - |  [`ai-claude.md`](./ticket-113/ai-claude.md) |  [`ai-claude-logs.txt`](./ticket-113/ai-claude-logs.txt) | [`changelog.md`](./ticket-113/changelog.md) |
 | **ticket-114** | [`README.md`](./ticket-114/README.md) | [`preprompt.md`](./ticket-114/preprompt.md) | - |  [`ai-claude.md`](./ticket-114/ai-claude.md) |  [`ai-claude-logs.txt`](./ticket-114/ai-claude-logs.txt) | [`changelog.md`](./ticket-114/changelog.md) |
 | **ticket-115** | [`README.md`](./ticket-115/README.md) | [`preprompt.md`](./ticket-115/preprompt.md) | - |  [`ai-gemini.md`](./ticket-115/ai-gemini.md) |  [`ai-gemini-logs.txt`](./ticket-115/ai-gemini-logs.txt) | [`changelog.md`](./ticket-115/changelog.md) |
+| **ticket-116** | [`README.md`](./ticket-116/README.md) | [`preprompt.md`](./ticket-116/preprompt.md) | - |  [`ai-antigravity.md`](./ticket-116/ai-antigravity.md) |  [`ai-antigravity-logs.txt`](./ticket-116/ai-antigravity-logs.txt) | [`changelog.md`](./ticket-116/changelog.md) |
+| **ticket-117** | [`README.md`](./ticket-117/README.md) | [`preprompt.md`](./ticket-117/preprompt.md) | - |  [`ai-codex.md`](./ticket-117/ai-codex.md) |  [`ai-codex-logs.txt`](./ticket-117/ai-codex-logs.txt) | [`changelog.md`](./ticket-117/changelog.md) |
 <!-- AUTO:TICKET_INDEX:END -->
 
 ---
