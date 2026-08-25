@@ -1,0 +1,66 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-117",
+  "summary": "Scope local worktree commit guard to the current checkout",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/worktree_guard.py",
+    "scripts/worktree_overlap_check.py",
+    "tests/worktree-overlap.test.sh",
+    "project/ticket-117/**",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python", "shell"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "22415662691eea2e4e2c3f1b91fb80468b390bdb",
+    "targetBranch": "main",
+    "outcome": "A local pre-commit worktree guard fails only for overlap pairs involving the checkout being committed, while repository and workspace audits remain complete.",
+    "nonGoals": [
+      "No weakening of conflict detection involving the active checkout",
+      "No filtering of scheduled repository or workspace audit reports",
+      "No automatic removal or mutation of sibling worktrees"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add an explicit checker focus path and have only repository commit gates bind it to their root checkout.",
+      "components": [{
+        "name": "worktree-overlap-guard",
+        "paths": [
+          "scripts/worktree_guard.py",
+          "scripts/worktree_overlap_check.py",
+          "tests/worktree-overlap.test.sh"
+        ]
+      }],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["worktree_overlap_check.py --focus-checkout PATH"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the focus option and runner propagation, then rerun the overlap integration suite."
+    },
+    "runtimeDependencies": [],
+    "validation": [{
+      "criterion": "AC-01..AC-04",
+      "commands": ["bash tests/worktree-overlap.test.sh", "git diff --check"],
+      "evidence": "project/ticket-117/ai-codex-logs.txt"
+    }]
+  }
+}
