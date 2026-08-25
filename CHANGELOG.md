@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.18.8] - 2026-08-25
+
+### Manifest-declared terminal closure enforcement
+
+- Honor both `DONE` and `CANCELLED` from `ticket.closedStatuses` in the hub and
+  managed adopter pre-commit hooks.
+- Apply the same fail-closed, governance-only path and deletion restrictions to
+  every terminal closure, including worktree guard execution.
+- Keep diagnostics and remediation status-neutral and add lifecycle regression
+  coverage for cancellation.
+
 ## [0.18.6] - 2026-08-23
 
 ### Windows pre-commit executable check fix
