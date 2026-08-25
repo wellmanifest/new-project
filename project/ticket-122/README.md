@@ -9,7 +9,8 @@
 ## Cel i Zakres
 Opublikować wersję `0.18.9` standardu `wellmanifest/new-project`, która zawiera
 scalony w `ticket-121` plugin cyklu życia governance dla pytest. Zakres zmiany
-produkcyjnej jest ograniczony do deklarowanego źródła wersji `VERSION`.
+produkcyjnej jest ograniczony do sześciu kanonicznych nośników wersji i ich
+asercji kontraktowych.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 - [ ] AC-01: `VERSION` wskazuje `0.18.9`.

@@ -13,6 +13,7 @@
     "TODO.md",
     "project/TICKETS.md",
     "VERSION",
+    "CHANGELOG.md",
     "governance/manifest.default.json",
     "governance/manifest.hub.json",
     "tests/adoption-lock.test.sh",
@@ -21,10 +22,98 @@
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
   ],
-  "stacks": [],
+  "stacks": [
+    "shell",
+    "python"
+  ],
   "dependsOn": [
     "ticket-121"
   ],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "adopt": [
+      "wellmanifest/new-project"
+    ]
+  },
+  "delivery": {
+    "acceptedBaseSha": "d958cd2e06f61551b1ab469ba66c8302cdd02af7",
+    "targetBranch": "main",
+    "outcome": "Publish the integrated pytest governance plugin as immutable new-project 0.18.9 for deterministic downstream adoption.",
+    "nonGoals": [
+      "No behavior changes beyond integrated ticket-121",
+      "No manual downstream copying or adoption before the immutable release exists",
+      "No changes to target-owned extendable governance files"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Advance the canonical version carriers and contract fixtures, then publish only after exact-head CI and independent Validator approval.",
+      "components": [
+        {
+          "name": "release-carriers",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        },
+        {
+          "name": "release-contract-tests",
+          "paths": [
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        "Advance the immutable standard version from 0.18.8 to 0.18.9"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Do not publish v0.18.9; adopters remain pinned to their previous immutable release."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "project/ticket-122/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "for suite in tests/*.test.sh; do bash $suite; done",
+          "project/governance-check.sh --base origin/main"
+        ],
+        "evidence": "project/ticket-122/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "git ls-remote --tags origin v0.18.9",
+          "gh release view v0.18.9 --repo wellmanifest/new-project"
+        ],
+        "evidence": "project/ticket-122/ai-codex-logs.txt"
+      }
+    ]
+  }
 }
