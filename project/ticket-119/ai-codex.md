@@ -36,6 +36,8 @@ exception.
   real `CANCELLED` commit followed by a rejected implementation attempt.
 - Updated diagnostic catalog and remediation documentation to name
   `ticket.closedStatuses` as the authority.
+- PR #202 passed hosted checks, received trusted exact-head approval for
+  `3e78031`, and merged as `2c7b79d`.
 
 ## Blockers
 

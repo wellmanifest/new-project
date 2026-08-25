@@ -2,8 +2,8 @@
 
 - **ID**: ticket-119
 - **Owner**: agent:codex under SESSION_EXECUTION_AUTHORIZATION
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-25
 
 ## Goal and scope
@@ -33,6 +33,17 @@ HOME `wellmanifest`, SHAPE `domain_pack`, ADOPT `wellmanifest/new-project`.
   evidence, repository indexes, and the exact generated artifact receipt.
 - This ticket does not change the lifecycle vocabulary or add another status;
   it makes enforcement agree with the existing manifest authority.
+
+## Publication evidence
+
+- Implementation PR: `wellmanifest/new-project#202`
+- Frozen Validator-approved head: `3e780314c6eaa61432901892516f5b2085bad557`
+- Trusted merge: `2c7b79d09b9379b3ff05d4a72e4adec3683e4937`
+- Merged: `2026-08-25T18:23:56Z`
+- Hosted checks: `test` and `windows-governance` passed on the frozen head.
+- Validator run: `subactor/validator-agent#32883398904`, approved and merged
+  with exact-head convergence.
+- Closure delivery mode: governed `pull-request`, registry publication disabled.
 
 ## Uczestnicy
 

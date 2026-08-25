@@ -7,3 +7,4 @@
 - Aligned hub and managed adopter hooks with both declared terminal statuses.
 - Added `CANCELLED` lifecycle enforcement coverage and status-neutral
   diagnostics.
+- Published through PR #202 and trusted merge `2c7b79d`.
