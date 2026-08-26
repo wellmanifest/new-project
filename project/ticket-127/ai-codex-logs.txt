@@ -6,6 +6,8 @@ repo-local, parallel organization roots and nested roots are noncanonical.
 2026-08-26 EVIDENCE: source revision bad8fab4ef96e770ccc4e4089bb4a3d623c1651a;
 schema sha256=0399c25a334e902d1cfa6ff44366419888d7b6281329602841c3c2766cd15442;
 checker sha256=ad978120003eef0c47c3fd3af545d6869e9d1717d945e3e0264c81238bfb1cab.
+2026-08-26 CI: kept package VERSION at 0.18.10 and recorded the change under
+Unreleased because an isolated bump would drift from manifest projections.
 2026-08-26 PRESERVATION: accidental untracked ticket-128 moved unchanged to
 workspace-relative .worktrees/.quarantine/new-project-ticket-128-accidental-20260826
 so it cannot participate in this repository's active governance scope.

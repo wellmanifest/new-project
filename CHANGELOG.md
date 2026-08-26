@@ -2,8 +2,6 @@
 
 ## [Unreleased]
 
-## [0.18.11] - 2026-08-26
-
 ### Canonical ticket worktree placement
 
 - Adopt the immutable `wellmanifest/worktrees` contract at revision

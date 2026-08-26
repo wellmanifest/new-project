@@ -26,7 +26,8 @@ contract at immutable revision `bad8fab4ef96e770ccc4e4089bb4a3d623c1651a`.
 - Vendored the published schema and pure conformance checker byte-for-byte.
 - Added a revision/digest lock and three managed package entries.
 - Added canonical-layout agent guidance and deterministic adoption tests.
-- Bumped the package version to 0.18.11 and documented the adoption.
+- Documented the adoption under `Unreleased`; a coordinated package release
+  remains outside this bounded ticket.
 
 ## Blockers
 
