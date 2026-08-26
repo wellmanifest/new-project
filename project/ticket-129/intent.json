@@ -1,0 +1,35 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-129",
+  "summary": "Enforce role-based standard pack adoption",
+  "workstream": "governance",
+  "classification": {"kind": "FEATURE", "priority": "P1", "origin": "requested"},
+  "allowedPaths": ["project/ticket-129/**", "project/ticket-127/README.md", "TODO.md", "project/TICKETS.md", "docs/STANDARD_PACK_BOUNDARIES.md", "governance/package-manifest.json", "governance/standard-adoption.default.json", "governance/standard-adoption.schema.json", "governance/standard-packs.json", "scripts/standard_pack_check.py", "template/files/new-project-governance.workflow.yml"],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {"home": "wellmanifest", "shape": "domain_pack", "adopt": ["wellmanifest/worktrees", "wellmanifest/git-lifecycle"]},
+  "delivery": {
+    "acceptedBaseSha": "2c9c3a595abdafe5afdb2be78f26f8eb7572a713",
+    "targetBranch": "main",
+    "outcome": "Attach single-owner Wellmanifest packs through role-based S0-S5 profiles and deterministic audit/enforce checks.",
+    "nonGoals": ["Mass-edit adopter repositories before publication", "Replace runtime bindings", "Authorize effects from documentation"],
+    "complexity": "L",
+    "estimatedMinutes": 30,
+    "budgets": {"maxImplementationFiles": 15, "maxAffectedComponents": 5, "maxPublicInterfaceChanges": 3, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Compose canonical packs through immutable projections, a role profile and one managed CI checker.",
+      "components": [{"name": "pack-catalog", "paths": ["governance/standard-packs.json", "docs/STANDARD_PACK_BOUNDARIES.md"]}, {"name": "adoption-contract", "paths": ["governance/standard-adoption.default.json", "governance/standard-adoption.schema.json", "scripts/standard_pack_check.py"]}, {"name": "managed-gate", "paths": ["governance/package-manifest.json", "template/files/new-project-governance.workflow.yml"]}, {"name": "delivery-record", "paths": ["project/ticket-129/**", "project/ticket-127/README.md"]}],
+      "responsibilityChanges": true,
+      "interfaceChanges": ["wellmanifest.standard-pack-routing/v1", "wellmanifest.standard-adoption/v1", "standard_pack_check.py CLI"],
+      "dataChanges": ["Role-based S0-S5 adoption evidence"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert before release; adopters remain in their existing pinned state."
+    },
+    "runtimeDependencies": [],
+    "validation": [{"criterion": "AC-01", "commands": ["python3 scripts/standard_pack_check.py --root . --catalog governance/standard-packs.json --adoption governance/standard-adoption.default.json --format json", "./project/governance-check.sh --actor agent", "git diff --check"], "evidence": "Pack audit and repository gates pass before protected publication."}]
+  }
+}
