@@ -1,0 +1,79 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-127",
+  "summary": "Adopt canonical wellmanifest/worktrees standard",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-127/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "subprojects/worktrees/worktrees.schema.json",
+    "subprojects/worktrees/conformance.py",
+    "governance/worktrees.lock.json",
+    "governance/package-manifest.json",
+    "template/files/AGENTS.template.md",
+    "tests/worktrees-adoption.test.py",
+    "VERSION",
+    "CHANGELOG.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "adopt": ["wellmanifest/worktrees"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "22bb4b9a6923a578a94a4f6a18fe169b7dd65cf4",
+    "targetBranch": "main",
+    "outcome": "Distribute the immutable wellmanifest/worktrees placement contract and enforce its canonical workspace-level layout in generated projects.",
+    "nonGoals": [
+      "Create, move or delete developer worktrees",
+      "Own Git branch lifecycle or ticket lifecycle",
+      "Add a runtime daemon or dependency"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Vendor exact schema and pure checker bytes from wellmanifest/worktrees, bind them by revision and SHA-256, and distribute them as managed governance artifacts.",
+      "components": [
+        {"name": "bundled-contract", "paths": ["subprojects/worktrees/**"]},
+        {"name": "adoption-package", "paths": ["governance/**", "template/files/AGENTS.template.md"]},
+        {"name": "validation-release", "paths": ["tests/worktrees-adoption.test.py", "VERSION", "CHANGELOG.md"]}
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        "Managed wellmanifest.worktrees/v1 layout schema",
+        "Managed worktree_path_check.py planner and validator CLI"
+      ],
+      "dataChanges": ["Pinned worktrees source revision and managed artifact digests"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the adoption commit before release; no existing adopter worktree is migrated automatically."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["python3 subprojects/worktrees/conformance.py plan --repository wellmanifest/new-project --repository-name new-project --ticket ticket-127 --slug worktrees-standard --workspace-root /workspace/wellmanifest"], "evidence": "Planner emits the canonical workspace-level paths."},
+      {"criterion": "AC-02", "commands": ["python3 -m json.tool governance/worktrees.lock.json"], "evidence": "Lock is valid JSON and pins the immutable source revision."},
+      {"criterion": "AC-03", "commands": ["python3 tests/worktrees-adoption.test.py"], "evidence": "Packaged bytes and digests match the published standard."},
+      {"criterion": "AC-04", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Generated governance package contains and validates the worktree artifacts."},
+      {"criterion": "AC-05", "commands": ["./project/governance-check.sh --actor agent", "git diff --check"], "evidence": "Repository gates pass before protected publication."}
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+2026-08-26 SESSION_EXECUTION_AUTHORIZATION: user requested a canonical
+wellmanifest/worktrees standard, adoption by new-project and publication.
+2026-08-26 DECISION: workspace-level <workspace>/.worktrees is canonical;
+repo-local, parallel organization roots and nested roots are noncanonical.
+2026-08-26 SAFETY: adoption performs no worktree migration or cleanup.
