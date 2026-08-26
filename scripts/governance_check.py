@@ -2354,18 +2354,6 @@ def check_delivery_base(
         )
 
     accepted_sha = delivery["acceptedBaseSha"]
-    try:
-        accepted_commit = git_output(
-            root, ["rev-parse", "--verify", f"{accepted_sha}^{{commit}}"]
-        ).decode().strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        report.add(
-            "GOV-BASE-001", "The accepted base revision cannot be resolved.",
-            "Fetch the complete target history and rerun against the accepted base SHA.",
-            [intent_path], {"acceptedBaseSha": accepted_sha},
-        )
-        return
-
     component_patterns = [
         pattern
         for component in delivery["architecture"]["components"]
@@ -2398,6 +2386,20 @@ def check_delivery_base(
             continue
         observed.append((target_ref, current_target))
         break
+
+    if not observed:
+        return
+    try:
+        accepted_commit = git_output(
+            root, ["rev-parse", "--verify", f"{accepted_sha}^{{commit}}"]
+        ).decode().strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        report.add(
+            "GOV-BASE-001", "The accepted base revision cannot be resolved.",
+            "Fetch the complete target history and rerun against the accepted base SHA.",
+            [intent_path], {"acceptedBaseSha": accepted_sha},
+        )
+        return
 
     checked: set[str] = set()
     for source, observed_sha in observed:
