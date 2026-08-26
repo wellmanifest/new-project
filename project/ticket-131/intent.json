@@ -1,0 +1,86 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-131",
+  "summary": "Enforce repository effect evidence without governance churn",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-131/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "tests/rule-enforcement.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": ["wellmanifest/new-project"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "eec3e681a219530bc5ce05bbb4fc645f801c5bde",
+    "targetBranch": "main",
+    "outcome": "Permit non-conflicting target-branch advancement without accepted-base repin commits while preserving fail-closed review for overlapping or non-linear drift.",
+    "nonGoals": [
+      "No weakening of exact-head Validator approval",
+      "No automatic merge or mutation authority",
+      "No replacement of immutable dependency source pins"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Treat acceptedBaseSha as the reviewed ancestor. Compare intervening target changes with declared component paths and require fresh approval only for overlap or non-linear history.",
+      "components": [
+        {
+          "name": "delivery-base-gate",
+          "paths": ["scripts/governance_check.py", "governance/diagnostics.json", "governance/rule-enforcement.json"]
+        },
+        {
+          "name": "standard-contract",
+          "paths": ["POLICY.md", "CONTRIBUTING.md", "tests/**"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["delivery.acceptedBaseSha advancement semantics"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the protected merge to restore exact-equality base validation."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "project/ticket-131/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/rule-enforcement.test.sh", "./project/governance-check.sh --actor agent"],
+        "evidence": "project/ticket-131/ai-codex-logs.txt"
+      }
+    ]
+  }
+}

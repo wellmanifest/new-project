@@ -1,0 +1,19 @@
+2026-08-26 targeted validation
+python3 -m py_compile scripts/governance_check.py: PASS
+bash tests/governance-validator.test.sh: PASS
+bash tests/rule-enforcement.test.sh: PASS
+diagnostic-catalog: 82 codes, 0 findings
+governed Goal publication contract: PASS
+rule enforcement traceability: PASS
+2026-08-26 full local CI parity
+./project/governance-check.sh --actor agent --base origin/main --head HEAD: GOV-PASS
+required-checks, decision-record, governance-scripts, governance-validator,
+branch-lifecycle, workspace-lifecycle, governance-env, adoption-lock,
+rule-enforcement, agent-hosts, pytest-plugin, worktree-overlap and fleet-report: PASS
+python3 -m pytest tests/worktrees-adoption.test.py: PASS
+2026-08-26 hosted push regression
+GitHub Actions run 32996662392 exposed a fixture with no observable Git base.
+Repair: resolve acceptedBaseSha only when a supplied base or target ref exists.
+bash tests/governance-validator.test.sh: PASS (governance validator: PASS)
+bash tests/rule-enforcement.test.sh: PASS
+./project/governance-check.sh --actor agent --base origin/main --head HEAD: GOV-PASS

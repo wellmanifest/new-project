@@ -2354,21 +2354,25 @@ def check_delivery_base(
         )
 
     accepted_sha = delivery["acceptedBaseSha"]
-    observed_base = None
+    component_patterns = [
+        pattern
+        for component in delivery["architecture"]["components"]
+        for pattern in component["paths"]
+    ]
+    observed: list[tuple[str, str]] = []
     if base:
         try:
-            observed_base = git_output(root, ["rev-parse", f"{base}^{{commit}}"]).decode().strip()
+            observed.append((
+                "suppliedBase",
+                git_output(root, ["rev-parse", f"{base}^{{commit}}"])
+                .decode()
+                .strip(),
+            ))
         except (subprocess.CalledProcessError, FileNotFoundError):
             report.add(
                 "GOV-BASE-001", "The supplied base revision cannot be resolved.",
-                "Fetch the complete target history and rerun against the exact accepted base SHA.",
+                "Fetch the complete target history and rerun against the accepted base SHA.",
                 [intent_path], {"suppliedBase": base, "acceptedBaseSha": accepted_sha},
-            )
-        if observed_base and observed_base != accepted_sha:
-            report.add(
-                "GOV-BASE-001", f"Ticket {record.directory.name} approval is bound to a stale or different base SHA.",
-                "Refresh the branch, update architecture/scope evidence and obtain fresh approval before continuing.",
-                [intent_path], {"acceptedBaseSha": accepted_sha, "observedBaseSha": observed_base},
             )
 
     target_refs = [
@@ -2380,13 +2384,81 @@ def check_delivery_base(
             current_target = git_output(root, ["rev-parse", "--verify", f"{target_ref}^{{commit}}"]).decode().strip()
         except (subprocess.CalledProcessError, FileNotFoundError):
             continue
-        if current_target != accepted_sha:
-            report.add(
-                "GOV-BASE-001", f"Target branch '{delivery['targetBranch']}' moved after ticket approval.",
-                "Refresh from the target, re-run conflict and validation checks, then obtain fresh approval if intent or architecture changed.",
-                [intent_path], {"acceptedBaseSha": accepted_sha, "currentTargetSha": current_target, "targetRef": target_ref},
-            )
+        observed.append((target_ref, current_target))
         break
+
+    if not observed:
+        return
+    try:
+        accepted_commit = git_output(
+            root, ["rev-parse", "--verify", f"{accepted_sha}^{{commit}}"]
+        ).decode().strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        report.add(
+            "GOV-BASE-001", "The accepted base revision cannot be resolved.",
+            "Fetch the complete target history and rerun against the accepted base SHA.",
+            [intent_path], {"acceptedBaseSha": accepted_sha},
+        )
+        return
+
+    checked: set[str] = set()
+    for source, observed_sha in observed:
+        if observed_sha in checked or observed_sha == accepted_commit:
+            continue
+        checked.add(observed_sha)
+        ancestor = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", accepted_commit, observed_sha],
+            cwd=root,
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if ancestor.returncode != 0:
+            report.add(
+                "GOV-BASE-001",
+                f"Ticket {record.directory.name} accepted base is not an ancestor of the observed target.",
+                "Rebuild from the current target and obtain fresh scope and architecture approval.",
+                [intent_path],
+                {
+                    "acceptedBaseSha": accepted_commit,
+                    "observedBaseSha": observed_sha,
+                    "source": source,
+                },
+            )
+            continue
+        try:
+            raw_paths = git_output(
+                root,
+                ["diff", "--name-only", "-z", f"{accepted_commit}..{observed_sha}"],
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            report.add(
+                "GOV-BASE-001", "Intervening target changes cannot be inspected.",
+                "Fetch the complete target history and rerun the overlap check.",
+                [intent_path],
+                {"acceptedBaseSha": accepted_commit, "observedBaseSha": observed_sha},
+            )
+            continue
+        intervening = sorted(
+            path
+            for path in raw_paths.decode("utf-8", "surrogateescape").split("\0")
+            if path
+        )
+        overlap = [path for path in intervening if matches(path, component_patterns)]
+        if overlap:
+            report.add(
+                "GOV-BASE-002",
+                f"Target branch changes overlap components approved for {record.directory.name}.",
+                "Refresh the branch, re-run validation and obtain fresh approval for the overlapping scope.",
+                [intent_path, *overlap],
+                {
+                    "acceptedBaseSha": accepted_commit,
+                    "observedBaseSha": observed_sha,
+                    "source": source,
+                    "componentPatterns": component_patterns,
+                    "overlappingPaths": overlap,
+                },
+            )
 
 
 def map_implementation_components(

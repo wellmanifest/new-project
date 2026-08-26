@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-131`](project/ticket-131/README.md) — dopuścić ruch target
+  branch bez metadata-only re-pina, gdy zaakceptowana baza pozostaje przodkiem,
+  a interweniujące zmiany nie nachodzą na komponenty ticketu. Stan:
+  `IN_PROGRESS / PUBLICATION`; klasyfikacja: `BUG / P1 / health`; workstream:
+  `governance`.
+
 - [x] [`ticket-126`](project/ticket-126/README.md) — publish integrated
   change-lease fencing, normative operating rules and managed target
   restoration as immutable `new-project 0.18.10`. Stan:
