@@ -28,13 +28,6 @@ contract at immutable revision `bad8fab4ef96e770ccc4e4089bb4a3d623c1651a`.
 - Added canonical-layout agent guidance and deterministic adoption tests.
 - Documented the adoption under `Unreleased`; a coordinated package release
   remains outside this bounded ticket.
-- Added a managed standard-pack routing map and documented HOME boundaries.
-- Replaced duplicated Git/worktree/merge/validator/provider procedures with
-  references to their canonical packs and adopter-owned runtime bindings.
-- Added repository-role profiles over the existing S0-S5 enforcement model.
-- Added a dependency-free adoption checker with immutable evidence, projection
-  digest verification and staged audit/enforce behavior.
-- Wired the checker into the managed governance workflow.
 
 ## Blockers
 
