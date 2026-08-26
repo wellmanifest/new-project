@@ -48,8 +48,13 @@ Before any multi-step implementation, an agent must:
    reporting completion. Root `project.sh` / `project.bat` are optional
    target-owned seed aliases and must not be assumed to contain the gate.
 9. Serialize ticket-ID allocation before branching, then use a separate
-   branch/worktree per implementation ticket. Each diff must resolve to exactly
-   one active ticket. Shared contract paths are edited only by the declared
+   branch/worktree per implementation ticket. Resolve its location with the
+   managed `wellmanifest/worktrees` checker. The canonical linked worktree is
+   `<workspace>/.worktrees/<repo>--ticket-NNN--<slug>` with its lease under
+   `<workspace>/.worktrees/.leases`; never create publishable ticket work in a
+   repo-local `.worktrees`, parallel `<organization>-worktrees`, nested
+   `.worktrees/.worktrees`, system temporary directory or duplicate clone.
+   Each diff must resolve to exactly one active ticket. Shared contract paths are edited only by the declared
    integration workstream; `integrationTicket` coordinates work but does not
    transfer path ownership. Product commercial registries (prices,
    entitlements, public plan ids) and brand facades (tokens, vocabulary,

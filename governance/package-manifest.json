@@ -104,6 +104,24 @@
       "executable": false
     },
     {
+      "source": "subprojects/worktrees/worktrees.schema.json",
+      "target": ".governance/worktrees.schema.json",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
+      "source": "subprojects/worktrees/conformance.py",
+      "target": ".governance/worktree_path_check.py",
+      "strategy": "managed",
+      "executable": true
+    },
+    {
+      "source": "governance/worktrees.lock.json",
+      "target": ".governance/worktrees.lock.json",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "scripts/change_lease_check.py",
       "target": ".governance/change_lease_check.py",
       "strategy": "managed",
