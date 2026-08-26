@@ -1,0 +1,7 @@
+2026-08-26 targeted validation
+python3 -m py_compile scripts/governance_check.py: PASS
+bash tests/governance-validator.test.sh: PASS
+bash tests/rule-enforcement.test.sh: PASS
+diagnostic-catalog: 82 codes, 0 findings
+governed Goal publication contract: PASS
+rule enforcement traceability: PASS
