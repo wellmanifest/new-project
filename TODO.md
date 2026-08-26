@@ -9,11 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
-- [ ] [`ticket-131`](project/ticket-131/README.md) — dopuścić ruch target
+- [x] [`ticket-131`](project/ticket-131/README.md) — dopuścić ruch target
   branch bez metadata-only re-pina, gdy zaakceptowana baza pozostaje przodkiem,
   a interweniujące zmiany nie nachodzą na komponenty ticketu. Stan:
-  `IN_PROGRESS / PUBLICATION`; klasyfikacja: `BUG / P1 / health`; workstream:
-  `governance`.
+  `DONE / DONE`; klasyfikacja: `BUG / P1 / health`; workstream:
+  `governance`; PR #222 przeszedł Linux, Windows oraz exact-head Validator
+  approval i został scalony jako `bcfa7cd`.
 
 - [x] [`ticket-126`](project/ticket-126/README.md) — publish integrated
   change-lease fencing, normative operating rules and managed target
