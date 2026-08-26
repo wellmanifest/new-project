@@ -34,6 +34,7 @@ for instructions in (agents, agent_template):
     assert 'events/' in instructions
     assert 'error/' in instructions
 assert 'RULE P-CORE-025 TYPE REQUIRED' in policy
+assert 'RULE P-CORE-026 TYPE REQUIRED' in policy
 assert 'operations/index.json' in policy
 assert 'open pull requests = 0' in enforcement
 assert 'remote branches = [default branch]' in enforcement
@@ -1981,6 +1982,33 @@ make_fixture "$stale_base"
   git add .
   git commit -qm 'fixture baseline'
   expect_code GOV-BASE-001 run_check "$stale_base" --base HEAD --changed-file src/app.js
+)
+
+advanced_base="$fixture/advanced-base"
+make_fixture "$advanced_base"
+(
+  cd "$advanced_base"
+  git init -q
+  git config user.email governance@example.invalid
+  git config user.name governance-fixture
+  git branch -M main
+  git add .
+  git commit -qm 'fixture accepted baseline'
+  accepted_base="$(git rev-parse HEAD)"
+  set_accepted_base "$advanced_base" "$accepted_base"
+  mkdir -p docs
+  printf '%s\n' 'unrelated target documentation' > docs/base-advance.md
+  git add docs/base-advance.md
+  git commit -qm 'advance unrelated target scope'
+  run_check "$advanced_base" --base HEAD --changed-file src/app.js \
+    > "$fixture/advanced-base.out"
+  grep -q '^GOV-PASS:' "$fixture/advanced-base.out"
+
+  printf '%s\n' 'overlapping upstream implementation' > src/upstream.js
+  git add src/upstream.js
+  git commit -qm 'advance overlapping target scope'
+  expect_code GOV-BASE-002 run_check "$advanced_base" --base HEAD \
+    --changed-file src/app.js
 )
 
 invalid_manifest="$fixture/invalid-manifest"

@@ -135,7 +135,7 @@ header = next(
     for lang, _, lines in blocks
     if lang == "dsl" and any(line == "DOCUMENT CONTRIBUTING" for line in lines)
 )
-assert "VERSION 13" in header
+assert "VERSION 14" in header
 
 declaration = re.compile(r"^(?:RULE|STATE|TRANSITION) [A-Z][A-Z0-9_-]*")
 mislabelled = [
@@ -236,6 +236,19 @@ for fragment in (
 assert {"GOV-TICKET-ALLOCATION-001", "GOV-TICKET-ALLOCATION-002"} <= set(
     mapping["C-CONCURRENCY-002"]["codes"]
 )
+
+base_advance = rule_body("C-EVALUATION-011")
+for fragment in (
+    "IS_ANCESTOR_OF TARGET_BRANCH_SHA",
+    "CONTINUE_WITHOUT_REPIN WHEN COMPONENT_OVERLAP_IS_EMPTY",
+    "BLOCK_WITH GOV-BASE-002",
+    "FORBID TREAT_UNRELATED_TARGET_MOVEMENT_AS_SCOPE_CHANGE",
+):
+    assert fragment in base_advance
+assert mapping["C-EVALUATION-011"] == {
+    "codes": ["GOV-BASE-001", "GOV-BASE-002"],
+    "enforcement": "deterministic",
+}
 print("governed Goal publication contract: PASS")
 PY
 

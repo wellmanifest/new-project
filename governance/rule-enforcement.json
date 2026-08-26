@@ -321,6 +321,13 @@
       ],
       "enforcement": "deterministic"
     },
+    "C-EVALUATION-011": {
+      "codes": [
+        "GOV-BASE-001",
+        "GOV-BASE-002"
+      ],
+      "enforcement": "deterministic"
+    },
     "C-HOST-001": {
       "codes": [
         "GOV-AGENT-HOST-004",
@@ -941,6 +948,13 @@
       ],
       "enforcement": "manual",
       "reason": "Invalid placement values fail GOV-INTENT-002. HOME vs ADOPT for new runtime_service remains agent/WAIT_FOR_APPROVAL procedure because placement is still optional on existing tickets."
+    },
+    "P-CORE-026": {
+      "codes": [
+        "GOV-BASE-001",
+        "GOV-BASE-002"
+      ],
+      "enforcement": "deterministic"
     },
     "P-DOCS-001": {
       "codes": [

@@ -66,6 +66,11 @@
       "remediation": "Rebase or rebuild from the accepted base, then update intent only through an authorized scope review.",
       "documentation": null
     },
+    "GOV-BASE-002": {
+      "message": "Target-branch advancement overlaps a component declared by the active ticket.",
+      "remediation": "Refresh the branch, rerun validation and obtain fresh scope approval; do not repin for unrelated target changes.",
+      "documentation": null
+    },
     "GOV-BOOT-001": {
       "message": "A required target-repository file is missing.",
       "remediation": "Create the target-owned prerequisite or adopt the managed file through the pinned standard package as applicable.",
