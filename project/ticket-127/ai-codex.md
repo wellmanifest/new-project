@@ -23,6 +23,10 @@ contract at immutable revision `bad8fab4ef96e770ccc4e4089bb4a3d623c1651a`.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- Vendored the published schema and pure conformance checker byte-for-byte.
+- Added a revision/digest lock and three managed package entries.
+- Added canonical-layout agent guidance and deterministic adoption tests.
+- Bumped the package version to 0.18.11 and documented the adoption.
 
 ## Blockers
 

@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.18.11] - 2026-08-26
+
+### Canonical ticket worktree placement
+
+- Adopt the immutable `wellmanifest/worktrees` contract at revision
+  `bad8fab4ef96e770ccc4e4089bb4a3d623c1651a` with SHA-256-bound schema and
+  conformance checker artifacts.
+- Distribute the schema, pure path checker and dependency lock as managed
+  governance files in generated projects.
+- Require workspace-level `.worktrees` placement and reject repo-local,
+  parallel-root, nested and duplicate-clone layouts for publishable ticket work.
+
 ## [0.18.10] - 2026-08-25
 
 ### Autonomous change fencing and managed recovery

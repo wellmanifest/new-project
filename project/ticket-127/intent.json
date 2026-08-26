@@ -42,7 +42,7 @@
       "Own Git branch lifecycle or ticket lifecycle",
       "Add a runtime daemon or dependency"
     ],
-    "complexity": "M",
+    "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
       "maxImplementationFiles": 8,
