@@ -16,6 +16,14 @@
     "subprojects/worktrees/conformance.py",
     "governance/worktrees.lock.json",
     "governance/package-manifest.json",
+    "governance/standard-packs.json",
+    "governance/standard-adoption.schema.json",
+    "governance/standard-adoption.default.json",
+    "scripts/standard_pack_check.py",
+    "template/files/new-project-governance.workflow.yml",
+    "docs/STANDARD_PACK_BOUNDARIES.md",
+    "README.md",
+    "AGENTS.md",
     "template/files/AGENTS.template.md",
     "tests/worktrees-adoption.test.py",
     "VERSION",
@@ -42,12 +50,12 @@
       "Own Git branch lifecycle or ticket lifecycle",
       "Add a runtime daemon or dependency"
     ],
-    "complexity": "S",
-    "estimatedMinutes": 30,
+    "complexity": "XL",
+    "estimatedMinutes": 45,
     "budgets": {
-      "maxImplementationFiles": 8,
-      "maxAffectedComponents": 3,
-      "maxPublicInterfaceChanges": 2,
+      "maxImplementationFiles": 25,
+      "maxAffectedComponents": 6,
+      "maxPublicInterfaceChanges": 4,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
@@ -56,14 +64,18 @@
       "components": [
         {"name": "bundled-contract", "paths": ["subprojects/worktrees/**"]},
         {"name": "adoption-package", "paths": ["governance/**", "template/files/AGENTS.template.md"]},
-        {"name": "validation-release", "paths": ["tests/worktrees-adoption.test.py", "VERSION", "CHANGELOG.md"]}
+        {"name": "validation-release", "paths": ["tests/worktrees-adoption.test.py", "VERSION", "CHANGELOG.md"]},
+        {"name": "pack-routing", "paths": ["governance/standard-packs.json", "docs/STANDARD_PACK_BOUNDARIES.md", "README.md", "AGENTS.md"]},
+        {"name": "pack-enforcement", "paths": ["governance/standard-adoption.schema.json", "governance/standard-adoption.default.json", "scripts/standard_pack_check.py", "template/files/new-project-governance.workflow.yml"]}
       ],
       "responsibilityChanges": true,
       "interfaceChanges": [
         "Managed wellmanifest.worktrees/v1 layout schema",
-        "Managed worktree_path_check.py planner and validator CLI"
+        "Managed worktree_path_check.py planner and validator CLI",
+        "Managed wellmanifest.standard-pack-routing/v1 composition map",
+        "Managed wellmanifest.standard-adoption/v1 audit and enforcement contract"
       ],
-      "dataChanges": ["Pinned worktrees source revision and managed artifact digests"],
+      "dataChanges": ["Pinned worktrees source revision and managed artifact digests", "Role-based S0-S5 pack adoption evidence"],
       "ui": {"impact": "none", "states": [], "evidence": []},
       "rollback": "Revert the adoption commit before release; no existing adopter worktree is migrated automatically."
     },

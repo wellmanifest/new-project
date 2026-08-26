@@ -20,6 +20,14 @@ by an adopting runtime.
 - [ ] AC-03: Drift between the published standard and vendored files is rejected.
 - [ ] AC-04: Generated projects receive the schema, checker and lock as managed files.
 - [ ] AC-05: Package tests and repository governance pass.
+- [ ] AC-06: Git, worktree, merge, attestation, ticket and LLM responsibilities
+  resolve to one HOME pack each.
+- [ ] AC-07: `wellmanifest/git` resolves to `wellmanifest/git-lifecycle` without
+  creating a duplicate standard.
+- [ ] AC-08: Standard-pack profiles reuse the canonical `S0-S5` model and map
+  repository roles to minimum deterministic evidence.
+- [ ] AC-09: A dependency-free checker distinguishes immutable managed
+  projections from source duplication and supports staged `audit`/`enforce` CI.
 
 ## Ryzyka i Uwagi
 

@@ -47,87 +47,48 @@ Before any multi-step implementation, an agent must:
    `project\governance-check.bat` on Windows) plus the stack checks before
    reporting completion. Root `project.sh` / `project.bat` are optional
    target-owned seed aliases and must not be assumed to contain the gate.
-9. Serialize ticket-ID allocation before branching, then use a separate
-   branch/worktree per implementation ticket. Resolve its location with the
-   managed `wellmanifest/worktrees` checker. The canonical linked worktree is
-   `<workspace>/.worktrees/<repo>--ticket-NNN--<slug>` with its lease under
-   `<workspace>/.worktrees/.leases`; never create publishable ticket work in a
-   repo-local `.worktrees`, parallel `<organization>-worktrees`, nested
-   `.worktrees/.worktrees`, system temporary directory or duplicate clone.
-   Each diff must resolve to exactly one active ticket. Shared contract paths are edited only by the declared
-   integration workstream; `integrationTicket` coordinates work but does not
-   transfer path ownership. Product commercial registries (prices,
-   entitlements, public plan ids) and brand facades (tokens, vocabulary,
-   public plan names) belong in `integration.requiredForPaths`. For Subactor,
-   bump `subactor/offer` and/or `subactor/brand` before any portal facade
-   rewrite; `wellmanifest/policy-dsl` owns promo rules only. Empty
-   `conflictsWith` does not authorize a parallel offer or brand rewrite.
+9. ADOPT `wellmanifest/worktrees` for canonical checkout placement and lease
+   identity, and `wellmanifest/git-lifecycle` for branch/ref/PR transitions.
+   `wellmanifest/git` is only an alias of `wellmanifest/git-lifecycle`. Keep one
+   ticket, branch, leased delivery worktree and pull request per delivery unit.
+   Shared contracts remain owned by the declared integration workstream and
+   their HOME domain packs; `integrationTicket` does not transfer ownership.
 10. Only `IN_PROGRESS` reserves a workstream and write scope. `BACKLOG`, `PLAN`
    and `BLOCKED` retain evidence without blocking another implementation;
    transition back to `IN_PROGRESS` before changing source or tests.
-11. Treat GitHub review as trusted only when it targets the current HEAD and
-   either a `User` login is in protected `trusted-reviewers` or a `Bot` login
-   is in the separate protected `trusted-validator-apps` input. Never trust an
-   arbitrary Bot review.
-11a. **INVOKE VALIDATOR-AGENT — do not ask the human.** When publication needs
-   trusted merge approval (protected default branch, merge blocked on reviews,
-   or the user asks to publish/merge), the coding agent MUST dispatch
-   `subactor/validator-agent` itself:
-
-   ```bash
-   # from a checkout of subactor/validator-agent @ main
-   ./bin/dispatch-direct-pr.sh \
-     --owner <org> --name <repo> --pr <N> --ticket ticket-NNN \
-     --wait-checks --merge --watch
-   ```
-
-   Freeze: re-read `gh pr view <N> --json headRefOid` immediately before
-   dispatch; do not push after freeze until approve or fail. MUST NOT ask the
-   human to “use the validator”, MUST NOT self-approve, and MUST NOT treat
-   chat/Markdown as merge approval. Normative:
-   `subactor/validator-agent/docs/PUBLICATION_FREEZE.md`.
-12. Require merge approval evidence to bind repository, PR, current HEAD,
-   active ticket and actor. The protected resolver creates that evidence
-   outside the PR checkout; repository-authored evidence is untrusted.
-13. A signed attestation is trusted only after a protected verifier validates
-   its signature, issuer, predicate type and subject bindings.
-14. Validator-agent examples use
-   `LLM_MODEL_VALIDATOR=openrouter/z-ai/glm-5.2`; model findings stay advisory.
-15. Configure GitHub with `delete_branch_on_merge=true`. A merged ticket branch
-   must disappear after merge. A PR closed without merge keeps its branch until
-   the owner explicitly discards that unmerged work. When no PR is open, the
-   only remote branch is the default branch.
-16. At merge, publication or explicit pilot discard, inventory temporary linked
-   worktrees, duplicate clones and non-default local branches. Verify dirty state and HEAD reachability
-   before removal; preserve unknown or unique data. Remove an exact linked
-   worktree through Git, prune its metadata and only then delete its released
-   disposable branch. Prefer recoverable trash for a verified duplicate clone.
-   The checker is read-only; during active work exempt a branch only through
-   the exact allowlisted checkout path, never a pattern or branch name. Run the
-   adopted workspace lifecycle checker through Goal for the terminal audit. CI
-   validates GitHub state separately and cannot inspect a developer filesystem.
-17. Allocate every ticket ID only through `./project/new-ticket.sh` after
+11. ADOPT `wellmanifest/validation-attestation` for trusted exact-head evidence
+   and `wellmanifest/merge` for disposition and merge decisions. Freeze the
+   current HEAD before independent validation; a target runtime binding invokes
+   its validator. Chat, repository-authored evidence and arbitrary Bot reviews
+   are never trusted approval.
+12. Keep LLM findings advisory under `wellmanifest/llm`; provider/model routing
+   belongs to the adopting runtime, not this bootstrap standard.
+13. Apply terminal remote-branch rules from `wellmanifest/git-lifecycle` and
+   terminal local-checkout rules from `wellmanifest/worktrees`. Preserve dirty,
+   unique, active or unknown work. Cleanup requires exact observations and a
+   runtime receipt; neither pack silently deletes or merges.
+14. Allocate every ticket ID only through `./project/new-ticket.sh` after
    fetching/pruning. Never create or copy `project/ticket-{NNN}` manually; the
    clone-wide lock and high-water reservation must exist before commit.
-18. Keep an implementation ticket `IN_PROGRESS / PUBLICATION` through
+15. Keep an implementation ticket `IN_PROGRESS / PUBLICATION` through
    exact-head review and trusted merge. Set `DONE / DONE` only in a
    governance-only closure based on the integrated default branch.
-19. Resolve `GOV-*` findings through `.governance/diagnostics.json` and its
+16. Resolve `GOV-*` findings through `.governance/diagnostics.json` and its
    linked `.governance/error/*.md` runbook when present. Ticket logs are
    historical evidence and never authorize bypassing a fail-closed gate.
-20. Keep each incident-specific `remediation-intent.dsl.json` in its target
+17. Keep each incident-specific `remediation-intent.dsl.json` in its target
    ticket. Validate it, atomically render its declared task/TODO paths and run
    `verify-todo2code` before extraction. Analyze todo2code with the exact graph,
    diagnostics and plans so only records citing those projections can affect
    the digest-bound advisory overlay; never let todo2code or an LLM expand the
    accepted intent.
-21. When `.governance/manifest.json` selects `domainContracts.mode=cqrs`, keep
+18. When `.governance/manifest.json` selects `domainContracts.mode=cqrs`, keep
    command and query definitions only in `operations/index.json`. Publish the
    mandatory `events/index.json` and `error/index.json` catalogs with stable
    `events/{event-id}.md` and `error/{code}.md` documents. Protobuf and JSON
    Schema models describe transport shape only; they never grant authority or
    redefine C/Q semantics. Run the managed gate after every graph change.
-22. Host-agnostic standard: follow `GEMINI.md`, `CLAUDE.md`, and
+19. Host-agnostic standard: follow `GEMINI.md`, `CLAUDE.md`, and
    `.cursor/rules/new-project-standard.mdc` in addition to this file. Run
    `./scripts/install-agent-hosts.sh` once per clone so `.githooks/pre-commit`
    rejects commits that are not bound to an `IN_PROGRESS` `ticket-NNN`. Do

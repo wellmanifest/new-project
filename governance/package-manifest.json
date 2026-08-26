@@ -378,6 +378,30 @@
       "target": "wellmanifest_governance.py",
       "strategy": "managed",
       "executable": false
+    },
+    {
+      "source": "governance/standard-packs.json",
+      "target": ".governance/standard-packs.json",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
+      "source": "governance/standard-adoption.schema.json",
+      "target": ".governance/standard-adoption.schema.json",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
+      "source": "governance/standard-adoption.default.json",
+      "target": ".governance/standard-adoption.json",
+      "strategy": "extendable",
+      "executable": false
+    },
+    {
+      "source": "scripts/standard_pack_check.py",
+      "target": ".governance/standard_pack_check.py",
+      "strategy": "managed",
+      "executable": true
     }
   ]
 }

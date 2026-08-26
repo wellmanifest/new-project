@@ -11,6 +11,12 @@
   governance files in generated projects.
 - Require workspace-level `.worktrees` placement and reject repo-local,
   parallel-root, nested and duplicate-clone layouts for publishable ticket work.
+- Publish a managed standard-pack routing map with one semantic HOME per
+  concern and `wellmanifest/git` as an alias of `wellmanifest/git-lifecycle`.
+- Replace duplicated Git/worktree/merge/validator/provider procedures with
+  canonical pack references and adopter-owned runtime bindings.
+- Add role-based S0-S5 execution profiles and a managed standard-pack checker
+  that detects missing evidence, ambiguous ownership and projection drift.
 
 ## [0.18.10] - 2026-08-25
 

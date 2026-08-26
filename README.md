@@ -3,7 +3,15 @@
 [![Purpose: Governance](https://img.shields.io/badge/Purpose-Governance_%26_Policy-blue.svg)](#)
 [![AI Agent Ready](https://img.shields.io/badge/AI_Agents-Ready-success.svg)](#)
 
-Repozytorium `wellmanifest/new-project` stanowi wyłączne, oficjalne źródło polityk bezpieczeństwa, procedur pracy oraz uniwersalnych narzędzi automatyzujących dla ludzi oraz autonomicznych agentów AI.
+Repozytorium `wellmanifest/new-project` jest hubem bootstrapu i kompozycji
+standardów dla ludzi oraz autonomicznych agentów AI. Nie jest drugim źródłem
+semantyki packów domenowych: każda reguła HOME istnieje w jednym repozytorium,
+a `new-project` jedynie wskazuje, przypina i dystrybuuje jej niezmienną
+projekcję adopcyjną.
+
+Granice właścicieli, alias `wellmanifest/git` oraz zasady nieduplikowania są w
+[`docs/STANDARD_PACK_BOUNDARIES.md`](docs/STANDARD_PACK_BOUNDARIES.md) i
+[`governance/standard-packs.json`](governance/standard-packs.json).
 
 > **UTRZYMANIE HUBA (`P-CORE-007`):** Niniejsze repozytorium jest edytowalnym
 > źródłem standardu. Każda wieloetapowa zmiana standardu musi odbywać się w
