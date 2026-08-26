@@ -394,7 +394,7 @@
     {
       "source": "governance/standard-adoption.default.json",
       "target": ".governance/standard-adoption.json",
-      "strategy": "extendable",
+      "strategy": "seed",
       "executable": false
     },
     {

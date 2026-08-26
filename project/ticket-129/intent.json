@@ -16,9 +16,9 @@
     "targetBranch": "main",
     "outcome": "Attach single-owner Wellmanifest packs through role-based S0-S5 profiles and deterministic audit/enforce checks.",
     "nonGoals": ["Mass-edit adopter repositories before publication", "Replace runtime bindings", "Authorize effects from documentation"],
-    "complexity": "XL",
+    "complexity": "L",
     "estimatedMinutes": 45,
-    "budgets": {"maxImplementationFiles": 25, "maxAffectedComponents": 6, "maxPublicInterfaceChanges": 4, "maxRuntimeDependencies": 0},
+    "budgets": {"maxImplementationFiles": 15, "maxAffectedComponents": 5, "maxPublicInterfaceChanges": 3, "maxRuntimeDependencies": 0},
     "architecture": {
       "status": "accepted",
       "decision": "Compose canonical packs through immutable projections, a role profile and one managed CI checker.",
