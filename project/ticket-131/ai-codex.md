@@ -38,3 +38,10 @@ potrzebna tylko przy rzeczywistym konflikcie zakresu lub nieliniowej historii.
   external coordination or material objective expansion. Protected delivery
   may be invoked without another prompt when publication is in scope; its
   exact-head trusted approval remains independent evidence.
+
+## Integrated result
+
+- Exact implementation head `523d342112c77f12f38fbba40426340bd732b5a0`
+  received Validator App approval and was merged by the protected process.
+- Merge commit `bcfa7cdce7053334c5cd6c7e60fa95da43568557` is present on
+  the default branch; this closure contains governance evidence only.

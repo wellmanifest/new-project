@@ -2,8 +2,8 @@
 
 - **ID**: ticket-131
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
-- **Workflow state**: PUBLICATION
+- **Status**: DONE
+- **Workflow state**: DONE
 - **Utworzono**: 2026-08-26
 
 ## Cel i Zakres
