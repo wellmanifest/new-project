@@ -94,6 +94,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
+          python3 .governance/standard_pack_check.py --root . --format json
           arguments=(--root . --manifest .governance/manifest.json
             --lock .governance/manifest.lock.json
             --stack-profiles .governance/stack-profiles.json --actor ci)
