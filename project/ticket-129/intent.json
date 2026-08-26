@@ -17,7 +17,7 @@
     "outcome": "Attach single-owner Wellmanifest packs through role-based S0-S5 profiles and deterministic audit/enforce checks.",
     "nonGoals": ["Mass-edit adopter repositories before publication", "Replace runtime bindings", "Authorize effects from documentation"],
     "complexity": "L",
-    "estimatedMinutes": 45,
+    "estimatedMinutes": 30,
     "budgets": {"maxImplementationFiles": 15, "maxAffectedComponents": 5, "maxPublicInterfaceChanges": 3, "maxRuntimeDependencies": 0},
     "architecture": {
       "status": "accepted",
