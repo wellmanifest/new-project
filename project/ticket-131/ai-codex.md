@@ -24,6 +24,12 @@ potrzebna tylko przy rzeczywistym konflikcie zakresu lub nieliniowej historii.
 
 - Initialized the bounded ticket and recorded `SESSION_EXECUTION_AUTHORIZATION`
   from the request to execute this work.
+- Replaced exact target/base equality with an ancestor and intervening-path
+  evaluation bound to the ticket's declared architecture components.
+- Added deterministic `GOV-BASE-002` overlap evidence and retained
+  `GOV-BASE-001` for unresolved or non-linear histories.
+- Added positive unrelated-advance and negative overlap regressions; the full
+  Linux CI suite and local governance gate pass.
 
 ## Blockers
 

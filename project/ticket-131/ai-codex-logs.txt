@@ -5,3 +5,9 @@ bash tests/rule-enforcement.test.sh: PASS
 diagnostic-catalog: 82 codes, 0 findings
 governed Goal publication contract: PASS
 rule enforcement traceability: PASS
+2026-08-26 full local CI parity
+./project/governance-check.sh --actor agent --base origin/main --head HEAD: GOV-PASS
+required-checks, decision-record, governance-scripts, governance-validator,
+branch-lifecycle, workspace-lifecycle, governance-env, adoption-lock,
+rule-enforcement, agent-hosts, pytest-plugin, worktree-overlap and fleet-report: PASS
+python3 -m pytest tests/worktrees-adoption.test.py: PASS

@@ -12,7 +12,7 @@
 - [ ] [`ticket-131`](project/ticket-131/README.md) — dopuścić ruch target
   branch bez metadata-only re-pina, gdy zaakceptowana baza pozostaje przodkiem,
   a interweniujące zmiany nie nachodzą na komponenty ticketu. Stan:
-  `IN_PROGRESS / EDIT`; klasyfikacja: `BUG / P1 / health`; workstream:
+  `IN_PROGRESS / PUBLICATION`; klasyfikacja: `BUG / P1 / health`; workstream:
   `governance`.
 
 - [x] [`ticket-126`](project/ticket-126/README.md) — publish integrated

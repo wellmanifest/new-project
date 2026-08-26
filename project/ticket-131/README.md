@@ -3,7 +3,7 @@
 - **ID**: ticket-131
 - **Owner**: unresolved:human
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-08-26
 
 ## Cel i Zakres
@@ -14,9 +14,9 @@ interweniujący diff z komponentami zadeklarowanymi w intencji. Kolizja lub
 nieliniowa historia nadal wymaga świeżej akceptacji.
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [ ] AC-01: Niepowiązana zmiana na target branch nie wymaga zmiany
+- [x] AC-01: Niepowiązana zmiana na target branch nie wymaga zmiany
   `acceptedBaseSha` i przechodzi walidację.
-- [ ] AC-02: Zmiana nachodząca na komponent ticketu oraz historia nieliniowa
+- [x] AC-02: Zmiana nachodząca na komponent ticketu oraz historia nieliniowa
   nadal kończą się stabilnym błędem governance.
 
 ## Ryzyka i Uwagi
