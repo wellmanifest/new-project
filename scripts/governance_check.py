@@ -1725,8 +1725,8 @@ def check_coordination(
     if not changed:
         # Ticket records merged into the clean default-branch snapshot are
         # authorization history, not evidence of concurrent live writers. A
-        # current change selects its lease below; implementation authorization
-        # remains independently fail-closed in check_change_gate.
+        # current non-empty change selects its lease below; implementation
+        # authorization remains independently fail-closed in check_change_gate.
         active = []
     else:
         changed_active = [
