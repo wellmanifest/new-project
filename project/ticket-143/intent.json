@@ -1,0 +1,60 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-143",
+  "summary": "Durable ignored targets and CI host bootstrap",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P0",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-143/**",
+    "project/TICKETS.md",
+    "scripts/create_adoption_lock.py",
+    "template/files/wellmanifest_governance.py",
+    "tests/adoption-lock.test.sh",
+    "tests/pytest-plugin.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python", "bash"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "88bc0b5d54ddd6e46cd9aa589779293180f36352",
+    "targetBranch": "main",
+    "outcome": "Adoption cannot pass locally with ignored managed files, and pytest governance works in a fresh shallow GitHub checkout.",
+    "nonGoals": ["Stage target files automatically", "Relax managed digest or host checks"],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reject ignored payload targets before writes and bootstrap only clone-local hook/base context inside the pytest lifecycle bridge.",
+      "components": [
+        {"name": "adoption-generator", "paths": ["scripts/create_adoption_lock.py", "tests/adoption-lock.test.sh"]},
+        {"name": "pytest-lifecycle", "paths": ["template/files/wellmanifest_governance.py", "tests/pytest-plugin.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Ignored-target adoption precondition"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert this ticket and publish a later corrective standard release."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/adoption-lock.test.sh"], "evidence": "Ignored managed targets fail without writes."},
+      {"criterion": "AC-02", "commands": ["bash tests/pytest-plugin.test.sh"], "evidence": "Managed hook activation passes."},
+      {"criterion": "AC-03", "commands": ["bash tests/pytest-plugin.test.sh"], "evidence": "Shallow PR base resolution passes."},
+      {"criterion": "AC-04", "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done"], "evidence": "Full deterministic suite passes."}
+    ]
+  }
+}

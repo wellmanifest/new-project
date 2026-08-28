@@ -46,6 +46,23 @@ candidate_adopt() {
     --allow-unpublished-for-testing "$@"
 }
 
+ignored_target="$fixture/ignored-target"
+mkdir -p "$ignored_target"
+git -C "$ignored_target" init -q
+printf '%s\n' '.github/' > "$ignored_target/.gitignore"
+before_ignored="$(find "$ignored_target" -mindepth 1 -not -path '*/.git/*' -printf '%P\n' | sort)"
+if candidate_adopt "$standard" \
+  --target-root "$ignored_target" --source-revision "$revision" \
+  > "$fixture/ignored.out" 2> "$fixture/ignored.err"; then
+  echo 'expected ignored managed adoption targets to fail closed' >&2
+  exit 1
+fi
+grep -Fq 'managed adoption targets are ignored by target Git rules' "$fixture/ignored.err"
+grep -Fq '.github/copilot-instructions.md' "$fixture/ignored.err"
+grep -Fq '.github/workflows/new-project-governance.yml' "$fixture/ignored.err"
+after_ignored="$(find "$ignored_target" -mindepth 1 -not -path '*/.git/*' -printf '%P\n' | sort)"
+test "$after_ignored" = "$before_ignored"
+
 unpublished_target="$fixture/unpublished-target"
 mkdir -p "$unpublished_target"
 if python3 "$standard/scripts/create_adoption_lock.py" \

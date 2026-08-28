@@ -7,14 +7,13 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
 import re
 import subprocess
 import tempfile
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
-
 
 PACKAGE_MANIFEST = "governance/package-manifest.json"
 MANIFEST_SOURCE = "governance/manifest.default.json"
@@ -396,6 +395,36 @@ def missing_target_prerequisites(
     return sorted(missing)
 
 
+def ignored_payload_targets(target_root: Path, targets: set[str]) -> list[str]:
+    """Return untracked package targets excluded by target Git ignore rules."""
+    if not targets or not target_root.is_dir():
+        return []
+    work_tree = subprocess.run(
+        ["git", "rev-parse", "--is-inside-work-tree"],
+        cwd=target_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if work_tree.returncode != 0 or work_tree.stdout.strip() != "true":
+        return []
+    encoded = b"".join(target.encode("utf-8") + b"\0" for target in sorted(targets))
+    result = subprocess.run(
+        ["git", "check-ignore", "--stdin", "-z"],
+        cwd=target_root,
+        input=encoded,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode not in {0, 1}:
+        raise SystemExit("target Git ignore rules could not be evaluated safely")
+    return sorted(
+        path.decode("utf-8")
+        for path in result.stdout.split(b"\0")
+        if path
+    )
+
+
 def report_missing_target_prerequisites(paths: list[str]) -> None:
     for path in paths:
         print(f"MISSING target prerequisite {path}")
@@ -499,6 +528,12 @@ def main() -> int:
         managed_targets,
         publication_status,
     )
+    ignored_targets = ignored_payload_targets(target_root, set(payloads))
+    if ignored_targets:
+        raise SystemExit(
+            "managed adoption targets are ignored by target Git rules; "
+            "make them trackable before retrying: " + ", ".join(ignored_targets)
+        )
     changes = planned_changes(target_root, payloads, expected_lock, executable_targets)
     missing_prerequisites = missing_target_prerequisites(target_root, manifest, payloads)
 
