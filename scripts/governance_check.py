@@ -1542,6 +1542,47 @@ def integration_reference_valid(record: TicketRecord | None, required_workstream
     )
 
 
+def atomic_adoption_binding_paths(
+    root: Path,
+    manifest: dict[str, Any],
+    intent: dict[str, Any],
+) -> set[str]:
+    """Return the closed set of target-owned files required during adoption."""
+    delivery = intent.get("delivery")
+    if not isinstance(delivery, dict) or "standardAdoption" not in delivery:
+        return set()
+    bindings: set[str] = set()
+    contract_path = next(
+        (
+            root / candidate
+            for candidate in (".governance/agent-hosts.json", "governance/agent-hosts.json")
+            if (root / candidate).is_file()
+        ),
+        None,
+    )
+    if contract_path is not None:
+        try:
+            contract = load_json(contract_path)
+            packaging = contract.get("packaging", {})
+            if isinstance(packaging, dict):
+                for binding in packaging.values():
+                    marker = binding.get("marker") if isinstance(binding, dict) else None
+                    if isinstance(marker, str) and relative_pattern(marker) and (root / marker).is_file():
+                        bindings.add(marker)
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            pass  # The authoritative agent-host validator reports malformed contracts.
+    docker = manifest.get("docker", {})
+    if isinstance(docker, dict) and docker.get("required") is True:
+        for field in ("dockerfiles", "composeFiles"):
+            candidates = docker.get(field, [])
+            if isinstance(candidates, list):
+                bindings.update(
+                    path for path in candidates
+                    if isinstance(path, str) and relative_pattern(path) and (root / path).is_file()
+                )
+    return bindings
+
+
 def check_active_relationships(
     root: Path,
     config: dict[str, Any],
@@ -1592,6 +1633,7 @@ def check_active_relationships(
 
 def check_workstream_claims(
     root: Path,
+    manifest: dict[str, Any],
     config: dict[str, Any],
     workstreams: dict[str, Any],
     governance_patterns: list[str],
@@ -1602,19 +1644,22 @@ def check_workstream_claims(
     for record in valid_active:
         assert record.intent is not None
         owned_paths = workstreams[record.intent["workstream"]]["ownedPaths"]
+        adoption_bindings = atomic_adoption_binding_paths(root, manifest, record.intent)
         implementation_patterns = [
             pattern for pattern in record.intent["allowedPaths"]
             if not matches(pattern, governance_patterns)
         ]
         unowned_patterns = [
             pattern for pattern in implementation_patterns
-            if not any(pattern_covered_by(pattern, owned) for owned in owned_paths)
+            if pattern not in adoption_bindings
+            and not any(pattern_covered_by(pattern, owned) for owned in owned_paths)
         ]
         unowned_claims = [
             path for path in files
             if not matches(path, governance_patterns)
             and matches(path, record.intent["allowedPaths"])
             and not matches(path, record.intent["forbiddenPaths"])
+            and path not in adoption_bindings
             and not matches(path, owned_paths)
         ]
         if unowned_patterns or unowned_claims:
@@ -1752,7 +1797,7 @@ def check_coordination(
     check_active_relationships(root, config, coordination, records, active, valid_active, report)
     files = repository_files(root, changed)
     governance_patterns = manifest["governancePaths"]
-    check_workstream_claims(root, config, workstreams, governance_patterns, files, valid_active, report)
+    check_workstream_claims(root, manifest, config, workstreams, governance_patterns, files, valid_active, report)
     if coordination["rejectActiveScopeOverlap"]:
         check_scope_overlaps(valid_active, files, governance_patterns, report)
 
@@ -2720,6 +2765,8 @@ def check_selected_ticket_state(
 
 
 def check_workstream_change_scope(
+    root: Path,
+    manifest: dict[str, Any],
     records: list[TicketRecord],
     coordination: dict[str, Any],
     selected: TicketRecord,
@@ -2728,9 +2775,13 @@ def check_workstream_change_scope(
 ) -> None:
     intent = selected.intent
     assert intent is not None
+    adoption_bindings = atomic_adoption_binding_paths(root, manifest, intent)
     workstream = coordination["workstreams"].get(intent["workstream"])
     if isinstance(workstream, dict):
-        unowned = [path for path in implementation if not matches(path, workstream["ownedPaths"])]
+        unowned = [
+            path for path in implementation
+            if path not in adoption_bindings and not matches(path, workstream["ownedPaths"])
+        ]
         if unowned:
             report.add(
                 "GOV-WORKSTREAM-003", f"Changed paths are not owned by workstream '{intent['workstream']}'.",
@@ -2738,7 +2789,10 @@ def check_workstream_change_scope(
                 unowned, {"ticket": selected.directory.name, "workstream": intent["workstream"], "ownedPaths": workstream["ownedPaths"]},
             )
     integration = coordination["integration"]
-    shared = [path for path in implementation if matches(path, integration["requiredForPaths"])]
+    shared = [
+        path for path in implementation
+        if path not in adoption_bindings and matches(path, integration["requiredForPaths"])
+    ]
     if shared and intent["workstream"] != integration["workstream"]:
         integration_name = intent["integrationTicket"]
         integration_record = next((record for record in records if record.directory.name == integration_name), None)
@@ -2781,7 +2835,7 @@ def check_selected_ticket_intent(
             )
         coordination = manifest.get("coordination")
         if isinstance(coordination, dict) and intent.get("schema") in {"new-project.intent/v2", "new-project.intent/v3"}:
-            check_workstream_change_scope(records, coordination, selected, implementation, report)
+            check_workstream_change_scope(root, manifest, records, coordination, selected, implementation, report)
         if intent is not None:
             check_delivery_gate(root, manifest, selected, implementation, base, elapsed_minutes, report)
 
