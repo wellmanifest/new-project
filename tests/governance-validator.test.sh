@@ -2423,6 +2423,56 @@ for mutation in schema-ref kind-order priority-order derivation rule-order \
   assert_classification_drift "$mutation"
 done
 
+# Atomic adoption may cross ownership only for target files required by the
+# adopted host/Docker contracts. Ordinary application paths remain rejected.
+python3 - "$repo_root/scripts/governance_check.py" "$fixture/adoption-bindings" <<'PY'
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+spec = importlib.util.spec_from_file_location("governance_check", sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+root = Path(sys.argv[2])
+(root / ".governance").mkdir(parents=True)
+(root / ".governance/agent-hosts.json").write_text(json.dumps({
+    "packaging": {
+        "python": {"marker": "pyproject.toml"},
+        "node": {"marker": "package.json"},
+    }
+}), encoding="utf-8")
+for name in ("pyproject.toml", "package.json", "Dockerfile", "compose.yml"):
+    (root / name).write_text("fixture\n", encoding="utf-8")
+manifest = {
+    "docker": {"required": True, "dockerfiles": ["Dockerfile"], "composeFiles": ["compose.yml"]},
+}
+intent = {
+    "workstream": "governance",
+    "allowedPaths": ["package.json", "pyproject.toml", "Dockerfile", "compose.yml", "src/**"],
+    "forbiddenPaths": [],
+    "delivery": {"standardAdoption": {}},
+}
+expected = {"package.json", "pyproject.toml", "Dockerfile", "compose.yml"}
+assert module.atomic_adoption_binding_paths(root, manifest, intent) == expected
+coordination = {
+    "workstreams": {"governance": {"ownedPaths": [".governance/**", "project/**"]}},
+    "integration": {"workstream": "integration", "requiredForPaths": ["package.json", "pyproject.toml"]},
+}
+record = module.TicketRecord(root / "project/ticket-001", "IN_PROGRESS", "EDIT", intent, None)
+report = module.Report(root)
+module.check_workstream_change_scope(
+    root, manifest, [record], coordination, record, sorted(expected), report
+)
+assert report.errors == 0, report.payload()
+report = module.Report(root)
+module.check_workstream_change_scope(
+    root, manifest, [record], coordination, record, [*sorted(expected), "src/app.py"], report
+)
+assert [item.code for item in report.findings] == ["GOV-WORKSTREAM-003"], report.payload()
+PY
+
 # Multi-agent change-lease: accepted freeze, stale fencing, frozen-head
 # mutation and non-monotonic receipts are part of the mandatory CI suite.
 change_lease_dir="$fixture/change-lease"

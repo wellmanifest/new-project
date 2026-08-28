@@ -1,0 +1,44 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-141",
+  "summary": "Permit bounded target bindings in atomic standard adoption",
+  "workstream": "governance",
+  "classification": {"kind": "BUG", "priority": "P0", "origin": "regression"},
+  "allowedPaths": [
+    "project/ticket-141/**",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": ["python", "bash"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ce58d9e6cdddfb8eb0b9fcf0ec969739dc009a76",
+    "targetBranch": "main",
+    "outcome": "Atomic adoption accepts only its required target bindings across workstream ownership while ordinary source changes remain rejected.",
+    "nonGoals": ["Grant integration repository-wide ownership", "Weaken managed-payload hash verification"],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {"maxImplementationFiles": 2, "maxAffectedComponents": 2, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Derive an exact binding allowlist from the adopted agent-host packaging contract and manifest Docker paths; keep every other path under normal ownership.",
+      "components": [
+        {"name": "governance-runtime", "paths": ["scripts/governance_check.py"]},
+        {"name": "governance-regression-suite", "paths": ["tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Atomic standard-adoption ownership validation"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the bounded exception and publish a later corrective standard version."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Required bindings pass and unrelated source remains rejected."},
+      {"criterion": "AC-02", "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done"], "evidence": "Full deterministic standard suite passes."}
+    ]
+  }
+}
