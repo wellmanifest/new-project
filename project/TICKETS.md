@@ -148,6 +148,7 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-140** | [`README.md`](./ticket-140/README.md) | - | - | - | - | - |
 | **ticket-141** | [`README.md`](./ticket-141/README.md) | - | - | - | - | - |
 | **ticket-142** | [`README.md`](./ticket-142/README.md) | - | - | - | - | - |
+| **ticket-143** | [`README.md`](./ticket-143/README.md) | - | - |  [`ai-codex.md`](./ticket-143/ai-codex.md) | - | [`changelog.md`](./ticket-143/changelog.md) |
 <!-- AUTO:TICKET_INDEX:END -->
 
 ---

@@ -14,7 +14,7 @@ permissions:
 jobs:
   remote-lifecycle:
     name: governance / remote lifecycle
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.NEW_PROJECT_RUNNER_LABEL || 'ubuntu-latest' }}
     steps:
       - name: Check out governed repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -76,7 +76,7 @@ jobs:
     name: governance / enforce
     # A closed pull request has nothing left to gate; remote-lifecycle still runs.
     if: github.event.action != 'closed'
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.NEW_PROJECT_RUNNER_LABEL || 'ubuntu-latest' }}
     steps:
       - name: Check out the exact revision under review
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

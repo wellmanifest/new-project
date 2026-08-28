@@ -1,0 +1,60 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-144",
+  "summary": "Allow portable governance runner selection",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    ".github/workflows/governance.yml",
+    "project/ticket-144/**",
+    "project/TICKETS.md",
+    "template/files/new-project-governance.workflow.yml",
+    "tests/branch-lifecycle.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "97240655640c9c46e1cfd62d60adb2757a9ea1a8",
+    "targetBranch": "main",
+    "outcome": "Governance adopters can select an authorized self-hosted runner while repositories without configuration retain the hosted default.",
+    "nonGoals": [
+      "Do not provision runners or change adopter repository settings in this standard ticket",
+      "Do not weaken required checks, exact-head checkout or approval policy"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Expose one runner-label input on the reusable workflow and one repository-variable override on the managed workflow, both defaulting to ubuntu-latest.",
+      "components": [
+        {"name": "reusable-governance-workflow", "paths": [".github/workflows/governance.yml"]},
+        {"name": "managed-adopter-workflow", "paths": ["template/files/new-project-governance.workflow.yml", "tests/branch-lifecycle.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Optional workflow_call input runner-label"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the ticket; every workflow returns to ubuntu-latest."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/branch-lifecycle.test.sh"], "evidence": "Managed and reusable workflows expose bounded runner selection with hosted fallback."},
+      {"criterion": "AC-02", "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done"], "evidence": "Full deterministic standard suite passes."}
+    ]
+  }
+}
