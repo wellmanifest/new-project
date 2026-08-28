@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-08-28
+
+### Atomic target-owned adoption profile
+
+- Classify `.governance/standard-adoption.json` as a governance carrier in
+  both adopter and hub manifests so introducing the seed during an immutable
+  standard upgrade does not become a false cross-workstream product change.
+- Add Linux and Windows conformance coverage for the carrier classification.
+
 ## [0.19.0] - 2026-08-28
 
 ### Material delivery without ticket ceremony
