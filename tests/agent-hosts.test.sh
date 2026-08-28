@@ -141,87 +141,29 @@ if git -C "$tmp/adopter" commit -qm "staged status bypass"; then
 fi
 git -C "$tmp/adopter" reset -q --hard HEAD
 
-# A terminal ticket may publish only its own closure evidence and the two
-# repository-level governance indexes plus the exact generated artifact receipt.
-sed -i 's/IN_PROGRESS/DONE/' "$tmp/adopter/project/ticket-001/README.md"
-printf '%s\n' '# TODO' '- [x] ticket-001: DONE / DONE' > "$tmp/adopter/TODO.md"
-mkdir -p "$tmp/adopter/project"
-printf '%s\n' '# Tickets' '- ticket-001' > "$tmp/adopter/project/TICKETS.md"
-mkdir -p "$tmp/adopter/config"
-printf '%s\n' '{"schema":"fixture.artifact-registry/v1"}' > \
-  "$tmp/adopter/config/artifact-registry.json"
-git -C "$tmp/adopter" add project/ticket-001/README.md TODO.md project/TICKETS.md \
-  config/artifact-registry.json
-git -C "$tmp/adopter" commit -qm "close ticket-001" || fail "DONE governance-only closure must commit"
-[[ "$(cat "$tmp/adopter/.guard-invocations")" == "3" ]] \
-  || fail "DONE governance-only success must invoke the guard"
-
-# A managed hook without its declared runner must fail closed.
-mv "$tmp/adopter/.governance/worktree_guard.py" "$tmp/worktree_guard.py.saved"
-printf '%s\n' 'runner loss evidence' >> "$tmp/adopter/project/ticket-001/README.md"
+# Tracking carriers cannot manufacture a repository delivery on their own.
+printf '%s\n' 'status-only evidence' >> "$tmp/adopter/project/ticket-001/README.md"
 git -C "$tmp/adopter" add project/ticket-001/README.md
-if git -C "$tmp/adopter" commit -qm "missing worktree runner" 2> "$tmp/missing-runner.err"; then
-  fail "missing worktree guard runner must reject a DONE closure"
+if git -C "$tmp/adopter" commit -qm "ticket-only status" 2> "$tmp/tracking-only.err"; then
+  fail "ticket-only commit must be rejected"
 fi
-grep -Fq 'cannot find worktree_guard.py' "$tmp/missing-runner.err" \
-  || fail "missing runner rejection must include remediation"
-git -C "$tmp/adopter" reset -q --hard HEAD
-mv "$tmp/worktree_guard.py.saved" "$tmp/adopter/.governance/worktree_guard.py"
-
-printf '%s\n' 'terminal evidence update' >> "$tmp/adopter/project/ticket-001/README.md"
-printf '%s\n' '{"schema":"fixture.other/v1"}' > "$tmp/adopter/config/other-generated.json"
-git -C "$tmp/adopter" add project/ticket-001/README.md config/other-generated.json
-if git -C "$tmp/adopter" commit -qm "foreign generated closure"; then
-  fail "DONE closure must reject non-receipt config paths"
-fi
+grep -Fq 'GOV-AGENT-HOST-007' "$tmp/tracking-only.err" \
+  || fail "ticket-only rejection must expose GOV-AGENT-HOST-007"
 git -C "$tmp/adopter" reset -q --hard HEAD
 
-echo "implementation after close" >> "$tmp/adopter/README.md"
-git -C "$tmp/adopter" add README.md
-if git -C "$tmp/adopter" commit -qm "closed implementation"; then
-  fail "DONE ticket must reject implementation"
-fi
-git -C "$tmp/adopter" reset -q --hard HEAD
-
-mkdir -p "$tmp/adopter/project/ticket-002"
-printf '%s\n' '# Foreign ticket' '- **Status**: DONE' > "$tmp/adopter/project/ticket-002/README.md"
-git -C "$tmp/adopter" add project/ticket-002/README.md
-if git -C "$tmp/adopter" commit -qm "foreign closure"; then
-  fail "DONE ticket must reject foreign ticket evidence"
-fi
-git -C "$tmp/adopter" reset -q --hard HEAD
-
-git -C "$tmp/adopter" rm -q TODO.md
-if git -C "$tmp/adopter" commit -qm "delete closure index"; then
-  fail "DONE ticket must reject deletions"
-fi
-git -C "$tmp/adopter" reset -q --hard HEAD
-
-# CANCELLED is the second manifest-declared terminal status. It must receive
-# exactly the same bounded closure behavior as the DONE path above.
-git -C "$tmp/adopter" checkout -qb ticket/002-cancelled
-mkdir -p "$tmp/adopter/project/ticket-002"
-printf '%s\n' '# Ticket 002' '- **Status**: IN_PROGRESS' > \
-  "$tmp/adopter/project/ticket-002/README.md"
-git -C "$tmp/adopter" add project/ticket-002/README.md
-git -C "$tmp/adopter" commit -qm "open ticket-002" \
-  || fail "IN_PROGRESS ticket preceding cancellation must commit"
-[[ "$(cat "$tmp/adopter/.guard-invocations")" == "4" ]] \
-  || fail "second IN_PROGRESS success must invoke the guard"
-
-sed -i 's/IN_PROGRESS/CANCELLED/' "$tmp/adopter/project/ticket-002/README.md"
-git -C "$tmp/adopter" add project/ticket-002/README.md
-git -C "$tmp/adopter" commit -qm "cancel ticket-002" \
-  || fail "CANCELLED governance-only closure must commit"
-[[ "$(cat "$tmp/adopter/.guard-invocations")" == "5" ]] \
-  || fail "CANCELLED governance-only success must invoke the guard"
-
-echo "implementation after cancellation" >> "$tmp/adopter/README.md"
-git -C "$tmp/adopter" add README.md
-if git -C "$tmp/adopter" commit -qm "cancelled implementation"; then
-  fail "CANCELLED ticket must reject implementation"
-fi
-git -C "$tmp/adopter" reset -q --hard HEAD
+# Terminal state belongs to the protected external receipt. Neither a
+# governance-only payload nor a material payload may create a closure commit.
+for terminal_status in DONE CANCELLED; do
+  sed -i "s/IN_PROGRESS/$terminal_status/" "$tmp/adopter/project/ticket-001/README.md"
+  echo "attempted $terminal_status closure" >> "$tmp/adopter/README.md"
+  git -C "$tmp/adopter" add project/ticket-001/README.md README.md
+  if git -C "$tmp/adopter" commit -qm "terminal closure $terminal_status" 2> "$tmp/terminal.err"; then
+    fail "$terminal_status repository closure must be rejected"
+  fi
+  grep -Fq 'GOV-AGENT-HOST-003' "$tmp/terminal.err" \
+    || fail "$terminal_status closure must expose GOV-AGENT-HOST-003"
+  git -C "$tmp/adopter" reset -q --hard HEAD
+done
 
 user_home="$tmp/home"
 mkdir -p "$user_home"

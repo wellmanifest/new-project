@@ -1,0 +1,109 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-133",
+  "summary": "Make material delivery atomic and receipt-closed",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "AGENTS.md",
+    "README.md",
+    "CHANGELOG.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "error/GOV-AGENT-HOST.md",
+    "error/GOV-INTENT.md",
+    "error/GOV-TICKET-001.md",
+    ".githooks/pre-commit",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
+    "scripts/governance_check.py",
+    "project/new-ticket.sh",
+    "template/files/ticket.template.md",
+    "template/files/AGENTS.template.md",
+    "template/files/pre-commit.template.sh",
+    "tests/agent-hosts.test.sh",
+    "tests/governance-scripts.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/rule-enforcement.test.sh",
+    "project/ticket-133/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4747417a26f0b8efcb3416c82e93e2132c548a76",
+    "targetBranch": "main",
+    "outcome": "Replace ticket ceremony commits with one bounded material delivery and a protected external terminal receipt.",
+    "nonGoals": [
+      "No weakening of exact-head review or merge authority",
+      "No automatic publication",
+      "No deletion of historical ticket evidence"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep tracked ticket intent as a bounded authorization snapshot, require a material repository delta, and make the protected external merge receipt terminal lifecycle truth.",
+      "components": [
+        {
+          "name": "standard-contract",
+          "paths": [
+            "AGENTS.md",
+            "CHANGELOG.md",
+            "CONTRIBUTING.md",
+            "POLICY.md",
+            "README.md",
+            "error/**",
+            "governance/**",
+            "template/files/AGENTS.template.md",
+            "template/files/ticket.template.md"
+          ]
+        },
+        {
+          "name": "deterministic-enforcement",
+          "paths": [
+            ".githooks/pre-commit",
+            "project/new-ticket.sh",
+            "scripts/governance_check.py",
+            "template/files/pre-commit.template.sh"
+          ]
+        },
+        {
+          "name": "conformance-tests",
+          "paths": ["tests/**"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["governance material-delivery validation"],
+      "dataChanges": ["ticket scaffold required files and hub delivery budget"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the contract, enforcement, templates and conformance cases together."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-05",
+        "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done", "./project/governance-check.sh"],
+        "evidence": "local deterministic test output"
+      }
+    ]
+  }
+}

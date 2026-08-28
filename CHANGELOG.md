@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Material delivery without ticket ceremony
+
+- Allow bounded intent to enter atomically with the first material change;
+  remove the mandatory plan-only commit.
+- Reject ticket, TODO, ticket-index and generated-registry-only changes as
+  non-delivery.
+- Close merged or no-change work through protected external receipts without a
+  repository closure commit, branch or pull request.
+- Reduce the required ticket scaffold to `README.md` and `intent.json`; raw
+  command logs and participant prose are optional and stay out of Git by
+  default.
+
 ### Canonical ticket worktree placement
 
 - Adopt the immutable `wellmanifest/worktrees` contract at revision

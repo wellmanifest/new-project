@@ -36,13 +36,8 @@ DOCELOWE REPOZYTORIUM SYSTEMU X (Root)
     ├── new-ticket.sh            <-- (Skrypt generujący strukturę nowego ticketu)
     │
     └── ticket-001/              <-- (Podkatalog Konkretnego Ticketu)
-        ├── README.md            <-- (Cel, zakres, status i kryteria odbioru ticketu)
-        ├── user-{NAME}.md       <-- (Opcjonalne notatki utworzone przez człowieka/trusted intake)
-        ├── preprompt.md         <-- (Wyciągnięte wytyczne z notatek & ustrukturyzowany workflow)
-        ├── intent.json          <-- (Maszynowy, zatwierdzany zakres dozwolonych zmian)
-        ├── ai-{PROVIDER}.md     <-- (MÓZG AGENTA: rozumienie intencji, plan, Kryteria Odbioru)
-        ├── ai-{PROVIDER}-logs.txt <-- (Dedykowany plik surowych logów tego agenta)
-        └── changelog.md         <-- (Lokalny rejestr zmian dotyczący tylko tego ticketu)
+        ├── README.md            <-- (Minimalny opis celu i kryteriów; pozostała proza jest opcjonalna)
+        └── intent.json          <-- (Maszynowy, zatwierdzany zakres dozwolonych zmian)
 ```
 
 ---
@@ -62,27 +57,24 @@ Realizacja każdego zadania w docelowym repozytorium odbywa się według ściśl
    * 3.1. Tworzony jest `project/TICKETS.md` (indeks ticketów), `project/readme.sh` oraz `project/new-ticket.sh`. Istniejący `project/README.md` pozostaje własnością jego generatora.
 
 4. **Wywołanie Skryptu `new-ticket.sh` (`project/ticket-{NNN}/`)**
-   * 4.1. Skrypt tworzy `README.md`, `preprompt.md`, jawnie typowany `ai-{AGENT}.md`, pusty log agenta i `changelog.md`.
+   * 4.1. Skrypt tworzy wyłącznie minimalne `README.md` i `intent.json`.
    * 4.2. Skrypt nie tworzy `user-*` ani tożsamości człowieka. Taki plik może utworzyć wyłącznie jego ludzki właściciel lub zaufana granica intake.
    * 4.3. Generator odmawia drugiego aktywnego ticketu w tym samym workstreamie albo przy nierozstrzygniętym workstreamie. Równoległy ticket wymaga jawnie innego workstreamu; ostateczny overlap sprawdza walidator.
    * 4.4. Numer ticketu wolno przydzielić wyłącznie tym skryptem. Ręczne
      utworzenie lub skopiowanie `project/ticket-{NNN}` omija clone-wide lock i
      high-water, dlatego jest błędem governance.
 
-5. **Ekstrakcja Wytycznych (`preprompt.md`)**
-   * 5.1. Agent AI analizuje tylko istniejące, human-owned notatki `user-{NAME}.md` i zapisuje własne rozumienie w `ai-{AGENT}.md`. Brak człowieka pozostaje `unresolved:human`.
+5. **Zatwierdzenie ograniczonej intencji**
+   * 5.1. `intent.json` wiąże rezultat, zakres ścieżek, budżet i walidację przed pierwszym zapisem implementacji.
+   * 5.2. Intencja może wejść do tego samego atomowego commita co pierwsza zmiana materialna; osobny commit planu jest zabronionym szumem procesowym.
 
-6. **Generowanie Mózgu AI (`ai-{AGENT}.md`) oraz Harmonogramu (`TODO.md`)**
-   * 6.1. Z pliku `preprompt.md` Agent generuje plik `ai-{AGENT}.md` (MÓZG AI), zawierający rozumienie intencji, koncepcję architektury, zakres i **Kryteria Odbioru (Acceptance Criteria)**.
-   * 6.2. Agent wpisuje listę zadań wykonawczych do głównego pliku `TODO.md`.
+6. **Materialna implementacja i dowody**
+   * 6.1. Commit i PR muszą zawierać kod, test, konfigurację, kontrakt lub konkretną dokumentację zamówioną przez użytkownika. Same pliki ticketu, TODO, indeks lub rejestr artefaktów nie są rezultatem.
+   * 6.2. Surowe wyjścia terminala, testów i modeli pozostają ulotne poza Git. Repozytorium przechowuje tylko potrzebny, ograniczony digest albo referencję do niezmiennego dowodu.
 
-7. **Wstrzymanie Pracy i Akceptacja Planu (`P-CORE-008`)**
-   * 7.1. Agent zatrzymuje przerwane kodowanie i przedstawia plik `ai-{AGENT}.md` oraz checklistę w `TODO.md` Użytkownikowi do weryfikacji.
-   * 7.2. Pisanie kodu rozpoczyna się wyłącznie po wyraźnej zgodzie Użytkownika.
-
-8. **Kodowanie, Logowanie i Rejestr Zmian**
-   * 8.1. Podczas wykonania Agent zapisuje surowe wyjścia z terminala i testów do pliku `ai-{AGENT}-logs.txt`.
-   * 8.2. Po zakończeniu etapu Agent uzupełnia `project/ticket-{NNN}/changelog.md`, odznacza pozycje w `TODO.md`, a po wyznaczeniu wydania aktualizuje zbiorczy `CHANGELOG.md` i podbija `VERSION`.
+7. **Publikacja i zakończenie**
+   * 7.1. Ticket pozostaje aktywny podczas review i merge materialnego PR-a.
+   * 7.2. Chroniony zewnętrzny receipt merge kończy lifecycle i zwalnia workstream bez commita, brancha ani PR-a zamykającego oraz bez przepisywania TODO, indeksów i logów.
 
 ---
 
@@ -92,10 +84,8 @@ Realizacja każdego zadania w docelowym repozytorium odbywa się według ściśl
 | :--- | :--- |
 | **`.env.example`** | **Szablon Konfiguracji**: definiuje domyślnego agenta (`DEFAULT_AGENT="antigravity"`); nie materializuje ludzi z konfiguracji. |
 | **`user-{NAME}.md`** | **Kontekst Człowieka**: ręczne, human-owned instrukcje i decyzje z jawnym `participant-id`, rolą, ticketem i typowanymi sekcjami. Agent nie tworzy ani nie edytuje tego pliku. |
-| **`preprompt.md`** | **Ustrukturyzowany Workflow**: przetworzone wytyczne z plików `user-*.md` ze zdefiniowanymi krokami wykonawczymi. |
-| **`ai-{AGENT}.md`** | **Mózg Agenta AI**: rozumienie intencji, zakres prac, specyfikacja techniczna i Kryteria Odbioru (AC). |
-| **`ai-{AGENT}-logs.txt`** | **Dedykowane Logi**: wyłączne surowe wyjścia komend CLI i testów uruchamianych przez danego agenta. |
-| **`changelog.md`** | **Lokalny Changelog**: wykaz zmian i edycji wykonanych wyłącznie w ramach danego ticketu. |
+| **`preprompt.md` / `ai-{AGENT}.md` / `changelog.md`** | **Opcjonalny kontekst**: powstaje tylko wtedy, gdy wnosi decyzję lub dowód, którego nie zawiera minimalny opis i intencja. Nie jest warunkiem poprawnego ticketu. |
+| **`ai-{AGENT}-logs.txt`** | **Historyczny artefakt opcjonalny**: generator go nie tworzy; nowych surowych transcriptów terminala, testów ani modeli nie zapisuje się w Git. |
 | **`project/TICKETS.md`** | **Indeks Ticketów**: centralny plik nawigacyjny indeksujący tickety bez nadpisywania analitycznego `project/README.md`. |
 | **`governance/diagnostics.json` → `.governance/diagnostics.json`** | **Maszynowy katalog błędów**: stabilny kod `GOV-*`, komunikat, najkrótsza bezpieczna remediacja i opcjonalny link do runbooka. |
 | **`error/*.md` → `.governance/error/*.md`** | **Runbook rozwiązania**: wieloetapowa lub ryzykowna procedura z weryfikacją i jawnymi zakazami. Nie zastępuje reguły ani findingu validatora. |
@@ -203,10 +193,10 @@ W przypadku wystąpienia konfliktu informacji obowiązuje następująca kolejno�
 ### 6.2. System Ticketów (`project/ticket-{NNN}` w Docelowym Repozytorium)
 * **Wymóg zakładania**: Każde zadanie składające się z więcej niż 1 kroku lub wymagające użycia Agenta AI **musi** posiadać swój folder pod `project/ticket-{NNN}` w repozytorium, którego dotyczy zmiana: w `wellmanifest/new-project` dla utrzymania standardu albo w repozytorium docelowym dla Systemu X.
 * **Indeks projektu (`project/TICKETS.md`)**: Służy jako menu nawigacyjne do ticketów z linkami do dokumentacji i uczestników; nie koliduje z artefaktami analizy w `project/README.md`.
-* **Mózg Agenta (`ai-{AGENT}.md`)**: Definiuje rozumienie intencji, plan, ryzyka i kryteria odbioru widziane przez danego agenta. Nie zastępuje polecenia ani decyzji człowieka; rozbieżności muszą pozostać widoczne.
+* **Opcjonalny kontekst agenta (`ai-{AGENT}.md`)**: Może utrwalić istotną decyzję lub ryzyko, ale nie jest wymagany i nie zastępuje polecenia ani decyzji człowieka.
 * **Pliki uczestników (`user-mateusz.md`, `user-tom.md`)**: Ręczne notatki człowieka wklejane przy każdym zleceniu jako stały kontekst.
-* **Logi (`ai-{AGENT}-logs.txt`)**: Wyłączne surowe wyjścia z konsoli i testów wykonywanych przez danego agenta.
-* **Granica implementacji**: Katalog ticketu przechowuje governance, decyzje, logi i dowody. Kod, testy oraz skrypty badawcze trafiają do zwykłych katalogów repozytorium.
+* **Dowody wykonania**: Surowe logi są ulotne i pozostają poza Git; trwały plik zawiera co najwyżej ograniczony digest lub niezmienną referencję.
+* **Granica implementacji**: Katalog ticketu przechowuje wyłącznie minimalny kontekst governance. Kod, testy, konfiguracja, dokumentacja rezultatu oraz skrypty badawcze trafiają do zwykłych katalogów repozytorium.
 * **Brak odbiorcy**: Wymagana odpowiedź bez zaufanego uczestnika używa `unresolved:human` lub `unresolved:agent`; pusta lista i zgadywanie tożsamości są zabronione.
 * **Retencja (Nie wolno usuwać ticketów!)**: Foldery ticketów są trwale zachowywane w docelowym repozytorium. Agentom **nie wolno ich usuwać**, chyba że po zakończonym projekcie użytkownik wyraźnie wyda takie polecenie.
 

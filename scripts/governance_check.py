@@ -946,19 +946,18 @@ def check_history_order(
             break
     if first_implementation is None:
         return
-    index, commit = first_implementation
-    parent = f"{commit}^" if index > 0 else base
+    _, commit = first_implementation
     ticket_intent = f"{ticket_root.rstrip('/')}/{ticket_name}/{intent_path}"
     try:
         subprocess.run(
-            ["git", "cat-file", "-e", f"{parent}:{ticket_intent}"], cwd=root,
+            ["git", "cat-file", "-e", f"{commit}:{ticket_intent}"], cwd=root,
             check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
     except subprocess.CalledProcessError:
         report.add(
             "GOV-INTENT-003",
-            f"{ticket_intent} did not exist before the first implementation commit.",
-            "Commit the plan-only ticket and intent first; start implementation in a later commit after review.",
+            f"{ticket_intent} was absent from the first material implementation commit.",
+            "Include the validated intent atomically with the first material commit; do not create a separate plan-only commit.",
             [ticket_intent], {"firstImplementationCommit": commit},
         )
 
@@ -1723,6 +1722,22 @@ def check_coordination(
     config = manifest["ticket"]
     check_ticket_statuses(root, config, records, report)
     active = [record for record in records if record.status in set(config.get("activeStatuses", ACTIVE_DEFAULT))]
+    changed_active = [
+        record for record in active
+        if any(path.startswith(f"{rel(root, record.directory).rstrip('/')}/") for path in changed)
+    ]
+    if changed_active:
+        active = changed_active
+    elif len(active) > 1:
+        path_active = [
+            record for record in active
+            if record.intent is not None and any(
+                matches(path, record.intent["allowedPaths"])
+                and not matches(path, record.intent["forbiddenPaths"])
+                for path in changed
+            )
+        ]
+        active = path_active if len(path_active) == 1 else active
     workstreams = coordination["workstreams"]
     valid_active = valid_active_tickets(root, config, active, workstreams, report)
     check_workstream_limits(root, valid_active, coordination["maxActiveTicketsPerWorkstream"], report)
@@ -2688,7 +2703,7 @@ def check_selected_ticket_state(
     if workflow not in set(config["implementationStates"]):
         report.add(
             "GOV-INTENT-001", f"Ticket {directory.name} is in workflow state {workflow or 'UNKNOWN'}, not an implementation state.",
-            "Keep the change plan-only until explicit approval moves the ticket to EDIT.", implementation,
+            "Do not commit the pending change; obtain approval that moves the ticket to EDIT, then deliver it with material output.", implementation,
         )
 
 
@@ -3299,12 +3314,30 @@ def check_change_gate(
     governance_patterns = manifest["governancePaths"]
     config = manifest["ticket"]
     active = [record for record in records if record.status in set(config.get("activeStatuses", ACTIVE_DEFAULT))]
+    changed_active = [
+        record for record in active
+        if any(path.startswith(f"{rel(root, record.directory).rstrip('/')}/") for path in changed)
+    ]
+    if changed_active:
+        active = changed_active
     adoption_paths = atomic_standard_adoption_paths(root, base, changed, active, report)
     implementation = [
         path for path in changed
         if not matches(path, governance_patterns) and path not in adoption_paths
     ]
+    if not changed_active and len(active) > 1 and implementation:
+        path_active = [record for record in active if ticket_owns_implementation(record, implementation)]
+        if len(path_active) == 1:
+            active = path_active
     if not implementation:
+        if changed and not adoption_paths:
+            report.add(
+                "GOV-MATERIAL-001",
+                "Changed paths contain only ticket tracking carriers.",
+                "Add a material source, test, configuration, standard or requested documentation change; if no material delta exists, emit an external no-change receipt without a commit or pull request.",
+                changed,
+                {"trackingCarriers": governance_patterns},
+            )
         return None
     repository = manifest.get("repository")
     if repository and repository["mode"] == "monorepo":

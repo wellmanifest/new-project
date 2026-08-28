@@ -216,6 +216,13 @@ refs_highest() {
 
 highest=0
 conflicting_ticket=""
+current_branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+if [[ "$current_branch" =~ ticket[-/]([0-9]{3}) ]]; then
+  current_ticket="project/ticket-${BASH_REMATCH[1]}"
+  if is_active_ticket "$current_ticket"; then
+    conflicting_ticket="$current_ticket"
+  fi
+fi
 if git rev-parse --git-dir >/dev/null 2>&1; then
   highest="$(refs_highest)"
   if [[ -n "$allocation_state" && -f "$allocation_state" ]]; then
@@ -235,7 +242,7 @@ if [[ -d project ]]; then
     [[ "$number" =~ ^[0-9]+$ ]] || continue
     decimal=$((10#$number))
     (( decimal > highest )) && highest=$decimal
-    if is_active_ticket "$dir"; then
+    if [[ -z "$current_branch" ]] && is_active_ticket "$dir"; then
       active_workstream="$(sed -nE 's/^[[:space:]]*"workstream"[[:space:]]*:[[:space:]]*"([a-z0-9-]+)".*/\1/p' "$dir/intent.json" 2>/dev/null | head -n 1)"
       if [[ -z "$active_workstream" || "$active_workstream" == "unresolved" || "$WORKSTREAM" == "unresolved" || "$active_workstream" == "$WORKSTREAM" ]]; then
         conflicting_ticket="$dir"
@@ -246,7 +253,7 @@ fi
 
 if [[ -n "$conflicting_ticket" && "$FORCE_NEW" != true ]]; then
   echo "Active ticket conflicts with workstream '$WORKSTREAM': $conflicting_ticket" >&2
-  echo "Continue it, choose a distinct declared workstream, close/cancel it, or use --force-new after an explicit human decision." >&2
+  echo "Continue it, or return to the default branch before allocating a distinct workstream." >&2
   exit 3
 fi
 
@@ -256,8 +263,6 @@ ticket_id="ticket-$ticket_num"
 ticket_dir="project/$ticket_id"
 timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 date_only="${timestamp%%T*}"
-agent_file="ai-$AGENT.md"
-agent_log="ai-$AGENT-logs.txt"
 
 if ! mkdir "$ticket_dir" 2>/dev/null; then
   echo "GOV-TICKET-LOCK-003: ticket directory already exists: $ticket_dir" >&2
@@ -337,32 +342,10 @@ To be completed from human-owned input.
 
 - [ ] AC-01: Scope is approved by a human owner.
 
-## Participants
+## Tracking boundary
 
-- Human participant: unresolved; no user-* file was created by this script.
-- Agent participant: [$agent_file]($agent_file)
-EOF
-fi
-
-if [[ -f template/files/preprompt.template.md ]]; then
-  render_template template/files/preprompt.template.md "$ticket_dir/preprompt.md"
-else
-  cat > "$ticket_dir/preprompt.md" <<EOF
-# Ticket preprompt
-
-- **Task ID**: $ticket_id
-- **Task title**: $TITLE
-- **Created**: $timestamp
-
-Keep executable implementation outside this governance/evidence directory.
-Read a human-owned user-*.md file only when one exists.
-The request to execute this work creates SESSION_EXECUTION_AUTHORIZATION;
-proceed within the recorded intent without a redundant confirmation prompt.
-Require new authority for destructive action, secrets, external coordination,
-or material objective expansion. When publication is in scope, session
-authorization permits the declared protected delivery process and its merge
-after exact-head trusted approval without another prompt. Session prose is
-never approval evidence and the agent must not merge directly.
+This directory contains the minimal reviewed intent. Optional participant prose
+and raw command logs are not required delivery output.
 EOF
 fi
 
@@ -389,52 +372,6 @@ else
 }
 EOF
 fi
-
-if [[ -f template/files/agent-participant.template.md ]]; then
-  render_template template/files/agent-participant.template.md "$ticket_dir/$agent_file"
-else
-  cat > "$ticket_dir/$agent_file" <<EOF
----
-participant-id: agent:$AGENT
-participant: $AGENT
-role: agent
-ticket: $ticket_id
----
-# Participant: $AGENT (AI agent)
-
-## Understanding
-
-To be completed after reading human-owned input and the ticket preprompt.
-
-## Execution plan
-
-1. Validate the ticket scope and acceptance evidence before implementation.
-
-## Actual changes
-
-- Initialized the bounded ticket and recorded SESSION_EXECUTION_AUTHORIZATION
-  from the request to execute this work.
-
-## Blockers
-
-- None inside the recorded intent; proceed without a second confirmation.
-- New authority remains required for destructive action, secret access, new
-  external coordination or material objective expansion. Protected delivery
-  may be invoked without another prompt when publication is in scope; its
-  exact-head trusted approval remains independent evidence.
-EOF
-fi
-
-: > "$ticket_dir/$agent_log"
-
-cat > "$ticket_dir/changelog.md" <<EOF
-# Ticket Changelog ($ticket_id)
-
-## [0.1.0] - $date_only
-
-- Initial governance scaffold created.
-- No human participant identity or content was generated.
-EOF
 
 if [[ -n "$USERS" ]]; then
   echo "warning: --users=$USERS did not create user-* files; human-owned input must come from a human or trusted intake boundary" >&2

@@ -50,14 +50,9 @@
     "directoryPattern": "^ticket-[0-9]{3}$",
     "requiredFiles": [
       "README.md",
-      "preprompt.md",
-      "changelog.md",
       "intent.json"
     ],
-    "requiredAgentFiles": [
-      "ai-*.md",
-      "ai-*-logs.txt"
-    ],
+    "requiredAgentFiles": [],
     "activeStatuses": [
       "IN_PROGRESS"
     ],

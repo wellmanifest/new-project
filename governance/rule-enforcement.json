@@ -172,6 +172,23 @@
       "enforcement": "manual",
       "reason": "Human/agent delegation boundaries are session procedure."
     },
+    "C-DELIVERY-001": {
+      "codes": [
+        "GOV-MATERIAL-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-DELIVERY-002": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "The protected lifecycle controller owns external no-change receipts and lease release."
+    },
+    "C-DELIVERY-003": {
+      "codes": [
+        "GOV-INTENT-003"
+      ],
+      "enforcement": "deterministic"
+    },
     "C-DIAGNOSTIC-001": {
       "codes": [
         "GOV-DIAGNOSTIC-001"
@@ -417,7 +434,7 @@
     "C-PUBLISH-009": {
       "codes": [],
       "enforcement": "manual",
-      "reason": "Post-merge governance-only closure runs on the integrated default branch and requires authoritative remote merge state."
+      "reason": "The protected delivery controller records the authoritative terminal receipt outside the author checkout without a repository write."
     },
     "C-REMEDIATION-001": {
       "codes": [
@@ -953,6 +970,12 @@
       "codes": [
         "GOV-BASE-001",
         "GOV-BASE-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CORE-027": {
+      "codes": [
+        "GOV-MATERIAL-001"
       ],
       "enforcement": "deterministic"
     },
