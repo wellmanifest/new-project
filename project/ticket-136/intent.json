@@ -1,0 +1,100 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-136",
+  "summary": "Enforce remote branch lifecycle in hub CI",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-136/**",
+    ".github/workflows/ci.yml",
+    "tests/branch-lifecycle.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "bash",
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": [
+      "wellmanifest/new-project"
+    ]
+  },
+  "delivery": {
+    "acceptedBaseSha": "2ec5c4cbff84415f9c9f58311776f450186cfaff",
+    "targetBranch": "main",
+    "outcome": "The governance hub's required CI rejects remote branch lifecycle drift instead of only unit-testing the validator.",
+    "nonGoals": [
+      "No automatic deletion of unknown or unmerged branches",
+      "No local worktree cleanup from GitHub Actions",
+      "No second branch lifecycle implementation"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Acquire a bounded GitHub snapshot in the existing required test job and validate it with the already canonical deterministic checker.",
+      "components": [
+        {
+          "name": "hub-remote-lifecycle-gate",
+          "paths": [
+            ".github/workflows/ci.yml",
+            "tests/branch-lifecycle.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "The existing test required check now also represents live remote branch lifecycle conformance."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Remove the live snapshot steps; CI will again test the validator without enforcing current GitHub state."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/branch-lifecycle.test.sh"
+        ],
+        "evidence": "The workflow wiring and snapshot contract are present."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/branch-lifecycle.test.sh"
+        ],
+        "evidence": "Clean, owned, orphaned and malformed fixtures retain deterministic verdicts."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "The bounded implementation diff passes the hub governance gate."
+      }
+    ]
+  }
+}
