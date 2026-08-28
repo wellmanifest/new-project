@@ -1,0 +1,56 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-134",
+  "summary": "Release atomic material-delivery governance",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-134/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "README.md",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c0d6ac9844bc3effff00da8a626750647e31e505",
+    "targetBranch": "main",
+    "outcome": "Publish the already merged atomic material-delivery fix as one immutable new-project 0.19.0 standard revision so adopters can use its corrected validator.",
+    "nonGoals": ["Do not change the merged policy semantics", "Do not publish from an unmerged feature head", "Do not move runtime ownership into wellmanifest"],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {"maxImplementationFiles": 8, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Synchronize the declared standard version, its manifests and conformance fixtures, then release only after the full hub test contract passes on the reviewed main-derived PR.",
+      "components": [
+        {"name": "release-metadata", "paths": ["VERSION", "README.md", "CHANGELOG.md"]},
+        {"name": "adoption-version-contract", "paths": ["governance/manifest.default.json", "governance/manifest.hub.json", "tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["wellmanifest/new-project@0.19.0"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Do not move the immutable tag; publish a later corrective version if release verification fails."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-03", "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done", "./project/governance-check.sh"], "evidence": "The complete deterministic hub contract passes before publication."}
+    ]
+  }
+}

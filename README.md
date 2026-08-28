@@ -244,3 +244,8 @@ Praca nad każdym zadaniem w docelowym repozytorium przechodzi przez cykl stanó
 | **[llms.txt](llms.txt)** | Mapa dokumentacji dla modeli LLM. |
 | **[project.sh](project.sh)** / **[project.bat](project.bat)** | Fail-closed wejście: najpierw governance gate, potem opcjonalna analiza w obrazie przypiętym digestem. |
 | **[template/](template/)** | Czyste szablony dla ticketów i wpisów uczestników. |
+
+
+## License
+
+Licensed under Apache-2.0.
