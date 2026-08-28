@@ -41,6 +41,30 @@ for closed_status in "${closed_statuses[@]}"; do
     || fail "adopter hook must recognize declared terminal status $closed_status"
 done
 
+mapfile -t non_active_statuses < <(python3 - "$root" <<'PY'
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+hub = json.loads((root / "governance/manifest.hub.json").read_text())
+default = json.loads((root / "governance/manifest.default.json").read_text())
+hub_statuses = hub["ticket"]["nonActiveStatuses"]
+default_statuses = default["ticket"]["nonActiveStatuses"]
+if hub_statuses != default_statuses:
+    raise SystemExit("hub and adopter manifests declare different nonActiveStatuses")
+print("\n".join(hub_statuses))
+PY
+)
+[[ "${non_active_statuses[*]}" == "BACKLOG PLAN BLOCKED" ]] \
+  || fail "non-active hook regression must cover every declared non-active status"
+for non_active_status in "${non_active_statuses[@]}"; do
+  grep -Fq "$non_active_status" "$root/.githooks/pre-commit" \
+    || fail "hub hook must recognize declared non-active status $non_active_status"
+  grep -Fq "$non_active_status" "$root/template/files/pre-commit.template.sh" \
+    || fail "adopter hook must recognize declared non-active status $non_active_status"
+done
+
 python3 - "$root" <<'PY'
 import json
 import pathlib
@@ -128,6 +152,27 @@ rm "$tmp/adopter/.guard-fail"
 git -C "$tmp/adopter" commit -qm "bound to ticket-001" || fail "IN_PROGRESS ticket branch must commit"
 [[ "$(cat "$tmp/adopter/.guard-invocations")" == "2" ]] \
   || fail "IN_PROGRESS success must invoke the guard"
+
+for non_active_status in "${non_active_statuses[@]}"; do
+  sed -i "s/IN_PROGRESS/$non_active_status/" "$tmp/adopter/project/ticket-001/README.md"
+  git -C "$tmp/adopter" add project/ticket-001/README.md
+  git -C "$tmp/adopter" commit -qm "pause ticket-001 as $non_active_status" \
+    || fail "$non_active_status governance-only transition must commit"
+
+  echo "implementation while $non_active_status" >> "$tmp/adopter/README.md"
+  git -C "$tmp/adopter" add README.md
+  if git -C "$tmp/adopter" commit -qm "non-active implementation"; then
+    fail "$non_active_status ticket must reject implementation"
+  fi
+  git -C "$tmp/adopter" reset -q --hard HEAD
+
+  sed -i "s/$non_active_status/IN_PROGRESS/" "$tmp/adopter/project/ticket-001/README.md"
+  git -C "$tmp/adopter" add project/ticket-001/README.md
+  git -C "$tmp/adopter" commit -qm "resume ticket-001 from $non_active_status" \
+    || fail "IN_PROGRESS resume from $non_active_status must commit"
+done
+[[ "$(cat "$tmp/adopter/.guard-invocations")" == "8" ]] \
+  || fail "non-active transitions and resumes must invoke the guard"
 
 # Status authority comes from the staged snapshot. An unstaged IN_PROGRESS
 # working-tree value must not authorize a staged BACKLOG ticket plus source.
