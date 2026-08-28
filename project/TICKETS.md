@@ -137,7 +137,17 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-127** | [`README.md`](./ticket-127/README.md) | [`preprompt.md`](./ticket-127/preprompt.md) | - |  [`ai-codex.md`](./ticket-127/ai-codex.md) |  [`ai-codex-logs.txt`](./ticket-127/ai-codex-logs.txt) | [`changelog.md`](./ticket-127/changelog.md) |
 | **ticket-129** | [`README.md`](./ticket-129/README.md) | [`preprompt.md`](./ticket-129/preprompt.md) | - |  [`ai-codex.md`](./ticket-129/ai-codex.md) |  [`ai-codex-logs.txt`](./ticket-129/ai-codex-logs.txt) | [`changelog.md`](./ticket-129/changelog.md) |
 | **ticket-131** | [`README.md`](./ticket-131/README.md) | [`preprompt.md`](./ticket-131/preprompt.md) | - |  [`ai-codex.md`](./ticket-131/ai-codex.md) |  [`ai-codex-logs.txt`](./ticket-131/ai-codex-logs.txt) | [`changelog.md`](./ticket-131/changelog.md) |
+| **ticket-132** | [`README.md`](./ticket-132/README.md) | - | - | - | - | - |
 | **ticket-133** | [`README.md`](./ticket-133/README.md) | - | - | - | - | - |
+| **ticket-134** | [`README.md`](./ticket-134/README.md) | - | - | - | - | - |
+| **ticket-135** | [`README.md`](./ticket-135/README.md) | - | - | - | - | - |
+| **ticket-136** | [`README.md`](./ticket-136/README.md) | - | - | - | - | - |
+| **ticket-137** | [`README.md`](./ticket-137/README.md) | - | - | - | - | - |
+| **ticket-138** | [`README.md`](./ticket-138/README.md) | - | - | - | - | - |
+| **ticket-139** | [`README.md`](./ticket-139/README.md) | - | - | - | - | - |
+| **ticket-140** | [`README.md`](./ticket-140/README.md) | - | - | - | - | - |
+| **ticket-141** | [`README.md`](./ticket-141/README.md) | - | - | - | - | - |
+| **ticket-142** | [`README.md`](./ticket-142/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 ---
