@@ -8,16 +8,16 @@
 
 ## Cel i Zakres
 
-Release the already merged atomic material-delivery and external closure
-contract as `wellmanifest/new-project` 0.19.0. Synchronize only release
-metadata, manifests and version-bound conformance fixtures; preserve the
-reviewed policy and implementation from PR #224.
+Release the corrective adoption-carrier contract as
+`wellmanifest/new-project` 0.19.1. Synchronize only release metadata,
+manifests and version-bound conformance fixtures; preserve the reviewed
+policy and implementation from PRs #224 and #227.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [ ] AC-01: Every live standard-version assertion resolves to 0.19.0.
-- [ ] AC-02: The adoption package is generated from one reviewed immutable SHA.
-- [ ] AC-03: All hub tests and the deterministic governance gate pass.
+- [x] AC-01: Every live standard-version assertion resolves to 0.19.1.
+- [x] AC-02: The adoption package is generated from one reviewed immutable SHA.
+- [x] AC-03: All hub tests and the deterministic governance gate pass.
 - [ ] AC-04: The annotated tag and final GitHub Release point to that exact SHA.
 
 ## Ryzyka i Uwagi
