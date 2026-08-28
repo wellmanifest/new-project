@@ -83,7 +83,7 @@
     "maxActiveTicketsPerWorkstream": 1,
     "rejectActiveScopeOverlap": true,
     "workstreams": {
-      "application": { "ownedPaths": ["src/**", "app/**", "lib/**", "test/**", "tests/**"] },
+      "application": { "ownedPaths": ["src/**", "app/**", "lib/**", "packages/**", "test/**", "tests/**"] },
       "interfaces": { "ownedPaths": ["api/**", "sdk/**", "clients/**"] },
       "infrastructure": { "ownedPaths": ["Dockerfile*", "compose*.yml", "compose*.yaml", "infra/**", ".github/**"] },
       "governance": { "ownedPaths": [".governance/**", "AGENTS.md", "README.md", "TODO.md", "CHANGELOG.md", ".env.example", "goal.yaml", "project.sh", "project.bat", "project/**", "scripts/runtime.sh"] },

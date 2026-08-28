@@ -369,6 +369,8 @@ assert {
 } <= set(manifest['coordination']['integration']['requiredForPaths'])
 assert 'VERSION' not in governance_paths
 assert 'VERSION' not in manifest['coordination']['workstreams']['application']['ownedPaths']
+# Monorepo package code must be assignable without a target-local manifest fork.
+assert 'packages/**' in manifest['coordination']['workstreams']['application']['ownedPaths']
 assert {
     'goal.yaml',
     'project.sh',
