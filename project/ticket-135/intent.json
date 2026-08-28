@@ -1,0 +1,86 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-135",
+  "summary": "Ignore integrated authorization snapshots on clean main",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "project/ticket-135/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python", "bash"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "adopt": ["wellmanifest/new-project"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "7b9e5c9da49e8335261171b3429b70ea5a8f5d09",
+    "targetBranch": "main",
+    "outcome": "Clean integrated snapshots do not retain false coordination leases while every material change remains bound to one active owning ticket.",
+    "nonGoals": [
+      "Do not rewrite tracked ticket histories after merge",
+      "Do not accept material changes without an active ticket",
+      "Do not treat unverified local prose as a terminal receipt"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Select coordination leases from tickets touched or claimed by the current diff; with no diff, retain the records as authorization history but project no live writer. Keep implementation authorization in the existing change gate.",
+      "components": [
+        {
+          "name": "deterministic-coordination-filter",
+          "paths": ["scripts/governance_check.py", "tests/governance-validator.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Restore repository-wide active-record coordination; clean default-branch releases will again require an out-of-band workaround."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/governance-validator.test.sh", "./project/governance-check.sh --actor agent"],
+        "evidence": "Clean snapshots pass while integrated authorization carriers remain tracked."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "Ambiguous active ownership fixtures retain exact diagnostics."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "Unowned implementation remains fail-closed."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done"],
+        "evidence": "The complete deterministic hub contract passes before publication."
+      }
+    ]
+  }
+}

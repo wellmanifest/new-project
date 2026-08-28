@@ -2122,6 +2122,26 @@ printf '%s\n' 'export const client = true;' > "$same_workstream/sdk/client.js"
 add_active_ticket "$same_workstream" ticket-003 application '["sdk/**"]'
 expect_code GOV-WORKSTREAM-002 run_check "$same_workstream" --changed-file TODO.md
 
+clean_integrated="$fixture/clean-integrated"
+make_fixture "$clean_integrated"
+mkdir -p "$clean_integrated/sdk"
+printf '%s\n' 'export const client = true;' > "$clean_integrated/sdk/client.js"
+add_active_ticket "$clean_integrated" ticket-003 application '["sdk/**"]'
+(
+  cd "$clean_integrated"
+  git init -q
+  git config user.email fixture@example.test
+  git config user.name Fixture
+  git add .
+  git commit -qm 'integrated authorization snapshots'
+)
+run_check "$clean_integrated" > "$fixture/clean-integrated.out"
+grep -q '^GOV-PASS:' "$fixture/clean-integrated.out"
+if grep -Eq 'GOV-WORKSTREAM-(002|004)' "$fixture/clean-integrated.out"; then
+  echo "clean integrated authorization snapshots must not project live coordination leases" >&2
+  exit 1
+fi
+
 overlap="$fixture/overlap"
 make_fixture "$overlap"
 printf '%s\n' 'export const shared = true;' > "$overlap/src/shared.js"

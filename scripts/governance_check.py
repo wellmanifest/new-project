@@ -1722,22 +1722,29 @@ def check_coordination(
     config = manifest["ticket"]
     check_ticket_statuses(root, config, records, report)
     active = [record for record in records if record.status in set(config.get("activeStatuses", ACTIVE_DEFAULT))]
-    changed_active = [
-        record for record in active
-        if any(path.startswith(f"{rel(root, record.directory).rstrip('/')}/") for path in changed)
-    ]
-    if changed_active:
-        active = changed_active
-    elif len(active) > 1:
-        path_active = [
+    if not changed:
+        # Ticket records merged into the clean default-branch snapshot are
+        # authorization history, not evidence of concurrent live writers. A
+        # current change selects its lease below; implementation authorization
+        # remains independently fail-closed in check_change_gate.
+        active = []
+    else:
+        changed_active = [
             record for record in active
-            if record.intent is not None and any(
-                matches(path, record.intent["allowedPaths"])
-                and not matches(path, record.intent["forbiddenPaths"])
-                for path in changed
-            )
+            if any(path.startswith(f"{rel(root, record.directory).rstrip('/')}/") for path in changed)
         ]
-        active = path_active if len(path_active) == 1 else active
+        if changed_active:
+            active = changed_active
+        elif len(active) > 1:
+            path_active = [
+                record for record in active
+                if record.intent is not None and any(
+                    matches(path, record.intent["allowedPaths"])
+                    and not matches(path, record.intent["forbiddenPaths"])
+                    for path in changed
+                )
+            ]
+            active = path_active if len(path_active) == 1 else active
     workstreams = coordination["workstreams"]
     valid_active = valid_active_tickets(root, config, active, workstreams, report)
     check_workstream_limits(root, valid_active, coordination["maxActiveTicketsPerWorkstream"], report)
