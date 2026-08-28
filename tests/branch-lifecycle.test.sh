@@ -102,6 +102,10 @@ PY
 grep -Fq "new-project.branch-lifecycle-snapshot/v1" "$repo_root/.github/workflows/governance.yml"
 grep -Fq 'runner-label:' "$repo_root/.github/workflows/governance.yml"
 grep -Fq 'default: ubuntu-latest' "$repo_root/.github/workflows/governance.yml"
+grep -A5 -F 'runner-label:' "$repo_root/.github/workflows/governance.yml" \
+  | grep -Fq 'required: false'
+grep -A5 -F 'runner-label:' "$repo_root/.github/workflows/governance.yml" \
+  | grep -Fq 'type: string'
 grep -Fq 'runs-on: ${{ inputs.runner-label }}' "$repo_root/.github/workflows/governance.yml"
 grep -Fq 'const repositorySettings = await github.graphql' \
   "$repo_root/.github/workflows/governance.yml"
