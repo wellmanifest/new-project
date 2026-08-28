@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.19.3] - 2026-08-28
+
+### Monorepo application ownership
+
+- Assign conventional `packages/**` source trees to the default application
+  workstream so monorepo adopters can govern package changes without a local
+  manifest fork.
+
 ## [0.19.2] - 2026-08-28
 
 ### Integrated coordination snapshots

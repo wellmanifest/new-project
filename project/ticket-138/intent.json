@@ -1,0 +1,42 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-138",
+  "summary": "Release new-project 0.19.3",
+  "workstream": "governance",
+  "classification": {"kind": "SERVICE", "priority": "P1", "origin": "requested"},
+  "allowedPaths": ["project/ticket-138/**", "VERSION", "CHANGELOG.md", "governance/manifest.default.json", "governance/manifest.hub.json", "tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d22f30d209f3acb687c5a754b8269ea06ba0dd3e",
+    "targetBranch": "main",
+    "outcome": "Publish immutable wellmanifest/new-project 0.19.3 with monorepo package ownership.",
+    "nonGoals": ["Change the merged ownership semantics", "Move an existing tag"],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {"maxImplementationFiles": 7, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Synchronize release metadata and conformance fixtures, merge through exact-head validation, then publish from clean main.",
+      "components": [
+        {"name": "release-metadata", "paths": ["VERSION", "CHANGELOG.md"]},
+        {"name": "standard-manifests", "paths": ["governance/manifest.default.json", "governance/manifest.hub.json"]},
+        {"name": "release-conformance", "paths": ["tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["wellmanifest/new-project@0.19.3"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Do not move v0.19.3; publish a later corrective version."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-validator.test.sh"], "evidence": "Version projections agree."},
+      {"criterion": "AC-02", "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done", "./project/governance-check.sh --actor agent"], "evidence": "Full deterministic contract passes."},
+      {"criterion": "AC-03", "commands": ["goal -a --delivery-mode direct-main"], "evidence": "Protected post-merge publication creates v0.19.3."}
+    ]
+  }
+}
