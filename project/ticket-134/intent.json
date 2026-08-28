@@ -28,9 +28,9 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "695ff736148a8802fa8b3f26bb730e754b0f945c",
+    "acceptedBaseSha": "3260781a939c2422a4775aecebc98e9f4c91f7e8",
     "targetBranch": "main",
-    "outcome": "Publish the merged adoption-carrier correction as immutable new-project 0.19.1 so future adopters receive the fixed manifests without moving v0.19.0.",
+    "outcome": "Publish the merged clean integrated-coordination correction as immutable new-project 0.19.2 without moving v0.19.0 or v0.19.1.",
     "nonGoals": ["Do not change the merged policy semantics", "Do not publish from an unmerged feature head", "Do not move runtime ownership into wellmanifest"],
     "complexity": "S",
     "estimatedMinutes": 20,
@@ -43,7 +43,7 @@
         {"name": "adoption-version-contract", "paths": ["governance/manifest.default.json", "governance/manifest.hub.json", "tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]}
       ],
       "responsibilityChanges": false,
-      "interfaceChanges": ["wellmanifest/new-project@0.19.1"],
+      "interfaceChanges": ["wellmanifest/new-project@0.19.2"],
       "dataChanges": [],
       "ui": {"impact": "none", "states": [], "evidence": []},
       "rollback": "Do not move the immutable tag; publish a later corrective version if release verification fails."
