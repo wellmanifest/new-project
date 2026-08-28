@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.19.4] - 2026-08-28
+
+### Docker multi-stage validation
+
+- Recognize previously declared Docker build-stage aliases as internal graph
+  references while retaining immutable digest enforcement for external images.
+
 ## [0.19.3] - 2026-08-28
 
 ### Monorepo application ownership
