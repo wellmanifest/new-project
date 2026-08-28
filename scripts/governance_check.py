@@ -2067,12 +2067,17 @@ def immutable_image_reference(reference: str) -> bool:
 
 def dockerfile_image_references(path: Path) -> list[tuple[int, str]]:
     references: list[tuple[int, str]] = []
+    stage_aliases: set[str] = set()
     for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         tokens = line.strip().split()
         if not tokens or tokens[0].upper() != "FROM":
             continue
-        image = next((token for token in tokens[1:] if not token.startswith("--")), "")
-        references.append((line_number, image))
+        operands = [token for token in tokens[1:] if not token.startswith("--")]
+        image = operands[0] if operands else ""
+        if image.lower() not in stage_aliases:
+            references.append((line_number, image))
+        if len(operands) >= 3 and operands[1].upper() == "AS":
+            stage_aliases.add(operands[2].lower())
     return references
 
 

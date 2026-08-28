@@ -1027,6 +1027,28 @@ expect_code GOV-DOCKER-002 run_check "$docker_tag" --changed-file src/app.js
 run_check "$docker_tag" --changed-file src/app.js > "$fixture/docker-tag.out" || true
 grep -Fq 'Dockerfile:1' "$fixture/docker-tag.out"
 
+docker_multistage="$fixture/docker-multistage"
+cp -R "$docker_references" "$docker_multistage"
+cat > "$docker_multistage/Dockerfile" <<'DOCKERFILE'
+FROM --platform=linux/amd64 python@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa AS base
+FROM base AS development
+FROM development AS test
+FROM base AS production
+DOCKERFILE
+run_check "$docker_multistage" --changed-file src/app.js \
+  > "$fixture/docker-multistage.out"
+grep -q '^GOV-PASS:' "$fixture/docker-multistage.out"
+
+docker_unknown_stage="$fixture/docker-unknown-stage"
+cp -R "$docker_multistage" "$docker_unknown_stage"
+printf '%s\n' \
+  'FROM python@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa AS base' \
+  'FROM missing AS runtime' > "$docker_unknown_stage/Dockerfile"
+expect_code GOV-DOCKER-002 run_check "$docker_unknown_stage" --changed-file src/app.js
+run_check "$docker_unknown_stage" --changed-file src/app.js \
+  > "$fixture/docker-unknown-stage.out" || true
+grep -Fq 'Dockerfile:2' "$fixture/docker-unknown-stage.out"
+
 docker_optional_tag="$fixture/docker-optional-tag"
 cp -R "$docker_tag" "$docker_optional_tag"
 python3 - "$docker_optional_tag/.governance/manifest.json" <<'PY'

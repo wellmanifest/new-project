@@ -1,0 +1,38 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-139",
+  "summary": "Allow Docker stage aliases under digest enforcement",
+  "workstream": "governance",
+  "classification": {"kind": "BUG", "priority": "P0", "origin": "regression"},
+  "allowedPaths": ["project/ticket-139/**", "scripts/governance_check.py", "tests/governance-validator.test.sh"],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "26f976cc2ad9a4fe416f9b5e073869e76987152c",
+    "targetBranch": "main",
+    "outcome": "Docker digest validation accepts declared internal stage aliases and still rejects mutable external images.",
+    "nonGoals": ["Relax digest enforcement for registry images", "Interpret dynamic Docker variables as immutable"],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {"maxImplementationFiles": 2, "maxAffectedComponents": 1, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Parse Docker FROM statements in order, record each AS alias, and exempt only later exact references to a recorded alias.",
+      "components": [{"name": "docker-governance-validator", "paths": ["scripts/governance_check.py", "tests/governance-validator.test.sh"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Dockerfile image-reference validation semantics"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert parser and conformance case together."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Pinned multi-stage fixture passes."},
+      {"criterion": "AC-02", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Negative fixtures keep GOV-DOCKER-002."},
+      {"criterion": "AC-03", "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done"], "evidence": "Full hub contract passes."}
+    ]
+  }
+}
