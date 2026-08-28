@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.19.6] - 2026-08-28
+
+### Portable and durable adoption
+
+- Allow adopters to select a repository-appropriate governance runner through
+  `NEW_PROJECT_RUNNER_LABEL`, while retaining `ubuntu-latest` as the default.
+- Preserve downstream managed-file bindings across adoption upgrades so
+  generated governance remains reproducible after the first installation.
+
 ## [0.19.5] - 2026-08-28
 
 ### Atomic adoption bindings

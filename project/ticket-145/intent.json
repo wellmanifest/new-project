@@ -1,0 +1,48 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-145",
+  "summary": "Release new-project 0.19.6",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P0",
+    "origin": "requested"
+  },
+  "allowedPaths": ["project/ticket-145/**", "VERSION", "CHANGELOG.md", "governance/manifest.default.json", "governance/manifest.hub.json", "tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "90c505489cc76f5879f48bf36b90bfdf79b47239",
+    "targetBranch": "main",
+    "outcome": "Publish immutable wellmanifest/new-project 0.19.6 with portable governance-runner selection and durable adoption.",
+    "nonGoals": ["Change merged governance semantics", "Move an existing tag"],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {"maxImplementationFiles": 7, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Synchronize release projections, merge through exact-head validation, and publish only from clean main.",
+      "components": [
+        {"name": "release-metadata", "paths": ["VERSION", "CHANGELOG.md"]},
+        {"name": "standard-manifests", "paths": ["governance/manifest.default.json", "governance/manifest.hub.json"]},
+        {"name": "release-conformance", "paths": ["tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["wellmanifest/new-project@0.19.6"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Do not move v0.19.6; publish a later corrective version."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-validator.test.sh"], "evidence": "Version projections agree."},
+      {"criterion": "AC-02", "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done"], "evidence": "Full deterministic contract passes."},
+      {"criterion": "AC-03", "commands": ["goal -a --delivery-mode direct-main --force-publish"], "evidence": "Protected post-merge publication creates v0.19.6."}
+    ]
+  }
+}
