@@ -1,0 +1,48 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-137",
+  "summary": "Own monorepo packages in application workstream",
+  "workstream": "governance",
+  "classification": {"kind": "BUG", "priority": "P1", "origin": "regression"},
+  "allowedPaths": [
+    "project/ticket-137/**",
+    "project/TICKETS.md",
+    "governance/manifest.default.json",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6eb79df2e035578dbe55f10656121f37a18937ea",
+    "targetBranch": "main",
+    "outcome": "Default governance assigns conventional monorepo packages to the application workstream.",
+    "nonGoals": ["Automatically mutate existing adopters", "Change non-application workstream ownership"],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Treat packages/** as a conventional application source root in the standard default manifest.",
+      "components": [{"name": "default-workstream-ownership", "paths": ["governance/manifest.default.json", "tests/governance-validator.test.sh"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Default application ownedPaths gains packages/**"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Remove packages/** from the default ownership list in a later standard version."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "The default manifest contains packages/**."},
+      {"criterion": "AC-02", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "The conformance assertion passes."},
+      {"criterion": "AC-03", "commands": ["./project/governance-check.sh --actor agent"], "evidence": "The deterministic hub gate passes."}
+    ]
+  }
+}
