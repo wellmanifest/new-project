@@ -41,7 +41,30 @@ if ! staged_readme="$(git show ":$readme_rel" 2>/dev/null)"; then
   exit 1
 fi
 
+governance_only_transition() {
+  if git diff --cached --quiet -- "$readme_rel"; then
+    return 1
+  fi
+  if ! git diff --cached --quiet --diff-filter=DRC --; then
+    return 1
+  fi
+
+  while IFS= read -r -d '' path; do
+    case "$path" in
+      "project/$ticket/"*|TODO.md|project/TICKETS.md|config/artifact-registry.json) ;;
+      *) return 1 ;;
+    esac
+  done < <(git diff --cached --name-only -z --diff-filter=AM --)
+}
+
 if grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*IN_PROGRESS([[:space:]]|$)' <<<"$staged_readme"; then
+  head_readme="$(git show "HEAD:$readme_rel" 2>/dev/null || true)"
+  if grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*(BACKLOG|PLAN|BLOCKED)([[:space:]]|$)' <<<"$head_readme" \
+    && governance_only_transition; then
+    run_worktree_guard
+    exit 0
+  fi
+
   material=false
   while IFS= read -r -d '' path; do
     case "$path" in
@@ -58,12 +81,22 @@ if grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*IN_PROGRESS([[:space:]]|$
   exit 0
 fi
 
+if grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*(BACKLOG|PLAN|BLOCKED)([[:space:]]|$)' <<<"$staged_readme"; then
+  if governance_only_transition; then
+    run_worktree_guard
+    exit 0
+  fi
+  echo "GOV-AGENT-HOST-003: $ticket non-active transition is not governance-only." >&2
+  echo "  Stage the ticket README and only bounded governance evidence; keep implementation on IN_PROGRESS." >&2
+  exit 1
+fi
+
 if grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*(DONE|CANCELLED)([[:space:]]|$)' <<<"$staged_readme"; then
   echo "GOV-AGENT-HOST-003: repository terminal closure commits are forbidden." >&2
   echo "  The protected delivery controller must emit the external terminal receipt without a repository write." >&2
   exit 1
 fi
 
-echo "GOV-AGENT-HOST-003: $ticket is neither IN_PROGRESS nor a valid staged terminal closure." >&2
-echo "  Return implementation to IN_PROGRESS; terminal state belongs to the protected external receipt." >&2
+echo "GOV-AGENT-HOST-003: $ticket is neither IN_PROGRESS nor a valid staged non-active transition." >&2
+echo "  Use BACKLOG, PLAN or BLOCKED only for bounded governance evidence; terminal state belongs to the protected external receipt." >&2
 exit 1

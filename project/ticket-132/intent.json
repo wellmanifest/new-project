@@ -1,0 +1,99 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-132",
+  "summary": "Allow bounded non-active ticket transitions",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-132/**",
+    ".githooks/pre-commit",
+    "template/files/pre-commit.template.sh",
+    "tests/agent-hosts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "bash"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": [
+      "wellmanifest/new-project"
+    ]
+  },
+  "delivery": {
+    "acceptedBaseSha": "bc1e419f33194a84e7c558776f3f52c85c74452c",
+    "targetBranch": "main",
+    "outcome": "Allow bounded governance-only pause and resume transitions while terminal state remains external and implementation remains bound to IN_PROGRESS.",
+    "nonGoals": [
+      "No implementation changes from BACKLOG, PLAN or BLOCKED tickets",
+      "No repository commits that set DONE or CANCELLED",
+      "No widening beyond ticket-local evidence and governance indexes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the manifest-declared non-active statuses for bounded pause and resume transitions, but retain fail-closed external terminalization for DONE and CANCELLED.",
+      "components": [
+        {
+          "name": "agent-host-commit-boundary",
+          "paths": [
+            ".githooks/pre-commit",
+            "template/files/pre-commit.template.sh",
+            "tests/agent-hosts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Restore rejection of non-active transitions; tickets will again require an out-of-band pause/resume workaround."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "All declared non-active pause and resume transitions pass."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Implementation while non-active and repository terminal closure remain rejected."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "The current-base bounded intent and complete diff pass governance."
+      }
+    ]
+  }
+}
