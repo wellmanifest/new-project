@@ -100,6 +100,13 @@ for forbidden in ("import requests", "import urllib", "import socket", "import s
 PY
 
 grep -Fq "new-project.branch-lifecycle-snapshot/v1" "$repo_root/.github/workflows/governance.yml"
+grep -Fq 'runner-label:' "$repo_root/.github/workflows/governance.yml"
+grep -Fq 'default: ubuntu-latest' "$repo_root/.github/workflows/governance.yml"
+grep -A5 -F 'runner-label:' "$repo_root/.github/workflows/governance.yml" \
+  | grep -Fq 'required: false'
+grep -A5 -F 'runner-label:' "$repo_root/.github/workflows/governance.yml" \
+  | grep -Fq 'type: string'
+grep -Fq 'runs-on: ${{ inputs.runner-label }}' "$repo_root/.github/workflows/governance.yml"
 grep -Fq 'const repositorySettings = await github.graphql' \
   "$repo_root/.github/workflows/governance.yml"
 grep -Fq 'deleteBranchOnMerge: repositorySettings.repository.deleteBranchOnMerge' \
@@ -127,6 +134,8 @@ fi
 grep -Fq "new-project.branch-lifecycle-snapshot/v1" "$target_workflow"
 grep -Fq 'deleteBranchOnMerge: settings.repository.deleteBranchOnMerge' "$target_workflow"
 grep -Fq 'python3 .governance/branch_lifecycle_check.py' "$target_workflow"
+test "$(grep -Fc "runs-on: \${{ vars.NEW_PROJECT_RUNNER_LABEL || 'ubuntu-latest' }}" \
+  "$target_workflow")" -eq 2
 python3 - "$repo_root/governance/package-manifest.json" <<'PY'
 import json
 import sys

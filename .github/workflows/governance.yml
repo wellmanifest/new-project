@@ -27,6 +27,11 @@ on:
         required: false
         default: ''
         type: string
+      runner-label:
+        description: Authorized runner label; defaults to the portable GitHub-hosted runner
+        required: false
+        default: ubuntu-latest
+        type: string
 
 permissions:
   contents: read
@@ -35,7 +40,7 @@ permissions:
 jobs:
   enforce:
     name: governance / enforce
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner-label }}
     steps:
       - name: Check out target repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
