@@ -98,7 +98,7 @@ assert hub_manifest['coordination']['integration'] == {
     'workstream': 'governance',
     'requiredForPaths': [],
 }
-assert hub_manifest['delivery']['maxImplementationFiles'] == 9
+assert hub_manifest['delivery']['maxImplementationFiles'] == 24
 
 goal = json.load(open(root / 'goal.yaml', encoding='utf-8'))
 assert goal['project'] == {
@@ -2144,9 +2144,8 @@ make_fixture "$generated_receipt"
 mkdir -p "$generated_receipt/config"
 printf '%s\n' '{"schema":"fixture.receipt/v1"}' > \
   "$generated_receipt/config/artifact-registry.json"
-run_check "$generated_receipt" --changed-file config/artifact-registry.json \
-  > "$fixture/generated-receipt.out"
-grep -q '^GOV-PASS:' "$fixture/generated-receipt.out"
+expect_code GOV-MATERIAL-001 run_check "$generated_receipt" \
+  --changed-file config/artifact-registry.json
 printf '%s\n' '{"schema":"fixture.other/v1"}' > \
   "$generated_receipt/config/other-generated.json"
 expect_code GOV-SCOPE-001 run_check "$generated_receipt" \
@@ -2270,6 +2269,14 @@ assert report['status'] == 'passed'
 assert sarif['version'] == '2.1.0'
 PY
 
+tracking_only="$fixture/tracking-only"
+make_fixture "$tracking_only"
+expect_code GOV-MATERIAL-001 run_check "$tracking_only" \
+  --changed-file project/ticket-002/README.md \
+  --changed-file TODO.md \
+  --changed-file project/TICKETS.md \
+  --changed-file config/artifact-registry.json
+
 history_good="$fixture/history-good"
 make_fixture "$history_good"
 cp -R "$history_good/project/ticket-002" "$fixture/history-good-ticket"
@@ -2285,11 +2292,9 @@ rm -rf "$history_good/project/ticket-002"
   git switch -qc ticket-002-work
   cp -R "$fixture/history-good-ticket" project/ticket-002
   set_accepted_base "$history_good" "$base"
-  git add project/ticket-002
-  git commit -qm 'plan exists'
   printf '%s\n' 'export const ok = 2;' > src/app.js
-  git add src/app.js
-  git commit -qm 'implementation after plan'
+  git add project/ticket-002 src/app.js
+  git commit -qm 'atomic intent and implementation'
   if ! run_check "$history_good" --base "$base" > "$fixture/history-good.out"; then
     cat "$fixture/history-good.out"
     exit 1
@@ -2311,11 +2316,13 @@ rm -f "$history_bad/src/app.js"
   git commit -qm 'baseline without ticket'
   base="$(git rev-parse HEAD)"
   git switch -qc ticket-002-work
+  printf '%s\n' 'export const late = true;' > src/app.js
+  git add src/app.js
+  git commit -qm 'implementation without intent'
   cp -R "$fixture/ticket-002.saved" project/ticket-002
   set_accepted_base "$history_bad" "$base"
-  printf '%s\n' 'export const late = true;' > src/app.js
-  git add .
-  git commit -qm 'ticket and implementation together'
+  git add project/ticket-002
+  git commit -qm 'late intent'
   expect_code GOV-INTENT-003 run_check "$history_bad" --base "$base"
 )
 

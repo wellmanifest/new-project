@@ -22,7 +22,8 @@ Before any multi-step implementation, an agent must:
    ticket is allowed only in a distinct workstream with no write-scope overlap.
    Otherwise run `./project/new-ticket.sh --title "..." --agent "..."
    --workstream "..."`.
-3. Complete the ticket `README.md`, owned `ai-*.md`, `intent.json` and `TODO.md`.
+3. Complete the minimal ticket `README.md` and `intent.json`. Participant prose,
+   changelog, raw logs, TODO and indexes are optional and never delivery output.
 4. Treat a user request that already says to execute or work autonomously as
    `SESSION_EXECUTION_AUTHORIZATION`; record it in the agent-owned ticket file.
    When that same request explicitly creates a new repository, `HEAD` is
@@ -110,8 +111,9 @@ Before any multi-step implementation, an agent must:
    fetching/pruning. Never create or copy `project/ticket-{NNN}` manually; the
    clone-wide lock and high-water reservation must exist before commit.
 18. Keep an implementation ticket `IN_PROGRESS / PUBLICATION` through
-   exact-head review and trusted merge. Set `DONE / DONE` only in a
-   governance-only closure based on the integrated default branch.
+   exact-head review and trusted merge. The protected delivery controller closes
+   it through an external receipt; never create a repository closure commit,
+   branch or PR.
 19. Resolve `GOV-*` findings through `.governance/diagnostics.json` and its
    linked `.governance/error/*.md` runbook when present. Ticket logs are
    historical evidence and never authorize bypassing a fail-closed gate.
@@ -133,6 +135,12 @@ Before any multi-step implementation, an agent must:
    rejects commits that are not bound to an `IN_PROGRESS` `ticket-NNN`. Do
    not write on `main` or a dirty primary checkout. Markdown is not a
    substitute for the hook.
+23. Require material delivery: ticket directories, TODO, ticket indexes and a
+   generated artifact registry are tracking carriers, not an outcome. Reject a
+   carrier-only commit or PR. If analysis finds no material delta, emit an
+   external no-change receipt and create no repository history. Intent may be
+   committed atomically with the first material change; do not create a
+   separate plan-only commit.
 
 Markdown approval is an audit note, not trusted merge approval. Required
 merge approval comes from the repository's protected review, attestation and

@@ -16,14 +16,9 @@
 ## Ryzyka i Uwagi
 - Risk 1: {Opis ryzyka i mitygacja}
 
-## Uczestnicy
-
-- Human participant: unresolved; `user-*` is created only by its human owner
-  or a trusted intake boundary.
-- Agent participant: `ai-{PROVIDER}.md`
-
 ## Granica katalogu
 
-Ten katalog przechowuje governance, decyzje, logi i dowody. Kod wykonywalny,
-skrypty badawcze i testy należą do zwykłych katalogów źródłowych repozytorium,
-nie do `project/ticket-{NNN}/`.
+Ten katalog przechowuje minimalny kontrakt i opcjonalne decyzje. Surowe logi
+pozostają poza śledzonym repozytorium; Git zapisuje tylko skrót wyniku i
+referencję do receiptu. Kod wykonywalny, skrypty badawcze i testy należą do
+zwykłych katalogów źródłowych, nie do `project/ticket-{NNN}/`.

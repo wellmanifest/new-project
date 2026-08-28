@@ -135,7 +135,7 @@ header = next(
     for lang, _, lines in blocks
     if lang == "dsl" and any(line == "DOCUMENT CONTRIBUTING" for line in lines)
 )
-assert "VERSION 14" in header
+assert "VERSION 15" in header
 
 declaration = re.compile(r"^(?:RULE|STATE|TRANSITION) [A-Z][A-Z0-9_-]*")
 mislabelled = [
@@ -219,9 +219,9 @@ assert "NEXT PUBLICATION OR DONE OR BLOCKED" in goal_record
 
 closure = rule_body("C-PUBLISH-009")
 for fragment in (
-    "GOVERNANCE_ONLY_CLOSURE_FROM_CURRENT_DEFAULT_BRANCH",
-    "TICKET_STATUS = DONE AND WORKFLOW_STATE = DONE",
-    "FORBID CARRY_UNMERGED_IMPLEMENTATION_DIFF_IN_CLOSURE",
+    "APPLY_EXTERNAL_TICKET_CLOSE_WITH_COMPARE_AND_SET",
+    "EMIT_PROTECTED_TERMINAL_RECEIPT",
+    "FORBID REPOSITORY_WRITE CLOSURE_COMMIT CLOSURE_BRANCH OR_CLOSURE_PULL_REQUEST",
 ):
     assert fragment in closure
 assert mapping["C-PUBLISH-009"]["enforcement"] == "manual"

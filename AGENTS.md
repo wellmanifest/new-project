@@ -56,15 +56,19 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
      - A separate repository for `repository.mode=standalone`, or every
        declared `repository.componentRoots` path in the current repository for
        `repository.mode=monorepo`.
-     - Scaffolds `project/ticket-{NNN}/` containing `preprompt.md` (technical directives and resource links) and `changelog.md`.
-     - Creates machine-readable `intent.json`; its `allowedPaths` bounds implementation after approval.
+     - Scaffolds the minimal `project/ticket-{NNN}/README.md` plus
+       machine-readable `intent.json`; its `allowedPaths` bounds implementation
+       after approval. Participant prose, changelog and raw logs are optional,
+       never required delivery output.
      - `project/TICKETS.md` is the ticket index; existing `project/README.md` files owned by analysis generators remain untouched.
      - Human participant file `user-{github_username}.md` is created only by that human or a trusted intake boundary. An agent never creates or edits it on the human's behalf.
-     - AI Agent Brain `ai-{PROVIDER}.md` (AI's understanding of the task, intent, scope, risks & Acceptance Criteria) uses explicit participant metadata and typed sections.
-     - Dedicated log file `ai-{PROVIDER}-logs.txt`.
+     - Optional AI participant notes use `ai-{PROVIDER}.md` with explicit
+       metadata. Raw command/test streams stay in ephemeral or external receipt
+       storage; Git records only bounded result digests and references.
   5. **RECORD BOUNDED AUTHORIZATION (`P-CORE-008`)**: Presents the initialized plan as an auditable scope before writing code:
-     - **Understanding View (`project/ticket-{NNN}/ai-{PROVIDER}.md`)**: User checks if AI correctly understood the task, intent, and acceptance criteria.
-     - **Task Checklist View (`TODO.md`)**: User checks if AI's step-by-step task breakdown and checklist are appropriate.
+     - **Understanding View (`project/ticket-{NNN}/README.md`)**: User checks
+       outcome, risks and acceptance criteria.
+     - **Scope View (`intent.json`)**: User checks the machine write boundary.
      - A request that already tells the agent to execute or work autonomously creates `SESSION_EXECUTION_AUTHORIZATION`; proceed within the recorded intent without a second confirmation.
   6. **EXECUTE WITHIN AUTHORIZATION**: With session execution authorization,
      executes the managed `./project/governance-check.sh` (or
@@ -77,7 +81,7 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
        trusted merge approval. CI requires an independent allowlisted human
        review, allowlisted Validator GitHub App review, or verified signed
        attestation.
-  7. **CONTINUE MATCHING ACTIVE TICKET (`P-CORE-009` / `C-TICKET-008`)**: Re-use the active ticket when workstream and scope match. A separate active ticket is allowed only for a declared different workstream with no write-scope overlap. Each branch/PR must resolve to exactly one ticket. Update only the agent-owned `ai-{PROVIDER}.md` and project TODO; NEVER modify human-owned `user-{github_username}.md` files.
+  7. **CONTINUE MATCHING ACTIVE TICKET (`P-CORE-009` / `C-TICKET-008`)**: Re-use the active ticket when workstream and scope match. A separate active ticket is allowed only for a declared different workstream with no write-scope overlap. Each branch/PR must resolve to exactly one ticket. Update `intent.json` only for a material scope change; do not rewrite AI prose, TODO or indexes for routine status. NEVER modify human-owned `user-{github_username}.md` files.
   8. **KEEP IMPLEMENTATION OUTSIDE THE TICKET**: `project/ticket-{NNN}/` contains governance, decisions, logs and captured evidence. Executable source, tests and research scripts belong in their normal repository directories.
   9. **ROUTE UNKNOWN OWNERS EXPLICITLY**: use `unresolved:human` or `unresolved:agent`; never emit an empty required-response route or infer identity from a name.
   10. **RUN THE GATE**: `./project/governance-check.sh` must pass before stack tests and publication. Required governance decisions are deterministic; LLM findings are advisory.
@@ -89,7 +93,7 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
    15. **CLEAN UP TICKET BRANCHES**: Configure GitHub with `delete_branch_on_merge=true`. A merged head branch is temporary and must disappear after merge. A PR closed without merge keeps its branch until the owner explicitly discards that unmerged work. When no PR is open, the only remote branch is the default branch.
    16. **CLEAN UP LOCAL WORKSPACES**: At merge, publication or explicit pilot discard, inventory every temporary linked worktree, duplicate clone and non-default local branch. Verify dirty state and whether each HEAD is integrated or explicitly disposable before removal. Preserve unknown or unique data. Remove an exact linked worktree through `git worktree remove`, then prune metadata and delete only its released disposable local branch; prefer recoverable trash for a verified duplicate clone. The checker is read-only: during active work exempt a branch only by allowlisting its exact checkout path, never by pattern or branch name. Run the adopted `.governance/workspace_lifecycle_check.py` through Goal for the terminal audit. CI validates GitHub state separately and cannot see a developer filesystem.
    17. **ALLOCATE THROUGH THE MANAGED SCRIPT**: Allocate every ticket ID only through `project/new-ticket.sh` after fetching/pruning. Never create or copy `project/ticket-{NNN}` manually. The clone-wide lock and high-water reservation are required even before the ticket is committed.
-   18. **KEEP PUBLICATION ACTIVE**: An implementation PR remains `IN_PROGRESS / PUBLICATION` through exact-head review and trusted merge. Set `DONE / DONE` only in a governance-only closure created from the integrated default branch; never close the unmerged full-diff branch.
+   18. **KEEP PUBLICATION ACTIVE**: An implementation PR remains `IN_PROGRESS / PUBLICATION` through exact-head review and trusted merge. The protected delivery controller closes it with an external receipt bound to PR head, merge SHA and checks. Never create a repository closure commit, closure branch or closure PR.
    19. **FOLLOW CANONICAL REMEDIATION**: Resolve `GOV-*` findings through `governance/diagnostics.json` and the linked `error/*.md` runbook when present. A ticket log is historical evidence, not a reusable solution, and a runbook never authorizes bypassing a fail-closed gate.
    20. **VALIDATE TARGET REMEDIATION INTENT**: Keep an incident-specific `remediation-intent.dsl.json` in the target repository ticket, validate it deterministically before LLM planning, and treat todo2code/LLM analysis as digest-bound advisory input. Never store target reports or remediation intents in this Governance Hub.
    21. **KEEP ONE C/Q AUTHORITY**: When `.governance/manifest.json` selects
@@ -108,3 +112,12 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
        whose branch is not bound to an `IN_PROGRESS` `ticket-NNN`. Markdown
        is not a substitute for the hook. Do not write on `main` or a dirty
        primary checkout.
+   23. **REQUIRE MATERIAL DELIVERY**: `project/ticket-*/**`, `TODO.md`,
+       `project/TICKETS.md` and a generated artifact registry are tracking
+       carriers, not an outcome. A commit or PR must include a material source,
+       test, configuration, standard or user-requested documentation change (or
+       a verified immutable standard adoption). If analysis finds no material
+       delta, emit an external no-change receipt and create no repository
+       commit, PR or follow-up ticket. The bounded intent may be committed in
+       the same atomic changeset as the first material change; a separate
+       plan-only commit is forbidden as ceremony.

@@ -51,35 +51,24 @@ test ! -d "$fixture/project/ticket-001"
 
 ticket="$fixture/project/ticket-001"
 test -f "$ticket/README.md"
-test -f "$ticket/preprompt.md"
 test -f "$ticket/intent.json"
-test -f "$ticket/ai-codex.md"
-test -f "$ticket/ai-codex-logs.txt"
-test -f "$ticket/changelog.md"
+test ! -e "$ticket/preprompt.md"
+test ! -e "$ticket/ai-codex.md"
+test ! -e "$ticket/ai-codex-logs.txt"
+test ! -e "$ticket/changelog.md"
 test ! -e "$ticket/user-alice.md"
 grep -q 'unresolved:human' "$ticket/README.md"
-grep -q 'participant-id: agent:codex' "$ticket/ai-codex.md"
 grep -q '^\- \*\*Status\*\*: IN_PROGRESS$' "$ticket/README.md"
 grep -q '^\- \*\*Workflow state\*\*: EDIT$' "$ticket/README.md"
-grep -q 'SESSION_EXECUTION_AUTHORIZATION' "$ticket/preprompt.md"
-grep -q 'without a second confirmation' "$ticket/ai-codex.md"
-grep -q 'chroniony proces dostawy' "$ticket/preprompt.md"
-grep -q 'Protected delivery' "$ticket/ai-codex.md"
-grep -q 'exact-head trusted approval remains independent evidence' "$ticket/ai-codex.md"
-if grep -Eq 'material(ly|nie) (new objective|nowy cel).*(trusted merge|merge approval)|material objective expansion and trusted merge' \
-  "$ticket/preprompt.md" "$ticket/ai-codex.md"; then
-  echo 'Generated ticket requires redundant merge authority' >&2
-  exit 1
-fi
 if grep -Eq 'WAIT_FOR_APPROVAL|waiting for approval|Human approval is required before implementation' \
-  "$ticket/README.md" "$ticket/preprompt.md" "$ticket/ai-codex.md"; then
+  "$ticket/README.md"; then
   echo 'Generated ticket restored the redundant approval pause' >&2
   exit 1
 fi
 grep -q 'did not create user-\* files' "$fixture/first.err"
 grep -qx '# Analysis-owned project README' "$fixture/project/README.md"
 grep -q 'ticket-001' "$fixture/project/TICKETS.md"
-if grep -q '{[A-Z_-]*}' "$ticket/README.md" "$ticket/preprompt.md" "$ticket/ai-codex.md"; then
+if grep -q '{[A-Z_-]*}' "$ticket/README.md"; then
   echo 'Generated ticket contains unresolved template placeholders' >&2
   exit 1
 fi
@@ -157,12 +146,9 @@ cp "$repo_root/governance/work-classification.dsl.json" \
 )
 grep -q '^\- \*\*Status\*\*: IN_PROGRESS$' "$fallback/project/ticket-001/README.md"
 grep -q '^\- \*\*Workflow state\*\*: EDIT$' "$fallback/project/ticket-001/README.md"
-grep -q 'SESSION_EXECUTION_AUTHORIZATION' "$fallback/project/ticket-001/preprompt.md"
-grep -q 'without a second confirmation' "$fallback/project/ticket-001/ai-codex.md"
-grep -q 'declared protected delivery process' "$fallback/project/ticket-001/preprompt.md"
-grep -q 'Protected delivery' "$fallback/project/ticket-001/ai-codex.md"
-grep -q 'exact-head trusted approval remains independent evidence' \
-  "$fallback/project/ticket-001/ai-codex.md"
+test -f "$fallback/project/ticket-001/intent.json"
+test ! -e "$fallback/project/ticket-001/preprompt.md"
+test ! -e "$fallback/project/ticket-001/ai-codex.md"
 
 status=0
 (
