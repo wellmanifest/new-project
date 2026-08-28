@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-08-28
+
 ### Material delivery without ticket ceremony
 
 - Allow bounded intent to enter atomically with the first material change;
