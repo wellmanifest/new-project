@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.19.5] - 2026-08-28
+
+### Atomic adoption bindings
+
+- Permit atomic standard adoption to update only the target packaging and
+  Docker files required by the adopted contracts across workstream ownership;
+  unrelated application paths remain governed normally.
+
 ## [0.19.4] - 2026-08-28
 
 ### Docker multi-stage validation
