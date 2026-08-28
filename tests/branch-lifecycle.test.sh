@@ -110,6 +110,13 @@ if grep -Fq 'repository.data.delete_branch_on_merge' \
   exit 1
 fi
 grep -Fq 'bash tests/branch-lifecycle.test.sh' "$repo_root/.github/workflows/ci.yml"
+grep -Fq 'Acquire live GitHub branch lifecycle snapshot' \
+  "$repo_root/.github/workflows/ci.yml"
+grep -Fq 'python3 scripts/branch_lifecycle_check.py' \
+  "$repo_root/.github/workflows/ci.yml"
+grep -Fq 'pull-requests: read' "$repo_root/.github/workflows/ci.yml"
+test "$(grep -Fc "if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'" \
+  "$repo_root/.github/workflows/ci.yml")" -eq 2
 
 target_workflow="$repo_root/template/files/new-project-governance.workflow.yml"
 grep -Fq '    - cron: "17 3 * * *"' "$target_workflow"
