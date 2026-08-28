@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.19.2] - 2026-08-28
+
+### Integrated coordination snapshots
+
+- Stop projecting tracked `IN_PROGRESS` authorization snapshots as concurrent
+  live writers when the integrated default branch has no proposed change.
+- Preserve fail-closed ticket selection and collision diagnostics for every
+  non-empty material or governance change.
+
 ## [0.19.1] - 2026-08-28
 
 ### Atomic target-owned adoption profile

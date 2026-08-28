@@ -8,17 +8,17 @@
 
 ## Cel i Zakres
 
-Release the corrective adoption-carrier contract as
-`wellmanifest/new-project` 0.19.1. Synchronize only release metadata,
+Release the clean integrated-coordination correction as
+`wellmanifest/new-project` 0.19.2. Synchronize only release metadata,
 manifests and version-bound conformance fixtures; preserve the reviewed
-policy and implementation from PRs #224 and #227.
+policy and implementation from PRs #224, #227 and #229.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 
-- [x] AC-01: Every live standard-version assertion resolves to 0.19.1.
+- [x] AC-01: Every live standard-version assertion resolves to 0.19.2.
 - [x] AC-02: The adoption package is generated from one reviewed immutable SHA.
 - [x] AC-03: All hub tests and the deterministic governance gate pass.
-- [ ] AC-04: The annotated tag and final GitHub Release point to that exact SHA.
+- [ ] AC-04: The annotated `v0.19.2` tag and final GitHub Release point to that exact SHA.
 
 ## Ryzyka i Uwagi
 
