@@ -64,6 +64,7 @@ default_manifest = json.load(open(
     root / 'governance/manifest.default.json', encoding='utf-8'
 ))
 assert 'config/artifact-registry.json' in default_manifest['governancePaths']
+assert '.governance/standard-adoption.json' in default_manifest['governancePaths']
 manifest_validator = Draft202012Validator(schemas['manifest.schema.json'])
 for valid_domain_contracts in (
     {'mode': 'none'},
@@ -90,6 +91,7 @@ hub_manifest = json.load(open(
 ))
 Draft202012Validator(schemas['manifest.schema.json']).validate(hub_manifest)
 assert 'config/artifact-registry.json' in hub_manifest['governancePaths']
+assert '.governance/standard-adoption.json' in hub_manifest['governancePaths']
 assert hub_manifest['standard']['version'] == '0.19.0'
 assert hub_manifest['coordination']['workstreams'] == {
     'governance': {'ownedPaths': ['**']},

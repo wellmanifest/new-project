@@ -43,9 +43,9 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "4747417a26f0b8efcb3416c82e93e2132c548a76",
+    "acceptedBaseSha": "ed2d47706a14d4e8ae1c48e31044ed2bfa14b009",
     "targetBranch": "main",
-    "outcome": "Replace ticket ceremony commits with one bounded material delivery and a protected external terminal receipt.",
+    "outcome": "Replace ticket ceremony commits with one bounded material delivery and a protected external terminal receipt, including atomic classification of target-owned adoption carriers.",
     "nonGoals": [
       "No weakening of exact-head review or merge authority",
       "No automatic publication",
