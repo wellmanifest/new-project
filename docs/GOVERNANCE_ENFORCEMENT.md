@@ -1,6 +1,6 @@
 # Egzekwowanie `new-project`
 
-`new-project` 0.9.0 rozdziela trzy warstwy, których nie wolno scalać:
+`new-project` rozdziela trzy warstwy, których nie wolno scalać:
 
 1. Markdown wyjaśnia zasady ludziom i agentom.
 2. Manifest, `intent.json` i walidator deterministycznie sprawdzają strukturę,
@@ -107,10 +107,14 @@ walidator zachowują pełne egzekwowanie tego jawnego opt-in.
 
 Manifest deklaruje wymagane pliki, opcjonalny Docker, aktywne/zamknięte statusy ticketów,
 stany implementacyjne, ścieżki governance i profile technologiczne. Każdy nowy
-ticket zawiera intent v2 z workstreamem, zakresem, zależnościami, konfliktami i
-opcjonalnym routingiem przez ticket integracyjny. Zamknięte tickety intent v1
-pozostają czytelne; aktywny ticket w manifeście v2 musi zostać jawnie
-zmigrowany i ponownie zatwierdzony.
+ticket zawiera kompaktowy intent v3 z workstreamem, zakresem, zależnościami,
+konfliktami i opcjonalnym routingiem przez ticket integracyjny. Pełna sekcja
+`delivery` jest domyślnie opcjonalna dla rutynowej zmiany. Nadal jest wymagana,
+gdy manifest ustawia `delivery.requiredForImplementation=true`, zmiana dotyka
+ścieżki integracyjnej lub deklaruje transakcję adopcji standardu. Jeżeli sekcji
+nie ma, walidator wciąż egzekwuje `allowedPaths`, nakładanie zakresów oraz twarde
+limity plików i zmian publicznego interfejsu z manifestu. Zamknięte starsze
+intenty pozostają czytelne; aktywny ticket musi spełnić bieżący kontrakt repo.
 
 Target z `docker.required=true` musi używać immutable external images. Każdy
 nie-`scratch` Dockerfile `FROM` i każdy scalar Compose `image:` ma postać
@@ -139,7 +143,8 @@ wrócić do `IN_PROGRESS` oraz stanu `EDIT`, `VALIDATION` lub `PUBLICATION`.
 
 Manifest definiuje nazwane workstreamy i ich `ownedPaths`. Obowiązują:
 
-1. maksymalnie jeden aktywny ticket implementacyjny na workstream;
+1. liczba aktywnych ticketów na workstream nie przekracza
+   `coordination.maxActiveTicketsPerWorkstream` (domyślnie cztery);
 2. brak nakładania aktywnych `allowedPaths` na konkretnych plikach repozytorium;
 3. jeden branch/PR rozwiązuje się dokładnie do jednego aktywnego ticketu;
 4. `dependsOn` tworzy acykliczny graf i wskazuje zakończone prerekwizyty;
@@ -149,9 +154,12 @@ Manifest definiuje nazwane workstreamy i ich `ownedPaths`. Obowiązują:
    `integrationTicket`, ale to odwołanie nie przenosi własności ścieżek.
 
 Branch/worktree jest izolacją operacyjną, nie zaufanym rozproszonym lockiem.
-Przydział kolejnego numeru ticketu trzeba zserializować i włączyć do gałęzi
-bazowej przed utworzeniem równoległych worktree; dwa odłączone worktree nie
-mogą niezależnie przydzielić tego samego `ticket-{NNN}`.
+`project/new-ticket.sh` przydziela numer z lokalnych oraz już pobranych refów i
+wspólnego high-water marku, więc rutynowa praca nie zależy od dostępności sieci.
+Przed koordynacją z innymi checkoutami operator może jawnie użyć
+`--refresh-remote`; błąd połączenia jest wtedy widoczny i nie zostaje pomylony z
+lokalnym błędem kontraktu. Skrypt czyta docelowy `.governance/manifest.json`, a
+podczas zarządzanej adopcji także `.governance/manifest.base.json`.
 Ostateczne porządkowanie równoległych PR-ów realizuje chroniony merge queue,
 który ponownie uruchamia governance i testy na aktualnej bazie.
 

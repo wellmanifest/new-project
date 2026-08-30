@@ -10,6 +10,7 @@ WORKSTREAM=""
 FORCE_NEW=false
 ALLOCATION_KEY=""
 ALLOCATION_RECEIPT=""
+REFRESH_REMOTE=false
 
 # Work classification for intent/v3. The defaults are the contract's own answer
 # for an unclassified new ticket: rule W-CLASS-006 (work-request / maintenance)
@@ -34,6 +35,7 @@ Usage: ./project/new-ticket.sh [options]
       --allocation-receipt FILE
                           Receipt returned by the registered allocator process
       --force-new        Create a new ticket despite an unfinished ticket
+      --refresh-remote   Fetch/prune origin before allocating; local refs are used by default
   -h, --help             Show this help
 
 Accepted classification values are read from the work classification contract,
@@ -105,6 +107,10 @@ while [[ $# -gt 0 ]]; do
       FORCE_NEW=true
       shift
       ;;
+    --refresh-remote)
+      REFRESH_REMOTE=true
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -130,7 +136,7 @@ fi
 
 governance_manifest() {
   local candidate
-  for candidate in .governance/manifest.json governance/manifest.hub.json; do
+  for candidate in .governance/manifest.json .governance/manifest.base.json governance/manifest.hub.json; do
     if [[ -f "$candidate" ]]; then
       printf '%s' "$candidate"
       return 0
@@ -323,11 +329,12 @@ fi
 
 # The allocator owns the freshness requirement. Relying on a caller to fetch
 # recreates the same partial view that clone-wide locking is meant to avoid.
-if git rev-parse --git-dir >/dev/null 2>&1 \
+if [[ "$REFRESH_REMOTE" == true ]] \
+  && git rev-parse --git-dir >/dev/null 2>&1 \
   && git remote get-url origin >/dev/null 2>&1; then
   if ! git fetch --prune origin '+refs/heads/*:refs/remotes/origin/*' >/dev/null 2>&1; then
     echo "GOV-TICKET-LOCK-004: remote ticket refs could not be refreshed safely." >&2
-    echo "  remediation: restore origin connectivity and retry; do not allocate a number from stale refs." >&2
+    echo "  remediation: restore origin connectivity and retry, or omit --refresh-remote and rely on local refs plus protected merge collision detection." >&2
     exit 4
   fi
 fi
