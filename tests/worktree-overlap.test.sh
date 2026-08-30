@@ -22,7 +22,10 @@ git -C "$primary" config user.email overlap-test@example.invalid
 git -C "$primary" config user.name overlap-test
 printf '%s\n' sample > "$primary/README.md"
 printf '%s\n' src > "$primary/app.py"
-git -C "$primary" add README.md app.py
+mkdir -p "$primary/governance"
+cp "$repo_root/governance/manifest.hub.json" "$primary/governance/manifest.hub.json"
+cp "$repo_root/governance/ticket-activity.json" "$primary/governance/ticket-activity.json"
+git -C "$primary" add README.md app.py governance
 git -C "$primary" commit --quiet -m initial
 git -C "$primary" remote add origin git@github.com:example/sample.git
 git -C "$primary" worktree add --quiet -b ticket/010 "$linked"

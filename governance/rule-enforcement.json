@@ -584,6 +584,20 @@
       ],
       "enforcement": "deterministic"
     },
+    "C-TICKET-ACTIVITY-001": {
+      "codes": [
+        "GOV-TICKET-ACTIVITY-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-RECOVERY-001": {
+      "codes": [
+        "GOV-TICKET-ACTIVITY-001",
+        "GOV-DIAGNOSTIC-001",
+        "GOV-DIAGNOSTIC-002"
+      ],
+      "enforcement": "deterministic"
+    },
     "C-TICKET-018": {
       "codes": [
         "GOV-DELIVERY-001"
@@ -949,6 +963,20 @@
     "P-CORE-023": {
       "codes": [
         "GOV-TICKET-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-TICKET-ACTIVITY-001": {
+      "codes": [
+        "GOV-TICKET-ACTIVITY-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-RECOVERY-001": {
+      "codes": [
+        "GOV-TICKET-ACTIVITY-001",
+        "GOV-DIAGNOSTIC-001",
+        "GOV-DIAGNOSTIC-002"
       ],
       "enforcement": "deterministic"
     },

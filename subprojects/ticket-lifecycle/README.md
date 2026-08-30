@@ -2,7 +2,7 @@
 
 ```dsl
 DOCUMENT TICKET_LIFECYCLE
-VERSION 2
+VERSION 3
 LANGUAGE EN
 MODE STRICT
 SCHEMA "wellmanifest.ticket-lifecycle/v1"
@@ -148,10 +148,12 @@ and budgets. LLM findings remain advisory; required verdicts are deterministic
 and expose stable diagnostic codes.
 
 An implementation ticket remains `IN_PROGRESS / PUBLICATION` while its PR is
-open. Exact-head trusted review and required checks precede merge. `DONE / DONE`
-is written only by a governance-only closure from the integrated default
-branch, with merge SHA and post-merge evidence. Closing an unmerged full-diff
-branch is forbidden.
+open. Exact-head trusted review and required checks precede merge. A protected
+terminal receipt records closure outside the repository; it does not trigger a
+closure commit, branch or pull request. The status text remains an auditable
+projection and a shared resolver releases its reservation only after receipt
+bindings and Git ancestry verify. Closing an unmerged full-diff branch is
+forbidden.
 
 ## Request and receipt boundary
 
@@ -177,5 +179,8 @@ ticket and intent reference.
 - `close` requires resolved trusted integration and post-merge evidence.
 - `block` preserves evidence and releases workstream/write reservations.
 - `resume` revalidates base, scope, dependencies and foreign workspace state.
+- Every fail-closed rejection has an authority-preserving exit to retry,
+  planning, blocked or a verified terminal result. Unsupported variants remain
+  conservative; they never require history rewriting or destructive cleanup.
 - Unknown references, state mismatch, scope overlap or missing evidence reject
   before repository mutation and yield a redacted receipt.

@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-155",
+  "summary": "Resolve ticket activity from terminal receipt registry",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-155/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "subprojects/ticket-lifecycle/README.md",
+    "governance/ticket-activity.json",
+    "governance/ticket-activity.schema.json",
+    "governance/terminal-receipt-registry.schema.json",
+    "governance/package-manifest.json",
+    "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
+    "error/GOV-TICKET-ACTIVITY.md",
+    "scripts/ticket_activity.py",
+    "scripts/governance_check.py",
+    "scripts/worktree_overlap_check.py",
+    "project/new-ticket.sh",
+    "tests/ticket-activity.test.sh",
+    "tests/governance-scripts.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/worktree-overlap.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": ["wellmanifest/new-project", "wellmanifest/logs"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "edce26953b46d3ba4096b1942bdf86bcce4edaf0",
+    "targetBranch": "main",
+    "outcome": "Resolve ticket reservations from a managed activity policy and verified external receipts instead of stale status prose or ticket-specific exceptions",
+    "nonGoals": [
+      "Do not store target receipts in Git",
+      "Do not accept mutable refs or unverified terminal claims",
+      "Do not auto-delete branches, tickets or receipt evidence"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 30,
+    "budgets": {"maxImplementationFiles": 20, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 3, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep status prose as a conservative projection; let a managed policy discover clone-external receipt registries and release reservations only after closed-schema and Git-ancestry verification",
+      "components": [
+        {"name": "activity-system", "paths": ["governance/ticket-activity*.json", "governance/terminal-receipt-registry.schema.json", "governance/package-manifest.json", "scripts/ticket_activity.py", "scripts/governance_check.py", "scripts/worktree_overlap_check.py", "project/new-ticket.sh"]},
+        {"name": "recovery-policy", "paths": ["POLICY.md", "CONTRIBUTING.md", "subprojects/ticket-lifecycle/README.md", "governance/diagnostics.json", "governance/rule-enforcement.json", "error/GOV-TICKET-ACTIVITY.md"]},
+        {"name": "conformance", "paths": ["tests/ticket-activity.test.sh", "tests/governance-scripts.test.sh", "tests/governance-validator.test.sh", "tests/worktree-overlap.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["new-project.ticket-activity/v1", "new-project.terminal-receipt-registry/v1", "ticket_activity.py resolve/record/validate"],
+      "dataChanges": ["Clone-external terminal receipt registry under the Git common directory"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Remove the activity policy and runtime together; status projection remains conservative"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/ticket-activity.test.sh", "bash tests/governance-scripts.test.sh"], "evidence": "Valid receipts release and absent/stale receipts remain active"},
+      {"criterion": "AC-02", "commands": ["bash tests/governance-validator.test.sh", "bash tests/worktree-overlap.test.sh"], "evidence": "Governance and worktree ownership share the resolver"},
+      {"criterion": "AC-03", "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done"], "evidence": "Full suite passes"},
+      {"criterion": "AC-04", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Managed adopter fixtures use the same resolver; live logs adoption follows the published release"}
+    ]
+  }
+}
