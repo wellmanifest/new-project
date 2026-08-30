@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.19.7] - 2026-08-30
+
+### Truthful worktree ticket attribution
+
+- Attribute an active ticket scope only to its matching branch or a checkout
+  actually changing that ticket directory.
+- Stop historical `IN_PROGRESS` copies without either ownership signal from
+  reserving every active worktree while preserving real path collisions.
+
 ## [0.19.6] - 2026-08-28
 
 ### Portable and durable adoption
