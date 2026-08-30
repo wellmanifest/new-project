@@ -32,6 +32,7 @@ cp -R "$repo_root/template/files" "$fixture/template/files"
 # the package manifest ships it. The scaffolder reads the accepted dimension
 # values from it instead of hardcoding them, so the fixture must mirror that.
 cp "$repo_root/governance/work-classification.dsl.json" "$fixture/.governance/work-classification.dsl.json"
+cp "$repo_root/governance/manifest.default.json" "$fixture/.governance/manifest.json"
 printf '%s\n' '# Analysis-owned project README' > "$fixture/project/README.md"
 
 status=0
@@ -42,6 +43,41 @@ status=0
 test "$status" -eq 2
 grep -q 'Workstream is required' "$fixture/missing-workstream.err"
 test ! -d "$fixture/project/ticket-001"
+
+status=0
+(
+  cd "$fixture"
+  bash project/new-ticket.sh --title 'Unknown workstream' --workstream invented \
+    > unknown-workstream.out 2> unknown-workstream.err
+) || status=$?
+test "$status" -eq 1
+grep -q 'GOV-WORKSTREAM-001' "$fixture/unknown-workstream.err"
+test ! -d "$fixture/project/ticket-001"
+
+mv "$fixture/.governance/manifest.json" "$fixture/manifest.json.bak"
+status=0
+(
+  cd "$fixture"
+  bash project/new-ticket.sh --title 'Missing registry' --workstream application \
+    > missing-registry.out 2> missing-registry.err
+) || status=$?
+test "$status" -eq 1
+grep -q 'GOV-MANIFEST-001' "$fixture/missing-registry.err"
+test ! -d "$fixture/project/ticket-001"
+mv "$fixture/manifest.json.bak" "$fixture/.governance/manifest.json"
+
+cp "$fixture/.governance/manifest.json" "$fixture/manifest.json.valid"
+printf '%s\n' '{}' > "$fixture/.governance/manifest.json"
+status=0
+(
+  cd "$fixture"
+  bash project/new-ticket.sh --title 'Invalid registry' --workstream application \
+    > invalid-registry.out 2> invalid-registry.err
+) || status=$?
+test "$status" -eq 1
+grep -q 'GOV-MANIFEST-001' "$fixture/invalid-registry.err"
+test ! -d "$fixture/project/ticket-001"
+mv "$fixture/manifest.json.valid" "$fixture/.governance/manifest.json"
 
 (
   cd "$fixture"
@@ -99,7 +135,27 @@ test "$status" -eq 3
 grep -q "Active ticket conflicts with workstream 'application': project/ticket-001" "$fixture/second.err"
 test ! -d "$fixture/project/ticket-002"
 
-sed -i 's/\*\*Status\*\*: IN_PROGRESS/**Status**: BLOCKED/' "$ticket/README.md"
+# Lifecycle vocabulary is registry-owned. A non-default active status must take
+# effect without changing the allocator, while the old literal stops reserving.
+python3 - "$fixture/.governance/manifest.json" <<'PY'
+import json
+import sys
+path = sys.argv[1]
+manifest = json.load(open(path, encoding='utf-8'))
+manifest['ticket']['activeStatuses'] = ['RESERVED']
+open(path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2) + '\n')
+PY
+sed -i 's/\*\*Status\*\*: IN_PROGRESS/**Status**: RESERVED/' "$ticket/README.md"
+status=0
+(
+  cd "$fixture"
+  bash project/new-ticket.sh --title 'Must reuse registry-active ticket' --agent codex --workstream application \
+    > registry-active.out 2> registry-active.err
+) || status=$?
+test "$status" -eq 3
+grep -q "Active ticket conflicts with workstream 'application': project/ticket-001" "$fixture/registry-active.err"
+
+sed -i 's/\*\*Status\*\*: RESERVED/**Status**: IN_PROGRESS/' "$ticket/README.md"
 (
   cd "$fixture"
   bash project/new-ticket.sh --title 'Replacement application ticket' --agent codex-2 \
@@ -107,6 +163,15 @@ sed -i 's/\*\*Status\*\*: IN_PROGRESS/**Status**: BLOCKED/' "$ticket/README.md"
 )
 test -d "$fixture/project/ticket-002"
 grep -q '"workstream": "application"' "$fixture/project/ticket-002/intent.json"
+
+python3 - "$fixture/.governance/manifest.json" <<'PY'
+import json
+import sys
+path = sys.argv[1]
+manifest = json.load(open(path, encoding='utf-8'))
+manifest['ticket']['activeStatuses'] = ['IN_PROGRESS']
+open(path, 'w', encoding='utf-8').write(json.dumps(manifest, indent=2) + '\n')
+PY
 
 (
   cd "$fixture"
@@ -116,7 +181,7 @@ grep -q '"workstream": "application"' "$fixture/project/ticket-002/intent.json"
 test -d "$fixture/project/ticket-003"
 grep -q '"workstream": "interfaces"' "$fixture/project/ticket-003/intent.json"
 
-sed -i 's/\*\*Status\*\*: BLOCKED/**Status**: DONE/' "$ticket/README.md"
+sed -i 's/\*\*Status\*\*: IN_PROGRESS/**Status**: DONE/' "$ticket/README.md"
 sed -i 's/\*\*Status\*\*: IN_PROGRESS/**Status**: DONE/' "$fixture/project/ticket-002/README.md"
 sed -i 's/\*\*Status\*\*: IN_PROGRESS/**Status**: DONE/' "$fixture/project/ticket-003/README.md"
 (
@@ -139,6 +204,7 @@ mkdir -p "$fallback/project" "$fallback/.governance"
 cp "$repo_root/project/new-ticket.sh" "$fallback/project/new-ticket.sh"
 cp "$repo_root/governance/work-classification.dsl.json" \
   "$fallback/.governance/work-classification.dsl.json"
+cp "$repo_root/governance/manifest.default.json" "$fallback/.governance/manifest.json"
 (
   cd "$fallback"
   bash project/new-ticket.sh --title 'Fallback autonomous ticket' \
@@ -241,6 +307,7 @@ cp "$repo_root/project/new-ticket.sh" "$race/mine/project/new-ticket.sh"
 cp "$repo_root/project/readme.sh" "$race/mine/project/readme.sh"
 cp -R "$repo_root/template/files" "$race/mine/template/files"
 cp "$repo_root/governance/work-classification.dsl.json" "$race/mine/.governance/work-classification.dsl.json"
+cp "$repo_root/governance/manifest.default.json" "$race/mine/.governance/manifest.json"
 
 # A third claim appears only after the worker clone exists. The allocator must
 # fetch it itself rather than rely on the caller to refresh remote refs.

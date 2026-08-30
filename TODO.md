@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-149`](project/ticket-149/README.md) — rozwiązywać aktywne
+  statusy i workstreamy allocatora z dynamicznego rejestru governance zamiast
+  z wartości zaszytych w skrypcie. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
+  `BUG / P1 / regression`; workstream: `governance`.
+
 - [x] [`ticket-131`](project/ticket-131/README.md) — dopuścić ruch target
   branch bez metadata-only re-pina, gdy zaakceptowana baza pozostaje przodkiem,
   a interweniujące zmiany nie nachodzą na komponenty ticketu. Stan:
