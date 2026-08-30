@@ -97,6 +97,7 @@ require() {
   [[ -f "$SOURCE/$1" ]] || { echo "Source file missing: $SOURCE/$1" >&2; exit 1; }
 }
 require scripts/worktree_overlap_check.py
+require scripts/ticket_activity.py
 require scripts/worktree_guard.py
 require worktree-guard.yaml
 require error/GOV-WORKTREE-OVERLAP.md
@@ -177,6 +178,7 @@ install_repo() {
 
   mkdir -p "$target/.governance/error" "$hooks_dir"
   install -m 0755 "$SOURCE/scripts/worktree_overlap_check.py" "$target/.governance/worktree_overlap_check.py"
+  install -m 0755 "$SOURCE/scripts/ticket_activity.py" "$target/.governance/ticket_activity.py"
   install -m 0755 "$SOURCE/scripts/worktree_guard.py" "$target/.governance/worktree_guard.py"
   install -m 0644 "$SOURCE/worktree-guard.yaml" "$target/worktree-guard.yaml"
   install -m 0644 "$SOURCE/error/GOV-WORKTREE-OVERLAP.md" "$target/.governance/error/GOV-WORKTREE-OVERLAP.md"
@@ -289,6 +291,7 @@ install_workspace() {
 
   mkdir -p "$DATA_HOME" "$STATE_HOME" "$UNIT_HOME"
   install -m 0755 "$SOURCE/scripts/worktree_overlap_check.py" "$DATA_HOME/worktree_overlap_check.py"
+  install -m 0755 "$SOURCE/scripts/ticket_activity.py" "$DATA_HOME/ticket_activity.py"
   install -m 0755 "$SOURCE/scripts/worktree_guard.py" "$DATA_HOME/worktree_guard.py"
   install -m 0644 "$SOURCE/worktree-guard.yaml" "$DATA_HOME/worktree-guard.yaml"
   # A workspace root is usually not a repository, so the units point the runner

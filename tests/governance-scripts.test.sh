@@ -27,6 +27,8 @@ test -f "$repo_root/template/files/agent-participant.template.md"
 mkdir -p "$fixture/project" "$fixture/template" "$fixture/.governance"
 cp "$repo_root/project/new-ticket.sh" "$fixture/project/new-ticket.sh"
 cp "$repo_root/project/readme.sh" "$fixture/project/readme.sh"
+cp "$repo_root/scripts/ticket_activity.py" "$fixture/.governance/ticket_activity.py"
+cp "$repo_root/governance/ticket-activity.json" "$fixture/.governance/ticket-activity.json"
 cp -R "$repo_root/template/files" "$fixture/template/files"
 # A real adopted target always carries the work classification contract, because
 # the package manifest ships it. The scaffolder reads the accepted dimension

@@ -22,7 +22,10 @@ git -C "$primary" config user.email overlap-test@example.invalid
 git -C "$primary" config user.name overlap-test
 printf '%s\n' sample > "$primary/README.md"
 printf '%s\n' src > "$primary/app.py"
-git -C "$primary" add README.md app.py
+mkdir -p "$primary/governance"
+cp "$repo_root/governance/manifest.hub.json" "$primary/governance/manifest.hub.json"
+cp "$repo_root/governance/ticket-activity.json" "$primary/governance/ticket-activity.json"
+git -C "$primary" add README.md app.py governance
 git -C "$primary" commit --quiet -m initial
 git -C "$primary" remote add origin git@github.com:example/sample.git
 git -C "$primary" worktree add --quiet -b ticket/010 "$linked"
@@ -407,6 +410,7 @@ chmod 0755 "$hookrepo/.githooks/pre-commit"
   --target "$hookrepo" --wire-hook > "$fixture/hookinstall.out"
 test -x "$hookrepo/.githooks/pre-commit"
 test -x "$hookrepo/.githooks/pre-commit-worktree-guard"
+test -x "$hookrepo/.governance/ticket_activity.py"
 test "$(tail -n 1 "$hookrepo/.githooks/pre-commit")" = 'exit 0'
 test "$(grep -n 'pre-commit-worktree-guard' "$hookrepo/.githooks/pre-commit" | cut -d: -f1)" \
   -lt "$(grep -n '^exit 0$' "$hookrepo/.githooks/pre-commit" | cut -d: -f1)"
