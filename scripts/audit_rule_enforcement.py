@@ -43,6 +43,9 @@ VALIDATOR_PATHS = (
     # The managed change-lease checker is independently loadable by governance;
     # its transition diagnostics must remain claimed by normative rules.
     Path("scripts/change_lease_check.py"),
+    # Registered allocation is a managed fail-closed validator. Keep its stable
+    # errors in the same rule/code traceability graph as the governance gate.
+    Path("scripts/ticket_allocation.py"),
 )
 
 GOV_CODE = re.compile(r'"(GOV-[A-Z]+(?:-[A-Z]+)*-[0-9]{3})"')

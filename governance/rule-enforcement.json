@@ -108,7 +108,9 @@
       "codes": [
         "GOV-TICKET-002",
         "GOV-TICKET-ALLOCATION-001",
-        "GOV-TICKET-ALLOCATION-002"
+        "GOV-TICKET-ALLOCATION-002",
+        "GOV-TICKET-ALLOCATION-003",
+        "GOV-TICKET-ALLOCATION-004"
       ],
       "enforcement": "deterministic"
     },
@@ -117,6 +119,14 @@
         "GOV-WORKSTREAM-002"
       ],
       "enforcement": "deterministic"
+    },
+    "C-CONCURRENCY-004": {
+      "codes": [
+        "GOV-TICKET-ALLOCATION-002",
+        "GOV-TICKET-ALLOCATION-004"
+      ],
+      "enforcement": "manual",
+      "reason": "The deterministic Strategy policy validates recovery evidence; this standard supplies the fail-closed diagnostic and ordered runbook."
     },
     "C-CONTEXT-001": {
       "codes": [],
@@ -956,7 +966,16 @@
     "P-CORE-022": {
       "codes": [
         "GOV-TICKET-ALLOCATION-001",
-        "GOV-TICKET-ALLOCATION-002"
+        "GOV-TICKET-ALLOCATION-002",
+        "GOV-TICKET-ALLOCATION-003",
+        "GOV-TICKET-ALLOCATION-004"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-TICKET-ALLOCATION-001": {
+      "codes": [
+        "GOV-TICKET-ALLOCATION-003",
+        "GOV-TICKET-ALLOCATION-004"
       ],
       "enforcement": "deterministic"
     },

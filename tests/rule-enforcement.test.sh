@@ -135,7 +135,7 @@ header = next(
     for lang, _, lines in blocks
     if lang == "dsl" and any(line == "DOCUMENT CONTRIBUTING" for line in lines)
 )
-assert "VERSION 16" in header
+assert "VERSION 17" in header
 
 declaration = re.compile(r"^(?:RULE|STATE|TRANSITION) [A-Z][A-Z0-9_-]*")
 mislabelled = [
@@ -230,12 +230,28 @@ allocation = rule_body("C-CONCURRENCY-002")
 for fragment in (
     'MANAGED_ALLOCATOR "project/new-ticket.sh"',
     "CLONE_WIDE_TICKET_ALLOCATION_LOCK",
+    "REGISTERED_ATOMIC_PROCESS_RECEIPT",
+    "FORBID USE_LOCAL_HIGH_WATER_AS_DISTRIBUTED_AUTHORITY",
     "FORBID MANUAL_MKDIR_OR_TEMPLATE_COPY",
 ):
     assert fragment in allocation
-assert {"GOV-TICKET-ALLOCATION-001", "GOV-TICKET-ALLOCATION-002"} <= set(
+assert {
+    "GOV-TICKET-ALLOCATION-001",
+    "GOV-TICKET-ALLOCATION-002",
+    "GOV-TICKET-ALLOCATION-003",
+    "GOV-TICKET-ALLOCATION-004",
+} <= set(
     mapping["C-CONCURRENCY-002"]["codes"]
 )
+
+collision = rule_body("C-CONCURRENCY-004")
+for fragment in (
+    "SELECT_CANONICAL_HISTORY_ONLY_FROM_VERIFIED_TERMINAL_MERGE_RECEIPT",
+    "ALLOCATE_SUCCESSOR_THROUGH_REGISTERED_PROCESS",
+    "CREATE_SUCCESSOR_BEFORE_CLOSING_PREDECESSOR_AS_SUPERSEDED",
+    "FORBID MANUAL_RENUMBER OVERWRITE_MERGED_HISTORY DELETE_UNKNOWN_WORK OR_DIRECT_MERGE",
+):
+    assert fragment in collision
 
 base_advance = rule_body("C-EVALUATION-011")
 for fragment in (

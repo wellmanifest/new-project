@@ -1,0 +1,95 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-161",
+  "summary": "Atomowa alokacja ticketów dla rozproszonych workerów",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-161/**",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "project/TICKETS.md",
+    "project/new-ticket.sh",
+    "scripts/ticket_allocation.py",
+    "scripts/audit_rule_enforcement.py",
+    "scripts/create_adoption_lock.py",
+    "scripts/governance_check.py",
+    "governance/ticket-allocation*.json",
+    "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
+    "governance/package-manifest.json",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "error/GOV-TICKET-ALLOCATION.md",
+    "tests/governance-scripts.test.sh",
+    "tests/rule-enforcement.test.sh",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d6097b846dfea06948540c0eadcf17ca6effc724",
+    "targetBranch": "main",
+    "outcome": "Distributed autonomous workers allocate repository ticket identities through one atomic registered process and recover collisions without overwriting work.",
+    "nonGoals": [
+      "Do not make wellmanifest run a Subactor daemon",
+      "Do not grant merge or execution authority through an allocation receipt",
+      "Do not remove the single-clone compatibility profile"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Wellmanifest defines the request/receipt and fail-closed allocation invariant; adopter runtime supplies the registered process URI and atomic store. The managed script validates exact bindings before materializing a ticket.",
+      "components": [
+        {
+          "name": "allocation-contract",
+          "paths": ["POLICY.md", "CONTRIBUTING.md", "governance/ticket-allocation*.json", "governance/diagnostics.json", "governance/rule-enforcement.json", "error/GOV-TICKET-ALLOCATION.md"]
+        },
+        {
+          "name": "managed-allocator",
+          "paths": ["project/new-ticket.sh", "scripts/ticket_allocation.py", "scripts/audit_rule_enforcement.py", "scripts/create_adoption_lock.py", "scripts/governance_check.py", "tests/governance-scripts.test.sh", "tests/rule-enforcement.test.sh"]
+        },
+        {
+          "name": "published-adoption",
+          "paths": ["VERSION", "CHANGELOG.md", "governance/package-manifest.json", "governance/manifest.default.json", "governance/manifest.hub.json", "tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "new-project.ticket-allocation/v1",
+        "new-project.ticket-allocation-request/v1",
+        "new-project.ticket-allocation-receipt/v1"
+      ],
+      "dataChanges": ["Registered adopters persist allocator receipts outside the repository checkout"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the registered profile and script integration while retaining the existing clone-wide local allocator."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/governance-scripts.test.sh"], "evidence": "registered allocation contract fixtures"},
+      {"criterion": "AC-02", "commands": ["bash tests/governance-scripts.test.sh"], "evidence": "request and receipt binding fixtures"},
+      {"criterion": "AC-03", "commands": ["bash tests/governance-scripts.test.sh"], "evidence": "known-claim rejection fixtures"},
+      {"criterion": "AC-04", "commands": ["bash tests/rule-enforcement.test.sh"], "evidence": "rule, diagnostic and runbook traceability"},
+      {"criterion": "AC-05", "commands": ["for test in tests/*.test.sh; do bash \"$test\"; done"], "evidence": "complete deterministic suite"}
+    ]
+  }
+}

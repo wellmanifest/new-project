@@ -21,9 +21,12 @@ MANIFEST_BASE_TARGET = ".governance/manifest.base.json"
 MANIFEST_TARGET = ".governance/manifest.json"
 CHECKS_SOURCE = "governance/required-checks.json"
 CHECKS_TARGET = ".governance/required-checks.json"
+TICKET_ALLOCATION_SOURCE = "governance/ticket-allocation.json"
+TICKET_ALLOCATION_TARGET = ".governance/ticket-allocation.json"
 ALLOWED_EXTENDABLE = {
     (MANIFEST_SOURCE, MANIFEST_TARGET),
     (CHECKS_SOURCE, CHECKS_TARGET),
+    (TICKET_ALLOCATION_SOURCE, TICKET_ALLOCATION_TARGET),
 }
 TARGET_OWNED_MANIFEST_PATHS = {
     ("$schema",),
@@ -166,8 +169,8 @@ def package_files(root: Path, revision: str) -> list[dict[str, object]]:
             raise SystemExit(f"package manifest file {index} has invalid strategy or executable flag")
         if strategy == "extendable" and ((source, target) not in ALLOWED_EXTENDABLE or executable):
             raise SystemExit(
-                "extendable strategy currently supports only the target governance JSON manifest "
-                "and the required-checks instance"
+                "extendable strategy currently supports only the target governance JSON manifest, "
+                "required-checks instance and ticket-allocation policy"
             )
         if target in targets:
             raise SystemExit(f"duplicate package target: {target}")

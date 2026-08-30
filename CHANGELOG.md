@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.19.15] - 2026-08-30
+
+### Registered ticket allocation
+
+- Separate the compatible single-clone high-water profile from distributed
+  allocation through an adopter-registered atomic process URI.
+- Add closed request and receipt contracts with exact repository, correlation,
+  issuer, digest, expiry and fencing-token bindings.
+- Make `new-ticket.sh` fail closed for distributed writers without a fresh
+  receipt and reject identities already visible in repository state.
+- Standardize lossless ticket-collision recovery: preserve both heads, trust
+  only the terminal merge receipt, allocate a successor, verify equivalence,
+  then close the predecessor as superseded.
+
 ## [0.19.14] - 2026-08-30
 
 ### Docs
