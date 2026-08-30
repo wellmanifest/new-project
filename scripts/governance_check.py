@@ -1697,6 +1697,7 @@ def check_active_relationships(
     report: Report,
 ) -> None:
     closed_statuses = set(config.get("closedStatuses", []))
+    active_statuses = set(config.get("activeStatuses", ACTIVE_DEFAULT))
     by_name = {record.directory.name: record for record in records}
     active_names = {record.directory.name for record in active}
     conflict_pairs: set[tuple[str, str]] = set()
@@ -1705,7 +1706,14 @@ def check_active_relationships(
         assert record.intent is not None
         for dependency in record.intent["dependsOn"]:
             prerequisite = by_name.get(dependency)
-            if prerequisite is None or prerequisite.status not in closed_statuses:
+            verified_terminal = bool(
+                prerequisite
+                and prerequisite.status in active_statuses
+                and dependency not in active_names
+            )
+            if prerequisite is None or (
+                prerequisite.status not in closed_statuses and not verified_terminal
+            ):
                 report.add(
                     "GOV-DEPENDENCY-002", f"Active ticket {record.directory.name} has unfinished or missing dependency {dependency}.",
                     "Complete the prerequisite or return the dependent ticket to a non-active planning backlog.",
