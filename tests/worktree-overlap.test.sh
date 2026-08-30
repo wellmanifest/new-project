@@ -265,9 +265,10 @@ YAML
     "$repo_root/scripts/install-worktree-guard.sh" \
       --source "$repo_root" --workspace "$workspace" \
       --pyqual "$fixture/pyqual.yaml" --interval 300 > "$fixture/install.out"
-  test -f "$fixture/xdg/config/systemd/user/worktree-guard@.service"
-  test -f "$fixture/xdg/config/systemd/user/worktree-guard@.timer"
-  test -f "$fixture/xdg/config/systemd/user/worktree-guard@.path"
+test -f "$fixture/xdg/config/systemd/user/worktree-guard@.service"
+test -f "$fixture/xdg/config/systemd/user/worktree-guard@.timer"
+test -f "$fixture/xdg/config/systemd/user/worktree-guard@.path"
+test -f "$fixture/xdg/data/worktree-guard/ticket_activity.py"
   grep -q '^OnUnitActiveSec=300s$' "$fixture/xdg/config/systemd/user/worktree-guard@.timer"
   grep -q '^PathModified=%f/.worktrees$' "$fixture/xdg/config/systemd/user/worktree-guard@.path"
   python3 - "$fixture/pyqual.yaml" <<'PY'
@@ -410,6 +411,7 @@ chmod 0755 "$hookrepo/.githooks/pre-commit"
   --target "$hookrepo" --wire-hook > "$fixture/hookinstall.out"
 test -x "$hookrepo/.githooks/pre-commit"
 test -x "$hookrepo/.githooks/pre-commit-worktree-guard"
+test -f "$hookrepo/.governance/ticket_activity.py"
 test "$(tail -n 1 "$hookrepo/.githooks/pre-commit")" = 'exit 0'
 test "$(grep -n 'pre-commit-worktree-guard' "$hookrepo/.githooks/pre-commit" | cut -d: -f1)" \
   -lt "$(grep -n '^exit 0$' "$hookrepo/.githooks/pre-commit" | cut -d: -f1)"
@@ -422,7 +424,11 @@ if git -C "$hookrepo" commit -m "overlapping" > "$fixture/blocked.out" 2>&1; the
   cat "$fixture/blocked.out" >&2
   exit 1
 fi
-grep -q 'GOV-WORKTREE-OVERLAP-FAIL' "$fixture/blocked.out"
+if ! grep -q 'GOV-WORKTREE-OVERLAP-FAIL' "$fixture/blocked.out"; then
+  echo "pre-commit failed without the expected overlap diagnostic" >&2
+  cat "$fixture/blocked.out" >&2
+  exit 1
+fi
 
 git -C "$fixture/hookspace/.worktrees/hooked-a" checkout --quiet -- shared.txt
 # Hook output goes to stderr; keep a passing suite quiet.

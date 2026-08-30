@@ -80,7 +80,7 @@
   },
   "coordination": {
     "mode": "workstreams",
-    "maxActiveTicketsPerWorkstream": 1,
+    "maxActiveTicketsPerWorkstream": 4,
     "rejectActiveScopeOverlap": true,
     "workstreams": {
       "application": { "ownedPaths": ["src/**", "app/**", "lib/**", "packages/**", "test/**", "tests/**"] },
@@ -95,9 +95,9 @@
     }
   },
   "delivery": {
-    "requiredForImplementation": true,
-    "maxActiveMinutes": 30,
-    "checkpointMinutes": 25,
+    "requiredForImplementation": false,
+    "maxActiveMinutes": 120,
+    "checkpointMinutes": 30,
     "allowedComplexityClasses": ["XS", "S", "M", "L"],
     "maxImplementationFiles": 15,
     "maxAffectedComponents": 5,

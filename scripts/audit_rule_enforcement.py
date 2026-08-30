@@ -43,6 +43,10 @@ VALIDATOR_PATHS = (
     # The managed change-lease checker is independently loadable by governance;
     # its transition diagnostics must remain claimed by normative rules.
     Path("scripts/change_lease_check.py"),
+    # Ticket lifecycle state is resolved from the immutable terminal-receipt
+    # registry as well as mutable ticket prose. Its diagnostics are normative
+    # enforcement and must therefore participate in the rule/code audit.
+    Path("scripts/ticket_activity.py"),
 )
 
 GOV_CODE = re.compile(r'"(GOV-[A-Z]+(?:-[A-Z]+)*-[0-9]{3})"')

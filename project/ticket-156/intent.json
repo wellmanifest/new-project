@@ -1,0 +1,77 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-156",
+  "summary": "Make routine governance proportional and parallel",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-156/**",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/manifest.schema.json",
+    "governance/intent.schema.json",
+    "project/new-ticket.sh",
+    "scripts/install-worktree-guard.sh",
+    "scripts/audit_rule_enforcement.py",
+    "scripts/governance_check.py",
+    "template/files/AGENTS.template.md",
+    "docs/GOVERNANCE_ENFORCEMENT.md",
+    "tests/governance-scripts.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/rule-enforcement.test.sh",
+    "tests/worktree-overlap.test.sh"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "9e82eaad9fd4c8b1a3b963f29510104bcb59e467",
+    "targetBranch": "main",
+    "outcome": "Routine Subactor changes use compact deterministic governance without losing path ownership, overlap detection or protected merge evidence",
+    "nonGoals": [
+      "Do not weaken exact-head approval or protected merge",
+      "Do not allow overlapping active write scopes",
+      "Do not remove immutable standard adoption checks",
+      "Do not modify target repositories in this ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 20,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep one compact mandatory intent and make the verbose delivery contract risk-triggered; retain deterministic hard ceilings and overlap checks",
+      "components": [
+        {"name": "policy", "paths": ["POLICY.md", "CONTRIBUTING.md", "template/files/AGENTS.template.md", "docs/GOVERNANCE_ENFORCEMENT.md"]},
+        {"name": "contracts", "paths": ["governance/manifest*.json", "governance/intent.schema.json"]},
+        {"name": "runtime", "paths": ["project/new-ticket.sh", "scripts/audit_rule_enforcement.py", "scripts/governance_check.py", "scripts/install-worktree-guard.sh", "tests/**"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Routine intent and allocator behavior become proportional and offline-capable"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the proportional defaults and runtime tests before publishing a new standard release"
+    },
+    "runtimeDependencies": [],
+    "validation": [{
+      "criterion": "AC-06",
+      "commands": [
+        "for test_script in tests/*.test.sh; do bash \"$test_script\"; done",
+        "./project/governance-check.sh --actor agent"
+      ],
+      "evidence": "Full deterministic suite and exact-base governance report"
+    }]
+  }
+}

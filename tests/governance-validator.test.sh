@@ -306,8 +306,10 @@ ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
 assert not set(ticket['activeStatuses']) & set(ticket['nonActiveStatuses'])
-assert manifest['delivery']['maxActiveMinutes'] == 30
-assert manifest['delivery']['checkpointMinutes'] == 25
+assert manifest['coordination']['maxActiveTicketsPerWorkstream'] == 4
+assert manifest['delivery']['requiredForImplementation'] is False
+assert manifest['delivery']['maxActiveMinutes'] == 120
+assert manifest['delivery']['checkpointMinutes'] == 30
 assert manifest['repository'] == {
     'mode': 'standalone',
     'componentRoots': [],
@@ -1862,7 +1864,42 @@ grep -q '^GOV-PASS:' "$fixture/thirty-minutes.out"
 missing_delivery="$fixture/missing-delivery"
 make_fixture "$missing_delivery"
 mutate_delivery "$missing_delivery" missing
-expect_code GOV-DELIVERY-001 run_check "$missing_delivery" --changed-file src/app.js
+run_check "$missing_delivery" --changed-file src/app.js > "$fixture/missing-delivery.out"
+grep -q '^GOV-PASS:' "$fixture/missing-delivery.out"
+
+required_delivery="$fixture/required-delivery"
+make_fixture "$required_delivery"
+mutate_delivery "$required_delivery" missing
+python3 - "$required_delivery/.governance/manifest.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+manifest = json.loads(path.read_text(encoding='utf-8'))
+manifest['delivery']['requiredForImplementation'] = True
+path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+PY
+expect_code GOV-DELIVERY-001 run_check "$required_delivery" --changed-file src/app.js
+
+compact_budget="$fixture/compact-budget"
+make_fixture "$compact_budget"
+mutate_delivery "$compact_budget" missing
+python3 - "$compact_budget/.governance/manifest.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+manifest = json.loads(path.read_text(encoding='utf-8'))
+manifest['delivery']['maxImplementationFiles'] = 1
+for profile in manifest['delivery']['profiles'].values():
+    profile['maxImplementationFiles'] = 1
+path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+PY
+printf '%s\n' 'export const extra = true;' > "$compact_budget/src/extra.js"
+expect_code GOV-BUDGET-001 run_check "$compact_budget" \
+  --changed-file src/app.js --changed-file src/extra.js
 
 over_time="$fixture/over-time"
 make_fixture "$over_time"
@@ -1871,10 +1908,10 @@ expect_code GOV-DELIVERY-001 run_check "$over_time" --changed-file src/app.js
 
 checkpoint="$fixture/checkpoint"
 make_fixture "$checkpoint"
-run_check "$checkpoint" --changed-file src/app.js --elapsed-minutes 25 > "$fixture/checkpoint.out"
+run_check "$checkpoint" --changed-file src/app.js --elapsed-minutes 30 > "$fixture/checkpoint.out"
 grep -q 'GOV-DELIVERY-002 WARNING' "$fixture/checkpoint.out"
 grep -q '^GOV-PASS:' "$fixture/checkpoint.out"
-expect_code GOV-DELIVERY-001 run_check "$checkpoint" --changed-file src/app.js --elapsed-minutes 30
+expect_code GOV-DELIVERY-001 run_check "$checkpoint" --changed-file src/app.js --elapsed-minutes 120
 
 file_budget="$fixture/file-budget"
 make_fixture "$file_budget"
@@ -2179,9 +2216,25 @@ grep -q '^GOV-PASS:' "$fixture/blocked-release.out"
 
 same_workstream="$fixture/same-workstream"
 make_fixture "$same_workstream"
-mkdir -p "$same_workstream/sdk"
-printf '%s\n' 'export const client = true;' > "$same_workstream/sdk/client.js"
-add_active_ticket "$same_workstream" ticket-003 application '["sdk/**"]'
+python3 - "$same_workstream/project/ticket-002/intent.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+intent['allowedPaths'] = ['src/app.js']
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+for suffix in one two three four; do
+  printf '%s\n' "export const $suffix = true;" > "$same_workstream/src/$suffix.js"
+done
+add_active_ticket "$same_workstream" ticket-003 application '["src/one.js"]'
+add_active_ticket "$same_workstream" ticket-004 application '["src/two.js"]'
+add_active_ticket "$same_workstream" ticket-005 application '["src/three.js"]'
+run_check "$same_workstream" --changed-file src/app.js > "$fixture/same-workstream.out"
+grep -q '^GOV-PASS:' "$fixture/same-workstream.out"
+add_active_ticket "$same_workstream" ticket-006 application '["src/four.js"]'
 expect_code GOV-WORKSTREAM-002 run_check "$same_workstream" --changed-file TODO.md
 
 clean_integrated="$fixture/clean-integrated"
@@ -2197,7 +2250,10 @@ add_active_ticket "$clean_integrated" ticket-003 application '["sdk/**"]'
   git add .
   git commit -qm 'integrated authorization snapshots'
 )
-run_check "$clean_integrated" > "$fixture/clean-integrated.out"
+if ! run_check "$clean_integrated" > "$fixture/clean-integrated.out" 2>&1; then
+  cat "$fixture/clean-integrated.out" >&2
+  exit 1
+fi
 grep -q '^GOV-PASS:' "$fixture/clean-integrated.out"
 if grep -Eq 'GOV-WORKSTREAM-(002|004)' "$fixture/clean-integrated.out"; then
   echo "clean integrated authorization snapshots must not project live coordination leases" >&2

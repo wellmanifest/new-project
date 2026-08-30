@@ -311,8 +311,8 @@ cp -R "$repo_root/template/files" "$race/mine/template/files"
 cp "$repo_root/governance/work-classification.dsl.json" "$race/mine/.governance/work-classification.dsl.json"
 cp "$repo_root/governance/manifest.default.json" "$race/mine/.governance/manifest.json"
 
-# A third claim appears only after the worker clone exists. The allocator must
-# fetch it itself rather than rely on the caller to refresh remote refs.
+# A third claim appears only after the worker clone exists. Explicit refresh
+# must discover it; routine offline allocation does not require network I/O.
 mkdir -p "$race/upstream/project/ticket-009"
 printf '# Ticket 009\n' > "$race/upstream/project/ticket-009/README.md"
 git -C "$race/upstream" -c user.email=t@e -c user.name=t add -A
@@ -321,10 +321,11 @@ git -C "$race/upstream" push -q origin HEAD:refs/heads/ticket/009-late
 
 (
   cd "$race/mine"
-  bash project/new-ticket.sh --title 'Must not reuse a remote claim' --workstream application > alloc.out 2>&1
+  bash project/new-ticket.sh --refresh-remote \
+    --title 'Must not reuse a remote claim' --workstream application > alloc.out 2>&1
 )
 # 008 and 009 exist only on unmerged remote branches; 009 was unknown locally
-# before the allocator fetched.
+# before the explicitly requested refresh.
 test ! -d "$race/mine/project/ticket-008"
 test ! -d "$race/mine/project/ticket-009"
 test -d "$race/mine/project/ticket-010"
@@ -342,7 +343,11 @@ fi
 
 # The shared high-water mark must keep 010 reserved after its uncommitted
 # directory disappears, which models allocation from another linked worktree.
+# A managed base manifest is a sufficient local contract, and the default path
+# must not contact even an unavailable remote.
 rm -rf "$race/mine/project/ticket-010"
+mv "$race/mine/.governance/manifest.json" "$race/mine/.governance/manifest.base.json"
+git -C "$race/mine" remote set-url origin file:///definitely-unavailable/new-project.git
 (
   cd "$race/mine"
   bash project/new-ticket.sh --title 'Must not recycle 010' --workstream integration > reserve.out 2>&1

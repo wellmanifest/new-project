@@ -18,6 +18,11 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+# Managed validators are read-only checks. Importing adjacent managed modules
+# must not create `__pycache__` inside the repository and turn a clean checkout
+# into an implementation diff on the next validation pass.
+sys.dont_write_bytecode = True
+
 try:
     from ticket_activity import ActivityError, resolve as resolve_ticket_activity
 except ModuleNotFoundError:
@@ -449,7 +454,7 @@ def relative_pattern_list(value: Any, *, nonempty: bool = False) -> bool:
 def delivery_limits_valid(value: dict[str, Any]) -> bool:
     return all([
         isinstance(value.get("requiredForImplementation"), bool),
-        1 <= value["maxActiveMinutes"] <= 30,
+        1 <= value["maxActiveMinutes"] <= 240,
         1 <= value["checkpointMinutes"] < value["maxActiveMinutes"],
         value["maxImplementationFiles"] >= 1,
         value["maxAffectedComponents"] >= 1,
@@ -540,8 +545,8 @@ def delivery_header_error(value: dict[str, Any]) -> str | None:
     if value.get("complexity") not in {"XS", "S", "M", "L"}:
         return "delivery complexity must be XS, S, M or L"
     minutes = value.get("estimatedMinutes")
-    if not isinstance(minutes, int) or isinstance(minutes, bool) or not 1 <= minutes <= 30:
-        return "delivery estimatedMinutes must be between 1 and 30"
+    if not isinstance(minutes, int) or isinstance(minutes, bool) or not 1 <= minutes <= 240:
+        return "delivery estimatedMinutes must be between 1 and 240"
     return None
 
 
@@ -1521,7 +1526,7 @@ def check_workstream_limits(
         if len(members) > limit:
             report.add(
                 "GOV-WORKSTREAM-002", f"Workstream '{workstream}' has {len(members)} active tickets; limit is {limit}.",
-                "Keep one active implementation ticket in this workstream or close/block-route the competing scope.",
+                "Keep active tickets within the configured limit, narrow scopes, or close/block-route competing work.",
                 [rel(root, member.directory) for member in members],
                 {"workstream": workstream, "tickets": [member.directory.name for member in members], "limit": limit},
             )
@@ -2749,7 +2754,7 @@ def check_integration_ownership(
         report.add(
             "GOV-ARCHITECTURE-001",
             "Responsibility or persistent-data movement is not owned by an integration slice.",
-            "Create and approve a <=30-minute integration-workstream slice before changing component ownership or persistent data.",
+            "Use an explicit integration-workstream contract before changing component ownership or persistent data.",
             [intent_path],
             {"workstream": record.intent["workstream"], "requiredWorkstream": integration_workstream},
         )
@@ -2765,18 +2770,46 @@ def check_delivery_gate(
     report: Report,
 ) -> None:
     policy = manifest.get("delivery")
-    if not isinstance(policy, dict) or not policy.get("requiredForImplementation"):
+    if not isinstance(policy, dict):
         return
     assert record.intent is not None
     delivery = record.intent.get("delivery")
     intent_path = rel(root, record.directory / manifest["ticket"]["intentFile"])
     if not isinstance(delivery, dict):
-        report.add(
-            "GOV-DELIVERY-001",
-            f"Implementation ticket {record.directory.name} has no bounded delivery contract.",
-            "Return to WAIT_FOR_APPROVAL, declare one <=30-minute XS/S outcome with architecture and validation evidence, then obtain fresh approval.",
-            [intent_path],
-        )
+        explicit_paths = [
+            path for path in implementation
+            if path in policy["dependencyManifestPaths"]
+            or matches(path, manifest["coordination"]["integration"]["requiredForPaths"])
+        ]
+        if policy.get("requiredForImplementation") or explicit_paths:
+            report.add(
+                "GOV-DELIVERY-001",
+                f"Implementation ticket {record.directory.name} needs an explicit delivery contract.",
+                "Add delivery architecture and validation evidence for the high-risk paths; routine disjoint source/test changes use the compact intent.",
+                [intent_path, *explicit_paths],
+                {"explicitContractPaths": explicit_paths},
+            )
+            return
+        public_paths = [
+            path for path in implementation
+            if matches(path, policy["publicInterfacePaths"])
+        ]
+        if (
+            len(implementation) > policy["maxImplementationFiles"]
+            or len(public_paths) > policy["maxPublicInterfaceChanges"]
+        ):
+            report.add(
+                "GOV-BUDGET-001",
+                f"Routine diff for {record.directory.name} exceeds the policy hard limit.",
+                "Narrow the change or add an explicit delivery contract; do not create tracking-only split tickets.",
+                implementation,
+                {
+                    "implementationFiles": len(implementation),
+                    "implementationFileLimit": policy["maxImplementationFiles"],
+                    "publicInterfacePaths": public_paths,
+                    "publicInterfaceLimit": policy["maxPublicInterfaceChanges"],
+                },
+            )
         return
     check_declared_delivery_budget(policy, delivery, record, intent_path, report)
     check_delivery_timebox(policy, record, intent_path, elapsed_minutes, report)
