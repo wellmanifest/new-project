@@ -23,7 +23,7 @@ Usage: ./project/new-ticket.sh [options]
 
   -t, --title TITLE       Ticket title
   -a, --agent ID         Agent provider/id used for ai-{ID}.md
-  -w, --workstream ID    Required workstream declared in the governance manifest
+  -w, --workstream ID    Required workstream from the governance registry
   -u, --users IDS        Compatibility input only; human files are not created
   -k, --kind KIND        Work kind; default SERVICE
   -p, --priority P       Work priority; default P2
@@ -113,8 +113,60 @@ if [[ ! "$AGENT" =~ ^[a-z0-9][a-z0-9._-]*$ ]]; then
   exit 2
 fi
 
+governance_manifest() {
+  local candidate
+  for candidate in .governance/manifest.json governance/manifest.hub.json; do
+    if [[ -f "$candidate" ]]; then
+      printf '%s' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+if ! GOVERNANCE_MANIFEST="$(governance_manifest)"; then
+  echo "GOV-MANIFEST-001: governance registry not found; cannot allocate a ticket." >&2
+  echo "  remediation: restore .governance/manifest.json in an adopter or governance/manifest.hub.json in the hub." >&2
+  exit 1
+fi
+
+if ! REGISTRY_VALUES="$(python3 - "$GOVERNANCE_MANIFEST" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as stream:
+    manifest = json.load(stream)
+ticket = manifest.get("ticket")
+coordination = manifest.get("coordination")
+statuses = ticket.get("activeStatuses") if isinstance(ticket, dict) else None
+workstreams = coordination.get("workstreams") if isinstance(coordination, dict) else None
+if (
+    manifest.get("schema") != "new-project.governance/v2"
+    or not isinstance(statuses, list)
+    or not statuses
+    or any(not isinstance(item, str) or not item for item in statuses)
+    or len(statuses) != len(set(statuses))
+    or not isinstance(workstreams, dict)
+    or not workstreams
+    or any(not isinstance(item, str) or not item for item in workstreams)
+):
+    raise SystemExit(1)
+for status in statuses:
+    print(f"status\t{status}")
+for workstream in sorted(workstreams):
+    print(f"workstream\t{workstream}")
+PY
+)"; then
+  echo "GOV-MANIFEST-001: governance registry is invalid: $GOVERNANCE_MANIFEST" >&2
+  echo "  remediation: restore a valid governance/v2 ticket and coordination registry." >&2
+  exit 1
+fi
+
+ACTIVE_STATUSES="$(printf '%s\n' "$REGISTRY_VALUES" | sed -n 's/^status[[:space:]]//p')"
+WORKSTREAM_REGISTRY="$(printf '%s\n' "$REGISTRY_VALUES" | sed -n 's/^workstream[[:space:]]//p')"
+
 if [[ -z "$WORKSTREAM" ]]; then
-  echo "Workstream is required; choose an id declared in .governance/manifest.json" >&2
+  echo "Workstream is required; choose an id declared in $GOVERNANCE_MANIFEST" >&2
   exit 2
 fi
 
@@ -123,10 +175,17 @@ if [[ ! "$WORKSTREAM" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
   echo "Workstream id must match [a-z0-9][a-z0-9-]*" >&2
   exit 2
 fi
+if ! printf '%s\n' "$WORKSTREAM_REGISTRY" | grep -Fxq -- "$WORKSTREAM"; then
+  echo "GOV-WORKSTREAM-001: workstream '$WORKSTREAM' is not declared in $GOVERNANCE_MANIFEST." >&2
+  echo "  accepted: $(printf '%s' "$WORKSTREAM_REGISTRY" | tr '\n' ' ')" >&2
+  exit 1
+fi
 
 is_active_ticket() {
-  local readme="$1/README.md"
-  [[ -f "$readme" ]] && grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*IN_PROGRESS([[:space:]]|$)' "$readme"
+  local readme="$1/README.md" status
+  [[ -f "$readme" ]] || return 1
+  status="$(sed -nE 's/^-[[:space:]]+\*\*Status\*\*:[[:space:]]*([^[:space:]]+).*/\1/p' "$readme" | head -n 1)"
+  [[ -n "$status" ]] && printf '%s\n' "$ACTIVE_STATUSES" | grep -Fxq -- "$status"
 }
 
 # The dimension vocabularies live in the work classification contract, which is
