@@ -56,6 +56,30 @@
       "executable": false
     },
     {
+      "source": "governance/ticket-allocation.json",
+      "target": ".governance/ticket-allocation.json",
+      "strategy": "extendable",
+      "executable": false
+    },
+    {
+      "source": "governance/ticket-allocation.schema.json",
+      "target": ".governance/ticket-allocation.schema.json",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
+      "source": "governance/ticket-allocation-request.schema.json",
+      "target": ".governance/ticket-allocation-request.schema.json",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
+      "source": "governance/ticket-allocation-receipt.schema.json",
+      "target": ".governance/ticket-allocation-receipt.schema.json",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "governance/ticket-activity.json",
       "target": ".governance/ticket-activity.json",
       "strategy": "managed",
@@ -178,6 +202,12 @@
     {
       "source": "scripts/ticket_activity.py",
       "target": ".governance/ticket_activity.py",
+      "strategy": "managed",
+      "executable": true
+    },
+    {
+      "source": "scripts/ticket_allocation.py",
+      "target": ".governance/ticket_allocation.py",
       "strategy": "managed",
       "executable": true
     },

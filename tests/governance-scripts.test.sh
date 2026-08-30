@@ -287,7 +287,8 @@ mv "$fixture/work-classification.dsl.json.bak" "$fixture/.governance/work-classi
 # and the index must not reference tickets git does not track. Both are exercised
 # in a throwaway repository so the fixture stays independent of this checkout.
 race="$(mktemp -d "${TMPDIR:-/tmp}/new-project-race-test.XXXXXX")"
-trap 'rm -rf "$fixture" "$race"' EXIT INT TERM
+registered="$(mktemp -d "${TMPDIR:-/tmp}/new-project-registered-allocation.XXXXXX")"
+trap 'rm -rf "$fixture" "$race" "$registered"' EXIT INT TERM
 
 git -C "$race" init -q origin.git --bare
 git -C "$race" clone -q origin.git upstream
@@ -349,6 +350,131 @@ rm -rf "$race/mine/project/ticket-010"
 )
 test -d "$race/mine/project/ticket-011"
 test ! -d "$race/mine/project/ticket-010"
+
+# Independent clones/nodes must not use the local high-water as global
+# authority. Registered mode emits an exact request, rejects untrusted,
+# expired, stale or mismatched receipts, and materializes only the fresh fenced
+# identity returned by the configured process URI.
+git -C "$registered" init -q --bare --initial-branch=main origin.git
+git -C "$registered" clone -q origin.git worker
+mkdir -p "$registered/worker/project/ticket-001" \
+  "$registered/worker/template" "$registered/worker/.governance"
+cp "$repo_root/project/new-ticket.sh" "$registered/worker/project/new-ticket.sh"
+cp "$repo_root/project/readme.sh" "$registered/worker/project/readme.sh"
+cp -R "$repo_root/template/files" "$registered/worker/template/files"
+cp "$repo_root/governance/work-classification.dsl.json" "$registered/worker/.governance/work-classification.dsl.json"
+cp "$repo_root/governance/manifest.default.json" "$registered/worker/.governance/manifest.json"
+cp "$repo_root/governance/ticket-activity.json" "$registered/worker/.governance/ticket-activity.json"
+cp "$repo_root/scripts/ticket_activity.py" "$registered/worker/.governance/ticket_activity.py"
+cp "$repo_root/scripts/ticket_allocation.py" "$registered/worker/.governance/ticket_allocation.py"
+printf '%s\n' '# Existing ticket 001' > "$registered/worker/project/ticket-001/README.md"
+cat > "$registered/worker/.governance/ticket-allocation.json" <<'JSON'
+{
+  "$schema": "ticket-allocation.schema.json",
+  "schema": "new-project.ticket-allocation/v1",
+  "mode": "registered",
+  "allocator": {
+    "processUri": "process://registry/tickets/allocate",
+    "issuer": "registry://control/ticket-allocator",
+    "maxReceiptAgeSeconds": 300
+  }
+}
+JSON
+git -C "$registered/worker" -c user.email=t@e -c user.name=t add -A
+git -C "$registered/worker" -c user.email=t@e -c user.name=t commit -qm baseline
+git -C "$registered/worker" config \
+  url."file://$registered/origin.git".insteadOf git@github.com:example/registered.git
+git -C "$registered/worker" remote set-url origin git@github.com:example/registered.git
+git -C "$registered/worker" push -q origin HEAD:main
+
+registered_args=(
+  --title 'Registered autonomous change'
+  --agent codex
+  --workstream application
+  --kind BUG
+  --priority P1
+  --origin regression
+  --allocation-key PLF-registered-test-001
+)
+registered_status=0
+(
+  cd "$registered/worker"
+  bash project/new-ticket.sh "${registered_args[@]}" > request.json 2> missing-receipt.err
+) || registered_status=$?
+test "$registered_status" -eq 5
+grep -Fq 'GOV-TICKET-ALLOCATION-003' "$registered/worker/missing-receipt.err"
+grep -Fq 'new-project.ticket-allocation-request/v1' "$registered/worker/request.json"
+test ! -d "$registered/worker/project/ticket-002"
+
+python3 - "$registered/worker/request.json" "$registered/worker" <<'PY'
+import datetime as dt
+import hashlib
+import json
+import pathlib
+import sys
+
+request = json.load(open(sys.argv[1], encoding="utf-8"))
+root = pathlib.Path(sys.argv[2])
+digest = "sha256:" + hashlib.sha256(
+    json.dumps(request, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+).hexdigest()
+now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0)
+
+def write(name, *, number=2, issuer="registry://control/ticket-allocator", request_digest=digest,
+          issued=now, expires=None):
+    expires = expires or issued + dt.timedelta(seconds=120)
+    value = {
+        "schema": "new-project.ticket-allocation-receipt/v1",
+        "allocationId": f"allocation://registry/test/{name}",
+        "repositoryRef": request["repositoryRef"],
+        "ticket": f"ticket-{number:03d}",
+        "number": number,
+        "requestDigest": request_digest,
+        "processUri": request["processUri"],
+        "issuer": issuer,
+        "fencingToken": 7,
+        "issuedAt": issued.isoformat().replace("+00:00", "Z"),
+        "expiresAt": expires.isoformat().replace("+00:00", "Z"),
+        "receiptRef": f"receipt://registry/test/{name}",
+        "proofDigest": "sha256:" + "a" * 64,
+    }
+    (root / f"{name}.json").write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+
+write("valid")
+write("bad-issuer", issuer="registry://untrusted/allocator")
+write("bad-digest", request_digest="sha256:" + "0" * 64)
+write("expired", issued=now - dt.timedelta(seconds=240), expires=now - dt.timedelta(seconds=120))
+write("visible", number=1)
+PY
+
+for invalid in bad-issuer bad-digest expired; do
+  registered_status=0
+  (
+    cd "$registered/worker"
+    bash project/new-ticket.sh "${registered_args[@]}" \
+      --allocation-receipt "$invalid.json" > "$invalid.out" 2>&1
+  ) || registered_status=$?
+  test "$registered_status" -eq 5
+  grep -Fq 'GOV-TICKET-ALLOCATION-003' "$registered/worker/$invalid.out"
+  test ! -d "$registered/worker/project/ticket-002"
+done
+
+registered_status=0
+(
+  cd "$registered/worker"
+  bash project/new-ticket.sh "${registered_args[@]}" \
+    --allocation-receipt visible.json > visible.out 2>&1
+) || registered_status=$?
+test "$registered_status" -eq 5
+grep -Fq 'GOV-TICKET-ALLOCATION-004' "$registered/worker/visible.out"
+
+(
+  cd "$registered/worker"
+  bash project/new-ticket.sh "${registered_args[@]}" \
+    --allocation-receipt valid.json > registered.out 2>&1
+)
+test -d "$registered/worker/project/ticket-002"
+grep -Fq 'Successfully scaffolded project/ticket-002' "$registered/worker/registered.out"
 
 # The adopted Bash entrypoint executes a dependency-free TypeScript-compatible
 # runtime. Exercise exact Git/contract bindings and adversarial evidence here so

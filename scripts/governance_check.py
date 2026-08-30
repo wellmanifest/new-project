@@ -3250,6 +3250,7 @@ def package_entry(item: Any) -> tuple[str, str, str]:
     allowed_extendable = {
         ("governance/manifest.default.json", ".governance/manifest.json"),
         ("governance/required-checks.json", ".governance/required-checks.json"),
+        ("governance/ticket-allocation.json", ".governance/ticket-allocation.json"),
     }
     if item.get("strategy") == "extendable" and (
         (source, target) not in allowed_extendable or item.get("executable")
