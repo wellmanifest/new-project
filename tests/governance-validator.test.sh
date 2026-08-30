@@ -92,7 +92,7 @@ hub_manifest = json.load(open(
 Draft202012Validator(schemas['manifest.schema.json']).validate(hub_manifest)
 assert 'config/artifact-registry.json' in hub_manifest['governancePaths']
 assert '.governance/standard-adoption.json' in hub_manifest['governancePaths']
-assert hub_manifest['standard']['version'] == '0.19.13'
+assert hub_manifest['standard']['version'] == '0.19.14'
 assert hub_manifest['coordination']['workstreams'] == {
     'governance': {'ownedPaths': ['**']},
 }
@@ -180,7 +180,7 @@ Draft202012Validator(schemas['lock.schema.json']).validate({
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.13',
+        'version': '0.19.14',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'published',
@@ -191,7 +191,7 @@ candidate_lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.13',
+        'version': '0.19.14',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'unpublished-test',
@@ -301,7 +301,7 @@ assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
 assert manifest['schema'] == schema['properties']['schema']['const']
-assert manifest['standard']['version'] == '0.19.13'
+assert manifest['standard']['version'] == '0.19.14'
 ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
@@ -1116,7 +1116,7 @@ lock = {
   'schema': 'new-project.lock/v1',
   'standard': {
     'id': 'wellmanifest/new-project',
-    'version': '0.19.13',
+    'version': '0.19.14',
     'sourceRepository': 'wellmanifest/new-project',
     'sourceRevision': 'a' * 40,
     'publicationStatus': 'published',
@@ -1174,7 +1174,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.13',
+        'version': '0.19.14',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'a' * 40,
         'publicationStatus': 'published',
@@ -1267,7 +1267,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.13',
+        'version': '0.19.14',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'b' * 40,
         'publicationStatus': 'published',
@@ -2343,9 +2343,15 @@ cat > "$dependency_terminal/receipt.json" <<JSON
 JSON
 python3 "$repo_root/scripts/ticket_activity.py" --root "$dependency_terminal" record \
   --receipt "$dependency_terminal/receipt.json" > "$fixture/dependency-terminal-recorded.json"
+rm "$dependency_terminal/project/ticket-003/intent.json"
 run_check "$dependency_terminal" --changed-file src/app.js \
   > "$fixture/dependency-terminal.out"
 grep -q '^GOV-PASS:' "$fixture/dependency-terminal.out"
+
+active_content_missing="$fixture/active-content-missing"
+make_fixture "$active_content_missing"
+rm "$active_content_missing/project/ticket-002/intent.json"
+expect_code GOV-TICKET-003 run_check "$active_content_missing" --changed-file TODO.md
 
 conflict="$fixture/conflict"
 make_fixture "$conflict"

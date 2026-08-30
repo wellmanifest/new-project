@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+## [0.19.14] - 2026-08-30
+
+### Docs
+- Update CHANGELOG.md
+- Update project/ticket-160/README.md
+
+### Test
+- Update tests/adoption-lock.test.sh
+- Update tests/governance-validator.test.sh
+
+### Other
+- Update VERSION
+- Update governance/manifest.default.json
+- Update governance/manifest.hub.json
+- Update project/ticket-160/intent.json
+- Update scripts/governance_check.py
+
+## [0.19.14] - 2026-08-30
+
+### Resolver-aware active ticket content
+
+- Apply active-only ticket scaffold requirements to the verified activity set
+  instead of the raw Markdown status projection.
+- Preserve executable-content scanning across every ticket directory.
+- Add regression coverage proving terminal receipts remove false scaffold
+  blockers while genuinely active incomplete tickets remain fail-closed.
+
 ## [0.19.13] - 2026-08-30
 
 ### Resolver-aware dependency ordering
