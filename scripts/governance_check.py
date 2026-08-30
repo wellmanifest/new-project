@@ -2308,10 +2308,16 @@ def check_stacks(root: Path, manifest: dict[str, Any], profiles_path: Path | Non
             report.add("GOV-STACK-001", f"Declared stack '{stack}' has no recognized project marker.", "Add the stack marker or remove the inaccurate stack declaration.", markers)
 
 
-def check_ticket_content(root: Path, directories: list[Path], config: dict[str, Any], report: Report) -> None:
+def check_ticket_content(
+    root: Path,
+    directories: list[Path],
+    active: list[TicketRecord],
+    config: dict[str, Any],
+    report: Report,
+) -> None:
+    active_names = {record.directory.name for record in active}
     for directory in directories:
-        status, _ = parse_ticket_state(directory / "README.md")
-        if status in set(config["activeStatuses"]):
+        if directory.name in active_names:
             missing = [rel(root, directory / item) for item in config["requiredFiles"] if not (directory / item).is_file()]
             for pattern in config["requiredAgentFiles"]:
                 if not any(directory.glob(pattern)):
@@ -3752,7 +3758,7 @@ def run_governance_checks(
     check_domain_contracts(root, manifest, report)
     check_docker_image_references(root, manifest, report)
     check_stacks(root, manifest, profiles_path, report)
-    check_ticket_content(root, directories, manifest["ticket"], report)
+    check_ticket_content(root, directories, active, manifest["ticket"], report)
     check_coordination(root, manifest, records, changed, adoption_paths, report)
     check_change_lease(root, report)
     check_changed_content(root, changed, args.actor, args.trusted_human_change, report)
