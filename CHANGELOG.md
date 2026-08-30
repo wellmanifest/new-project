@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.19.8] - 2026-08-30
+
+### Registry-driven ticket allocation
+
+- Resolve active lifecycle statuses and valid workstreams from the current
+  governance manifest rather than duplicating their values in the allocator.
+- Fail closed before allocation when the manifest registry is missing,
+  malformed or does not declare the requested workstream.
+
 ## [0.19.7] - 2026-08-30
 
 ### Truthful worktree ticket attribution
