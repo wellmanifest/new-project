@@ -75,6 +75,21 @@ assert report["summary"]["errors"] == 0
 assert report["summary"]["checkouts"] >= 3
 PY
 
+# Reproducible Python bytecode is runtime noise at both the repository root and
+# below managed directories. The same nested cache path in two worktrees must
+# not become a false source overlap.
+mkdir -p "$linked/.governance/__pycache__" "$linked_b/.governance/__pycache__"
+printf '%s\n' cache-a > "$linked/.governance/__pycache__/governance_check.cpython-313.pyc"
+printf '%s\n' cache-b > "$linked_b/.governance/__pycache__/governance_check.cpython-313.pyc"
+python3 "$checker" --workspace-root "$workspace" --format json > "$fixture/nested-cache.json"
+python3 - "$fixture/nested-cache.json" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["status"] == "passed", report["findings"]
+PY
+
 # Intent overlap without conflictsWith.
 mkdir -p "$linked/project/ticket-010" "$linked_b/project/ticket-011"
 cat > "$linked/project/ticket-010/README.md" <<'MD'

@@ -1,0 +1,18 @@
+2026-08-30 verification summary
+- no-bytecode wrapper probe: PASS
+- worktree-overlap.test.sh: PASS
+- adoption-lock.test.sh: PASS
+- governance-scripts.test.sh: PASS
+- governance-validator.test.sh: PASS
+- agent-hosts.test.sh: PASS
+- required-checks.test.sh: PASS
+- decision-record.test.sh: PASS
+- branch-lifecycle.test.sh: PASS
+- workspace-lifecycle.test.sh: PASS
+- governance-env.test.sh: PASS
+- rule-enforcement.test.sh: PASS
+- pytest-plugin.test.sh: PASS
+- fleet-report.test.sh: PASS
+- git diff --check: PASS
+- Platform artifacts:build: no write; external baseline findings remain in
+  problem-strategies catalog/schema and are outside ticket-130.

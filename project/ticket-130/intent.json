@@ -1,0 +1,80 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-130",
+  "summary": "Prevent managed governance wrapper bytecode drift",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-130/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "project/governance-check.sh",
+    "scripts/worktree_overlap_check.py",
+    "tests/worktree-overlap.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": ["wellmanifest/git-lifecycle", "wellmanifest/worktrees"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "b858161c9253d48288b77424b063d384256d822d",
+    "targetBranch": "main",
+    "outcome": "Managed governance checks do not create bytecode cache artifacts, and the worktree overlap checker ignores root and nested Python bytecode caches if another invocation creates them.",
+    "nonGoals": [
+      "No governance policy or diagnostic semantic change",
+      "No package-manifest ownership or distribution-path change",
+      "No credential, secret, or external service access"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Prefix each Python checker invocation with PYTHONDONTWRITEBYTECODE=1 and make the overlap checker's reproducible-cache allowlist cover nested __pycache__ directories as well as the repository root.",
+      "components": [
+        {"name": "managed-governance-wrapper", "paths": ["project/governance-check.sh"]},
+        {"name": "worktree-overlap-checker", "paths": ["scripts/worktree_overlap_check.py", "tests/worktree-overlap.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the protected standard merge; adopters retain their prior pinned release until an explicit upgrade."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "env -u PYTHONDONTWRITEBYTECODE ./project/governance-check.sh --actor agent",
+          "test -z \"$(find . -type d -name __pycache__ -print -quit)\"",
+          "bash tests/worktree-overlap.test.sh"
+        ],
+        "evidence": "project/ticket-130/ai-codex-logs.txt"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-scripts.test.sh", "./project/governance-check.sh --actor agent", "git diff --check"],
+        "evidence": "project/ticket-130/ai-codex-logs.txt"
+      }
+    ]
+  }
+}

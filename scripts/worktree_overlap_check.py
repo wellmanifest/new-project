@@ -33,6 +33,7 @@ DEFAULT_IGNORE = (
     ".venv/**",
     "venv/**",
     "__pycache__/**",
+    "**/__pycache__/**",
 )
 DEFAULT_WORKTREE_DIRNAMES = (".worktrees", ".workspaces")
 
