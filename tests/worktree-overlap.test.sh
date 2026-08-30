@@ -166,6 +166,20 @@ mkdir -p "$linked_c/project"
 cp -r "$linked/project/ticket-010" "$linked_c/project/ticket-010"
 cp -r "$linked_b/project/ticket-011" "$linked_c/project/ticket-011"
 
+# A stale IN_PROGRESS directory with no matching branch and no checkout
+# changing its own ticket directory is unclaimed historical state. It must not
+# reserve every worktree and multiply unrelated scope findings.
+for checkout in "$linked" "$linked_b" "$linked_c"; do
+  mkdir -p "$checkout/project/ticket-009"
+  cat > "$checkout/project/ticket-009/README.md" <<'EOF'
+# Stale ticket
+- **Status**: IN_PROGRESS
+EOF
+  cat > "$checkout/project/ticket-009/intent.json" <<'EOF'
+{"workstream":"stale","allowedPaths":["shared.txt"],"conflictsWith":[]}
+EOF
+done
+
 if python3 "$checker" --workspace-root "$workspace" --format json \
   > "$fixture/attribution.json"; then
   status=0
