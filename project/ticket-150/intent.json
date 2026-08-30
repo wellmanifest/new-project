@@ -1,0 +1,63 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-150",
+  "summary": "Release new-project 0.19.8",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-150/**",
+    "project/TICKETS.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": ["wellmanifest/new-project"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "418d3d82e64d277f02a777d0e9b151d90c7ee47f",
+    "targetBranch": "main",
+    "outcome": "Publish immutable wellmanifest/new-project 0.19.8 with registry-driven ticket allocation",
+    "nonGoals": ["Change merged allocator semantics", "Move an existing tag"],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {"maxImplementationFiles": 6, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Synchronize release projections and publish only the exact protected merge as 0.19.8",
+      "components": [
+        {"name": "release-metadata", "paths": ["VERSION", "CHANGELOG.md"]},
+        {"name": "standard-manifests", "paths": ["governance/manifest.default.json", "governance/manifest.hub.json"]},
+        {"name": "release-conformance", "paths": ["tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["wellmanifest/new-project@0.19.8"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Do not move v0.19.8; publish a later corrective version"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-validator.test.sh"], "evidence": "Version projections agree"},
+      {"criterion": "AC-02", "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done"], "evidence": "Full deterministic suite passes"},
+      {"criterion": "AC-03", "commands": ["goal -a --delivery-mode direct-main --force-publish"], "evidence": "Protected post-merge publication creates v0.19.8"}
+    ]
+  }
+}
