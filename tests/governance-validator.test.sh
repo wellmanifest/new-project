@@ -1407,6 +1407,7 @@ intent['workstream'] = 'governance'
 intent['allowedPaths'] = [
     '.governance/manifest.json',
     '.governance/manifest.lock.json',
+    'src/standard-1.js',
 ]
 intent['delivery']['budgets']['maxImplementationFiles'] = 2
 intent['delivery']['architecture']['components'] = [{
@@ -1414,6 +1415,7 @@ intent['delivery']['architecture']['components'] = [{
     'paths': [
         '.governance/manifest.json',
         '.governance/manifest.lock.json',
+        'src/standard-1.js',
     ],
 }]
 intent_path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
@@ -1549,6 +1551,38 @@ if ! run_check "$atomic_adoption" --base "$atomic_base" > "$fixture/atomic-adopt
   exit 1
 fi
 grep -q '^GOV-PASS:' "$fixture/atomic-adoption.out"
+
+# A path listed by the ticket may cross workstream ownership only while the
+# immutable package registry classifies it as managed and both locks/content
+# verify it. Changing the same path to seed restores ordinary ownership gates.
+atomic_seed_scope="$fixture/atomic-adoption-seed-scope"
+cp -R "$atomic_adoption" "$atomic_seed_scope"
+python3 - "$atomic_seed_scope" <<'PY'
+import hashlib
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+package_path = root / '.governance/package-manifest.json'
+package = json.loads(package_path.read_text(encoding='utf-8'))
+for item in package['files']:
+    if item['target'] == 'src/standard-1.js':
+        item['strategy'] = 'seed'
+package_path.write_text(json.dumps(package, indent=2) + '\n', encoding='utf-8')
+
+lock_path = root / '.governance/manifest.lock.json'
+lock = json.loads(lock_path.read_text(encoding='utf-8'))
+del lock['managedFiles']['src/standard-1.js']
+lock['managedFiles']['.governance/package-manifest.json'] = hashlib.sha256(
+    package_path.read_bytes()
+).hexdigest()
+lock_path.write_text(json.dumps(lock, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_seed_scope" add .governance/package-manifest.json \
+  .governance/manifest.lock.json
+git -C "$atomic_seed_scope" commit -qm 'make foreign adoption target seed-owned'
+expect_code GOV-WORKSTREAM-003 run_check "$atomic_seed_scope" --base "$atomic_base"
 
 atomic_takeover_missing="$fixture/atomic-adoption-takeover-missing"
 cp -R "$atomic_adoption" "$atomic_takeover_missing"

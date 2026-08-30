@@ -1,0 +1,68 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-151",
+  "summary": "Unify atomic adoption scope with verified managed paths",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-151/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": ["wellmanifest/new-project"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "3d01ccab38be81553ca2ecbd4ec02e6c4cba2290",
+    "targetBranch": "main",
+    "outcome": "Use the hash-verified managed-file registry consistently in both adoption ownership gates",
+    "nonGoals": [
+      "Do not exempt extendable or target-owned files",
+      "Do not widen workstream ownedPaths",
+      "Do not trust intent-declared paths without lock and base verification"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Derive one verified adoption path set from the immutable package manifest, base lock, head lock and content digests, then pass that set to coordination and change-scope checks",
+      "components": [
+        {"name": "governance-runtime", "paths": ["scripts/governance_check.py"]},
+        {"name": "adoption-regression", "paths": ["tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Atomic adoption ownership uses the verified managed-path registry consistently"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the shared verified-path propagation while preserving fail-closed lock validation"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Cross-workstream managed adoption succeeds only for digest-verified paths"},
+      {"criterion": "AC-02", "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done"], "evidence": "Full deterministic suite passes"},
+      {"criterion": "AC-03", "commands": ["./project/governance-check.sh --actor agent --base 3d01ccab38be81553ca2ecbd4ec02e6c4cba2290 --head HEAD"], "evidence": "Exact-base governance gate passes"}
+    ]
+  }
+}

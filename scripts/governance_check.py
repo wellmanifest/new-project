@@ -1639,12 +1639,16 @@ def check_workstream_claims(
     governance_patterns: list[str],
     files: list[str],
     valid_active: list[TicketRecord],
+    verified_adoption_paths: set[str],
     report: Report,
 ) -> None:
     for record in valid_active:
         assert record.intent is not None
         owned_paths = workstreams[record.intent["workstream"]]["ownedPaths"]
-        adoption_bindings = atomic_adoption_binding_paths(root, manifest, record.intent)
+        adoption_bindings = (
+            atomic_adoption_binding_paths(root, manifest, record.intent)
+            | verified_adoption_paths
+        )
         implementation_patterns = [
             pattern for pattern in record.intent["allowedPaths"]
             if not matches(pattern, governance_patterns)
@@ -1759,6 +1763,7 @@ def check_coordination(
     manifest: dict[str, Any],
     records: list[TicketRecord],
     changed: list[str],
+    verified_adoption_paths: set[str],
     report: Report,
 ) -> None:
     coordination = manifest.get("coordination")
@@ -1797,7 +1802,10 @@ def check_coordination(
     check_active_relationships(root, config, coordination, records, active, valid_active, report)
     files = repository_files(root, changed)
     governance_patterns = manifest["governancePaths"]
-    check_workstream_claims(root, manifest, config, workstreams, governance_patterns, files, valid_active, report)
+    check_workstream_claims(
+        root, manifest, config, workstreams, governance_patterns, files,
+        valid_active, verified_adoption_paths, report,
+    )
     if coordination["rejectActiveScopeOverlap"]:
         check_scope_overlaps(valid_active, files, governance_patterns, report)
 
@@ -3375,6 +3383,7 @@ def check_change_gate(
     expected_head: str | None,
     enforce_approval: bool,
     elapsed_minutes: int | None,
+    adoption_paths: set[str],
     report: Report,
 ) -> str | None:
     governance_patterns = manifest["governancePaths"]
@@ -3386,7 +3395,6 @@ def check_change_gate(
     ]
     if changed_active:
         active = changed_active
-    adoption_paths = atomic_standard_adoption_paths(root, base, changed, active, report)
     implementation = [
         path for path in changed
         if not matches(path, governance_patterns) and path not in adoption_paths
@@ -3615,6 +3623,15 @@ def run_governance_checks(
     records = load_ticket_records(directories, manifest["ticket"])
     base = resolve_validation_base(args.base, records, manifest["ticket"])
     changed = resolve_changed_paths(args, root, base, report)
+    active_statuses = set(manifest["ticket"].get("activeStatuses", ACTIVE_DEFAULT))
+    active = [record for record in records if record.status in active_statuses]
+    changed_active = [
+        record for record in active
+        if any(path.startswith(f"{rel(root, record.directory).rstrip('/')}/") for path in changed)
+    ]
+    adoption_paths = atomic_standard_adoption_paths(
+        root, base, changed, changed_active or active, report,
+    )
     load_work_classification(root, report, args.work_classification)
     check_lock(root, lock_path, manifest, report)
     check_policy_dsl(root, report)
@@ -3625,14 +3642,14 @@ def run_governance_checks(
     check_docker_image_references(root, manifest, report)
     check_stacks(root, manifest, profiles_path, report)
     check_ticket_content(root, directories, manifest["ticket"], report)
-    check_coordination(root, manifest, records, changed, report)
+    check_coordination(root, manifest, records, changed, adoption_paths, report)
     check_change_lease(root, report)
     check_changed_content(root, changed, args.actor, args.trusted_human_change, report)
     return check_change_gate(
         root, manifest, records, changed, base, args.head, args.approval_source,
         args.approved_ticket, args.approval_evidence, args.expected_repository,
         args.expected_pull_request, args.expected_head, args.enforce_approval,
-        args.elapsed_minutes, report,
+        args.elapsed_minutes, adoption_paths, report,
     )
 
 
