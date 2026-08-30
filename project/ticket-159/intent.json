@@ -1,0 +1,54 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-159",
+  "summary": "Resolve terminal receipts in dependency DAG",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P0",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-159/**",
+    "project/TICKETS.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "scripts/governance_check.py",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "VERSION",
+    "CHANGELOG.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python", "bash"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "1881d3c6f0e132bd899c5c316a526eef65c6caff",
+    "targetBranch": "main",
+    "outcome": "Dependency ordering and active-ticket reservations share one verified terminal-state authority.",
+    "nonGoals": ["Do not trust Markdown status as terminal evidence", "Do not add ticket-specific exceptions"],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {"maxImplementationFiles": 7, "maxAffectedComponents": 1, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Pass the resolver-derived active ticket set into dependency validation and reject only missing or still-active prerequisites.",
+      "components": [{"name": "governance-validator", "paths": ["governance/manifest.default.json", "governance/manifest.hub.json", "scripts/governance_check.py", "tests/adoption-lock.test.sh", "tests/governance-validator.test.sh", "VERSION", "CHANGELOG.md"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the resolver-aware dependency check; fail-closed receipt validation remains unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "terminal dependency fixture"},
+      {"criterion": "AC-02", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "unverified dependency fixtures"},
+      {"criterion": "AC-03", "commands": ["for test in tests/*.test.sh; do bash \"$test\"; done"], "evidence": "complete deterministic suite"}
+    ]
+  }
+}

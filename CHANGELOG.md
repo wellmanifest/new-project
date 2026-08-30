@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.19.13] - 2026-08-30
+
+### Resolver-aware dependency ordering
+
+- Reuse verified external terminal receipts when validating ticket
+  dependencies instead of consulting only the Markdown status projection.
+- Keep missing, non-terminal and unverifiable prerequisites fail-closed with
+  the existing `GOV-DEPENDENCY-002` diagnostic.
+- Add a Git-ancestry regression fixture proving a merged prerequisite releases
+  its dependent ticket without a repository closure commit.
+
 ## [0.19.12] - 2026-08-30
 
 ### Self-hosted governance Python compatibility
