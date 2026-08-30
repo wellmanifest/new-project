@@ -554,7 +554,8 @@ def attributed_tickets(group: list[Checkout]) -> dict[Path, tuple[TicketScope, .
     ticket against itself through unrelated worktrees and name the wrong ticket
     in the remediation. The working branch is the authority; a ticket whose
     branch is not checked out anywhere falls back to the checkouts that are
-    actually writing its directory, and only then to the whole group.
+    actually writing its directory. If neither signal exists, the ticket is a
+    stale unclaimed copy and reserves no checkout scope.
     """
     names = {scope.ticket for checkout in group for scope in checkout.tickets}
     owners: dict[str, set[Path]] = {}
@@ -573,7 +574,7 @@ def attributed_tickets(group: list[Checkout]) -> dict[Path, tuple[TicketScope, .
                     for changed in checkout.changed_paths
                 )
             }
-        owners[name] = claimed or {checkout.path for checkout in group}
+        owners[name] = claimed
     return {
         checkout.path: tuple(
             scope

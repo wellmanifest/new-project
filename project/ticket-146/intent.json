@@ -1,0 +1,70 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-146",
+  "summary": "Ignore unclaimed stale ticket scopes in worktree overlap guard",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-146/**",
+    "project/TICKETS.md",
+    "scripts/worktree_overlap_check.py",
+    "tests/worktree-overlap.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python", "shell"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d9cf17e972f2b715482ca26889780d3349e0274e",
+    "targetBranch": "main",
+    "outcome": "Worktree overlap governance ignores unclaimed historical ticket copies while preserving branch-owned scope and real path collision detection.",
+    "nonGoals": [
+      "Do not infer terminal lifecycle state for stale tickets",
+      "Do not weaken dirty or committed path collision checks"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Attribute scope only from a matching ticket branch or an actual change to that ticket directory; leave signal-free historical copies unowned.",
+      "components": [{
+        "name": "worktree-overlap-guard",
+        "paths": [
+          "scripts/worktree_overlap_check.py",
+          "tests/worktree-overlap.test.sh"
+        ]
+      }],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert this ticket to restore the conservative all-checkout fallback."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/worktree-overlap.test.sh"],
+        "evidence": "The fixture produces no extra finding for an unclaimed stale ticket."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/worktree-overlap.test.sh"],
+        "evidence": "The same fixture retains exactly one branch-owned overlap finding."
+      }
+    ]
+  }
+}
