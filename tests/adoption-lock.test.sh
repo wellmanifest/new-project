@@ -159,7 +159,7 @@ manifest = json.load(open(root / '.governance/manifest.json', encoding='utf-8'))
 base = json.load(open(root / '.governance/manifest.base.json', encoding='utf-8'))
 assert lock['standard']['sourceRevision'] == sys.argv[2]
 assert lock['standard']['publicationStatus'] == 'unpublished-test'
-assert lock['standard']['version'] == '0.19.6'
+assert lock['standard']['version'] == '0.19.7'
 assert '.governance/manifest.base.json' in lock['managedFiles']
 assert '.governance/manifest.json' not in lock['managedFiles']
 assert 'project.sh' not in lock['managedFiles']
@@ -322,7 +322,7 @@ grep -q -- '--check and --upgrade are mutually exclusive' "$fixture/options.err"
 
 mismatch="$fixture/mismatch"
 mkdir -p "$mismatch/.governance"
-sed 's/"version": "0.19.6"/"version": "9.9.9"/' \
+sed 's/"version": "0.19.7"/"version": "9.9.9"/' \
   "$standard/governance/manifest.default.json" > "$mismatch/.governance/manifest.json"
 if candidate_adopt "$standard" \
   --target-root "$mismatch" --source-revision "$revision" --upgrade \
