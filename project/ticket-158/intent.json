@@ -1,0 +1,75 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-158",
+  "summary": "Support system Python on self-hosted governance runners",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P0",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-158/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "template/files/new-project-governance.workflow.yml",
+    "tests/branch-lifecycle.test.sh",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": ["wellmanifest/new-project"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "76667407e86d21744411e05d1257e922715b8751",
+    "targetBranch": "main",
+    "outcome": "Publish new-project 0.19.12 so managed governance uses pinned setup-python on GitHub-hosted runners and an already-provisioned system python3 on self-hosted runners.",
+    "nonGoals": [
+      "Do not install or mutate host packages on self-hosted runners",
+      "Do not weaken or skip the governance gate",
+      "Do not move immutable release tags"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the trusted runner.environment boundary: keep pinned Python 3.11 provisioning on GitHub-hosted runners, while self-hosted runners must provide python3 and execute the same deterministic gate unchanged.",
+      "components": [
+        {"name": "managed-workflow", "paths": ["template/files/new-project-governance.workflow.yml"]},
+        {"name": "workflow-conformance", "paths": ["tests/branch-lifecycle.test.sh"]},
+        {"name": "release", "paths": ["VERSION", "CHANGELOG.md", "governance/manifest.*.json", "tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["wellmanifest/new-project@0.19.12", "Managed workflow self-hosted Python prerequisite"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Publish a later corrective release; never move v0.19.12."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/branch-lifecycle.test.sh"], "evidence": "Workflow contract asserts conditional hosted setup and self-hosted python3 preflight."},
+      {"criterion": "AC-02", "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done"], "evidence": "Full deterministic suite passes."},
+      {"criterion": "AC-03", "commands": ["Adopt exact merged release in subactor/agents and observe governance / enforce"], "evidence": "Real self-hosted Actions job passes."}
+    ]
+  }
+}
