@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [0.19.9] - 2026-08-30
+
+### Consistent atomic adoption ownership
+
+- Derive one digest-verified managed-path set from the immutable package and
+  base/head locks, then reuse it in coordination and change-scope gates.
+- Keep `seed`, `extendable`, target-owned and unverified paths behind their
+  manifest-declared workstream ownership.
+
 ## [0.19.8] - 2026-08-30
 
 ### Registry-driven ticket allocation
