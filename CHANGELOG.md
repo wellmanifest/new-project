@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.19.11] - 2026-08-30
+
+### Recoverable terminal receipt activity
+
+- Resolve ticket reservations through one managed status/receipt resolver used
+  by the allocator, governance gate and worktree overlap checker.
+- Release stale `IN_PROGRESS` projections only when external terminal receipt
+  bindings and Git ancestry verify; unsupported or malformed evidence remains
+  conservative with `GOV-TICKET-ACTIVITY-001`.
+- Require every fail-closed blocker to expose an authority-preserving exit, and
+  keep normative standards focused on invariants and forbidden shortcuts.
+
 ## [0.19.10] - 2026-08-30
 
 ### Registry-driven revision workflow bindings
