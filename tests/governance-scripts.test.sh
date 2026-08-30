@@ -396,13 +396,11 @@ registered_args=(
   --origin regression
   --allocation-key PLF-registered-test-001
 )
-set +e
+registered_status=0
 (
   cd "$registered/worker"
   bash project/new-ticket.sh "${registered_args[@]}" > request.json 2> missing-receipt.err
-)
-registered_status=$?
-set -e
+) || registered_status=$?
 test "$registered_status" -eq 5
 grep -Fq 'GOV-TICKET-ALLOCATION-003' "$registered/worker/missing-receipt.err"
 grep -Fq 'new-project.ticket-allocation-request/v1' "$registered/worker/request.json"
@@ -450,27 +448,23 @@ write("visible", number=1)
 PY
 
 for invalid in bad-issuer bad-digest expired; do
-  set +e
+  registered_status=0
   (
     cd "$registered/worker"
     bash project/new-ticket.sh "${registered_args[@]}" \
       --allocation-receipt "$invalid.json" > "$invalid.out" 2>&1
-  )
-  registered_status=$?
-  set -e
+  ) || registered_status=$?
   test "$registered_status" -eq 5
   grep -Fq 'GOV-TICKET-ALLOCATION-003' "$registered/worker/$invalid.out"
   test ! -d "$registered/worker/project/ticket-002"
 done
 
-set +e
+registered_status=0
 (
   cd "$registered/worker"
   bash project/new-ticket.sh "${registered_args[@]}" \
     --allocation-receipt visible.json > visible.out 2>&1
-)
-registered_status=$?
-set -e
+) || registered_status=$?
 test "$registered_status" -eq 5
 grep -Fq 'GOV-TICKET-ALLOCATION-004' "$registered/worker/visible.out"
 
