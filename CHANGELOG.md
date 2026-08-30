@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.19.12] - 2026-08-30
+
+### Self-hosted governance Python compatibility
+
+- Keep pinned Python 3.11 provisioning on GitHub-hosted runners, but use an
+  already-provisioned compatible `python3` on self-hosted runners.
+- Fail closed with an explicit Python 3.11+ prerequisite instead of asking
+  `actions/setup-python` for an unavailable build on a newer host distro.
+- Preserve the same deterministic governance commands and merge gates on both
+  runner environments.
+
 ## [0.19.11] - 2026-08-30
 
 ### Recoverable terminal receipt activity
