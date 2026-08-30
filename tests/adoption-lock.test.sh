@@ -161,6 +161,8 @@ assert lock['standard']['sourceRevision'] == sys.argv[2]
 assert lock['standard']['publicationStatus'] == 'unpublished-test'
 assert lock['standard']['version'] == '0.19.9'
 assert '.governance/manifest.base.json' in lock['managedFiles']
+assert '.governance/adoption-bindings.json' in lock['managedFiles']
+assert '.governance/adoption-bindings.schema.json' in lock['managedFiles']
 assert '.governance/manifest.json' not in lock['managedFiles']
 assert 'project.sh' not in lock['managedFiles']
 assert 'project.bat' not in lock['managedFiles']
