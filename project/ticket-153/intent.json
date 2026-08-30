@@ -1,0 +1,68 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-153",
+  "summary": "Bind adoption workflow pins from required-check registry",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-153/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/adoption-bindings.json",
+    "governance/adoption-bindings.schema.json",
+    "governance/package-manifest.json",
+    "scripts/governance_check.py",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": ["wellmanifest/new-project"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "e750af09ef3d3731e4f57c59d21d7d262057cb88",
+    "targetBranch": "main",
+    "outcome": "Resolve revision-bound adoption workflows from a managed registry and verify both immutable pins",
+    "nonGoals": [
+      "Do not allow arbitrary workflow paths from ticket intent",
+      "Do not allow mutable refs or mismatched pins",
+      "Do not widen target workstream ownedPaths"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {"maxImplementationFiles": 6, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Ship a managed exact-path registry and derive atomic target bindings only when the registered workflow contains both canonical new-project pins bound to standardAdoption.toRevision",
+      "components": [
+        {"name": "adoption-binding-registry", "paths": ["governance/adoption-bindings.json", "governance/adoption-bindings.schema.json", "governance/package-manifest.json"]},
+        {"name": "governance-runtime", "paths": ["scripts/governance_check.py"]},
+        {"name": "regression-conformance", "paths": ["tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Managed adoption-binding registry declares revision-bound workflow paths"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Remove the managed registry and workflow-binding derivation together"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Custom registered path passes and missing/mismatched pins fail closed"},
+      {"criterion": "AC-02", "commands": ["bash tests/adoption-lock.test.sh"], "evidence": "Registry and schema ship as managed digest-bound files"},
+      {"criterion": "AC-03", "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done"], "evidence": "Full deterministic suite passes"}
+    ]
+  }
+}

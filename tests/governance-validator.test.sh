@@ -2458,7 +2458,8 @@ for mutation in schema-ref kind-order priority-order derivation rule-order \
 done
 
 # Atomic adoption may cross ownership only for target files required by the
-# adopted host/Docker contracts. Ordinary application paths remain rejected.
+# managed revision-bound workflow registry and adopted host/Docker contracts.
+# Ordinary application paths and workflows with mismatched pins remain rejected.
 python3 - "$repo_root/scripts/governance_check.py" "$fixture/adoption-bindings" <<'PY'
 import importlib.util
 import json
@@ -2471,6 +2472,22 @@ sys.modules[spec.name] = module
 spec.loader.exec_module(module)
 root = Path(sys.argv[2])
 (root / ".governance").mkdir(parents=True)
+(root / ".github/workflows").mkdir(parents=True)
+(root / ".governance/adoption-bindings.json").write_text(json.dumps({
+    "schema": "new-project.adoption-bindings/v1",
+    "revisionBoundWorkflowPaths": [".github/workflows/custom-governance.yml"],
+}), encoding="utf-8")
+revision = "b" * 40
+workflow = root / ".github/workflows/custom-governance.yml"
+workflow.write_text(
+    "jobs:\n"
+    "  governance:\n"
+    "    uses: wellmanifest/new-project/.github/workflows/governance.yml@"
+    f"{revision}\n"
+    "    with:\n"
+    f"      standard-ref: {revision}\n",
+    encoding="utf-8",
+)
 (root / ".governance/agent-hosts.json").write_text(json.dumps({
     "packaging": {
         "python": {"marker": "pyproject.toml"},
@@ -2484,11 +2501,17 @@ manifest = {
 }
 intent = {
     "workstream": "governance",
-    "allowedPaths": ["package.json", "pyproject.toml", "Dockerfile", "compose.yml", "src/**"],
+    "allowedPaths": [
+        ".github/workflows/custom-governance.yml", "package.json",
+        "pyproject.toml", "Dockerfile", "compose.yml", "src/**",
+    ],
     "forbiddenPaths": [],
-    "delivery": {"standardAdoption": {}},
+    "delivery": {"standardAdoption": {"toRevision": revision}},
 }
-expected = {"package.json", "pyproject.toml", "Dockerfile", "compose.yml"}
+expected = {
+    ".github/workflows/custom-governance.yml", "package.json",
+    "pyproject.toml", "Dockerfile", "compose.yml",
+}
 assert module.atomic_adoption_binding_paths(root, manifest, intent) == expected
 coordination = {
     "workstreams": {"governance": {"ownedPaths": [".governance/**", "project/**"]}},
@@ -2500,6 +2523,15 @@ module.check_workstream_change_scope(
     root, manifest, [record], coordination, record, sorted(expected), report
 )
 assert report.errors == 0, report.payload()
+workflow.write_text(workflow.read_text().replace(revision, "c" * 40, 1), encoding="utf-8")
+without_workflow = expected - {".github/workflows/custom-governance.yml"}
+assert module.atomic_adoption_binding_paths(root, manifest, intent) == without_workflow
+report = module.Report(root)
+module.check_workstream_change_scope(
+    root, manifest, [record], coordination, record,
+    [".github/workflows/custom-governance.yml"], report,
+)
+assert [item.code for item in report.findings] == ["GOV-WORKSTREAM-003"], report.payload()
 report = module.Report(root)
 module.check_workstream_change_scope(
     root, manifest, [record], coordination, record, [*sorted(expected), "src/app.py"], report
