@@ -490,6 +490,7 @@ make_fixture() {
   local target="$1"
   mkdir -p "$target/.governance" "$target/project/ticket-001" "$target/project/ticket-002" "$target/src"
   cp "$repo_root/scripts/governance_check.py" "$target/.governance/governance_check.py"
+  cp "$repo_root/scripts/ticket_activity.py" "$target/.governance/ticket_activity.py"
   cp "$repo_root/governance/manifest.default.json" "$target/.governance/manifest.json"
   python3 - "$target/.governance/manifest.json" <<'PY'
 import json
@@ -1228,6 +1229,7 @@ initial_base="$(git -C "$initial_adoption" rev-parse HEAD)"
 git -C "$initial_adoption" switch -qc ticket-002-initial-adoption
 mkdir -p "$initial_adoption/.governance" "$initial_adoption/project/ticket-002"
 cp "$repo_root/scripts/governance_check.py" "$initial_adoption/.governance/governance_check.py"
+cp "$repo_root/scripts/ticket_activity.py" "$initial_adoption/.governance/ticket_activity.py"
 cp "$repo_root/governance/manifest.default.json" "$initial_adoption/.governance/manifest.json"
 cp "$repo_root/governance/stack-profiles.json" "$initial_adoption/.governance/stack-profiles.json"
 cp "$repo_root/governance/work-classification.dsl.json" \
@@ -1253,6 +1255,7 @@ package = {
         {'source': 'template/files/AGENTS.template.md', 'target': 'AGENTS.md', 'strategy': 'managed', 'executable': False},
         {'source': 'governance/package-manifest.json', 'target': '.governance/package-manifest.json', 'strategy': 'managed', 'executable': False},
         {'source': 'scripts/governance_check.py', 'target': '.governance/governance_check.py', 'strategy': 'managed', 'executable': False},
+        {'source': 'scripts/ticket_activity.py', 'target': '.governance/ticket_activity.py', 'strategy': 'managed', 'executable': False},
         {'source': 'governance/stack-profiles.json', 'target': '.governance/stack-profiles.json', 'strategy': 'managed', 'executable': False},
         {'source': 'governance/work-classification.dsl.json', 'target': '.governance/work-classification.dsl.json', 'strategy': 'managed', 'executable': False},
         {'source': 'governance/manifest.default.json', 'target': '.governance/manifest.json', 'strategy': 'seed', 'executable': False},
@@ -1275,6 +1278,7 @@ lock = {
             'AGENTS.md',
             '.governance/package-manifest.json',
             '.governance/governance_check.py',
+            '.governance/ticket_activity.py',
             '.governance/stack-profiles.json',
             '.governance/work-classification.dsl.json',
         )
@@ -2194,6 +2198,10 @@ add_active_ticket "$clean_integrated" ticket-003 application '["sdk/**"]'
   git commit -qm 'integrated authorization snapshots'
 )
 run_check "$clean_integrated" > "$fixture/clean-integrated.out"
+if find "$clean_integrated/.governance" -path '*/__pycache__/ticket_activity*.pyc' -print -quit | grep -q .; then
+  echo 'managed ticket activity import wrote runtime bytecode into the target checkout' >&2
+  exit 1
+fi
 grep -q '^GOV-PASS:' "$fixture/clean-integrated.out"
 if grep -Eq 'GOV-WORKSTREAM-(002|004)' "$fixture/clean-integrated.out"; then
   echo "clean integrated authorization snapshots must not project live coordination leases" >&2

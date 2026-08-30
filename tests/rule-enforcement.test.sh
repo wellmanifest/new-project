@@ -135,7 +135,7 @@ header = next(
     for lang, _, lines in blocks
     if lang == "dsl" and any(line == "DOCUMENT CONTRIBUTING" for line in lines)
 )
-assert "VERSION 15" in header
+assert "VERSION 16" in header
 
 declaration = re.compile(r"^(?:RULE|STATE|TRANSITION) [A-Z][A-Z0-9_-]*")
 mislabelled = [

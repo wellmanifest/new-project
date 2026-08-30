@@ -112,6 +112,8 @@ jobs:
         run: bash tests/decision-record.test.sh
       - name: Test ticket governance scripts
         run: bash tests/governance-scripts.test.sh
+      - name: Test terminal receipt activity resolver
+        run: bash tests/ticket-activity.test.sh
       - name: Test deterministic governance validator
         run: bash tests/governance-validator.test.sh
       - name: Test deterministic branch lifecycle validator
