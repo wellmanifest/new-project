@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.19.10] - 2026-08-30
+
+### Registry-driven revision workflow bindings
+
+- Ship the exact revision-bound workflow paths as a digest-locked managed
+  registry instead of maintaining a repository-specific runtime list.
+- Admit a registered workflow into atomic adoption only when both its reusable
+  workflow pin and `standard-ref` equal the immutable target revision.
+- Fail closed for malformed registries, wildcard paths, missing workflows and
+  mismatched pins.
+
 ## [0.19.9] - 2026-08-30
 
 ### Consistent atomic adoption ownership
