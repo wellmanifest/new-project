@@ -9,6 +9,14 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-167`](project/ticket-167/README.md) — udokumentować i wdrożyć
+  kontrakt kontrolowanego streamowania zmian: rozróżnienie konfliktu
+  semantycznego od technicznego, strategie `parallel`, `serialize`, `rebase`,
+  `split` i `handoff`, oraz deterministyczne retry. Stan: `IN_PROGRESS /
+  VALIDATION`; klasyfikacja: `SERVICE / P1 / health`; workstream: `governance`.
+  Szczegóły i kolejne implementacyjne slice'y:
+  [`docs/CONTROLLED_CHANGE_STREAMING.md`](docs/CONTROLLED_CHANGE_STREAMING.md).
+
 - [ ] [`ticket-149`](project/ticket-149/README.md) — rozwiązywać aktywne
   statusy i workstreamy allocatora z dynamicznego rejestru governance zamiast
   z wartości zaszytych w skrypcie. Stan: `IN_PROGRESS / EDIT`; klasyfikacja:
