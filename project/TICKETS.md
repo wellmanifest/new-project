@@ -168,6 +168,7 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-160** | [`README.md`](./ticket-160/README.md) | - | - | - | - | - |
 | **ticket-161** | [`README.md`](./ticket-161/README.md) | - | - | - | - | - |
 | **ticket-163** | [`README.md`](./ticket-163/README.md) | - | - | - | - | - |
+| **ticket-164** | [`README.md`](./ticket-164/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 ---
