@@ -10,6 +10,7 @@
   },
   "allowedPaths": [
     "project/ticket-156/**",
+    ".github/workflows/ci.yml",
     "POLICY.md",
     "CONTRIBUTING.md",
     "governance/manifest.default.json",
@@ -33,7 +34,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "9e82eaad9fd4c8b1a3b963f29510104bcb59e467",
+    "acceptedBaseSha": "685351c578f17806438fb618b7067410e1a6bbf0",
     "targetBranch": "main",
     "outcome": "Routine Subactor changes use compact deterministic governance without losing path ownership, overlap detection or protected merge evidence",
     "nonGoals": [
@@ -56,7 +57,7 @@
       "components": [
         {"name": "policy", "paths": ["POLICY.md", "CONTRIBUTING.md", "template/files/AGENTS.template.md", "docs/GOVERNANCE_ENFORCEMENT.md"]},
         {"name": "contracts", "paths": ["governance/manifest*.json", "governance/intent.schema.json"]},
-        {"name": "runtime", "paths": ["project/new-ticket.sh", "scripts/audit_rule_enforcement.py", "scripts/governance_check.py", "scripts/install-worktree-guard.sh", "tests/**"]}
+        {"name": "runtime", "paths": [".github/workflows/ci.yml", "project/new-ticket.sh", "scripts/audit_rule_enforcement.py", "scripts/governance_check.py", "scripts/install-worktree-guard.sh", "tests/**"]}
       ],
       "responsibilityChanges": false,
       "interfaceChanges": ["Routine intent and allocator behavior become proportional and offline-capable"],
