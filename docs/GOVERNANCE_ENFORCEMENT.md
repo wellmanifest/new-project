@@ -155,6 +155,27 @@ mogą niezależnie przydzielić tego samego `ticket-{NNN}`.
 Ostateczne porządkowanie równoległych PR-ów realizuje chroniony merge queue,
 który ponownie uruchamia governance i testy na aktualnej bazie.
 
+### Złożona publikacja: protokół kolejki
+
+Dla zmian obejmujących kilka komponentów albo pliki generowane stosuje się
+stałą sekwencję:
+
+1. allocator przydziela ticket i atomowo rezerwuje jego `allowedPaths`;
+2. tylko jeden writer otrzymuje stan `IN_PROGRESS`; pozostali przechodzą do
+   `BLOCKED` z `conflictsWith` i receiptu konfliktu;
+3. writer publikuje exact-head PR, a kolejka rebazuje go na najnowszy `main`;
+4. po `STALE_HEAD_CHANGED` kolejka odświeża lease i uruchamia wszystkie bramki
+   od nowa, bez force-pushowania cudzej gałęzi;
+5. Validator zatwierdza wyłącznie aktualny head, po czym chroniony kontroler
+   wykonuje merge i zapisuje zewnętrzny receipt;
+6. deploy wykonuje bounded canary/readback, a dopiero potem lease i worktree
+   są zwalniane.
+
+Receipt musi zawierać `ticket`, `lease`, `headSha`, `actor`, `nextAction`,
+`retryBudget` oraz wynik (`MERGED`, `CANARY_FAILED` albo `BLOCKED`). Supervisor
+może wznowić kolejkę tylko z takiego receiptu i nie może powtarzać mutacji,
+której wynik jest już znany.
+
 
 ## Commercial and product SSOT paths
 

@@ -13,7 +13,9 @@
     "TODO.md",
     "project/TICKETS.md",
     "project/new-ticket.sh",
-    "tests/governance-scripts.test.sh"
+    "tests/governance-scripts.test.sh",
+    "docs/GOVERNANCE_ENFORCEMENT.md",
+    "CONTRIBUTING.md"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"

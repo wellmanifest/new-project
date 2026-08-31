@@ -26,6 +26,10 @@ nie może jednak wymuszać utrzymywania drugiej listy statusów w skrypcie.
 - [x] AC-04: test regresyjny potwierdza niestandardowy aktywny status oraz
       zwolnienie historycznego statusu spoza rejestru.
 - [x] AC-05: pełna bramka governance i testy skryptów przechodzą.
+- [ ] AC-06: złożone zmiany używają atomowej rezerwacji ścieżek, kolejki merge
+      oraz bounded retry po `STALE_HEAD_CHANGED`.
+- [ ] AC-07: każdy etap publikuje receipt z ticketem, lease, head SHA,
+      następną akcją i budżetem retry, możliwy do wznowienia przez Supervisor.
 
 ## Ryzyka i Uwagi
 

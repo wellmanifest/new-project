@@ -846,8 +846,20 @@ zaakceptowana intencja + polityka + zaakceptowana baza
           niezależne zatwierdzenie exact-head
                          |
                          v
-                       merge
+                      merge
 ```
+
+### Złożone zmiany i streamowanie do `main`
+
+Zmiana wielokomponentowa używa merge queue jako jedynego streamu do gałęzi
+chronionej. Przed pierwszym zapisem allocator atomowo rezerwuje ścieżki z
+`allowedPaths`; drugi writer nie czeka w stanie `IN_PROGRESS`, lecz otrzymuje
+`BLOCKED` i receipt konfliktu. Kolejka wykonuje rebase exact-head na bieżącym
+`main`, ponawia governance/testy po `STALE_HEAD_CHANGED`, a następnie wymaga
+niezależnego Validatora. Merge i deploy są jedną chronioną transakcją z
+bounded canary/readback. Receipt zawiera ticket, lease, head/merge SHA,
+`nextAction` i `retryBudget`, dzięki czemu Supervisor wznawia pracę bez
+powtarzania zakończonej mutacji.
 
 Twarde bramki są niekompensowalne. Wymiary pomagają reviewerowi, ale nie
 mogą zamienić bramki `FAILED`, `UNKNOWN` lub `WAITING` na zgodę. Lokalny raport
