@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -446,6 +447,55 @@ def ignored_payload_targets(target_root: Path, targets: set[str]) -> list[str]:
     )
 
 
+def project_inherited_required_checks(
+    target_root: Path,
+    payloads: dict[str, bytes],
+) -> None:
+    """Replace only the hub's inherited check declaration with target truth.
+
+    The package installs a governance workflow into every adopter.  Its check
+    declaration must describe that workflow, rather than the hub's unrelated
+    CI jobs.  A target-owned declaration is an extension and is never changed.
+    """
+    raw = payloads.get(CHECKS_TARGET)
+    if raw is None:
+        path = target_root / CHECKS_TARGET
+        raw = path.read_bytes() if path.is_file() else None
+    if raw is None:
+        return
+    document = load_json_bytes(raw, "target required-checks declaration")
+    if not isinstance(document, dict) or document.get("repository") != "wellmanifest/new-project":
+        return
+    workflow_payloads = {
+        target: content
+        for target, content in payloads.items()
+        if target.startswith(".github/workflows/")
+    }
+    generator_path = Path(__file__).resolve().with_name("generate_required_checks.py")
+    spec = importlib.util.spec_from_file_location("new_project_required_checks", generator_path)
+    if spec is None or spec.loader is None:
+        raise SystemExit("cannot load the managed required-checks generator")
+    generator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(generator)
+    derived = generator.declaration_for(
+        target_root,
+        ignored=(),
+        workflow_payloads=workflow_payloads,
+    )
+    if derived is None:
+        # A non-Git bootstrap has no authoritative repository identity. Keep
+        # the source declaration rather than inventing one; a later adoption
+        # in the real repository will project the local workflow truth.
+        return
+    callers = derived.get("reusableWorkflowCallers", [])
+    if callers:
+        raise SystemExit(
+            "cannot project inherited required-checks through reusable workflow callers: "
+            + ", ".join(str(value) for value in callers)
+        )
+    payloads[CHECKS_TARGET] = json_bytes(derived)
+
+
 def report_missing_target_prerequisites(paths: list[str]) -> None:
     for path in paths:
         print(f"MISSING target prerequisite {path}")
@@ -540,6 +590,8 @@ def main() -> int:
         raise SystemExit(f"target manifest is not valid JSON: {error}") from error
     if manifest.get("standard", {}).get("version") != version:
         raise SystemExit(f"target manifest version must equal adopted standard version {version}")
+
+    project_inherited_required_checks(target_root, payloads)
 
     expected_lock = lock_content(
         target_root,

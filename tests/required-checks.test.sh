@@ -282,6 +282,29 @@ names = sorted(check["name"] for check in document["requiredChecks"])
 assert names == ["governance / windows", "test"], names
 PY
 
+# A copied hub declaration must not carry the hub's circular exclusions into an
+# adopter: its own governance workflow publishes real target check contexts.
+python3 - "$fixture" <<'PY'
+import json, pathlib, sys
+path = pathlib.Path(sys.argv[1]) / '.governance/required-checks.json'
+path.write_text(json.dumps({
+    'schema': 'new-project.required-checks/v1',
+    'version': 1,
+    'repository': 'wellmanifest/new-project',
+    'workflowFile': '.github/workflows/ci.yml',
+    'requiredCheckNames': ['test', 'windows-governance'],
+    'circularGovernanceChecksIgnoredByValidator': ['test'],
+}, indent=2) + '\n')
+PY
+python3 "$generator" --write --format json "$fixture" > /dev/null
+python3 - "$fixture" <<'PY'
+import json, pathlib, sys
+document = json.loads((pathlib.Path(sys.argv[1]) / '.governance/required-checks.json').read_text())
+assert document['repository'] == 'wellmanifest/fixture', document
+assert 'circularGovernanceChecksIgnoredByValidator' not in document, document
+assert sorted(check['name'] for check in document['requiredChecks']) == ['governance / windows', 'test']
+PY
+
 # A check the repository excludes as circular stays excluded.
 python3 - "$fixture" <<'PY'
 import json, pathlib, sys
