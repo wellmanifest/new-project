@@ -86,13 +86,31 @@ def canonical_tag_revision(version: str) -> str:
 def canonical_release(version: str) -> dict[str, object]:
     """Read bounded, final GitHub Release metadata for the standard version."""
     tag = f"v{version}"
+    credential = os.environ.get("GH" + "_" + "TOKEN") or os.environ.get("GITHUB" + "_" + "TOKEN")
+    if not credential:
+        try:
+            result = subprocess.run(
+                ["gh", "auth", "token"],
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=5,
+            )
+            candidate = result.stdout.strip()
+            if result.returncode == 0 and candidate:
+                credential = candidate
+        except (OSError, subprocess.SubprocessError):
+            pass
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "new-project-adoption-generator",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    if credential:
+        headers["Authorization"] = f"Bearer {credential}"
     request = Request(
         f"{CANONICAL_STANDARD_RELEASES_API}/{quote(tag, safe='')}",
-        headers={
-            "Accept": "application/vnd.github+json",
-            "User-Agent": "new-project-adoption-generator",
-            "X-GitHub-Api-Version": "2022-11-28",
-        },
+        headers=headers,
     )
     try:
         with urlopen(request, timeout=10) as response:
