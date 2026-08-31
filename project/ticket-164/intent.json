@@ -1,0 +1,39 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-164",
+  "summary": "Project adopter checks from local workflows",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-164/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/create_adoption_lock.py",
+    "scripts/generate_required_checks.py",
+    "tests/adoption-lock.test.sh",
+    "tests/required-checks.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "efdb30aec5985d49cbf19bb18012524b941ba3ef",
+    "targetBranch": "main",
+    "outcome": "Published adoption derives required checks from target workflows instead of inheriting the hub CI declaration.",
+    "nonGoals": ["Changing a target-owned required-checks declaration", "Changing GitHub rulesets directly"],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {"maxImplementationFiles": 4, "maxAffectedComponents": 1, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {"status": "accepted", "decision": "Derive only the unmistakably inherited hub declaration from the target workflow projection before computing the immutable lock.", "components": [{"name": "adoption-projection", "paths": ["scripts/create_adoption_lock.py", "scripts/generate_required_checks.py", "tests/adoption-lock.test.sh", "tests/required-checks.test.sh"]}], "responsibilityChanges": false, "interfaceChanges": [], "dataChanges": [], "ui": {"impact": "none", "states": [], "evidence": []}, "rollback": "A later published standard can restore the previous projection without altering target-owned declarations."},
+    "runtimeDependencies": [],
+    "validation": [{"criterion": "AC-01", "commands": ["bash tests/adoption-lock.test.sh", "bash tests/required-checks.test.sh", "./project/governance-check.sh --actor agent"], "evidence": "Fixture adoption and deterministic governance checks."}]
+  }
+}

@@ -141,6 +141,12 @@ test "$(grep '^MISSING target prerequisite ' "$fixture/initial-check.out")" = "$
 ! grep -q '^MISSING target prerequisite project/readme.sh$' "$fixture/initial-check.out"
 test -z "$(find "$target" -mindepth 1 -print -quit)"
 
+# A real target repository supplies the identity used by the derived check
+# declaration. Keep the preceding empty-directory assertion independent from
+# Git's administrative files.
+git -C "$target" init -q
+git -C "$target" remote add origin git@github.com:wellmanifest/adoption-fixture.git
+
 candidate_adopt "$standard" \
   --target-root "$target" --source-revision "$revision" > "$fixture/adopt.out"
 grep -q '^adopted wellmanifest/new-project ' "$fixture/adopt.out"
@@ -181,7 +187,13 @@ for entry in catalog['codes'].values():
         assert (root / '.governance' / documentation).is_file(), documentation
 for path, expected in lock['managedFiles'].items():
     assert hashlib.sha256((root / path).read_bytes()).hexdigest() == expected
+checks = json.load(open(root / '.governance/required-checks.json', encoding='utf-8'))
+assert checks['repository'] == 'wellmanifest/adoption-fixture'
+assert sorted(check['name'] for check in checks['requiredChecks']) == [
+    'governance / enforce', 'governance / remote lifecycle'
+]
 PY
+python3 "$target/.governance/check_required_checks.py" --root "$target"
 touch "$target/README.md" "$target/VERSION" "$target/CHANGELOG.md" "$target/TODO.md" \
   "$target/project/TICKETS.md"
 python3 - "$target/.governance/manifest.json" <<'PY'
