@@ -1,0 +1,40 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-166",
+  "summary": "Release corrected adoption projection",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-166/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "92eb2383c7ce5c8d2b12c9fd4ab3948a796093b6",
+    "targetBranch": "main",
+    "outcome": "Publish the merged adopter-check projection as wellmanifest/new-project 0.19.16.",
+    "nonGoals": ["Changing adoption behavior beyond the merged projection", "Moving an existing release tag"],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {"maxImplementationFiles": 5, "maxAffectedComponents": 1, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {"status": "accepted", "decision": "Advance the declared semantic version in the standard and its deterministic fixtures; publish only after protected exact-head merge.", "components": [{"name": "standard-release-metadata", "paths": ["VERSION", "governance/manifest.default.json", "governance/manifest.hub.json", "tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]}], "responsibilityChanges": false, "interfaceChanges": [], "dataChanges": [], "ui": {"impact": "none", "states": [], "evidence": []}, "rollback": "Publish a later corrective version; immutable releases are never retargeted."},
+    "runtimeDependencies": [],
+    "validation": [{"criterion": "AC-01", "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-validator.test.sh", "./project/governance-check.sh --actor agent"], "evidence": "Version and immutable adoption fixtures."}]
+  }
+}
