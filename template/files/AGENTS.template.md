@@ -19,10 +19,14 @@ Before any multi-step implementation, an agent must:
    `docker.required=true`; existing Docker configuration remains subject to
    stack validation even when Docker is optional.
 2. Reuse an unfinished ticket whose workstream and scope match. A second active
-   ticket is allowed only in a distinct workstream with no write-scope overlap.
+   ticket is allowed when its write scope is disjoint and the manifest's
+   per-workstream concurrency limit permits it.
    Otherwise run `./project/new-ticket.sh --title "..." --agent "..."
    --workstream "..."`.
-3. Complete the minimal ticket `README.md` and `intent.json`. Participant prose,
+3. Complete the minimal ticket `README.md` and `intent.json`. Routine disjoint
+   source/test work uses that compact intent; add the full `delivery` contract
+   for dependency manifests, integration-owned paths or repositories whose
+   manifest requires it. Participant prose,
    changelog, raw logs, TODO and indexes are optional and never delivery output.
 4. Treat a user request that already says to execute or work autonomously as
    `SESSION_EXECUTION_AUTHORIZATION`; record it in the agent-owned ticket file.

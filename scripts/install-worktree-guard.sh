@@ -34,6 +34,7 @@ Usage: ./scripts/install-worktree-guard.sh [options]
 --target installs:
   worktree-guard.yaml
   .governance/worktree_overlap_check.py
+  .governance/ticket_activity.py
   .governance/worktree_guard.py
   .governance/error/GOV-WORKTREE-OVERLAP.md
   <effective hooks dir>/pre-commit-worktree-guard
@@ -42,7 +43,7 @@ Usage: ./scripts/install-worktree-guard.sh [options]
       With --wire-hook the call is added to pre-commit (created if absent).
 
 --workspace installs:
-  $XDG_DATA_HOME/worktree-guard/{worktree_overlap_check.py,worktree_guard.py,worktree-guard.yaml}
+  $XDG_DATA_HOME/worktree-guard/{worktree_overlap_check.py,ticket_activity.py,worktree_guard.py,worktree-guard.yaml}
   $XDG_CONFIG_HOME/systemd/user/worktree-guard@.{service,timer,path}
   reports under $XDG_STATE_HOME/worktree-guard/
 EOF
