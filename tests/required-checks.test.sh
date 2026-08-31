@@ -305,7 +305,8 @@ assert 'circularGovernanceChecksIgnoredByValidator' not in document, document
 assert sorted(check['name'] for check in document['requiredChecks']) == ['governance / windows', 'test']
 PY
 
-# A check the repository excludes as circular stays excluded.
+# Circular metadata is retained for external validators but does not omit a
+# check from the repository's own workflow-derived declaration.
 python3 - "$fixture" <<'PY'
 import json, pathlib, sys
 path = pathlib.Path(sys.argv[1]) / ".governance/required-checks.json"
@@ -317,7 +318,7 @@ observed="$(derive "$fixture")"
 python3 - "$observed" <<'PY'
 import json, sys
 entry = json.loads(sys.argv[1])
-assert entry["derivedNames"] == ["governance / windows"], entry["derivedNames"]
+assert entry["derivedNames"] == ["governance / windows", "test"], entry["derivedNames"]
 PY
 
 echo "required-checks generator: PASS"

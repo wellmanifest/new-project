@@ -137,10 +137,6 @@ def declaration_for(
             else published_checks(workflow, callers)
         )
         for name in names:
-            # A repository may declare a check that its own validator must not
-            # wait for, to avoid a circular gate; keep that exclusion.
-            if name in ignored:
-                continue
             checks.append({"name": name, "workflowFile": relative})
     if not checks and not callers:
         return None
@@ -195,7 +191,7 @@ def main(argv: list[str] | None = None) -> int:
         current = current_declaration(root)
         inherited_hub_declaration = (current or {}).get("repository") == HUB_REPOSITORY
         ignored = () if inherited_hub_declaration else tuple((current or {}).get(IGNORED_FIELD, ()) or ())
-        derived = declaration_for(root, ignored)
+        derived = declaration_for(root)
         if derived is not None and ignored:
             derived[IGNORED_FIELD] = list(ignored)
         entry = {

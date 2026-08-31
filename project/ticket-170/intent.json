@@ -1,0 +1,24 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-170",
+  "summary": "Keep all local required checks in adoption projection",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-170/**",
+    "TODO.md",
+    "project/TICKETS.md", "scripts/generate_required_checks.py", "tests/required-checks.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {"acceptedBaseSha":"9cfcaf6f85c19a9b5d0a779b9e651082024d3f3e","targetBranch":"main","outcome":"Workflow-derived declarations retain every local check even when external circular metadata exists.","nonGoals":["Do not disable circular metadata for external validators","Do not weaken local required-check validation"],"complexity":"S","estimatedMinutes":20,"budgets":{"maxImplementationFiles":2,"maxAffectedComponents":1,"maxPublicInterfaceChanges":1,"maxRuntimeDependencies":0},"architecture":{"status":"accepted","decision":"Derive all local jobs; preserve circular metadata separately.","components":[{"name":"required-check-projection","paths":["scripts/generate_required_checks.py","tests/required-checks.test.sh"]}],"responsibilityChanges":false,"interfaceChanges":[],"dataChanges":[],"ui":{"impact":"none","states":[],"evidence":[]},"rollback":"Revert the projection change."},"runtimeDependencies":[],"validation":[{"criterion":"AC-01","commands":["bash tests/required-checks.test.sh"],"evidence":"Circular metadata no longer filters published local jobs."}]}
+}
