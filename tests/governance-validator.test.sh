@@ -1564,6 +1564,76 @@ if ! run_check "$atomic_adoption" --base "$atomic_base" > "$fixture/atomic-adopt
 fi
 grep -q '^GOV-PASS:' "$fixture/atomic-adoption.out"
 
+# A former managed path may already have drifted before an atomic upgrade. It
+# remains fail-closed unless the ticket binds the exact base bytes as a
+# takeover; the new immutable lock still verifies the replacement payload.
+atomic_drifted_managed="$fixture/atomic-adoption-drifted-managed"
+cp -R "$atomic_adoption" "$atomic_drifted_managed"
+atomic_upgrade_head="$(git -C "$atomic_drifted_managed" rev-parse HEAD)"
+git -C "$atomic_drifted_managed" switch -q --detach "$atomic_base"
+printf '%s\n' 'locally drifted managed agents' > "$atomic_drifted_managed/AGENTS.md"
+git -C "$atomic_drifted_managed" add AGENTS.md
+git -C "$atomic_drifted_managed" commit -qm 'drift previously managed agents'
+atomic_drift_base="$(git -C "$atomic_drifted_managed" rev-parse HEAD)"
+git -C "$atomic_drifted_managed" switch -qc ticket-002-drifted-adoption
+git -C "$atomic_drifted_managed" branch -f main "$atomic_drift_base"
+if git -C "$atomic_drifted_managed" cherry-pick "$atomic_upgrade_head"; then
+  echo 'expected managed AGENTS.md conflict while replaying the immutable upgrade' >&2
+  exit 1
+fi
+printf '%s\n' 'managed agents v2' > "$atomic_drifted_managed/AGENTS.md"
+git -C "$atomic_drifted_managed" add AGENTS.md
+git -C "$atomic_drifted_managed" cherry-pick --continue
+python3 - "$atomic_drifted_managed/project/ticket-002/intent.json" \
+  "AGENTS.md" "$atomic_drift_base" <<'PY'
+import hashlib
+import json
+import pathlib
+import subprocess
+import sys
+
+intent_path = pathlib.Path(sys.argv[1])
+target = sys.argv[2]
+base = sys.argv[3]
+base_bytes = subprocess.check_output(
+    ['git', '-C', str(intent_path.parents[2]), 'show', f'{base}:{target}']
+)
+intent = json.loads(intent_path.read_text(encoding='utf-8'))
+intent['delivery']['acceptedBaseSha'] = base
+intent['delivery']['standardAdoption']['managedTargetTakeovers'].append({
+    'path': target,
+    'baseDigest': hashlib.sha256(base_bytes).hexdigest(),
+})
+intent_path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_drifted_managed" add project/ticket-002/intent.json
+git -C "$atomic_drifted_managed" commit -qm 'bind drifted managed target digest'
+if ! run_check "$atomic_drifted_managed" --base "$atomic_drift_base" \
+  > "$fixture/atomic-drifted-managed.out"; then
+  cat "$fixture/atomic-drifted-managed.out"
+  exit 1
+fi
+grep -q '^GOV-PASS:' "$fixture/atomic-drifted-managed.out"
+
+atomic_drifted_missing="$fixture/atomic-adoption-drifted-missing"
+cp -R "$atomic_drifted_managed" "$atomic_drifted_missing"
+python3 - "$atomic_drifted_missing/project/ticket-002/intent.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+takeovers = intent['delivery']['standardAdoption']['managedTargetTakeovers']
+intent['delivery']['standardAdoption']['managedTargetTakeovers'] = [
+    item for item in takeovers if item['path'] != 'AGENTS.md'
+]
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_drifted_missing" add project/ticket-002/intent.json
+git -C "$atomic_drifted_missing" commit -qm 'omit drifted managed target digest'
+expect_code GOV-SYNC-001 run_check "$atomic_drifted_missing" --base "$atomic_drift_base"
+
 # A path listed by the ticket may cross workstream ownership only while the
 # immutable package registry classifies it as managed and both locks/content
 # verify it. Changing the same path to seed restores ordinary ownership gates.
