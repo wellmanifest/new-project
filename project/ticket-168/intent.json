@@ -1,0 +1,37 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-168",
+  "summary": "Permit audited atomic upgrade from a drifted managed target",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-168/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "486f00b8b77c86f46dde65e83aee2946ea741578",
+    "targetBranch": "main",
+    "outcome": "Atomic standard upgrades accept a previously drifted managed file only when the ticket binds its exact base digest and the target payload still matches the immutable new lock.",
+    "nonGoals": ["Do not allow an unbound managed-file drift", "Do not weaken lock, tag, release or target payload verification", "Do not treat ordinary target-owned files as managed"],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {"maxImplementationFiles": 2, "maxAffectedComponents": 1, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {"status": "accepted", "decision": "Reuse the existing managedTargetTakeovers binding as a one-time digest-bound acknowledgement for either a new managed target or a drifted formerly managed target.", "components": [{"name": "atomic-adoption-verifier", "paths": ["scripts/governance_check.py", "tests/governance-validator.test.sh"]}], "responsibilityChanges": false, "interfaceChanges": [], "dataChanges": [], "ui": {"impact": "none", "states": [], "evidence": []}, "rollback": "Revert the verifier change; the prior stricter refusal resumes."},
+    "runtimeDependencies": [],
+    "validation": [{"criterion": "AC-01", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "A positive fixture requires the exact base digest for a drifted old managed file."}, {"criterion": "AC-02", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Missing and incorrect takeover bindings remain deterministic failures."}]
+  }
+}

@@ -3446,7 +3446,12 @@ def verify_changed_managed_paths(
                     )
                 consumed_restorations.add(raw_path)
             elif content_digest(base_content) != base_hashes[raw_path]:
-                raise ValueError(f"base managed hash differs: {raw_path}")
+                observed_digest = content_digest(base_content)
+                if takeovers.get(raw_path) != observed_digest:
+                    raise ValueError(
+                        f"base managed hash differs without matching takeover digest: {raw_path}"
+                    )
+                consumed_takeovers.add(raw_path)
         elif base_content is not None:
             if initial:
                 # Installing the standard does not erase target ownership.
