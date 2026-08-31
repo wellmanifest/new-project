@@ -1,0 +1,24 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-171",
+  "summary": "Release complete required-check projection",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-171/**",
+    "TODO.md",
+    "project/TICKETS.md", "VERSION", "governance/manifest.default.json", "governance/manifest.hub.json", "tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery":{"acceptedBaseSha":"363a05558048d69101a66ac072be18da79fbbb5c","targetBranch":"main","outcome":"Publish required-check projection as 0.19.18.","nonGoals":["Do not move existing tags"],"complexity":"S","estimatedMinutes":20,"budgets":{"maxImplementationFiles":5,"maxAffectedComponents":1,"maxPublicInterfaceChanges":0,"maxRuntimeDependencies":0},"architecture":{"status":"accepted","decision":"Advance version and fixtures together.","components":[{"name":"release","paths":["VERSION","governance/manifest.default.json","governance/manifest.hub.json","tests/adoption-lock.test.sh","tests/governance-validator.test.sh"]}],"responsibilityChanges":false,"interfaceChanges":[],"dataChanges":[],"ui":{"impact":"none","states":[],"evidence":[]},"rollback":"Publish later corrective release."},"runtimeDependencies":[],"validation":[{"criterion":"AC-01","commands":["bash tests/required-checks.test.sh"],"evidence":"Release projection remains deterministic."}]}
+}
