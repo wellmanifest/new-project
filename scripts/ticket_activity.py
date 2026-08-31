@@ -16,6 +16,11 @@ from typing import Any
 
 SHA_RE = re.compile(r"^[a-f0-9]{40}$")
 TICKET_RE = re.compile(r"^ticket-[0-9]{3}$")
+RECEIPT_REF_RE = re.compile(r"^receipt:\S+$")
+TARGET_BRANCH_RE = re.compile(r"^[A-Za-z0-9._/-]+$")
+OCCURRED_AT_RE = re.compile(
+    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+)
 
 
 class ActivityError(RuntimeError):
@@ -127,7 +132,7 @@ def _validate_registry(value: Any, expected_repository: str) -> list[dict[str, s
         fields = {"receiptRef", "ticket", "outcome", "headSha", "terminalSha", "targetBranch", "occurredAt"}
         if not isinstance(receipt, dict) or set(receipt) != fields:
             raise ActivityError("terminal receipt fields are invalid")
-        if not isinstance(receipt.get("receiptRef"), str) or not receipt["receiptRef"].startswith("receipt:"):
+        if not isinstance(receipt.get("receiptRef"), str) or RECEIPT_REF_RE.fullmatch(receipt["receiptRef"]) is None:
             raise ActivityError("terminal receipt reference is invalid")
         if receipt["receiptRef"] in seen:
             raise ActivityError("terminal receipt references are not unique")
@@ -136,8 +141,12 @@ def _validate_registry(value: Any, expected_repository: str) -> list[dict[str, s
             raise ActivityError("terminal receipt ticket is invalid")
         if not SHA_RE.fullmatch(receipt.get("headSha", "")) or not SHA_RE.fullmatch(receipt.get("terminalSha", "")):
             raise ActivityError("terminal receipt SHA binding is invalid")
-        if not all(isinstance(receipt.get(key), str) and receipt[key] for key in ("outcome", "targetBranch", "occurredAt")):
+        if not isinstance(receipt.get("outcome"), str) or not receipt["outcome"]:
             raise ActivityError("terminal receipt value is blank")
+        if TARGET_BRANCH_RE.fullmatch(receipt.get("targetBranch", "")) is None:
+            raise ActivityError("terminal receipt target branch is invalid")
+        if OCCURRED_AT_RE.fullmatch(receipt.get("occurredAt", "")) is None:
+            raise ActivityError("terminal receipt timestamp is invalid")
     return receipts
 
 

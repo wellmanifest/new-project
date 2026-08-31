@@ -351,6 +351,16 @@
       "remediation": "Stop both writers, preserve both heads and reallocate the later intent through project/new-ticket.sh before rebuilding its branch.",
       "documentation": "error/GOV-TICKET-ALLOCATION.md"
     },
+    "GOV-TICKET-ALLOCATION-003": {
+      "message": "A distributed writer lacks a valid receipt from the registered atomic ticket allocator.",
+      "remediation": "Submit the emitted exact request to the configured process URI and retry with its fresh fenced receipt; never choose a local number.",
+      "documentation": "error/GOV-TICKET-ALLOCATION.md"
+    },
+    "GOV-TICKET-ALLOCATION-004": {
+      "message": "A registered allocation resolves to a ticket identity already visible in repository state.",
+      "remediation": "Continue the existing claim or request a fresh fenced allocation after reconciliation; do not recreate, rename or overwrite it.",
+      "documentation": "error/GOV-TICKET-ALLOCATION.md"
+    },
     "GOV-TICKET-LOCK-001": {
       "message": "Another ticket allocation holds the clone-wide lock.",
       "remediation": "Wait for the allocator; remove a stale lock only after proving no allocation process is active.",

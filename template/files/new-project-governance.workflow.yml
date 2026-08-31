@@ -84,9 +84,17 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Set up Python
+        if: runner.environment == 'github-hosted'
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.11"
+      - name: Require provisioned Python on self-hosted runner
+        if: runner.environment == 'self-hosted'
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v python3 >/dev/null
+          python3 -c 'import sys; assert sys.version_info >= (3, 11), sys.version'
       - name: Run the managed governance gate
         shell: bash
         env:

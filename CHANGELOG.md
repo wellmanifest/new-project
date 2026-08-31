@@ -2,6 +2,81 @@
 
 ## [Unreleased]
 
+## [0.19.15] - 2026-08-30
+
+### Registered ticket allocation
+
+- Separate the compatible single-clone high-water profile from distributed
+  allocation through an adopter-registered atomic process URI.
+- Add closed request and receipt contracts with exact repository, correlation,
+  issuer, digest, expiry and fencing-token bindings.
+- Make `new-ticket.sh` fail closed for distributed writers without a fresh
+  receipt and reject identities already visible in repository state.
+- Standardize lossless ticket-collision recovery: preserve both heads, trust
+  only the terminal merge receipt, allocate a successor, verify equivalence,
+  then close the predecessor as superseded.
+
+## [0.19.14] - 2026-08-30
+
+### Docs
+- Update CHANGELOG.md
+- Update project/ticket-160/README.md
+
+### Test
+- Update tests/adoption-lock.test.sh
+- Update tests/governance-validator.test.sh
+
+### Other
+- Update VERSION
+- Update governance/manifest.default.json
+- Update governance/manifest.hub.json
+- Update project/ticket-160/intent.json
+- Update scripts/governance_check.py
+
+## [0.19.14] - 2026-08-30
+
+### Resolver-aware active ticket content
+
+- Apply active-only ticket scaffold requirements to the verified activity set
+  instead of the raw Markdown status projection.
+- Preserve executable-content scanning across every ticket directory.
+- Add regression coverage proving terminal receipts remove false scaffold
+  blockers while genuinely active incomplete tickets remain fail-closed.
+
+## [0.19.13] - 2026-08-30
+
+### Resolver-aware dependency ordering
+
+- Reuse verified external terminal receipts when validating ticket
+  dependencies instead of consulting only the Markdown status projection.
+- Keep missing, non-terminal and unverifiable prerequisites fail-closed with
+  the existing `GOV-DEPENDENCY-002` diagnostic.
+- Add a Git-ancestry regression fixture proving a merged prerequisite releases
+  its dependent ticket without a repository closure commit.
+
+## [0.19.12] - 2026-08-30
+
+### Self-hosted governance Python compatibility
+
+- Keep pinned Python 3.11 provisioning on GitHub-hosted runners, but use an
+  already-provisioned compatible `python3` on self-hosted runners.
+- Fail closed with an explicit Python 3.11+ prerequisite instead of asking
+  `actions/setup-python` for an unavailable build on a newer host distro.
+- Preserve the same deterministic governance commands and merge gates on both
+  runner environments.
+
+## [0.19.11] - 2026-08-30
+
+### Recoverable terminal receipt activity
+
+- Resolve ticket reservations through one managed status/receipt resolver used
+  by the allocator, governance gate and worktree overlap checker.
+- Release stale `IN_PROGRESS` projections only when external terminal receipt
+  bindings and Git ancestry verify; unsupported or malformed evidence remains
+  conservative with `GOV-TICKET-ACTIVITY-001`.
+- Require every fail-closed blocker to expose an authority-preserving exit, and
+  keep normative standards focused on invariants and forbidden shortcuts.
+
 ## [0.19.10] - 2026-08-30
 
 ### Registry-driven revision workflow bindings

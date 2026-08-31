@@ -411,7 +411,7 @@ chmod 0755 "$hookrepo/.githooks/pre-commit"
   --target "$hookrepo" --wire-hook > "$fixture/hookinstall.out"
 test -x "$hookrepo/.githooks/pre-commit"
 test -x "$hookrepo/.githooks/pre-commit-worktree-guard"
-test -f "$hookrepo/.governance/ticket_activity.py"
+test -x "$hookrepo/.governance/ticket_activity.py"
 test "$(tail -n 1 "$hookrepo/.githooks/pre-commit")" = 'exit 0'
 test "$(grep -n 'pre-commit-worktree-guard' "$hookrepo/.githooks/pre-commit" | cut -d: -f1)" \
   -lt "$(grep -n '^exit 0$' "$hookrepo/.githooks/pre-commit" | cut -d: -f1)"

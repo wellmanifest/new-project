@@ -21,22 +21,27 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-try:
-    from ticket_activity import ActivityError, resolve as resolve_ticket_activity
-except ModuleNotFoundError:
-    import importlib.util
-    import sys
+import importlib.util
+import sys
 
-    _activity_spec = importlib.util.spec_from_file_location(
-        "ticket_activity", Path(__file__).with_name("ticket_activity.py")
-    )
-    if _activity_spec is None or _activity_spec.loader is None:
-        raise
-    _activity_module = importlib.util.module_from_spec(_activity_spec)
-    sys.modules[_activity_spec.name] = _activity_module
-    _activity_spec.loader.exec_module(_activity_module)
-    ActivityError = _activity_module.ActivityError
-    resolve_ticket_activity = _activity_module.resolve
+_previous_bytecode_policy = sys.dont_write_bytecode
+sys.dont_write_bytecode = True
+try:
+    try:
+        from ticket_activity import ActivityError, resolve as resolve_ticket_activity
+    except ModuleNotFoundError:
+        _activity_spec = importlib.util.spec_from_file_location(
+            "ticket_activity", Path(__file__).with_name("ticket_activity.py")
+        )
+        if _activity_spec is None or _activity_spec.loader is None:
+            raise
+        _activity_module = importlib.util.module_from_spec(_activity_spec)
+        sys.modules[_activity_spec.name] = _activity_module
+        _activity_spec.loader.exec_module(_activity_module)
+        ActivityError = _activity_module.ActivityError
+        resolve_ticket_activity = _activity_module.resolve
+finally:
+    sys.dont_write_bytecode = _previous_bytecode_policy
 
 
 REPORT_SCHEMA = "new-project.worktree-overlap-report/v1"
@@ -394,7 +399,9 @@ def active_statuses(root: Path) -> set[str]:
         ):
             raise AuditError("ticket status registry has no valid activeStatuses")
         return set(statuses)
-    raise AuditError("ticket status registry is missing")
+    # A repository without the ticket contract still receives physical dirty
+    # path protection. It simply contributes no intent-level ticket scopes.
+    return set()
 
 
 def ticket_scopes(root: Path) -> tuple[tuple[TicketScope, ...], tuple[str, ...]]:
@@ -404,6 +411,8 @@ def ticket_scopes(root: Path) -> tuple[tuple[TicketScope, ...], tuple[str, ...]]
     scopes: list[TicketScope] = []
     errors: list[str] = []
     statuses = active_statuses(root)
+    if not statuses:
+        return (), ()
     for directory in sorted(project.iterdir(), key=lambda item: item.name):
         if not directory.is_dir() or TICKET_DIRECTORY_RE.fullmatch(directory.name) is None:
             continue

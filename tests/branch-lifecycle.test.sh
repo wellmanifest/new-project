@@ -136,6 +136,12 @@ grep -Fq 'deleteBranchOnMerge: settings.repository.deleteBranchOnMerge' "$target
 grep -Fq 'python3 .governance/branch_lifecycle_check.py' "$target_workflow"
 test "$(grep -Fc "runs-on: \${{ vars.NEW_PROJECT_RUNNER_LABEL || 'ubuntu-latest' }}" \
   "$target_workflow")" -eq 2
+grep -A2 -F 'name: Set up Python' "$target_workflow" \
+  | grep -Fq "if: runner.environment == 'github-hosted'"
+grep -A6 -F 'name: Require provisioned Python on self-hosted runner' \
+  "$target_workflow" | grep -Fq "if: runner.environment == 'self-hosted'"
+grep -A6 -F 'name: Require provisioned Python on self-hosted runner' \
+  "$target_workflow" | grep -Fq "sys.version_info >= (3, 11)"
 python3 - "$repo_root/governance/package-manifest.json" <<'PY'
 import json
 import sys

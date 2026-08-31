@@ -1,0 +1,90 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-160",
+  "summary": "Resolve ticket content from terminal activity",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-160/**",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "tests/adoption-lock.test.sh",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "VERSION",
+    "CHANGELOG.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "90a96d8dfb1858dfe9d3b73a53fab9bf340e7e9c",
+    "targetBranch": "main",
+    "outcome": "Active-only ticket content validation follows the verified terminal activity authority.",
+    "nonGoals": [
+      "Do not rewrite historical ticket status projections",
+      "Do not weaken terminal receipt verification"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Pass the resolver-derived active TicketRecord set into ticket content validation and retain executable scanning for every ticket directory.",
+      "components": [
+        {
+          "name": "governance-validator",
+          "paths": [
+            "scripts/governance_check.py",
+            "tests/governance-validator.test.sh",
+            "tests/adoption-lock.test.sh",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "VERSION",
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the active-record parameter while retaining the fail-closed activity resolver."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "terminal ticket content fixture"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "live missing scaffold fixture"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["for test in tests/*.test.sh; do bash \"$test\"; done"],
+        "evidence": "complete deterministic suite"
+      }
+    ]
+  }
+}

@@ -18,24 +18,24 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-# Managed validators are read-only checks. Importing adjacent managed modules
-# must not create `__pycache__` inside the repository and turn a clean checkout
-# into an implementation diff on the next validation pass.
+_previous_bytecode_policy = sys.dont_write_bytecode
 sys.dont_write_bytecode = True
-
 try:
-    from ticket_activity import ActivityError, resolve as resolve_ticket_activity
-except ModuleNotFoundError:
-    _activity_spec = importlib.util.spec_from_file_location(
-        "ticket_activity", Path(__file__).with_name("ticket_activity.py")
-    )
-    if _activity_spec is None or _activity_spec.loader is None:
-        raise
-    _activity_module = importlib.util.module_from_spec(_activity_spec)
-    sys.modules[_activity_spec.name] = _activity_module
-    _activity_spec.loader.exec_module(_activity_module)
-    ActivityError = _activity_module.ActivityError
-    resolve_ticket_activity = _activity_module.resolve
+    try:
+        from ticket_activity import ActivityError, resolve as resolve_ticket_activity
+    except ModuleNotFoundError:
+        _activity_spec = importlib.util.spec_from_file_location(
+            "ticket_activity", Path(__file__).with_name("ticket_activity.py")
+        )
+        if _activity_spec is None or _activity_spec.loader is None:
+            raise
+        _activity_module = importlib.util.module_from_spec(_activity_spec)
+        sys.modules[_activity_spec.name] = _activity_module
+        _activity_spec.loader.exec_module(_activity_module)
+        ActivityError = _activity_module.ActivityError
+        resolve_ticket_activity = _activity_module.resolve
+finally:
+    sys.dont_write_bytecode = _previous_bytecode_policy
 
 RUNTIME_VERSION = "0.11.0"
 POLICY_DSL_LOCK = {
@@ -56,6 +56,7 @@ POLICY_DSL_LOCK = {
     },
 }
 ACTIVE_DEFAULT = {"IN_PROGRESS"}
+TICKET_ACTIVITY_ERROR = "GOV-TICKET-ACTIVITY-001"
 EXECUTABLE_SUFFIXES = {
     ".bat", ".c", ".cc", ".cmd", ".cpp", ".go", ".java", ".js", ".jsx",
     ".mjs", ".php", ".ps1", ".py", ".rb", ".rs", ".sh", ".ts", ".tsx",
@@ -1454,10 +1455,10 @@ def active_ticket_records(
             # Keep the projection active and expose one stable, recoverable error.
             active.append(record)
             if report is not None and not any(
-                finding.code == error.code for finding in report.findings
+                finding.code == TICKET_ACTIVITY_ERROR for finding in report.findings
             ):
                 report.add(
-                    error.code,
+                    TICKET_ACTIVITY_ERROR,
                     f"Ticket activity could not be resolved safely: {error}",
                     "Reconcile or quarantine the clone-external registry from protected evidence; follow error/GOV-TICKET-ACTIVITY.md.",
                     [rel(root, record.directory / "README.md")],
@@ -1696,6 +1697,7 @@ def check_active_relationships(
     report: Report,
 ) -> None:
     closed_statuses = set(config.get("closedStatuses", []))
+    active_statuses = set(config.get("activeStatuses", ACTIVE_DEFAULT))
     by_name = {record.directory.name: record for record in records}
     active_names = {record.directory.name for record in active}
     conflict_pairs: set[tuple[str, str]] = set()
@@ -1704,7 +1706,14 @@ def check_active_relationships(
         assert record.intent is not None
         for dependency in record.intent["dependsOn"]:
             prerequisite = by_name.get(dependency)
-            if prerequisite is None or prerequisite.status not in closed_statuses:
+            verified_terminal = bool(
+                prerequisite
+                and prerequisite.status in active_statuses
+                and dependency not in active_names
+            )
+            if prerequisite is None or (
+                prerequisite.status not in closed_statuses and not verified_terminal
+            ):
                 report.add(
                     "GOV-DEPENDENCY-002", f"Active ticket {record.directory.name} has unfinished or missing dependency {dependency}.",
                     "Complete the prerequisite or return the dependent ticket to a non-active planning backlog.",
@@ -2299,10 +2308,16 @@ def check_stacks(root: Path, manifest: dict[str, Any], profiles_path: Path | Non
             report.add("GOV-STACK-001", f"Declared stack '{stack}' has no recognized project marker.", "Add the stack marker or remove the inaccurate stack declaration.", markers)
 
 
-def check_ticket_content(root: Path, directories: list[Path], config: dict[str, Any], report: Report) -> None:
+def check_ticket_content(
+    root: Path,
+    directories: list[Path],
+    active: list[TicketRecord],
+    config: dict[str, Any],
+    report: Report,
+) -> None:
+    active_names = {record.directory.name for record in active}
     for directory in directories:
-        status, _ = parse_ticket_state(directory / "README.md")
-        if status in set(config["activeStatuses"]):
+        if directory.name in active_names:
             missing = [rel(root, directory / item) for item in config["requiredFiles"] if not (directory / item).is_file()]
             for pattern in config["requiredAgentFiles"]:
                 if not any(directory.glob(pattern)):
@@ -3263,6 +3278,7 @@ def package_entry(item: Any) -> tuple[str, str, str]:
     allowed_extendable = {
         ("governance/manifest.default.json", ".governance/manifest.json"),
         ("governance/required-checks.json", ".governance/required-checks.json"),
+        ("governance/ticket-allocation.json", ".governance/ticket-allocation.json"),
     }
     if item.get("strategy") == "extendable" and (
         (source, target) not in allowed_extendable or item.get("executable")
@@ -3771,7 +3787,7 @@ def run_governance_checks(
     check_domain_contracts(root, manifest, report)
     check_docker_image_references(root, manifest, report)
     check_stacks(root, manifest, profiles_path, report)
-    check_ticket_content(root, directories, manifest["ticket"], report)
+    check_ticket_content(root, directories, active, manifest["ticket"], report)
     check_coordination(root, manifest, records, changed, adoption_paths, report)
     check_change_lease(root, report)
     check_changed_content(root, changed, args.actor, args.trusted_human_change, report)

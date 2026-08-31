@@ -12,6 +12,7 @@
     "project/ticket-155/**",
     "TODO.md",
     "project/TICKETS.md",
+    ".github/workflows/ci.yml",
     "POLICY.md",
     "CONTRIBUTING.md",
     "subprojects/ticket-lifecycle/README.md",
@@ -25,10 +26,12 @@
     "scripts/ticket_activity.py",
     "scripts/governance_check.py",
     "scripts/worktree_overlap_check.py",
+    "scripts/install-worktree-guard.sh",
     "project/new-ticket.sh",
     "tests/ticket-activity.test.sh",
     "tests/governance-scripts.test.sh",
     "tests/governance-validator.test.sh",
+    "tests/rule-enforcement.test.sh",
     "tests/worktree-overlap.test.sh"
   ],
   "forbiddenPaths": [
@@ -53,16 +56,16 @@
       "Do not accept mutable refs or unverified terminal claims",
       "Do not auto-delete branches, tickets or receipt evidence"
     ],
-    "complexity": "M",
+    "complexity": "S",
     "estimatedMinutes": 30,
-    "budgets": {"maxImplementationFiles": 20, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 3, "maxRuntimeDependencies": 0},
+    "budgets": {"maxImplementationFiles": 24, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 3, "maxRuntimeDependencies": 0},
     "architecture": {
       "status": "accepted",
       "decision": "Keep status prose as a conservative projection; let a managed policy discover clone-external receipt registries and release reservations only after closed-schema and Git-ancestry verification",
       "components": [
-        {"name": "activity-system", "paths": ["governance/ticket-activity*.json", "governance/terminal-receipt-registry.schema.json", "governance/package-manifest.json", "scripts/ticket_activity.py", "scripts/governance_check.py", "scripts/worktree_overlap_check.py", "project/new-ticket.sh"]},
+        {"name": "activity-system", "paths": [".github/workflows/ci.yml", "governance/ticket-activity*.json", "governance/terminal-receipt-registry.schema.json", "governance/package-manifest.json", "scripts/ticket_activity.py", "scripts/governance_check.py", "scripts/worktree_overlap_check.py", "scripts/install-worktree-guard.sh", "project/new-ticket.sh"]},
         {"name": "recovery-policy", "paths": ["POLICY.md", "CONTRIBUTING.md", "subprojects/ticket-lifecycle/README.md", "governance/diagnostics.json", "governance/rule-enforcement.json", "error/GOV-TICKET-ACTIVITY.md"]},
-        {"name": "conformance", "paths": ["tests/ticket-activity.test.sh", "tests/governance-scripts.test.sh", "tests/governance-validator.test.sh", "tests/worktree-overlap.test.sh"]}
+        {"name": "conformance", "paths": ["tests/ticket-activity.test.sh", "tests/governance-scripts.test.sh", "tests/governance-validator.test.sh", "tests/rule-enforcement.test.sh", "tests/worktree-overlap.test.sh"]}
       ],
       "responsibilityChanges": false,
       "interfaceChanges": ["new-project.ticket-activity/v1", "new-project.terminal-receipt-registry/v1", "ticket_activity.py resolve/record/validate"],
@@ -74,7 +77,7 @@
     "validation": [
       {"criterion": "AC-01", "commands": ["bash tests/ticket-activity.test.sh", "bash tests/governance-scripts.test.sh"], "evidence": "Valid receipts release and absent/stale receipts remain active"},
       {"criterion": "AC-02", "commands": ["bash tests/governance-validator.test.sh", "bash tests/worktree-overlap.test.sh"], "evidence": "Governance and worktree ownership share the resolver"},
-      {"criterion": "AC-03", "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done"], "evidence": "Full suite passes"},
+      {"criterion": "AC-03", "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done"], "evidence": "Full suite passes including rule-enforcement traceability"},
       {"criterion": "AC-04", "commands": ["bash tests/governance-validator.test.sh"], "evidence": "Managed adopter fixtures use the same resolver; live logs adoption follows the published release"}
     ]
   }

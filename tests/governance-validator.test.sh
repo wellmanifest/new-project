@@ -92,7 +92,7 @@ hub_manifest = json.load(open(
 Draft202012Validator(schemas['manifest.schema.json']).validate(hub_manifest)
 assert 'config/artifact-registry.json' in hub_manifest['governancePaths']
 assert '.governance/standard-adoption.json' in hub_manifest['governancePaths']
-assert hub_manifest['standard']['version'] == '0.19.10'
+assert hub_manifest['standard']['version'] == '0.19.15'
 assert hub_manifest['coordination']['workstreams'] == {
     'governance': {'ownedPaths': ['**']},
 }
@@ -180,7 +180,7 @@ Draft202012Validator(schemas['lock.schema.json']).validate({
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.10',
+        'version': '0.19.15',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'published',
@@ -191,7 +191,7 @@ candidate_lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.10',
+        'version': '0.19.15',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'unpublished-test',
@@ -268,6 +268,12 @@ for item in package['files']:
 extendable = [item for item in package['files'] if item['strategy'] == 'extendable']
 assert extendable == [
     {
+        'source': 'governance/ticket-allocation.json',
+        'target': '.governance/ticket-allocation.json',
+        'strategy': 'extendable',
+        'executable': False,
+    },
+    {
         'source': 'governance/required-checks.json',
         'target': '.governance/required-checks.json',
         'strategy': 'extendable',
@@ -301,7 +307,7 @@ assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
 assert manifest['schema'] == schema['properties']['schema']['const']
-assert manifest['standard']['version'] == '0.19.10'
+assert manifest['standard']['version'] == '0.19.15'
 ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
@@ -1118,7 +1124,7 @@ lock = {
   'schema': 'new-project.lock/v1',
   'standard': {
     'id': 'wellmanifest/new-project',
-    'version': '0.19.10',
+    'version': '0.19.15',
     'sourceRepository': 'wellmanifest/new-project',
     'sourceRevision': 'a' * 40,
     'publicationStatus': 'published',
@@ -1176,7 +1182,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.10',
+        'version': '0.19.15',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'a' * 40,
         'publicationStatus': 'published',
@@ -1269,7 +1275,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.10',
+        'version': '0.19.15',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'b' * 40,
         'publicationStatus': 'published',
@@ -2254,6 +2260,10 @@ if ! run_check "$clean_integrated" > "$fixture/clean-integrated.out" 2>&1; then
   cat "$fixture/clean-integrated.out" >&2
   exit 1
 fi
+if find "$clean_integrated/.governance" -path '*/__pycache__/ticket_activity*.pyc' -print -quit | grep -q .; then
+  echo 'managed ticket activity import wrote runtime bytecode into the target checkout' >&2
+  exit 1
+fi
 grep -q '^GOV-PASS:' "$fixture/clean-integrated.out"
 if grep -Eq 'GOV-WORKSTREAM-(002|004)' "$fixture/clean-integrated.out"; then
   echo "clean integrated authorization snapshots must not project live coordination leases" >&2
@@ -2365,6 +2375,45 @@ dependency_missing="$fixture/dependency-missing"
 make_fixture "$dependency_missing"
 sed -i 's/"dependsOn": \[\]/"dependsOn": ["ticket-999"]/' "$dependency_missing/project/ticket-002/intent.json"
 expect_code GOV-DEPENDENCY-002 run_check "$dependency_missing" --changed-file TODO.md
+
+dependency_terminal="$fixture/dependency-terminal"
+make_fixture "$dependency_terminal"
+cp "$repo_root/governance/ticket-activity.json" "$dependency_terminal/.governance/ticket-activity.json"
+sed -i 's/"dependsOn": \[\]/"dependsOn": ["ticket-003"]/' "$dependency_terminal/project/ticket-002/intent.json"
+add_active_ticket "$dependency_terminal" ticket-003 interfaces '["sdk/**"]'
+git init --quiet --initial-branch=main "$dependency_terminal"
+git -C "$dependency_terminal" config user.email governance-test@example.invalid
+git -C "$dependency_terminal" config user.name governance-test
+git -C "$dependency_terminal" add .
+git -C "$dependency_terminal" commit --quiet -m active-prerequisite
+dependency_head="$(git -C "$dependency_terminal" rev-parse HEAD)"
+set_accepted_base "$dependency_terminal" "$dependency_head"
+printf '%s\n' integrated >> "$dependency_terminal/README.md"
+git -C "$dependency_terminal" add .
+git -C "$dependency_terminal" commit --quiet -m terminal-prerequisite
+dependency_terminal_sha="$(git -C "$dependency_terminal" rev-parse HEAD)"
+cat > "$dependency_terminal/receipt.json" <<JSON
+{
+  "receiptRef": "receipt:test/dependency-terminal/1",
+  "ticket": "ticket-003",
+  "outcome": "merged",
+  "headSha": "$dependency_head",
+  "terminalSha": "$dependency_terminal_sha",
+  "targetBranch": "main",
+  "occurredAt": "2026-08-30T17:20:00Z"
+}
+JSON
+python3 "$repo_root/scripts/ticket_activity.py" --root "$dependency_terminal" record \
+  --receipt "$dependency_terminal/receipt.json" > "$fixture/dependency-terminal-recorded.json"
+rm "$dependency_terminal/project/ticket-003/intent.json"
+run_check "$dependency_terminal" --changed-file src/app.js \
+  > "$fixture/dependency-terminal.out"
+grep -q '^GOV-PASS:' "$fixture/dependency-terminal.out"
+
+active_content_missing="$fixture/active-content-missing"
+make_fixture "$active_content_missing"
+rm "$active_content_missing/project/ticket-002/intent.json"
+expect_code GOV-TICKET-003 run_check "$active_content_missing" --changed-file TODO.md
 
 conflict="$fixture/conflict"
 make_fixture "$conflict"
