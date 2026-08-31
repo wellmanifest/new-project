@@ -1,0 +1,36 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-167",
+  "summary": "Document controlled streaming de-escalation",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-167/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "docs/CONTROLLED_CHANGE_STREAMING.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b13e6b593ac6f9a4d22a792fc3b78327a8fad00a",
+    "targetBranch": "main",
+    "outcome": "Document remaining controlled-streaming and de-escalation work in docs and TODO.",
+    "nonGoals": ["Changing runtime authority", "Changing a lease or allocation schema"],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {"maxImplementationFiles": 2, "maxAffectedComponents": 1, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {"status": "accepted", "decision": "Publish a bounded roadmap before changing the process contracts.", "components": [{"name": "controlled-streaming-roadmap", "paths": ["docs/CONTROLLED_CHANGE_STREAMING.md", "TODO.md"]}], "responsibilityChanges": false, "interfaceChanges": [], "dataChanges": [], "ui": {"impact": "none", "states": [], "evidence": []}, "rollback": "Revert the documentation commit if it is found inaccurate; no runtime behavior changes."},
+    "runtimeDependencies": [],
+    "validation": [{"criterion": "AC-02", "commands": ["./project/governance-check.sh --actor agent"], "evidence": "Deterministic ticket and path validation."}]
+  }
+}
