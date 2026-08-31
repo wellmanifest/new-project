@@ -1,0 +1,37 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-163",
+  "summary": "Authenticate adoption release verification",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-163/**",
+    "TODO.md",
+    "project/TICKETS.md"
+    ,"scripts/create_adoption_lock.py"
+    ,"tests/adoption_release_auth_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "685351c578f17806438fb618b7067410e1a6bbf0",
+    "targetBranch": "main",
+    "outcome": "Release verification can use an authenticated local GitHub CLI session when anonymous API capacity is exhausted.",
+    "nonGoals": ["Persisting credentials", "Bypassing annotated-tag or final-release validation"],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {"maxImplementationFiles": 2, "maxAffectedComponents": 1, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {"status": "accepted", "decision": "Prefer process-local environment credentials, then the existing GitHub CLI credential helper, and keep release verification otherwise unchanged.", "components": [{"name": "adoption-release-verifier", "paths": ["scripts/create_adoption_lock.py", "tests/adoption_release_auth_test.py"]}], "responsibilityChanges": false, "interfaceChanges": [], "dataChanges": [], "ui": {"impact": "none", "states": [], "evidence": []}, "rollback": "Revert the credential lookup; anonymous verification remains fail-closed."},
+    "runtimeDependencies": [],
+    "validation": [{"criterion": "AC-02", "commands": ["python3 -m pytest -q tests/adoption_release_auth_test.py", "./project/governance-check.sh --actor agent"], "evidence": "Focused test and deterministic governance gate."}]
+  }
+}
