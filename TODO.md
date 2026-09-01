@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-180`](project/ticket-180/README.md) — rozliczać chronione rebase
+  i squash merges przez osiągalny terminal oraz dokładny dowód patch-id, bez
+  osłabienia dotychczasowej ścieżki ancestry. Stan: `IN_PROGRESS / PUBLICATION`;
+  klasyfikacja: `BUG / P0 / regression`; workstream: `governance`.
+
 - [ ] [`ticket-167`](project/ticket-167/README.md) — udokumentować i wdrożyć
   kontrakt kontrolowanego streamowania zmian: rozróżnienie konfliktu
   semantycznego od technicznego, strategie `parallel`, `serialize`, `rebase`,
