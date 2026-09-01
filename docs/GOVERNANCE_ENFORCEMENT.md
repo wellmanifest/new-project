@@ -160,8 +160,10 @@ Przed koordynacją z innymi checkoutami operator może jawnie użyć
 `--refresh-remote`; błąd połączenia jest wtedy widoczny i nie zostaje pomylony z
 lokalnym błędem kontraktu. Skrypt czyta docelowy `.governance/manifest.json`, a
 podczas zarządzanej adopcji także `.governance/manifest.base.json`.
-Ostateczne porządkowanie równoległych PR-ów realizuje chroniony merge queue,
-który ponownie uruchamia governance i testy na aktualnej bazie.
+Integrację PR-ów serializuje chroniony `main`: branch jest aktualizowany przed
+freeze, a wymagane governance i testy muszą przejść na dokładnym HEAD. Obecny
+runtime nie udostępnia ogólnej merge queue; jej kontrakt pozostaje dalszą
+implementacją opisaną w `CONTROLLED_CHANGE_STREAMING.md`.
 
 ### Złożona publikacja: działający protokół
 
@@ -180,7 +182,9 @@ stałą sekwencję:
 5. po `STALE_HEAD_CHANGED` Supervisor rozpoczyna nowy freeze. Nie wolno
    automatycznie przepiąć approval na nowszy SHA ani pushować podczas freeze;
 6. po exact-head approval kontroler wykonuje merge, zapisuje zewnętrzny
-   terminalny receipt, usuwa zdalny branch i dopiero wtedy zwalnia worktree.
+   terminalny receipt i usuwa zdalny branch. Receipt zwalnia rezerwację
+   ticketu; fizyczny lokalny worktree usuwa później operator lifecycle dopiero
+   po sprawdzeniu dirty state, procesów i osiągalności HEAD.
 
 Rejestr terminalny przechowuje `receiptRef`, `ticket`, `outcome`, `headSha`,
 `terminalSha`, `targetBranch` i `occurredAt`. Repozytorium, PR, aktor i checki

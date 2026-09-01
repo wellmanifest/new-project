@@ -1,0 +1,72 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-177",
+  "summary": "Align complex delivery documentation with runtime",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-177/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "docs/GOVERNANCE_ENFORCEMENT.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": ["wellmanifest/new-project"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "5af758ce683a42d892cc774f0e69bb247163bf14",
+    "targetBranch": "main",
+    "outcome": "Make complex-delivery documentation match the deployed direct-pr, terminal receipt and local workspace lifecycle boundaries.",
+    "nonGoals": [
+      "Do not implement a merge queue or effectful lease controller",
+      "Do not change receipt schemas or delivery runtime",
+      "Do not touch the active ticket-176 worktree or scope"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Correct the two contradicted statements in the enforcement guide and retain the future-runtime boundary in the controlled-streaming document.",
+      "components": [
+        {"name": "delivery-documentation", "paths": ["docs/GOVERNANCE_ENFORCEMENT.md"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Enforcement documentation distinguishes ticket reservation release from physical worktree cleanup"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the wording correction; no runtime state changes."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/work-continuity.test.sh",
+          "bash tests/workspace-lifecycle.test.sh",
+          "./project/governance-check.sh --actor agent --base origin/main --head HEAD"
+        ],
+        "evidence": "Documentation-to-runtime audit plus deterministic local and exact-head hosted checks."
+      }
+    ]
+  }
+}
