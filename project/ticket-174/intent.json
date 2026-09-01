@@ -1,0 +1,107 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-174",
+  "summary": "Adopt repository-namespaced worktrees v2",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-174/**",
+    "project/TICKETS.md",
+    "project/new-ticket.sh",
+    "VERSION",
+    "CHANGELOG.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "AGENTS.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/worktrees.lock.json",
+    "subprojects/worktrees/**",
+    "template/files/AGENTS.template.md",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/governance-scripts.test.sh",
+    "tests/rule-enforcement.test.sh",
+    "tests/worktrees-adoption.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": ["wellmanifest/new-project", "wellmanifest/worktrees"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "43999c793a86084b4c3198fe07be350105db59ec",
+    "targetBranch": "main",
+    "outcome": "Publish new-project 0.19.20 with the immutable worktrees v2 projection and one repository-namespaced workspace layout for every adopter.",
+    "nonGoals": [
+      "Do not automatically move or delete any existing worktree",
+      "Do not rewrite historical ticket status after merge",
+      "Do not create a separate release-only ticket or pull request"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 18,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Consume the immutable worktrees v2 owner artifacts, distribute them byte-for-byte, make the nested layout normative in adopter instructions, and publish the version from the same material changeset.",
+      "components": [
+        {
+          "name": "standard-package",
+          "paths": [
+            "governance/worktrees.lock.json",
+            "subprojects/worktrees/**",
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        },
+        {
+          "name": "adopter-contract",
+          "paths": ["POLICY.md", "CONTRIBUTING.md", "AGENTS.md", "project/new-ticket.sh", "template/files/AGENTS.template.md"]
+        },
+        {
+          "name": "verification",
+          "paths": ["tests/**"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Canonical worktree paths use a repository namespace directory",
+        "Canonical lease paths use the same repository namespace"
+      ],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Publish a later corrective version; never move immutable v0.2.0 or v0.19.20 tags."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "python3 tests/worktrees-adoption.test.py",
+          "for test in tests/*.test.sh; do bash \"$test\"; done",
+          "./project/governance-check.sh --actor agent --base origin/main --head HEAD"
+        ],
+        "evidence": "Deterministic local suite and protected exact-head checks."
+      }
+    ]
+  }
+}

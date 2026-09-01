@@ -33,7 +33,7 @@ class WorktreesAdoptionTest(unittest.TestCase):
         self.assertEqual(lock["dependency"]["id"], "wellmanifest/worktrees")
         self.assertEqual(
             lock["dependency"]["sourceRevision"],
-            "bad8fab4ef96e770ccc4e4089bb4a3d623c1651a",
+            "9d342c817c06d70e60711728f292feeaf85b1e44",
         )
         for artifact in lock["artifacts"]:
             self.assertEqual(
@@ -66,18 +66,27 @@ class WorktreesAdoptionTest(unittest.TestCase):
         )
         self.assertEqual(
             record["worktreePath"],
-            "/workspace/wellmanifest/.worktrees/new-project--ticket-127--worktrees-standard",
+            "/workspace/wellmanifest/.worktrees/new-project/ticket-127--worktrees-standard",
+        )
+        self.assertEqual(
+            record["repositoryWorktreesRoot"],
+            "/workspace/wellmanifest/.worktrees/new-project",
+        )
+        self.assertEqual(
+            record["leasePath"],
+            "/workspace/wellmanifest/.worktrees/.leases/new-project/ticket-127--worktrees-standard.json",
         )
         self.assertEqual(checker.validate(record), [])
-        record["worktreePath"] = "/workspace/wellmanifest/new-project/.worktrees/ticket-127"
+        record["worktreePath"] = "/workspace/wellmanifest/.worktrees/new-project--ticket-127--worktrees-standard"
         self.assertIn("noncanonical:worktreePath", checker.validate(record))
 
     def test_agent_template_declares_canonical_layout(self):
         template = (ROOT / "template" / "files" / "AGENTS.template.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("<workspace>/.worktrees/<repo>--ticket-NNN--<slug>", template)
+        self.assertIn("<workspace>/.worktrees/<repo>/<ticket-NNN>--<slug>", template)
         self.assertIn("parallel `<organization>-worktrees`", template)
+        self.assertIn("never move an existing worktree automatically", template)
 
 
 if __name__ == "__main__":
