@@ -13,7 +13,7 @@ cache'em, ale nie jest źródłem prawdy ani magazynem danych.
 3. aktualna dzierżawa oraz chronione receipt'y efektów zewnętrznych;
 4. dowody testów i artefaktów wskazane przez niezmienne referencje.
 
-Checkpoint `new-project.work-continuity/v1` jest wyłącznie ograniczoną
+Checkpoint `new-project.work-continuity/v2` jest wyłącznie ograniczoną
 projekcją nawigacyjną nad tymi źródłami. Pole `authority` zawsze ma wartość
 `advisory-projection`.
 
@@ -24,10 +24,13 @@ Checkpoint wiąże bez kopiowania treści:
 - kanoniczną, pozbawioną transportu i poświadczeń tożsamość repozytorium,
   ticket, workstream, target branch, branch i dokładny `HEAD`;
 - digest całego intentu i jego kanonicznej projekcji zakresu;
+- dokładne, content-addressed bindings planu i slice'u wykonywanego przez
+  bieżącą sesję;
 - fazę pracy, referencję autoryzacji sesji oraz — gdy istnieje — lease revision
   i fencing token;
+- redagowaną obserwację remote/account wraz z receiptem i czasem obserwacji;
 - stan workspace: `clean` albo `snapshotted` z referencją i SHA-256 artefaktu
-  oraz receiptem zakończonego secret scanu;
+  oraz osobnymi receiptami snapshotu i zakończonego secret scanu;
 - zakończone i pozostałe kryteria odbioru, bounded evidence refs;
 - oczekujące efekty z idempotency key oraz jeden typ następnej czynności.
 
@@ -51,9 +54,13 @@ Agent lub kontroler zapisuje checkpoint:
 
 Nie wolno deklarować trwałego checkpointu tylko dlatego, że model opisał stan
 w rozmowie. Chroniony kontroler musi zapisać wyemitowany dokument w zewnętrznym
-receipt store. Rejestr `.git/new-project/work-continuity.json` jest atomowym,
-lokalnym cache'em pomocnym po utracie kontekstu, ale sam nie chroni przed utratą
-dysku lub klona.
+receipt store. Każdy host dopisuje ten sam zamknięty event JSON do
+`.subactor/sessions/work-continuity.jsonl`; stream jest append-only i nie ma
+limitu rozmiaru polityki. Mały
+`.subactor/recovery/checkpoint-index.json` przechowuje wyłącznie najnowsze
+referencje (maksymalnie 128, 256 KiB), jest zapisywany przez atomic replace i
+może zostać odbudowany ze streamu. Oba pozostają ignorowanym, lokalnym cache'em
+i same nie chronią przed utratą dysku lub klona.
 
 ## Brudny workspace
 
@@ -62,8 +69,8 @@ Brudny workspace jest odtwarzalny tylko w jednym z dwóch wariantów:
 - zmiana została zapisana w autoryzowanym commicie na ticket branch; wtedy
   kolejny checkpoint ma stan `clean`;
 - uprawniony kontroler utworzył content-addressed snapshot poza Git, wykonał
-  secret scan i przekazał `artifact:` ref, SHA-256 oraz `receipt:` skanu; wtedy
-  checkpoint ma stan `snapshotted`.
+  secret scan i przekazał `artifact:` ref, SHA-256, receipt snapshotu oraz
+  receipt skanu; wtedy checkpoint ma stan `snapshotted`.
 
 Lokalny stash, surowy patch w tickecie, opis w czacie lub nieśledzony plik bez
 artefaktu nie spełniają kontraktu. Gdy bezpieczny snapshot nie jest dostępny,
@@ -75,10 +82,10 @@ zabezpieczone.
 ```mermaid
 flowchart TD
     A[Nowa sesja lub handoff] --> B[Obserwuj filesystem, Git, PR i receipt'y]
-    B --> C[Rozwiąż najnowszy monotoniczny checkpoint]
-    C --> D{HEAD, intent, scope i status workspace zgodne?}
+    B --> C[Rozwiąż najnowszy monotoniczny event i checkpoint]
+    C --> D{Plan, slice, HEAD, intent, scope i workspace zgodne?}
     D -- nie --> E[RECONCILE lub BLOCKED; zachowaj obie wersje]
-    D -- tak --> F[Zweryfikuj lub ponownie pozyskaj lease i fencing token]
+    D -- tak --> F[Rewaliduj lease, fencing token i remote/account]
     F --> G[Uruchom governance gate i wymagane szybkie testy]
     G --> H[Kontynuuj od remainingCriteria/nextAction]
 ```
@@ -87,14 +94,15 @@ Kolejność jest obowiązkowa:
 
 1. Najpierw odczytaj bieżące pliki, `git status`, branch/HEAD, stan PR i
    zewnętrzne receipt'y. Checkpoint nie może nadpisać obserwacji.
-2. Zweryfikuj cały append-only chain. Ten sam `checkpointRef` nie może wskazać
-   innej treści, `checkpointRef` musi odpowiadać SHA-256 kanonicznego payloadu,
-   a `sequence` i `previousCheckpointRef` muszą być monotoniczne.
-3. Porównaj repository, ticket, intent digests, branch, HEAD i status digest.
+2. Zweryfikuj oba append-only chainy. Te same `eventRef` i `checkpointRef` nie
+   mogą wskazywać innej treści; referencje odpowiadają SHA-256 kanonicznych
+   payloadów, a sekwencje i previous refs są monotoniczne.
+3. Porównaj repository, plan, slice, ticket, intent digests, branch, HEAD i
+   status digest.
 4. Przy rozjeździe nie resetuj, nie usuwaj i nie nakładaj snapshotu. Przejdź do
    `reconcile` albo `blocked` i zachowaj nieznane dane.
-5. Nie używaj zapisanego fencing tokenu bez ponownej walidacji lease. Stary
-   token jest informacją diagnostyczną, nie prawem do zapisu.
+5. Nie używaj zapisanego fencing tokenu ani account ref bez ponownej obserwacji
+   remote i walidacji lease. Stare dane są diagnostyką, nie prawem do zapisu.
 6. Dopiero po ponownej walidacji bramki wykonaj `nextAction`; checkpoint nigdy
    nie udziela zgody na sekret, destrukcję, merge ani rozszerzenie celu.
 7. Gdy `goal.yaml` wymaga ticket-bound delivery, także temat każdego
@@ -110,9 +118,17 @@ Przykładowe lokalne użycie po zapisaniu materialnej pracy:
 python3 .governance/work_continuity.py capture \
   --root . \
   --ticket ticket-042 \
+  --session-id session-042-a \
   --phase validation \
   --worktree-id project-ticket-042 \
   --authorization-ref authorization:session/ticket-042 \
+  --plan-ref artifact:plan/ticket-042/v3 \
+  --plan-sha256 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \
+  --slice-ref artifact:slice/ticket-042/2 \
+  --slice-sha256 abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789 \
+  --slice-ordinal 2 --slice-total 3 \
+  --remote-account-ref account:github/operator \
+  --remote-observation-receipt receipt:remote-observation/ticket-042/7 \
   --completed AC-01 \
   --remaining AC-02 \
   --next-action validate \
@@ -124,12 +140,21 @@ Wznowienie zaczyna się od weryfikacji obserwowalnego stanu:
 ```bash
 python3 .governance/work_continuity.py resolve --root . --ticket ticket-042
 python3 .governance/work_continuity.py verify --root . --ticket ticket-042
+python3 .governance/work_continuity.py rebuild-index --root .
 ./project/governance-check.sh --actor agent
 ```
 
 `verify` potwierdza tylko zgodność z obserwowanym repozytorium i jawnie zwraca
-`authorityVerified=false`. Kontroler osobno weryfikuje authorization ref, lease
-i chronione efekty.
+`authorityVerified=false` i `remoteAccountMustBeReobserved=true`. Kontroler
+osobno weryfikuje authorization ref, lease, konto remote i chronione efekty.
+
+Pre-commit uruchamia wyłącznie `verify-pin --staged`: czyta lokalny manifest,
+adoption lock i managed digests. Nie wykonuje fetchu ani żadnej mutacji.
+Świeżość zapewnia jawne uruchomienie `scripts/create_adoption_lock.py` z
+dokładnym opublikowanym `--source-revision` albo bot wykonujący tę samą
+transakcję, nigdy hook commitowy. Target ze starym szerokim `/.subactor/`
+najpierw zawęża własny ignore w osobnym, autoryzowanym changesecie; updater
+fail-closuje zamiast samodzielnie przejmować lub przepisywać target-owned plik.
 
 ## Wskazówki dla pozostałych standardów
 
@@ -149,8 +174,11 @@ własnego formatu.
 
 ## Granice retencji
 
-- Przechowuj cały chain dla aktywnego ticketu i co najmniej checkpoint
-  bezpośrednio poprzedzający każdy efekt zewnętrzny.
+- Append-only event stream nie ma limitu rozmiaru polityki. Retencja lub
+  archiwizacja jest osobnym, autoryzowanym efektem runtime i nie może
+  przepisywać istniejących eventów.
+- Bounded indeks zachowuje maksymalnie 128 najnowszych ticket bindings; brak
+  starszego wpisu nie usuwa odpowiadającego eventu ze streamu.
 - Po terminalnym merge receipt można skompaktować snapshoty robocze zgodnie z
   retencją i klasyfikacją danych, ale zachować checkpoint refs, digests i
   terminalny receipt.

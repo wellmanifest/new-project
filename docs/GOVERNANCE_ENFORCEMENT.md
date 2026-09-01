@@ -189,9 +189,12 @@ stałą sekwencję:
 Rejestr terminalny przechowuje `receiptRef`, `ticket`, `outcome`, `headSha`,
 `terminalSha`, `targetBranch` i `occurredAt`. Repozytorium, PR, aktor i checki
 są związane w chronionym dowodzie decyzji Validatora. Checkpoint
-`new-project.work-continuity/v1` może wskazać `nextAction` dla pracy
-niezakończonej, lecz ma `authority=advisory-projection` i nie jest receiptem
-merge ani zgodą. Efektowy lease CAS oraz kolejka wielu repozytoriów pozostają
+`new-project.work-continuity/v2` może wskazać `nextAction` dla pracy
+niezakończonej. Lokalny append-only event stream i bounded atomic index są
+ignorowanym cache'em, a checkpoint ma `authority=advisory-projection`: nie
+jest receiptem merge ani zgodą. Pre-commit sprawdza tylko lokalny immutable pin,
+bez fetchu lub mutacji; jawny updater/bot odpowiada za freshness. Efektowy
+lease CAS oraz kolejka wielu repozytoriów pozostają
 planowaną warstwą runtime opisaną w `CONTROLLED_CHANGE_STREAMING.md`.
 
 

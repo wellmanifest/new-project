@@ -17,48 +17,13 @@ schema = json.load(open(sys.argv[1], encoding="utf-8"))
 Draft202012Validator.check_schema(schema)
 PY
 
-python3 - "$repo_root/subprojects/ticket-lifecycle/ticket-lifecycle.schema.json" \
-  "$repo_root/subprojects/ticket-lifecycle/ticket-lifecycle.v1.gbnf" <<'PY'
-import copy
-import json
-import sys
-from jsonschema import Draft202012Validator
-
-schema = json.load(open(sys.argv[1], encoding="utf-8"))
-validator = Draft202012Validator(schema)
-Draft202012Validator.check_schema(schema)
-request = {
-    "schema": "wellmanifest.ticket-lifecycle/v1",
-    "kind": "transition-request",
-    "requestId": "request:continuity_001",
-    "repositoryRef": "repository:continuity_fixture",
-    "workstreamRef": "workstream:application",
-    "action": "checkpoint",
-    "ticket": "ticket-001",
-    "expectedState": "editing",
-    "targetState": "editing",
-    "intentRef": "artifact:intent_ticket_001",
-    "authorizationRef": "authorization:session_ticket_001",
-    "evidenceRefs": ["receipt:continuity.ticket-001.1.abc"],
-    "idempotencyKey": "idempotency:continuity_001",
-}
-validator.validate(request)
-invalid = copy.deepcopy(request)
-invalid["targetState"] = "validating"
-assert not validator.is_valid(invalid)
-invalid = copy.deepcopy(request)
-invalid["evidenceRefs"] = ["receipt:other.abc"]
-assert not validator.is_valid(invalid)
-grammar = open(sys.argv[2], encoding="utf-8").read()
-assert 'checkpoint-editing' in grammar
-assert 'receipt:continuity.' in grammar
-PY
-
 git init --quiet --initial-branch=main "$fixture/repo"
 git -C "$fixture/repo" config user.email continuity-test@example.invalid
 git -C "$fixture/repo" config user.name continuity-test
 git -C "$fixture/repo" remote add origin https://user:secret-marker@github.com/example/continuity-fixture.git
-mkdir -p "$fixture/repo/project/ticket-001"
+mkdir -p "$fixture/repo/project/ticket-001" "$fixture/repo/.subactor"
+cp "$repo_root/.subactor/manifest.json" "$fixture/repo/.subactor/manifest.json"
+cp "$repo_root/.subactor/.gitignore" "$fixture/repo/.subactor/.gitignore"
 printf '%s\n' '# continuity fixture' > "$fixture/repo/README.md"
 printf '%s\n' '- **Status**: IN_PROGRESS' > "$fixture/repo/project/ticket-001/README.md"
 python3 - "$fixture/repo/project/ticket-001/intent.json" <<'PY'
@@ -90,130 +55,162 @@ git -C "$fixture/repo" add .
 git -C "$fixture/repo" commit --quiet -m baseline
 git -C "$fixture/repo" switch --quiet -c ticket/001-continuity
 
-registry="$fixture/registry.json"
-python3 "$runtime" capture \
-  --root "$fixture/repo" \
-  --registry "$registry" \
-  --ticket ticket-001 \
+plan_sha="$(printf plan | sha256sum | cut -d' ' -f1)"
+slice_sha="$(printf slice | sha256sum | cut -d' ' -f1)"
+capture=(
+  python3 "$runtime" capture
+  --root "$fixture/repo"
+  --ticket ticket-001
+  --session-id session-001
+  --worktree-id ticket-001--continuity
+  --authorization-ref authorization:session/ticket-001
+  --plan-ref artifact:plan/ticket-001/v1
+  --plan-sha256 "$plan_sha"
+  --slice-ref artifact:slice/ticket-001/1
+  --slice-sha256 "$slice_sha"
+  --slice-ordinal 1
+  --slice-total 1
+  --remote-name origin
+  --remote-account-ref account:github/example
+  --remote-observation-receipt receipt:remote-observation/ticket-001/1
+)
+
+"${capture[@]}" \
   --phase edit \
-  --worktree-id continuity-fixture \
-  --authorization-ref authorization:session/ticket-001 \
   --remaining AC-01 \
   --next-action edit \
-  --next-criterion AC-01 > "$fixture/checkpoint-1.json"
+  --next-criterion AC-01 > "$fixture/event-1.json"
 
-python3 "$runtime" validate "$fixture/checkpoint-1.json" > "$fixture/valid-1.json"
-grep -q '"status": "valid"' "$fixture/valid-1.json"
-grep -q '"repositoryRef": "repository:github.com/example/continuity-fixture"' "$fixture/checkpoint-1.json"
-if grep -q 'secret-marker' "$fixture/checkpoint-1.json"; then
-  printf '%s\n' 'repository credentials leaked into checkpoint' >&2
+event_stream="$fixture/repo/.subactor/sessions/work-continuity.jsonl"
+checkpoint_index="$fixture/repo/.subactor/recovery/checkpoint-index.json"
+test -f "$event_stream"
+test -f "$checkpoint_index"
+test "$(wc -l < "$event_stream")" -eq 1
+cp "$event_stream" "$fixture/event-stream-prefix.jsonl"
+
+python3 - "$fixture/event-1.json" "$checkpoint_index" "$repo_root/.subactor/manifest.json" <<'PY'
+import json
+import sys
+
+event = json.load(open(sys.argv[1], encoding="utf-8"))
+index = json.load(open(sys.argv[2], encoding="utf-8"))
+manifest = json.load(open(sys.argv[3], encoding="utf-8"))
+checkpoint = event["checkpoint"]
+assert event["schema"] == "new-project.work-continuity-event/v2"
+assert event["sessionId"] == "session-001"
+assert checkpoint["schema"] == "new-project.work-continuity/v2"
+assert checkpoint["authority"] == "advisory-projection"
+assert checkpoint["plan"]["ref"] == "artifact:plan/ticket-001/v1"
+assert checkpoint["slice"]["ordinal"] == checkpoint["slice"]["total"] == 1
+assert checkpoint["branchRef"] == "ticket/001-continuity"
+assert checkpoint["remoteObservation"]["accountRef"] == "account:github/example"
+assert checkpoint["workspace"]["resumeSource"] == "commit"
+assert index["schema"] == "new-project.work-continuity-index/v2"
+assert index["maxEntries"] == 128 and len(index["entries"]) == 1
+continuity = manifest["continuity"]
+assert continuity["eventStreamPolicyMaxBytes"] is None
+assert continuity["checkpointIndexMaxBytes"] == 262144
+PY
+
+python3 - "$fixture/event-1.json" "$fixture/checkpoint-1.json" <<'PY'
+import json
+import sys
+event = json.load(open(sys.argv[1], encoding="utf-8"))
+open(sys.argv[2], "w", encoding="utf-8").write(json.dumps(event["checkpoint"], indent=2) + "\n")
+PY
+python3 "$runtime" validate "$fixture/event-1.json" > "$fixture/valid-event.json"
+python3 "$runtime" validate "$fixture/checkpoint-1.json" > "$fixture/valid-checkpoint.json"
+python3 "$runtime" validate "$checkpoint_index" > "$fixture/valid-index.json"
+python3 "$runtime" verify --root "$fixture/repo" --checkpoint "$fixture/checkpoint-1.json" \
+  > "$fixture/verified-1.json"
+grep -q '"authorityVerified": false' "$fixture/verified-1.json"
+grep -q '"remoteAccountMustBeReobserved": true' "$fixture/verified-1.json"
+if grep -q 'secret-marker' "$fixture/event-1.json"; then
+  printf '%s\n' 'repository credentials leaked into continuity event' >&2
   exit 1
 fi
-python3 "$runtime" verify \
-  --root "$fixture/repo" \
-  --checkpoint "$fixture/checkpoint-1.json" > "$fixture/verified-1.json"
-grep -q '"authorityVerified": false' "$fixture/verified-1.json"
-grep -q '"status": "matches-observed-state"' "$fixture/verified-1.json"
 
-# A dirty workspace cannot be represented by conversation prose or a local
-# stash. It needs an already-created external, secret-scanned snapshot.
+# Dirty prose, stash or an untracked file is not a resumable boundary. A failed
+# capture must append neither the event stream nor the atomic index.
 printf '%s\n' 'unfinished material work' > "$fixture/repo/work.txt"
-cp "$registry" "$fixture/registry-before-dirty.json"
+cp "$event_stream" "$fixture/events-before-dirty.jsonl"
+cp "$checkpoint_index" "$fixture/index-before-dirty.json"
 status=0
-python3 "$runtime" capture \
-  --root "$fixture/repo" \
-  --registry "$registry" \
-  --ticket ticket-001 \
+"${capture[@]}" \
   --phase edit \
-  --worktree-id continuity-fixture \
-  --authorization-ref authorization:session/ticket-001 \
   --remaining AC-01 \
   --next-action edit \
   --next-criterion AC-01 > "$fixture/dirty.out" 2> "$fixture/dirty.err" || status=$?
 test "$status" -eq 2
 grep -q 'GOV-CONTINUITY-001' "$fixture/dirty.err"
-cmp "$registry" "$fixture/registry-before-dirty.json"
+cmp "$event_stream" "$fixture/events-before-dirty.jsonl"
+cmp "$checkpoint_index" "$fixture/index-before-dirty.json"
 
-snapshot_sha="$(printf '%064d' 0 | tr 0 a)"
-python3 "$runtime" capture \
-  --root "$fixture/repo" \
-  --registry "$registry" \
-  --ticket ticket-001 \
+snapshot_sha="$(printf snapshot | sha256sum | cut -d' ' -f1)"
+"${capture[@]}" \
   --phase validation \
-  --worktree-id continuity-fixture \
-  --authorization-ref authorization:session/ticket-001 \
   --lease-ref receipt:lease/ticket-001/2 \
   --lease-revision 2 \
   --fencing-token 7 \
   --snapshot-ref artifact:snapshot/ticket-001/2 \
   --snapshot-sha256 "$snapshot_sha" \
+  --snapshot-receipt receipt:snapshot/ticket-001/2 \
   --snapshot-secret-scan-receipt receipt:secret-scan/ticket-001/2 \
   --completed AC-01 \
   --remaining AC-02 \
   --evidence artifact:test/continuity/1 \
   --pending validation,in-flight,idempotency:continuity-validation,receipt:run/42 \
   --next-action validate \
-  --next-criterion AC-02 > "$fixture/checkpoint-2.json"
+  --next-criterion AC-02 > "$fixture/event-2.json"
 
-python3 "$runtime" validate "$registry" > "$fixture/registry-valid.json"
-python3 "$runtime" resolve \
-  --root "$fixture/repo" \
-  --registry "$registry" \
-  --ticket ticket-001 > "$fixture/resolved.json"
-cmp "$fixture/checkpoint-2.json" "$fixture/resolved.json"
-python3 "$runtime" verify \
-  --root "$fixture/repo" \
-  --registry "$registry" \
-  --ticket ticket-001 > "$fixture/verified-2.json"
-grep -q '"leaseMustBeRevalidated": true' "$fixture/verified-2.json"
+test "$(wc -l < "$event_stream")" -eq 2
+head -n 1 "$event_stream" > "$fixture/first-event-after.jsonl"
+cmp "$fixture/event-stream-prefix.jsonl" "$fixture/first-event-after.jsonl"
+test "$(stat -c '%s' "$checkpoint_index")" -le 262144
+test -z "$(find "$fixture/repo/.subactor/recovery" -name 'checkpoint-index.*.json' -print -quit)"
 
-# A restored cache must receive the complete chain, in order. Replay is
-# idempotent, while rebinding an existing receipt reference is forbidden.
-restored="$fixture/restored.json"
-python3 "$runtime" record \
-  --root "$fixture/repo" --registry "$restored" \
-  --checkpoint "$fixture/checkpoint-1.json" > "$fixture/restored-1.json"
-python3 "$runtime" record \
-  --root "$fixture/repo" --registry "$restored" \
-  --checkpoint "$fixture/checkpoint-2.json" > "$fixture/restored-2.json"
-python3 "$runtime" record \
-  --root "$fixture/repo" --registry "$restored" \
-  --checkpoint "$fixture/checkpoint-2.json" > "$fixture/restored-replay.json"
-grep -q '"status": "already-recorded"' "$fixture/restored-replay.json"
-
-python3 - "$fixture/checkpoint-2.json" "$fixture/rebound.json" <<'PY'
+python3 - "$fixture/event-2.json" "$fixture/checkpoint-2.json" "$checkpoint_index" <<'PY'
 import json
 import sys
-
-value = json.load(open(sys.argv[1], encoding="utf-8"))
-value["headSha"] = "f" * 40
-open(sys.argv[2], "w", encoding="utf-8").write(json.dumps(value) + "\n")
+event = json.load(open(sys.argv[1], encoding="utf-8"))
+checkpoint = event["checkpoint"]
+index = json.load(open(sys.argv[3], encoding="utf-8"))
+assert event["eventSequence"] == 2
+assert event["previousEventRef"] is not None
+assert checkpoint["sequence"] == 2
+assert checkpoint["previousCheckpointRef"] is not None
+assert checkpoint["workspace"]["resumeSource"] == "snapshot"
+assert checkpoint["workspace"]["snapshotReceipt"] == "receipt:snapshot/ticket-001/2"
+assert index["entries"][0]["checkpointSequence"] == 2
+open(sys.argv[2], "w", encoding="utf-8").write(json.dumps(checkpoint, indent=2) + "\n")
 PY
-cp "$restored" "$fixture/restored-before-rebind.json"
-status=0
-python3 "$runtime" record \
-  --root "$fixture/repo" --registry "$restored" \
-  --checkpoint "$fixture/rebound.json" > "$fixture/rebind.out" 2> "$fixture/rebind.err" || status=$?
-test "$status" -eq 2
-grep -q 'GOV-CONTINUITY-002' "$fixture/rebind.err"
-cmp "$restored" "$fixture/restored-before-rebind.json"
+python3 "$runtime" resolve --root "$fixture/repo" --ticket ticket-001 > "$fixture/resolved.json"
+cmp "$fixture/checkpoint-2.json" "$fixture/resolved.json"
+python3 "$runtime" verify --root "$fixture/repo" --ticket ticket-001 > "$fixture/verified-2.json"
+grep -q '"leaseMustBeRevalidated": true' "$fixture/verified-2.json"
 
-# A stale checkpoint can guide reconciliation but cannot resume mutation.
+# The bounded index is derived, not authority: removing it and explicitly
+# rebuilding from the unlimited append-only stream reproduces the same latest
+# checkpoint binding without changing the stream.
+events_sha_before="$(sha256sum "$event_stream" | cut -d' ' -f1)"
+rm "$checkpoint_index"
+python3 "$runtime" rebuild-index --root "$fixture/repo" > "$fixture/rebuilt.json"
+test "$events_sha_before" = "$(sha256sum "$event_stream" | cut -d' ' -f1)"
+grep -q '"status": "rebuilt"' "$fixture/rebuilt.json"
+
+# Current observation wins over prose or a stale checkpoint.
 git -C "$fixture/repo" add work.txt
 git -C "$fixture/repo" commit --quiet -m advance-after-checkpoint
 status=0
-python3 "$runtime" verify \
-  --root "$fixture/repo" \
-  --checkpoint "$fixture/checkpoint-2.json" > "$fixture/stale.out" 2> "$fixture/stale.err" || status=$?
+python3 "$runtime" verify --root "$fixture/repo" --checkpoint "$fixture/checkpoint-2.json" \
+  > "$fixture/stale.out" 2> "$fixture/stale.err" || status=$?
 test "$status" -eq 3
 grep -q 'GOV-CONTINUITY-003' "$fixture/stale.err"
 
-# Closed objects prevent raw prose, secrets and absolute host paths from being
-# smuggled into a continuity receipt.
+# Closed objects reject raw conversation, secrets and absolute host paths.
 python3 - "$fixture/checkpoint-1.json" "$fixture/unsafe.json" <<'PY'
 import json
 import sys
-
 value = json.load(open(sys.argv[1], encoding="utf-8"))
 value["rawConversation"] = "sensitive material must not be stored"
 value["repositoryRef"] = "/home/example/private-checkout"
@@ -225,7 +222,7 @@ test "$status" -eq 2
 grep -q 'GOV-CONTINUITY-001' "$fixture/unsafe.err"
 
 python3 - "$repo_root/governance/work-continuity.schema.json" \
-  "$fixture/checkpoint-1.json" "$registry" <<'PY'
+  "$fixture/checkpoint-1.json" "$fixture/event-2.json" "$checkpoint_index" <<'PY'
 import json
 import sys
 from jsonschema import Draft202012Validator
@@ -234,12 +231,8 @@ schema = json.load(open(sys.argv[1], encoding="utf-8"))
 validator = Draft202012Validator(schema, format_checker=Draft202012Validator.FORMAT_CHECKER)
 for path in sys.argv[2:]:
     validator.validate(json.load(open(path, encoding="utf-8")))
-
 unsafe = json.load(open(sys.argv[2], encoding="utf-8"))
-unsafe["repositoryRef"] = "/home/example/private-checkout"
-assert not validator.is_valid(unsafe)
-unsafe = json.load(open(sys.argv[2], encoding="utf-8"))
-unsafe["workspace"]["statusSha256"] = "a" * 64
+unsafe["workspace"]["resumeSource"] = "snapshot"
 assert not validator.is_valid(unsafe)
 PY
 

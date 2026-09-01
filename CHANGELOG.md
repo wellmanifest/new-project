@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-09-01
+
+### Host-agnostic local continuity
+
+- Keep `.subactor/manifest.json` tracked while managing ignores only for local
+  leases, sessions, recovery, receipts, cache and content-addressed snapshots.
+- Advance continuity to v2: append-only host-agnostic session events have no
+  policy size cap, while a bounded latest-checkpoint index is replaced
+  atomically and can be rebuilt from the stream.
+- Bind every checkpoint to the exact plan, slice, ticket, branch, HEAD, lease,
+  remote/account observation and snapshot receipt. Dirty work is resumable
+  only from a commit or a content-addressed snapshot with a secret-scan receipt.
+- Make the managed pre-commit validate only the locally pinned standard. It
+  never fetches or mutates; explicit adoption/updater automation owns freshness.
+- Add the provenance-verified worktree test bootstrap template derived from
+  `autogrammar/hillm` commits `305361a` and `b8a9f8a`.
+
 ## [0.20.0] - 2026-09-01
 
 ### Repository-local relative delivery worktrees

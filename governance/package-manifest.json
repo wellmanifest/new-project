@@ -8,6 +8,24 @@
       "executable": false
     },
     {
+      "source": ".subactor/.gitignore",
+      "target": ".subactor/.gitignore",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
+      "source": ".subactor/manifest.json",
+      "target": ".subactor/manifest.json",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
+      "source": "template/files/tests/conftest-worktree-bootstrap.template.py",
+      "target": ".governance/templates/conftest-worktree-bootstrap.py",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "project.sh",
       "target": "project.sh",
       "strategy": "seed",
