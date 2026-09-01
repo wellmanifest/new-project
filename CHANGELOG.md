@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.20.3] - 2026-09-02
+
+### Digest-bound target-owned adoption transitions
+
+- Allow an upgrade ticket to migrate an existing target-owned CI workflow in
+  the same atomic adoption only with its exact path plus accepted-base and
+  working-head SHA-256 digests.
+- Restrict eligible targets to workflow patterns from the immutable managed
+  adoption-binding registry; declarations cannot create, delete or overlap a
+  package-owned target.
+- Reject malformed, duplicate, unused, unallowlisted and digest-mismatched
+  transitions while retaining all managed takeover, restoration and lock
+  checks.
+
 ## [0.20.2] - 2026-09-01
 
 ### Protected rewritten-merge terminal receipts
