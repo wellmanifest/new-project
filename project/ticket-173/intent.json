@@ -1,0 +1,79 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-173",
+  "summary": "Release resumable work continuity",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-173/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "329d58b76f9b9b7d7c3c2ef9debc22e638ce8b14",
+    "targetBranch": "main",
+    "outcome": "Publish the merged work-continuity standard as immutable version 0.19.19.",
+    "nonGoals": [
+      "Do not move or replace an existing tag",
+      "Do not add functionality beyond the already merged ticket-172 contract",
+      "Do not publish before protected exact-head merge"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Advance version manifests and adoption fixtures together after the material continuity change is integrated.",
+      "components": [
+        {
+          "name": "release-projection",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Publish a later corrective version; never rewrite v0.19.19."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "for test in tests/*.test.sh; do bash \"$test\"; done",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Adoption package and complete deterministic standard suite."
+      }
+    ]
+  }
+}
