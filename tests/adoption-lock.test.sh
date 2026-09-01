@@ -12,11 +12,18 @@ python3 - "$repo_root/template/files/tests/conftest-worktree-bootstrap.template.
 import importlib.util
 import pathlib
 import sys
+import types
 
 source, root = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
 text = source.read_text(encoding='utf-8')
 assert 'autogrammar/hillm' in text
 assert '305361a' in text and 'b8a9f8a' in text
+# Loading a conftest template to test its bootstrap helper must not require the
+# CI host itself to have pytest installed. The adopted repository supplies the
+# real module when pytest discovers conftest.py.
+sys.modules['pytest'] = types.SimpleNamespace(
+    fixture=lambda **_kwargs: lambda function: function,
+)
 spec = importlib.util.spec_from_file_location('worktree_bootstrap_template', source)
 module = importlib.util.module_from_spec(spec)
 assert spec.loader is not None
