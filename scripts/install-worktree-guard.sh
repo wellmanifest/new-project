@@ -33,6 +33,7 @@ Usage: ./scripts/install-worktree-guard.sh [options]
 
 --target installs:
   worktree-guard.yaml
+  .governance/worktree_path_check.py
   .governance/worktree_overlap_check.py
   .governance/ticket_activity.py
   .governance/worktree_guard.py
@@ -43,7 +44,7 @@ Usage: ./scripts/install-worktree-guard.sh [options]
       With --wire-hook the call is added to pre-commit (created if absent).
 
 --workspace installs:
-  $XDG_DATA_HOME/worktree-guard/{worktree_overlap_check.py,ticket_activity.py,worktree_guard.py,worktree-guard.yaml}
+  $XDG_DATA_HOME/worktree-guard/{worktree_path_check.py,worktree_overlap_check.py,ticket_activity.py,worktree_guard.py,worktree-guard.yaml}
   $XDG_CONFIG_HOME/systemd/user/worktree-guard@.{service,timer,path}
   reports under $XDG_STATE_HOME/worktree-guard/
 EOF
@@ -98,6 +99,7 @@ require() {
   [[ -f "$SOURCE/$1" ]] || { echo "Source file missing: $SOURCE/$1" >&2; exit 1; }
 }
 require scripts/worktree_overlap_check.py
+require subprojects/worktrees/conformance.py
 require scripts/ticket_activity.py
 require scripts/worktree_guard.py
 require worktree-guard.yaml
@@ -178,6 +180,7 @@ install_repo() {
   [[ "$hooks_dir" == /* ]] || hooks_dir="$target/$hooks_dir"
 
   mkdir -p "$target/.governance/error" "$hooks_dir"
+  install -m 0755 "$SOURCE/subprojects/worktrees/conformance.py" "$target/.governance/worktree_path_check.py"
   install -m 0755 "$SOURCE/scripts/worktree_overlap_check.py" "$target/.governance/worktree_overlap_check.py"
   install -m 0755 "$SOURCE/scripts/ticket_activity.py" "$target/.governance/ticket_activity.py"
   install -m 0755 "$SOURCE/scripts/worktree_guard.py" "$target/.governance/worktree_guard.py"
@@ -291,6 +294,7 @@ install_workspace() {
   instance="$(systemd-escape --path "$workspace")"
 
   mkdir -p "$DATA_HOME" "$STATE_HOME" "$UNIT_HOME"
+  install -m 0755 "$SOURCE/subprojects/worktrees/conformance.py" "$DATA_HOME/worktree_path_check.py"
   install -m 0755 "$SOURCE/scripts/worktree_overlap_check.py" "$DATA_HOME/worktree_overlap_check.py"
   install -m 0755 "$SOURCE/scripts/ticket_activity.py" "$DATA_HOME/ticket_activity.py"
   install -m 0755 "$SOURCE/scripts/worktree_guard.py" "$DATA_HOME/worktree_guard.py"
@@ -330,9 +334,10 @@ TIMER
 
   cat > "$UNIT_HOME/worktree-guard@.path" <<PATHUNIT
 [Unit]
-Description=Worktree overlap scan when %f/.worktrees changes
+Description=Worktree overlap scan when %f worktree roots change
 
 [Path]
+PathModified=%f/worktrees
 PathModified=%f/.worktrees
 Unit=worktree-guard@%i.service
 

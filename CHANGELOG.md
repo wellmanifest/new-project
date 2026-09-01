@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-09-01
+
+### Repository-local relative delivery worktrees
+
+- Adopt immutable `wellmanifest/worktrees` v0.4.0 from exact source revision
+  `73f9b99227bfbad6ce02834324d053279fb48611`.
+- Make `<primaryCheckout>/worktrees/<ticket-NNN>--<slug>` with relative Git
+  metadata the only publishable layout and bind its lease below
+  `<primaryCheckout>/.subactor/leases/`.
+- Require anchored `/worktrees/` and `/.subactor/` ignores, primary-checkout
+  resolution from Git, and a Git 2.51 relative-path feature probe.
+- Classify legacy v1/v2/v3, `/tmp`, duplicate and unknown registrations as
+  read-only recovery inventory. Never move, repair, delete, prune or clean
+  observed work automatically.
+
 ## [0.19.22] - 2026-09-01
 
 ### Collision-proof branch worktree namespace

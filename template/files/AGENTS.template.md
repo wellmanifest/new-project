@@ -54,18 +54,21 @@ Before any multi-step implementation, an agent must:
    target-owned seed aliases and must not be assumed to contain the gate.
 9. Serialize ticket-ID allocation before branching, then use a separate
    branch/worktree per implementation ticket. Resolve its location with the
-   managed `wellmanifest/worktrees` checker. The canonical linked worktree is
-   `<workspace>/.worktrees/.branches/<repo>/<ticket-NNN>--<slug>` with its lease under
-   `<workspace>/.worktrees/.leases/<repo>`; never create publishable ticket work in a
-   repo-local `.worktrees`, parallel `<organization>-worktrees`, nested
-   `.worktrees/.worktrees`, system temporary directory or duplicate clone.
-   Reject a symlink in any existing canonical path component before the first
-   filesystem or Git effect; never resolve it and continue.
-   The extra repository directory makes ownership and cleanup explicit; a
-   repository rename changes that namespace. Preserve legacy worktrees and
-   never move an existing worktree automatically. Migrate only after auditing
-   dirty state, active processes and IDEs, leases, pull requests and HEAD
-   reachability, using the exact `git worktree move` target.
+   managed `wellmanifest/worktrees` checker. Resolve the primary checkout from
+   Git even when allocation starts inside a linked checkout. The only
+   publishable linked worktree is
+   `<primaryCheckout>/worktrees/<ticket-NNN>--<slug>` with
+   `linkMode=relative`; its lease is
+   `<primaryCheckout>/.subactor/leases/<ticket-NNN>--<slug>.json`. Root-ignore
+   `/worktrees/` and `/.subactor/`. Before the first effect, feature-probe
+   `git worktree add --relative-paths` and
+   `git worktree repair --relative-paths` (minimum Git 2.51.0), and reject a
+   symlink in any existing canonical path component. Legacy v1/v2/v3,
+   system-temporary, duplicate and unknown registrations are read-only recovery
+   inventory, never publishable locations. Never automatically move, repair,
+   delete, prune or clean them. A separately authorized exact operation first
+   audits dirty state, active processes and IDEs, leases, pull requests and
+   HEAD reachability.
    Each diff must resolve to exactly one active ticket. Shared contract paths are edited only by the declared
    integration workstream; `integrationTicket` coordinates work but does not
    transfer path ownership. Product commercial registries (prices,

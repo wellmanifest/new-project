@@ -1,0 +1,143 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-178",
+  "summary": "Adopt Worktrees v4 repository-local relative layout",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-178/**",
+    "project/TICKETS.md",
+    ".gitignore",
+    "AGENTS.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/worktrees.lock.json",
+    "subprojects/worktrees/conformance.py",
+    "subprojects/worktrees/worktrees.schema.json",
+    "template/files/AGENTS.template.md",
+    "scripts/workspace_lifecycle_check.py",
+    "scripts/worktree_overlap_check.py",
+    "scripts/install-worktree-guard.sh",
+    "worktree-guard.yaml",
+    "tests/worktrees-adoption.test.py",
+    "tests/workspace-lifecycle.test.sh",
+    "tests/worktree-overlap.test.sh",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/rule-enforcement.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": ["wellmanifest/worktrees"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "1a239c89adbc4a66b6670128b865d4a8116f5419",
+    "targetBranch": "main",
+    "outcome": "Publish new-project 0.20.0 with the exact Worktrees v4 repository-local relative layout, recovery-only legacy inventory, and deterministic adopter enforcement.",
+    "nonGoals": [
+      "Do not move, delete, prune or clean any existing worktree or clone",
+      "Do not modify the user-owned untracked template test in the primary checkout",
+      "Do not implement a runtime lease daemon or automatically migrate legacy layouts",
+      "Do not merge the pull request or publish the new-project release from this ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Adopt the immutable Worktrees v4 schema and planner as the sole allocation authority, project its canonical relative layout into policy and host templates, and make lifecycle/overlap inventory report non-v4 registrations for operator-led recovery without mutation.",
+      "components": [
+        {
+          "name": "standard-release-contract",
+          "paths": [
+            ".gitignore",
+            "AGENTS.md",
+            "POLICY.md",
+            "CONTRIBUTING.md",
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "governance/worktrees.lock.json",
+            "template/files/*.template.*",
+            "template/files/AGENTS.template.md"
+          ]
+        },
+        {
+          "name": "worktrees-v4-projection-and-inventory",
+          "paths": [
+            "subprojects/worktrees/conformance.py",
+            "subprojects/worktrees/worktrees.schema.json",
+            "scripts/workspace_lifecycle_check.py",
+            "scripts/worktree_overlap_check.py",
+            "scripts/install-worktree-guard.sh",
+            "worktree-guard.yaml"
+          ]
+        },
+        {
+          "name": "adoption-and-platform-tests",
+          "paths": ["tests/**"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "The publishable worktree path is <primaryCheckout>/worktrees/<ticket>--<slug> with relative Git links",
+        "The lease path is <primaryCheckout>/.subactor/leases/<ticket>--<slug>.json and both generated roots are anchored ignores",
+        "Lifecycle and overlap evidence classifies v1/v2/v3, system-temp, duplicate and unknown layouts as recovery-only"
+      ],
+      "dataChanges": [
+        "Managed Worktrees lock advances from v0.3.0 to immutable v0.4.0",
+        "New-project release projections advance from 0.19.22 to 0.20.0"
+      ],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Before publication, revert the ticket commit; after publication, issue a newer corrective standard without retargeting immutable tags. Existing worktrees are never migrated automatically."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["python3 tests/worktrees-adoption.test.py"],
+        "evidence": "Pinned v0.4.0 revision, source hashes, schema v4 and planner outputs are exact."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/workspace-lifecycle.test.sh",
+          "bash tests/worktree-overlap.test.sh"
+        ],
+        "evidence": "Scratch repositories exercise canonical relative links plus read-only legacy and temporary-path classifications."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "for test_script in tests/*.test.sh; do bash \"$test_script\"; done",
+          "pwsh -NoProfile -File tests/windows-governance.test.ps1 -SourceRevision HEAD",
+          "./project/governance-check.sh --actor agent --base origin/main --head HEAD"
+        ],
+        "evidence": "Complete deterministic POSIX/Windows suites and exact-head governance pass."
+      }
+    ]
+  }
+}

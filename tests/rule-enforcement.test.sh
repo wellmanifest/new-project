@@ -135,7 +135,7 @@ header = next(
     for lang, _, lines in blocks
     if lang == "dsl" and any(line == "DOCUMENT CONTRIBUTING" for line in lines)
 )
-assert "VERSION 19" in header
+assert "VERSION 20" in header
 
 declaration = re.compile(r"^(?:RULE|STATE|TRANSITION) [A-Z][A-Z0-9_-]*")
 mislabelled = [
@@ -205,6 +205,15 @@ assert "PULL_REQUEST_HEAD" in release and "UNAPPROVED_HEAD" in release
 delivery = rule_body("C-DELIVERY-001")
 assert "VERSION_AND_RELEASE_PROJECTIONS_TO_JOIN_THE_MATERIAL_CHANGESET" in delivery
 assert "SEPARATE_RELEASE_ONLY_TICKET_COMMIT_BRANCH_OR_PULL_REQUEST" in delivery
+
+concurrency = rule_body("C-CONCURRENCY-001")
+for fragment in (
+    '<primaryCheckout>/worktrees/<ticket-NNN>--<slug>',
+    '<primaryCheckout>/.subactor/leases/<ticket-NNN>--<slug>.json',
+    "FEATURE_PROBE_GIT_WORKTREE_RELATIVE_PATHS",
+    "AUTOMATIC_MOVE_REPAIR_DELETE_PRUNE_OR_CLEAN",
+):
+    assert fragment in concurrency, fragment
 
 implementation_pr = rule_body("C-PUBLISH-003")
 for fragment in (
