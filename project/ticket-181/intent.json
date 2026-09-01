@@ -1,0 +1,93 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-181",
+  "summary": "Allow digest-bound target-owned adoption transitions",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/governance_check.py",
+    "governance/intent.schema.json",
+    "governance/adoption-bindings.json",
+    "governance/adoption-bindings.schema.json",
+    "tests/governance-validator.test.sh",
+    "tests/adoption-lock.test.sh",
+    "tests/agent-hosts.test.sh",
+    "CONTRIBUTING.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "project/ticket-181/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e992c86fecb1ca9310dae89172eb6ca31bf5a90e",
+    "targetBranch": "main",
+    "outcome": "Publish new-project 0.20.3 with fail-closed digest-bound transitions for allowlisted target-owned files in one atomic standard adoption.",
+    "nonGoals": [
+      "Do not allow wildcard transition declarations or arbitrary target-owned paths",
+      "Do not permit target-owned file creation or deletion",
+      "Do not weaken managed takeover, restoration, package lock or accepted-base verification",
+      "Do not create a separate release-only ticket or rewrite terminal ticket projections"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 13,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend standardAdoption with targetOwnedTransitions[{path,baseDigest,headDigest}], verify each transition against the accepted base and working head exactly once, and permit paths only when matched by the immutable managed adoption-binding registry.",
+      "components": [
+        {
+          "name": "adoption-runtime",
+          "paths": ["scripts/governance_check.py", "tests/governance-validator.test.sh"]
+        },
+        {
+          "name": "adoption-contract",
+          "paths": ["governance/intent.schema.json", "governance/adoption-bindings.json", "governance/adoption-bindings.schema.json", "CONTRIBUTING.md"]
+        },
+        {
+          "name": "release-projection",
+          "paths": ["VERSION", "CHANGELOG.md", "governance/manifest.default.json", "governance/manifest.hub.json", "tests/adoption-lock.test.sh", "tests/agent-hosts.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "new-project.intent/v3 standardAdoption optionally accepts targetOwnedTransitions[{path,baseDigest,headDigest}]",
+        "new-project.adoption-bindings/v2 declares digestBoundTargetPatterns"
+      ],
+      "dataChanges": ["New-project release projections advance from 0.20.2 to 0.20.3"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Before publication, revert the atomic ticket commit; after publication, issue a newer corrective standard without moving immutable release tags."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "Positive and negative transition fixtures pass deterministically."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["for test_script in tests/*.test.sh; do bash \"$test_script\"; done", "python3 tests/worktrees-adoption.test.py", "./project/governance-check.sh --actor agent --base e992c86fecb1ca9310dae89172eb6ca31bf5a90e --head HEAD"],
+        "evidence": "Complete deterministic suite and exact-range governance pass."
+      }
+    ]
+  }
+}

@@ -43,6 +43,7 @@ schemas = {
     name: json.load(open(root / 'governance' / name, encoding='utf-8'))
     for name in (
         'approval-evidence.schema.json',
+        'adoption-bindings.schema.json',
         'diagnostics.schema.json',
         'intent.schema.json',
         'lock.schema.json',
@@ -52,6 +53,10 @@ schemas = {
 }
 for schema in schemas.values():
     Draft202012Validator.check_schema(schema)
+
+Draft202012Validator(schemas['adoption-bindings.schema.json']).validate(
+    json.load(open(root / 'governance/adoption-bindings.json', encoding='utf-8'))
+)
 
 Draft202012Validator(schemas['diagnostics.schema.json']).validate(
     json.load(open(root / 'governance/diagnostics.json', encoding='utf-8'))
@@ -92,7 +97,7 @@ hub_manifest = json.load(open(
 Draft202012Validator(schemas['manifest.schema.json']).validate(hub_manifest)
 assert 'config/artifact-registry.json' in hub_manifest['governancePaths']
 assert '.governance/standard-adoption.json' in hub_manifest['governancePaths']
-assert hub_manifest['standard']['version'] == '0.20.2'
+assert hub_manifest['standard']['version'] == '0.20.3'
 assert hub_manifest['coordination']['workstreams'] == {
     'governance': {'ownedPaths': ['**']},
 }
@@ -143,6 +148,20 @@ adoption_intent['delivery']['standardAdoption'] = {
     'toRevision': 'b' * 40,
 }
 intent_validator.validate(adoption_intent)
+transition_intent = json.loads(json.dumps(adoption_intent))
+transition_intent['delivery']['standardAdoption']['targetOwnedTransitions'] = [{
+    'path': '.github/workflows/ci.yml',
+    'baseDigest': '0' * 64,
+    'headDigest': '1' * 64,
+}]
+intent_validator.validate(transition_intent)
+duplicate_transition = json.loads(json.dumps(transition_intent))
+duplicate_transition['delivery']['standardAdoption']['targetOwnedTransitions'].append({
+    'path': '.github/workflows/ci.yml',
+    'baseDigest': '2' * 64,
+    'headDigest': '3' * 64,
+})
+assert intent_validator.is_valid(duplicate_transition)
 bootstrap_intent = json.loads(json.dumps(adoption_intent))
 bootstrap_intent['delivery']['standardAdoption']['fromRevision'] = None
 intent_validator.validate(bootstrap_intent)
@@ -180,7 +199,7 @@ Draft202012Validator(schemas['lock.schema.json']).validate({
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.20.2',
+        'version': '0.20.3',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'published',
@@ -191,7 +210,7 @@ candidate_lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.20.2',
+        'version': '0.20.3',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'unpublished-test',
@@ -307,7 +326,7 @@ assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
 assert manifest['schema'] == schema['properties']['schema']['const']
-assert manifest['standard']['version'] == '0.20.2'
+assert manifest['standard']['version'] == '0.20.3'
 ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
@@ -450,7 +469,36 @@ assert module.standard_adoption_error({
         'path': 'AGENTS.md',
         'baseDigest': '0' * 64,
     }],
-}) == 'initial standard adoption cannot declare managed target bindings'
+}) == 'initial standard adoption cannot declare target bindings'
+assert module.standard_adoption_error({
+    'sourceRepository': 'wellmanifest/new-project',
+    'fromRevision': 'a' * 40,
+    'toRevision': 'b' * 40,
+    'targetOwnedTransitions': [{
+        'path': '.github/workflows/ci.yml',
+        'baseDigest': '0' * 64,
+        'headDigest': '1' * 64,
+    }],
+}) is None
+assert module.standard_adoption_error({
+    'sourceRepository': 'wellmanifest/new-project',
+    'fromRevision': 'a' * 40,
+    'toRevision': 'b' * 40,
+    'targetOwnedTransitions': [{
+        'path': '.github/workflows/ci.yml',
+        'baseDigest': '0' * 64,
+        'headDigest': '0' * 64,
+    }],
+}) == 'delivery standardAdoption target-owned transition digests must differ'
+assert module.standard_adoption_error({
+    'sourceRepository': 'wellmanifest/new-project',
+    'fromRevision': 'a' * 40,
+    'toRevision': 'b' * 40,
+    'targetOwnedTransitions': [
+        {'path': '.github/workflows/ci.yml', 'baseDigest': '0' * 64, 'headDigest': '1' * 64},
+        {'path': '.github/workflows/ci.yml', 'baseDigest': '2' * 64, 'headDigest': '3' * 64},
+    ],
+}) == 'delivery standardAdoption target-owned transition paths must be unique'
 assert module.standard_adoption_error({
     'sourceRepository': 'wellmanifest/new-project',
     'fromRevision': 'a' * 40,
@@ -502,6 +550,7 @@ make_fixture() {
   mkdir -p "$target/.governance" "$target/project/ticket-001" "$target/project/ticket-002" "$target/src"
   cp "$repo_root/scripts/governance_check.py" "$target/.governance/governance_check.py"
   cp "$repo_root/scripts/ticket_activity.py" "$target/.governance/ticket_activity.py"
+  cp "$repo_root/governance/adoption-bindings.json" "$target/.governance/adoption-bindings.json"
   cp "$repo_root/governance/manifest.default.json" "$target/.governance/manifest.json"
   python3 - "$target/.governance/manifest.json" <<'PY'
 import json
@@ -1127,7 +1176,7 @@ lock = {
   'schema': 'new-project.lock/v1',
   'standard': {
     'id': 'wellmanifest/new-project',
-    'version': '0.20.2',
+    'version': '0.20.3',
     'sourceRepository': 'wellmanifest/new-project',
     'sourceRevision': 'a' * 40,
     'publicationStatus': 'published',
@@ -1185,7 +1234,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.20.2',
+        'version': '0.20.3',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'a' * 40,
         'publicationStatus': 'published',
@@ -1278,7 +1327,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.20.2',
+        'version': '0.20.3',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'b' * 40,
         'publicationStatus': 'published',
@@ -1446,6 +1495,7 @@ package = {
     'schema': 'new-project.package-manifest/v1',
     'files': [
         {'source': 'template/files/AGENTS.template.md', 'target': 'AGENTS.md', 'strategy': 'managed', 'executable': False},
+        {'source': 'governance/adoption-bindings.json', 'target': '.governance/adoption-bindings.json', 'strategy': 'managed', 'executable': False},
         {'source': 'governance/package-manifest.json', 'target': '.governance/package-manifest.json', 'strategy': 'managed', 'executable': False},
         {'source': 'published/src/missing.js', 'target': 'src/missing.js', 'strategy': 'managed', 'executable': False},
         {'source': 'governance/manifest.default.json', 'target': '.governance/manifest.json', 'strategy': 'seed', 'executable': False},
@@ -1461,6 +1511,10 @@ package_path.write_text(json.dumps(package, indent=2) + '\n', encoding='utf-8')
 
 (root / 'src').mkdir(exist_ok=True)
 (root / 'src/pilot.js').write_text('target-owned pilot v1\n', encoding='utf-8')
+(root / '.github/workflows').mkdir(parents=True, exist_ok=True)
+(root / '.github/workflows/ci.yml').write_text(
+    'jobs:\n  test:\n    runs-on: ubuntu-latest\n', encoding='utf-8'
+)
 
 def write_lock(revision, version):
     targets = [item['target'] for item in package['files']]
@@ -1519,6 +1573,16 @@ intent['delivery']['standardAdoption'] = {
         'baseDigest': hashlib.sha256(b'managed src/missing.js v1\n').hexdigest(),
     }],
 }
+ci_path = root / '.github/workflows/ci.yml'
+base_ci_digest = hashlib.sha256(ci_path.read_bytes()).hexdigest()
+ci_path.write_text(
+    'jobs:\n  test:\n    name: test\n    runs-on: ubuntu-latest\n', encoding='utf-8'
+)
+intent['delivery']['standardAdoption']['targetOwnedTransitions'] = [{
+    'path': '.github/workflows/ci.yml',
+    'baseDigest': base_ci_digest,
+    'headDigest': hashlib.sha256(ci_path.read_bytes()).hexdigest(),
+}]
 intent_path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
 
 manifest_path = root / '.governance/manifest.json'
@@ -1577,6 +1641,104 @@ if ! run_check "$atomic_adoption" --base "$atomic_base" > "$fixture/atomic-adopt
   exit 1
 fi
 grep -q '^GOV-PASS:' "$fixture/atomic-adoption.out"
+
+# A target-owned path is exempt only for the exact accepted-base and working-
+# head bytes declared by the one adoption ticket.
+for transition_digest in baseDigest headDigest; do
+  target="$fixture/atomic-adoption-transition-wrong-$transition_digest"
+  cp -R "$atomic_adoption" "$target"
+  python3 - "$target/project/ticket-002/intent.json" "$transition_digest" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+intent['delivery']['standardAdoption']['targetOwnedTransitions'][0][sys.argv[2]] = '0' * 64
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+  git -C "$target" add project/ticket-002/intent.json
+  git -C "$target" commit -qm "bind wrong target-owned $transition_digest"
+  expect_code GOV-SYNC-001 run_check "$target" --base "$atomic_base"
+done
+
+atomic_transition_unused="$fixture/atomic-adoption-transition-unused"
+cp -R "$atomic_adoption" "$atomic_transition_unused"
+python3 - "$atomic_transition_unused/project/ticket-002/intent.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+intent = json.loads(path.read_text(encoding='utf-8'))
+intent['delivery']['standardAdoption']['targetOwnedTransitions'].append({
+    'path': '.github/workflows/unused.yml',
+    'baseDigest': '2' * 64,
+    'headDigest': '3' * 64,
+})
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_transition_unused" add project/ticket-002/intent.json
+git -C "$atomic_transition_unused" commit -qm 'declare unused target-owned transition'
+expect_code GOV-SYNC-001 run_check "$atomic_transition_unused" --base "$atomic_base"
+
+atomic_transition_unallowlisted="$fixture/atomic-adoption-transition-unallowlisted"
+cp -R "$atomic_adoption" "$atomic_transition_unallowlisted"
+printf '%s\n' 'changed target readme' > "$atomic_transition_unallowlisted/README.md"
+python3 - "$atomic_transition_unallowlisted" "$atomic_base" <<'PY'
+import hashlib
+import json
+import pathlib
+import subprocess
+import sys
+
+root = pathlib.Path(sys.argv[1])
+base = sys.argv[2]
+path = root / 'project/ticket-002/intent.json'
+intent = json.loads(path.read_text(encoding='utf-8'))
+base_bytes = subprocess.check_output(['git', '-C', str(root), 'show', f'{base}:README.md'])
+intent['delivery']['standardAdoption']['targetOwnedTransitions'].append({
+    'path': 'README.md',
+    'baseDigest': hashlib.sha256(base_bytes).hexdigest(),
+    'headDigest': hashlib.sha256((root / 'README.md').read_bytes()).hexdigest(),
+})
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_transition_unallowlisted" add README.md project/ticket-002/intent.json
+git -C "$atomic_transition_unallowlisted" commit -qm 'bind unallowlisted target-owned transition'
+expect_code GOV-SYNC-001 run_check "$atomic_transition_unallowlisted" --base "$atomic_base"
+
+atomic_transition_deleted="$fixture/atomic-adoption-transition-deleted"
+cp -R "$atomic_adoption" "$atomic_transition_deleted"
+rm "$atomic_transition_deleted/.github/workflows/ci.yml"
+git -C "$atomic_transition_deleted" add .github/workflows/ci.yml
+git -C "$atomic_transition_deleted" commit -qm 'delete target-owned transition path'
+expect_code GOV-SYNC-001 run_check "$atomic_transition_deleted" --base "$atomic_base"
+
+atomic_transition_managed="$fixture/atomic-adoption-transition-managed"
+cp -R "$atomic_adoption" "$atomic_transition_managed"
+python3 - "$atomic_transition_managed" "$atomic_base" <<'PY'
+import hashlib
+import json
+import pathlib
+import subprocess
+import sys
+
+root = pathlib.Path(sys.argv[1])
+base = sys.argv[2]
+path = root / 'project/ticket-002/intent.json'
+intent = json.loads(path.read_text(encoding='utf-8'))
+base_bytes = subprocess.check_output(['git', '-C', str(root), 'show', f'{base}:AGENTS.md'])
+intent['delivery']['standardAdoption']['targetOwnedTransitions'].append({
+    'path': 'AGENTS.md',
+    'baseDigest': hashlib.sha256(base_bytes).hexdigest(),
+    'headDigest': hashlib.sha256((root / 'AGENTS.md').read_bytes()).hexdigest(),
+})
+path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
+PY
+git -C "$atomic_transition_managed" add project/ticket-002/intent.json
+git -C "$atomic_transition_managed" commit -qm 'overlap target-owned transition with package target'
+expect_code GOV-SYNC-001 run_check "$atomic_transition_managed" --base "$atomic_base"
 
 # A former managed path may already have drifted before an atomic upgrade. It
 # remains fail-closed unless the ticket binds the exact base bytes as a
@@ -2684,8 +2846,9 @@ root = Path(sys.argv[2])
 (root / ".governance").mkdir(parents=True)
 (root / ".github/workflows").mkdir(parents=True)
 (root / ".governance/adoption-bindings.json").write_text(json.dumps({
-    "schema": "new-project.adoption-bindings/v1",
+    "schema": "new-project.adoption-bindings/v2",
     "revisionBoundWorkflowPaths": [".github/workflows/custom-governance.yml"],
+    "digestBoundTargetPatterns": [".github/workflows/*.yml"],
 }), encoding="utf-8")
 revision = "b" * 40
 workflow = root / ".github/workflows/custom-governance.yml"
@@ -2722,6 +2885,10 @@ expected = {
     ".github/workflows/custom-governance.yml", "package.json",
     "pyproject.toml", "Dockerfile", "compose.yml",
 }
+assert module.adoption_binding_registry(root) == (
+    [".github/workflows/custom-governance.yml"],
+    [".github/workflows/*.yml"],
+)
 assert module.atomic_adoption_binding_paths(root, manifest, intent) == expected
 coordination = {
     "workstreams": {"governance": {"ownedPaths": [".governance/**", "project/**"]}},
@@ -2747,6 +2914,14 @@ module.check_workstream_change_scope(
     root, manifest, [record], coordination, record, [*sorted(expected), "src/app.py"], report
 )
 assert [item.code for item in report.findings] == ["GOV-WORKSTREAM-003"], report.payload()
+registry_path = root / ".governance/adoption-bindings.json"
+registry = json.loads(registry_path.read_text(encoding="utf-8"))
+registry["digestBoundTargetPatterns"] = ["**"]
+registry_path.write_text(json.dumps(registry), encoding="utf-8")
+assert module.adoption_binding_registry(root) is None
+registry["extra"] = True
+registry_path.write_text(json.dumps(registry), encoding="utf-8")
+assert module.adoption_binding_registry(root) is None
 PY
 
 # Multi-agent change-lease: accepted freeze, stale fencing, frozen-head
