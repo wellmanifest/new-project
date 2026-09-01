@@ -1,0 +1,145 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-172",
+  "summary": "Make agent work resumable without conversation memory",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-172/**",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    "README.md",
+    "AGENTS.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "docs/WORK_CONTINUITY.md",
+    "governance/work-continuity.schema.json",
+    "governance/package-manifest.json",
+    "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
+    "error/GOV-WORK-CONTINUITY.md",
+    "error/README.md",
+    "scripts/work_continuity.py",
+    "scripts/audit_rule_enforcement.py",
+    "subprojects/ticket-lifecycle/README.md",
+    "subprojects/ticket-lifecycle/ticket-lifecycle.schema.json",
+    "subprojects/ticket-lifecycle/ticket-lifecycle.v1.gbnf",
+    "subprojects/git-lifecycle/README.md",
+    "template/files/AGENTS.template.md",
+    "tests/work-continuity.test.sh",
+    "tests/adoption-lock.test.sh",
+    "tests/rule-enforcement.test.sh",
+    "tests/windows-governance.test.ps1"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7dd68589340bfd4b18b94f3141f41833280c2985",
+    "targetBranch": "main",
+    "outcome": "Make nonterminal agent work reconstructable without conversation memory through bounded, append-only continuity checkpoints.",
+    "nonGoals": [
+      "Do not store raw conversation or command logs in Git",
+      "Do not make a checkpoint an execution or merge authority",
+      "Do not implement the external durable receipt service in wellmanifest"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep intent and observable repository state authoritative; add a bounded continuity projection with a monotonic receipt chain and fail-closed resume verification.",
+      "components": [
+        {
+          "name": "continuity-runtime",
+          "paths": [
+            "governance/work-continuity.schema.json",
+            "scripts/work_continuity.py",
+            "tests/work-continuity.test.sh",
+            "tests/windows-governance.test.ps1",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "normative-standards",
+          "paths": [
+            "POLICY.md",
+            "CONTRIBUTING.md",
+            "AGENTS.md",
+            "README.md",
+            "docs/WORK_CONTINUITY.md",
+            "template/files/AGENTS.template.md",
+            "subprojects/ticket-lifecycle/README.md",
+            "subprojects/ticket-lifecycle/ticket-lifecycle.schema.json",
+            "subprojects/ticket-lifecycle/ticket-lifecycle.v1.gbnf",
+            "subprojects/git-lifecycle/README.md"
+          ]
+        },
+        {
+          "name": "adoption-and-diagnostics",
+          "paths": [
+            "governance/diagnostics.json",
+            "governance/rule-enforcement.json",
+            "error/GOV-WORK-CONTINUITY.md",
+            "error/README.md",
+            "governance/package-manifest.json",
+            "scripts/audit_rule_enforcement.py",
+            "tests/adoption-lock.test.sh",
+            "tests/rule-enforcement.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        "new-project.work-continuity/v1 checkpoint and registry schema",
+        "work_continuity.py validate, record, resolve and verify commands",
+        "wellmanifest.ticket-lifecycle/v1 checkpoint self-transition"
+      ],
+      "dataChanges": [
+        "Append-only continuity receipts live outside tracked repository history; adopters receive only the schema and resolver."
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the checkpoint contract, runtime, projections and package entries together; existing external checkpoint receipts remain inert advisory evidence."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/work-continuity.test.sh"],
+        "evidence": "valid, malformed, stale-chain and unsafe-workspace fixtures"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/work-continuity.test.sh"],
+        "evidence": "record, resolve and live-state verification fixtures"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["python3 scripts/audit_rule_enforcement.py --root . --require-complete"],
+        "evidence": "normative rule and diagnostic mapping audit"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["./project/governance-check.sh --actor agent", "for test in tests/*.test.sh; do bash \"$test\"; done"],
+        "evidence": "complete deterministic governance and adoption suite"
+      }
+    ]
+  }
+}

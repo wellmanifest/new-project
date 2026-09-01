@@ -140,11 +140,22 @@ Before any multi-step implementation, an agent must:
    not write on `main` or a dirty primary checkout. Markdown is not a
    substitute for the hook.
 23. Require material delivery: ticket directories, TODO, ticket indexes and a
-   generated artifact registry are tracking carriers, not an outcome. Reject a
+    generated artifact registry are tracking carriers, not an outcome. Reject a
    carrier-only commit or PR. If analysis finds no material delta, emit an
-   external no-change receipt and create no repository history. Intent may be
-   committed atomically with the first material change; do not create a
-   separate plan-only commit.
+    external no-change receipt and create no repository history. Intent may be
+    committed atomically with the first material change; do not create a
+    separate plan-only commit.
+24. Treat conversation memory as a cache, never task storage. At a material
+    milestone, configured checkpoint interval, context compaction, handoff,
+    pause, blocker, tool failure or external-effect boundary, emit a bounded
+    `new-project.work-continuity/v1` checkpoint through
+    `.governance/work_continuity.py` and persist it in the external receipt
+    store. The local `.git` registry is only a recovery cache. Resume by
+    observing Git/PR/receipts first, verifying the monotonic chain, intent,
+    HEAD and workspace digest, then revalidating the lease. The checkpoint
+    grants no authority. Dirty work needs an authorized ticket-branch commit
+    or a content-addressed, secret-scanned external snapshot; otherwise stop
+    the handoff and preserve the unknown state.
 
 Markdown approval is an audit note, not trusted merge approval. Required
 merge approval comes from the repository's protected review, attestation and

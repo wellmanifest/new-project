@@ -2,7 +2,7 @@
 
 ```dsl
 DOCUMENT TICKET_LIFECYCLE
-VERSION 3
+VERSION 4
 LANGUAGE EN
 MODE STRICT
 SCHEMA "wellmanifest.ticket-lifecycle/v1"
@@ -36,6 +36,11 @@ stateDiagram-v2
     editing --> validating: validate
     validating --> publication: publish
     publication --> done: trusted integration + close
+    authorized --> authorized: checkpoint
+    editing --> editing: checkpoint
+    validating --> validating: checkpoint
+    publication --> publication: checkpoint
+    blocked --> blocked: checkpoint
     allocated --> blocked: block
     planned --> blocked: block
     authorized --> blocked: block
@@ -65,6 +70,7 @@ TRANSITION validating -> publication ACTION publish
 TRANSITION publication -> done ACTION close
 TRANSITION ACTIVE_NONTERMINAL -> blocked ACTION block
 TRANSITION blocked -> planned ACTION resume
+TRANSITION [authorized, editing, validating, publication, blocked] -> SAME_STATE ACTION checkpoint
 ```
 
 The lifecycle state is separate from the ticket's public status fields. The
@@ -155,6 +161,22 @@ projection and a shared resolver releases its reservation only after receipt
 bindings and Git ancestry verify. Closing an unmerged full-diff branch is
 forbidden.
 
+## Continuity checkpoint
+
+`checkpoint` is an append-only, same-state transition for work that has an
+authorization reference and may outlive the current conversation or process.
+Its evidence includes exactly one bounded `new-project.work-continuity/v1`
+receipt reference. The resolved checkpoint binds ticket, intent and scope
+digests, HEAD, workspace digest, criteria and pending effects. It never changes
+the ticket state, grants authority, renews a lease or marks an effect complete.
+
+The controller checkpoints at material milestones, the configured time
+interval, context compaction, handoff, pause, blocker and external-effect
+boundaries. A dirty workspace is accepted only after an authorized branch
+commit or an external content-addressed, secret-scanned snapshot. Resume first
+observes live Git/PR/receipt state and revalidates the checkpoint chain,
+authorization and fencing token; mismatch routes to reconciliation or blocked.
+
 ## Request and receipt boundary
 
 [`ticket-lifecycle.schema.json`](ticket-lifecycle.schema.json) defines request,
@@ -178,6 +200,8 @@ ticket and intent reference.
   recorded outcome includes publication.
 - `close` requires resolved trusted integration and post-merge evidence.
 - `block` preserves evidence and releases workstream/write reservations.
+- `checkpoint` preserves the current state and records only a bounded external
+  continuity receipt; it cannot transport conversation prose or source data.
 - `resume` revalidates base, scope, dependencies and foreign workspace state.
 - Every fail-closed rejection has an authority-preserving exit to retry,
   planning, blocked or a verified terminal result. Unsupported variants remain

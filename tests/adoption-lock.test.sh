@@ -169,6 +169,9 @@ assert lock['standard']['version'] == '0.19.18'
 assert '.governance/manifest.base.json' in lock['managedFiles']
 assert '.governance/adoption-bindings.json' in lock['managedFiles']
 assert '.governance/adoption-bindings.schema.json' in lock['managedFiles']
+assert '.governance/work-continuity.schema.json' in lock['managedFiles']
+assert '.governance/work_continuity.py' in lock['managedFiles']
+assert '.governance/error/GOV-WORK-CONTINUITY.md' in lock['managedFiles']
 assert '.governance/manifest.json' not in lock['managedFiles']
 assert 'project.sh' not in lock['managedFiles']
 assert 'project.bat' not in lock['managedFiles']
@@ -215,13 +218,16 @@ test -x "$target/project.sh"
 test -x "$target/.governance/check_required_checks.py"
 test -x "$target/.governance/decision_record.py"
 test -x "$target/.governance/remediation_intent.py"
+test -x "$target/.governance/work_continuity.py"
 test -x "$target/.governance/governance_check.py"
 test -f "$target/project.bat"
 test -f "$target/AGENTS.md"
 test -f "$target/.governance/approval-evidence.schema.json"
 test -f "$target/.governance/remediation-intent.schema.json"
 test -f "$target/.governance/remediation-intent.template.dsl.json"
+test -f "$target/.governance/work-continuity.schema.json"
 test -f "$target/.governance/error/GOV-REMEDIATION-INTENT.md"
+test -f "$target/.governance/error/GOV-WORK-CONTINUITY.md"
 test -f "$target/.governance/package-manifest.json"
 printf '%s\n' '# target-owned seed extension' >> "$target/project.sh"
 printf '%s\r\n' 'REM target-owned seed extension' >> "$target/project.bat"
@@ -661,6 +667,8 @@ assert 'MATERIAL_OBJECTIVE_EXPANSION' in rule(contributing, 'C-APPROVAL-003')
 for agents in (hub_agents, target_agents):
     assert 'SESSION_EXECUTION_AUTHORIZATION' in agents
     assert 'without a second confirmation' in agents
+    assert 'new-project.work-continuity/v1' in agents
+    assert 'conversation memory' in agents.lower()
 assert 'protected delivery' in target_agents.lower()
 assert 'session prose is never' in target_agents.lower()
 assert 'agent must not merge directly' in target_agents.lower()

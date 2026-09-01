@@ -126,6 +126,8 @@ jobs:
         run: bash tests/adoption-lock.test.sh
       - name: Test receipt-aware ticket activity resolution
         run: bash tests/ticket-activity.test.sh
+      - name: Test work continuity checkpoint and resume contract
+        run: bash tests/work-continuity.test.sh
       # Every tests/*.test.sh must be listed above. The list is hand-written, so
       # this refuses to pass when a suite exists that no step runs - which is how
       # governance-env.test.sh went unexecuted after ticket 020 added it.
