@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.19.21] - 2026-09-01
+
+### Legacy-adopter anti-noise compatibility
+
+- Assign the shared manifest, lock, package marker, agent contract and every
+  extendable governance target used by atomic adoption to one integration
+  workstream, so one precise adoption ticket can own the complete material
+  diff. A verified adoption lock joins that atomic ownership proof.
+- Reject legacy target overrides that make agent prose, raw logs, preprompts or
+  ticket changelogs mandatory; the only required ticket files are `README.md`
+  and `intent.json`.
+- Keep the patch release in the same material changeset and reuse its terminal
+  merge receipt instead of creating a release-only ticket or PR.
+
 ## [0.19.20] - 2026-09-01
 
 ### Repository-namespaced ticket worktrees
