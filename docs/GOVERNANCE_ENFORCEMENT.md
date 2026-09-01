@@ -163,6 +163,33 @@ podczas zarządzanej adopcji także `.governance/manifest.base.json`.
 Ostateczne porządkowanie równoległych PR-ów realizuje chroniony merge queue,
 który ponownie uruchamia governance i testy na aktualnej bazie.
 
+### Złożona publikacja: działający protokół
+
+Dla zmian obejmujących kilka komponentów albo pliki generowane stosuje się
+stałą sekwencję:
+
+1. allocator przydziela ticket, branch i kanoniczny worktree; `intent.json`
+   wyznacza dopuszczalny zakres zapisu;
+2. governance oraz overlap guard wykrywają aktywne nakładanie ścieżek. Writer
+   klasyfikuje kolizję jako `parallel`, `rebase`, `split`, `serialize`,
+   `handoff` albo `block` i nie modyfikuje cudzego worktree;
+3. writer publikuje PR związany z jednym ticketem. Gdy branch jest za `main`,
+   aktualizuje go przed freeze i ponawia governance oraz testy;
+4. `dispatch-direct-pr.sh --wait-checks --watch --merge` ponownie odczytuje
+   HEAD, zamraża dokładny SHA i uruchamia chronionego Validatora;
+5. po `STALE_HEAD_CHANGED` Supervisor rozpoczyna nowy freeze. Nie wolno
+   automatycznie przepiąć approval na nowszy SHA ani pushować podczas freeze;
+6. po exact-head approval kontroler wykonuje merge, zapisuje zewnętrzny
+   terminalny receipt, usuwa zdalny branch i dopiero wtedy zwalnia worktree.
+
+Rejestr terminalny przechowuje `receiptRef`, `ticket`, `outcome`, `headSha`,
+`terminalSha`, `targetBranch` i `occurredAt`. Repozytorium, PR, aktor i checki
+są związane w chronionym dowodzie decyzji Validatora. Checkpoint
+`new-project.work-continuity/v1` może wskazać `nextAction` dla pracy
+niezakończonej, lecz ma `authority=advisory-projection` i nie jest receiptem
+merge ani zgodą. Efektowy lease CAS oraz kolejka wielu repozytoriów pozostają
+planowaną warstwą runtime opisaną w `CONTROLLED_CHANGE_STREAMING.md`.
+
 
 ## Commercial and product SSOT paths
 

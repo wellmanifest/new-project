@@ -26,6 +26,12 @@ nie może jednak wymuszać utrzymywania drugiej listy statusów w skrypcie.
 - [x] AC-04: test regresyjny potwierdza niestandardowy aktywny status oraz
       zwolnienie historycznego statusu spoza rejestru.
 - [x] AC-05: pełna bramka governance i testy skryptów przechodzą.
+- [x] AC-06: dokumentacja złożonej zmiany odzwierciedla działające worktree,
+      overlap guard, odświeżenie bazy, exact-head freeze i bounded retry po
+      `STALE_HEAD_CHANGED`.
+- [x] AC-07: dokumentacja rozdziela chroniony terminalny receipt od doradczego
+      checkpointu ciągłości i nie deklaruje niezaimplementowanej merge queue
+      ani efektowego lease store.
 
 ## Ryzyka i Uwagi
 

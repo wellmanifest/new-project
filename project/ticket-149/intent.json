@@ -1,7 +1,7 @@
 {
   "schema": "new-project.intent/v3",
   "ticket": "ticket-149",
-  "summary": "Resolve ticket reservations from dynamic registries",
+  "summary": "Document resumable complex delivery after dynamic ticket resolution",
   "workstream": "governance",
   "classification": {
     "kind": "BUG",
@@ -13,7 +13,9 @@
     "TODO.md",
     "project/TICKETS.md",
     "project/new-ticket.sh",
-    "tests/governance-scripts.test.sh"
+    "tests/governance-scripts.test.sh",
+    "docs/GOVERNANCE_ENFORCEMENT.md",
+    "CONTRIBUTING.md"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -29,14 +31,15 @@
     "adopt": ["wellmanifest/new-project"]
   },
   "delivery": {
-    "acceptedBaseSha": "7290b016c9e67ef80df901d0bdeb640e49b569ab",
+    "acceptedBaseSha": "86380ee9491872d456d3d80244e50af2b8178414",
     "targetBranch": "main",
-    "outcome": "Ticket allocation resolves lifecycle and workstream vocabulary from the current governance registry instead of hardcoded shell values",
+    "outcome": "Document the implemented isolated-worktree and exact-head Validator delivery loop without claiming unavailable merge-queue or effectful lease runtime",
     "nonGoals": [
       "Do not persist protected merge receipts in the repository tree",
       "Do not infer merge authority from ticket Markdown",
       "Do not change governance checker ticket attribution",
-      "Do not publish a release in this ticket"
+      "Do not publish a release in this ticket",
+      "Do not claim that an effectful lease store or multi-repository merge queue is already deployed"
     ],
     "complexity": "S",
     "estimatedMinutes": 25,
@@ -48,22 +51,29 @@
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Resolve one manifest registry, validate its closed lifecycle/workstream projections, and make allocation fail closed when that registry is unavailable or malformed",
+      "decision": "Describe the currently enforced worktree, overlap, branch-refresh, publication-freeze and protected receipt boundaries while routing stronger lease orchestration to its explicit future-runtime document",
       "components": [{
-        "name": "managed-ticket-allocator",
-        "paths": ["project/new-ticket.sh", "tests/governance-scripts.test.sh"]
+        "name": "governed-delivery-documentation",
+        "paths": ["CONTRIBUTING.md", "docs/GOVERNANCE_ENFORCEMENT.md"]
       }],
       "responsibilityChanges": false,
-      "interfaceChanges": ["new-ticket.sh rejects workstreams not declared by the resolved governance manifest"],
+      "interfaceChanges": ["Complex delivery documentation binds the live exact-head publication loop and distinguishes future runtime work"],
       "dataChanges": [],
       "ui": {"impact": "none", "states": [], "evidence": []},
-      "rollback": "Revert the allocator and its regression test before adoption; existing ticket data remains unchanged"
+      "rollback": "Revert the documentation clarification; existing allocator, worktree and protected publication behavior remains unchanged"
     },
     "runtimeDependencies": [],
-    "validation": [{
-      "criterion": "AC-05",
-      "commands": ["bash tests/governance-scripts.test.sh", "./project/governance-check.sh --actor agent"],
-      "evidence": "bounded command output and exact-head CI receipt"
-    }]
+    "validation": [
+      {
+        "criterion": "AC-06",
+        "commands": ["bash tests/work-continuity.test.sh", "bash tests/worktree-overlap.test.sh", "./project/governance-check.sh --actor agent"],
+        "evidence": "bounded command output, documentation-to-runtime comparison and exact-head CI receipt"
+      },
+      {
+        "criterion": "AC-07",
+        "commands": ["bash tests/ticket-activity.test.sh", "bash tests/work-continuity.test.sh", "./project/governance-check.sh --actor agent"],
+        "evidence": "terminal-receipt and advisory-checkpoint contract tests plus exact-head CI receipt"
+      }
+    ]
   }
 }

@@ -876,8 +876,30 @@ zaakceptowana intencja + polityka + zaakceptowana baza
           niezależne zatwierdzenie exact-head
                          |
                          v
-                       merge
+                      merge
 ```
+
+### Złożone zmiany i streamowanie do `main`
+
+Każdy writer pracuje w osobnym, kanonicznym worktree i na branchu związanym z
+jednym aktywnym ticketem. Przed zapisem governance oraz lokalny overlap guard
+porównują `allowedPaths`; kolizja prowadzi do jawnego `BLOCKED`, `rebase`,
+`split`, `serialize` albo `handoff`, a nie do nadpisania drugiego worktree.
+
+Integracja jest serializowana na chronionym `main`. Branch pozostający za bazą
+jest najpierw aktualizowany, a governance i testy są uruchamiane ponownie.
+Następnie `dispatch-direct-pr.sh` ponownie odczytuje HEAD, czeka na wymagane
+checki, zamraża dokładny SHA i przekazuje go niezależnemu Validatorowi. Po
+`STALE_HEAD_CHANGED` Supervisor rozpoczyna nowy freeze od bieżącego HEAD; w
+trakcie freeze żaden writer nie wykonuje pushu.
+
+Chroniony kontroler zapisuje terminalny receipt związany z ticketem, PR,
+head SHA i merge SHA. Niezakończona praca może dodatkowo mieć checkpoint
+ciągłości z `nextAction`, ale checkpoint pozostaje projekcją doradczą i nie
+zastępuje receiptu ani approval. Silniejszy, efektowy kontroler lease i kolejka
+wielu repozytoriów są opisane jako dalsza implementacja w
+`docs/CONTROLLED_CHANGE_STREAMING.md`; ten kontrakt nie zakłada, że już
+działają.
 
 Twarde bramki są niekompensowalne. Wymiary pomagają reviewerowi, ale nie
 mogą zamienić bramki `FAILED`, `UNKNOWN` lub `WAITING` na zgodę. Lokalny raport
