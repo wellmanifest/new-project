@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-175",
+  "summary": "Make anti-noise upgrades valid for legacy adopters",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-175/**",
+    "project/TICKETS.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/manifest.schema.json",
+    "scripts/governance_check.py",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": ["wellmanifest/new-project", "wellmanifest/worktrees"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "67a09fe7780e2abf6d1941694b84e11d76d27a15",
+    "targetBranch": "main",
+    "outcome": "Publish a patch release whose bootstrap and upgrade paths fit one integration ticket while enforcing the minimal ticket carrier set.",
+    "nonGoals": [
+      "Do not auto-move existing worktrees",
+      "Do not preserve legacy requirements for raw agent logs or redundant ticket prose"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Route the exact shared adoption contracts through one integration slice, include the verified lock in its atomic proof, and reject process-only ticket requirements.",
+      "components": [
+        {"name": "manifest-contract", "paths": ["governance/manifest*.json"]},
+        {"name": "governance-runtime", "paths": ["scripts/governance_check.py"]},
+        {"name": "regressions", "paths": ["tests/**", "VERSION", "CHANGELOG.md"]}
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        "One integration ticket owns the shared standard-adoption contracts",
+        "Ticket manifests may require only README.md and intent.json"
+      ],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Publish a later corrective version while retaining immutable release history."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "./project/governance-check.sh --actor agent --base origin/main --head HEAD"
+        ],
+        "evidence": "Deterministic upgrade fixtures and the governed exact diff."
+      }
+    ]
+  }
+}

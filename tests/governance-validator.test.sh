@@ -92,7 +92,7 @@ hub_manifest = json.load(open(
 Draft202012Validator(schemas['manifest.schema.json']).validate(hub_manifest)
 assert 'config/artifact-registry.json' in hub_manifest['governancePaths']
 assert '.governance/standard-adoption.json' in hub_manifest['governancePaths']
-assert hub_manifest['standard']['version'] == '0.19.20'
+assert hub_manifest['standard']['version'] == '0.19.21'
 assert hub_manifest['coordination']['workstreams'] == {
     'governance': {'ownedPaths': ['**']},
 }
@@ -180,7 +180,7 @@ Draft202012Validator(schemas['lock.schema.json']).validate({
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.20',
+        'version': '0.19.21',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'published',
@@ -191,7 +191,7 @@ candidate_lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.20',
+        'version': '0.19.21',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'unpublished-test',
@@ -307,7 +307,7 @@ assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
 assert manifest['schema'] == schema['properties']['schema']['const']
-assert manifest['standard']['version'] == '0.19.20'
+assert manifest['standard']['version'] == '0.19.21'
 ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
@@ -1124,7 +1124,7 @@ lock = {
   'schema': 'new-project.lock/v1',
   'standard': {
     'id': 'wellmanifest/new-project',
-    'version': '0.19.20',
+    'version': '0.19.21',
     'sourceRepository': 'wellmanifest/new-project',
     'sourceRevision': 'a' * 40,
     'publicationStatus': 'published',
@@ -1182,7 +1182,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.20',
+        'version': '0.19.21',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'a' * 40,
         'publicationStatus': 'published',
@@ -1213,9 +1213,9 @@ expect_code GOV-SYNC-001 run_check "$extendable_sync" --changed-file src/app.js 
 
 dot_path="$fixture/dot-path"
 make_fixture "$dot_path"
-sed -i 's/"workstream": "application"/"workstream": "governance"/' "$dot_path/project/ticket-002/intent.json"
-sed -i 's#"allowedPaths": \["src/\*\*"\]#"allowedPaths": [".governance/**"]#' "$dot_path/project/ticket-002/intent.json"
-sed -i 's#"components": \[{"name": "application", "paths": \["src/\*\*"\]}\]#"components": [{"name": "governance", "paths": [".governance/**"]}]#' "$dot_path/project/ticket-002/intent.json"
+sed -i 's/"workstream": "application"/"workstream": "integration"/' "$dot_path/project/ticket-002/intent.json"
+sed -i 's#"allowedPaths": \["src/\*\*"\]#"allowedPaths": [".governance/manifest.json"]#' "$dot_path/project/ticket-002/intent.json"
+sed -i 's#"components": \[{"name": "application", "paths": \["src/\*\*"\]}\]#"components": [{"name": "integration", "paths": [".governance/manifest.json"]}]#' "$dot_path/project/ticket-002/intent.json"
 if ! run_check "$dot_path" --changed-file .governance/manifest.json > "$fixture/dot-path.out"; then
   cat "$fixture/dot-path.out"
   exit 1
@@ -1275,7 +1275,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.20',
+        'version': '0.19.21',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'b' * 40,
         'publicationStatus': 'published',
@@ -1299,7 +1299,7 @@ intent = {
     'schema': 'new-project.intent/v3',
     'ticket': 'ticket-002',
     'summary': 'Initial managed adoption fixture',
-    'workstream': 'governance',
+    'workstream': 'integration',
     'allowedPaths': [
         'AGENTS.md',
         '.governance/manifest.json',
@@ -1331,7 +1331,7 @@ intent = {
         },
         'architecture': {
             'status': 'accepted',
-            'decision': 'Keep the replaced target file in ordinary governance',
+            'decision': 'Route the shared manifest through the integration workstream',
             'components': [{
                 'name': 'target-adoption',
                 'paths': [
@@ -1415,10 +1415,11 @@ import sys
 root = pathlib.Path(sys.argv[1])
 intent_path = root / 'project/ticket-002/intent.json'
 intent = json.load(open(intent_path, encoding='utf-8'))
-intent['workstream'] = 'governance'
+intent['workstream'] = 'integration'
 intent['allowedPaths'] = [
     '.governance/manifest.json',
     '.governance/manifest.lock.json',
+    '.governance/required-checks.json',
     'src/standard-1.js',
 ]
 intent['delivery']['budgets']['maxImplementationFiles'] = 2
@@ -1427,6 +1428,7 @@ intent['delivery']['architecture']['components'] = [{
     'paths': [
         '.governance/manifest.json',
         '.governance/manifest.lock.json',
+        '.governance/required-checks.json',
         'src/standard-1.js',
     ],
 }]
@@ -1444,10 +1446,15 @@ package = {
         {'source': 'governance/package-manifest.json', 'target': '.governance/package-manifest.json', 'strategy': 'managed', 'executable': False},
         {'source': 'published/src/missing.js', 'target': 'src/missing.js', 'strategy': 'managed', 'executable': False},
         {'source': 'governance/manifest.default.json', 'target': '.governance/manifest.json', 'strategy': 'seed', 'executable': False},
+        {'source': 'governance/required-checks.json', 'target': '.governance/required-checks.json', 'strategy': 'extendable', 'executable': False},
     ],
 }
 package_path = root / '.governance/package-manifest.json'
 package_path.write_text(json.dumps(package, indent=2) + '\n', encoding='utf-8')
+(root / '.governance/required-checks.json').write_text(
+    '{"schema":"new-project.required-checks/v1","checks":[]}\n',
+    encoding='utf-8',
+)
 
 (root / 'src').mkdir(exist_ok=True)
 (root / 'src/pilot.js').write_text('target-owned pilot v1\n', encoding='utf-8')
@@ -1515,6 +1522,10 @@ manifest_path = root / '.governance/manifest.json'
 manifest = json.load(open(manifest_path, encoding='utf-8'))
 manifest['standard']['version'] = '0.13.0'
 manifest_path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+(root / '.governance/required-checks.json').write_text(
+    '{"schema":"new-project.required-checks/v1","checks":["governance"]}\n',
+    encoding='utf-8',
+)
 (root / 'AGENTS.md').write_text('managed agents v2\n', encoding='utf-8')
 (root / 'scripts').mkdir(exist_ok=True)
 (root / 'src/missing.js').write_text('managed src/missing.js v2\n', encoding='utf-8')
@@ -2192,6 +2203,23 @@ invalid_manifest="$fixture/invalid-manifest"
 make_fixture "$invalid_manifest"
 sed -i 's/"requiredFiles": \[/"requiredFiles": "not-an-array", "ignored": [/' "$invalid_manifest/.governance/manifest.json"
 expect_code GOV-MANIFEST-001 run_check "$invalid_manifest" --changed-file TODO.md
+
+legacy_ticket_carriers="$fixture/legacy-ticket-carriers"
+make_fixture "$legacy_ticket_carriers"
+python3 - "$legacy_ticket_carriers/.governance/manifest.json" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+manifest = json.loads(path.read_text(encoding='utf-8'))
+manifest['ticket']['requiredFiles'] = [
+    'README.md', 'intent.json', 'preprompt.md', 'changelog.md',
+]
+manifest['ticket']['requiredAgentFiles'] = ['ai-*.md', 'ai-*-logs.txt']
+path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+PY
+expect_code GOV-MANIFEST-001 run_check "$legacy_ticket_carriers" --changed-file TODO.md
 
 invalid_intent_path="$fixture/invalid-intent-path"
 make_fixture "$invalid_intent_path"

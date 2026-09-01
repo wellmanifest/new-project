@@ -165,7 +165,7 @@ manifest = json.load(open(root / '.governance/manifest.json', encoding='utf-8'))
 base = json.load(open(root / '.governance/manifest.base.json', encoding='utf-8'))
 assert lock['standard']['sourceRevision'] == sys.argv[2]
 assert lock['standard']['publicationStatus'] == 'unpublished-test'
-assert lock['standard']['version'] == '0.19.20'
+assert lock['standard']['version'] == '0.19.21'
 assert '.governance/manifest.base.json' in lock['managedFiles']
 assert '.governance/adoption-bindings.json' in lock['managedFiles']
 assert '.governance/adoption-bindings.schema.json' in lock['managedFiles']
@@ -180,6 +180,21 @@ assert 'project/governance-check.bat' in lock['managedFiles']
 assert (root / '.governance/manifest.base.json').is_file()
 assert manifest['docker']['required'] is False
 assert 'required' not in base['docker']
+assert manifest['ticket']['requiredFiles'] == ['README.md', 'intent.json']
+assert manifest['ticket']['requiredAgentFiles'] == []
+integration = manifest['coordination']['workstreams']['integration']['ownedPaths']
+required_for_integration = manifest['coordination']['integration']['requiredForPaths']
+for path in (
+    '.governance/manifest.base.json',
+    '.governance/manifest.json',
+    '.governance/manifest.lock.json',
+    '.governance/package-manifest.json',
+    '.governance/required-checks.json',
+    '.governance/ticket-allocation.json',
+    'AGENTS.md',
+):
+    assert path in integration
+    assert path in required_for_integration
 governance_paths = manifest['coordination']['workstreams']['governance']['ownedPaths']
 assert 'CHANGELOG.md' in governance_paths
 assert '.env.example' in governance_paths
@@ -342,7 +357,7 @@ grep -q -- '--check and --upgrade are mutually exclusive' "$fixture/options.err"
 
 mismatch="$fixture/mismatch"
 mkdir -p "$mismatch/.governance"
-sed 's/"version": "0.19.20"/"version": "9.9.9"/' \
+sed 's/"version": "0.19.21"/"version": "9.9.9"/' \
   "$standard/governance/manifest.default.json" > "$mismatch/.governance/manifest.json"
 if candidate_adopt "$standard" \
   --target-root "$mismatch" --source-revision "$revision" --upgrade \
