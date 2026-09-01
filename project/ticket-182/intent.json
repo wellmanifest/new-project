@@ -1,0 +1,96 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-182",
+  "summary": "Neutralize terminal review governance reruns",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    ".github/workflows/governance.yml",
+    "scripts/pull_request_gate.py",
+    "governance/diagnostics.json",
+    "tests/governance-validator.test.sh",
+    "project/ticket-182/**",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "da71bb6311b681a22e013b6386a58000909b8a7c",
+    "targetBranch": "main",
+    "outcome": "Make terminal pull-request review reruns neutral before ticket resolution while preserving complete fail-closed governance for every open pull request.",
+    "nonGoals": [
+      "Do not relax ticket ownership, intent, scope or approval checks for an open pull request",
+      "Do not repin adopter repositories or repair the historical todo2code run",
+      "Do not create a release, tag or cleanup commit"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Acquire a closed live PR-state snapshot in the protected workflow, validate its repository/number/head bindings with a deterministic standard runtime, and gate diff ownership plus approval only when the validated result is enforce; terminal results emit a neutral success and unknown states fail closed.",
+      "components": [
+        {
+          "name": "pull-request-gate-runtime",
+          "paths": [
+            "scripts/pull_request_gate.py",
+            "governance/diagnostics.json",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "reusable-governance-workflow",
+          "paths": [
+            ".github/workflows/governance.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "The reusable governance workflow now distinguishes live open and terminal pull-request states before diff enforcement"
+      ],
+      "dataChanges": [
+        "A runner-temporary closed PR-state snapshot and gate output are introduced"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Before merge, revert the atomic ticket commit; after merge, publish a corrective standard commit while retaining open-PR fail-closed behavior."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Open, terminal and malformed snapshot fixtures plus workflow structure assertions pass deterministically."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "for test_script in tests/*.test.sh; do bash \"$test_script\"; done",
+          "python3 tests/worktrees-adoption.test.py",
+          "./project/governance-check.sh --actor agent --base da71bb6311b681a22e013b6386a58000909b8a7c --head HEAD"
+        ],
+        "evidence": "The complete standard suite and exact-range governance gate pass."
+      }
+    ]
+  }
+}

@@ -281,6 +281,11 @@
       "remediation": "Restore the managed Policy DSL files or correct the selected dsl fences, then rerun the governance gate.",
       "documentation": null
     },
+    "GOV-PULL-REQUEST-STATE-001": {
+      "message": "The protected workflow cannot bind a live pull-request state to its event.",
+      "remediation": "Re-acquire the pull request through the GitHub API and retry the workflow; do not skip open-PR ticket, scope or approval enforcement.",
+      "documentation": null
+    },
     "GOV-REMEDIATION-001": {
       "message": "A diagnostic remediation intent is malformed, unresolved or semantically unsafe.",
       "remediation": "Correct the target-owned remediation-intent DSL and pass deterministic schema and semantic validation before LLM planning.",

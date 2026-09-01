@@ -125,8 +125,65 @@ jobs:
             --snapshot "$BRANCH_LIFECYCLE_SNAPSHOT" \
             --expected-repository "$EXPECTED_REPOSITORY" \
             --format text
-      - name: Resolve ticket owning the pull request diff
+      - name: Acquire current pull request state
         if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          PULL_REQUEST_GATE_SNAPSHOT: ${{ runner.temp }}/new-project-pull-request-gate.json
+        with:
+          script: |
+            const fs = require('fs');
+            const pullRequestNumber = context.payload.pull_request?.number;
+            if (!Number.isSafeInteger(pullRequestNumber) || pullRequestNumber < 1) {
+              throw new Error('GOV-PULL-REQUEST-STATE-001: event has no valid pull request number');
+            }
+            const pull = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pullRequestNumber,
+            });
+            const snapshot = {
+              schema: 'new-project.pull-request-gate-snapshot/v1',
+              repository: `${context.repo.owner}/${context.repo.repo}`,
+              pullRequest: pull.data.number,
+              state: pull.data.state,
+              merged: pull.data.merged,
+              headSha: pull.data.head.sha,
+            };
+            fs.writeFileSync(
+              process.env.PULL_REQUEST_GATE_SNAPSHOT,
+              `${JSON.stringify(snapshot)}\n`,
+              {encoding: 'utf8', mode: 0o600},
+            );
+      - name: Resolve current pull request gate
+        id: pull-request-gate
+        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+          EXPECTED_PULL_REQUEST: ${{ github.event.pull_request.number }}
+          EXPECTED_REPOSITORY: ${{ github.repository }}
+          PULL_REQUEST_GATE_SNAPSHOT: ${{ runner.temp }}/new-project-pull-request-gate.json
+        run: |
+          python3 .new-project-standard/scripts/pull_request_gate.py \
+            --snapshot "$PULL_REQUEST_GATE_SNAPSHOT" \
+            --expected-repository "$EXPECTED_REPOSITORY" \
+            --expected-pull-request "$EXPECTED_PULL_REQUEST" \
+            --expected-head "$EXPECTED_HEAD" \
+            --format github >> "$GITHUB_OUTPUT"
+      - name: Confirm neutral terminal pull request result
+        if: >-
+          (github.event_name == 'pull_request' || github.event_name == 'pull_request_review')
+          && steps.pull-request-gate.outputs.gate == 'terminal'
+        env:
+          TERMINAL_OUTCOME: ${{ steps.pull-request-gate.outputs.outcome }}
+        shell: bash
+        run: |
+          echo "GOV-PULL-REQUEST-TERMINAL: $TERMINAL_OUTCOME pull request is already terminal; diff ownership and approval gates are not applicable."
+      - name: Resolve ticket owning the pull request diff
+        if: >-
+          (github.event_name == 'pull_request' || github.event_name == 'pull_request_review')
+          && steps.pull-request-gate.outputs.gate == 'enforce'
         shell: bash
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -145,7 +202,9 @@ jobs:
             --format text
       - name: Resolve trusted human or Validator App approval
         id: approval
-        if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
+        if: >-
+          (github.event_name == 'pull_request' || github.event_name == 'pull_request_review')
+          && steps.pull-request-gate.outputs.gate == 'enforce'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           TRUSTED_REVIEWERS: ${{ inputs.trusted-reviewers }}
@@ -223,6 +282,9 @@ jobs:
             core.setOutput('source', source);
             core.setOutput('ticket', ticket);
       - name: Validate policy, intent, scope and approval
+        if: >-
+          (github.event_name != 'pull_request' && github.event_name != 'pull_request_review')
+          || steps.pull-request-gate.outputs.gate == 'enforce'
         shell: bash
         env:
           APPROVAL_EVIDENCE_PATH: ${{ runner.temp }}/new-project-approval-evidence.json
