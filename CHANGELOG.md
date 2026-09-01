@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.19.22] - 2026-09-01
+
+### Collision-proof branch worktree namespace
+
+- Pin the immutable `wellmanifest/worktrees` v0.3.0 owner artifacts.
+- Place every new delivery worktree under the reserved
+  `<workspace>/.worktrees/.branches/<repo>/<ticket-NNN>--<slug>` namespace.
+- Reject symbolic-link traversal in existing canonical path components before
+  a runtime performs Git or filesystem effects.
+- Preserve version 1 and version 2 worktrees as legacy inventory; never move
+  them automatically or create a separate release-only commit.
+
 ## [0.19.21] - 2026-09-01
 
 ### Legacy-adopter anti-noise compatibility

@@ -55,10 +55,12 @@ Before any multi-step implementation, an agent must:
 9. Serialize ticket-ID allocation before branching, then use a separate
    branch/worktree per implementation ticket. Resolve its location with the
    managed `wellmanifest/worktrees` checker. The canonical linked worktree is
-   `<workspace>/.worktrees/<repo>/<ticket-NNN>--<slug>` with its lease under
+   `<workspace>/.worktrees/.branches/<repo>/<ticket-NNN>--<slug>` with its lease under
    `<workspace>/.worktrees/.leases/<repo>`; never create publishable ticket work in a
    repo-local `.worktrees`, parallel `<organization>-worktrees`, nested
    `.worktrees/.worktrees`, system temporary directory or duplicate clone.
+   Reject a symlink in any existing canonical path component before the first
+   filesystem or Git effect; never resolve it and continue.
    The extra repository directory makes ownership and cleanup explicit; a
    repository rename changes that namespace. Preserve legacy worktrees and
    never move an existing worktree automatically. Migrate only after auditing

@@ -1,0 +1,85 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-176",
+  "summary": "Adopt collision-proof worktrees v0.3.0",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-176/**",
+    "VERSION",
+    "CHANGELOG.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "AGENTS.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/worktrees.lock.json",
+    "subprojects/worktrees/**",
+    "template/files/AGENTS.template.md",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/worktrees-adoption.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": ["wellmanifest/new-project", "wellmanifest/worktrees"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "5af758ce683a42d892cc774f0e69bb247163bf14",
+    "targetBranch": "main",
+    "outcome": "Publish new-project 0.19.22 with the immutable collision-proof worktrees v3 projection.",
+    "nonGoals": [
+      "Do not move or delete any existing v1/v2 worktree",
+      "Do not remove legacy workspace symlinks",
+      "Do not create a release-only commit or pull request"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 18,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Vendor Worktrees v3 byte-for-byte, make its reserved .branches path normative, and publish the projection from one material changeset.",
+      "components": [
+        {"name": "standard-package", "paths": ["governance/**", "subprojects/worktrees/**", "VERSION", "CHANGELOG.md"]},
+        {"name": "adopter-contract", "paths": ["POLICY.md", "CONTRIBUTING.md", "AGENTS.md", "template/files/AGENTS.template.md"]},
+        {"name": "verification", "paths": ["tests/**", "project/ticket-176/**"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Canonical delivery paths use the reserved .branches namespace",
+        "Existing symlink components fail closed before effects"
+      ],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Publish a later corrective version without rewriting immutable tags."
+    },
+    "runtimeDependencies": [],
+    "validation": [{
+      "criterion": "AC-03",
+      "commands": [
+        "python3 tests/worktrees-adoption.test.py",
+        "for test in tests/*.test.sh; do bash \"$test\"; done",
+        "./project/governance-check.sh --actor agent --base origin/main --head HEAD"
+      ],
+      "evidence": "Deterministic local suite and protected exact-head checks."
+    }]
+  }
+}
