@@ -13,6 +13,10 @@ fail() {
 [[ -x "$root/scripts/install-agent-hosts.sh" ]] || fail "installer must be executable"
 [[ -x "$root/.githooks/pre-commit" ]] || fail "hook must be executable"
 grep -Fq 'GOV-AGENT-HOST-001' "$root/.githooks/pre-commit" || fail "hook must emit GOV-AGENT-HOST-001"
+grep -Fq 'verify-pin --root "$root" --staged' "$root/template/files/pre-commit.template.sh" \
+  || fail "managed hook must validate the staged local standard pin"
+! grep -Eq 'git[[:space:]]+(fetch|pull)' "$root/template/files/pre-commit.template.sh" \
+  || fail "managed pre-commit must never fetch or pull"
 grep -Fq 'new-ticket.sh' "$root/GEMINI.md" || fail "GEMINI.md must require new-ticket.sh"
 grep -Fq 'new-ticket.sh' "$root/CLAUDE.md" || fail "CLAUDE.md must require new-ticket.sh"
 grep -Fq 'alwaysApply: true' "$root/.cursor/rules/new-project-standard.mdc" || fail "Cursor rule must alwaysApply"
@@ -173,6 +177,79 @@ for non_active_status in "${non_active_statuses[@]}"; do
 done
 [[ "$(cat "$tmp/adopter/.guard-invocations")" == "8" ]] \
   || fail "non-active transitions and resumes must invoke the guard"
+
+# The pin validator reads only the local staged manifest, lock and managed
+# digests. A command spy proves that no fetch/pull is attempted, and the check
+# leaves both HEAD and the index/worktree status unchanged.
+pinrepo="$tmp/pinrepo"
+mkdir -p "$pinrepo/.subactor" "$pinrepo/.governance" "$tmp/fakebin"
+git init -q "$pinrepo"
+git -C "$pinrepo" config user.email "test@example.com"
+git -C "$pinrepo" config user.name "Test"
+cp "$root/.subactor/manifest.json" "$pinrepo/.subactor/manifest.json"
+cp "$root/.subactor/.gitignore" "$pinrepo/.subactor/.gitignore"
+cp "$root/scripts/work_continuity.py" "$pinrepo/.governance/work_continuity.py"
+python3 - "$pinrepo" <<'PY'
+import hashlib
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+managed = {}
+for relative in ('.subactor/manifest.json', '.subactor/.gitignore'):
+    managed[relative] = hashlib.sha256((root / relative).read_bytes()).hexdigest()
+lock = {
+    'schema': 'new-project.lock/v1',
+    'standard': {
+        'id': 'wellmanifest/new-project',
+        'version': '0.20.1',
+        'sourceRepository': 'wellmanifest/new-project',
+        'sourceRevision': '1' * 40,
+        'publicationStatus': 'published',
+    },
+    'managedFiles': managed,
+}
+(root / '.governance/manifest.lock.json').write_text(
+    json.dumps(lock, indent=2) + '\n', encoding='utf-8'
+)
+PY
+git -C "$pinrepo" add .
+real_git="$(command -v git)"
+cat > "$tmp/fakebin/git" <<EOF
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >> "\$GIT_TRACE_ARGS"
+exec "$real_git" "\$@"
+EOF
+chmod +x "$tmp/fakebin/git"
+pin_trace="$tmp/pin-git-commands"
+before_pin_status="$(git -C "$pinrepo" status --porcelain=v1)"
+before_pin_head="$(git -C "$pinrepo" rev-parse --verify HEAD 2>/dev/null || true)"
+GIT_TRACE_ARGS="$pin_trace" PATH="$tmp/fakebin:$PATH" \
+  python3 "$pinrepo/.governance/work_continuity.py" verify-pin \
+    --root "$pinrepo" --staged > "$tmp/pin-pass.json"
+grep -q '"networkAccess": false' "$tmp/pin-pass.json"
+grep -q '"mutated": false' "$tmp/pin-pass.json"
+! grep -Eq '(^| )(fetch|pull)( |$)' "$pin_trace" || fail "pin validation used the network"
+[[ "$(git -C "$pinrepo" status --porcelain=v1)" == "$before_pin_status" ]] \
+  || fail "pin validation mutated index or worktree"
+[[ "$(git -C "$pinrepo" rev-parse --verify HEAD 2>/dev/null || true)" == "$before_pin_head" ]] \
+  || fail "pin validation mutated HEAD"
+
+python3 - "$pinrepo/.subactor/manifest.json" <<'PY'
+import json
+import sys
+path = sys.argv[1]
+value = json.load(open(path, encoding='utf-8'))
+value['continuity']['checkpointIndexMaxEntries'] = 1
+open(path, 'w', encoding='utf-8').write(json.dumps(value, indent=2) + '\n')
+PY
+git -C "$pinrepo" add .subactor/manifest.json
+status=0
+python3 "$pinrepo/.governance/work_continuity.py" verify-pin \
+  --root "$pinrepo" --staged > "$tmp/pin-drift.out" 2> "$tmp/pin-drift.err" || status=$?
+test "$status" -eq 2
+grep -Fq 'GOV-CONTINUITY-001' "$tmp/pin-drift.err"
 
 # Status authority comes from the staged snapshot. An unstaged IN_PROGRESS
 # working-tree value must not authorize a staged BACKLOG ticket plus source.

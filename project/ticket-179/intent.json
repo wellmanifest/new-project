@@ -1,0 +1,149 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-179",
+  "summary": "Standardize local Subactor continuity",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-179/**",
+    "project/TICKETS.md",
+    ".gitignore",
+    ".subactor/.gitignore",
+    ".subactor/manifest.json",
+    "AGENTS.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "docs/GOVERNANCE_ENFORCEMENT.md",
+    "docs/WORK_CONTINUITY.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/agent-hosts.json",
+    "governance/package-manifest.json",
+    "governance/rule-enforcement.json",
+    "governance/work-continuity.schema.json",
+    "scripts/work_continuity.py",
+    "subprojects/ticket-lifecycle/README.md",
+    "template/files/AGENTS.template.md",
+    "template/files/pre-commit.template.sh",
+    "template/files/tests/conftest-worktree-bootstrap.template.py",
+    "tests/adoption-lock.test.sh",
+    "tests/agent-hosts.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/rule-enforcement.test.sh",
+    "tests/work-continuity.test.sh",
+    "tests/worktrees-adoption.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": ["wellmanifest/new-project"]
+  },
+  "delivery": {
+    "acceptedBaseSha": "7e4d2e49a0aa99462dfe552a1bdd6d02aacddf60",
+    "targetBranch": "main",
+    "outcome": "Publish new-project 0.20.1 with managed local Subactor storage, work-continuity v2 and network-free local pin enforcement.",
+    "nonGoals": [
+      "Do not fetch or mutate repository state from pre-commit",
+      "Do not impose a policy size cap on append-only session event streams",
+      "Do not treat checkpoint data or prose as execution or merge authority",
+      "Do not modify the user-owned untracked fixture in the primary checkout",
+      "Do not merge or publish this pull request"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep authoritative Git, intent, lease and protected receipts outside model prose; store unlimited append-only local events in ignored .subactor runtime paths, derive a bounded atomic latest-checkpoint index, and validate the already-adopted immutable standard pin locally at commit time.",
+      "components": [
+        {
+          "name": "continuity-contract",
+          "paths": [
+            ".subactor/**",
+            "AGENTS.md",
+            "POLICY.md",
+            "CONTRIBUTING.md",
+            "docs/GOVERNANCE_ENFORCEMENT.md",
+            "docs/WORK_CONTINUITY.md",
+            "governance/agent-hosts.json",
+            "governance/work-continuity.schema.json",
+            "scripts/work_continuity.py",
+            "subprojects/ticket-lifecycle/README.md",
+            "template/files/AGENTS.template.md",
+            "template/files/pre-commit.template.sh"
+          ]
+        },
+        {
+          "name": "standard-release-package",
+          "paths": [
+            ".gitignore",
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "governance/package-manifest.json",
+            "governance/rule-enforcement.json",
+            "template/files/tests/conftest-worktree-bootstrap.template.py"
+          ]
+        },
+        {
+          "name": "continuity-tests",
+          "paths": ["tests/**"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Managed local storage exposes tracked .subactor/manifest.json and six ignored runtime directories",
+        "Work continuity advances to v2 with exact plan, slice, Git, lease, remote/account and snapshot bindings",
+        "Managed pre-commit rejects local standard-pin drift without network or mutation"
+      ],
+      "dataChanges": [
+        "Local continuity storage changes from an unbounded checkpoint registry to append-only events plus a bounded index",
+        "New-project release projections advance from 0.20.0 to 0.20.1"
+      ],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Before publication revert the atomic ticket commit; after publication issue a newer corrective standard and preserve append-only events and unknown snapshots for manual recovery."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/work-continuity.test.sh"],
+        "evidence": "Scratch repositories prove v2 bindings, append-only events, bounded atomic index and divergence handling."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["bash tests/agent-hosts.test.sh", "bash tests/adoption-lock.test.sh"],
+        "evidence": "Adopter hook validates only local managed data and explicit adoption supplies freshness."
+      },
+      {
+        "criterion": "AC-06",
+        "commands": [
+          "for test_script in tests/*.test.sh; do bash \"$test_script\"; done",
+          "pwsh -NoProfile -File tests/windows-governance.test.ps1 -SourceRevision HEAD",
+          "./project/governance-check.sh --actor agent --base origin/main --head HEAD"
+        ],
+        "evidence": "Complete deterministic suite and exact-head governance pass."
+      }
+    ]
+  }
+}

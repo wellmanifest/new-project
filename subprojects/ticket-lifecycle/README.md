@@ -165,10 +165,13 @@ forbidden.
 
 `checkpoint` is an append-only, same-state transition for work that has an
 authorization reference and may outlive the current conversation or process.
-Its evidence includes exactly one bounded `new-project.work-continuity/v1`
-receipt reference. The resolved checkpoint binds ticket, intent and scope
-digests, HEAD, workspace digest, criteria and pending effects. It never changes
-the ticket state, grants authority, renews a lease or marks an effect complete.
+Its evidence includes exactly one bounded `new-project.work-continuity/v2`
+receipt reference. The resolved checkpoint binds plan, slice, ticket, intent
+and scope digests, branch, HEAD, lease, remote/account observation, workspace,
+snapshot receipt, criteria and pending effects. The local host-agnostic event
+stream may grow without a policy cap; its atomic latest-checkpoint index stays
+bounded. Neither changes ticket state, grants authority, renews a lease or
+marks an effect complete.
 
 The controller checkpoints at material milestones, the configured time
 interval, context compaction, handoff, pause, blocker and external-effect

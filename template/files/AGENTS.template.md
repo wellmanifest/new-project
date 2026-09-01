@@ -60,7 +60,9 @@ Before any multi-step implementation, an agent must:
    `<primaryCheckout>/worktrees/<ticket-NNN>--<slug>` with
    `linkMode=relative`; its lease is
    `<primaryCheckout>/.subactor/leases/<ticket-NNN>--<slug>.json`. Root-ignore
-   `/worktrees/` and `/.subactor/`. Before the first effect, feature-probe
+   `/worktrees/` and only
+   `/.subactor/{leases,sessions,recovery,receipts,cache,snapshots}/`; keep
+   `.subactor/manifest.json` tracked. Before the first effect, feature-probe
    `git worktree add --relative-paths` and
    `git worktree repair --relative-paths` (minimum Git 2.51.0), and reject a
    symlink in any existing canonical path component. Legacy v1/v2/v3,
@@ -160,14 +162,19 @@ Before any multi-step implementation, an agent must:
 24. Treat conversation memory as a cache, never task storage. At a material
     milestone, configured checkpoint interval, context compaction, handoff,
     pause, blocker, tool failure or external-effect boundary, emit a bounded
-    `new-project.work-continuity/v1` checkpoint through
-    `.governance/work_continuity.py` and persist it in the external receipt
-    store. The local `.git` registry is only a recovery cache. Resume by
-    observing Git/PR/receipts first, verifying the monotonic chain, intent,
-    HEAD and workspace digest, then revalidating the lease. The checkpoint
-    grants no authority. Dirty work needs an authorized ticket-branch commit
-    or a content-addressed, secret-scanned external snapshot; otherwise stop
-    the handoff and preserve the unknown state.
+    `new-project.work-continuity/v2` checkpoint through
+    `.governance/work_continuity.py`. Append it to the ignored host-agnostic
+    session event stream and atomically refresh the bounded recovery index;
+    event streams have no policy size cap. Persist its receipt externally for
+    cross-machine recovery. Bind the exact plan, slice, ticket, branch, HEAD,
+    lease, remote/account observation and snapshot receipt. Resume by observing
+    Git/PR/receipts first, verifying the monotonic chain, intent, HEAD and
+    workspace digest, then revalidating lease and remote account. Checkpoint
+    data and prose grant no authority. Dirty work needs an authorized
+    ticket-branch commit or a content-addressed, secret-scanned external
+    snapshot. Pre-commit checks only the local immutable pin; explicit
+    adoption/updater automation owns freshness and the hook never fetches or
+    mutates.
 
 Markdown approval is an audit note, not trusted merge approval. Required
 merge approval comes from the repository's protected review, attestation and

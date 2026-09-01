@@ -221,7 +221,19 @@ class WorktreesAdoptionTest(unittest.TestCase):
             self.assertIn("AGENTS.md", text, pointer)
         ignores = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
         self.assertIn("/worktrees/", ignores)
-        self.assertIn("/.subactor/", ignores)
+        for directory in (
+            "leases", "sessions", "recovery", "receipts", "cache", "snapshots"
+        ):
+            self.assertIn(f"/.subactor/{directory}/", ignores)
+        self.assertNotIn("/.subactor/", ignores)
+        manifest = ROOT / ".subactor" / "manifest.json"
+        self.assertTrue(manifest.is_file())
+        self.assertFalse(
+            subprocess.run(
+                ["git", "-C", str(ROOT), "check-ignore", "--quiet", str(manifest)],
+                check=False,
+            ).returncode == 0
+        )
 
     def test_feature_probe_requires_version_and_both_options(self):
         checker = load_checker()

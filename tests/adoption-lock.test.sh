@@ -5,6 +5,43 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fixture="$(mktemp -d "${TMPDIR:-/tmp}/new-project-adoption-test.XXXXXX")"
 trap 'rm -rf "$fixture"' EXIT INT TERM
 
+# The recovered worktree bootstrap template has traceable source commits and
+# must fail-close into the repository installer before a test suite starts.
+python3 - "$repo_root/template/files/tests/conftest-worktree-bootstrap.template.py" \
+  "$fixture/bootstrap" <<'PY'
+import importlib.util
+import pathlib
+import sys
+
+source, root = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
+text = source.read_text(encoding='utf-8')
+assert 'autogrammar/hillm' in text
+assert '305361a' in text and 'b8a9f8a' in text
+spec = importlib.util.spec_from_file_location('worktree_bootstrap_template', source)
+module = importlib.util.module_from_spec(spec)
+assert spec.loader is not None
+spec.loader.exec_module(module)
+module.ROOT = root
+module.VENV_BIN = root / '.venv' / 'bin'
+module.REQUIRED_CLIS = ('fixture-cli',)
+calls = []
+
+def run(arguments, *, cwd, check):
+    assert cwd == root and check is True
+    calls.append(arguments)
+    module.VENV_BIN.mkdir(parents=True, exist_ok=True)
+    if arguments == ['bash', 'packages/install-dev.sh']:
+        (module.VENV_BIN / 'fixture-cli').write_text('', encoding='utf-8')
+
+module.subprocess.run = run
+module._ensure_dev_install()
+assert calls[0][1:3] == ['-m', 'venv']
+assert calls[1] == ['bash', 'packages/install-dev.sh']
+calls.clear()
+module._ensure_dev_install()
+assert calls == []
+PY
+
 standard="$fixture/standard"
 target="$fixture/target"
 mkdir -p "$standard" "$target"
@@ -165,13 +202,19 @@ manifest = json.load(open(root / '.governance/manifest.json', encoding='utf-8'))
 base = json.load(open(root / '.governance/manifest.base.json', encoding='utf-8'))
 assert lock['standard']['sourceRevision'] == sys.argv[2]
 assert lock['standard']['publicationStatus'] == 'unpublished-test'
-assert lock['standard']['version'] == '0.20.0'
+assert lock['standard']['version'] == '0.20.1'
 assert '.governance/manifest.base.json' in lock['managedFiles']
 assert '.governance/adoption-bindings.json' in lock['managedFiles']
 assert '.governance/adoption-bindings.schema.json' in lock['managedFiles']
 assert '.governance/work-continuity.schema.json' in lock['managedFiles']
 assert '.governance/work_continuity.py' in lock['managedFiles']
 assert '.governance/error/GOV-WORK-CONTINUITY.md' in lock['managedFiles']
+assert '.subactor/.gitignore' in lock['managedFiles']
+assert '.subactor/manifest.json' in lock['managedFiles']
+assert '.governance/templates/conftest-worktree-bootstrap.py' in lock['managedFiles']
+assert (root / '.subactor/manifest.json').is_file()
+assert (root / '.subactor/.gitignore').is_file()
+assert (root / '.governance/templates/conftest-worktree-bootstrap.py').is_file()
 assert '.governance/manifest.json' not in lock['managedFiles']
 assert 'project.sh' not in lock['managedFiles']
 assert 'project.bat' not in lock['managedFiles']
@@ -191,6 +234,7 @@ for path in (
     '.governance/package-manifest.json',
     '.governance/required-checks.json',
     '.governance/ticket-allocation.json',
+    '.subactor/manifest.json',
     'AGENTS.md',
 ):
     assert path in integration
@@ -357,7 +401,7 @@ grep -q -- '--check and --upgrade are mutually exclusive' "$fixture/options.err"
 
 mismatch="$fixture/mismatch"
 mkdir -p "$mismatch/.governance"
-sed 's/"version": "0.20.0"/"version": "9.9.9"/' \
+sed 's/"version": "0.20.1"/"version": "9.9.9"/' \
   "$standard/governance/manifest.default.json" > "$mismatch/.governance/manifest.json"
 if candidate_adopt "$standard" \
   --target-root "$mismatch" --source-revision "$revision" --upgrade \
@@ -682,7 +726,7 @@ assert 'MATERIAL_OBJECTIVE_EXPANSION' in rule(contributing, 'C-APPROVAL-003')
 for agents in (hub_agents, target_agents):
     assert 'SESSION_EXECUTION_AUTHORIZATION' in agents
     assert 'without a second confirmation' in agents
-    assert 'new-project.work-continuity/v1' in agents
+    assert 'new-project.work-continuity/v2' in agents
     assert 'conversation memory' in agents.lower()
 assert 'protected delivery' in target_agents.lower()
 assert 'session prose is never' in target_agents.lower()
