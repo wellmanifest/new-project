@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.20.2] - 2026-09-01
+
+### Protected rewritten-merge terminal receipts
+
+- Preserve direct ancestry as the primary terminal proof and add fail-closed
+  fallbacks for GitHub rebase and squash merges.
+- Require rebase to preserve a linear, equally long series of ordered stable
+  patch IDs; require squash to match the aggregate head patch with one terminal
+  commit before releasing a reservation.
+- Continue requiring the terminal SHA to be reachable from the declared target
+  branch; malformed, nonlinear, empty or changed series remain active.
+- Keep the existing receipt schema and append-only registry bindings while
+  publishing the corrected policy, runtime, runbook and regression fixture.
+
 ## [0.20.1] - 2026-09-01
 
 ### Host-agnostic local continuity

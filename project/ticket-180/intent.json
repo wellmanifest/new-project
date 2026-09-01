@@ -1,0 +1,127 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-180",
+  "summary": "Support protected rewritten merges in terminal receipt verification",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P0",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-180/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/ticket_activity.py",
+    "governance/ticket-activity.json",
+    "governance/ticket-activity.schema.json",
+    "error/GOV-TICKET-ACTIVITY.md",
+    "tests/ticket-activity.test.sh",
+    "tests/adoption-lock.test.sh",
+    "tests/agent-hosts.test.sh",
+    "tests/governance-validator.test.sh",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "placement": {
+    "home": "wellmanifest",
+    "shape": "domain_pack",
+    "runtimeOwner": "wellmanifest",
+    "adopt": [
+      "wellmanifest/new-project"
+    ]
+  },
+  "delivery": {
+    "acceptedBaseSha": "ce1c85d1a2526d7dc89635c8dc9eb485f6870b7a",
+    "targetBranch": "main",
+    "outcome": "Publish new-project 0.20.2 with fail-closed terminal receipt verification for protected GitHub rebase and squash merges.",
+    "nonGoals": [
+      "Do not weaken target-branch reachability or append-only receipt bindings",
+      "Do not trust mutable refs, PR prose or an asserted merge method",
+      "Do not change the terminal receipt registry schema",
+      "Do not rewrite historical ticket status projections or create a release-only ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Retain direct Git ancestry as the primary terminal proof; accept a rebase only when a linear original head series matches the same-length terminal patch series, and accept a squash only when one terminal commit matches the aggregate protected-head patch.",
+      "components": [
+        {
+          "name": "ticket-activity-runtime",
+          "paths": [
+            "scripts/ticket_activity.py",
+            "governance/ticket-activity.json",
+            "governance/ticket-activity.schema.json",
+            "error/GOV-TICKET-ACTIVITY.md"
+          ]
+        },
+        {
+          "name": "terminal-receipt-regression",
+          "paths": [
+            "tests/ticket-activity.test.sh"
+          ]
+        },
+        {
+          "name": "standard-release-projection",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "tests/adoption-lock.test.sh",
+            "tests/agent-hosts.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "terminalOutcomes verification advances from git-ancestry to git-ancestry-or-rewritten-patch-series"
+      ],
+      "dataChanges": [
+        "New-project release projections advance from 0.20.1 to 0.20.2"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Before publication, revert the atomic ticket commit; after publication, issue a newer corrective standard without retargeting immutable tags."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/ticket-activity.test.sh"
+        ],
+        "evidence": "An advanced target plus protected two-commit rebase and squash both resolve, while mismatched and nonlinear patch evidence is rejected without registry mutation."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "for test_script in tests/*.test.sh; do bash \"$test_script\"; done",
+          "python3 tests/worktrees-adoption.test.py",
+          "./project/governance-check.sh --actor agent --base ce1c85d1a2526d7dc89635c8dc9eb485f6870b7a --head HEAD"
+        ],
+        "evidence": "Complete deterministic suite and exact-head governance pass."
+      }
+    ]
+  }
+}
