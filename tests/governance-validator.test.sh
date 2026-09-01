@@ -92,7 +92,7 @@ hub_manifest = json.load(open(
 Draft202012Validator(schemas['manifest.schema.json']).validate(hub_manifest)
 assert 'config/artifact-registry.json' in hub_manifest['governancePaths']
 assert '.governance/standard-adoption.json' in hub_manifest['governancePaths']
-assert hub_manifest['standard']['version'] == '0.19.19'
+assert hub_manifest['standard']['version'] == '0.19.20'
 assert hub_manifest['coordination']['workstreams'] == {
     'governance': {'ownedPaths': ['**']},
 }
@@ -180,7 +180,7 @@ Draft202012Validator(schemas['lock.schema.json']).validate({
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.19',
+        'version': '0.19.20',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'published',
@@ -191,7 +191,7 @@ candidate_lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.19',
+        'version': '0.19.20',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'unpublished-test',
@@ -307,7 +307,7 @@ assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
 assert manifest['schema'] == schema['properties']['schema']['const']
-assert manifest['standard']['version'] == '0.19.19'
+assert manifest['standard']['version'] == '0.19.20'
 ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
@@ -1124,7 +1124,7 @@ lock = {
   'schema': 'new-project.lock/v1',
   'standard': {
     'id': 'wellmanifest/new-project',
-    'version': '0.19.19',
+    'version': '0.19.20',
     'sourceRepository': 'wellmanifest/new-project',
     'sourceRevision': 'a' * 40,
     'publicationStatus': 'published',
@@ -1182,7 +1182,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.19',
+        'version': '0.19.20',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'a' * 40,
         'publicationStatus': 'published',
@@ -1275,7 +1275,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.19.19',
+        'version': '0.19.20',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'b' * 40,
         'publicationStatus': 'published',
@@ -1583,7 +1583,7 @@ if git -C "$atomic_drifted_managed" cherry-pick "$atomic_upgrade_head"; then
 fi
 printf '%s\n' 'managed agents v2' > "$atomic_drifted_managed/AGENTS.md"
 git -C "$atomic_drifted_managed" add AGENTS.md
-git -C "$atomic_drifted_managed" cherry-pick --continue
+GIT_EDITOR=true git -C "$atomic_drifted_managed" cherry-pick --continue
 python3 - "$atomic_drifted_managed/project/ticket-002/intent.json" \
   "AGENTS.md" "$atomic_drift_base" <<'PY'
 import hashlib

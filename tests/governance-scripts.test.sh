@@ -37,6 +37,35 @@ cp "$repo_root/governance/work-classification.dsl.json" "$fixture/.governance/wo
 cp "$repo_root/governance/manifest.default.json" "$fixture/.governance/manifest.json"
 printf '%s\n' '# Analysis-owned project README' > "$fixture/project/README.md"
 
+# `grep -q` must not sit behind a producer in a pipefail pipeline: when the
+# selected value is early and the registry exceeds the pipe buffer, the
+# producer receives SIGPIPE and a valid value is rejected nondeterministically.
+pipefail_fixture="$fixture/pipefail-registry"
+mkdir -p "$pipefail_fixture/project" "$pipefail_fixture/template" \
+  "$pipefail_fixture/.governance"
+cp "$repo_root/project/new-ticket.sh" "$pipefail_fixture/project/new-ticket.sh"
+cp "$repo_root/project/readme.sh" "$pipefail_fixture/project/readme.sh"
+cp -R "$repo_root/template/files" "$pipefail_fixture/template/files"
+cp "$repo_root/governance/work-classification.dsl.json" \
+  "$pipefail_fixture/.governance/work-classification.dsl.json"
+cp "$repo_root/governance/manifest.default.json" \
+  "$pipefail_fixture/.governance/manifest.json"
+python3 - "$pipefail_fixture/.governance/manifest.json" <<'PY'
+import json
+import sys
+path = sys.argv[1]
+manifest = json.load(open(path, encoding='utf-8'))
+for index in range(7000):
+    manifest['coordination']['workstreams'][f'zz-{index:04d}'] = {'ownedPaths': []}
+open(path, 'w', encoding='utf-8').write(json.dumps(manifest) + '\n')
+PY
+(
+  cd "$pipefail_fixture"
+  bash project/new-ticket.sh --title 'Pipefail-safe registry lookup' \
+    --workstream application > allocation.out
+)
+test -d "$pipefail_fixture/project/ticket-001"
+
 status=0
 (
   cd "$fixture"

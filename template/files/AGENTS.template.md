@@ -55,10 +55,15 @@ Before any multi-step implementation, an agent must:
 9. Serialize ticket-ID allocation before branching, then use a separate
    branch/worktree per implementation ticket. Resolve its location with the
    managed `wellmanifest/worktrees` checker. The canonical linked worktree is
-   `<workspace>/.worktrees/<repo>--ticket-NNN--<slug>` with its lease under
-   `<workspace>/.worktrees/.leases`; never create publishable ticket work in a
+   `<workspace>/.worktrees/<repo>/<ticket-NNN>--<slug>` with its lease under
+   `<workspace>/.worktrees/.leases/<repo>`; never create publishable ticket work in a
    repo-local `.worktrees`, parallel `<organization>-worktrees`, nested
    `.worktrees/.worktrees`, system temporary directory or duplicate clone.
+   The extra repository directory makes ownership and cleanup explicit; a
+   repository rename changes that namespace. Preserve legacy worktrees and
+   never move an existing worktree automatically. Migrate only after auditing
+   dirty state, active processes and IDEs, leases, pull requests and HEAD
+   reachability, using the exact `git worktree move` target.
    Each diff must resolve to exactly one active ticket. Shared contract paths are edited only by the declared
    integration workstream; `integrationTicket` coordinates work but does not
    transfer path ownership. Product commercial registries (prices,
@@ -144,7 +149,9 @@ Before any multi-step implementation, an agent must:
    carrier-only commit or PR. If analysis finds no material delta, emit an
     external no-change receipt and create no repository history. Intent may be
     committed atomically with the first material change; do not create a
-    separate plan-only commit.
+    separate plan-only commit. A version bump and release projections join
+    their material implementation ticket; never create a separate release-only
+    ticket, branch or PR.
 24. Treat conversation memory as a cache, never task storage. At a material
     milestone, configured checkpoint interval, context compaction, handoff,
     pause, blocker, tool failure or external-effect boundary, emit a bounded

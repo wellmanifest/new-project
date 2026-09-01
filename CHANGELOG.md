@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.19.20] - 2026-09-01
+
+### Repository-namespaced ticket worktrees
+
+- Pin the immutable `wellmanifest/worktrees` v0.2.0 owner artifacts.
+- Standardize `<workspace>/.worktrees/<repo>/<ticket-NNN>--<slug>` and matching
+  repository-scoped leases across every adopter.
+- Reject the legacy flat layout and require audit-first, non-destructive
+  migration of existing linked worktrees.
+- Publish the version from this material changeset instead of creating a
+  separate release-only ticket and pull request.
+
 ## [0.19.15] - 2026-08-30
 
 ### Registered ticket allocation

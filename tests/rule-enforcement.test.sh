@@ -135,7 +135,7 @@ header = next(
     for lang, _, lines in blocks
     if lang == "dsl" and any(line == "DOCUMENT CONTRIBUTING" for line in lines)
 )
-assert "VERSION 18" in header
+assert "VERSION 19" in header
 
 declaration = re.compile(r"^(?:RULE|STATE|TRANSITION) [A-Z][A-Z0-9_-]*")
 mislabelled = [
@@ -181,6 +181,8 @@ expected = {
         "goal -a --delivery-mode direct-main",
         "CLEAN_RETESTED_DEFAULT_BRANCH_AT_EXACT_APPROVED_MERGE_SHA",
         "MOVING_EXISTING_TAG",
+        "MATERIAL_IMPLEMENTATION_TICKET",
+        "SEPARATE_RELEASE_ONLY_TICKET",
     ],
     "C-PUBLISH-008": [
         "HEAD_NOT_INTEGRATED",
@@ -199,6 +201,10 @@ implementation = rule_body("C-PUBLISH-006")
 assert "PUBLISH_ONLY" in implementation and "TAG_OR_RELEASE_CREATION" in implementation
 release = rule_body("C-PUBLISH-007")
 assert "PULL_REQUEST_HEAD" in release and "UNAPPROVED_HEAD" in release
+
+delivery = rule_body("C-DELIVERY-001")
+assert "VERSION_AND_RELEASE_PROJECTIONS_TO_JOIN_THE_MATERIAL_CHANGESET" in delivery
+assert "SEPARATE_RELEASE_ONLY_TICKET_COMMIT_BRANCH_OR_PULL_REQUEST" in delivery
 
 implementation_pr = rule_body("C-PUBLISH-003")
 for fragment in (
