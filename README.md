@@ -27,6 +27,8 @@ DOCELOWE REPOZYTORIUM SYSTEMU X (Root)
 ├── project.sh / project.bat     <-- (Fail-closed governance gate; opcjonalna analiza w przypiętym obrazie)
 ├── .governance/                  <-- (Pakiet standardu przypięty do immutable revision)
 │   ├── diagnostics.json         <-- (Maszynowy katalog kodów GOV-*)
+│   ├── work-continuity.schema.json <-- (Checkpoint odporny na utratę kontekstu)
+│   ├── work_continuity.py       <-- (Capture / resolve / verify continuity)
 │   └── error/                   <-- (Kanoniczne runbooki dla złożonych kodów GOV-*)
 │
 └── project/                     <-- (Katalog zarządzania ticketami)
@@ -241,6 +243,7 @@ Praca nad każdym zadaniem w docelowym repozytorium przechodzi przez cykl stanó
 | **[POLICY.md](POLICY.md)** | Ścisłe zasady bezpieczeństwa, zakazy i limity (MODE STRICT). |
 | **[CONTRIBUTING.md](CONTRIBUTING.md)** | Procedura pracy, tickety, Docker i maszyna stanów (MODE PROCEDURAL). |
 | **[AGENTS.md](AGENTS.md)** | Standardowy punkt wejścia dla agentów AI (Cursor, Claude Code, Antigravity itp.). |
+| **[docs/WORK_CONTINUITY.md](docs/WORK_CONTINUITY.md)** | Checkpointy i bezpieczne wznowienie pracy bez zależności od pamięci rozmowy. |
 | **[llms.txt](llms.txt)** | Mapa dokumentacji dla modeli LLM. |
 | **[project.sh](project.sh)** / **[project.bat](project.bat)** | Fail-closed wejście: najpierw governance gate, potem opcjonalna analiza w obrazie przypiętym digestem. |
 | **[template/](template/)** | Czyste szablony dla ticketów i wpisów uczestników. |

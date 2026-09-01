@@ -2,7 +2,7 @@
 
 ```dsl
 DOCUMENT GIT_LIFECYCLE
-VERSION 1
+VERSION 2
 LANGUAGE EN
 MODE STRICT
 SCHEMA "wellmanifest.git-lifecycle/v1"
@@ -133,6 +133,24 @@ controller returns a rejected receipt and preserves the working tree.
 - `release` originates only from a clean, retested integrated default branch.
 - `cleanup` inventories every linked worktree/clone, preserves unknown data,
   and removes only an exact path proven disposable.
+
+## Continuity and dirty work
+
+Git state is re-observed before any continuity resume; a checkpoint cannot
+move a ref, reset a tree, restore a snapshot or authorize a Git transition.
+Clean work is recoverable from the exact ticket branch and `HEAD`. Dirty work
+may cross a context or process boundary only when either:
+
+1. an already-authorized `local-commit` stores the bounded material delta on
+   the ticket branch; or
+2. a protected controller secret-scans the delta, stores a content-addressed
+   snapshot outside Git and emits an immutable artifact reference plus SHA-256.
+
+A stash, raw patch, untracked-only delta or chat summary is not durable Git
+evidence. Snapshot restoration is a separate, explicitly validated operation:
+the controller first compares repository, branch, HEAD, intent/scope and status
+digests. Any divergence preserves both states and routes to reconciliation;
+automatic reset, overwrite or deletion is forbidden.
 
 ## Request and receipt boundary
 

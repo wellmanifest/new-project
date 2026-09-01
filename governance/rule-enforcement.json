@@ -128,6 +128,26 @@
       "enforcement": "manual",
       "reason": "The deterministic Strategy policy validates recovery evidence; this standard supplies the fail-closed diagnostic and ordered runbook."
     },
+    "C-CONTINUITY-001": {
+      "codes": [
+        "GOV-CONTINUITY-001",
+        "GOV-CONTINUITY-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-CONTINUITY-002": {
+      "codes": [
+        "GOV-CONTINUITY-001"
+      ],
+      "enforcement": "deterministic"
+    },
+    "C-CONTINUITY-003": {
+      "codes": [
+        "GOV-CONTINUITY-002",
+        "GOV-CONTINUITY-003"
+      ],
+      "enforcement": "deterministic"
+    },
     "C-CONTEXT-001": {
       "codes": [],
       "enforcement": "manual",
@@ -996,6 +1016,26 @@
         "GOV-TICKET-ACTIVITY-001",
         "GOV-DIAGNOSTIC-001",
         "GOV-DIAGNOSTIC-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CONTINUITY-001": {
+      "codes": [
+        "GOV-CONTINUITY-001",
+        "GOV-CONTINUITY-002"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CONTINUITY-002": {
+      "codes": [
+        "GOV-CONTINUITY-002",
+        "GOV-CONTINUITY-003"
+      ],
+      "enforcement": "deterministic"
+    },
+    "P-CONTINUITY-003": {
+      "codes": [
+        "GOV-CONTINUITY-001"
       ],
       "enforcement": "deterministic"
     },

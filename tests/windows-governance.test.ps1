@@ -28,6 +28,16 @@ try {
         throw "governance-check.bat did not forward --help successfully: $LASTEXITCODE"
     }
 
+    $continuityRuntime = Join-Path $targetRoot '.governance/work_continuity.py'
+    $continuitySchema = Join-Path $targetRoot '.governance/work-continuity.schema.json'
+    if (-not (Test-Path $continuitySchema -PathType Leaf)) {
+        throw 'work continuity schema was not adopted'
+    }
+    & python $continuityRuntime --help *> $null
+    if ($LASTEXITCODE -ne 0) {
+        throw "work continuity runtime did not start successfully: $LASTEXITCODE"
+    }
+
     Remove-Item (Join-Path $targetRoot '.governance/manifest.json')
     & (Join-Path $targetRoot 'project.bat') *> $null
     if ($LASTEXITCODE -eq 0) {

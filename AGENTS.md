@@ -121,3 +121,15 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
        commit, PR or follow-up ticket. The bounded intent may be committed in
        the same atomic changeset as the first material change; a separate
        plan-only commit is forbidden as ceremony.
+   24. **CHECKPOINT BEFORE MEMORY OR PROCESS BOUNDARIES**: Conversation memory
+       is a cache, never task storage. At a material milestone, configured
+       checkpoint interval, context compaction, handoff, pause, blocker, tool
+       failure or external-effect boundary, emit a bounded
+       `new-project.work-continuity/v1` checkpoint through the managed runtime
+       and persist it in the external receipt store. A local `.git` registry is
+       only a recovery cache. Resume by observing Git/PR/receipts first, then
+       verify the checkpoint chain, intent, HEAD and workspace digest and
+       revalidate the lease. A checkpoint grants no authority. Dirty work must
+       be in an authorized branch commit or a content-addressed,
+       secret-scanned external snapshot; otherwise stop the handoff without
+       overwriting or deleting anything.
