@@ -522,6 +522,98 @@ assert module.placement_error({
 }) == 'placement adopt must be wellmanifest/<pack> ids'
 PY
 python3 "$repo_root/scripts/audit_diagnostics.py" --root "$repo_root"
+python3 - "$repo_root/scripts/pull_request_gate.py" "$fixture" <<'PY'
+import json
+import pathlib
+import subprocess
+import sys
+
+runtime = pathlib.Path(sys.argv[1])
+fixture = pathlib.Path(sys.argv[2])
+head = '1' * 40
+base = {
+    'schema': 'new-project.pull-request-gate-snapshot/v1',
+    'repository': 'example/project',
+    'pullRequest': 17,
+    'state': 'open',
+    'merged': False,
+    'headSha': head,
+}
+
+def run(snapshot, expected_head=head):
+    path = fixture / 'pull-request-gate.json'
+    path.write_text(json.dumps(snapshot) + '\n', encoding='utf-8')
+    return subprocess.run(
+        [
+            sys.executable,
+            str(runtime),
+            '--snapshot', str(path),
+            '--expected-repository', 'example/project',
+            '--expected-pull-request', '17',
+            '--expected-head', expected_head,
+            '--format', 'github',
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+open_result = run(base)
+assert open_result.returncode == 0, open_result.stderr
+assert open_result.stdout == 'gate=enforce\noutcome=open\n'
+
+merged_result = run({**base, 'state': 'closed', 'merged': True})
+assert merged_result.returncode == 0, merged_result.stderr
+assert merged_result.stdout == 'gate=terminal\noutcome=merged\n'
+
+closed_result = run({**base, 'state': 'closed'})
+assert closed_result.returncode == 0, closed_result.stderr
+assert closed_result.stdout == 'gate=terminal\noutcome=closed-unmerged\n'
+
+invalid = (
+    ({**base, 'state': 'unknown'}, head),
+    ({**base, 'merged': True}, head),
+    ({**base, 'extra': 'forbidden'}, head),
+    (base, '2' * 40),
+)
+for snapshot, expected_head in invalid:
+    result = run(snapshot, expected_head)
+    assert result.returncode == 1
+    assert result.stdout == ''
+    assert result.stderr.startswith('GOV-PULL-REQUEST-STATE-001 ERROR:')
+
+source = runtime.read_text(encoding='utf-8')
+for forbidden in ('import requests', 'import urllib', 'import socket', 'import subprocess'):
+    assert forbidden not in source
+PY
+python3 - "$repo_root/.github/workflows/governance.yml" <<'PY'
+import pathlib
+import sys
+
+source = pathlib.Path(sys.argv[1]).read_text(encoding='utf-8')
+
+def step(name):
+    marker = f'      - name: {name}\n'
+    start = source.index(marker)
+    end = source.find('\n      - name:', start + len(marker))
+    return source[start:] if end < 0 else source[start:end]
+
+acquire = step('Acquire current pull request state')
+resolve = step('Resolve current pull request gate')
+neutral = step('Confirm neutral terminal pull request result')
+ticket = step('Resolve ticket owning the pull request diff')
+approval = step('Resolve trusted human or Validator App approval')
+validate = step('Validate policy, intent, scope and approval')
+
+assert source.index(acquire) < source.index(resolve) < source.index(ticket)
+assert 'github.rest.pulls.get' in acquire
+assert "schema: 'new-project.pull-request-gate-snapshot/v1'" in acquire
+assert 'scripts/pull_request_gate.py' in resolve
+assert "steps.pull-request-gate.outputs.gate == 'terminal'" in neutral
+for guarded in (ticket, approval, validate):
+    assert "steps.pull-request-gate.outputs.gate == 'enforce'" in guarded
+assert "github.event_name != 'pull_request_review'" in validate
+PY
 grep -q 'review.commit_id === head' "$repo_root/.github/workflows/governance.yml"
 grep -Fq '^[0-9a-f]{40}$' "$repo_root/.github/workflows/governance.yml"
 grep -q 'trustedReviewers.has(normalize(review.user.login))' "$repo_root/.github/workflows/governance.yml"
