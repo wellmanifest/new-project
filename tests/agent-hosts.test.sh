@@ -203,7 +203,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.20.3',
+        'version': '0.20.4',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '1' * 40,
         'publicationStatus': 'published',

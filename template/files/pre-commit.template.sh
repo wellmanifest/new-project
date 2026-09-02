@@ -34,13 +34,27 @@ run_local_standard_pin_check() {
     return 1
   fi
 
-  # Reads only the staged local manifest, adoption lock and managed digests.
-  # Freshness belongs to the explicit adoption updater/bot, never this hook.
+  # This first boundary reads only staged local manifests and managed digests.
+  # The separately managed controller may then ask Goal to verify freshness.
   python3 "$runner" verify-pin --root "$root" --staged >/dev/null
+}
+
+run_standard_update_controller() {
+  local runner="$root/.governance/precommit_standard_update.py"
+  if [[ ! -f "$runner" ]]; then
+    if [[ ! -e "$root/.governance/standard-adoption.json" ]]; then
+      return 0
+    fi
+    echo "GOV-STANDARD-UPDATE-001: the managed standard update controller is missing." >&2
+    echo "  Restore the pinned package; never bypass the pre-commit freshness boundary." >&2
+    return 1
+  fi
+  python3 "$runner" --root "$root" --ticket "$ticket"
 }
 
 run_commit_guards() {
   run_local_standard_pin_check
+  run_standard_update_controller
   run_worktree_guard
 }
 

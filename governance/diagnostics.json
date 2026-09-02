@@ -326,6 +326,11 @@
       "remediation": "Use one declared active, non-active or closed status and a compatible workflow state.",
       "documentation": null
     },
+    "GOV-STANDARD-UPDATE-001": {
+      "message": "The pinned Wellmanifest standard cannot be verified or safely prepared during pre-commit.",
+      "remediation": "Install a compatible Goal release and use one active standard-adoption ticket to prepare, review and restage the immutable update.",
+      "documentation": "error/GOV-STANDARD-UPDATE.md"
+    },
     "GOV-SYNC-001": {
       "message": "A managed governance file does not match its pinned SHA-256 digest.",
       "remediation": "Adopt or upgrade the complete immutable package through Goal; do not patch managed payload files manually.",
