@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [0.20.4] - 2026-09-02
+
+### Automatic, fail-closed standard update preparation
+
+- Add a managed pre-commit controller that checks the local immutable pin,
+  resolves the latest final release through Goal and prepares an atomic update
+  only under an exact staged adoption ticket.
+- Abort the initiating commit after preparing an upgrade so the full diff can
+  be reviewed and restaged; never silently commit, merge or publish it.
+- Allow adopters to disable freshness checks or select `goal`/`koru-goal`
+  execution through validated `standard-adoption.json` configuration.
+- Publish `GOV-STANDARD-UPDATE-001`, its runbook and deterministic hook,
+  configuration and failure-path tests as managed standard payload.
+
 ## [0.20.3] - 2026-09-02
 
 ### Digest-bound target-owned adoption transitions

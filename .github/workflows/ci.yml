@@ -124,6 +124,8 @@ jobs:
         run: bash tests/governance-env.test.sh
       - name: Test immutable adoption lock
         run: bash tests/adoption-lock.test.sh
+      - name: Test automatic pre-commit standard update preparation
+        run: bash tests/precommit-standard-update.test.sh
       - name: Test receipt-aware ticket activity resolution
         run: bash tests/ticket-activity.test.sh
       - name: Test work continuity checkpoint and resume contract

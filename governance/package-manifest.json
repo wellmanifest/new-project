@@ -410,6 +410,12 @@
       "executable": false
     },
     {
+      "source": "error/GOV-STANDARD-UPDATE.md",
+      "target": ".governance/error/GOV-STANDARD-UPDATE.md",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "error/GOV-PACKAGING.md",
       "target": ".governance/error/GOV-PACKAGING.md",
       "strategy": "managed",
@@ -436,6 +442,12 @@
     {
       "source": "template/files/pre-commit.template.sh",
       "target": ".githooks/pre-commit",
+      "strategy": "managed",
+      "executable": true
+    },
+    {
+      "source": "scripts/precommit_standard_update.py",
+      "target": ".governance/precommit_standard_update.py",
       "strategy": "managed",
       "executable": true
     },

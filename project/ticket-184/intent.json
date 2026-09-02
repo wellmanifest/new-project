@@ -1,0 +1,78 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-184",
+  "summary": "Prepare pinned standard updates during pre-commit",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-184/**",
+    "project/TICKETS.md",
+    "template/files/pre-commit.template.sh",
+    "scripts/precommit_standard_update.py",
+    "governance/package-manifest.json",
+    "governance/diagnostics.json",
+    "governance/standard-adoption.schema.json",
+    "governance/standard-adoption.default.json",
+    "error/GOV-STANDARD-UPDATE.md",
+    "tests/precommit-standard-update.test.sh",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/agent-hosts.test.sh",
+    ".github/workflows/ci.yml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "bca7d4cb20d73cb856db6368413fd7a6b136d421",
+    "targetBranch": "main",
+    "outcome": "Every managed adopter pre-commit verifies its staged pin and delegates latest-release detection plus authorized update preparation to Goal.",
+    "nonGoals": [
+      "Do not silently stage, commit, merge or publish an upstream standard update",
+      "Do not duplicate GitHub release verification in the standard hook",
+      "Do not mutate a target without an active adoption ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 16,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Compose the existing offline staged-pin check with a no-shell managed adapter that delegates latest release trust, authorization and update preparation to Goal before the worktree guard runs.",
+      "components": [
+        {"name": "managed-precommit", "paths": ["template/files/pre-commit.template.sh", ".github/workflows/ci.yml"]},
+        {"name": "standard-update-adapter", "paths": ["scripts/precommit_standard_update.py", "governance/package-manifest.json", "governance/standard-adoption.default.json", "governance/standard-adoption.schema.json", "VERSION", "CHANGELOG.md", "governance/manifest.default.json", "governance/manifest.hub.json"]},
+        {"name": "diagnostic-contract", "paths": ["governance/diagnostics.json", "error/GOV-STANDARD-UPDATE.md", "tests/precommit-standard-update.test.sh", "tests/adoption-lock.test.sh", "tests/agent-hosts.test.sh", "tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Managed pre-commit invokes Goal's governance adoption pre-commit protocol",
+        "standard-adoption.json selects goal or koru-goal as the bounded update executor"
+      ],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Remove the adapter invocation and managed payload; staged immutable pin validation remains unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-03", "commands": ["bash tests/precommit-standard-update.test.sh"], "evidence": "deterministic fake-Goal invocation and refusal fixtures"},
+      {"criterion": "AC-05", "commands": ["bash tests/agent-hosts.test.sh", "./project/governance-check.sh --actor agent", "git diff --check"], "evidence": "managed package, hook and governance gates"}
+    ]
+  }
+}
