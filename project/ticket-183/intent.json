@@ -1,0 +1,83 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-183",
+  "summary": "Scope repository-gate activity errors to the gated identity",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-183/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/worktree_overlap_check.py",
+    "tests/worktree-overlap.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "779665724e2c84372b4cbb5b9d225972a2aa4496",
+    "targetBranch": "main",
+    "outcome": "A repository-level gate passes when sibling repositories carry unsupported ticket-activity policy versions, while the workspace scan still reports the full drift.",
+    "nonGoals": [
+      "No change to overlap detection between worktrees of the same identity",
+      "No allowlist or per-repository exceptions"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "One guard clause in the activity_errors loop of overlap_findings(): when only_identity is set, skip activity findings from checkouts of a different identity \u2014 the same scoping the overlap groups already apply.",
+      "components": [
+        {
+          "name": "worktree-overlap-guard",
+          "paths": [
+            "scripts/worktree_overlap_check.py",
+            "tests/worktree-overlap.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Remove the four-line guard; workspace scan behavior is unchanged either way."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 scripts/worktree_overlap_check.py --workspace-root <repo> --identity-of <repo> --focus-checkout <repo> --format json"
+        ],
+        "evidence": "Repository gate returns passed while foreign-repo policy drift exists in the workspace."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 scripts/worktree_overlap_check.py --workspace-root <repo> --format json"
+        ],
+        "evidence": "Workspace scan still reports the full GOV-TICKET-ACTIVITY-001 drift."
+      }
+    ]
+  }
+}
