@@ -355,6 +355,46 @@ assert report["status"] == "passed", report["findings"]
 assert report["summary"]["checkouts"] >= 3
 PY
 
+# A repository gate must not fail on a sibling repository's ticket-activity
+# policy drift: an unreadable activity registry in "other" stays visible to
+# workspace scans but cannot block the gated repository's pre-commit.
+mkdir -p "$other/governance"
+cp "$repo_root/governance/manifest.hub.json" "$other/governance/manifest.hub.json"
+cp "$repo_root/governance/ticket-activity.json" "$other/governance/ticket-activity.json"
+git -C "$other" add governance
+git -C "$other" commit --quiet -m governance
+git_dir_other="$(git -C "$other" rev-parse --path-format=absolute --git-common-dir)"
+mkdir -p "$git_dir_other/new-project"
+printf '%s' 'not-json' > "$git_dir_other/new-project/terminal-receipts.json"
+mkdir -p "$other/project/ticket-030"
+cat > "$other/project/ticket-030/README.md" <<'MD'
+- **Status**: IN_PROGRESS
+MD
+python3 "$checker" --workspace-root "$workspace" --identity-of "$primary" \
+  --focus-checkout "$primary" --format json > "$fixture/activity-scoped.json"
+python3 - "$fixture/activity-scoped.json" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["status"] == "passed", report["findings"]
+PY
+if python3 "$checker" --workspace-root "$workspace" --format json \
+  > "$fixture/activity-wide.json"; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+python3 - "$fixture/activity-wide.json" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+codes = {item["code"] for item in report["findings"]}
+assert "GOV-TICKET-ACTIVITY-001" in codes, codes
+PY
+
 # The runner picks repository scope on its own when --root is a checkout.
 python3 "$guard" --root "$other" --config "$repo_root/worktree-guard.yaml" \
   --checker "$checker" --once --format json > "$fixture/auto-scope.json" || true
