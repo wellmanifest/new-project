@@ -1,0 +1,97 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-187",
+  "summary": "Adopt Worktrees observed repository name inventory fix",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/worktrees.lock.json",
+    "subprojects/worktrees/conformance.py",
+    "subprojects/worktrees/worktrees.schema.json",
+    "tests/worktrees-adoption.test.py",
+    "project/ticket-187/**",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/agent-hosts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "8cffec79436e12192d3bef13b185668afcd97d63",
+    "targetBranch": "main",
+    "outcome": "Publish new-project 0.20.5 with immutable Worktrees 0.4.1 inventory support for existing repository basenames such as .github.",
+    "nonGoals": [
+      "No changes to allocation policy",
+      "No edits to parallel ticket-183 or its primary working tree",
+      "No live worktree cleanup or relocation"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Vendor exact merged upstream schema and conformance bytes, update their pinned hashes, and prove the packaged lifecycle checker audits observed repository names.",
+      "components": [
+        {
+          "name": "standard-package",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "governance/worktrees.lock.json",
+            "subprojects/worktrees/conformance.py",
+            "subprojects/worktrees/worktrees.schema.json"
+          ]
+        },
+        {
+          "name": "adoption-validation",
+          "paths": [
+            "tests/worktrees-adoption.test.py",
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh",
+            "tests/agent-hosts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Retain immutable old releases; revert the adoption before release or publish a later corrective version."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/worktrees-adoption.test.py",
+          "bash tests/workspace-lifecycle.test.sh",
+          "bash tests/adoption-lock.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "exact-byte upstream binding plus packaged checker regression and protected CI"
+      }
+    ]
+  }
+}
