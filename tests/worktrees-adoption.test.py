@@ -14,7 +14,7 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 LOCK_PATH = ROOT / "governance" / "worktrees.lock.json"
-SOURCE_REVISION = "73f9b99227bfbad6ce02834324d053279fb48611"
+SOURCE_REVISION = "46db8845637cef2388282b15fe6b17fc76c141d3"
 
 
 def sha256(path: pathlib.Path) -> str:
@@ -46,17 +46,38 @@ def run(*args: str, cwd: pathlib.Path | None = None) -> str:
 
 
 class WorktreesAdoptionTest(unittest.TestCase):
+    def test_lifecycle_audits_observed_repository_basenames(self):
+        with tempfile.TemporaryDirectory(prefix="observed-repositories-") as directory:
+            workspace = pathlib.Path(directory)
+            for name in (".github", "Repo_Name.v2"):
+                primary = workspace / name
+                run("git", "init", "--quiet", "--initial-branch=main", str(primary))
+                run("git", "config", "user.email", "inventory@example.invalid", cwd=primary)
+                run("git", "config", "user.name", "inventory-test", cwd=primary)
+                (primary / "README.md").write_text("fixture\n", encoding="utf-8")
+                run("git", "add", "README.md", cwd=primary)
+                run("git", "commit", "--quiet", "-m", "fixture", cwd=primary)
+            result = subprocess.run(
+                [sys.executable, str(ROOT / "scripts/workspace_lifecycle_check.py"),
+                 "--workspace-root", str(workspace), "--format", "json"],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            report = json.loads(result.stdout)
+            self.assertEqual(report["status"], "passed")
+            self.assertEqual(len(report["inventory"]["entries"]), 2)
+
     def test_lock_binds_published_artifacts(self):
         lock = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
         self.assertEqual(lock["schema"], "new-project.worktrees-lock/v1")
         self.assertEqual(lock["dependency"]["id"], "wellmanifest/worktrees")
-        self.assertEqual(lock["dependency"]["version"], "0.4.0")
+        self.assertEqual(lock["dependency"]["version"], "0.4.1")
         self.assertEqual(lock["dependency"]["sourceRevision"], SOURCE_REVISION)
         expected = {
             "subprojects/worktrees/worktrees.schema.json":
-                "da485b122b749374146d86a74cfa2dc678c091556883cdca48e3caf0d06d8199",
+                "5ba905865a72aea6a01afff1d06de028224651d2b444f6ac528cf65499d30148",
             "subprojects/worktrees/conformance.py":
-                "dd1ac79d9265c6f00cab2b62c2348c1a45b63c0aba6a3c180dab9672a7984c02",
+                "6333676ac045246a655ea6fc042e83d5bbceef5b03b80eca50a12dc98a7aabeb",
         }
         self.assertEqual(
             {artifact["packageSourcePath"] for artifact in lock["artifacts"]},
