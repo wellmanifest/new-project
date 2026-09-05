@@ -1,0 +1,92 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-189",
+  "summary": "Detect competing local worktrees without an origin remote",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-189/**",
+    "project/TICKETS.md",
+    "scripts/worktree_overlap_check.py",
+    "tests/worktree-overlap.test.sh",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/agent-hosts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-188"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "eb2b78f4553bb0b9b3b646121edb4a29e4351864",
+    "targetBranch": "main",
+    "outcome": "Detect competing linked worktrees even without origin and publish a correctly annotated immutable 0.20.7 release for website adoption.",
+    "nonGoals": [
+      "No removal of unknown worktrees, no permission grant from diagnostics, no weakening of protected merge approval"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use Git common directory as local-only identity; network origins retain existing identity resolution.",
+      "components": [
+        {
+          "name": "workspace-guard",
+          "paths": [
+            "scripts/worktree_overlap_check.py",
+            "tests/worktree-overlap.test.sh"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh",
+            "tests/agent-hosts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert material policy/checker change through protected delivery."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/worktree-overlap.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "No-origin negative regression plus existing snapshot and origin identity cases"
+      }
+    ]
+  }
+}

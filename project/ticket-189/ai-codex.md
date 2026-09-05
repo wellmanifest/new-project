@@ -1,0 +1,1 @@
+SESSION_EXECUTION_AUTHORIZATION: The requested improvement to agent decisions and wellmanifest guidelines includes correcting the actual local-only repository identity gap discovered while validating the snapshot repair. Publication and managed target adoption remain the original outcome. Unknown work and existing release refs remain preserved.

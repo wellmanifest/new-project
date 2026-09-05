@@ -203,7 +203,10 @@ def repository_identity(root: Path, seen: set[Path] | None = None) -> str:
     except AuditError as error:
         if "No such remote" not in str(error):
             raise
-        return f"local-repository:{resolved}"
+        # Linked checkouts before remote creation still share a repository.
+        # Their different working directories must not hide competing writes.
+        common = Path(run_git(resolved, "rev-parse", "--path-format=absolute", "--git-common-dir")).resolve()
+        return f"local-repository:{common}"
     local = local_remote_path(resolved, remote)
     if local is not None and (local / ".git").exists():
         return repository_identity(local, visited)

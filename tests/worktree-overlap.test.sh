@@ -671,3 +671,17 @@ if python3 "$checker" --workspace-root "$snapshot_space" --format json > "$fixtu
   echo 'older dirty writer against a descendant delta was accepted' >&2; exit 1
 fi
 printf 'snapshot contribution regressions: PASS\n'
+
+# Local repositories before remote creation still have one shared Git identity.
+# The fixture retains competing dirty ancestor/descendant work from above.
+git -C "$snapshot_repo" remote remove origin
+if python3 "$checker" --workspace-root "$snapshot_space" --format json > "$fixture/local-only-conflict.json"; then
+  echo 'local worktrees without origin escaped overlap detection' >&2; exit 1
+fi
+python3 - "$fixture/local-only-conflict.json" <<'PY'
+import json,sys
+r=json.load(open(sys.argv[1]))
+assert len(r['summary']['identitiesWithMultipleWorktrees']) == 1, r
+assert any(x['code']=='GOV-WORKTREE-OVERLAP-001' for x in r['findings']), r
+PY
+printf 'local-only worktree identity: PASS\n'
