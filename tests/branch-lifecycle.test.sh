@@ -159,3 +159,5 @@ assert by_target[".github/workflows/new-project-governance.yml"] == {
 PY
 
 echo 'branch lifecycle validator: PASS'
+
+PYTHONDONTWRITEBYTECODE=1 python3 "$repo_root/tests/branch_intent_reconciliation_test.py"

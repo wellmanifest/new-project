@@ -1,0 +1,102 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-186",
+  "summary": "Reconcile branch intent before unmerged discard",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-186/**",
+    "AGENTS.md",
+    "template/files/AGENTS.template.md",
+    "docs/BRANCH_INTENT_RECONCILIATION.md",
+    "governance/branch-intent-reconciliation.schema.json",
+    "governance/package-manifest.json",
+    "governance/diagnostics.json",
+    "scripts/branch_intent_reconciliation.py",
+    "scripts/branch_lifecycle_check.py",
+    "tests/branch_intent_reconciliation_test.py",
+    "tests/branch-lifecycle.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "16dda08c837e243c99eb741005fac839537a23f9",
+    "targetBranch": "main",
+    "outcome": "Require criterion-level intent reconciliation before proposing unmerged branch discard; ship a read-only report validator, managed artifacts, agent procedure and regressions. Publish through protected review.",
+    "nonGoals": [
+      "No branch deletion or automatic approval",
+      "No changes to ticket-185 or its paths",
+      "No fleet-wide adoption or semantic equivalence oracle"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Report conformance is separate from trusted evidence acquisition and discard authorization. Validate closed report structure against externally acquired expected bindings and criterion inventory; keep semantic tools advisory.",
+      "components": [
+        {
+          "name": "contract",
+          "paths": [
+            "governance/branch-intent-reconciliation.schema.json",
+            "scripts/branch_intent_reconciliation.py"
+          ]
+        },
+        {
+          "name": "adoption-procedure",
+          "paths": [
+            "AGENTS.md",
+            "template/files/AGENTS.template.md",
+            "docs/BRANCH_INTENT_RECONCILIATION.md",
+            "governance/package-manifest.json",
+            "scripts/branch_lifecycle_check.py",
+            "governance/diagnostics.json"
+          ]
+        },
+        {
+          "name": "tests",
+          "paths": [
+            "tests/branch_intent_reconciliation_test.py",
+            "tests/branch-lifecycle.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Read-only branch intent reconciliation report conformance CLI"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this material changeset; preserved branches and proof artifacts are never mutated."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/branch-lifecycle.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Regression and package conformance results"
+      }
+    ]
+  }
+}
