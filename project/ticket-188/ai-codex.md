@@ -1,0 +1,1 @@
+SESSION_EXECUTION_AUTHORIZATION: The user explicitly requested improving decision making and updating AGENTS.md and the related wellmanifest standards. This authorizes the bounded policy/checker repair and target adoption. It does not itself discard unknown work or substitute for protected merge evidence.

@@ -28,6 +28,13 @@ validate; fill them in `WAIT_FOR_APPROVAL` before execution):
 `shape=runtime_service` must not use `home=wellmanifest`.
 
 ## Primary Instructions & Policy Rules
+Use [Agent decisions](docs/AGENT_DECISIONS.md) before escalating a blocker.
+Reconcile the requested effect with existing session authority and current
+evidence. Continue already authorized disjoint work; ask only for information
+or authority still required by the concrete next effect. A shared Git history
+or a quarantine label alone does not establish a second writer or require
+cleanup. Preserve unknown work and keep protected publication approval intact.
+
 AI Agents interacting with this workspace MUST immediately read and adhere to the authoritative policy files:
 
 1. 🛡️ **[POLICY.md](POLICY.md)** – Mandatory safety rules, forbidden actions, and source precedence (Mode: Strict).

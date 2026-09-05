@@ -1,0 +1,117 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-188",
+  "summary": "Resolve agent decisions from existing authority and actual worktree contention",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-188/**",
+    "project/TICKETS.md",
+    "AGENTS.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "template/files/AGENTS.template.md",
+    "scripts/worktree_overlap_check.py",
+    "tests/worktree-overlap.test.sh",
+    "error/GOV-WORKTREE-OVERLAP.md",
+    "docs/AGENT_DECISIONS.md",
+    "governance/package-manifest.json",
+    "governance/rule-enforcement.json",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/agent-hosts.test.sh",
+    "GEMINI.md",
+    "template/files/GEMINI.template.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [
+    "ticket-183"
+  ],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "fd5dc4210eaf50bb96d02ddfea625bf46a85263f",
+    "targetBranch": "main",
+    "outcome": "Publish new-project 0.20.6 with evidence-based decision guidance and snapshot overlap repair, then adopt the immutable release in the website governance ticket.",
+    "nonGoals": [
+      "No removal of unknown worktrees, no permission grant from diagnostics, no weakening of protected merge approval"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 20,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Compare dirty changes against the peer contribution since their shared Git base and document authority-preserving remediation before escalation.",
+      "components": [
+        {
+          "name": "agent-policy",
+          "paths": [
+            "AGENTS.md",
+            "POLICY.md",
+            "CONTRIBUTING.md",
+            "template/files/AGENTS.template.md",
+            "docs/AGENT_DECISIONS.md",
+            "governance/rule-enforcement.json",
+            "GEMINI.md",
+            "template/files/GEMINI.template.md"
+          ]
+        },
+        {
+          "name": "workspace-guard",
+          "paths": [
+            "scripts/worktree_overlap_check.py",
+            "tests/worktree-overlap.test.sh",
+            "error/GOV-WORKTREE-OVERLAP.md"
+          ]
+        },
+        {
+          "name": "adoption",
+          "paths": [
+            "governance/package-manifest.json",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh",
+            "tests/agent-hosts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert material policy/checker change through protected delivery."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/worktree-overlap.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Regression fixtures plus managed governance and package checks"
+      }
+    ]
+  }
+}

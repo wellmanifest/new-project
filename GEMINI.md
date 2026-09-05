@@ -13,4 +13,6 @@ This file is the Gemini / Antigravity entry. The same rules are in
 7. Run `./project/governance-check.sh` before claiming done.
 8. The pre-commit hook rejects commits that are not bound to an `IN_PROGRESS` `ticket-NNN`.
 
-If any step is unclear: STOP. Do not invent a ticket number.
+If authority or ownership remains unclear, pause the dependent effect and
+follow [docs/AGENT_DECISIONS.md](docs/AGENT_DECISIONS.md) to inspect evidence and existing authorization.
+Continue disjoint authorized work. Do not invent a ticket number.

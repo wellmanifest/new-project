@@ -616,3 +616,58 @@ for item in report["findings"]:
 PY
 
 echo 'worktree overlap guard: PASS'
+
+# A detached recovery inventory at the writer's HEAD is not a second source
+# writer. Preserve its carrier data and registration; do not require cleanup.
+snapshot_space="$fixture/snapshot-space"
+snapshot_repo="$snapshot_space/app"
+git init --quiet --initial-branch=main "$snapshot_repo"
+git -C "$snapshot_repo" config user.email overlap-test@example.invalid
+git -C "$snapshot_repo" config user.name overlap-test
+printf 'initial\n' > "$snapshot_repo/app.py"
+printf '/worktrees/\n/.subactor/\n' > "$snapshot_repo/.gitignore"
+git -C "$snapshot_repo" add .
+git -C "$snapshot_repo" commit --quiet -m initial
+git -C "$snapshot_repo" remote add origin git@github.com:example/snapshot-app.git
+writer="$snapshot_repo/worktrees/ticket-060--writer"
+inventory="$snapshot_space/.worktrees/.quarantine/snapshot"
+git -C "$snapshot_repo" worktree add --quiet -b ticket/060-writer "$writer"
+printf 'shared implementation\n' > "$writer/app.py"
+git -C "$writer" commit --quiet -am implementation
+git -C "$snapshot_repo" worktree add --quiet --detach "$inventory" ticket/060-writer
+mkdir -p "$inventory/project/ticket-061"
+printf 'Unclassified preserved carrier\n' > "$inventory/project/ticket-061/README.md"
+printf 'shared implementation\nnew work\n' > "$writer/app.py"
+python3 "$checker" --workspace-root "$snapshot_space" --format json > "$fixture/inert-snapshot.json"
+python3 - "$fixture/inert-snapshot.json" <<'PY'
+import json,sys
+r=json.load(open(sys.argv[1]))
+assert r['summary']['checkouts'] == 3, r
+assert r['summary']['identitiesWithMultipleWorktrees'] == ['remote:github.com/example/snapshot-app'], r
+assert r['status']=='passed', r['findings']
+PY
+test -f "$inventory/project/ticket-061/README.md"
+test "$(git -C "$inventory" status --porcelain | wc -l)" -eq 1
+
+# Genuine uncommitted changes on both sides remain a conflict.
+printf 'independent unfinished work\n' > "$inventory/app.py"
+if python3 "$checker" --workspace-root "$snapshot_space" --format json > "$fixture/two-dirty-writers.json"; then
+  echo 'two real writers were accepted' >&2; exit 1
+fi
+python3 - "$fixture/two-dirty-writers.json" <<'PY'
+import json,sys
+report=json.load(open(sys.argv[1]))
+assert any(x['code']=='GOV-WORKTREE-OVERLAP-001' and 'app.py' in x['evidence']['overlappingPaths'] for x in report['findings'])
+PY
+git -C "$inventory" checkout -- app.py
+git -C "$writer" commit --quiet -am continuation
+printf 'new descendant work\n' >> "$writer/app.py"
+python3 "$checker" --workspace-root "$snapshot_space" --format json > "$fixture/ancestor-snapshot.json"
+
+# Dirt on the older side competing with a descendant's new commit is real.
+git -C "$writer" checkout -- app.py
+printf 'different ancestor edit\n' > "$inventory/app.py"
+if python3 "$checker" --workspace-root "$snapshot_space" --format json > "$fixture/ancestor-dirty.json"; then
+  echo 'older dirty writer against a descendant delta was accepted' >&2; exit 1
+fi
+printf 'snapshot contribution regressions: PASS\n'
