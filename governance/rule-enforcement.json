@@ -1228,6 +1228,11 @@
         "GOV-WORKSPACE-LIFECYCLE-004"
       ],
       "enforcement": "deterministic"
+    },
+    "P-BLOCK-005": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Session authority, necessity of a question and the safest bounded alternative require current interaction evidence. Workspace contention itself remains deterministically checked by the overlap guard; this rule grants no effects."
     }
   }
 }
