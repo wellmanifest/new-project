@@ -3,7 +3,7 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "hidden-worktree-adoption",
   "kind": "information",
-  "version": 2,
+  "version": 3,
   "title": "Hidden repository-local worktree adoption",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
@@ -64,3 +64,5 @@ Installing instructions does not update custom runtime allocators or prove produ
 Worktrees 0.5.1 was protected-merged in [PR 19](https://github.com/wellmanifest/worktrees/pull/19) at `81e0d750f18ecace4436706250bf5deb190a000a`. Hosts running from an organization directory must pass `feature-probe --from-worktree <checkout>`. An unavailable repository is reported separately from missing Git support; inherited Git selectors cannot redirect the query. The operation remains read-only.
 
 Host installation also distinguishes the governance hub source paths from adopter target paths using the existing package manifest. Hub activation no longer demands duplicate `.governance` copies of its `scripts` runtime files. Missing source files still fail closed.
+
+The hub AGENTS prose and P-CORE-009 now agree with C-TICKET-008: a matching task reuses its ticket, while a disjoint task may use another ticket within the manifest limit. The hub retains its limit of one active governance ticket; adopters may allow more. An unconditional ban on all new tickets is not a valid projection of this rule.

@@ -27,6 +27,22 @@ Draft202012Validator.check_schema(schema)
 Draft202012Validator(schema).validate(catalog)
 PY
 
+# The human/agent projections must not unconditionally forbid what the
+# manifest and C-TICKET-008 explicitly permit for disjoint concurrent work.
+python3 - "$repo_root" <<'PYCONCURRENCY'
+from pathlib import Path
+import sys
+root=Path(sys.argv[1])
+policy=(root/'POLICY.md').read_text().split('RULE P-CORE-009',1)[1].split('RULE P-CORE-010',1)[0]
+assert 'FORBID CREATE_NEW_TICKET_DIRECTORY\n' not in policy
+assert 'FORBID CREATE_NEW_TICKET_DIRECTORY WHEN WORKSTREAM_AND_SCOPE_MATCH' in policy
+for path in ['AGENTS.md','template/files/AGENTS.template.md']:
+    text=(root/path).read_text()
+    assert 'different workstream with no write-scope overlap' not in text
+    assert 'per-workstream concurrency limit permits it' in text
+assert 'WRITE_SCOPE_DOES_NOT_OVERLAP AND MANIFEST_WORKSTREAM_LIMIT_ALLOWS' in (root/'CONTRIBUTING.md').read_text()
+PYCONCURRENCY
+
 # Negative cases run against a copy so the checkout is never mutated.
 cp -R "$repo_root/governance" "$repo_root/scripts" "$repo_root/POLICY.md" "$repo_root/CONTRIBUTING.md" "$work/"
 mkdir -p "$work/repo" && mv "$work/governance" "$work/scripts" "$work/POLICY.md" "$work/CONTRIBUTING.md" "$work/repo/"
