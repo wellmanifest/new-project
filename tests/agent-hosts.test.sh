@@ -21,6 +21,28 @@ grep -Fq 'new-ticket.sh' "$root/GEMINI.md" || fail "GEMINI.md must require new-t
 grep -Fq 'new-ticket.sh' "$root/CLAUDE.md" || fail "CLAUDE.md must require new-ticket.sh"
 grep -Fq 'alwaysApply: true' "$root/.cursor/rules/new-project-standard.mdc" || fail "Cursor rule must alwaysApply"
 
+# Activating the hub must resolve runtime sources instead of requiring a
+# duplicate adopter .governance tree. Missing source files still fail closed.
+python3 - "$root" "$tmp/hub" <<'PYHUB'
+import json,pathlib,shutil,subprocess,sys
+source=pathlib.Path(sys.argv[1]);target=pathlib.Path(sys.argv[2]);target.mkdir()
+contract=json.loads((source/'governance/agent-hosts.json').read_text())
+package=json.loads((source/'governance/package-manifest.json').read_text())
+paths={row['target']:row['source'] for row in package['files']}
+files=[h['file'] for h in contract['hosts']]+[contract['hook']['path']]
+files += [paths.get(p,p) for p in contract['hook']['runtimeFiles']]
+files += ['governance/agent-hosts.json','governance/manifest.hub.json','governance/package-manifest.json','scripts/install-agent-hosts.sh']
+for name in files:
+    dst=target/name;dst.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(source/name,dst)
+subprocess.run(['git','init','--quiet',str(target)],check=True)
+subprocess.run(['bash','scripts/install-agent-hosts.sh'],cwd=target,check=True)
+subprocess.run(['bash','scripts/install-agent-hosts.sh','--check'],cwd=target,check=True)
+assert not (target/'.governance').exists()
+(target/paths[contract['hook']['runtimeFiles'][0]]).unlink()
+failure=subprocess.run(['bash','scripts/install-agent-hosts.sh','--check'],cwd=target,capture_output=True,text=True)
+assert failure.returncode != 0 and 'GOV-AGENT-HOST-004' in failure.stderr
+PYHUB
+
 mapfile -t closed_statuses < <(python3 - "$root" <<'PY'
 import json
 import pathlib
@@ -203,7 +225,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.20.8',
+        'version': '0.20.9',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '1' * 40,
         'publicationStatus': 'published',

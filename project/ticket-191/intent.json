@@ -1,0 +1,97 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-191",
+  "summary": "Adopt Worktrees 0.5.1 explicit probe context",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-191/**",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/worktrees.lock.json",
+    "subprojects/worktrees/conformance.py",
+    "tests/worktrees-adoption.test.py",
+    "tests/adoption-lock.test.sh",
+    "tests/agent-hosts.test.sh",
+    "tests/governance-validator.test.sh",
+    "docs/information/hidden-worktree-adoption.md",
+    "template/files/AGENTS.template.md",
+    "scripts/install-agent-hosts.sh",
+    ".governance/docs.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "5848c1efb3386765e221cde57090f8c221f3e857",
+    "targetBranch": "main",
+    "outcome": "Publish new-project 0.20.9 with the protected Worktrees 0.5.1 probe, exact digest pin, host instructions and adoption regression. Resolve host runtime files through package source mappings when activating the governance hub.",
+    "nonGoals": [
+      "No removal of unknown worktrees, no permission grant from diagnostics, no weakening of protected merge approval"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 13,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Adopt protected Worktrees PR19 without a second checker implementation; make explicit checkout context visible to every host.",
+      "components": [
+        {
+          "name": "adopted-worktrees",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "governance/worktrees.lock.json",
+            "subprojects/worktrees/conformance.py",
+            "tests/worktrees-adoption.test.py",
+            "tests/adoption-lock.test.sh",
+            "tests/agent-hosts.test.sh",
+            "tests/governance-validator.test.sh",
+            "docs/information/hidden-worktree-adoption.md",
+            "template/files/AGENTS.template.md",
+            "scripts/install-agent-hosts.sh",
+            ".governance/docs.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Optional explicit repository context in the distributed probe"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert material policy/checker change through protected delivery."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/worktrees-adoption.test.py",
+          "bash tests/worktree-overlap.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Pending: exact adopted digests, real allocation and relative relocation, inventory schema and host/bootstrap consistency."
+      }
+    ]
+  }
+}

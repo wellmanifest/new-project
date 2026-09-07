@@ -3,14 +3,14 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "hidden-worktree-adoption",
   "kind": "information",
-  "version": 1,
+  "version": 2,
   "title": "Hidden repository-local worktree adoption",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
   "created": "2026-09-07",
   "updated": "2026-09-07",
   "review_after": "2026-10-07",
-  "source_revision": "9d7af1e63d46e0277da407286699ee50de726d17",
+  "source_revision": "5848c1efb3386765e221cde57090f8c221f3e857",
   "affected_repositories": [
     "wellmanifest/new-project"
   ],
@@ -27,7 +27,7 @@
 <!-- docs:section purpose -->
 ## Purpose
 
-New-project 0.20.8 distributes Worktrees 0.5.0 / v5, whose delivery location is `<primaryCheckout>/.worktrees/<ticket-NNN>--<slug>`. The branch is `ticket/NNN-<slug>` and the lease remains `<primaryCheckout>/.subactor/leases/<ticket-NNN>--<slug>.json`.
+New-project 0.20.9 distributes Worktrees 0.5.1 / v5, whose delivery location is `<primaryCheckout>/.worktrees/<ticket-NNN>--<slug>`. The branch is `ticket/NNN-<slug>` and the lease remains `<primaryCheckout>/.subactor/leases/<ticket-NNN>--<slug>.json`.
 
 <!-- docs:section scope -->
 ## Scope
@@ -57,3 +57,10 @@ Installing instructions does not update custom runtime allocators or prove produ
 ## Validation and rollout
 
 `tests/worktrees-adoption.test.py` exercises pinned bytes, POSIX/Windows plans, root-ignore preservation and idempotence, symlink rejection, primary resolution and relative relocation in disposable Git repositories. The shell overlap and lifecycle suites exercise consumer inventory. After protected publication, adopters use `goal governance adopt --source-revision <published-merge-sha> --upgrade` through their own bounded tickets and validation. Source merge, final release, adoption and actual runtime allocation require separate receipts.
+
+
+## Probe context for parallel hosts
+
+Worktrees 0.5.1 was protected-merged in [PR 19](https://github.com/wellmanifest/worktrees/pull/19) at `81e0d750f18ecace4436706250bf5deb190a000a`. Hosts running from an organization directory must pass `feature-probe --from-worktree <checkout>`. An unavailable repository is reported separately from missing Git support; inherited Git selectors cannot redirect the query. The operation remains read-only.
+
+Host installation also distinguishes the governance hub source paths from adopter target paths using the existing package manifest. Hub activation no longer demands duplicate `.governance` copies of its `scripts` runtime files. Missing source files still fail closed.
