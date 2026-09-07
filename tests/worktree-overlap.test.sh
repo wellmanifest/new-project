@@ -13,8 +13,8 @@ checker="$repo_root/scripts/worktree_overlap_check.py"
 guard="$repo_root/scripts/worktree_guard.py"
 workspace="$fixture/workspace"
 primary="$workspace/sample"
-linked="$primary/worktrees/ticket-010--sample-a"
-linked_b="$primary/worktrees/ticket-011--sample-b"
+linked="$primary/.worktrees/ticket-010--sample-a"
+linked_b="$primary/.worktrees/ticket-011--sample-b"
 
 mkdir -p "$workspace/.worktrees"
 git init --quiet --initial-branch=main "$primary"
@@ -22,7 +22,7 @@ git -C "$primary" config user.email overlap-test@example.invalid
 git -C "$primary" config user.name overlap-test
 printf '%s\n' sample > "$primary/README.md"
 printf '%s\n' src > "$primary/app.py"
-printf '%s\n' /worktrees/ /.subactor/ > "$primary/.gitignore"
+printf '%s\n' /.worktrees/ /.subactor/ > "$primary/.gitignore"
 mkdir -p "$primary/governance"
 cp "$repo_root/governance/manifest.hub.json" "$primary/governance/manifest.hub.json"
 cp "$repo_root/governance/ticket-activity.json" "$primary/governance/ticket-activity.json"
@@ -51,7 +51,7 @@ report = json.load(open(sys.argv[1], encoding="utf-8"))
 assert report["schema"] == "new-project.worktree-overlap-report/v1"
 assert report["status"] == "failed"
 assert report["summary"]["errors"] >= 1
-assert report["inventory"]["schema"] == "wellmanifest.worktrees/v4"
+assert report["inventory"]["schema"] == "wellmanifest.worktrees/v5"
 assert report["inventory"]["readOnly"] is True
 codes = {finding["code"] for finding in report["findings"]}
 assert "GOV-WORKTREE-OVERLAP-001" in codes
@@ -64,8 +64,8 @@ assert {finding["evidence"]["left"], finding["evidence"]["right"]} == {
     sys.argv[3],
 }
 by_path = {item["path"]: item for item in report["inventory"]["entries"]}
-assert by_path[sys.argv[2]]["classification"] == "canonical-v4"
-assert by_path[sys.argv[3]]["classification"] == "canonical-v4"
+assert by_path[sys.argv[2]]["classification"] == "canonical-v5"
+assert by_path[sys.argv[3]]["classification"] == "canonical-v5"
 PY
 
 # Distinct files in two worktrees must pass the path check.
@@ -176,7 +176,7 @@ grep -q '^GOV-WORKTREE-OVERLAP-003 ERROR:' "$fixture/missing.out"
 # A merged-but-still-IN_PROGRESS ticket directory is present in every sibling
 # worktree. Only the checkout whose branch is that ticket's branch is writing
 # it, so a third worktree carrying stale copies must not be paired.
-linked_c="$primary/worktrees/ticket-012--sample-c"
+linked_c="$primary/.worktrees/ticket-012--sample-c"
 git -C "$primary" worktree add --quiet -b ticket/012-sample-c "$linked_c"
 python3 -c '
 import json
@@ -306,11 +306,11 @@ git init --quiet --initial-branch=main "$other"
 git -C "$other" config user.email overlap-test@example.invalid
 git -C "$other" config user.name overlap-test
 printf '%s\n' other > "$other/other.py"
-printf '%s\n' /worktrees/ /.subactor/ > "$other/.gitignore"
+printf '%s\n' /.worktrees/ /.subactor/ > "$other/.gitignore"
 git -C "$other" add other.py .gitignore
 git -C "$other" commit --quiet -m initial
 git -C "$other" remote add origin git@github.com:example/other.git
-other_linked="$other/worktrees/ticket-020--other-a"
+other_linked="$other/.worktrees/ticket-020--other-a"
 git -C "$other" worktree add --quiet -b ticket/020-other-a "$other_linked"
 printf '%s\n' dirty-here > "$other/other.py"
 printf '%s\n' dirty-there > "$other_linked/other.py"
@@ -447,11 +447,11 @@ git -C "$hookrepo" config user.email overlap-test@example.invalid
 git -C "$hookrepo" config user.name overlap-test
 git -C "$hookrepo" config core.hooksPath .githooks
 printf '%s\n' base > "$hookrepo/shared.txt"
-printf '%s\n' /worktrees/ /.subactor/ > "$hookrepo/.gitignore"
+printf '%s\n' /.worktrees/ /.subactor/ > "$hookrepo/.gitignore"
 git -C "$hookrepo" add shared.txt .gitignore
 git -C "$hookrepo" commit --quiet -m initial
 git -C "$hookrepo" remote add origin git@github.com:example/hooked.git
-hooklinked="$hookrepo/worktrees/ticket-030--hooked-a"
+hooklinked="$hookrepo/.worktrees/ticket-030--hooked-a"
 git -C "$hookrepo" worktree add --quiet -b ticket/030-hooked-a "$hooklinked"
 mkdir -p "$hookrepo/.githooks"
 printf '%s\n' '#!/usr/bin/env bash' 'set -euo pipefail' 'exit 0' \
@@ -520,14 +520,14 @@ git init --quiet --initial-branch=main "$mrepo"
 git -C "$mrepo" config user.email overlap-test@example.invalid
 git -C "$mrepo" config user.name overlap-test
 printf 'top\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nbottom\n' > "$mrepo/wide.txt"
-printf '%s\n' /worktrees/ /.subactor/ > "$mrepo/.gitignore"
+printf '%s\n' /.worktrees/ /.subactor/ > "$mrepo/.gitignore"
 git -C "$mrepo" add wide.txt .gitignore
 git -C "$mrepo" commit --quiet -m initial
 git -C "$mrepo" remote add origin git@github.com:example/app.git
 base="$(git -C "$mrepo" rev-parse HEAD)"
 
-far_a="$mrepo/worktrees/ticket-040--far-a"
-far_b="$mrepo/worktrees/ticket-041--far-b"
+far_a="$mrepo/.worktrees/ticket-040--far-a"
+far_b="$mrepo/.worktrees/ticket-041--far-b"
 git -C "$mrepo" worktree add --quiet -b ticket/040-far-a "$far_a"
 git -C "$mrepo" worktree add --quiet -b ticket/041-far-b "$far_b"
 
@@ -582,7 +582,7 @@ PY
 
 # A stacked branch cannot conflict with its own ancestor.
 git -C "$far_b" reset --hard --quiet "$base"
-stacked="$mrepo/worktrees/ticket-042--stacked"
+stacked="$mrepo/.worktrees/ticket-042--stacked"
 git -C "$mrepo" worktree add --quiet -b ticket/042-stacked "$stacked" ticket/040-far-a
 printf 'top rewritten by A\nplus one more line\n' > "$stacked/wide.txt"
 git -C "$stacked" commit --quiet -am "stacked on top of A"
@@ -601,7 +601,7 @@ assert frozenset((sys.argv[2], sys.argv[3])) not in pairs, report["findings"]
 PY
 
 # A merged, clean leftover is not a writer and must not be paired at all.
-leftover="$mrepo/worktrees/ticket-043--leftover"
+leftover="$mrepo/.worktrees/ticket-043--leftover"
 git -C "$mrepo" worktree add --quiet -b ticket/043-leftover "$leftover" main
 python3 "$checker" --workspace-root "$mspace" --format json > "$fixture/leftover.json"
 python3 - "$fixture/leftover.json" "$leftover" <<'PY'
@@ -625,11 +625,11 @@ git init --quiet --initial-branch=main "$snapshot_repo"
 git -C "$snapshot_repo" config user.email overlap-test@example.invalid
 git -C "$snapshot_repo" config user.name overlap-test
 printf 'initial\n' > "$snapshot_repo/app.py"
-printf '/worktrees/\n/.subactor/\n' > "$snapshot_repo/.gitignore"
+printf '/.worktrees/\n/.subactor/\n' > "$snapshot_repo/.gitignore"
 git -C "$snapshot_repo" add .
 git -C "$snapshot_repo" commit --quiet -m initial
 git -C "$snapshot_repo" remote add origin git@github.com:example/snapshot-app.git
-writer="$snapshot_repo/worktrees/ticket-060--writer"
+writer="$snapshot_repo/.worktrees/ticket-060--writer"
 inventory="$snapshot_space/.worktrees/.quarantine/snapshot"
 git -C "$snapshot_repo" worktree add --quiet -b ticket/060-writer "$writer"
 printf 'shared implementation\n' > "$writer/app.py"

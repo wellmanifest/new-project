@@ -16,7 +16,7 @@ primary="$workspace/sample"
 legacy_v1="$workspace/.worktrees/sample--ticket-001--legacy-v1"
 legacy_v2="$workspace/.worktrees/sample/ticket-002--legacy-v2"
 legacy_v3="$workspace/.worktrees/.branches/sample/ticket-003--legacy-v3"
-canonical_v4="$primary/worktrees/ticket-004--canonical-v4"
+canonical_v5="$primary/.worktrees/ticket-004--canonical-v5"
 system_temp="$fixture/external/ticket-005--system-temp"
 unknown="$unknown_root/ticket-006--unknown"
 duplicate="$workspace/sample-pilot"
@@ -28,7 +28,7 @@ git init --quiet --initial-branch=main "$primary"
 git -C "$primary" config user.email workspace-test@example.invalid
 git -C "$primary" config user.name workspace-test
 printf '%s\n' sample > "$primary/README.md"
-printf '%s\n' /worktrees/ /.subactor/ > "$primary/.gitignore"
+printf '%s\n' /.worktrees/ /.subactor/ > "$primary/.gitignore"
 git -C "$primary" add README.md .gitignore
 git -C "$primary" commit --quiet -m initial
 git -C "$primary" remote add origin git@github.com:example/sample.git
@@ -37,7 +37,7 @@ mkdir -p "$workspace/.worktrees/.branches/sample" "$unknown_root" \
 git -C "$primary" worktree add --quiet -b ticket/001-legacy-v1 "$legacy_v1"
 git -C "$primary" worktree add --quiet -b ticket/002-legacy-v2 "$legacy_v2"
 git -C "$primary" worktree add --quiet -b ticket/003-legacy-v3 "$legacy_v3"
-git -C "$primary" worktree add --quiet -b ticket/004-canonical-v4 "$canonical_v4"
+git -C "$primary" worktree add --quiet -b ticket/004-canonical-v5 "$canonical_v5"
 git -C "$primary" worktree add --quiet -b ticket/005-system-temp "$system_temp"
 git -C "$primary" worktree add --quiet -b ticket/006-unknown "$unknown"
 git clone --quiet "$primary" "$duplicate"
@@ -57,7 +57,7 @@ else
 fi
 test "$status" -eq 1
 python3 - "$fixture/violations.json" "$legacy_v1" "$legacy_v2" "$legacy_v3" \
-  "$canonical_v4" "$system_temp" "$unknown" "$duplicate" \
+  "$canonical_v5" "$system_temp" "$unknown" "$duplicate" \
   "$nested_duplicate" "$empty_duplicate" <<'PY'
 import json
 import sys
@@ -66,7 +66,7 @@ report = json.load(open(sys.argv[1], encoding="utf-8"))
 assert report["schema"] == "new-project.workspace-lifecycle-report/v1"
 assert report["status"] == "failed"
 assert report["summary"] == {"errors": 15, "warnings": 0, "findings": 15}
-assert report["inventory"]["schema"] == "wellmanifest.worktrees/v4"
+assert report["inventory"]["schema"] == "wellmanifest.worktrees/v5"
 assert report["inventory"]["readOnly"] is True
 assert {finding["code"] for finding in report["findings"]} == {
     "GOV-WORKSPACE-LIFECYCLE-001",
@@ -90,7 +90,7 @@ assert len(duplicates) == 3
 assert len(branches) == 6
 assert {item["evidence"]["branch"] for item in branches} == {
     "ticket/001-legacy-v1", "ticket/002-legacy-v2", "ticket/003-legacy-v3",
-    "ticket/004-canonical-v4", "ticket/005-system-temp", "ticket/006-unknown",
+    "ticket/004-canonical-v5", "ticket/005-system-temp", "ticket/006-unknown",
 }
 assert all(item["evidence"]["defaultBranch"] == "main" for item in branches)
 assert all(item["evidence"]["checkout"] is not None for item in branches)
@@ -105,7 +105,7 @@ assert classifications == {
     sys.argv[2]: "legacy-v1",
     sys.argv[3]: "legacy-v2",
     sys.argv[4]: "legacy-v3",
-    sys.argv[5]: "canonical-v4",
+    sys.argv[5]: "canonical-v5",
     sys.argv[6]: "system-temp",
     sys.argv[7]: "unknown",
 }, classifications
@@ -128,7 +128,7 @@ assert all(
 PY
 
 test "$registry_before" = "$(git -C "$primary" worktree list --porcelain)"
-for preserved in "$legacy_v1" "$legacy_v2" "$legacy_v3" "$canonical_v4" \
+for preserved in "$legacy_v1" "$legacy_v2" "$legacy_v3" "$canonical_v5" \
   "$system_temp" "$unknown"; do
   test -d "$preserved"
 done
@@ -136,7 +136,7 @@ test -f "$legacy_v1/untracked.txt"
 
 python3 "$validator" --workspace-root "$workspace" \
   --allow "$legacy_v1" --allow "$legacy_v2" --allow "$legacy_v3" \
-  --allow "$canonical_v4" --allow "$system_temp" --allow "$unknown" \
+  --allow "$canonical_v5" --allow "$system_temp" --allow "$unknown" \
   --allow "$duplicate" \
   --allow "$nested_duplicate" --allow "$empty_duplicate" \
   > "$fixture/allowed.out"
@@ -145,7 +145,7 @@ grep -Fxq 'GOV-WORKSPACE-PASS: passed (0 errors, 0 warnings)' "$fixture/allowed.
 git -C "$primary" worktree remove --force "$legacy_v1"
 git -C "$primary" worktree remove --force "$legacy_v2"
 git -C "$primary" worktree remove --force "$legacy_v3"
-git -C "$primary" worktree remove --force "$canonical_v4"
+git -C "$primary" worktree remove --force "$canonical_v5"
 git -C "$primary" worktree remove --force "$system_temp"
 git -C "$primary" worktree remove --force "$unknown"
 rm -rf "$duplicate"
@@ -172,14 +172,14 @@ assert {finding["code"] for finding in report["findings"]} == {
 }
 assert {finding["evidence"]["branch"] for finding in report["findings"]} == {
     "ticket/001-legacy-v1", "ticket/002-legacy-v2", "ticket/003-legacy-v3",
-    "ticket/004-canonical-v4", "ticket/005-system-temp", "ticket/006-unknown",
+    "ticket/004-canonical-v5", "ticket/005-system-temp", "ticket/006-unknown",
 }
 assert all(finding["evidence"]["checkout"] is None for finding in report["findings"])
 assert all(finding["evidence"]["defaultBranch"] == "main" for finding in report["findings"])
 PY
 test "$(git -C "$primary" for-each-ref --format='%(refname:short)' refs/heads/ticket | wc -l)" -eq 6
 git -C "$primary" branch -d ticket/001-legacy-v1 ticket/002-legacy-v2 \
-  ticket/003-legacy-v3 ticket/004-canonical-v4 ticket/005-system-temp \
+  ticket/003-legacy-v3 ticket/004-canonical-v5 ticket/005-system-temp \
   ticket/006-unknown
 python3 "$validator" --workspace-root "$workspace" > "$fixture/clean.out"
 grep -Fxq 'GOV-WORKSPACE-PASS: passed (0 errors, 0 warnings)' "$fixture/clean.out"

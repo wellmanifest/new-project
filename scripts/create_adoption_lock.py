@@ -370,6 +370,25 @@ def lock_content(
     return (json.dumps(lock, indent=2, sort_keys=True) + "\n").encode()
 
 
+def worktree_ignore_payload(target_root: Path) -> bytes:
+    """Append required root ignores without replacing target-owned rules."""
+    target = target_root / ".gitignore"
+    if target.is_symlink():
+        raise SystemExit("root .gitignore must not be a symlink")
+    content = target.read_bytes() if target.exists() else b""
+    rules = [b"/.worktrees/"] + [
+        f"/.subactor/{name}/".encode()
+        for name in ("leases", "sessions", "recovery", "receipts", "cache", "snapshots")
+    ]
+    present = set(content.splitlines())
+    missing = [rule for rule in rules if rule not in present]
+    if not missing:
+        return content
+    if content and not content.endswith(b"\n"):
+        content += b"\n"
+    return content + b"\n# Repository-local worktrees and operational state\n" + b"\n".join(missing) + b"\n"
+
+
 def planned_changes(
     target_root: Path,
     payloads: dict[str, bytes],
@@ -592,6 +611,7 @@ def main() -> int:
         raise SystemExit(f"target manifest version must equal adopted standard version {version}")
 
     project_inherited_required_checks(target_root, payloads)
+    payloads[".gitignore"] = worktree_ignore_payload(target_root)
 
     expected_lock = lock_content(
         target_root,

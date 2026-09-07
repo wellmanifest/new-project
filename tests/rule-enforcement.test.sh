@@ -208,7 +208,7 @@ assert "SEPARATE_RELEASE_ONLY_TICKET_COMMIT_BRANCH_OR_PULL_REQUEST" in delivery
 
 concurrency = rule_body("C-CONCURRENCY-001")
 for fragment in (
-    '<primaryCheckout>/worktrees/<ticket-NNN>--<slug>',
+    '<primaryCheckout>/.worktrees/<ticket-NNN>--<slug>',
     '<primaryCheckout>/.subactor/leases/<ticket-NNN>--<slug>.json',
     "FEATURE_PROBE_GIT_WORKTREE_RELATIVE_PATHS",
     "AUTOMATIC_MOVE_REPAIR_DELETE_PRUNE_OR_CLEAN",

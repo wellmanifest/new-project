@@ -14,7 +14,7 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 LOCK_PATH = ROOT / "governance" / "worktrees.lock.json"
-SOURCE_REVISION = "46db8845637cef2388282b15fe6b17fc76c141d3"
+SOURCE_REVISION = "87d17708895ffad603c5d71cb2b8ef02ab100279"
 
 
 def sha256(path: pathlib.Path) -> str:
@@ -67,17 +67,46 @@ class WorktreesAdoptionTest(unittest.TestCase):
             self.assertEqual(report["status"], "passed")
             self.assertEqual(len(report["inventory"]["entries"]), 2)
 
+    def test_adoption_preserves_root_rules_and_ignores_hidden_worktrees(self):
+        spec = importlib.util.spec_from_file_location(
+            "adoption_generator", ROOT / "scripts/create_adoption_lock.py")
+        generator = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(generator)
+        with tempfile.TemporaryDirectory() as directory:
+            target = pathlib.Path(directory)
+            run("git", "init", "--quiet", str(target))
+            original = b"# Target-owned rules\n/private-data/\n/worktrees/"
+            (target / ".gitignore").write_bytes(original)
+            rendered = generator.worktree_ignore_payload(target)
+            self.assertTrue(rendered.startswith(original))
+            (target / ".gitignore").write_bytes(rendered)
+            self.assertEqual(generator.worktree_ignore_payload(target), rendered)
+            for path in (".worktrees/ticket-190--sample/file", ".subactor/leases/a.json"):
+                self.assertEqual(subprocess.run(
+                    ["git", "check-ignore", "--quiet", path], cwd=target).returncode, 0)
+            self.assertEqual(subprocess.run(
+                ["git", "check-ignore", "--quiet", ".subactor/manifest.json"],
+                cwd=target).returncode, 1)
+            if os.name != "nt":
+                (target / ".gitignore").unlink()
+                outside = target / "outside"
+                outside.write_bytes(original)
+                (target / ".gitignore").symlink_to(outside)
+                with self.assertRaises(SystemExit):
+                    generator.worktree_ignore_payload(target)
+                self.assertEqual(outside.read_bytes(), original)
+
     def test_lock_binds_published_artifacts(self):
         lock = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
         self.assertEqual(lock["schema"], "new-project.worktrees-lock/v1")
         self.assertEqual(lock["dependency"]["id"], "wellmanifest/worktrees")
-        self.assertEqual(lock["dependency"]["version"], "0.4.1")
+        self.assertEqual(lock["dependency"]["version"], "0.5.0")
         self.assertEqual(lock["dependency"]["sourceRevision"], SOURCE_REVISION)
         expected = {
             "subprojects/worktrees/worktrees.schema.json":
-                "5ba905865a72aea6a01afff1d06de028224651d2b444f6ac528cf65499d30148",
+                "9cc10d126e06cafc87cc117f11b8b095676f461de4d168d2a1c2bb959f0fccd5",
             "subprojects/worktrees/conformance.py":
-                "6333676ac045246a655ea6fc042e83d5bbceef5b03b80eca50a12dc98a7aabeb",
+                "5e38dc9a4c953ba0fb2a4301a0917e609e0b00cebcb345a16962b13d1de02389",
         }
         self.assertEqual(
             {artifact["packageSourcePath"] for artifact in lock["artifacts"]},
@@ -114,11 +143,11 @@ class WorktreesAdoptionTest(unittest.TestCase):
             slug="adopt-worktrees-v4",
             primary_checkout="/workspace/new-project",
         )
-        self.assertEqual(record["schema"], "wellmanifest.worktrees/v4")
+        self.assertEqual(record["schema"], "wellmanifest.worktrees/v5")
         self.assertEqual(record["kind"], "layout-record")
         self.assertEqual(
             record["worktreePath"],
-            "/workspace/new-project/worktrees/ticket-178--adopt-worktrees-v4",
+            "/workspace/new-project/.worktrees/ticket-178--adopt-worktrees-v4",
         )
         self.assertEqual(
             record["leasePath"],
@@ -144,7 +173,7 @@ class WorktreesAdoptionTest(unittest.TestCase):
         )
         self.assertEqual(
             windows["worktreePath"],
-            r"C:\workspace\new-project\worktrees\ticket-178--adopt-worktrees-v4",
+            r"C:\workspace\new-project\.worktrees\ticket-178--adopt-worktrees-v4",
         )
         self.assertEqual(
             windows["leasePath"],
@@ -157,7 +186,7 @@ class WorktreesAdoptionTest(unittest.TestCase):
         registered = [
             {"path": primary, "head": "a" * 40, "branch": "refs/heads/main"},
             {
-                "path": f"{primary}/worktrees/ticket-178--adopt-worktrees-v4",
+                "path": f"{primary}/.worktrees/ticket-178--adopt-worktrees-v4",
                 "head": "b" * 40,
                 "branch": "refs/heads/ticket/178-adopt-worktrees-v4",
             },
@@ -210,8 +239,8 @@ class WorktreesAdoptionTest(unittest.TestCase):
         }
         self.assertEqual(classifications[primary], "primary")
         self.assertEqual(
-            classifications[f"{primary}/worktrees/ticket-178--adopt-worktrees-v4"],
-            "canonical-v4",
+            classifications[f"{primary}/.worktrees/ticket-178--adopt-worktrees-v4"],
+            "canonical-v5",
         )
         self.assertIn("legacy-v3", classifications.values())
         self.assertIn("legacy-v2", classifications.values())
@@ -229,7 +258,7 @@ class WorktreesAdoptionTest(unittest.TestCase):
         agents_path = ROOT / "template" / "files" / "AGENTS.template.md"
         agents = agents_path.read_text(encoding="utf-8")
         self.assertIn(
-            "<primaryCheckout>/worktrees/<ticket-NNN>--<slug>", agents
+            "<primaryCheckout>/.worktrees/<ticket-NNN>--<slug>", agents
         )
         self.assertIn(".subactor/leases/<ticket-NNN>--<slug>.json", agents)
         self.assertIn("linkMode=relative", agents)
@@ -241,7 +270,7 @@ class WorktreesAdoptionTest(unittest.TestCase):
             text = (ROOT / "template" / "files" / pointer).read_text(encoding="utf-8")
             self.assertIn("AGENTS.md", text, pointer)
         ignores = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
-        self.assertIn("/worktrees/", ignores)
+        self.assertIn("/.worktrees/", ignores)
         for directory in (
             "leases", "sessions", "recovery", "receipts", "cache", "snapshots"
         ):
@@ -293,11 +322,11 @@ class WorktreesAdoptionTest(unittest.TestCase):
             run("git", "init", "--quiet", "--initial-branch=main", str(primary))
             run("git", "-C", str(primary), "config", "user.email", "v4@example.invalid")
             run("git", "-C", str(primary), "config", "user.name", "v4-test")
-            (primary / ".gitignore").write_text("/worktrees/\n/.subactor/\n", encoding="utf-8")
+            (primary / ".gitignore").write_text("/.worktrees/\n/.subactor/\n", encoding="utf-8")
             (primary / "README.md").write_text("sample\n", encoding="utf-8")
             run("git", "-C", str(primary), "add", ".gitignore", "README.md")
             run("git", "-C", str(primary), "commit", "--quiet", "-m", "initial")
-            linked = primary / "worktrees" / "ticket-201--rename-safe"
+            linked = primary / ".worktrees" / "ticket-201--rename-safe"
             run(
                 "git", "-C", str(primary), "worktree", "add", "--relative-paths",
                 "--quiet", "-b", "ticket/201-rename-safe", str(linked),
@@ -305,7 +334,7 @@ class WorktreesAdoptionTest(unittest.TestCase):
             pointer = (linked / ".git").read_text(encoding="utf-8").strip()
             self.assertFalse(os.path.isabs(pointer.removeprefix("gitdir: ")), pointer)
             primary.rename(renamed)
-            moved_linked = renamed / "worktrees" / "ticket-201--rename-safe"
+            moved_linked = renamed / ".worktrees" / "ticket-201--rename-safe"
             self.assertEqual(run("git", "-C", str(moved_linked), "rev-parse", "HEAD"),
                              run("git", "-C", str(renamed), "rev-parse", "HEAD"))
             run(

@@ -1,0 +1,128 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-190",
+  "summary": "Adopt hidden repository-local worktrees v5",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-190/**",
+    "project/TICKETS.md",
+    "governance/worktrees.lock.json",
+    "subprojects/worktrees/conformance.py",
+    "subprojects/worktrees/worktrees.schema.json",
+    "template/files/AGENTS.template.md",
+    "scripts/worktree_overlap_check.py",
+    "scripts/workspace_lifecycle_check.py",
+    ".gitignore",
+    "tests/worktrees-adoption.test.py",
+    "tests/rule-enforcement.test.sh",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/agent-hosts.test.sh",
+    "docs/information/hidden-worktree-adoption.md",
+    "docs/README.md",
+    "AGENTS.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "scripts/create_adoption_lock.py",
+    "tests/worktree-overlap.test.sh",
+    "tests/workspace-lifecycle.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "9d7af1e63d46e0277da407286699ee50de726d17",
+    "targetBranch": "main",
+    "outcome": "Publish an immutable new-project release adopting Worktrees v5 with repository-local hidden checkout paths, matching agent instructions and bootstrap ignore rules, and truthful read-only legacy inventory.",
+    "nonGoals": [
+      "No removal of unknown worktrees, no permission grant from diagnostics, no weakening of protected merge approval"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Pin the protected Worktrees v5 release; derive inventory schema from that same adopted contract and keep prior layouts readable. User explicitly authorizes this ticket in the new .worktrees location.",
+      "components": [
+        {
+          "name": "adopted-worktrees",
+          "paths": [
+            "governance/worktrees.lock.json",
+            "subprojects/worktrees/**",
+            "tests/worktrees-adoption.test.py"
+          ]
+        },
+        {
+          "name": "runtime-adoption",
+          "paths": [
+            "template/files/AGENTS.template.md",
+            "scripts/worktree_overlap_check.py",
+            "scripts/workspace_lifecycle_check.py",
+            ".gitignore",
+            "tests/rule-enforcement.test.sh",
+            "AGENTS.md",
+            "POLICY.md",
+            "CONTRIBUTING.md",
+            "scripts/create_adoption_lock.py",
+            "tests/worktree-overlap.test.sh",
+            "tests/workspace-lifecycle.test.sh"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh",
+            "tests/agent-hosts.test.sh",
+            "docs/**"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Adopt wellmanifest.worktrees/v5 inventory and layout"
+      ],
+      "dataChanges": [
+        "New worktree root <primary>/.worktrees; historical undotted worktrees remain read-only legacy-v4."
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert material policy/checker change through protected delivery."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/worktrees-adoption.test.py",
+          "bash tests/worktree-overlap.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Pending: exact adopted digests, real allocation and relative relocation, inventory schema and host/bootstrap consistency."
+      }
+    ]
+  }
+}
