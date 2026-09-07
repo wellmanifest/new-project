@@ -70,7 +70,9 @@ Before any multi-step implementation, an agent must:
    `/.subactor/{leases,sessions,recovery,receipts,cache,snapshots}/`; keep
    `.subactor/manifest.json` tracked. Before the first effect, feature-probe
    `git worktree add --relative-paths` and
-   `git worktree repair --relative-paths` (minimum Git 2.51.0), and reject a
+   `git worktree repair --relative-paths` (minimum Git 2.51.0). When the host starts outside the target checkout, pass
+   `feature-probe --from-worktree <checkout>` to the adopted checker; resolve
+   `repository_context_unavailable` before interpreting feature support. Reject a
    symlink in any existing canonical path component. Legacy v1/v2/v3/v4,
    system-temporary, duplicate and unknown registrations are read-only recovery
    inventory, never publishable locations. Never automatically move, repair,

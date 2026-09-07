@@ -14,7 +14,7 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 LOCK_PATH = ROOT / "governance" / "worktrees.lock.json"
-SOURCE_REVISION = "87d17708895ffad603c5d71cb2b8ef02ab100279"
+SOURCE_REVISION = "81e0d750f18ecace4436706250bf5deb190a000a"
 
 
 def sha256(path: pathlib.Path) -> str:
@@ -96,17 +96,27 @@ class WorktreesAdoptionTest(unittest.TestCase):
                     generator.worktree_ignore_payload(target)
                 self.assertEqual(outside.read_bytes(), original)
 
+    def test_published_probe_accepts_explicit_repository_from_another_cwd(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = run(sys.executable, str(ROOT / "subprojects/worktrees/conformance.py"),
+                         "feature-probe", "--from-worktree", str(ROOT), cwd=pathlib.Path(directory))
+            result = json.loads(output)
+            self.assertTrue(result["repositoryContextValid"])
+            self.assertIsNone(result["probeError"])
+            self.assertTrue(result["supported"])
+            self.assertEqual(list(pathlib.Path(directory).iterdir()), [])
+
     def test_lock_binds_published_artifacts(self):
         lock = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
         self.assertEqual(lock["schema"], "new-project.worktrees-lock/v1")
         self.assertEqual(lock["dependency"]["id"], "wellmanifest/worktrees")
-        self.assertEqual(lock["dependency"]["version"], "0.5.0")
+        self.assertEqual(lock["dependency"]["version"], "0.5.1")
         self.assertEqual(lock["dependency"]["sourceRevision"], SOURCE_REVISION)
         expected = {
             "subprojects/worktrees/worktrees.schema.json":
                 "9cc10d126e06cafc87cc117f11b8b095676f461de4d168d2a1c2bb959f0fccd5",
             "subprojects/worktrees/conformance.py":
-                "5e38dc9a4c953ba0fb2a4301a0917e609e0b00cebcb345a16962b13d1de02389",
+                "d3309b76e2c91dd7f046b00322ec8cb48ef744b8b7908d70e475fedf95e5e196",
         }
         self.assertEqual(
             {artifact["packageSourcePath"] for artifact in lock["artifacts"]},
@@ -291,6 +301,8 @@ class WorktreesAdoptionTest(unittest.TestCase):
         def runner(arguments, **_kwargs):
             if arguments == ["git", "--version"]:
                 output = b"git version 2.51.0\n"
+            elif "rev-parse" in arguments:
+                output = b".git\n"
             elif arguments[-2:] == ["add", "-h"]:
                 output = b"usage: git worktree add --relative-paths\n"
             elif arguments[-2:] == ["repair", "-h"]:
