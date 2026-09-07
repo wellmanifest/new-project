@@ -546,6 +546,12 @@
       "target": ".governance/docs/BRANCH_INTENT_RECONCILIATION.md",
       "strategy": "managed",
       "executable": false
+    },
+    {
+      "source": "docs/information/local-ci-publication.md",
+      "target": ".governance/docs/LOCAL_CI_PUBLICATION.md",
+      "strategy": "managed",
+      "executable": false
     }
   ]
 }
