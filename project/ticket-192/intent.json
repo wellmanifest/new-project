@@ -1,0 +1,91 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-192",
+  "summary": "Prefer local OneDev verification and independent Validator publication in Semcod and Subactor",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-192/**",
+    "AGENTS.md",
+    "template/files/AGENTS.template.md",
+    "docs/information/local-ci-publication.md",
+    "docs/README.md",
+    "governance/package-manifest.json",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/agent-hosts.test.sh",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6f302b389b03515e62d4e3ee9d88beb63a89bdcc",
+    "targetBranch": "main",
+    "outcome": "Publish local CI selection and migration evidence requirements through standard 0.20.10 and managed agent instructions.",
+    "nonGoals": [
+      "No invented executor profile, test bypass, secret transport or automatic grant. Fleet adoption and runtime rollout retain separate repository scopes."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Local OneDev runs tests and the independent local Validator App owns exact-head approval. Hosted migration retains equivalent verification before retiring a named context.",
+      "components": [
+        {
+          "name": "publication-standard",
+          "paths": [
+            "AGENTS.md",
+            "template/files/AGENTS.template.md",
+            "docs/information/local-ci-publication.md",
+            "docs/README.md",
+            "governance/package-manifest.json",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "tests/adoption-lock.test.sh",
+            "tests/agent-hosts.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert material policy/checker change through protected delivery."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/agent-hosts.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Pending standard conformance and protected publication."
+      }
+    ]
+  }
+}
