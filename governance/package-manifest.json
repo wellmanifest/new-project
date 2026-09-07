@@ -548,7 +548,7 @@
       "executable": false
     },
     {
-      "source": "docs/information/local-ci-publication.md",
+      "source": "template/files/LOCAL_CI_PUBLICATION.template.md",
       "target": ".governance/docs/LOCAL_CI_PUBLICATION.md",
       "strategy": "managed",
       "executable": false

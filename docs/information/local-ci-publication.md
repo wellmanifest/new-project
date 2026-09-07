@@ -3,14 +3,14 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "local-ci-publication",
   "kind": "information",
-  "version": 1,
+  "version": 2,
   "title": "Local OneDev verification and independent Validator publication",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
   "created": "2026-09-07",
-  "updated": "2026-09-07",
+  "updated": "2026-09-08",
   "review_after": "2026-10-07",
-  "source_revision": "6f302b389b03515e62d4e3ee9d88beb63a89bdcc",
+  "source_revision": "d5f77d83b3752477cfb95a535d0e1ce77f148576",
   "affected_repositories": [
     "wellmanifest/new-project"
   ],
@@ -139,8 +139,11 @@ compares configured policies; its configured-union mode does not establish a
 full inventory. Retain dated, per-repository fleet evidence in `subactor/docs`.
 
 Adopt the published governance package through `goal governance adopt` with an
-immutable source revision. The managed target path for this document is
+immutable source revision. The managed consumer reference is
 `.governance/docs/LOCAL_CI_PUBLICATION.md`; the managed `AGENTS.md` points to it.
+The reference pins the canonical policy without copying authored metadata into
+the target repository. This preserves canonical ownership and compatibility
+with the documentation placement checker.
 For a scoped instructions-only rollout, preserve the target's custom policy,
 record the exact standard revision/document digest and explicitly label the
 result as publication-policy adoption, not full governance or runtime adoption.

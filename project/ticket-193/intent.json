@@ -1,0 +1,87 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-193",
+  "summary": "Distribute local CI policy as an immutable adoption reference",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-193/**",
+    "template/files/LOCAL_CI_PUBLICATION.template.md",
+    "governance/package-manifest.json",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/agent-hosts.test.sh",
+    "tests/governance-validator.test.sh",
+    "docs/information/local-ci-publication.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d5f77d83b3752477cfb95a535d0e1ce77f148576",
+    "targetBranch": "main",
+    "outcome": "Publish standard 0.20.11 with a consumer reference to the canonical local CI policy, so copied standard metadata does not claim ownership in adopting repositories.",
+    "nonGoals": [
+      "No invented executor profile, test bypass, secret transport or automatic grant. Fleet adoption and runtime rollout retain separate repository scopes."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep authored document metadata only at its canonical Wellmanifest home. Distribute a plain immutable policy reference as the managed consumer runbook.",
+      "components": [
+        {
+          "name": "publication-standard",
+          "paths": [
+            "template/files/LOCAL_CI_PUBLICATION.template.md",
+            "governance/package-manifest.json",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "tests/adoption-lock.test.sh",
+            "tests/agent-hosts.test.sh",
+            "tests/governance-validator.test.sh",
+            "docs/information/local-ci-publication.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert material policy/checker change through protected delivery."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/agent-hosts.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Pending standard conformance and protected publication."
+      }
+    ]
+  }
+}
