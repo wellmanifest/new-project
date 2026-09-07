@@ -27,6 +27,8 @@ Thumbs.db
 .idea/
 
 # Repository-local worktrees and non-authoritative Subactor runtime state
+/.worktrees/
+# Historical v4 checkouts remain ignored until separately audited.
 /worktrees/
 /.subactor/leases/
 /.subactor/sessions/

@@ -63,15 +63,15 @@ Before any multi-step implementation, an agent must:
    managed `wellmanifest/worktrees` checker. Resolve the primary checkout from
    Git even when allocation starts inside a linked checkout. The only
    publishable linked worktree is
-   `<primaryCheckout>/worktrees/<ticket-NNN>--<slug>` with
+   `<primaryCheckout>/.worktrees/<ticket-NNN>--<slug>` with
    `linkMode=relative`; its lease is
    `<primaryCheckout>/.subactor/leases/<ticket-NNN>--<slug>.json`. Root-ignore
-   `/worktrees/` and only
+   `/.worktrees/` and only
    `/.subactor/{leases,sessions,recovery,receipts,cache,snapshots}/`; keep
    `.subactor/manifest.json` tracked. Before the first effect, feature-probe
    `git worktree add --relative-paths` and
    `git worktree repair --relative-paths` (minimum Git 2.51.0), and reject a
-   symlink in any existing canonical path component. Legacy v1/v2/v3,
+   symlink in any existing canonical path component. Legacy v1/v2/v3/v4,
    system-temporary, duplicate and unknown registrations are read-only recovery
    inventory, never publishable locations. Never automatically move, repair,
    delete, prune or clean them. A separately authorized exact operation first
