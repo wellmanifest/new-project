@@ -11,6 +11,7 @@ trap cleanup EXIT INT TERM
 
 checker="$repo_root/scripts/worktree_overlap_check.py"
 python3 "$repo_root/tests/worktree-pending-merge.test.py"
+python3 "$repo_root/tests/worktree-default-base.test.py"
 guard="$repo_root/scripts/worktree_guard.py"
 workspace="$fixture/workspace"
 primary="$workspace/sample"

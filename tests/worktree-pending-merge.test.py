@@ -44,6 +44,10 @@ class PendingMergeTest(unittest.TestCase):
         self.git(self.main, "symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main")
         self.git(self.main, "worktree", "add", "-b", "ticket/002-peer", str(self.peer))
         (self.peer / "peer.txt").write_text("independent\n")
+        # This peer owns real post-main contributions on the contested paths.
+        # Inherited main content alone must not turn it into a second writer.
+        for name in ("imported.txt", "conflict.txt", "deleted.txt"):
+            (self.peer / name).write_text("peer contribution\n")
         self.git(self.peer, "add", ".")
         self.git(self.peer, "commit", "-m", "peer")
         result = self.git(self.feature, "merge", "--no-commit", "origin/main", check=False)
