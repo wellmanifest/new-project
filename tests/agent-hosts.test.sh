@@ -43,6 +43,59 @@ failure=subprocess.run(['bash','scripts/install-agent-hosts.sh','--check'],cwd=t
 assert failure.returncode != 0 and 'GOV-AGENT-HOST-004' in failure.stderr
 PYHUB
 
+# Activation must reject disabled hooks and malformed contracts without effects.
+python3 - "$root" "$tmp/activation" <<'PYACT'
+import json, pathlib, shutil, subprocess, sys
+source, target = map(pathlib.Path, sys.argv[1:])
+target.mkdir()
+subprocess.run(['git', 'init', '--quiet', str(target)], check=True)
+def run(*args):
+    return subprocess.run(['bash', str(source/'scripts/install-agent-hosts.sh'),
+                           '--source', str(source), '--target', str(target), *args],
+                          capture_output=True, text=True)
+assert run().returncode == 0
+hook = target/'.githooks/pre-commit'
+hook.chmod(0o644)
+result = run('--check')
+assert result.returncode != 0, 'disabled hook incorrectly reported active'
+assert hook.stat().st_mode & 0o111 == 0, '--check mutated permissions'
+contract = target/'.governance/agent-hosts.json'
+original = contract.read_text()
+value = json.loads(original)
+del value['hosts']
+contract.write_text(json.dumps(value))
+subprocess.run(['git', '-C', str(target), 'config', '--unset', 'core.hooksPath'], check=True)
+result = subprocess.run(['bash', str(source/'scripts/install-agent-hosts.sh'),
+                         '--source', str(target), '--target', str(target)],
+                        capture_output=True, text=True)
+assert result.returncode != 0, 'malformed contract incorrectly activated'
+assert subprocess.run(['git', '-C', str(target), 'config', '--get', 'core.hooksPath'],
+                      capture_output=True).returncode != 0
+contract.write_text(original)
+# Bootstrap preflights all sources before overwriting any target file.
+broken = target.parent/'broken-source'
+shutil.copytree(source, broken, ignore=shutil.ignore_patterns('.git', '.worktrees', 'worktrees'))
+package = json.loads((broken/'governance/package-manifest.json').read_text())
+files = {row['target']:row['source'] for row in package['files']}
+missing = json.loads(original)['hook']['runtimeFiles'][-1]
+(broken/files[missing]).unlink()
+(target/'GEMINI.md').write_text('existing instructions\n')
+result = subprocess.run(['bash', str(source/'scripts/install-agent-hosts.sh'),
+                         '--source', str(broken), '--target', str(target)],
+                        capture_output=True, text=True)
+assert result.returncode != 0
+assert (target/'GEMINI.md').read_text() == 'existing instructions\n', 'partial bootstrap overwrite'
+# A missing manifest mapping is also rejected before copying host instructions.
+shutil.copy2(source/files[missing], broken/files[missing])
+package['files'] = [row for row in package['files'] if row['target'] != missing]
+(broken/'governance/package-manifest.json').write_text(json.dumps(package))
+result = subprocess.run(['bash', str(source/'scripts/install-agent-hosts.sh'),
+                         '--source', str(broken), '--target', str(target)],
+                        capture_output=True, text=True)
+assert result.returncode != 0
+assert (target/'GEMINI.md').read_text() == 'existing instructions\n'
+PYACT
+
 mapfile -t closed_statuses < <(python3 - "$root" <<'PY'
 import json
 import pathlib
@@ -310,11 +363,18 @@ for terminal_status in DONE CANCELLED; do
 done
 
 user_home="$tmp/home"
-mkdir -p "$user_home"
+mkdir -p "$user_home/.gemini" "$user_home/.claude"
+printf "Existing private instruction\n" > "$user_home/.gemini/GEMINI.md"
+printf "Existing private instruction\n" > "$user_home/.claude/CLAUDE.md"
 HOME="$user_home" "$root/scripts/install-agent-hosts.sh" --source "$root" --user
 [[ -f "$user_home/.cursor/rules/new-project-standard.mdc" ]] || fail "--user must install Cursor rule"
 grep -Fq 'wellmanifest/new-project host contract' "$user_home/.gemini/GEMINI.md" || fail "--user must install Gemini pointer"
 grep -Fq 'wellmanifest/new-project host contract' "$user_home/.claude/CLAUDE.md" || fail "--user must install Claude pointer"
+
+grep -Fq 'Existing private instruction' "$user_home/.gemini/GEMINI.md" || fail "preserve Gemini instructions"
+grep -Fq 'Existing private instruction' "$user_home/.claude/CLAUDE.md" || fail "preserve Claude instructions"
+HOME="$user_home" "$root/scripts/install-agent-hosts.sh" --source "$root" --user
+[[ "$(grep -Fc 'wellmanifest/new-project host contract' "$user_home/.gemini/GEMINI.md")" == 1 ]] || fail "user pointer must be idempotent"
 
 # --- ticket-106: deterministic host and packaging validator -------------------
 
