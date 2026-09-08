@@ -225,7 +225,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.20.11',
+        'version': '0.20.12',
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '1' * 40,
         'publicationStatus': 'published',
