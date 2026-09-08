@@ -3,16 +3,16 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "sqlite-ticket-input",
   "kind": "information",
-  "version": 1,
+  "version": 2,
   "title": "SQLite ticket input for governance validation",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
   "created": "2026-09-08",
   "updated": "2026-09-08",
   "review_after": "2026-09-22",
-  "source_revision": "6d2da011088b69ebe1636f3bf681e5ec21a062ab",
+  "source_revision": "ed1c3ea778989e911ff4f400d90f8064b8f95dfe",
   "affected_repositories": ["wellmanifest/new-project"],
-  "evidence": ["https://github.com/subactor/registry/commit/510ce294ed1e7ddcf1b877a76f72f4a41dfbebea", "tests/ticket-input.test.py"]
+  "evidence": ["https://github.com/wellmanifest/new-project/pull/310", "https://github.com/subactor/registry/commit/510ce294ed1e7ddcf1b877a76f72f4a41dfbebea", "tests/ticket-input.test.py"]
 }
 ---
 
@@ -24,7 +24,8 @@
 Validate ticket intent, workflow state, ownership and scope without requiring a
 ticket directory in the implementation commit. Operational updates can remain
 in the ignored `project.sqlite` instead of producing Git changes. Version
-0.20.17 extends the source revision named above; Registry owns persistence.
+0.20.17 introduces this input contract at the exact source revision named
+above; Registry owns persistence.
 
 <!-- docs:section scope -->
 ## Scope

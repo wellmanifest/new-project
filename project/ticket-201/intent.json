@@ -4,9 +4,9 @@
   "summary": "Validate database-only ticket input without Git carriers",
   "workstream": "governance",
   "classification": {
-    "kind": "BUG",
-    "priority": "P1",
-    "origin": "regression"
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
   },
   "allowedPaths": [
     "project/ticket-201/**",
