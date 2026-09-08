@@ -1,0 +1,97 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-200",
+  "summary": "Validate a clean published integration against its actual preceding target revision",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-200/**",
+    "scripts/governance_check.py",
+    "tests/delivery-post-merge-base.test.py",
+    "tests/governance-validator.test.sh",
+    "error/GOV-BASE-002.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/agent-hosts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "9996f970352ea28349f8592d92b35df5639c1272",
+    "targetBranch": "main",
+    "outcome": "Publish a standard update that validates a clean target integration against its supplied first-parent base, retaining pre-merge and stale-base conflict protection.",
+    "nonGoals": [
+      "No bypass of conflicts, digest verification, protected delivery or physical hardware interlocks."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 16,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Only a clean HEAD equal to the observed target with the supplied base equal to its first parent is an already-published integration. Validate accepted-to-supplied-base drift while excluding that integration from intervening target changes; otherwise retain conservative behavior.",
+      "components": [
+        {
+          "name": "delivery-base-validation",
+          "paths": [
+            "scripts/governance_check.py",
+            "tests/delivery-post-merge-base.test.py",
+            "tests/governance-validator.test.sh",
+            "error/GOV-BASE-002.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "tests/adoption-lock.test.sh",
+            "tests/agent-hosts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "The existing governance checker accepts a clean published integration with its exact first-parent base while retaining pre-merge drift checks."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material fix through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/delivery-post-merge-base.test.py"
+        ],
+        "evidence": "Real Git histories for published integrations, stale bases, dirty trees and ambiguous observations."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh",
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/agent-hosts.test.sh",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Pending package validation and protected publication."
+      }
+    ]
+  }
+}
