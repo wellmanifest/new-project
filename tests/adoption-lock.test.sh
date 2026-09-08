@@ -209,7 +209,7 @@ manifest = json.load(open(root / '.governance/manifest.json', encoding='utf-8'))
 base = json.load(open(root / '.governance/manifest.base.json', encoding='utf-8'))
 assert lock['standard']['sourceRevision'] == sys.argv[2]
 assert lock['standard']['publicationStatus'] == 'unpublished-test'
-assert lock['standard']['version'] == '0.20.13'
+assert lock['standard']['version'] == '0.20.14'
 assert '.governance/docs/LOCAL_CI_PUBLICATION.md' in lock['managedFiles']
 assert 'run-local-direct-pr.sh' in (root / '.governance/docs/LOCAL_CI_PUBLICATION.md').read_text()
 assert not (root / '.governance/docs/LOCAL_CI_PUBLICATION.md').read_text().startswith('---')
@@ -413,7 +413,7 @@ grep -q -- '--check and --upgrade are mutually exclusive' "$fixture/options.err"
 
 mismatch="$fixture/mismatch"
 mkdir -p "$mismatch/.governance"
-sed 's/"version": "0.20.13"/"version": "9.9.9"/' \
+sed 's/"version": "0.20.14"/"version": "9.9.9"/' \
   "$standard/governance/manifest.default.json" > "$mismatch/.governance/manifest.json"
 if candidate_adopt "$standard" \
   --target-root "$mismatch" --source-revision "$revision" --upgrade \
