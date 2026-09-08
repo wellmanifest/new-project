@@ -1,0 +1,106 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-201",
+  "summary": "Validate database-only ticket input without Git carriers",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-201/**",
+    "scripts/ticket_input.py",
+    "scripts/governance_check.py",
+    "scripts/ticket_activity.py",
+    "tests/ticket-input.test.py",
+    "governance/package-manifest.json",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/agent-hosts.test.sh",
+    "docs/information/sqlite-ticket-input.md",
+    "docs/README.md",
+    "POLICY.md",
+    "CONTRIBUTING.md",
+    "tests/governance-validator.test.sh",
+    "tests/rule-enforcement.test.sh",
+    "governance/rule-enforcement.json",
+    "README.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6d2da011088b69ebe1636f3bf681e5ec21a062ab",
+    "targetBranch": "main",
+    "outcome": "Publish opt-in local SQLite ticket validation and independently pinned external CI snapshots without materializing project/ticket-*.",
+    "nonGoals": [
+      "No bypass of conflicts, digest verification, protected delivery or physical hardware interlocks."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 18,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Registry owns ticket persistence; the standard validates immutable ticket input and reuses the existing scope and authority checks. Local SQLite is forbidden as a protected CI authority source.",
+      "components": [
+        {
+          "name": "ticket-input",
+          "paths": [
+            "scripts/ticket_input.py",
+            "scripts/governance_check.py",
+            "scripts/ticket_activity.py",
+            "tests/ticket-input.test.py",
+            "governance/package-manifest.json",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "tests/adoption-lock.test.sh",
+            "tests/agent-hosts.test.sh",
+            "docs/information/sqlite-ticket-input.md",
+            "docs/README.md",
+            "POLICY.md",
+            "CONTRIBUTING.md",
+            "tests/governance-validator.test.sh",
+            "tests/rule-enforcement.test.sh",
+            "governance/rule-enforcement.json",
+            "README.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Explicit local database and independently pinned snapshot arguments for governance."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material fix through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket-input.test.py",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Actual Git repositories and SQLite; no carrier materialization, wrong pins/subjects and scope escapes rejected."
+      }
+    ]
+  }
+}

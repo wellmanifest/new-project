@@ -101,6 +101,7 @@ class TicketRecord:
     workflow: str | None
     intent: dict[str, Any] | None
     intent_error: str | None
+    files: dict[str, tuple[bytes, str]] | None = None
 
 
 class Report:
@@ -1344,6 +1345,10 @@ def parse_ticket_state(readme: Path) -> tuple[str | None, str | None]:
         text = readme.read_text(encoding="utf-8")
     except OSError:
         return None, None
+    return parse_ticket_state_text(text)
+
+
+def parse_ticket_state_text(text: str) -> tuple[str | None, str | None]:
     status_match = re.search(r"(?mi)^-[ \t]+\*\*Status\*\*:[ \t]*([A-Z_]+)[ \t]*$", text)
     state_match = re.search(r"(?mi)^-[ \t]+\*\*Workflow state\*\*:[ \t]*([A-Z_]+)[ \t]*$", text)
     return (
@@ -1452,6 +1457,10 @@ def validate_intent(path: Path, ticket_name: str) -> tuple[dict[str, Any] | None
         intent = load_json(path)
     except (OSError, json.JSONDecodeError) as error:
         return None, str(error)
+    return validate_intent_value(intent, ticket_name)
+
+
+def validate_intent_value(intent: Any, ticket_name: str) -> tuple[dict[str, Any] | None, str | None]:
     error = intent_fields_error(intent)
     if error:
         return None, error
@@ -1479,6 +1488,39 @@ def load_ticket_records(directories: list[Path], config: dict[str, Any]) -> list
     return records
 
 
+def load_external_ticket_records(args: argparse.Namespace, root: Path, config: dict[str, Any]) -> list[TicketRecord] | None:
+    database = getattr(args, "ticket_database", None)
+    snapshot = getattr(args, "ticket_snapshot", None)
+    pin = getattr(args, "ticket_snapshot_sha256", None)
+    if not any((database, snapshot, pin)):
+        return None
+    spec = importlib.util.spec_from_file_location("new_project_ticket_input", Path(__file__).with_name("ticket_input.py"))
+    if spec is None or spec.loader is None:
+        raise ValueError("managed ticket input reader missing")
+    module = importlib.util.module_from_spec(spec)
+    previous = sys.dont_write_bytecode
+    try:
+        sys.dont_write_bytecode = True
+        spec.loader.exec_module(module)
+    finally:
+        sys.dont_write_bytecode = previous
+    source = module.load_input(root, database=database, snapshot=snapshot, snapshot_sha256=pin,
+        repository=args.expected_repository, base=args.base, head=args.head,
+        protected=args.actor == "ci" or args.enforce_approval)
+    records = []
+    for item in source:
+        files = item["files"]
+        readme = files.get("README.md", (b"", "100644"))[0].decode("utf-8")
+        status, workflow = parse_ticket_state_text(readme)
+        raw_intent = files.get(config["intentFile"], (b"null", "100644"))[0]
+        try:
+            intent, error = validate_intent_value(module.parse_json(raw_intent), item["ticket"])
+        except (ValueError, UnicodeError):
+            intent, error = None, "invalid database intent JSON"
+        records.append(TicketRecord(root / config["root"] / item["ticket"], status, workflow, intent, error, files))
+    return records
+
+
 def active_ticket_records(
     root: Path,
     config: dict[str, Any],
@@ -1492,7 +1534,8 @@ def active_ticket_records(
         if record.status not in active_statuses:
             continue
         try:
-            resolution = resolve_ticket_activity(root, record.directory, active_statuses)
+            resolution = resolve_ticket_activity(root, record.directory, active_statuses,
+                **({"status_override": record.status} if record.files is not None else {}))
         except ActivityError as error:
             # A broken optional cache must never fabricate terminal authority.
             # Keep the projection active and expose one stable, recoverable error.
@@ -2381,9 +2424,25 @@ def check_ticket_content(
     active: list[TicketRecord],
     config: dict[str, Any],
     report: Report,
+    records: list[TicketRecord] | None = None,
 ) -> None:
     active_names = {record.directory.name for record in active}
+    virtual = {record.directory.name: record.files for record in records or [] if record.files is not None}
     for directory in directories:
+        if directory.name in virtual:
+            files = virtual[directory.name]
+            if directory.name in active_names:
+                missing = [name for name in config["requiredFiles"] if name not in files]
+                missing += [pattern for pattern in config["requiredAgentFiles"] if not any(fnmatch.fnmatchcase(name, pattern) for name in files)]
+                if missing:
+                    report.add("GOV-TICKET-003", "Active database ticket is missing required content.",
+                        "Complete the ticket in its database without materializing Git carriers.",
+                        [rel(root, directory / name) for name in missing])
+            for name, (content, mode) in files.items():
+                if Path(name).suffix.lower() in EXECUTABLE_SUFFIXES or mode == "100755":
+                    report.add("GOV-TICKET-004", "Executable content is forbidden in a database ticket.",
+                        "Move implementation into source or test paths.", [rel(root, directory / name)])
+            continue
         if directory.name in active_names:
             missing = [rel(root, directory / item) for item in config["requiredFiles"] if not (directory / item).is_file()]
             for pattern in config["requiredAgentFiles"]:
@@ -2997,12 +3056,16 @@ def check_selected_ticket_state(
 ) -> None:
     directory = selected.directory
     workflow = selected.workflow
-    check_history_order(
-        root, base=base, head=head, ticket_name=directory.name,
-        ticket_root=config["root"],
-        intent_path=config["intentFile"], governance_patterns=governance_patterns,
-        report=report,
-    )
+    if selected.files is None:
+        check_history_order(
+            root, base=base, head=head, ticket_name=directory.name,
+            ticket_root=config["root"],
+            intent_path=config["intentFile"], governance_patterns=governance_patterns,
+            report=report,
+        )
+    # External ticket chronology belongs to its protected receipt store. The
+    # pinned input binds repository/base/head; a local DB is never accepted for
+    # protected validation. Scope, state, base and approval checks still run.
     if workflow not in set(config["implementationStates"]):
         report.add(
             "GOV-INTENT-001", f"Ticket {directory.name} is in workflow state {workflow or 'UNKNOWN'}, not an implementation state.",
@@ -3780,6 +3843,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--expected-repository")
     parser.add_argument("--expected-pull-request", type=int)
     parser.add_argument("--expected-head")
+    parser.add_argument("--ticket-database", help="Local primary-checkout project.sqlite; forbidden for CI/approval enforcement")
+    parser.add_argument("--ticket-snapshot", help="Externally acquired ticket snapshot outside Git checkouts")
+    parser.add_argument("--ticket-snapshot-sha256", help="Independent protected snapshot digest")
     parser.add_argument("--resolved-ticket-output")
     parser.add_argument("--elapsed-minutes", type=int)
     parser.add_argument("--format", choices=["text", "json", "sarif"], default="text")
@@ -3894,8 +3960,17 @@ def run_governance_checks(
 ) -> str | None:
     lock_path = optional_repo_path(root, args.lock, "GOV-SYNC-001", "governance lock", report)
     profiles_path = optional_repo_path(root, args.stack_profiles, "GOV-MANIFEST-001", "stack-profile", report)
-    directories = ticket_directories(root, manifest["ticket"])
-    records = load_ticket_records(directories, manifest["ticket"])
+    try:
+        records = load_external_ticket_records(args, root, manifest["ticket"])
+    except Exception:
+        report.add("GOV-INTENT-002", "Ticket input is missing, invalid or untrusted for this validation mode.",
+            "Use initialized local SQLite for local checks, or an independently acquired exact-subject snapshot and digest for CI.")
+        return None
+    if records is None:
+        directories = ticket_directories(root, manifest["ticket"])
+        records = load_ticket_records(directories, manifest["ticket"])
+    else:
+        directories = [record.directory for record in records]
     base = resolve_validation_base(args.base, root, records, manifest["ticket"])
     changed = resolve_changed_paths(args, root, base, report)
     active = active_ticket_records(root, manifest["ticket"], records, report)
@@ -3915,7 +3990,7 @@ def run_governance_checks(
     check_domain_contracts(root, manifest, report)
     check_docker_image_references(root, manifest, report)
     check_stacks(root, manifest, profiles_path, report)
-    check_ticket_content(root, directories, active, manifest["ticket"], report)
+    check_ticket_content(root, directories, active, manifest["ticket"], report, records)
     check_coordination(root, manifest, records, changed, adoption_paths, report)
     check_change_lease(root, report)
     check_changed_content(root, changed, args.actor, args.trusted_human_change, report)

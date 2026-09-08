@@ -248,6 +248,12 @@
       "executable": true
     },
     {
+      "source": "scripts/ticket_input.py",
+      "target": ".governance/ticket_input.py",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "scripts/ticket_allocation.py",
       "target": ".governance/ticket_allocation.py",
       "strategy": "managed",
