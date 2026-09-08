@@ -13,6 +13,8 @@ Repozytorium `wellmanifest/new-project` stanowi wyłączne, oficjalne źródło 
 
 ---
 
+Dokumentacja: [indeks](docs/README.md) oraz [walidacja ticketów z SQLite](docs/information/sqlite-ticket-input.md).
+
 ## 1. Struktura Drzewa Plików Repozytorium Docelowego
 
 ```text

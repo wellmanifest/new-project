@@ -320,10 +320,10 @@ def _advanced_ticket_branch(root: Path, ticket: str, head_sha: str, terminal_sha
     return bool(current and current != head_sha and _ancestor(root, head_sha, current) and not _ancestor(root, current, terminal_sha))
 
 
-def resolve(root: Path, ticket_dir: Path, active_statuses: set[str]) -> ActivityResolution:
+def resolve(root: Path, ticket_dir: Path, active_statuses: set[str], *, status_override: str | None = None) -> ActivityResolution:
     root = root.resolve()
     ticket = ticket_dir.name
-    status = projection_status(ticket_dir)
+    status = projection_status(ticket_dir) if status_override is None else status_override
     projected_active = status in active_statuses
     if not projected_active:
         return ActivityResolution(ticket, False, status, "status-projection", reason="projection-not-active")

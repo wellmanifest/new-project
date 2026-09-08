@@ -215,9 +215,10 @@
     },
     "C-DELIVERY-003": {
       "codes": [
-        "GOV-INTENT-003"
+        "GOV-INTENT-003", "GOV-INTENT-002"
       ],
-      "enforcement": "deterministic"
+      "enforcement": "manual",
+      "reason": "File mode verifies Git intent presence. External mode validates pinned content and subject; pre-edit intent chronology requires the protected external receipt producer."
     },
     "C-DIAGNOSTIC-001": {
       "codes": [
@@ -1065,6 +1066,11 @@
         "GOV-MATERIAL-001"
       ],
       "enforcement": "deterministic"
+    },
+    "P-CORE-028": {
+      "codes": ["GOV-INTENT-002", "GOV-SCOPE-001", "GOV-APPROVAL-001"],
+      "enforcement": "manual",
+      "reason": "The reader validates content digests and exact subjects and rejects local databases in protected mode. Independent snapshot acquisition and historical intent receipt custody remain obligations of the protected producer; the reader cannot authenticate its own caller. Scope and approval remain deterministic."
     },
     "P-DOCS-001": {
       "codes": [
