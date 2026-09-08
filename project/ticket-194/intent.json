@@ -1,0 +1,104 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-194",
+  "summary": "Preserve local publication pins and distinguish pending main imports",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-194/**",
+    "scripts/worktree_overlap_check.py",
+    "tests/worktree-overlap.test.sh",
+    "tests/worktree-pending-merge.test.py",
+    "template/files/pre-commit.template.sh",
+    "tests/precommit-standard-update.test.sh",
+    "tests/precommit-local-pin.test.py",
+    "error/GOV-STANDARD-UPDATE.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/agent-hosts.test.sh",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2cd39286dc0931870a8a60ee11c96dd6448b39e6",
+    "targetBranch": "main",
+    "outcome": "Publish standard 0.20.12 with conservative pending-main-import overlap checks and an offline immutable-pin commit boundary.",
+    "nonGoals": [
+      "No bypass of conflicts, digest verification, protected delivery or physical hardware interlocks."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 16,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Recognize only clean index imports from the current remote default branch; retain explicit adoption while removing automatic latest resolution from the commit hook.",
+      "components": [
+        {
+          "name": "publication-guards",
+          "paths": [
+            "scripts/worktree_overlap_check.py",
+            "tests/worktree-overlap.test.sh",
+            "tests/worktree-pending-merge.test.py",
+            "template/files/pre-commit.template.sh",
+            "tests/precommit-standard-update.test.sh",
+            "tests/precommit-local-pin.test.py",
+            "error/GOV-STANDARD-UPDATE.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "tests/adoption-lock.test.sh",
+            "tests/agent-hosts.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material fix through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/worktree-overlap.test.sh"
+        ],
+        "evidence": "Pending real Git regression cases."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/precommit-standard-update.test.sh",
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/agent-hosts.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Pending offline pin and package conformance."
+      }
+    ]
+  }
+}

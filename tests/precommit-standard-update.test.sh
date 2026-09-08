@@ -12,8 +12,7 @@ fail() {
 
 runner="$root/scripts/precommit_standard_update.py"
 [[ -x "$runner" ]] || fail "standard update controller must be executable"
-grep -Fq 'run_standard_update_controller' "$root/template/files/pre-commit.template.sh" \
-  || fail "managed hook must compose the standard update controller"
+python3 "$root/tests/precommit-local-pin.test.py"
 
 mkdir -p "$tmp/plain" "$tmp/adopter/.governance" "$tmp/fakebin"
 python3 "$runner" --root "$tmp/plain" --ticket ticket-184 \
