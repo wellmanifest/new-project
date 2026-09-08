@@ -15,6 +15,7 @@ from pathlib import Path
 import re
 import sqlite3
 import subprocess
+import sys
 
 MAX_BYTES = 32 * 1024 * 1024
 APPLICATION_ID = 1398030897
@@ -83,13 +84,46 @@ def decode_document(ticket, revision, sha, raw):
     return {"ticket": ticket, "revision": revision, "files": files}
 
 
-def database_rows(root, database):
-    database = Path(database).absolute()
-    no_links(database)
+def primary_database(root):
     records = git(root, "worktree", "list", "--porcelain", "-z").decode().split("\0")
     if not records[0].startswith("worktree ") or "bare" in records:
         raise TicketInputError("registered primary checkout required")
-    primary = Path(records[0][9:])
+    database = Path(records[0][9:]) / "project.sqlite"
+    no_links(database)
+    return database
+
+
+def configured_mode(root):
+    try:
+        mode = git(root, "config", "--local", "--get", "new-project.ticketStorage").decode().strip()
+    except subprocess.CalledProcessError as error:
+        if error.returncode != 1:
+            raise
+        mode = "files"
+    if mode not in {"files", "sqlite"}:
+        raise TicketInputError("unknown configured ticket storage")
+    return mode
+
+
+def configured_records(root):
+    if configured_mode(root) == "files":
+        return None
+    return [decode_document(*row) for row in database_rows(root, primary_database(root))]
+
+
+def read_file(root, ticket, filename):
+    for item in database_rows(root, primary_database(root)):
+        if item[0] == ticket:
+            files = decode_document(*item)["files"]
+            if filename in files:
+                return files[filename][0]
+    raise TicketInputError("ticket content not found")
+
+
+def database_rows(root, database):
+    database = Path(database).absolute()
+    no_links(database)
+    primary = primary_database(root).parent
     if database != primary / "project.sqlite":
         raise TicketInputError("database must be primary checkout project.sqlite")
     names = ["project.sqlite" + suffix for suffix in ("", "-wal", "-shm", "-journal")]
@@ -190,14 +224,19 @@ def load_input(root, *, database=None, snapshot=None, snapshot_sha256=None,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["export"])
+    parser.add_argument("command", choices=["export", "read"])
     parser.add_argument("--root", type=Path, required=True)
-    parser.add_argument("--database", required=True)
-    parser.add_argument("--repository", required=True)
-    parser.add_argument("--base", required=True)
+    parser.add_argument("--database")
+    parser.add_argument("--repository")
+    parser.add_argument("--base")
     parser.add_argument("--head", default="HEAD")
+    parser.add_argument("--ticket")
+    parser.add_argument("--file", choices=["README.md", "intent.json"])
     args = parser.parse_args()
     try:
-        print(json.dumps(export_snapshot(args.root, args.database, args.repository, args.base, args.head), sort_keys=True))
+        if args.command == "read":
+            sys.stdout.buffer.write(read_file(args.root, args.ticket, args.file))
+        else:
+            print(json.dumps(export_snapshot(args.root, args.database or primary_database(args.root), args.repository, args.base, args.head), sort_keys=True))
     except (ValueError, OSError, sqlite3.Error, subprocess.SubprocessError):
-        parser.exit(1, "ticket input export failed; no snapshot emitted\n")
+        parser.exit(1, "ticket input operation failed; no content emitted\n")

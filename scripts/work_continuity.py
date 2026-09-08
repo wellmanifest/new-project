@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -632,10 +633,24 @@ def commit_event(root: Path, event: dict[str, Any]) -> dict[str, Any]:
 def intent_state(root: Path, ticket: str) -> tuple[dict[str, Any], str, str, str]:
     path = root / "project" / ticket / "intent.json"
     try:
-        raw = path.read_bytes()
+        storage = git(root, "config", "--local", "--default", "files", "--get", "new-project.ticketStorage")
+        if storage == "sqlite":
+            spec = importlib.util.spec_from_file_location("continuity_ticket_input", Path(__file__).with_name("ticket_input.py"))
+            module = importlib.util.module_from_spec(spec)
+            previous = sys.dont_write_bytecode
+            try:
+                sys.dont_write_bytecode = True
+                spec.loader.exec_module(module)
+            finally:
+                sys.dont_write_bytecode = previous
+            raw = module.read_file(root, ticket, "intent.json")
+        elif storage == "files":
+            raw = path.read_bytes()
+        else:
+            raise ValueError("unknown ticket storage mode")
         value = json.loads(raw.decode("utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-        fail("GOV-CONTINUITY-003", f"cannot resolve active ticket intent: {exc}")
+    except Exception:
+        fail("GOV-CONTINUITY-003", "cannot resolve active ticket intent from configured storage")
     if not isinstance(value, dict) or value.get("ticket") != ticket:
         fail("GOV-CONTINUITY-003", "ticket intent identity does not match")
     workstream = value.get("workstream")

@@ -254,6 +254,12 @@
       "executable": false
     },
     {
+      "source": "scripts/ticket_storage.py",
+      "target": ".governance/ticket_storage.py",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "scripts/ticket_allocation.py",
       "target": ".governance/ticket_allocation.py",
       "strategy": "managed",

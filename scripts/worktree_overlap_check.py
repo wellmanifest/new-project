@@ -592,18 +592,46 @@ def active_statuses(root: Path) -> set[str]:
 
 def ticket_scopes(root: Path) -> tuple[tuple[TicketScope, ...], tuple[str, ...]]:
     project = root / "project"
-    if not project.is_dir():
+    storage = run_git(root, "config", "--local", "--default", "files", "--get", "new-project.ticketStorage")
+    virtual = None
+    if storage == "sqlite":
+        try:
+            spec = importlib.util.spec_from_file_location("worktree_ticket_input", Path(__file__).with_name("ticket_input.py"))
+            module = importlib.util.module_from_spec(spec)
+            previous = sys.dont_write_bytecode
+            try:
+                sys.dont_write_bytecode = True
+                spec.loader.exec_module(module)
+            finally:
+                sys.dont_write_bytecode = previous
+            virtual = {item["ticket"]: item["files"] for item in module.configured_records(root)}
+        except Exception as error:
+            raise AuditError("configured SQLite ticket scopes are unavailable") from error
+    elif storage != "files":
+        raise AuditError("unknown ticket storage mode")
+    if virtual is None and not project.is_dir():
         return (), ()
     scopes: list[TicketScope] = []
     errors: list[str] = []
     statuses = active_statuses(root)
     if not statuses:
         return (), ()
-    for directory in sorted(project.iterdir(), key=lambda item: item.name):
-        if not directory.is_dir() or TICKET_DIRECTORY_RE.fullmatch(directory.name) is None:
+    directories = (project / name for name in virtual) if virtual is not None else project.iterdir()
+    for directory in sorted(directories, key=lambda item: item.name):
+        if (virtual is None and not directory.is_dir()) or TICKET_DIRECTORY_RE.fullmatch(directory.name) is None:
             continue
+        override = {}
+        if virtual is not None:
+            try:
+                text = virtual[directory.name]["README.md"][0].decode("utf-8")
+                match = re.search(r"(?mi)^-[ \t]+\*\*Status\*\*:[ \t]*([A-Z_]+)[ \t]*$", text)
+                if match is None:
+                    raise ValueError("ticket status missing")
+                override = {"status_override": match.group(1)}
+            except (KeyError, ValueError) as error:
+                raise AuditError("configured SQLite ticket status is invalid") from error
         try:
-            resolution = resolve_ticket_activity(root, directory, statuses)
+            resolution = resolve_ticket_activity(root, directory, statuses, **override)
         except ActivityError as error:
             errors.append(f"{directory.name}: {error}")
             resolution = None
@@ -612,11 +640,13 @@ def ticket_scopes(root: Path) -> tuple[tuple[TicketScope, ...], tuple[str, ...]]
         intent_path = directory / "intent.json"
         intent: dict[str, Any] = {}
         try:
-            value = json.loads(intent_path.read_text(encoding="utf-8"))
+            raw = virtual[directory.name]["intent.json"][0] if virtual is not None else intent_path.read_bytes()
+            value = json.loads(raw.decode("utf-8"))
             if isinstance(value, dict):
                 intent = value
-        except (OSError, json.JSONDecodeError):
-            pass
+        except (OSError, ValueError, KeyError) as error:
+            if virtual is not None:
+                raise AuditError("configured SQLite ticket intent is invalid") from error
         allowed = intent.get("allowedPaths")
         conflicts = intent.get("conflictsWith")
         scopes.append(

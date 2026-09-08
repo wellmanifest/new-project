@@ -1,0 +1,108 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-202",
+  "summary": "Allocate tickets and validate local commits using SQLite",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-202/**",
+    "project/new-ticket.sh",
+    ".githooks/pre-commit",
+    "scripts/ticket_storage.py",
+    "scripts/ticket_input.py",
+    "scripts/governance_check.py",
+    "tests/sqlite-allocation.test.py",
+    "tests/governance-validator.test.sh",
+    "tests/adoption-lock.test.sh",
+    "tests/agent-hosts.test.sh",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/package-manifest.json",
+    "docs/information/sqlite-ticket-input.md",
+    "AGENTS.md",
+    "template/files/AGENTS.template.md",
+    "template/files/pre-commit.template.sh",
+    "scripts/worktree_overlap_check.py",
+    "scripts/work_continuity.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "84061f1e1368509c72db7a45150628ebffb07b2d",
+    "targetBranch": "main",
+    "outcome": "Allocate and commit against SQLite tickets with the existing clone lock and a digest-pinned Registry writer, without ticket carrier files.",
+    "nonGoals": [
+      "No bypass of conflicts, digest verification, protected delivery or physical hardware interlocks."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 22,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "The standard keeps ID reservation and local checks; a verified Registry package owns SQLite mutations. Local opt-in lives in Git configuration and protected CI still requires an independent snapshot.",
+      "components": [
+        {
+          "name": "sqlite-ticket-integration",
+          "paths": [
+            "project/new-ticket.sh",
+            ".githooks/pre-commit",
+            "scripts/ticket_storage.py",
+            "scripts/ticket_input.py",
+            "scripts/governance_check.py",
+            "tests/sqlite-allocation.test.py",
+            "tests/governance-validator.test.sh",
+            "tests/adoption-lock.test.sh",
+            "tests/agent-hosts.test.sh",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "governance/package-manifest.json",
+            "docs/information/sqlite-ticket-input.md",
+            "AGENTS.md",
+            "template/files/AGENTS.template.md",
+            "template/files/pre-commit.template.sh",
+            "scripts/worktree_overlap_check.py",
+            "scripts/work_continuity.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Optional SQLite allocation and local hook mode with explicit runtime pin."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material fix through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/sqlite-allocation.test.py",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Real pinned Registry writer and Git allocation, tamper rejection and carrier-free commits."
+      }
+    ]
+  }
+}
