@@ -1,0 +1,77 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-196",
+  "summary": "Fail closed when activating agent hosts",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-196/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/install-agent-hosts.sh",
+    "tests/agent-hosts.test.sh",
+    "docs/information/agent-host-activation.md",
+    "docs/README.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "bf3099667babd14ee778917d911d6c6bad45dcab",
+    "targetBranch": "main",
+    "outcome": "Reject invalid host activation without success or partial effects; preserve user instructions.",
+    "nonGoals": [
+      "No fleet rollout, hosted-check retirement or automatic merge policy change"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Preflight host contracts and package sources before mutation; check actual hook executability and preserve existing user instructions.",
+      "components": [
+        {
+          "name": "host-activation",
+          "paths": [
+            "scripts/install-agent-hosts.sh",
+            "tests/agent-hosts.test.sh",
+            "docs/information/agent-host-activation.md",
+            "docs/README.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material patch through protected delivery."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Negative and positive activation fixtures must pass."
+      }
+    ]
+  }
+}
