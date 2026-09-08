@@ -1,0 +1,103 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-198",
+  "summary": "Distribute published Worktrees 0.5.2 basename support",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-198/**",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/worktrees.lock.json",
+    "subprojects/worktrees/conformance.py",
+    "subprojects/worktrees/worktrees.schema.json",
+    "tests/worktrees-adoption.test.py",
+    "CHANGELOG.md",
+    "tests/governance-validator.test.sh",
+    "tests/agent-hosts.test.sh",
+    "tests/adoption-lock.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "824625238d697511f58be2b73c0aa6e15c228a9a",
+    "targetBranch": "main",
+    "outcome": "Publish new-project 0.20.14 distributing the independently merged Worktrees 0.5.2 planner and schema with exact upstream digests.",
+    "nonGoals": [
+      "No permissions, snapshot formats, trusted reviewers or required-check changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 11,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Consume exact published Worktrees bytes and update the distribution lock and adoption regressions; keep allocation effects and repository authority unchanged.",
+      "components": [
+        {
+          "name": "worktrees-distribution",
+          "paths": [
+            "governance/worktrees.lock.json",
+            "subprojects/worktrees/conformance.py",
+            "subprojects/worktrees/worktrees.schema.json",
+            "tests/worktrees-adoption.test.py"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "CHANGELOG.md",
+            "tests/governance-validator.test.sh",
+            "tests/agent-hosts.test.sh",
+            "tests/adoption-lock.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Distributed planner accepts observed repository basenames while retaining v5 path constraints."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material fix through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/worktrees-adoption.test.py"
+        ],
+        "evidence": "Pending exact upstream and adopter regression checks."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Pending governed publication."
+      }
+    ]
+  }
+}

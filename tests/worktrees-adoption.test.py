@@ -14,7 +14,7 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 LOCK_PATH = ROOT / "governance" / "worktrees.lock.json"
-SOURCE_REVISION = "81e0d750f18ecace4436706250bf5deb190a000a"
+SOURCE_REVISION = "44f1686dd041554649720e171d690944afa49586"
 
 
 def sha256(path: pathlib.Path) -> str:
@@ -106,17 +106,29 @@ class WorktreesAdoptionTest(unittest.TestCase):
             self.assertTrue(result["supported"])
             self.assertEqual(list(pathlib.Path(directory).iterdir()), [])
 
+    def test_distributed_planner_preserves_existing_repository_basenames(self):
+        checker = load_checker()
+        for name in (".github", "Repo_Name.v2", "my repo"):
+            for style, root in (("posix", "/workspace"), ("windows", "C:/workspace")):
+                with self.subTest(name=name, style=style):
+                    layout = checker.plan(repository=f"org/{name}", repository_name=name,
+                                          ticket="ticket-198", slug="basename-support",
+                                          primary_checkout=f"{root}/{name}", path_style=style)
+                    self.assertEqual(layout["repositoryName"], name)
+                    self.assertEqual(layout["branch"], "ticket/198-basename-support")
+                    self.assertEqual(checker.validate(layout), [])
+
     def test_lock_binds_published_artifacts(self):
         lock = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
         self.assertEqual(lock["schema"], "new-project.worktrees-lock/v1")
         self.assertEqual(lock["dependency"]["id"], "wellmanifest/worktrees")
-        self.assertEqual(lock["dependency"]["version"], "0.5.1")
+        self.assertEqual(lock["dependency"]["version"], "0.5.2")
         self.assertEqual(lock["dependency"]["sourceRevision"], SOURCE_REVISION)
         expected = {
             "subprojects/worktrees/worktrees.schema.json":
-                "9cc10d126e06cafc87cc117f11b8b095676f461de4d168d2a1c2bb959f0fccd5",
+                "bb5989c19ee33d9beafa34576ef568ef70384a664ccf763ac2e29dde3a464756",
             "subprojects/worktrees/conformance.py":
-                "d3309b76e2c91dd7f046b00322ec8cb48ef744b8b7908d70e475fedf95e5e196",
+                "4d3e8457023eccd417a472be9c46a975dbc46c04d38c204eecd92a8583bb996e",
         }
         self.assertEqual(
             {artifact["packageSourcePath"] for artifact in lock["artifacts"]},

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.14 - 2026-09-08
+
+- Distribute published Worktrees 0.5.2 so canonical allocation preserves existing repository basenames, including .github, mixed case, underscores and spaces.
+
 ## [Unreleased]
 
 ## [0.20.4] - 2026-09-02
