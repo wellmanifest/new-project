@@ -1,0 +1,88 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-197",
+  "summary": "Publish github-script v9 in managed governance workflows",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "template/files/new-project-governance.workflow.yml",
+    ".github/workflows/ci.yml",
+    ".github/workflows/governance.yml",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/agent-hosts.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-197/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "1ec678cd37736ddc81dd8ff2bd9d3d1b27434747",
+    "targetBranch": "main",
+    "outcome": "Publish new-project 0.20.13 with immutable github-script v9 pins in the managed adopter workflow and hub CI.",
+    "nonGoals": [
+      "No permissions, snapshot formats, trusted reviewers or required-check changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Change the action at its standard source, verify existing scripts against v9, exercise the hub workflow and version the complete package.",
+      "components": [
+        {
+          "name": "managed-governance-workflow",
+          "paths": [
+            "template/files/new-project-governance.workflow.yml",
+            ".github/workflows/ci.yml",
+            ".github/workflows/governance.yml",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "tests/adoption-lock.test.sh",
+            "tests/agent-hosts.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material fix through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/agent-hosts.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Published upstream action tag/commit, existing script API compatibility, managed adopter tests, hub Linux/Windows CI and protected review."
+      }
+    ]
+  }
+}
