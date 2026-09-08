@@ -1493,7 +1493,19 @@ def load_external_ticket_records(args: argparse.Namespace, root: Path, config: d
     snapshot = getattr(args, "ticket_snapshot", None)
     pin = getattr(args, "ticket_snapshot_sha256", None)
     if not any((database, snapshot, pin)):
-        return None
+        try:
+            mode = git_output(root, ["config", "--local", "--get", "new-project.ticketStorage"]).decode().strip()
+        except subprocess.CalledProcessError as error:
+            # Explicit-path validation also supports an uninitialized scaffold.
+            # Such a directory has no clone-local opt-in; preserve file mode.
+            no_repository = error.returncode == 128 and b"--local can only be used inside a git repository" in error.stderr
+            if error.returncode != 1 and not no_repository:
+                raise
+            mode = "files"
+        if mode == "files":
+            return None
+        if mode != "sqlite":
+            raise ValueError("unknown ticket storage mode")
     spec = importlib.util.spec_from_file_location("new_project_ticket_input", Path(__file__).with_name("ticket_input.py"))
     if spec is None or spec.loader is None:
         raise ValueError("managed ticket input reader missing")
@@ -1504,6 +1516,8 @@ def load_external_ticket_records(args: argparse.Namespace, root: Path, config: d
         spec.loader.exec_module(module)
     finally:
         sys.dont_write_bytecode = previous
+    if not any((database, snapshot, pin)):
+        database = module.primary_database(root)
     source = module.load_input(root, database=database, snapshot=snapshot, snapshot_sha256=pin,
         repository=args.expected_repository, base=args.base, head=args.head,
         protected=args.actor == "ci" or args.enforce_approval)
