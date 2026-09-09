@@ -14,7 +14,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import subprocess
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -153,6 +155,73 @@ def compare(required: list[str], published: list[str]) -> list[str]:
     return errors
 
 
+UNRESOLVED_ADOPTER = "unresolved/adopter"
+REMOTE_IDENTITY = re.compile(
+    r"(?:git@|https://|ssh://git@)(?:[^/:]+)[/:]([^/]+)/(.+?)(?:\.git)?/?$"
+)
+
+
+def own_identity(root: Path) -> str | None:
+    """Resolve owner/name for this checkout from Git, then from CI.
+
+    The origin remote is what every other participant addresses this
+    repository by, so it outranks the directory name, which is a local
+    convenience. GITHUB_REPOSITORY is the fallback for a CI checkout whose
+    remote was not configured.
+    """
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(root), "remote", "get-url", "origin"],
+            capture_output=True, text=True, check=False,
+        )
+    except OSError:
+        completed = None
+    if completed is not None and completed.returncode == 0:
+        match = REMOTE_IDENTITY.match(completed.stdout.strip())
+        if match:
+            return f"{match.group(1)}/{match.group(2)}"
+    # GITHUB_REPOSITORY names the checkout the workflow runs on, so it answers
+    # for that checkout and nothing else. Pointing the gate at a fixture or a
+    # second repository must not inherit the workflow's identity and report a
+    # mismatch that does not exist.
+    workspace = os.environ.get("GITHUB_WORKSPACE")
+    if workspace and Path(workspace).resolve() == root.resolve():
+        return os.environ.get("GITHUB_REPOSITORY") or None
+    return None
+
+
+def check_instance_identity(root: Path, data: dict, source_path: Path) -> list[str]:
+    """Refuse an instance that describes a different repository.
+
+    required-checks.json is per-repository instance data seeded from a
+    template. A seed kept verbatim names the repository it came from, so its
+    check names are that repository's job names and can never turn green here.
+    Measured on 2026-09-09 across 88 governed checkouts: 30 declared another
+    repository and 22 required a check no local workflow publishes.
+
+    Silence here is not neutral. The declared names are what a branch ruleset
+    enforces, so an unadapted instance blocks every pull request in the
+    repository while looking configured.
+    """
+    declared = data.get("repository")
+    if not isinstance(declared, str) or not declared:
+        return []
+    if declared == UNRESOLVED_ADOPTER:
+        return [
+            f"{source_path} still carries the unadapted template identity "
+            f"{UNRESOLVED_ADOPTER!r}; set repository, workflowFile and the check "
+            "names this repository's own workflows publish"
+        ]
+    own = own_identity(root)
+    if own is None or declared.casefold() == own.casefold():
+        return []
+    return [
+        f"{source_path} declares repository {declared!r} but this checkout is "
+        f"{own!r}; the instance was seeded and never adapted, so its check names "
+        "are another repository's job names"
+    ]
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -196,6 +265,12 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"  - {path}", file=sys.stderr)
             return 2
     data = load_source(source_path)
+    identity_errors = check_instance_identity(root, data, source_path)
+    if identity_errors:
+        print("required-checks gate FAILED:", file=sys.stderr)
+        for message in identity_errors:
+            print(f"  - {message}", file=sys.stderr)
+        return 1
     pairs = declared_checks(data)
     if args.workflow is not None:
         workflow_path = args.workflow

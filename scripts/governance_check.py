@@ -3446,6 +3446,11 @@ def package_entry(item: Any) -> tuple[str, str, str]:
         raise TypeError("package manifest entry is invalid")
     allowed_extendable = {
         ("governance/manifest.default.json", ".governance/manifest.json"),
+        # ticket-206 moved the adopter seed off the hub's own live instance,
+        # which shipped the hub's identity and job names into every adopter.
+        # Both sources stay accepted so a repository pinned before that change
+        # still validates its own manifest while it upgrades.
+        ("template/files/required-checks.template.json", ".governance/required-checks.json"),
         ("governance/required-checks.json", ".governance/required-checks.json"),
         ("governance/ticket-allocation.json", ".governance/ticket-allocation.json"),
     }
