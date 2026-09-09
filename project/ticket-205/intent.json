@@ -1,0 +1,84 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-205",
+  "summary": "Detect fleet conformance defects in adopter governance instances",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "scripts/fleet_conformance.py",
+    "governance/fleet-conformance.rules.json",
+    "governance/fleet-conformance.schema.json",
+    "tests/fleet-conformance.test.sh",
+    ".github/workflows/ci.yml",
+    "project/ticket-205/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f1ce59fb4d71d3d6970c4787ad1cbbd5c3258b9b",
+    "targetBranch": "main",
+    "outcome": "One read-only audit reports, across many governed checkouts at once, every place where a repository's governance declarations describe a different repository: a seed instance kept verbatim, a required check no workflow can publish, a managed file drifted from its own pin, and a declared gate no workflow invokes.",
+    "nonGoals": [
+      "No rewrite of the 30 affected instances; each belongs to its own repository and ticket, and needs that repository's real job names.",
+      "No change to how required-checks.json is distributed; whether it should ship as extendable at all is a separate decision this audit supplies evidence for.",
+      "No network access and no writes to inspected repositories."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the rules as data in governance/fleet-conformance.rules.json and the implementations in one module, then assert in tests that the two sets are equal in both directions: a rule naming a missing check and a check no rule reaches are equally silent failures. Identity comes from the origin remote rather than the directory name, because the remote is what every other participant addresses the repository by. Compose with subactor/diagit, which discovers fleet Git state, instead of duplicating discovery.",
+      "components": [
+        {
+          "name": "fleet-conformance",
+          "paths": [
+            "scripts/fleet_conformance.py",
+            "governance/fleet-conformance.rules.json",
+            "governance/fleet-conformance.schema.json",
+            "tests/fleet-conformance.test.sh",
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "New hub-only audit scripts/fleet_conformance.py with the stable finding codes FLEET-INSTANCE-001, FLEET-CHECK-002, FLEET-MANAGED-003 and FLEET-GATE-004, and a ci.yml step that runs its tests."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Delete the script, rules, schema and test, and drop the ci.yml step; nothing else reads them."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/fleet-conformance.test.sh",
+          "python3 scripts/fleet_conformance.py <organisation-checkout-root> --format json"
+        ],
+        "evidence": "Measured on 88 governed checkouts across wellmanifest, subactor and autogrammar: 52 errors and 24 warnings, of which 30 are instances declaring wellmanifest/new-project while living elsewhere and 22 require the hub's own job names test and windows-governance. Zero managed files drifted, which is why the defect had stayed invisible: content distribution is intact and only the instance data is wrong."
+      }
+    ]
+  }
+}
