@@ -186,6 +186,25 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-180** | [`README.md`](./ticket-180/README.md) | - | - | - | - | - |
 | **ticket-181** | [`README.md`](./ticket-181/README.md) | - | - | - | - | - |
 | **ticket-182** | [`README.md`](./ticket-182/README.md) | - | - | - | - | - |
+| **ticket-183** | [`README.md`](./ticket-183/README.md) | - | - | - | - | - |
+| **ticket-184** | [`README.md`](./ticket-184/README.md) | - | - | - | - | - |
+| **ticket-186** | [`README.md`](./ticket-186/README.md) | - | - |  [`ai-codex.md`](./ticket-186/ai-codex.md) | - | - |
+| **ticket-187** | [`README.md`](./ticket-187/README.md) | - | - | - | - | - |
+| **ticket-188** | [`README.md`](./ticket-188/README.md) | - | - |  [`ai-codex.md`](./ticket-188/ai-codex.md) | - | - |
+| **ticket-189** | [`README.md`](./ticket-189/README.md) | - | - |  [`ai-codex.md`](./ticket-189/ai-codex.md) | - | - |
+| **ticket-190** | [`README.md`](./ticket-190/README.md) | - | - | - | - | - |
+| **ticket-191** | [`README.md`](./ticket-191/README.md) | - | - | - | - | - |
+| **ticket-192** | [`README.md`](./ticket-192/README.md) | - | - | - | - | - |
+| **ticket-193** | [`README.md`](./ticket-193/README.md) | - | - | - | - | - |
+| **ticket-194** | [`README.md`](./ticket-194/README.md) | - | - | - | - | - |
+| **ticket-196** | [`README.md`](./ticket-196/README.md) | - | - | - | - | - |
+| **ticket-197** | [`README.md`](./ticket-197/README.md) | - | - | - | - | - |
+| **ticket-198** | [`README.md`](./ticket-198/README.md) | - | - | - | - | - |
+| **ticket-199** | [`README.md`](./ticket-199/README.md) | - | - | - | - | - |
+| **ticket-200** | [`README.md`](./ticket-200/README.md) | - | - | - | - | - |
+| **ticket-201** | [`README.md`](./ticket-201/README.md) | - | - | - | - | - |
+| **ticket-202** | [`README.md`](./ticket-202/README.md) | - | - | - | - | - |
+| **ticket-203** | [`README.md`](./ticket-203/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 ---

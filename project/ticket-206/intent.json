@@ -1,0 +1,95 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-206",
+  "summary": "Seed adopter required-checks from a template, not from the hub instance",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "template/files/required-checks.template.json",
+    "governance/package-manifest.json",
+    "scripts/check_required_checks.py",
+    "scripts/create_adoption_lock.py",
+    "scripts/governance_check.py",
+    "tests/required-checks.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-206/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f1ce59fb4d71d3d6970c4787ad1cbbd5c3258b9b",
+    "targetBranch": "main",
+    "outcome": "The adopter required-checks seed is a template rather than the hub's own live instance, the adoption-time derivation fires on it, and the gate refuses an instance that describes a different repository, so an unadapted seed can neither be produced nor kept silently.",
+    "nonGoals": [
+      "No rewrite of the 30 affected instances; adopting this revision repairs them through the existing derivation.",
+      "No new repair mechanism: create_adoption_lock.py already projected the declaration from the target's workflows and only needed the marker wired in.",
+      "No schema change; the marker satisfies the existing owner/name pattern."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Seed from template/files like every other adopter file, and reuse the derivation that already repairs a hub-identity declaration during adoption by widening its trigger to the template marker. Keep the legacy source in both extendable allowlists so a repository pinned before this change still validates while it upgrades. The gate resolves identity from the origin remote, falling back to GITHUB_REPOSITORY, because the remote is what other participants address the repository by.",
+      "components": [
+        {
+          "name": "adoption-seed",
+          "paths": [
+            "template/files/required-checks.template.json",
+            "governance/package-manifest.json",
+            "scripts/create_adoption_lock.py"
+          ]
+        },
+        {
+          "name": "required-checks-gate",
+          "paths": [
+            "scripts/check_required_checks.py",
+            "scripts/governance_check.py",
+            "tests/required-checks.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "The adopter seed for .governance/required-checks.json is template/files/required-checks.template.json and carries the identity marker unresolved/adopter.",
+        "check_required_checks.py now fails closed when the instance declares a repository other than this checkout's origin or still carries the marker."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Repoint the manifest source back to governance/required-checks.json, narrow the derivation trigger and drop the identity check; the legacy source is already accepted everywhere."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/required-checks.test.sh",
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Measured across 88 governed checkouts: 30 declare wellmanifest/new-project while living elsewhere, 22 require the hub's job names test and windows-governance, and zero managed files drifted. The adoption fixture proves a fresh adoption now projects the declaration from the target's own workflows, so the marker never survives adoption."
+      }
+    ]
+  }
+}

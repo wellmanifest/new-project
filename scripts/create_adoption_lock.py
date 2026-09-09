@@ -20,13 +20,21 @@ PACKAGE_MANIFEST = "governance/package-manifest.json"
 MANIFEST_SOURCE = "governance/manifest.default.json"
 MANIFEST_BASE_TARGET = ".governance/manifest.base.json"
 MANIFEST_TARGET = ".governance/manifest.json"
-CHECKS_SOURCE = "governance/required-checks.json"
+# ticket-206: the adopter seed is a template. Before it, this source was the
+# hub's own live instance, so every unadapted adopter declared
+# wellmanifest/new-project and required the hub's job names. The previous
+# source stays accepted so a repository pinned before the change still
+# generates a valid lock while it upgrades.
+UNRESOLVED_ADOPTER = "unresolved/adopter"
+CHECKS_SOURCE = "template/files/required-checks.template.json"
+CHECKS_SOURCE_LEGACY = "governance/required-checks.json"
 CHECKS_TARGET = ".governance/required-checks.json"
 TICKET_ALLOCATION_SOURCE = "governance/ticket-allocation.json"
 TICKET_ALLOCATION_TARGET = ".governance/ticket-allocation.json"
 ALLOWED_EXTENDABLE = {
     (MANIFEST_SOURCE, MANIFEST_TARGET),
     (CHECKS_SOURCE, CHECKS_TARGET),
+    (CHECKS_SOURCE_LEGACY, CHECKS_TARGET),
     (TICKET_ALLOCATION_SOURCE, TICKET_ALLOCATION_TARGET),
 }
 TARGET_OWNED_MANIFEST_PATHS = {
@@ -483,7 +491,12 @@ def project_inherited_required_checks(
     if raw is None:
         return
     document = load_json_bytes(raw, "target required-checks declaration")
-    if not isinstance(document, dict) or document.get("repository") != "wellmanifest/new-project":
+    # Two declarations are unadapted seeds and must be projected from the
+    # target's own workflows: the template marker, and the hub identity that
+    # every adopter received while the seed was the hub's live instance.
+    if not isinstance(document, dict) or document.get("repository") not in {
+        UNRESOLVED_ADOPTER, "wellmanifest/new-project",
+    }:
         return
     workflow_payloads = {
         target: content
