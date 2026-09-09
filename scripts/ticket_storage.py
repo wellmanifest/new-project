@@ -54,7 +54,7 @@ def invoke(root, pin, *args, content=None):
 
 def create(args):
     ticket = args.ticket
-    if re.fullmatch(r"ticket-[0-9]{3}", ticket or "") is None:
+    if re.fullmatch(r"ticket-[0-9]{3,}", ticket or "") is None:
         raise ValueError("reserved ticket identity required")
     if not args.title or "\n" in args.title or "\r" in args.title:
         raise ValueError("single-line title required")

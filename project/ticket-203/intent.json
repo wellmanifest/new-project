@@ -1,0 +1,116 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-203",
+  "summary": "Accept allocated ticket identifiers beyond 999",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    ".github/workflows/governance.yml",
+    "governance/approval-evidence.schema.json",
+    "governance/change-evaluation.schema.json",
+    "governance/decision-record.schema.json",
+    "governance/intent.schema.json",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/remediation-intent.schema.json",
+    "governance/terminal-receipt-registry.schema.json",
+    "scripts/governance_check.py",
+    "scripts/remediation_intent.py",
+    "scripts/runtime.sh",
+    "scripts/ticket_activity.py",
+    "scripts/ticket_input.py",
+    "scripts/ticket_storage.py",
+    ".githooks/pre-commit",
+    "project/new-ticket.sh",
+    "template/files/pre-commit.template.sh",
+    "tests/governance-scripts.test.sh",
+    "VERSION",
+    "governance/package-manifest.json",
+    "project/ticket-203/**",
+    "tests/governance-validator.test.sh",
+    "tests/adoption-lock.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "5e23e443c2c836365296122a4bff8761134f8a13",
+    "targetBranch": "main",
+    "outcome": "Publish consistent support for allocator-produced ticket IDs of at least three digits across validation, hooks, receipts and schemas; preserve shorter malformed ID rejection.",
+    "nonGoals": [
+      "No renumbering, weakened approval or queue authority changes."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use a minimum three-digit ticket width consistently; the allocator already emits unbounded decimal IDs. Regress allocation at the 999 boundary and complete matching ticket readback.",
+      "components": [
+        {
+          "name": "ticket-contract",
+          "paths": [
+            ".github/workflows/governance.yml",
+            "governance/approval-evidence.schema.json",
+            "governance/change-evaluation.schema.json",
+            "governance/decision-record.schema.json",
+            "governance/intent.schema.json",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "governance/remediation-intent.schema.json",
+            "governance/terminal-receipt-registry.schema.json",
+            "scripts/governance_check.py",
+            "scripts/remediation_intent.py",
+            "scripts/runtime.sh",
+            "scripts/ticket_activity.py",
+            "scripts/ticket_input.py",
+            "scripts/ticket_storage.py",
+            ".githooks/pre-commit",
+            "project/new-ticket.sh",
+            "template/files/pre-commit.template.sh",
+            "tests/governance-scripts.test.sh",
+            "VERSION",
+            "governance/package-manifest.json",
+            "tests/governance-validator.test.sh",
+            "tests/adoption-lock.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Accept valid allocator-generated IDs beyond ticket-999."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Publish a corrective version preserving allocated IDs; never renumber existing tickets."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/governance-scripts.test.sh",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Allocator boundary and malformed-ID regressions plus repository governance and required CI."
+      }
+    ]
+  }
+}

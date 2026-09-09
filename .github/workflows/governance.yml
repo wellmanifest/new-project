@@ -256,7 +256,7 @@ jobs:
             const approved = humanApproval ?? appApproval;
             const ticket = fs.existsSync(process.env.RESOLVED_TICKET_PATH)
               ? fs.readFileSync(process.env.RESOLVED_TICKET_PATH, 'utf8').trim() : '';
-            if (ticket && !/^ticket-[0-9]{3}$/.test(ticket)) {
+            if (ticket && !/^ticket-[0-9]{3,}$/.test(ticket)) {
               throw new Error('resolved ticket output is malformed');
             }
             if (!approved || !ticket) {
