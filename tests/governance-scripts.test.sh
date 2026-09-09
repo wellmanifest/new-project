@@ -1209,3 +1209,54 @@ fi
 grep -Fq 'GOV-REMEDIATION-003' "$remediation_root/stale.out"
 
 echo 'governance scripts: PASS'
+
+# The allocator's decimal counter must remain usable after its display width
+# is exceeded; validators and the adopter hook must not truncate ticket-1000.
+wide="$fixture/wide-ticket"
+mkdir -p "$wide/project" "$wide/.governance" "$wide/.githooks"
+cp "$repo_root/project/new-ticket.sh" "$wide/project/new-ticket.sh"
+cp "$repo_root/governance/manifest.default.json" "$wide/.governance/manifest.json"
+cp "$repo_root/governance/work-classification.dsl.json" "$wide/.governance/work-classification.dsl.json"
+cp "$repo_root/template/files/pre-commit.template.sh" "$wide/.githooks/pre-commit"
+chmod +x "$wide/.githooks/pre-commit"
+# Only the hook's ticket binding is exercised here; full policy is covered by
+# governance-validator.test.sh against generated adopter repositories.
+printf '%s\n' 'raise SystemExit(0)' > "$wide/.governance/worktree_guard.py"
+(
+  cd "$wide"
+  git init -q
+  git config user.name 'Fixture'
+  git config user.email 'fixture@example.invalid'
+  git config core.hooksPath .githooks
+  printf '%s\n' 999 > .git/new-project-ticket-high-water
+  bash project/new-ticket.sh --title 'Allocated beyond display width' --agent codex \
+    --workstream application > allocation.out
+  test -f project/ticket-1000/intent.json
+  git checkout -qb ticket/1000-wide
+  printf '%s\n' 'value = 1' > app.py
+  git add project/ticket-1000 app.py
+  git commit -qm 'Exercise complete four-digit hook binding'
+)
+python3 - "$repo_root" "$wide" <<'PY'
+import hashlib, json, pathlib, re, sys
+root, wide = map(pathlib.Path, sys.argv[1:])
+sys.path.insert(0, str(root / 'scripts'))
+import governance_check as gate
+import ticket_input
+config = json.loads((wide / '.governance/manifest.json').read_text())['ticket']
+assert [p.name for p in gate.ticket_directories(wide, config)] == ['ticket-1000']
+intent = json.loads((wide / 'project/ticket-1000/intent.json').read_text())
+intent.update(dependsOn=['ticket-1001'], conflictsWith=['ticket-13632'], integrationTicket='ticket-1002')
+assert gate.validate_intent_value(intent, 'ticket-1000')[1] is None
+for bad in ['ticket-01', 'ticket-1000x', 'ticket-../1000']:
+    intent['dependsOn'] = [bad]
+    assert gate.validate_intent_value(intent, 'ticket-1000')[1] is not None
+for name in ['ticket-1000', 'ticket-13632']:
+    doc = dict(schema='registry.ticket-content/v1', ticket=name, files={}, execution_authorized=False, merge_authorized=False)
+    raw = json.dumps(doc)
+    assert ticket_input.decode_document(name, 1, hashlib.sha256(raw.encode()).hexdigest(), raw)['ticket'] == name
+for schema in ['intent', 'approval-evidence', 'decision-record', 'remediation-intent']:
+    pattern = json.loads((root / f'governance/{schema}.schema.json').read_text())['properties']['ticket']['pattern']
+    assert re.fullmatch(pattern, 'ticket-13632')
+    assert not re.fullmatch(pattern, 'ticket-01')
+PY

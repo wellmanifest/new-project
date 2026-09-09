@@ -54,7 +54,7 @@ def parse_json(data):
 
 
 def decode_document(ticket, revision, sha, raw):
-    if not isinstance(ticket, str) or re.fullmatch(r"ticket-[0-9]{3}", ticket) is None:
+    if not isinstance(ticket, str) or re.fullmatch(r"ticket-[0-9]{3,}", ticket) is None:
         raise TicketInputError("unsupported ticket identity")
     if type(revision) is not int or revision < 1 or not isinstance(raw, str):
         raise TicketInputError("invalid ticket revision")

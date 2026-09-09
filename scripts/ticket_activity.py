@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 SHA_RE = re.compile(r"^[a-f0-9]{40}$")
-TICKET_RE = re.compile(r"^ticket-[0-9]{3}$")
+TICKET_RE = re.compile(r"^ticket-[0-9]{3,}$")
 RECEIPT_REF_RE = re.compile(r"^receipt:\S+$")
 TARGET_BRANCH_RE = re.compile(r"^[A-Za-z0-9._/-]+$")
 OCCURRED_AT_RE = re.compile(

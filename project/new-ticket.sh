@@ -400,7 +400,7 @@ refs_highest() {
 highest=0
 conflicting_ticket=""
 current_branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
-if [[ "$current_branch" =~ ticket[-/]([0-9]{3}) ]]; then
+if [[ "$current_branch" =~ ticket[-/]([0-9]{3,}) ]]; then
   current_ticket="project/ticket-${BASH_REMATCH[1]}"
   if is_active_ticket "$current_ticket"; then
     conflicting_ticket="$current_ticket"

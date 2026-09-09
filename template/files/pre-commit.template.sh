@@ -49,7 +49,7 @@ if [[ -z "$branch" || "$branch" == "HEAD" ]]; then
   exit 1
 fi
 
-if [[ ! "$branch" =~ ticket[-/]([0-9]{3}) ]]; then
+if [[ ! "$branch" =~ ticket[-/]([0-9]{3,}) ]]; then
   echo "GOV-AGENT-HOST-001: branch '$branch' is not bound to ticket-NNN." >&2
   echo "  Allocate with ./project/new-ticket.sh and commit on a ticket branch." >&2
   exit 1

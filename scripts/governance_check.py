@@ -1387,7 +1387,7 @@ def intent_common_error(intent: dict[str, Any], ticket_name: str) -> str | None:
 def ticket_id_list_error(intent: dict[str, Any], field_name: str) -> str | None:
     values = intent.get(field_name)
     if not isinstance(values, list) or not all(
-        isinstance(value, str) and re.fullmatch(r"ticket-[0-9]{3}", value)
+        isinstance(value, str) and re.fullmatch(r"ticket-[0-9]{3,}", value)
         for value in values
     ):
         return f"intent {field_name} must contain ticket IDs"
@@ -1403,7 +1403,7 @@ def intent_v2_error(intent: dict[str, Any], ticket_name: str) -> str | None:
         if error:
             return error
     integration = intent.get("integrationTicket")
-    if integration is not None and (not isinstance(integration, str) or not re.fullmatch(r"ticket-[0-9]{3}", integration)):
+    if integration is not None and (not isinstance(integration, str) or not re.fullmatch(r"ticket-[0-9]{3,}", integration)):
         return "intent integrationTicket must be null or a ticket ID"
     if integration == ticket_name:
         return "intent integrationTicket cannot reference its own ticket"
@@ -3183,7 +3183,7 @@ def approval_subject_valid(evidence: Any) -> bool:
         and isinstance(evidence.get("headSha"), str)
         and re.fullmatch(r"[0-9a-f]{40}", evidence["headSha"]) is not None
         and isinstance(evidence.get("ticket"), str)
-        and re.fullmatch(r"ticket-[0-9]{3}", evidence["ticket"]) is not None
+        and re.fullmatch(r"ticket-[0-9]{3,}", evidence["ticket"]) is not None
     )
 
 
