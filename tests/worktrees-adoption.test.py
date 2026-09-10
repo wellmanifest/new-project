@@ -14,7 +14,7 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 LOCK_PATH = ROOT / "governance" / "worktrees.lock.json"
-SOURCE_REVISION = "44f1686dd041554649720e171d690944afa49586"
+SOURCE_REVISION = "57bcd6b6f5d266fa9952824f1d89d4d45d8a386d"
 
 
 def sha256(path: pathlib.Path) -> str:
@@ -122,13 +122,13 @@ class WorktreesAdoptionTest(unittest.TestCase):
         lock = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
         self.assertEqual(lock["schema"], "new-project.worktrees-lock/v1")
         self.assertEqual(lock["dependency"]["id"], "wellmanifest/worktrees")
-        self.assertEqual(lock["dependency"]["version"], "0.5.2")
+        self.assertEqual(lock["dependency"]["version"], "0.5.3")
         self.assertEqual(lock["dependency"]["sourceRevision"], SOURCE_REVISION)
         expected = {
             "subprojects/worktrees/worktrees.schema.json":
                 "bb5989c19ee33d9beafa34576ef568ef70384a664ccf763ac2e29dde3a464756",
             "subprojects/worktrees/conformance.py":
-                "4d3e8457023eccd417a472be9c46a975dbc46c04d38c204eecd92a8583bb996e",
+                "fad10912f3b14913cc348880996b636ba0d31ea66a853dd264b53e4e66f17feb",
         }
         self.assertEqual(
             {artifact["packageSourcePath"] for artifact in lock["artifacts"]},
