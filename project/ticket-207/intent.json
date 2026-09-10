@@ -24,7 +24,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "668d6a46abd582c692ad205b23a7381f09203b57",
+    "acceptedBaseSha": "d31beca68b9964c6af493a44974b247626294b65",
     "targetBranch": "main",
     "outcome": "An adopter can resolve a merged ticket as terminal from Git when no receipt exists, so the active set stops carrying merged work and the coordination rules that filter on it have a true set to reason over.",
     "nonGoals": [
