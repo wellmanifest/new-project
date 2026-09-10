@@ -1,0 +1,98 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-208",
+  "summary": "Reduce canonical validator complexity without changing decisions",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-208/**",
+    "scripts/governance_check.py",
+    "scripts/change_lease_check.py",
+    "scripts/generate_required_checks.py",
+    "scripts/branch_lifecycle_check.py",
+    "scripts/branch_intent_reconciliation.py",
+    "scripts/check_required_checks.py",
+    "scripts/standard_pack_check.py",
+    "scripts/remediation_intent.py",
+    "scripts/ticket_allocation.py",
+    "scripts/ticket_input.py",
+    "scripts/work_continuity.py",
+    "scripts/workspace_lifecycle_check.py",
+    "scripts/worktree_overlap_check.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "668d6a46abd582c692ad205b23a7381f09203b57",
+    "targetBranch": "main",
+    "outcome": "Canonical validator functions satisfy the existing Koru complexity and length limits while preserving validation decisions, diagnostics and side effects.",
+    "nonGoals": [
+      "No change to required checks or complexity thresholds",
+      "No source changes in adopted copies",
+      "No overlapping changes to ticket_activity.py while PR316 owns that file",
+      "No worktrees vendor edit; its source owns those changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extract cohesive validation stages and predicates into private helpers in their existing modules; preserve evaluation order and public entry points.",
+      "components": [
+        {
+          "name": "canonical-validators",
+          "paths": [
+            "scripts/governance_check.py",
+            "scripts/change_lease_check.py",
+            "scripts/generate_required_checks.py",
+            "scripts/branch_lifecycle_check.py",
+            "scripts/branch_intent_reconciliation.py",
+            "scripts/check_required_checks.py",
+            "scripts/standard_pack_check.py",
+            "scripts/remediation_intent.py",
+            "scripts/ticket_allocation.py",
+            "scripts/ticket_input.py",
+            "scripts/work_continuity.py",
+            "scripts/workspace_lifecycle_check.py",
+            "scripts/worktree_overlap_check.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this source refactor; input/output contracts and schema versions are unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "lizard -C 15 -L 100 -w scripts/governance_check.py scripts/change_lease_check.py scripts/generate_required_checks.py scripts/branch_lifecycle_check.py scripts/branch_intent_reconciliation.py scripts/check_required_checks.py scripts/standard_pack_check.py scripts/remediation_intent.py scripts/ticket_allocation.py scripts/ticket_input.py scripts/work_continuity.py scripts/workspace_lifecycle_check.py scripts/worktree_overlap_check.py",
+          "bash tests/governance-validator.test.sh",
+          "bash tests/rule-enforcement.test.sh"
+        ],
+        "evidence": "Existing fail-closed fixtures and unchanged external complexity thresholds"
+      }
+    ]
+  }
+}
