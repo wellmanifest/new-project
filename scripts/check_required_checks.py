@@ -55,6 +55,21 @@ def resolve_source(root: Path, script_path: Path) -> tuple[Path | None, list[Pat
     return None, candidates
 
 
+def bound_check_pairs(required_checks: list) -> list[tuple[str, str]]:
+    pairs: list[tuple[str, str]] = []
+    for item in required_checks:
+        if not isinstance(item, dict):
+            raise SystemExit("requiredChecks entries must be objects")
+        name = item.get("name")
+        workflow = item.get("workflowFile")
+        if not isinstance(name, str) or not name.strip():
+            raise SystemExit("requiredChecks.name missing or empty")
+        if not isinstance(workflow, str) or not workflow.strip():
+            raise SystemExit("requiredChecks.workflowFile missing or empty")
+        pairs.append((name, workflow))
+    return pairs
+
+
 def declared_checks(data: dict) -> list[tuple[str, str]]:
     has_legacy = "workflowFile" in data or "requiredCheckNames" in data
     has_bound = "requiredChecks" in data
@@ -65,18 +80,7 @@ def declared_checks(data: dict) -> list[tuple[str, str]]:
         )
     required_checks = data.get("requiredChecks")
     if isinstance(required_checks, list) and required_checks:
-        pairs: list[tuple[str, str]] = []
-        for item in required_checks:
-            if not isinstance(item, dict):
-                raise SystemExit("requiredChecks entries must be objects")
-            name = item.get("name")
-            workflow = item.get("workflowFile")
-            if not isinstance(name, str) or not name.strip():
-                raise SystemExit("requiredChecks.name missing or empty")
-            if not isinstance(workflow, str) or not workflow.strip():
-                raise SystemExit("requiredChecks.workflowFile missing or empty")
-            pairs.append((name, workflow))
-        return pairs
+        return bound_check_pairs(required_checks)
     names = data.get("requiredCheckNames")
     workflow = data.get("workflowFile")
     if not isinstance(names, list) or not names or not all(isinstance(n, str) and n.strip() for n in names):
@@ -222,6 +226,42 @@ def check_instance_identity(root: Path, data: dict, source_path: Path) -> list[s
     ]
 
 
+def source_for_check(root: Path, source_override: Path | None) -> Path | None:
+    looked: list[Path] = []
+    if source_override is not None:
+        source_path = source_override
+        if not source_path.is_file():
+            print(
+                "required-checks gate FAILED: source file not found. looked in:\n"
+                f"  - {source_path}",
+                file=sys.stderr,
+            )
+            return None
+    else:
+        source_path, looked = resolve_source(root, Path(__file__))
+        if source_path is None:
+            print(
+                "required-checks gate FAILED: source file not found. looked in:",
+                file=sys.stderr,
+            )
+            for path in looked:
+                print(f"  - {path}", file=sys.stderr)
+            return None
+    return source_path
+
+
+def print_check_success(root, source_path, required_names, published_names) -> None:
+    try:
+        source_label = source_path.relative_to(root)
+    except ValueError:
+        source_label = source_path
+    print(
+        "required-checks gate OK: "
+        f"source={source_label} "
+        f"required={required_names} published={published_names}"
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -244,26 +284,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
     root = args.root.resolve() if args.root else repo_root()
-    looked: list[Path] = []
-    if args.source is not None:
-        source_path = args.source
-        if not source_path.is_file():
-            print(
-                "required-checks gate FAILED: source file not found. looked in:\n"
-                f"  - {source_path}",
-                file=sys.stderr,
-            )
-            return 2
-    else:
-        source_path, looked = resolve_source(root, Path(__file__))
-        if source_path is None:
-            print(
-                "required-checks gate FAILED: source file not found. looked in:",
-                file=sys.stderr,
-            )
-            for path in looked:
-                print(f"  - {path}", file=sys.stderr)
-            return 2
+    source_path = source_for_check(root, args.source)
+    if source_path is None:
+        return 2
     data = load_source(source_path)
     identity_errors = check_instance_identity(root, data, source_path)
     if identity_errors:
@@ -302,15 +325,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     required_names = [name for name, _workflow in pairs]
     if __name__ == "__main__":
-        try:
-            source_label = source_path.relative_to(root)
-        except ValueError:
-            source_label = source_path
-        print(
-            "required-checks gate OK: "
-            f"source={source_label} "
-            f"required={required_names} published={published_names}"
-        )
+        print_check_success(root, source_path, required_names, published_names)
     return 0
 
 
