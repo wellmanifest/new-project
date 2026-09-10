@@ -1,0 +1,38 @@
+{
+  "$schema": "./fleet-conformance.schema.json",
+  "schema": "new-project.fleet-conformance/v1",
+  "rules": [
+    {
+      "code": "FLEET-INSTANCE-001",
+      "severity": "error",
+      "check": "instance_identity",
+      "title": "Adopter carries another repository's governance instance.",
+      "subject": ".governance/required-checks.json",
+      "identityField": "repository",
+      "remediation": "Rewrite the instance for this repository: its own name, its own workflow file and the check names its own workflows publish. The seed is a starting point, not content to keep."
+    },
+    {
+      "code": "FLEET-CHECK-002",
+      "severity": "error",
+      "check": "unprovidable_required_check",
+      "title": "A required check name is published by no workflow in this repository.",
+      "subject": ".governance/required-checks.json",
+      "remediation": "Either add the job that publishes the name, or declare the names the workflows already publish. A required check no workflow can produce blocks every pull request forever."
+    },
+    {
+      "code": "FLEET-MANAGED-003",
+      "severity": "warning",
+      "check": "managed_file_drift",
+      "title": "A standard-managed file differs from the revision this repository pins.",
+      "remediation": "Adopt the pinned revision so managed files match their recorded digests, or repair the file. Managed content is not an extension point."
+    },
+    {
+      "code": "FLEET-GATE-004",
+      "severity": "warning",
+      "check": "gate_never_executed",
+      "title": "A declared governance gate is invoked by no workflow.",
+      "subject": "project/governance-check.sh",
+      "remediation": "Invoke the gate from a workflow, or stop declaring it. A gate that never runs is documentation, and it reads as protection that is not there."
+    }
+  ]
+}
