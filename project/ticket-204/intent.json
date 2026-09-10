@@ -23,7 +23,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "668d6a46abd582c692ad205b23a7381f09203b57",
+    "acceptedBaseSha": "d31beca68b9964c6af493a44974b247626294b65",
     "targetBranch": "main",
     "outcome": "The pre-commit standard updater refuses on drift instead of on staleness, so a repository whose managed files still match their own pinned lock can commit while a newer standard revision exists, and still sees the staleness reported.",
     "nonGoals": [
