@@ -1,0 +1,93 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-209",
+  "summary": "Publish bounded validators and canonical Worktrees 0.5.3 adoption",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-209/**",
+    "scripts/ticket_activity.py",
+    "subprojects/worktrees/conformance.py",
+    "governance/worktrees.lock.json",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/worktrees-adoption.test.py",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [
+    "ticket-207"
+  ],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "86bc406b9ab7f6da75aba4f21b85dfc5d48a5e01",
+    "targetBranch": "main",
+    "outcome": "Publish new-project 0.20.20 with all downstream Koru validator complexity findings resolved through canonical source changes and pinned Worktrees 0.5.3.",
+    "nonGoals": [
+      "No changes to activity policy defaults, resolution or the opt-in behavior proposed by ticket-207",
+      "No changes to required checks or complexity thresholds",
+      "No edits to another ticket checkout"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extract terminal outcome and receipt validation helpers, away from ticket-207 policy acceptance and resolver changes. Declare the shared source path and reconcile current base before protected publication. Copy Worktrees only from its independently merged source and bind artifact hashes.",
+      "components": [
+        {
+          "name": "validators-and-release",
+          "paths": [
+            "scripts/ticket_activity.py",
+            "subprojects/worktrees/conformance.py",
+            "governance/worktrees.lock.json",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "tests/worktrees-adoption.test.py",
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this source refactor; input/output contracts and schema versions are unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/ticket-activity.test.sh",
+          "python3 tests/worktrees-adoption.test.py",
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "lizard -C 15 -L 100 -w scripts/ticket_activity.py subprojects/worktrees/conformance.py"
+        ],
+        "evidence": "Existing fail-closed fixtures, canonical source hashes and unchanged complexity thresholds."
+      }
+    ]
+  }
+}
