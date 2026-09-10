@@ -94,7 +94,11 @@ Path(sys.argv[1]).write_text(json.dumps({
 PY
 
 echo "== adopter .governance/ layout with display-name jobs =="
-python3 "$ADOPTER/.governance/check_required_checks.py" --root "$ADOPTER"
+# The fixture has no Git remote, so identity falls back to GITHUB_REPOSITORY.
+# Pin it to the simulated adopter so the gate judges the fixture, not the CI
+# checkout that happens to be running the test.
+GITHUB_REPOSITORY="wellmanifest/autonomy" \
+  python3 "$ADOPTER/.governance/check_required_checks.py" --root "$ADOPTER"
 
 echo "== mutation: job key instead of display name is rejected =="
 python3 - "$ADOPTER/.governance/required-checks.json" <<'PY'
@@ -106,7 +110,8 @@ data = json.loads(path.read_text(encoding="utf-8"))
 data["requiredChecks"][0]["name"] = "remote-lifecycle"
 path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
-if python3 "$ADOPTER/.governance/check_required_checks.py" --root "$ADOPTER"; then
+if GITHUB_REPOSITORY="wellmanifest/autonomy" \
+  python3 "$ADOPTER/.governance/check_required_checks.py" --root "$ADOPTER"; then
   echo "expected gate to fail when declaration uses the job key" >&2
   exit 1
 fi
@@ -125,7 +130,8 @@ Path(sys.argv[1]).write_text(json.dumps({
     "requiredCheckNames": ["test", "windows-governance"],
 }, indent=2) + "\n", encoding="utf-8")
 PY
-if python3 "$ADOPTER/.governance/check_required_checks.py" --root "$ADOPTER"; then
+if GITHUB_REPOSITORY="wellmanifest/autonomy" \
+  python3 "$ADOPTER/.governance/check_required_checks.py" --root "$ADOPTER"; then
   echo "expected gate to fail when the adopter still declares hub checks" >&2
   exit 1
 fi
@@ -322,3 +328,103 @@ assert entry["derivedNames"] == ["governance / windows", "test"], entry["derived
 PY
 
 echo "required-checks generator: PASS"
+
+# required-checks.json is per-repository instance data. Until 2026-09-09 the
+# adopter seed was the hub's own live instance, so a repository that never
+# rewrote it declared wellmanifest/new-project and required the hub's job names
+# `test` and `windows-governance`. Measured across 88 governed checkouts: 30
+# carried a foreign identity and 22 required a check no local workflow can
+# publish, which blocks every pull request there while looking configured.
+FOREIGN="$TMP/foreign-instance.json"
+python3 - "$FOREIGN" <<'PY'
+import json, sys
+json.dump({
+    "schema": "new-project.required-checks/v1",
+    "version": 1,
+    "repository": "wellmanifest/some-other-repository",
+    "workflowFile": ".github/workflows/ci.yml",
+    "requiredCheckNames": ["test", "windows-governance"],
+}, open(sys.argv[1], "w"), indent=2)
+PY
+if python3 scripts/check_required_checks.py --source "$FOREIGN"; then
+  echo "FAIL: an instance describing another repository must fail closed" >&2
+  exit 1
+fi
+# The refusal exits non-zero, so capture it before matching: a pipeline under
+# `set -o pipefail` would fail on the expected exit code rather than the text.
+foreign_out="$(python3 scripts/check_required_checks.py --source "$FOREIGN" 2>&1 || true)"
+grep -Fq "but this checkout is" <<<"$foreign_out" \
+  || { echo "FAIL: the refusal must name both identities" >&2; exit 1; }
+
+# The template ships an explicitly unresolved identity so a seed kept verbatim
+# fails closed instead of silently requiring the hub's checks.
+UNADAPTED="$TMP/unadapted.json"
+python3 - "$UNADAPTED" <<'PY'
+import json, pathlib, sys
+seed = json.loads(pathlib.Path("template/files/required-checks.template.json").read_text())
+json.dump(seed, open(sys.argv[1], "w"), indent=2)
+PY
+if python3 scripts/check_required_checks.py --source "$UNADAPTED"; then
+  echo "FAIL: the unadapted template identity must fail closed" >&2
+  exit 1
+fi
+unadapted_out="$(python3 scripts/check_required_checks.py --source "$UNADAPTED" 2>&1 || true)"
+grep -Fq "unresolved/adopter" <<<"$unadapted_out" \
+  || { echo "FAIL: the refusal must name the unadapted marker" >&2; exit 1; }
+
+# The seed must declare the check names the adopter workflow template actually
+# publishes; otherwise a correct adoption still fails its own gate.
+python3 - <<'PY'
+import json, pathlib, re
+seed = json.loads(pathlib.Path("template/files/required-checks.template.json").read_text())
+declared = {entry["name"] for entry in seed["requiredChecks"]}
+workflow = pathlib.Path("template/files/new-project-governance.workflow.yml").read_text()
+published = set(re.findall(r"^    name:\s*(.+?)\s*$", workflow, re.MULTILINE))
+assert declared == published, f"seed {sorted(declared)} != template workflow {sorted(published)}"
+targets = {entry["workflowFile"] for entry in seed["requiredChecks"]}
+assert targets == {".github/workflows/new-project-governance.yml"}, targets
+PY
+
+# The package manifest must seed adopters from the template, never from the
+# hub's own instance. That single wrong source is the whole defect.
+python3 - <<'PY'
+import json, pathlib
+manifest = json.loads(pathlib.Path("governance/package-manifest.json").read_text())
+entry = next(
+    item for item in manifest["files"]
+    if item["target"] == ".governance/required-checks.json"
+)
+assert entry["source"] == "template/files/required-checks.template.json", entry
+PY
+
+echo "required-checks instance identity: OK"
+
+# GITHUB_REPOSITORY answers for the checkout the workflow runs on and for
+# nothing else. Pointing the gate at a fixture or a second repository must not
+# inherit the workflow's identity: CI caught exactly that, reporting a mismatch
+# between a synthetic adopter and the repository running the job.
+ELSEWHERE="$TMP/elsewhere"
+mkdir -p "$ELSEWHERE/.governance"
+python3 - "$ELSEWHERE/.governance/required-checks.json" <<'PY'
+import json, sys
+json.dump({
+    "schema": "new-project.required-checks/v1",
+    "version": 1,
+    "repository": "wellmanifest/some-adopter",
+    "workflowFile": ".github/workflows/new-project-governance.yml",
+    "requiredCheckNames": ["governance / enforce"],
+}, open(sys.argv[1], "w"), indent=2)
+PY
+mkdir -p "$ELSEWHERE/.github/workflows"
+cat > "$ELSEWHERE/.github/workflows/new-project-governance.yml" <<'EOF'
+name: new-project-governance
+jobs:
+  enforce:
+    name: governance / enforce
+    steps:
+      - run: echo ok
+EOF
+GITHUB_REPOSITORY=wellmanifest/new-project \
+GITHUB_WORKSPACE="$PWD" \
+  python3 scripts/check_required_checks.py --root "$ELSEWHERE" \
+  || { echo "FAIL: a checked root outside the workspace must not inherit its identity" >&2; exit 1; }

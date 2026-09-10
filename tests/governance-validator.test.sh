@@ -295,8 +295,11 @@ assert extendable == [
         'strategy': 'extendable',
         'executable': False,
     },
+    # An adopter seed must never be the hub's own live instance: a copy kept
+    # verbatim declares wellmanifest/new-project and requires the hub's job
+    # names, which no adopter workflow publishes. ticket-206.
     {
-        'source': 'governance/required-checks.json',
+        'source': 'template/files/required-checks.template.json',
         'target': '.governance/required-checks.json',
         'strategy': 'extendable',
         'executable': False,
