@@ -129,6 +129,144 @@ class PublishedDeliveryBaseTest(unittest.TestCase):
         with patch.object(governance, "git_output", side_effect=observe):
             self.assert_overlap(self.accepted)
 
+    def implicit_base(self, supplied=None, count=1, head="HEAD", targets=None):
+        records = [SimpleNamespace(intent={"delivery": {
+            "acceptedBaseSha": self.accepted, "targetBranch": target,
+            "standardAdoption": {},
+        }}) for target in (targets if targets is not None else ["main"] * count)]
+        with patch.object(governance, "active_ticket_records", return_value=records):
+            return governance.resolve_validation_base(supplied, self.root, [], {}, head)
+
+    def publish_after_historical_adoption(self):
+        preceding = self.commit("src/intervening.py", "already delivered\n")
+        self.commit("src/latest.py", "latest delivery\n")
+        self.publish()
+        return preceding
+
+    def test_implicit_base_limits_clean_published_scope_to_latest_delivery(self):
+        preceding = self.publish_after_historical_adoption()
+        self.assertEqual(preceding, self.implicit_base())
+        self.assertEqual(["src/latest.py"], governance.changed_paths(
+            self.root, self.implicit_base(), "HEAD", [],
+        ))
+
+    def test_implicit_base_on_detached_published_checkout(self):
+        preceding = self.publish_after_historical_adoption()
+        self.git("checkout", "--detach", "-q", "HEAD")
+        self.assertEqual(preceding, self.implicit_base())
+
+    def test_implicit_base_of_published_merge_is_first_parent(self):
+        preceding = self.merge_feature("docs/target.md")
+        self.assertEqual(preceding, self.implicit_base())
+
+    def test_explicit_base_is_never_replaced(self):
+        self.publish_after_historical_adoption()
+        self.assertEqual(self.accepted, self.implicit_base(self.accepted))
+        self.assertEqual("missing-explicit-base", self.implicit_base("missing-explicit-base"))
+
+    def test_implicit_base_does_not_narrow_a_different_or_unreadable_head(self):
+        preceding = self.publish_after_historical_adoption()
+        for head in (preceding, "missing-head"):
+            with self.subTest(head=head):
+                self.assertEqual(self.accepted, self.implicit_base(head=head))
+
+    def test_implicit_base_retains_dirty_and_staged_adoption_scope(self):
+        self.publish_after_historical_adoption()
+        (self.root / "src/latest.py").write_text("pending\n")
+        self.assertEqual(self.accepted, self.implicit_base())
+        self.git("add", "src/latest.py")
+        self.assertEqual(self.accepted, self.implicit_base())
+
+    def test_implicit_base_retains_untracked_adoption_scope(self):
+        self.publish_after_historical_adoption()
+        (self.root / "src/untracked.py").write_text("pending\n")
+        self.assertEqual(self.accepted, self.implicit_base())
+
+    def test_implicit_base_retains_unpublished_adoption_scope(self):
+        self.publish_after_historical_adoption()
+        self.git("checkout", "-qb", "ticket-002")
+        self.commit("src/pending.py", "pending\n")
+        self.assertEqual(self.accepted, self.implicit_base())
+
+    def test_implicit_base_requires_remote_target_not_local_branch(self):
+        self.publish_after_historical_adoption()
+        self.git("update-ref", "-d", "refs/remotes/origin/main")
+        self.assertEqual(self.accepted, self.implicit_base())
+
+    def test_implicit_base_does_not_select_absent_adoptions(self):
+        self.publish_after_historical_adoption()
+        self.assertIsNone(self.implicit_base(count=0))
+
+    def test_repeated_published_adoptions_select_the_latest_integration(self):
+        preceding = self.publish_after_historical_adoption()
+        for count in (2, 3, 20):
+            with self.subTest(count=count):
+                self.assertEqual(preceding, self.implicit_base(count=count))
+                self.assertEqual(["src/latest.py"], governance.changed_paths(
+                    self.root, self.implicit_base(count=count), "HEAD", [],
+                ))
+
+    def test_repeated_published_adoptions_on_detached_head(self):
+        preceding = self.publish_after_historical_adoption()
+        self.git("checkout", "--detach", "-q", "HEAD")
+        self.assertEqual(preceding, self.implicit_base(count=3))
+
+    def test_repeated_adoptions_preserve_explicit_base(self):
+        self.publish_after_historical_adoption()
+        self.assertEqual(self.accepted, self.implicit_base(self.accepted, count=3))
+
+    def test_repeated_adoptions_cannot_hide_dirty_or_untracked_work(self):
+        self.publish_after_historical_adoption()
+        (self.root / "src/latest.py").write_text("pending\n")
+        self.assertIsNone(self.implicit_base(count=3))
+        self.git("add", "src/latest.py")
+        self.assertIsNone(self.implicit_base(count=3))
+        self.git("commit", "-qm", "pending")
+        self.publish()
+        (self.root / "src/untracked.py").write_text("pending\n")
+        self.assertIsNone(self.implicit_base(count=3))
+
+    def test_repeated_adoptions_require_the_exact_published_head(self):
+        self.publish_after_historical_adoption()
+        self.assertIsNone(self.implicit_base(count=3, head=self.accepted))
+        self.git("checkout", "-qb", "ticket-002")
+        self.commit("src/pending.py", "pending\n")
+        self.assertIsNone(self.implicit_base(count=3))
+
+    def test_repeated_adoptions_require_an_unambiguous_target(self):
+        self.publish_after_historical_adoption()
+        self.git("update-ref", "refs/remotes/origin/release", "HEAD")
+        self.assertIsNone(self.implicit_base(targets=["main", "release"]))
+
+    def test_repeated_adoptions_require_remote_and_readable_observations(self):
+        self.publish_after_historical_adoption()
+        original = governance.git_output
+
+        def observe(root, arguments):
+            if arguments[0] == "status":
+                raise subprocess.CalledProcessError(128, ["git", *arguments])
+            return original(root, arguments)
+
+        with patch.object(governance, "git_output", side_effect=observe):
+            self.assertIsNone(self.implicit_base(count=3))
+        self.git("update-ref", "-d", "refs/remotes/origin/main")
+        self.assertIsNone(self.implicit_base(count=3))
+
+    def test_implicit_base_requires_readable_first_parent(self):
+        self.assertEqual(self.accepted, self.implicit_base())
+
+    def test_implicit_base_requires_readable_clean_status(self):
+        self.publish_after_historical_adoption()
+        original = governance.git_output
+
+        def observe(root, arguments):
+            if arguments[0] == "status":
+                raise subprocess.CalledProcessError(128, ["git", *arguments])
+            return original(root, arguments)
+
+        with patch.object(governance, "git_output", side_effect=observe):
+            self.assertEqual(self.accepted, self.implicit_base())
+
 
 if __name__ == "__main__":
     unittest.main()

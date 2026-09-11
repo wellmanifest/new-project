@@ -1,0 +1,78 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-204",
+  "summary": "Refuse a commit on standard drift, not on standard staleness",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/precommit_standard_update.py",
+    "tests/precommit-standard-update.test.sh",
+    "project/ticket-204/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d31beca68b9964c6af493a44974b247626294b65",
+    "targetBranch": "main",
+    "outcome": "The pre-commit standard updater refuses on drift instead of on staleness, so a repository whose managed files still match their own pinned lock can commit while a newer standard revision exists, and still sees the staleness reported.",
+    "nonGoals": [
+      "No change to the managed pre-commit template, which already performs a local staged-pin check and does not invoke this updater.",
+      "No change to Goal, to release verification, or to when a repository adopts a revision.",
+      "No new adoption action value, so the fix reaches adopters without another managed-file change."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Separate staleness from drift. Staleness means a newer revision was published; drift means a managed file no longer matches the digest in its own pinned lock. A commit can cause or repair only drift, so a GOV-STANDARD-UPDATE-001 refusal is downgraded to a reported advisory when the staged tree is internally consistent. Drift is read from the index, never the worktree, in one batched git cat-file process, and an answer that cannot be established never relaxes the gate.",
+      "components": [
+        {
+          "name": "standard-update-hook",
+          "paths": [
+            "scripts/precommit_standard_update.py",
+            "tests/precommit-standard-update.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "A GOV-STANDARD-UPDATE-001 refusal no longer blocks a commit whose staged managed files all match the digests recorded in the staged lock."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Restore the unconditional refusal; no persisted state is involved."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/precommit-standard-update.test.sh",
+          "./project/governance-check.sh --base origin/main"
+        ],
+        "evidence": "This standard published seven revisions on 2026-09-08 (0.20.12 to 0.20.18). In maskservice/update five pull-request repairs failed on this gate, spent their retry budget and went terminal, while all 88 managed files matched their recorded sha256 digests exactly. The new cases were verified to fail when the downgrade is removed."
+      }
+    ]
+  }
+}
