@@ -1,0 +1,79 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-207",
+  "summary": "Resolve a merged ticket as terminal from Git when no receipt exists",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "scripts/ticket_activity.py",
+    "governance/ticket-activity.schema.json",
+    "tests/ticket-activity.test.sh",
+    "project/ticket-207/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d31beca68b9964c6af493a44974b247626294b65",
+    "targetBranch": "main",
+    "outcome": "An adopter can resolve a merged ticket as terminal from Git when no receipt exists, so the active set stops carrying merged work and the coordination rules that filter on it have a true set to reason over.",
+    "nonGoals": [
+      "No change to the status-projection default, which the existing test defends as deliberately conservative.",
+      "No new conflict rule: deriving conflicts from allowedPaths was measured and yields thousands of findings on today's active sets.",
+      "No change to receipt-backed resolution, which already verifies by Git ancestry."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add git-ancestry as a second missingPolicy rather than reversing the default. A ticket directory on the target ref is the ancestry evidence the policy already declares, because a commit carrying only tracking carriers is refused, so the directory cannot be there without its delivery. Any branch for the same ticket outside the target keeps the ticket active, so a delivery still in flight is never resolved terminal.",
+      "components": [
+        {
+          "name": "ticket-activity",
+          "paths": [
+            "scripts/ticket_activity.py",
+            "governance/ticket-activity.schema.json",
+            "tests/ticket-activity.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "registry.missingPolicy accepts git-ancestry in addition to status-projection; a resolution may now carry authority git-ancestry with reason delivery-on-target."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Return missingPolicy to a const and drop the derivation; adopters on the default were never affected."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/ticket-activity.test.sh"
+        ],
+        "evidence": "Measured 2026-09-09: four adopters projected 54, 65, 153 and 182 tickets active, with coding-agent's ticket-018, ticket-019 and ticket-111 merged into main while still reading IN_PROGRESS. On the same repository the two policies resolve 53 and 0 active, and an open pushed ticket-137 stays active under both."
+      }
+    ]
+  }
+}

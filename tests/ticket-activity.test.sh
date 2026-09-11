@@ -249,3 +249,79 @@ test "$status" -eq 2
 cmp "$rebase_registry" "$fixture/rebase-registry-before-nonlinear.json"
 
 printf '%s\n' 'ticket activity tests passed'
+
+# The receipt registry lives in the Git common directory and is untracked, so
+# it is usually absent and every ticket merged through an ordinary pull request
+# stayed projected active for the rest of the repository's life. Measured
+# 2026-09-09 across four adopters: 54, 65, 153 and 182 tickets projected active
+# at once, merged deliveries among them, which leaves every rule that filters
+# on "active" reasoning over noise.
+derived="$fixture/derived"
+git init --quiet --initial-branch=main "$derived"
+git -C "$derived" config user.email activity-test@example.invalid
+git -C "$derived" config user.name activity-test
+mkdir -p "$derived/governance" "$derived/project/ticket-010"
+# The conservative default is unchanged; this adopter opts in explicitly.
+python3 - "$repo_root/governance/ticket-activity.json" "$derived/governance/ticket-activity.json" <<'PY'
+import json, pathlib, sys
+policy = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+policy["registry"]["missingPolicy"] = "git-ancestry"
+pathlib.Path(sys.argv[2]).write_text(json.dumps(policy, indent=2) + "\n", encoding="utf-8")
+PY
+printf '%s\n' '- **Status**: IN_PROGRESS' > "$derived/project/ticket-010/README.md"
+printf '%s\n' 'delivered' > "$derived/src.txt"
+git -C "$derived" add .
+git -C "$derived" commit --quiet -m 'deliver ticket-010'
+
+# A ticket whose directory is on the target branch has landed: the standard
+# refuses a commit carrying only tracking carriers, so the directory could not
+# be there without its delivery.
+resolution="$(cd "$derived" && python3 "$repo_root/scripts/ticket_activity.py" resolve --root . --ticket ticket-010 2>/dev/null || true)"
+python3 - "$derived" "$repo_root" <<'PY'
+import pathlib, sys
+sys.path.insert(0, str(pathlib.Path(sys.argv[2]) / "scripts"))
+import ticket_activity as ta
+root = pathlib.Path(sys.argv[1])
+target = ta._target_ref(root, "main")
+assert target, "fixture must have a main ref"
+landed = ta.delivery_landed(root, root / "project/ticket-010", target)
+assert landed, "a ticket directory present on the target branch is terminal"
+outcome = ta.resolve(root, root / "project/ticket-010", {"IN_PROGRESS"})
+assert outcome.active is False, outcome
+assert outcome.authority == "git-ancestry", outcome
+assert outcome.reason == "delivery-on-target", outcome
+PY
+
+# An unmerged branch for the same ticket means the delivery is still in flight.
+# This is the case that must not regress: a false terminal would release the
+# reservation on live work.
+git -C "$derived" checkout --quiet -b ticket/010-follow-up
+printf '%s\n' 'more' >> "$derived/src.txt"
+git -C "$derived" commit --quiet -am 'continue ticket-010'
+git -C "$derived" checkout --quiet main
+python3 - "$derived" "$repo_root" <<'PY'
+import pathlib, sys
+sys.path.insert(0, str(pathlib.Path(sys.argv[2]) / "scripts"))
+import ticket_activity as ta
+root = pathlib.Path(sys.argv[1])
+target = ta._target_ref(root, "main")
+assert ta._unmerged_ticket_branch(root, "ticket-010", target), "open branch must be seen"
+assert not ta.delivery_landed(root, root / "project/ticket-010", target), \
+    "a ticket with work outside the target is still active"
+outcome = ta.resolve(root, root / "project/ticket-010", {"IN_PROGRESS"})
+assert outcome.active is True, outcome
+PY
+
+# A ticket that never reached the target branch is untouched by the derivation.
+mkdir -p "$derived/project/ticket-011"
+printf '%s\n' '- **Status**: IN_PROGRESS' > "$derived/project/ticket-011/README.md"
+python3 - "$derived" "$repo_root" <<'PY'
+import pathlib, sys
+sys.path.insert(0, str(pathlib.Path(sys.argv[2]) / "scripts"))
+import ticket_activity as ta
+root = pathlib.Path(sys.argv[1])
+target = ta._target_ref(root, "main")
+assert not ta.delivery_landed(root, root / "project/ticket-011", target)
+PY
+
+echo "ticket activity: git-derived terminal resolution OK"
