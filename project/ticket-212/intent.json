@@ -1,0 +1,56 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-212",
+  "summary": "Publish git-ancestry terminal activity fix as 0.20.23",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-212/**",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c65bdc2009f18dc9f2b8fbd9b7c8df0260fa6ea4",
+    "targetBranch": "main",
+    "outcome": "Publish the merged git-ancestry ticket-activity resolver as immutable wellmanifest/new-project 0.20.23 so coding-agent can adopt it and stop treating merged tickets as active on hosted runners.",
+    "nonGoals": [
+      "No manual downstream copying or unpublished adoption.",
+      "No change to the conservative status-projection default or receipt-backed resolution.",
+      "No direct tag or release mutation from the implementation branch."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {"maxImplementationFiles": 8, "maxAffectedComponents": 2, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Advance the three canonical release projections and their deterministic version assertions together; protected publication will create the immutable tag and GitHub Release after exact-head validation.",
+      "components": [{"name": "standard-release", "paths": ["VERSION", "governance/manifest.default.json", "governance/manifest.hub.json", "tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Do not move the immutable release; retain 0.20.22 and publish a later corrective version if needed."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/ticket-activity.test.sh"], "evidence": "Merged ticket-207 resolver and its git-ancestry regression tests remain green."},
+      {"criterion": "AC-02", "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-validator.test.sh"], "evidence": "Release projections and immutable adoption checks pass for 0.20.23."}
+    ]
+  }
+}
