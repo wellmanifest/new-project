@@ -1,0 +1,71 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-213",
+  "summary": "Make Git ancestry the default missing receipt policy for adopters",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "governance/ticket-activity.json",
+    "tests/ticket-activity.test.sh",
+    "project/ticket-213/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6cdd7627b3853d72dd5461e95c05b4d0cf233737",
+    "targetBranch": "main",
+    "outcome": "New adopters use Git ancestry to resolve merged ticket directories when the optional terminal-receipt registry is absent, eliminating stale active-ticket projections after ordinary protected merges.",
+    "nonGoals": [
+      "Do not weaken receipt validation or rewrite the append-only terminal receipt registry.",
+      "Do not change the explicit status-projection option for adopters that retain it.",
+      "Do not infer terminal state from an unmerged ticket branch or from carrier-only changes."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Change only the managed package default from status-projection to git-ancestry. The resolver already verifies the target ref and rejects carrier-only delivery; existing adopters may retain the conservative policy explicitly.",
+      "components": [
+        {
+          "name": "ticket-activity-default",
+          "paths": ["governance/ticket-activity.json", "tests/ticket-activity.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["New package adopters receive registry.missingPolicy=git-ancestry by default"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Restore status-projection in governance/ticket-activity.json and the conservative fixture expectation."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/ticket-activity.test.sh"],
+        "evidence": "A missing registry resolves a ticket whose directory is on the target as terminal under the new default, while an explicit status-projection policy remains conservative."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/*.test.sh"],
+        "evidence": "All standard governance and ticket-activity suites pass with the published package projection."
+      }
+    ]
+  }
+}
