@@ -4030,21 +4030,51 @@ def resolve_changed_paths(
         return []
 
 
+def published_adoption_validation_base(root: Path, delivery: dict[str, Any], head: str) -> str | None:
+    """Bound implicit adoption validation without changing ticket authority.
+
+    A historical IN_PROGRESS adoption may remain in a fresh published checkout
+    without its external terminal receipt. Validate the latest integration's
+    diff there, not every delivery since that adoption. Require origin evidence;
+    a local target branch alone does not establish published state.
+    """
+    try:
+        target_ref = f"refs/remotes/origin/{delivery['targetBranch']}"
+        target = git_output(root, ["rev-parse", "--verify", f"{target_ref}^{{commit}}"]).decode().strip()
+        if git_output(root, ["rev-parse", "--verify", f"{head}^{{commit}}"]).decode().strip() != target:
+            return None
+        parent = git_output(root, ["rev-parse", "--verify", f"{target}^1"]).decode().strip()
+        if is_published_integration(root, target, parent):
+            return parent
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+    return None
+
+
 def resolve_validation_base(
     supplied_base: str | None,
     root: Path,
     records: list[TicketRecord],
     config: dict[str, Any],
+    head: str = "HEAD",
 ) -> str | None:
     if supplied_base is not None:
         return supplied_base
     active = active_ticket_records(root, config, records)
     adoption_records = standard_adoption_records(active)
-    if len(adoption_records) != 1:
+    deliveries = [record.intent["delivery"] for record in adoption_records if record.intent is not None]
+    if not deliveries:
         return None
-    record = adoption_records[0]
-    assert record.intent is not None
-    return record.intent["delivery"]["acceptedBaseSha"]
+    # Fresh published clones retain historical adoption prose but not external
+    # terminal receipts. Establish the latest integration's range before its
+    # changed-ticket filter decides ownership; do not declare tickets terminal.
+    if len({delivery["targetBranch"] for delivery in deliveries}) == 1:
+        published_base = published_adoption_validation_base(root, deliveries[0], head)
+        if published_base is not None:
+            return published_base
+    if len(deliveries) != 1:
+        return None
+    return deliveries[0]["acceptedBaseSha"]
 
 
 def check_change_lease(root: Path, report: Report) -> None:
@@ -4099,7 +4129,7 @@ def run_governance_checks(
         records = load_ticket_records(directories, manifest["ticket"])
     else:
         directories = [record.directory for record in records]
-    base = resolve_validation_base(args.base, root, records, manifest["ticket"])
+    base = resolve_validation_base(args.base, root, records, manifest["ticket"], args.head)
     changed = resolve_changed_paths(args, root, base, report)
     active = active_ticket_records(root, manifest["ticket"], records, report)
     changed_active = [

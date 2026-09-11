@@ -1,0 +1,57 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-210",
+  "summary": "Bound default validation to the published integration",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "scripts/governance_check.py",
+    "tests/delivery-post-merge-base.test.py",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-210/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d31beca68b9964c6af493a44974b247626294b65",
+    "targetBranch": "main",
+    "outcome": "A no-base gate on a clean published integration validates its first-parent diff, not an old adoption ticket's subsequent history.",
+    "nonGoals": ["No ticket terminal authority changes or edits to tickets 204 and 207.", "No required-check or approval bypass; no target-repository edits here."],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {"maxImplementationFiles": 8, "maxAffectedComponents": 2, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse the clean published integration observation for implicit adoption bases. Only origin's exact target HEAD with a readable first parent qualifies. Dirty, unpublished and unobservable states retain the accepted adoption base; explicit bases always win.",
+      "components": [
+        {"name": "governance-validation", "paths": ["scripts/governance_check.py", "tests/delivery-post-merge-base.test.py"]},
+        {"name": "standard-release", "paths": ["VERSION", "governance/manifest.default.json", "governance/manifest.hub.json", "tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Adopt the previous immutable standard revision; no closure metadata is changed."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["python3 tests/delivery-post-merge-base.test.py"], "evidence": "Real Git regressions for clean published scope and conservative fallback."},
+      {"criterion": "AC-02", "commands": ["bash tests/governance-validator.test.sh", "bash tests/adoption-lock.test.sh"], "evidence": "Managed suites and protected Linux/Windows CI before independent merge."}
+    ]
+  }
+}

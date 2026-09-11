@@ -1,0 +1,96 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-211",
+  "summary": "Resolve published validation before counting historical adoption tickets",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "scripts/governance_check.py",
+    "tests/delivery-post-merge-base.test.py",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-211/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d1f35ed1b8be60f50a6739984c947a30379ead5b",
+    "targetBranch": "main",
+    "outcome": "Fresh published checkouts with successive same-target adoptions validate only their latest integration instead of rejecting historical tickets as concurrent writers.",
+    "nonGoals": [
+      "No terminal ticket authority or historical status changes.",
+      "No weakened handling of dirty, unpublished or differently targeted adoptions.",
+      "No target-repository code or report changes here."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "For a nonempty set of adoption records targeting the same branch, reuse the exact clean-published first-parent observation before applying the active adoption cardinality check. If publication cannot be proven, preserve the previous single-adoption fallback or ambiguity failure.",
+      "components": [
+        {
+          "name": "base-resolution",
+          "paths": [
+            "scripts/governance_check.py",
+            "tests/delivery-post-merge-base.test.py"
+          ]
+        },
+        {
+          "name": "release-projections",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Adopt the prior immutable standard revision through a separately validated delivery."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/delivery-post-merge-base.test.py"
+        ],
+        "evidence": "Real-Git positive tests for two, three and many same-target historical adoptions; negative dirty/untracked/unpublished/ambiguous-target tests."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/governance-validator.test.sh",
+          "bash tests/adoption-lock.test.sh"
+        ],
+        "evidence": "Full standard contract, protected Linux/Windows checks and independent review; atomic 0.20.22 release projections."
+      }
+    ]
+  }
+}
