@@ -10,6 +10,7 @@
   },
   "allowedPaths": [
     "governance/ticket-activity.json",
+    "scripts/ticket_activity.py",
     "tests/ticket-activity.test.sh",
     "project/ticket-213/**",
     "TODO.md",
@@ -45,7 +46,7 @@
       "components": [
         {
           "name": "ticket-activity-default",
-          "paths": ["governance/ticket-activity.json", "tests/ticket-activity.test.sh"]
+          "paths": ["governance/ticket-activity.json", "scripts/ticket_activity.py", "tests/ticket-activity.test.sh"]
         }
       ],
       "responsibilityChanges": false,
