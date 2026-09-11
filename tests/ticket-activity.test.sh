@@ -18,12 +18,13 @@ git -C "$fixture/repo" add .
 git -C "$fixture/repo" commit --quiet -m initial-ticket
 head_sha="$(git -C "$fixture/repo" rev-parse HEAD)"
 
-# Missing optional registry is conservative and does not block ordinary work.
+# The default derives terminal state from Git when the optional registry is absent.
 python3 "$repo_root/scripts/ticket_activity.py" --root "$fixture/repo" resolve \
   --ticket-dir "$fixture/repo/project/ticket-001" --active-status IN_PROGRESS \
   > "$fixture/absent.json"
-grep -q '"active": true' "$fixture/absent.json"
-grep -q 'registry-absent' "$fixture/absent.json"
+grep -q '"active": false' "$fixture/absent.json"
+grep -q '"authority": "git-ancestry"' "$fixture/absent.json"
+grep -q 'delivery-on-target' "$fixture/absent.json"
 
 git -C "$fixture/repo" switch --quiet -c delivery
 printf '%s\n' integrated >> "$fixture/repo/README.md"
@@ -261,7 +262,7 @@ git init --quiet --initial-branch=main "$derived"
 git -C "$derived" config user.email activity-test@example.invalid
 git -C "$derived" config user.name activity-test
 mkdir -p "$derived/governance" "$derived/project/ticket-010"
-# The conservative default is unchanged; this adopter opts in explicitly.
+# An adopter can still pin the conservative status-projection policy explicitly.
 python3 - "$repo_root/governance/ticket-activity.json" "$derived/governance/ticket-activity.json" <<'PY'
 import json, pathlib, sys
 policy = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))

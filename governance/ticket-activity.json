@@ -4,7 +4,7 @@
   "registry": {
     "location": "git-common-dir",
     "path": "new-project/terminal-receipts.json",
-    "missingPolicy": "status-projection"
+    "missingPolicy": "git-ancestry"
   },
   "terminalOutcomes": {
     "merged": {
