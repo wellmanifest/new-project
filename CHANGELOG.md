@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+## [0.20.24] - 2026-09-11
+
+### Test
+- Update tests/adoption-lock.test.sh
+- Update tests/governance-validator.test.sh
+
+### Other
+- Update VERSION
+- Update governance/manifest.default.json
+- Update governance/manifest.hub.json
+
 ## [0.20.4] - 2026-09-02
 
 ### Automatic, fail-closed standard update preparation
