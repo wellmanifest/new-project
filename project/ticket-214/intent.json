@@ -1,0 +1,55 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-214",
+  "summary": "Add a target-owned ticket activity policy override",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "governance/package-manifest.json",
+    "governance/ticket-activity-override.schema.json",
+    "scripts/ticket_activity.py",
+    "tests/ticket-activity.test.sh",
+    "project/ticket-214/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6cdd7627b3853d72dd5461e95c05b4d0cf233737",
+    "targetBranch": "main",
+    "outcome": "Adopters can opt into Git-derived terminal ticket resolution through a target-owned override while the managed status-projection default remains conservative.",
+    "nonGoals": [
+      "Do not change the managed default or receipt verification.",
+      "Do not allow an override to change registry location, terminal outcomes or unsupported-outcome handling.",
+      "Do not treat a carrier-only ticket directory as delivery evidence without the existing Git safety checks."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {"maxImplementationFiles": 5, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 2, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Ship a managed schema for a small target-owned override document and have ticket_activity merge only its missingPolicy into the managed policy. The override is opt-in, strict and cannot alter receipt authority.",
+      "components": [{"name": "ticket-activity", "paths": ["scripts/ticket_activity.py", "governance/ticket-activity-override.schema.json", "governance/package-manifest.json", "tests/ticket-activity.test.sh"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Targets may add .governance/ticket-activity.override.json with missingPolicy=git-ancestry"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Remove the target-owned override; the managed status-projection policy remains the fallback."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/ticket-activity.test.sh"], "evidence": "Default missing registry remains active; a valid target-owned override derives terminal state only when Git proves delivery landed."},
+      {"criterion": "AC-02", "commands": ["bash tests/*.test.sh"], "evidence": "All standard suites and exact-base governance pass."}
+    ]
+  }
+}
