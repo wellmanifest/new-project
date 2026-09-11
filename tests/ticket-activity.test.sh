@@ -261,13 +261,16 @@ git init --quiet --initial-branch=main "$derived"
 git -C "$derived" config user.email activity-test@example.invalid
 git -C "$derived" config user.name activity-test
 mkdir -p "$derived/governance" "$derived/project/ticket-010"
-# The conservative default is unchanged; this adopter opts in explicitly.
-python3 - "$repo_root/governance/ticket-activity.json" "$derived/governance/ticket-activity.json" <<'PY'
-import json, pathlib, sys
-policy = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
-policy["registry"]["missingPolicy"] = "git-ancestry"
-pathlib.Path(sys.argv[2]).write_text(json.dumps(policy, indent=2) + "\n", encoding="utf-8")
-PY
+# A target-owned override opts into Git-derived terminal resolution without
+# changing the managed policy.
+cp "$repo_root/governance/ticket-activity.json" "$derived/governance/ticket-activity.json"
+cat > "$derived/governance/ticket-activity.override.json" <<'JSON'
+{
+  "$schema": "./ticket-activity-override.schema.json",
+  "schema": "new-project.ticket-activity-override/v1",
+  "missingPolicy": "git-ancestry"
+}
+JSON
 printf '%s\n' '- **Status**: IN_PROGRESS' > "$derived/project/ticket-010/README.md"
 printf '%s\n' 'delivered' > "$derived/src.txt"
 git -C "$derived" add .
@@ -276,7 +279,7 @@ git -C "$derived" commit --quiet -m 'deliver ticket-010'
 # A ticket whose directory is on the target branch has landed: the standard
 # refuses a commit carrying only tracking carriers, so the directory could not
 # be there without its delivery.
-resolution="$(cd "$derived" && python3 "$repo_root/scripts/ticket_activity.py" resolve --root . --ticket ticket-010 2>/dev/null || true)"
+resolution="$(cd "$derived" && python3 "$repo_root/scripts/ticket_activity.py" --root . resolve --ticket-dir project/ticket-010 --active-status IN_PROGRESS 2>/dev/null || true)"
 python3 - "$derived" "$repo_root" <<'PY'
 import pathlib, sys
 sys.path.insert(0, str(pathlib.Path(sys.argv[2]) / "scripts"))
@@ -291,6 +294,13 @@ assert outcome.active is False, outcome
 assert outcome.authority == "git-ancestry", outcome
 assert outcome.reason == "delivery-on-target", outcome
 PY
+
+# An invalid target-owned override fails closed.
+printf '%s\n' '{"missingPolicy":"git-ancestry"}' > "$derived/governance/ticket-activity.override.json"
+status=0
+(cd "$derived" && python3 "$repo_root/scripts/ticket_activity.py" --root . resolve --ticket-dir project/ticket-010 --active-status IN_PROGRESS) > "$derived/invalid.out" 2> "$derived/invalid.err" || status=$?
+test "$status" -eq 2
+grep -q 'target-owned ticket activity override is invalid' "$derived/invalid.err"
 
 # An unmerged branch for the same ticket means the delivery is still in flight.
 # This is the case that must not regress: a false terminal would release the
