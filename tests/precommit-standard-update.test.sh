@@ -112,3 +112,70 @@ assert default["updates"] == {
     "executor": "goal",
 }
 PY
+
+# Staleness is not drift. The standard published seven revisions on 2026-09-08;
+# an implementation ticket can never be the governance adoption ticket Goal
+# demands, so the gate held five clean pull-request repairs in one adopter for a
+# full day. A commit that leaves every managed file matching its own pinned lock
+# has caused nothing and now proceeds with the staleness reported.
+drift_repo="$tmp/drift"
+mkdir -p "$drift_repo/.governance" "$tmp/stalebin"
+git -C "$drift_repo" init --quiet
+printf '{}\n' > "$drift_repo/.governance/standard-adoption.json"
+printf 'managed contract body\n' > "$drift_repo/AGENTS.md"
+
+cat > "$tmp/stalebin/goal" <<'EOF'
+#!/usr/bin/env bash
+echo "Error: GOV-STANDARD-UPDATE-001: pre-commit standard update requires a staged governance adoption intent binding aaa to bbb in ticket-058" >&2
+exit 1
+EOF
+chmod +x "$tmp/stalebin/goal"
+
+cat > "$tmp/stalebin/broken-goal" <<'EOF'
+#!/usr/bin/env bash
+echo "Error: the requested standard revision does not publish VERSION" >&2
+exit 1
+EOF
+chmod +x "$tmp/stalebin/broken-goal"
+
+relock() {
+  python3 - "$drift_repo" <<'PY'
+import hashlib, json, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+body = (root / "AGENTS.md").read_bytes()
+(root / ".governance/manifest.lock.json").write_text(json.dumps({
+    "standard": {"sourceRevision": "a" * 40, "version": "0.20.9"},
+    "managedFiles": {"AGENTS.md": hashlib.sha256(body).hexdigest()},
+}, indent=2) + "\n", encoding="utf-8")
+PY
+  git -C "$drift_repo" add -A
+}
+
+relock
+status=0
+PATH="$tmp/stalebin:$PATH" python3 "$runner" --root "$drift_repo" --ticket ticket-058 \
+  > "$tmp/stale.out" 2> "$tmp/stale.err" || status=$?
+[[ "$status" -eq 0 ]] || fail "a stale pin without managed drift must not block an unrelated commit"
+grep -Fq 'no managed file drifted' "$tmp/stale.err" \
+  || fail "the allowed commit must still report the staleness it did not cause"
+
+printf 'hand edited managed contract\n' > "$drift_repo/AGENTS.md"
+git -C "$drift_repo" add -A
+status=0
+PATH="$tmp/stalebin:$PATH" python3 "$runner" --root "$drift_repo" --ticket ticket-058 \
+  > "$tmp/drift.out" 2> "$tmp/drift.err" || status=$?
+[[ "$status" -eq 1 ]] || fail "managed drift must keep failing closed"
+grep -Fq 'GOV-STANDARD-UPDATE-001' "$tmp/drift.err" \
+  || fail "a drifted refusal must expose the canonical diagnostic"
+
+relock
+status=0
+PATH="$tmp/stalebin:$PATH" python3 "$runner" --root "$drift_repo" --ticket ticket-058 \
+  --goal-executable broken-goal > "$tmp/other.out" 2> "$tmp/other.err" || status=$?
+[[ "$status" -eq 1 ]] || fail "a refusal that is not adoption authorization must stay closed"
+
+git -C "$drift_repo" rm --cached --quiet .governance/manifest.lock.json
+status=0
+PATH="$tmp/stalebin:$PATH" python3 "$runner" --root "$drift_repo" --ticket ticket-058 \
+  > "$tmp/nolock.out" 2> "$tmp/nolock.err" || status=$?
+[[ "$status" -eq 1 ]] || fail "evidence that cannot be read must never relax the gate"
