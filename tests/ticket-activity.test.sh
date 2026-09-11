@@ -19,9 +19,11 @@ git -C "$fixture/repo" commit --quiet -m initial-ticket
 head_sha="$(git -C "$fixture/repo" rev-parse HEAD)"
 
 # The default derives terminal state from Git when the optional registry is absent.
+status=0
 python3 "$repo_root/scripts/ticket_activity.py" --root "$fixture/repo" resolve \
   --ticket-dir "$fixture/repo/project/ticket-001" --active-status IN_PROGRESS \
-  > "$fixture/absent.json"
+  > "$fixture/absent.json" || status=$?
+test "$status" -eq 1
 grep -q '"active": false' "$fixture/absent.json"
 grep -q '"authority": "git-ancestry"' "$fixture/absent.json"
 grep -q 'delivery-on-target' "$fixture/absent.json"
