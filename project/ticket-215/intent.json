@@ -1,0 +1,44 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-215",
+  "summary": "Publish wellmanifest/new-project 0.20.24",
+  "workstream": "governance",
+  "classification": {"kind": "SERVICE", "priority": "P1", "origin": "health"},
+  "allowedPaths": [
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-215/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "fcaced8c6d4095162a78134191f6904b8194a4b6",
+    "targetBranch": "main",
+    "outcome": "Publish the 0.20.24 standard projection containing the target-owned ticket activity override contract.",
+    "nonGoals": ["No runtime behavior beyond the already merged ticket-214 standard change."],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {"maxImplementationFiles": 24, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Advance release metadata and test projections atomically after the protected source merge.",
+      "components": [{"name": "release-projection", "paths": ["VERSION", "governance/manifest.default.json", "governance/manifest.hub.json", "CHANGELOG.md", "tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": ["Standard version advances from 0.20.23 to 0.20.24"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Do not publish the tag; retain the protected source merge and issue a newer corrective release if needed."
+    },
+    "runtimeDependencies": [],
+    "validation": [{"criterion": "AC-01", "commands": ["bash tests/*.test.sh"], "evidence": "Full standard suite passed in the exact release clone."}]
+  }
+}
