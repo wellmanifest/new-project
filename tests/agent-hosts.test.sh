@@ -511,6 +511,32 @@ json.dump(document, open(path, "w", encoding="utf-8"), indent=2)
 PYNPM
 [[ -z "$(codes "$fixture")" ]] || fail "aligned package.json must pass: $(codes "$fixture")"
 
+# An adopter may declare requires-python >=3.10, where tomllib does not exist.
+# The validator must still import and skip the Python packaging binding: an
+# ImportError here reaches governance_check.py as a missing managed validator,
+# which turns an interpreter gap into a false GOV-SYNC-001 sync defect.
+codes_without_tomllib() {
+  local report="$tmp/agent-host-report-no-tomllib.json"
+  FIXTURE_ROOT="$1" CHECKER_PATH="$checker" python3 - > "$report" <<'PYNOTOML' || true
+import os, runpy, sys
+
+sys.modules["tomllib"] = None  # `import tomllib` now raises ImportError
+sys.argv = [
+    "agent_host_check",
+    "--root", os.environ["FIXTURE_ROOT"],
+    "--actor", "agent",
+    "--format", "json",
+]
+runpy.run_path(os.environ["CHECKER_PATH"], run_name="__main__")
+PYNOTOML
+  python3 -c 'import json,sys; print(" ".join(f["code"] for f in json.load(open(sys.argv[1]))["findings"]))' "$report"
+}
+
+observed="$(codes_without_tomllib "$fixture")"
+assert_lacks "$observed" "GOV-PACKAGING-001" "python marker unreadable without tomllib"
+assert_lacks "$observed" "GOV-PACKAGING-002" "python marker unreadable without tomllib"
+assert_lacks "$observed" "GOV-PACKAGING-003" "python lifecycle unreadable without tomllib"
+
 # Every code the validator can emit must be registered in the catalog.
 python3 "$root/scripts/audit_diagnostics.py" --root "$root" >/dev/null \
   || fail "diagnostics catalog must cover every emitted code"
