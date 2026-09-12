@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+## [0.20.25] - 2026-09-12
+
+### Fixed
+- Keep `scripts/agent_host_check.py` importable on interpreters without `tomllib` (Python 3.10). `governance_check.py` reported the `ImportError` as a missing managed validator, so an adopter declaring `requires-python >=3.10` failed its own gate with a false `GOV-SYNC-001`, and the pytest lifecycle binding aborted the session. The Python packaging binding is skipped when no TOML reader exists; 3.11+ enforces `GOV-PACKAGING-001/002/003` unchanged [ticket-216].
+
 ## [0.20.24] - 2026-09-11
 
 ### Test
