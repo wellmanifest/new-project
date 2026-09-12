@@ -1,0 +1,93 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-217",
+  "summary": "Publish wellmanifest/new-project 0.20.25",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "project/ticket-217/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "560adb7a7079df326ef2ae57e2f29e46a40a8e13",
+    "targetBranch": "main",
+    "outcome": "Publish the 0.20.25 standard projection containing the tomllib-safe agent host validator, so adopters on Python 3.10 can pin a released revision that passes their own gate.",
+    "nonGoals": [
+      "No behaviour change beyond the already merged ticket-216 fix.",
+      "No adopter is upgraded by this ticket; each repository pins the new revision on its own schedule."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Advance the published projection exactly as 0.20.24 did: VERSION, CHANGELOG, both manifests and the two release tests that pin the current version string.",
+      "components": [
+        {
+          "name": "release-projection",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        },
+        {
+          "name": "release-tests",
+          "paths": [
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        "Standard version advances from 0.20.24 to 0.20.25"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the release commit; adopters pinned to 0.20.24 are unaffected because adoption pins an immutable revision."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Pending exact-head publication."
+      }
+    ]
+  }
+}
