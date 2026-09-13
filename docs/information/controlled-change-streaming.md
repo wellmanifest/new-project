@@ -3,18 +3,19 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "controlled-change-streaming",
   "kind": "information",
-  "version": 2,
+  "version": 3,
   "title": "Kontrolowane streamowanie i recepty odzyskiwania postępu",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
   "created": "2026-09-13",
-  "updated": "2026-09-13",
+  "updated": "2026-09-14",
   "review_after": "2026-10-13",
-  "source_revision": "a5ffa7dd5d0bb5cafbcefbb180204874787c0758",
+  "source_revision": "e162ce9f7af8e8243df8ad9b994a156afb2c6c2f",
   "affected_repositories": ["wellmanifest/new-project"],
   "evidence": [
     "https://github.com/wellmanifest/new-project/blob/a5ffa7dd5d0bb5cafbcefbb180204874787c0758/scripts/branch_lifecycle_check.py",
     "https://github.com/wellmanifest/new-project/blob/a5ffa7dd5d0bb5cafbcefbb180204874787c0758/governance/diagnostics.json",
+    "https://github.com/wellmanifest/new-project/pull/341",
     "https://docs.github.com/en/pull-requests/reference/pull-requests",
     "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches"
   ]
@@ -40,6 +41,23 @@ uzgadnia diagnostyki i recepty w zarządzanych plikach. **Nie wprowadza nowego
 trybu push, nie zmienia exit codes ani wymaganych bramek.** Rozdzielenie
 bramek poniżej jest projektem następnej, jawnej adopcji standardu i publikatora.
 POLICY/CONTRIBUTING i przypięty runtime nadal określają dopuszczalne efekty.
+
+Poprawka ticketu 225 dodaje wąskie rozpoznanie historycznej zawartości w lokalnym
+guardzie admission. Branch bez worktree nie koliduje, jeżeli pełne drzewa
+**wszystkich** jego odrębnych commitów występują na ścieżce obserwowanego
+targetu po wspólnym przodku. Nowy zamiar rollbacku nie może zostać uznany za
+zintegrowany przez dopasowanie do stanu sprzed rozgałęzienia.
+Ref nadal pozostaje w inwentarzu. Nie wystarcza podobieństwo plików,
+patch-id ani zgodność samego HEAD. Brudne/aktywne worktree i WIP zachowują
+dotychczasowe kontrole. To nie jest nowy tryb push, dowód aktualnego zachowania,
+zamknięcie ticketu ani zgoda na cleanup.
+
+Publikacja tej poprawki oznacza zmianę źródeł, nie nowe wydanie standardu.
+Próba aktualizacji VERSION ujawniła literalne `0.20.27` w testach adopcji
+i walidatora. Kolejny zakres wydania musi najpierw usunąć zależność testów od
+bieżącego numeru (zachowując negatywne testy mismatch), zamiast aktualizować
+rozproszone literały przy każdym wydaniu. Do tego czasu nie ogłaszamy nowej
+paczki ani automatycznej adopcji tej poprawki.
 
 <!-- docs:section evidence -->
 ## Dowody i ograniczenia wnioskowania

@@ -1,0 +1,61 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-225",
+  "summary": "Recognize exact integrated commit trees before blocking work admission",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-225/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/AGENT_DECISIONS.md",
+    "docs/information/controlled-change-streaming.md",
+    "error/GOV-WORK-START.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "scripts/work_start_check.py",
+    "tests/work_start_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e162ce9f7af8e8243df8ad9b994a156afb2c6c2f",
+    "targetBranch": "main",
+    "outcome": "Avoid false clone-local admission conflicts for unregistered branches whose complete unique commit trees already occur in target history; publish the bounded source fix without advancing the release version.",
+    "nonGoals": ["No branch deletion, terminal receipt inference or transfer of writer authority.", "No effect-specific push exemption, target adoption or Taskand deployment."],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {"maxImplementationFiles": 9, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the existing closed report and pure Git observer. Before an unassigned-branch conflict, require all unique commit trees to match target history. Preserve every ref and registered-writer check; cache only within the single immutable observation.",
+      "components": [
+        {"name": "admission", "paths": ["scripts/work_start_check.py", "tests/work_start_test.py", "error/GOV-WORK-START.md"]},
+        {"name": "guidance", "paths": ["docs/AGENT_DECISIONS.md", "docs/information/controlled-change-streaming.md"]},
+        {"name": "release", "paths": ["VERSION", "CHANGELOG.md", "governance/manifest.hub.json", "governance/manifest.default.json"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the bounded admission change; original branches and their content remain unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["python3 tests/work_start_test.py"], "evidence": "Real Git fixtures with different commit IDs and identical complete trees."},
+      {"criterion": "AC-02", "commands": ["python3 tests/work_start_test.py"], "evidence": "Negative fixtures preserve all unique work, active scopes and WIP checks."},
+      {"criterion": "AC-03", "commands": ["git diff --check", "bash tests/rule-enforcement.test.sh"], "evidence": "Closed report validation, no-write assertions and full hub delivery gate."}
+    ]
+  }
+}

@@ -217,6 +217,121 @@ class WorkStartTest(unittest.TestCase):
         (peer / "api/a.txt").write_text("two\n")
         self.assertNotEqual(first, self.report()["observationDigest"])
 
+    def integrated_copy(self):
+        self.git(self.root, "switch", "-c", "recovery/old-copy")
+        (self.root / "api/a.txt").write_text("delivered content\n")
+        self.git(self.root, "commit", "-am", "original identity")
+        original = self.git(self.root, "rev-parse", "HEAD")
+        self.git(self.root, "switch", "main")
+        self.git(self.root, "cherry-pick", "--no-commit", original)
+        self.git(self.root, "commit", "-m", "accepted identity")
+        accepted = self.git(self.root, "rev-parse", "HEAD")
+        self.assertNotEqual(original, accepted)
+        self.assertEqual(self.git(self.root, "rev-parse", original + "^{tree}"),
+                         self.git(self.root, "rev-parse", accepted + "^{tree}"))
+        return original, accepted
+
+    def test_integrated_tree_history_is_not_a_second_writer(self):
+        original, _ = self.integrated_copy()
+        (self.root / "ui/a.txt").write_text("later accepted work\n")
+        self.git(self.root, "commit", "-am", "later target")
+        refs = self.git(self.root, "show-ref")
+        index = (self.root / ".git/index").read_bytes()
+        report = self.report()
+        self.assertEqual(report["route"], "NEW_TICKET_CANDIDATE")
+        self.assertEqual(report["blockers"], [])
+        self.assertIn(original, [b["headSha"] for b in report["uncheckedBranches"]])
+        self.assertEqual(refs, self.git(self.root, "show-ref"))
+        self.assertEqual(index, (self.root / ".git/index").read_bytes())
+
+    def test_integrated_tree_does_not_hide_new_branch_work(self):
+        self.integrated_copy()
+        self.git(self.root, "switch", "recovery/old-copy")
+        (self.root / "api/a.txt").write_text("still pending\n")
+        self.git(self.root, "commit", "-am", "new unmerged work")
+        self.git(self.root, "switch", "main")
+        self.assertEqual(self.report()["route"], "RECONCILE")
+
+    def test_equal_head_does_not_hide_unmatched_intermediate_commit(self):
+        original, _ = self.integrated_copy()
+        self.git(self.root, "switch", "recovery/old-copy")
+        (self.root / "api/a.txt").write_text("unseen intermediate work\n")
+        self.git(self.root, "commit", "-am", "intermediate")
+        (self.root / "api/a.txt").write_text("delivered content\n")
+        self.git(self.root, "commit", "-am", "back to delivered tree")
+        self.assertEqual(self.git(self.root, "rev-parse", "HEAD^{tree}"),
+                         self.git(self.root, "rev-parse", original + "^{tree}"))
+        self.git(self.root, "switch", "main")
+        self.assertEqual(self.report()["route"], "RECONCILE")
+
+    def test_equivalence_uses_observed_target_not_another_local_branch(self):
+        self.integrated_copy()
+        # The preferred fetched target does not yet contain the local delivery.
+        self.git(self.root, "update-ref", "refs/remotes/origin/main", self.base)
+        self.assertEqual(self.report()["route"], "RECONCILE")
+
+    def test_path_or_patch_equality_is_not_complete_tree_equality(self):
+        original, _ = self.integrated_copy()
+        self.git(self.root, "reset", "--hard", self.base)  # isolated fixture only
+        (self.root / "ui/a.txt").write_text("different base\n")
+        self.git(self.root, "commit", "-am", "unrelated target change")
+        self.git(self.root, "cherry-pick", "--no-commit", original)
+        self.git(self.root, "commit", "-m", "same api patch, different tree")
+        self.assertEqual(self.report()["route"], "RECONCILE")
+
+    def test_tree_equivalence_never_exempts_registered_dirty_worktree(self):
+        self.integrated_copy()
+        peer = self.root / ".worktrees/recovery-copy"
+        self.git(self.root, "worktree", "add", str(peer), "recovery/old-copy")
+        (peer / "api/a.txt").write_text("uncommitted work\n")
+        self.assertEqual(self.report()["route"], "RECONCILE")
+
+    def test_target_tree_index_is_read_once_and_not_cached_across_observations(self):
+        _, accepted = self.integrated_copy()
+        self.git(self.root, "branch", "another-old-copy", "recovery/old-copy")
+        with patch.object(start, "git", wraps=start.git) as observed:
+            self.assertEqual(self.report()["route"], "NEW_TICKET_CANDIDATE")
+        tree_logs = [c for c in observed.call_args_list
+                     if c.args[1:3] == ("log", "--format=%T") and c.args[-1] == self.base + ".." + accepted]
+        self.assertEqual(len(tree_logs), 1)
+        self.git(self.root, "update-ref", "refs/remotes/origin/main", self.base)
+        self.assertEqual(self.report()["route"], "RECONCILE")
+
+    def test_unknown_or_empty_tree_history_fails_closed(self):
+        self.integrated_copy()
+        with patch.object(start, "commit_trees", side_effect=start.ObservationError("unavailable")):
+            with self.assertRaises(start.ObservationError):
+                self.report()
+        for malformed in ("", "not-a-tree\n"):
+            with patch.object(start, "git", return_value=malformed):
+                with self.assertRaises(start.ObservationError):
+                    start.commit_trees(self.root, self.base)
+
+    def test_replace_ref_cannot_forge_integrated_content(self):
+        self.git(self.root, "switch", "-c", "unmerged")
+        (self.root / "api/a.txt").write_text("unique work\n")
+        self.git(self.root, "commit", "-am", "unique")
+        unique = self.git(self.root, "rev-parse", "HEAD")
+        self.git(self.root, "switch", "main")
+        fake = self.git(self.root, "commit-tree", self.base + "^{tree}",
+                        "-p", self.base, "-m", "fake equivalent tree")
+        self.git(self.root, "replace", unique, fake)
+        self.assertEqual(self.report()["route"], "RECONCILE")
+
+    def test_new_rollback_is_not_confused_with_an_old_integrated_tree(self):
+        original, _ = self.integrated_copy()
+        (self.root / "api/a.txt").write_text("new target behavior\n")
+        self.git(self.root, "commit", "-am", "advance target")
+        self.git(self.root, "switch", "-c", "intentional-rollback")
+        (self.root / "api/a.txt").write_text("delivered content\n")
+        self.git(self.root, "commit", "-am", "new intent to restore older behavior")
+        self.assertEqual(self.git(self.root, "rev-parse", "HEAD^{tree}"),
+                         self.git(self.root, "rev-parse", original + "^{tree}"))
+        self.git(self.root, "switch", "main")
+        report = self.report()
+        self.assertEqual(report["route"], "RECONCILE")
+        self.assertIn("refs/heads/intentional-rollback", [b["branch"] for b in report["blockers"]])
+
     def test_stale_hook_git_environment_does_not_hide_sibling(self):
         peer = self.sibling()
         with patch.dict(os.environ, {"GIT_DIR": str(self.root / ".git"),

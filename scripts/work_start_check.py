@@ -34,6 +34,7 @@ def digest(value):
 def git(root, *args, optional=False):
     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
     env["GIT_OPTIONAL_LOCKS"] = "0"
+    env["GIT_NO_REPLACE_OBJECTS"] = "1"
     try:
         result = subprocess.run(["git", "-C", str(root), *args], env=env,
                                 capture_output=True, timeout=20)
@@ -109,6 +110,17 @@ def worktrees(root):
     if not result or "worktree" not in result[0] or "bare" in result[0]:
         raise ObservationError("Registered primary checkout unavailable")
     return result
+
+
+def commit_trees(root, revision, *, ancestry_path=False):
+    """Complete immutable snapshots, never path similarity or patch IDs."""
+    options = ("--ancestry-path",) if ancestry_path else ()
+    output = git(root, "log", "--format=%T", "--no-show-signature", *options, revision)
+    trees = set(output.splitlines())
+    if not trees or any(not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", tree)
+                        for tree in trees):
+        raise ObservationError("Commit tree history unavailable")
+    return trees
 
 
 def dirty_observation(root):
@@ -289,6 +301,7 @@ def inspect(root, workstream, requested_paths=(), ticket=None, storage=None):
                              "reason": "scope-reservation" if reserved else "pending-delta"})
     checked = {e["branch"] for e in entries}
     branches = []
+    target_trees = {}
     for ref, sha in sorted(refs_map.items()):
         if not ref.startswith("refs/heads/") or ref in checked or ref == "refs/heads/" + target:
             continue
@@ -296,6 +309,16 @@ def inspect(root, workstream, requested_paths=(), ticket=None, storage=None):
                                     sha + "..." + target_sha).split())
         branches.append({"branch": ref, "headSha": sha, "ahead": ahead, "behind": behind})
         if ahead and intersects(requested, changes(root, comparison_sha, sha)):
+            # Only branches WITHOUT a registered checkout reach this path.
+            # Require every unique snapshot AFTER divergence (not just HEAD).
+            # An intentional new rollback must not match a pre-branch snapshot.
+            # Preserve refs; this is neither terminal nor cleanup authority.
+            ancestor = git(root, "merge-base", target_sha, sha).strip()
+            if ancestor != target_sha and ancestor not in target_trees:
+                target_trees[ancestor] = commit_trees(root, ancestor + ".." + target_sha, ancestry_path=True)
+            if (ancestor != target_sha and
+                    commit_trees(root, target_sha + ".." + sha) <= target_trees[ancestor]):
+                continue
             blockers.append({"path": None, "branch": ref, "ticket": None,
                              "active": False, "reason": "unassigned-branch-delta"})
     route = "NEW_TICKET_CANDIDATE"
