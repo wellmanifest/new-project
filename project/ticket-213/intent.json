@@ -1,7 +1,7 @@
 {
   "schema": "new-project.intent/v3",
   "ticket": "ticket-213",
-  "summary": "Make Git ancestry the default missing receipt policy for adopters",
+  "summary": "Preserve active exact ticket refs without changing the conservative activity default",
   "workstream": "governance",
   "classification": {
     "kind": "BUG",
@@ -24,11 +24,12 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "6cdd7627b3853d72dd5461e95c05b4d0cf233737",
+    "acceptedBaseSha": "8d86cd61404d51809532a8292ce9c0cc02ed6157",
     "targetBranch": "main",
-    "outcome": "New adopters use Git ancestry to resolve merged ticket directories when the optional terminal-receipt registry is absent, eliminating stale active-ticket projections after ordinary protected merges.",
+    "outcome": "Reconcile the closed unmerged ticket losslessly: retain main's status-projection default and explicit target-owned opt-in, while preserving unfinished exact, dashed and nested ticket refs in Git-derived activity resolution.",
     "nonGoals": [
       "Do not weaken receipt validation or rewrite the append-only terminal receipt registry.",
+      "Do not restore the global git-ancestry default rejected for a safety regression in PR 322.",
       "Do not change the explicit status-projection option for adopters that retain it.",
       "Do not infer terminal state from an unmerged ticket branch or from carrier-only changes."
     ],
@@ -42,7 +43,7 @@
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Change only the managed package default from status-projection to git-ancestry. The resolver already verifies the target ref and rejects carrier-only delivery; existing adopters may retain the conservative policy explicitly.",
+      "decision": "Merge the current target without rewriting the preserved three-commit history. Supersede the rejected global-default change with the current target-owned opt-in boundary. Retain only the exact-ref safety correction and regression tests within the existing three implementation paths and file budget.",
       "components": [
         {
           "name": "ticket-activity-default",
@@ -50,22 +51,22 @@
         }
       ],
       "responsibilityChanges": false,
-      "interfaceChanges": ["New package adopters receive registry.missingPolicy=git-ancestry by default"],
+      "interfaceChanges": [],
       "dataChanges": [],
       "ui": {"impact": "none", "states": [], "evidence": []},
-      "rollback": "Restore status-projection in governance/ticket-activity.json and the conservative fixture expectation."
+      "rollback": "Revert the exact-ref correction through protected delivery; never change the default or the target-owned override as part of rollback."
     },
     "runtimeDependencies": [],
     "validation": [
       {
         "criterion": "AC-01",
         "commands": ["bash tests/ticket-activity.test.sh"],
-        "evidence": "A missing registry resolves a ticket whose directory is on the target as terminal under the new default, while an explicit status-projection policy remains conservative."
+        "evidence": "The missing-registry default remains conservative; the current main target-owned override and invalid-override rejection remain unchanged."
       },
       {
         "criterion": "AC-02",
-        "commands": ["bash tests/*.test.sh"],
-        "evidence": "All standard governance and ticket-activity suites pass with the published package projection."
+        "commands": ["bash tests/ticket-activity.test.sh", "python3 tests/work_start_test.py", "bash tests/governance-validator.test.sh"],
+        "evidence": "Local and fetched exact/dashed/nested refs keep unfinished tickets active; adjacent ticket numbers and integrated refs do not reserve that scope. The declared CI suites must pass before protected merge."
       }
     ]
   }

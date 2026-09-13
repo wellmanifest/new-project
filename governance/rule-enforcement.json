@@ -2,6 +2,26 @@
   "schema": "new-project.rule-enforcement/v1",
   "note": "Maps a normative RULE to the deterministic GOV-* codes that enforce it. Both sides are derived by scripts/audit_rule_enforcement.py: rules from POLICY.md and CONTRIBUTING.md, codes from the deterministic governance, branch-lifecycle and workspace-lifecycle validators. Only this association is written by hand. A rule that no mechanism can enforce is declared enforcement: manual with a reason, so the gap is visible rather than absent. Ticket-034 filled the initial complete map; manual entries are candidates for future GOV-* codes.",
   "rules": {
+    "P-WORKSPACE-005": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Reuse and proportional isolation remain operator/controller obligations; the read-only query cannot establish writer authority or prevent arbitrary editor writes."
+    },
+    "P-WORKSPACE-006": {
+      "codes": ["GOV-WORK-START-001"],
+      "enforcement": "manual",
+      "reason": "The managed allocator deterministically rejects contested scope, WIP saturation and incomplete observations before reservation. Reobservation before arbitrary edits and accepted fenced handoff still require the owning effect controller."
+    },
+    "C-START-004": {
+      "codes": ["GOV-WORK-START-001"],
+      "enforcement": "manual",
+      "reason": "The query and allocator enforce local admission, not mandatory invocation by every editor, global freshness or lease transfer. The operator must route assistance, handoff and serialization without treating the report as authority."
+    },
+    "C-CONCURRENCY-005": {
+      "codes": ["GOV-WORK-START-001"],
+      "enforcement": "manual",
+      "reason": "Allocation is gated by local pending work and manifest capacity, including force-new requests. Reusing a matching authorized checkout and avoiding ceremony-only work outside this allocator remain procedural requirements."
+    },
     "C-LEASE-001": {
       "codes": ["GOV-CHANGE-LEASE-001", "GOV-CHANGE-LEASE-002"],
       "enforcement": "deterministic"

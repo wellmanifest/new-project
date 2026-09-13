@@ -319,7 +319,7 @@ race="$(mktemp -d "${TMPDIR:-/tmp}/new-project-race-test.XXXXXX")"
 registered="$(mktemp -d "${TMPDIR:-/tmp}/new-project-registered-allocation.XXXXXX")"
 trap 'rm -rf "$fixture" "$race" "$registered"' EXIT INT TERM
 
-git -C "$race" init -q origin.git --bare
+git -C "$race" init -q --initial-branch=main origin.git --bare
 git -C "$race" clone -q origin.git upstream
 mkdir -p "$race/upstream/project/ticket-007"
 printf '# Ticket 007\n' > "$race/upstream/project/ticket-007/README.md"
@@ -340,6 +340,10 @@ cp "$repo_root/project/readme.sh" "$race/mine/project/readme.sh"
 cp -R "$repo_root/template/files" "$race/mine/template/files"
 cp "$repo_root/governance/work-classification.dsl.json" "$race/mine/.governance/work-classification.dsl.json"
 cp "$repo_root/governance/manifest.default.json" "$race/mine/.governance/manifest.json"
+cp "$repo_root/scripts/work_start_check.py" "$race/mine/.governance/work_start_check.py"
+cp "$repo_root/scripts/worktree_overlap_check.py" "$race/mine/.governance/worktree_overlap_check.py"
+cp "$repo_root/scripts/ticket_input.py" "$race/mine/.governance/ticket_input.py"
+cp "$repo_root/scripts/ticket_activity.py" "$race/mine/.governance/ticket_activity.py"
 
 # A third claim appears only after the worker clone exists. Explicit refresh
 # must discover it; routine offline allocation does not require network I/O.
@@ -377,6 +381,12 @@ fi
 # must not contact even an unavailable remote.
 rm -rf "$race/mine/project/ticket-010"
 mv "$race/mine/.governance/manifest.json" "$race/mine/.governance/manifest.base.json"
+# This fixture tests ID reservation, not admission of a second writer over
+# an unfinished adoption. Commit its owned scaffolding before requesting an
+# integration scope; the new work-start regression tests cover the refusal.
+git -C "$race/mine" add .governance template project/new-ticket.sh project/readme.sh
+git -C "$race/mine" -c user.email=t@e -c user.name=t commit -qm 'fixture adoption baseline'
+git -C "$race/mine" push -q origin HEAD:main
 git -C "$race/mine" remote set-url origin file:///definitely-unavailable/new-project.git
 (
   cd "$race/mine"
@@ -401,6 +411,9 @@ cp "$repo_root/governance/manifest.default.json" "$registered/worker/.governance
 cp "$repo_root/governance/ticket-activity.json" "$registered/worker/.governance/ticket-activity.json"
 cp "$repo_root/scripts/ticket_activity.py" "$registered/worker/.governance/ticket_activity.py"
 cp "$repo_root/scripts/ticket_allocation.py" "$registered/worker/.governance/ticket_allocation.py"
+cp "$repo_root/scripts/work_start_check.py" "$registered/worker/.governance/work_start_check.py"
+cp "$repo_root/scripts/worktree_overlap_check.py" "$registered/worker/.governance/worktree_overlap_check.py"
+cp "$repo_root/scripts/ticket_input.py" "$registered/worker/.governance/ticket_input.py"
 printf '%s\n' '# Existing ticket 001' > "$registered/worker/project/ticket-001/README.md"
 cat > "$registered/worker/.governance/ticket-allocation.json" <<'JSON'
 {

@@ -2,6 +2,24 @@
   "schema": "new-project.package-manifest/v1",
   "files": [
     {
+      "source": "scripts/work_start_check.py",
+      "target": ".governance/work_start_check.py",
+      "strategy": "managed",
+      "executable": true
+    },
+    {
+      "source": "governance/work-start-report.schema.json",
+      "target": ".governance/work-start-report.schema.json",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
+      "source": "error/GOV-WORK-START.md",
+      "target": ".governance/error/GOV-WORK-START.md",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "template/files/AGENTS.template.md",
       "target": "AGENTS.md",
       "strategy": "managed",
@@ -112,6 +130,12 @@
     {
       "source": "governance/ticket-activity.schema.json",
       "target": ".governance/ticket-activity.schema.json",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
+      "source": "governance/ticket-activity-override.schema.json",
+      "target": ".governance/ticket-activity-override.schema.json",
       "strategy": "managed",
       "executable": false
     },

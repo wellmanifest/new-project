@@ -72,6 +72,35 @@ def policy_path(root: Path) -> Path:
     raise ActivityPolicyMissing("managed ticket activity policy is missing")
 
 
+def override_path(root: Path) -> Path | None:
+    for candidate in (
+        root / ".governance/ticket-activity.override.json",
+        root / "governance/ticket-activity.override.json",
+    ):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def apply_override(root: Path, value: dict[str, Any]) -> dict[str, Any]:
+    path = override_path(root)
+    if path is None:
+        return value
+    override = _load(path)
+    if (
+        not isinstance(override, dict)
+        or set(override) != {"$schema", "schema", "missingPolicy"}
+        or override.get("$schema") != "./ticket-activity-override.schema.json"
+        or override.get("schema") != "new-project.ticket-activity-override/v1"
+        or override.get("missingPolicy") not in MISSING_POLICIES
+    ):
+        raise ActivityError("target-owned ticket activity override is invalid")
+    effective = dict(value)
+    effective["registry"] = dict(value["registry"])
+    effective["registry"]["missingPolicy"] = override["missingPolicy"]
+    return effective
+
+
 def load_policy(root: Path) -> dict[str, Any]:
     value = _load(policy_path(root))
     required = {"$schema", "schema", "registry", "terminalOutcomes", "unsupportedOutcomePolicy"}
@@ -88,7 +117,7 @@ def load_policy(root: Path) -> dict[str, Any]:
     _validate_terminal_outcomes(value)
     if value.get("unsupportedOutcomePolicy") != "remain-active":
         raise ActivityError("unsupported outcome policy must remain-active")
-    return value
+    return apply_override(root, value)
 
 
 def _validate_terminal_outcomes(value):

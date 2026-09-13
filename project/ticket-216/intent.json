@@ -1,0 +1,83 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-216",
+  "summary": "Guard the packaging validator against interpreters without tomllib",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-216/**",
+    "project/TICKETS.md",
+    "TODO.md",
+    "scripts/agent_host_check.py",
+    "tests/agent-hosts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b6b432c24630532630c74cb1be20b7c4ca4f2f09",
+    "targetBranch": "main",
+    "outcome": "The managed agent-host validator imports on any interpreter the adopted standard allows, so a repository declaring requires-python >=3.10 no longer fails its own gate with a false missing-validator defect.",
+    "nonGoals": [
+      "No change to what the packaging bindings require on interpreters that can read TOML.",
+      "No new runtime dependency: tomli is used only when it is already installed."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Import tomllib defensively (stdlib, then an already-installed tomli, then None) and skip the Python packaging binding when no reader exists. governance_check.py treats an ImportError from this module as a missing managed file, so the import must never fail; interpreters at 3.11+ keep enforcing GOV-PACKAGING-001/002/003 unchanged.",
+      "components": [
+        {
+          "name": "agent-host-validator",
+          "paths": [
+            "scripts/agent_host_check.py"
+          ]
+        },
+        {
+          "name": "validator-tests",
+          "paths": [
+            "tests/agent-hosts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; the import returns to the unguarded stdlib form."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/agent-hosts.test.sh",
+          "bash tests/pytest-plugin.test.sh",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Pending exact-head publication."
+      }
+    ]
+  }
+}

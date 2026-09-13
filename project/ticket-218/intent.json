@@ -1,0 +1,157 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-218",
+  "summary": "Reuse-first governance and repository work-start admission",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "AGENTS.md",
+    "template/files/AGENTS.template.md",
+    "CONTRIBUTING.md",
+    "tests/agent-hosts.test.sh",
+    "POLICY.md",
+    "scripts/decision_record.py",
+    "scripts/work_start_check.py",
+    "governance/work-start-report.schema.json",
+    "project/new-ticket.sh",
+    "tests/work_start_test.py",
+    "tests/governance-scripts.test.sh",
+    "governance/package-manifest.json",
+    "governance/diagnostics.json",
+    "error/GOV-WORK-START.md",
+    ".github/workflows/ci.yml",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "governance/rule-enforcement.json",
+    "scripts/audit_rule_enforcement.py",
+    "tests/rule-enforcement.test.sh",
+    "project/ticket-218/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d54878a105a20d84dd554f205bc177dcacc8730a",
+    "targetBranch": "main",
+    "outcome": "Correct the reported single-agent governance escalation: reuse matching workspaces, prevent ceremony-only tickets/worktrees, classify routine actions without decision logs, preserve exact effect authority and independent publication controls. Inspect work beside main before development or allocation; prefer resume, read-only assistance, controlled handoff and bounded serialization over unnecessary new worktrees. Publish through the declared protected PR/validator/merge process and release the material standard version for immutable adoption.",
+    "nonGoals": [
+      "Editing managed adopter copies or installed host pins",
+      "Deleting or renaming existing worktrees or foreign work",
+      "Weakening concurrency isolation, base/scope checks or trusted review",
+      "Introducing primary-checkout delivery contrary to adopted Worktrees v5",
+      "Direct agent merge or bypass of independent exact-head approval",
+      "Bulk overwrite of adopter workspaces or unattended ownership takeover"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Current user explicitly requests repository-wide start awareness and conflict escalation prevention. Continue ticket-218 in its existing checkout, adding a read-only preflight and allocator admission, closed report schema, regression tests and canonical remediation. Retain base integration blocker and all publication authority. The user now explicitly authorizes publication and subsequent fleet adoption. Existing ticket checkout was fast-forwarded to observed main; preserve upstream SQLite input changes, revalidate scope on this exact base and include release projections in the same material ticket. Keep the material count within 24 by consolidating explanatory guidance into the indexed canonical document; update coupled release test expectations rather than weakening the file budget. Complete the rule-to-code traceability graph in the same bounded change. Consolidate strategy documentation into CONTRIBUTING and the runbook, and proportional classifier regressions into agent-host tests; retain existing decision replay tests unchanged.",
+      "components": [
+        {
+          "name": "policy",
+          "paths": [
+            "AGENTS.md",
+            "template/files/AGENTS.template.md",
+            "CONTRIBUTING.md",
+            "POLICY.md",
+            "docs/**",
+            "VERSION",
+            "README.md",
+            "CHANGELOG.md"
+          ]
+        },
+        {
+          "name": "governance-runtime",
+          "paths": [
+            "scripts/decision_record.py",
+            "scripts/work_start_check.py",
+            "project/new-ticket.sh",
+            "governance/work-start-report.schema.json",
+            "governance/package-manifest.json",
+            "governance/diagnostics.json",
+            "error/GOV-WORK-START.md",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json",
+            "governance/rule-enforcement.json",
+            "scripts/audit_rule_enforcement.py"
+          ]
+        },
+        {
+          "name": "verification",
+          "paths": [
+            "tests/agent-hosts.test.sh",
+            "tests/decision-record.test.sh",
+            "tests/work_start_test.py",
+            "tests/governance-scripts.test.sh",
+            ".github/workflows/ci.yml",
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh",
+            "tests/rule-enforcement.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Add work-start report v1 and conservative allocator admission; no grant of write or merge authority."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Preserve previous snapshot and reverse only the reviewed local delta; no history rewrite, cleanup or remote effects."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Source/template regression for reuse-first isolation and no recursive evidence."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/decision-record.test.sh"
+        ],
+        "evidence": "Closed action classification, positive/negative cases, legacy replay and no side effects."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 scripts/governance_check.py --manifest governance/manifest.hub.json --base d54878a105a20d84dd554f205bc177dcacc8730a --changed-file <each exact changed path> --format json"
+        ],
+        "evidence": "Full local and protected exact-head gates after base reconciliation; publication only with independent approval."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python3 tests/work_start_test.py",
+          "bash tests/governance-scripts.test.sh"
+        ],
+        "evidence": "Real Git fixtures: sibling pending work, inherited history, disjoint scopes, uncertainty, bounded WIP, no writes and rejected allocation before reservation."
+      }
+    ]
+  }
+}

@@ -18,15 +18,12 @@ git -C "$fixture/repo" add .
 git -C "$fixture/repo" commit --quiet -m initial-ticket
 head_sha="$(git -C "$fixture/repo" rev-parse HEAD)"
 
-# The default derives terminal state from Git when the optional registry is absent.
-status=0
+# Missing optional registry is conservative and does not block ordinary work.
 python3 "$repo_root/scripts/ticket_activity.py" --root "$fixture/repo" resolve \
   --ticket-dir "$fixture/repo/project/ticket-001" --active-status IN_PROGRESS \
-  > "$fixture/absent.json" || status=$?
-test "$status" -eq 1
-grep -q '"active": false' "$fixture/absent.json"
-grep -q '"authority": "git-ancestry"' "$fixture/absent.json"
-grep -q 'delivery-on-target' "$fixture/absent.json"
+  > "$fixture/absent.json"
+grep -q '"active": true' "$fixture/absent.json"
+grep -q 'registry-absent' "$fixture/absent.json"
 
 git -C "$fixture/repo" switch --quiet -c delivery
 printf '%s\n' integrated >> "$fixture/repo/README.md"
@@ -264,13 +261,16 @@ git init --quiet --initial-branch=main "$derived"
 git -C "$derived" config user.email activity-test@example.invalid
 git -C "$derived" config user.name activity-test
 mkdir -p "$derived/governance" "$derived/project/ticket-010"
-# An adopter can still pin the conservative status-projection policy explicitly.
-python3 - "$repo_root/governance/ticket-activity.json" "$derived/governance/ticket-activity.json" <<'PY'
-import json, pathlib, sys
-policy = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
-policy["registry"]["missingPolicy"] = "git-ancestry"
-pathlib.Path(sys.argv[2]).write_text(json.dumps(policy, indent=2) + "\n", encoding="utf-8")
-PY
+# A target-owned override opts into Git-derived terminal resolution without
+# changing the managed policy.
+cp "$repo_root/governance/ticket-activity.json" "$derived/governance/ticket-activity.json"
+cat > "$derived/governance/ticket-activity.override.json" <<'JSON'
+{
+  "$schema": "./ticket-activity-override.schema.json",
+  "schema": "new-project.ticket-activity-override/v1",
+  "missingPolicy": "git-ancestry"
+}
+JSON
 printf '%s\n' '- **Status**: IN_PROGRESS' > "$derived/project/ticket-010/README.md"
 printf '%s\n' 'delivered' > "$derived/src.txt"
 git -C "$derived" add .
@@ -279,7 +279,7 @@ git -C "$derived" commit --quiet -m 'deliver ticket-010'
 # A ticket whose directory is on the target branch has landed: the standard
 # refuses a commit carrying only tracking carriers, so the directory could not
 # be there without its delivery.
-resolution="$(cd "$derived" && python3 "$repo_root/scripts/ticket_activity.py" resolve --root . --ticket ticket-010 2>/dev/null || true)"
+resolution="$(cd "$derived" && python3 "$repo_root/scripts/ticket_activity.py" --root . resolve --ticket-dir project/ticket-010 --active-status IN_PROGRESS 2>/dev/null || true)"
 python3 - "$derived" "$repo_root" <<'PY'
 import pathlib, sys
 sys.path.insert(0, str(pathlib.Path(sys.argv[2]) / "scripts"))
@@ -294,6 +294,41 @@ assert outcome.active is False, outcome
 assert outcome.authority == "git-ancestry", outcome
 assert outcome.reason == "delivery-on-target", outcome
 PY
+
+# Every supported ref spelling must protect live work, locally and in fetched
+# remote refs. Adjacent ticket numbers must not reserve this ticket's scope.
+python3 - "$derived" "$repo_root" <<'PY'
+import pathlib, subprocess, sys
+sys.path.insert(0, str(pathlib.Path(sys.argv[2]) / "scripts"))
+import ticket_activity as ta
+root = pathlib.Path(sys.argv[1])
+def git(*args):
+    return subprocess.check_output(["git", "-C", str(root), *args], text=True).strip()
+git("switch", "--quiet", "-c", "fixture-unfinished")
+(root / "src.txt").write_text("unfinished implementation\n")
+git("commit", "--quiet", "-am", "unfinished fixture implementation")
+head = git("rev-parse", "HEAD")
+git("switch", "--quiet", "main")
+for prefix in ("refs/heads/", "refs/remotes/origin/"):
+    for name in ("ticket/010", "ticket/010-follow-up", "ticket/010/follow-up", "ticket/0100", "ticket/011"):
+        ref = prefix + name
+        git("update-ref", ref, head)
+        expected = name in ("ticket/010", "ticket/010-follow-up", "ticket/010/follow-up")
+        try:
+            assert ta._unmerged_ticket_branch(root, "ticket-010", "main") == expected, ref
+            outcome = ta.resolve(root, root / "project/ticket-010", {"IN_PROGRESS"})
+            assert outcome.active == expected, (ref, outcome)
+            assert not ta._unmerged_ticket_branch(root, "ticket-010", head), ref
+        finally:
+            git("update-ref", "-d", ref, head)  # exact synthetic fixture ref only
+PY
+
+# An invalid target-owned override fails closed.
+printf '%s\n' '{"missingPolicy":"git-ancestry"}' > "$derived/governance/ticket-activity.override.json"
+status=0
+(cd "$derived" && python3 "$repo_root/scripts/ticket_activity.py" --root . resolve --ticket-dir project/ticket-010 --active-status IN_PROGRESS) > "$derived/invalid.out" 2> "$derived/invalid.err" || status=$?
+test "$status" -eq 2
+grep -q 'target-owned ticket activity override is invalid' "$derived/invalid.err"
 
 # An unmerged branch for the same ticket means the delivery is still in flight.
 # This is the case that must not regress: a false terminal would release the

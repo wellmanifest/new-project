@@ -6,6 +6,28 @@
 
 ## [Unreleased]
 
+## [0.20.26] - 2026-09-13
+
+### Fixed
+- Prevent ceremony-only worktrees and recursive decision evidence. Local checks remain reports, not trusted review decisions.
+- Inspect pending branches, worktrees, intents and workstream capacity before allocating another ticket; prefer reuse, read-only help, controlled handoff or serialization. Ship the closed work-start report, fail-closed allocator integration and regression tests in the same material ticket [ticket-218].
+
+## [0.20.25] - 2026-09-12
+
+### Fixed
+- Keep `scripts/agent_host_check.py` importable on interpreters without `tomllib` (Python 3.10). `governance_check.py` reported the `ImportError` as a missing managed validator, so an adopter declaring `requires-python >=3.10` failed its own gate with a false `GOV-SYNC-001`, and the pytest lifecycle binding aborted the session. The Python packaging binding is skipped when no TOML reader exists; 3.11+ enforces `GOV-PACKAGING-001/002/003` unchanged [ticket-216].
+
+## [0.20.24] - 2026-09-11
+
+### Test
+- Update tests/adoption-lock.test.sh
+- Update tests/governance-validator.test.sh
+
+### Other
+- Update VERSION
+- Update governance/manifest.default.json
+- Update governance/manifest.hub.json
+
 ## [0.20.4] - 2026-09-02
 
 ### Automatic, fail-closed standard update preparation
