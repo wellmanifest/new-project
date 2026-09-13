@@ -22,4 +22,4 @@ Canonical result: [work registration](../../docs/information/work-registration.m
 
 ## Validation
 
-All 40 registration tests and all 27 work-start tests pass. The new cases produced 10 failing subcases on the accepted source before correction. Managed governance and the pinned Docs checker pass. Source publication still requires the protected exact-head gates and independent Validator.
+All 41 registration tests and all 27 work-start tests pass. The new cases produced 10 failing subcases on the accepted source before correction. The source-hub CI manifest and pinned Docs checker pass. A declared 40-minute estimate exceeded the source profile's 30-minute active-work limit; the bounded implementation estimate is corrected to 20 minutes. Source publication still requires the protected exact-head gates and independent Validator.

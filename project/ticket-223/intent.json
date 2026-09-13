@@ -33,7 +33,7 @@
       "No package-manifest, allocator or foreign branch changes; mandatory installer/controller remain separate integration work."
     ],
     "complexity": "S",
-    "estimatedMinutes": 40,
+    "estimatedMinutes": 20,
     "budgets": {
       "maxImplementationFiles": 3,
       "maxAffectedComponents": 2,
@@ -83,7 +83,7 @@
       {
         "criterion": "AC-02",
         "commands": [
-          "bash project/governance-check.sh --base e9981f2c4067f68037116e3662f5ad2e51467fed --head HEAD --actor agent"
+          "python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base e9981f2c4067f68037116e3662f5ad2e51467fed --head HEAD --actor ci --format json"
         ],
         "evidence": "Protected exact-head publication and terminal workspace recovery follow local validation."
       }

@@ -358,6 +358,15 @@ class RegistrationTest(unittest.TestCase):
         value["requests"][0]["pr"]["number"] = 100
         self.check(value, "REG-IDENTITY", previous=previous)
 
+    def test_inventory_dirty_observation_can_refresh_without_new_identity(self):
+        previous = snapshot("editing")
+        previous["worktrees"][0]["dirty"] = "unknown"
+        for dirty in ("clean", "dirty"):
+            with self.subTest(dirty=dirty):
+                value = advance(previous)
+                value["worktrees"][0]["dirty"] = dirty
+                self.check(value, status="complete", previous=previous)
+
     def test_unknown_dirty_state_needs_reconciliation(self):
         value = snapshot("editing")
         value["worktrees"][0]["dirty"] = "unknown"
