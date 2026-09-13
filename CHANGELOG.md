@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+## [0.20.27] - 2026-09-13
+
+### Fixed
+- Preserve every nonzero Goal refusal in the explicit standard-update adapter; generic diagnostic text no longer overrides errors. Remove unused drift helpers and cover stdout/stderr diagnostic collisions [ticket-221].
+
 ## [0.20.26] - 2026-09-13
 
 ### Fixed

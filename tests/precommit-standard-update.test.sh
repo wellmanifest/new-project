@@ -113,11 +113,8 @@ assert default["updates"] == {
 }
 PY
 
-# Staleness is not drift. The standard published seven revisions on 2026-09-08;
-# an implementation ticket can never be the governance adoption ticket Goal
-# demands, so the gate held five clean pull-request repairs in one adopter for a
-# full day. A commit that leaves every managed file matching its own pinned lock
-# has caused nothing and now proceeds with the staleness reported.
+# Text diagnostics are not structured authority. Even a consistent staged pin
+# cannot turn an explicit Goal refusal into success.
 drift_repo="$tmp/drift"
 mkdir -p "$drift_repo/.governance" "$tmp/stalebin"
 git -C "$drift_repo" init --quiet
@@ -155,9 +152,7 @@ relock
 status=0
 PATH="$tmp/stalebin:$PATH" python3 "$runner" --root "$drift_repo" --ticket ticket-058 \
   > "$tmp/stale.out" 2> "$tmp/stale.err" || status=$?
-[[ "$status" -eq 0 ]] || fail "a stale pin without managed drift must not block an unrelated commit"
-grep -Fq 'no managed file drifted' "$tmp/stale.err" \
-  || fail "the allowed commit must still report the staleness it did not cause"
+[[ "$status" -eq 1 ]] || fail "an adoption authority refusal must preserve its nonzero result"
 
 printf 'hand edited managed contract\n' > "$drift_repo/AGENTS.md"
 git -C "$drift_repo" add -A
@@ -179,3 +174,28 @@ status=0
 PATH="$tmp/stalebin:$PATH" python3 "$runner" --root "$drift_repo" --ticket ticket-058 \
   > "$tmp/nolock.out" 2> "$tmp/nolock.err" || status=$?
 [[ "$status" -eq 1 ]] || fail "evidence that cannot be read must never relax the gate"
+
+# Exercise the collision through the real CLI and a consistent Git index.
+relock
+cat > "$tmp/stalebin/collision-goal" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$COLLISION_STREAM" == stdout ]]; then
+  echo 'GOV-STANDARD-UPDATE-001: diagnostic context only'
+else
+  echo 'GOV-STANDARD-UPDATE-001: diagnostic context only' >&2
+fi
+echo 'Error: invalid adoption authority; unrelated failure' >&2
+exit 99
+EOF
+chmod +x "$tmp/stalebin/collision-goal"
+for stream in stdout stderr; do
+  status=0
+  COLLISION_STREAM="$stream" PATH="$tmp/stalebin:$PATH" python3 "$runner" \
+    --root "$drift_repo" --ticket ticket-058 --goal-executable collision-goal \
+    > "$tmp/collision.out" 2> "$tmp/collision.err" || status=$?
+  [[ "$status" -eq 99 ]] || fail "a $stream diagnostic collision must preserve Goal exit 99"
+done
+status=0
+python3 "$runner" --root "$drift_repo" --ticket ticket-058 \
+  --goal-executable "$tmp/no-such-goal" > "$tmp/missing.out" 2> "$tmp/missing.err" || status=$?
+[[ "$status" -eq 2 ]] || fail "missing Goal must fail closed"
