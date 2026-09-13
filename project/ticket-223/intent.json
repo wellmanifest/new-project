@@ -1,0 +1,92 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-223",
+  "summary": "Preserve observed checkout identity and terminal retirement across registration snapshots (#337)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/work_registration.py",
+    "tests/work-registration.test.py",
+    "docs/information/work-registration.md",
+    "project/ticket-223/**",
+    "project/TICKETS.md",
+    "TODO.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e9981f2c4067f68037116e3662f5ad2e51467fed",
+    "targetBranch": "main",
+    "outcome": "Unknown or previously registered checkouts cannot disappear or change identity across an adjacent journal transition without a matching retained terminal binding.",
+    "nonGoals": [
+      "No deletion authority, filesystem mutation or receipt authentication is added to this read-only checker.",
+      "No package-manifest, allocator or foreign branch changes; mandatory installer/controller remain separate integration work."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 40,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Compare inventory identity across adjacent snapshots and accept disappearance only for a previously bound checkout whose retained current request has a terminal state and receipt; unknown observations require reconciliation first.",
+      "components": [
+        {
+          "name": "registration-consistency",
+          "paths": [
+            "scripts/work_registration.py",
+            "tests/work-registration.test.py"
+          ]
+        },
+        {
+          "name": "normative-contract",
+          "paths": [
+            "docs/information/work-registration.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        "Tighten consistency of existing v1 snapshots without changing their schema."
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this checker/test/documentation delta without changing stored snapshots."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/work-registration.test.py",
+          "python3 tests/work_start_test.py"
+        ],
+        "evidence": "A pending orphan snapshot became complete after silent inventory removal on the accepted base; negative regression must fail before correction."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh --base e9981f2c4067f68037116e3662f5ad2e51467fed --head HEAD --actor agent"
+        ],
+        "evidence": "Protected exact-head publication and terminal workspace recovery follow local validation."
+      }
+    ]
+  }
+}

@@ -177,6 +177,38 @@ def chain_findings(current, previous, add):
                 add("REG-HEAD", rid, "Frozen publication head changed")
 
 
+def inventory_chain_findings(current, previous, add):
+    """Retain observations until an already bound request records retirement."""
+    observed = {item["id"]: item for item in current["worktrees"]}
+    requests = {request["id"]: request for request in current["requests"]}
+    for old in previous["worktrees"]:
+        newer = observed.get(old["id"])
+        if newer is not None:
+            for field in ("path", "branch"):
+                if old[field] is not None and newer[field] != old[field]:
+                    add("REG-IDENTITY", old["id"], f"Known checkout {field} changed or became unknown")
+            continue
+        if old["path"] is not None and any(item["path"] == old["path"] for item in current["worktrees"]):
+            add("REG-IDENTITY", old["id"], "An observed checkout cannot be relabelled as a new inventory identity")
+            continue
+        retired = False
+        for request in previous["requests"]:
+            binding = request["binding"]
+            if (binding is None or old["path"] != binding["worktree"]
+                    or old["branch"] != binding["branch"]):
+                continue
+            retained = requests.get(request["id"])
+            if (retained is not None and retained["state"] in TERMINAL
+                    and retained["terminalReceipt"] is not None and retained["binding"] is not None
+                    and all(retained["binding"][field] == binding[field]
+                            for field in ("ticket", "branch", "worktree"))):
+                retired = True
+                break
+        if not retired:
+            add("REG-INVENTORY", old["id"],
+                "Observed checkout disappeared without prior registration and a retained terminal receipt")
+
+
 def validate(snapshot, previous=None):
     findings = []
 
@@ -199,6 +231,7 @@ def validate(snapshot, previous=None):
             add("REG-CHAIN", "$", "A noninitial snapshot requires the previous snapshot")
     else:
         chain_findings(snapshot, previous, add)
+        inventory_chain_findings(snapshot, previous, add)
     requests, inventory, effects = snapshot["requests"], snapshot["worktrees"], snapshot["outbox"]
     identities = {}
 

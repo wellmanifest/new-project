@@ -155,6 +155,86 @@ class RegistrationTest(unittest.TestCase):
         value["worktrees"] = [{"id": "legacy", "path": None, "branch": "old/work", "dirty": "unknown"}]
         self.check(value, "REG-ORPHAN", status="pending")
 
+    def test_orphan_cannot_disappear_from_the_next_inventory(self):
+        for path in (None, ".worktrees/ticket-001--example"):
+            with self.subTest(path=path):
+                previous = snapshot()
+                previous["worktrees"] = [{"id": "legacy", "path": path,
+                                          "branch": "ticket/001-example", "dirty": "unknown"}]
+                value = advance(previous)
+                value["worktrees"] = []
+                self.check(value, "REG-INVENTORY", previous=previous)
+
+    def test_relabelling_an_orphan_does_not_resolve_its_history(self):
+        previous = snapshot()
+        previous["worktrees"] = [{"id": "legacy", "path": None, "branch": "old/work", "dirty": "unknown"}]
+        value = advance(previous)
+        value["worktrees"][0]["id"] = "new-label"
+        self.check(value, "REG-INVENTORY", previous=previous)
+
+    def test_blocked_checkout_cannot_disappear(self):
+        previous = snapshot("editing")
+        previous["requests"][0]["state"] = "blocked"
+        previous["requests"][0]["binding"]["lease"]["phase"] = "released"
+        self.check(previous, status="complete")
+        value = advance(previous)
+        value["worktrees"] = []
+        self.check(value, "REG-INVENTORY", previous=previous)
+
+    def test_known_inventory_path_and_branch_are_stable(self):
+        previous = snapshot("editing")
+        previous["requests"][0]["state"] = "blocked"
+        previous["requests"][0]["binding"]["lease"]["phase"] = "released"
+        for field, replacement in (("path", ".worktrees/ticket-002--other"),
+                                   ("branch", "ticket/001-other"), ("path", None), ("branch", None)):
+            with self.subTest(field=field, replacement=replacement):
+                value = advance(previous)
+                value["worktrees"][0][field] = replacement
+                self.check(value, "REG-IDENTITY", previous=previous)
+
+    def test_unknown_inventory_observation_can_be_resolved_without_relabelling(self):
+        previous = snapshot()
+        previous["worktrees"] = [{"id": "legacy", "path": None, "branch": None, "dirty": "unknown"}]
+        value = advance(previous)
+        editing = snapshot("editing")
+        value["requests"] = editing["requests"]
+        value["worktrees"] = editing["worktrees"]
+        value["worktrees"][0]["id"] = "legacy"
+        self.check(value, status="complete", previous=previous)
+
+    def test_retirement_requires_a_previously_bound_terminal_request(self):
+        previous = snapshot("editing")
+        value = advance(previous)
+        request = value["requests"][0]
+        request["state"] = "cancelled"
+        request["terminalReceipt"] = "receipt:controller/cancellation"
+        request["binding"]["lease"].update(phase="released", revision=2, fencingToken=2)
+        value["worktrees"] = []
+        self.check(value, status="complete", previous=previous)
+        # A brand-new binding cannot retroactively authorize losing an orphan.
+        previous["requests"][0]["binding"] = None
+        previous["requests"][0]["state"] = "queued"
+        value["previousDigest"] = registration.digest(previous)
+        self.check(value, "REG-INVENTORY", previous=previous)
+
+    def test_merged_checkout_can_retire_and_terminal_record_stays(self):
+        previous = snapshot("publication")
+        value = advance(previous)
+        request = value["requests"][0]
+        request["state"] = "merged"
+        request["terminalReceipt"] = "receipt:controller/merge"
+        request["binding"]["lease"].update(phase="released", revision=2, fencingToken=2)
+        value["worktrees"] = []
+        self.check(value, status="complete", previous=previous)
+        self.check(advance(value), status="complete", previous=value)
+
+    def test_terminal_checkout_cannot_be_relabelled_while_remaining_present(self):
+        previous = snapshot("merged")
+        previous["worktrees"] = snapshot("editing")["worktrees"]
+        value = advance(previous)
+        value["worktrees"][0]["id"] = "replacement"
+        self.check(value, "REG-IDENTITY", previous=previous)
+
     def test_active_checkout_must_be_observed(self):
         value = snapshot("editing")
         value["worktrees"] = []
