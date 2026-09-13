@@ -2,7 +2,7 @@
 
 ```dsl
 DOCUMENT CONTRIBUTING
-VERSION 21
+VERSION 22
 LANGUAGE PL
 MODE PROCEDURAL
 PURPOSE "proces pracy nad repozytorium"
@@ -47,7 +47,7 @@ Bloki `dsl` są normatywnym, czytelnym dla ludzi i agentów zapisem polityki;
 nie są samodzielnie wykonywalnym językiem programowania. Deterministyczne
 egzekwowanie realizuje walidator i manifest policy-as-code. Ten profil używa
 języka `wellmanifest.policy/v1`; historyczne `policy-sh@1` jest wyłącznie
-aliasem zgodności runtime. `VERSION 17` powyżej wersjonuje dokument
+aliasem zgodności runtime. Pole `VERSION` powyżej wersjonuje dokument
 `CONTRIBUTING`, a nie gramatykę ani runtime.
 
 ```dsl
@@ -100,7 +100,26 @@ Semantyka:
 
 ## IZOLACJA WSPÓŁBIEŻNEJ PRACY
 
+Liczba agentów w rozmowie, repozytoriów i worktree to trzy różne wielkości.
+Najpierw identyfikuje się rzeczywistych writerów i istniejący checkout zadania.
+Jeden writer kontynuujący ten sam ticket używa tego samego worktree. Czytanie
+innego repozytorium nie tworzy tam ticketu, adopcji ani worktree. Zapis w trzech
+repozytoriach zachowuje trzech właścicieli zmian, lecz nie wymaga trzech nowych
+checkoutów, jeżeli odpowiednie, autoryzowane miejsca pracy już istnieją.
+Profil Worktrees v5 nadal wymaga kanonicznego miejsca dostawy; ta procedura
+nie zezwala na pisanie w brudnym primary ani na obchodzenie jego adopcji.
+
 ```dsl
+RULE C-CONCURRENCY-005 TYPE REQUIRED
+WHEN TASK_OR_CONTINUATION_RECEIVED
+DO APPLY P-WORKSPACE-005
+DO APPLY P-WORKSPACE-006 BEFORE_NEW_ALLOCATION
+DO REUSE EXISTING_TICKET_WORKTREE_AND_MATCHING_LEASE WHEN SCOPE_AND_OWNERSHIP_MATCH
+DO ALLOCATE NEW_DELIVERY_WORKTREE WHEN MATERIAL_WRITE_REQUIRES_ISOLATION AND NO_MATCHING_AUTHORIZED_WORKTREE_EXISTS AND WORK_START_ROUTE = NEW_TICKET_CANDIDATE
+DO LIMIT_CROSS_REPOSITORY_WRITES_TO_REQUESTED_MATERIAL_DELIVERABLES
+FORBID CREATE_UPSTREAM_ADOPTION_OR_MAINTENANCE_TICKET_FOR_READ_ONLY_CONTEXT_LOOKUP
+ASSERT FOLLOWUP_CHECK_OR_RECEIPT_DOES_NOT_MULTIPLY_DELIVERY_WORKSPACES
+
 RULE C-CONCURRENCY-001 TYPE FORBIDDEN
 WHEN MULTIPLE_AGENT_OR_AUTOMATION_SESSIONS_TARGET_SAME_REPOSITORY
 DO REQUIRE DEDICATED_GIT_WORKTREE_PER_ACTIVE_TICKET
@@ -367,6 +386,9 @@ DO ATOMICALLY_REPLACE BOUNDED_CHECKPOINT_INDEX ".subactor/recovery/checkpoint-in
 DO BIND EXACT_PLAN SLICE TICKET BRANCH HEAD LEASE REMOTE_ACCOUNT_OBSERVATION AND_SNAPSHOT_RECEIPT
 DO REQUIRE EXTERNAL_DURABLE_RECEIPT_REF_BEFORE_CLAIMING_CROSS_PROCESS_OR_CROSS_MACHINE_RECOVERABILITY
 DO KEEP LOCAL_EVENT_STREAM_AND_INDEX_IGNORED_AND_NONAUTHORITATIVE
+DO COALESCE_SAME_BOUNDARY_TRIGGERS_INTO_ONE_CHECKPOINT_AFTER_TRACKED_FINALIZATION
+DO STORE_RECEIPT_WITHOUT_NEW_DECISION_RECORD_OR_REPOSITORY_WRITE
+FORBID RECURSIVE_CHECKPOINT_OR_DECISION_FOR_WRITING_THE_CHECKPOINT_ITSELF
 FORBID TICKET_PROSE CHAT_SUMMARY OR_RAW_LOG_AS_CHECKPOINT_SUBSTITUTE
 ASSERT EVENT_AND_CHECKPOINT_CHAINS_ARE_APPEND_ONLY_REDACTED_AND_NONAUTHORITATIVE
 
@@ -557,6 +579,20 @@ TRANSITION BLOCKED -> EDIT WHEN BLOCKER_RESOLVED_AND_APPROVED_SCOPE_UNCHANGED
 ## PROCEDURA START
 
 ```dsl
+RULE C-START-004
+WHEN DEVELOPMENT_TASK_OR_CONTINUATION_RECEIVED
+DO RUN_MANAGED_WORK_START_QUERY BEFORE_ALLOCATION_OR_EDIT
+DO BIND TARGET_REFS WORKTREE_HEADS DIRTY_DIGESTS INTENT_DIGESTS AND_DECLARED_WORKSTREAM_LIMIT
+DO REUSE_MATCHING_TICKET WHEN ROUTE = REUSE_EXISTING AND OWNER_AND_SCOPE_REVALIDATED
+DO OFFER_READ_ONLY_ASSISTANCE WHEN ROUTE = ASSIST_READ_ONLY
+DO REQUIRE_ACCEPTED_HANDOFF_AND_CONTROLLER_CAS WHEN ROUTE = HANDOFF_REQUIRED
+DO QUEUE_AFFECTED_WORK_WITHOUT_NEW_DELIVERY_WORKTREE WHEN ROUTE IN [SERIALIZE, RECONCILE]
+DO RECHECK_CURRENT_STATE_AND_FENCING_BEFORE_EFFECT
+FORBID READ_ONLY_HELP_AS_WRITE_AUTHORITY_OR_TRUSTED_REVIEW
+FORBID ALLOCATION_OVERRIDE_FROM_FORCE_NEW_OR_SAVED_REPORT
+ASSERT ADMISSION_QUERY_HAS_NO_GIT_OR_LEASE_EFFECT_AND_NEVER_GRANTS_AUTHORITY
+NEXT ANALYSIS OR BLOCKED
+
 RULE C-START-001
 WHEN TASK_RECEIVED
 DO READ_RELEVANT_FILES
@@ -1152,10 +1188,14 @@ ASSERT PROJECTION_AND_ADVISORY_ANALYSIS_ARE_REPRODUCIBLE_AND_INTENT_SCOPED
 
 ## LOG DECYZJI AUTONOMICZNYCH (DECISION_LOG)
 
-Każda decyzja agenta, która wpływa na stan repozytorium lub na zaufane
-zatwierdzenie (approve / request changes / merge readiness), musi mieć
-**przeliczalny** wpis. Log prozy LLM nie jest dowodem: strona trzecia odtwarza
-werdykt z `INPUT` i `APPLIED_RULE` bez czytania `ADVISORY`.
+Przeliczalny wpis dotyczy materialnej decyzji o zmianie zakresu lub authority,
+działaniu destrukcyjnym albo publikacji/review. Zwykła edycja w zaakceptowanym
+zakresie, formatowanie, uruchomienie testu, odczyt oraz zapis dowodu nie są
+osobnymi decyzjami tego typu. Pokrywają je istniejący intent, diff i wynik
+kontroli. Nie tworzy się decyzji o zapisaniu decyzji, receiptu czy checkpointu.
+Log prozy LLM nie jest dowodem: strona trzecia odtwarza werdykt z `INPUT` i
+`APPLIED_RULE` bez czytania `ADVISORY`. Lokalny wynik PASS/FAIL pozostaje
+raportem kontroli, nie `APPROVE` ani `REQUEST_CHANGES`.
 
 Maszynowy kontrakt JSON: `governance/decision-record.schema.json`
 (`new-project.decision-record/v1`). Forma DSL i JSON są wzajemnie wyprowadzalne
@@ -1164,11 +1204,13 @@ przez `scripts/decision_record.py`. Wpis powinien być **wyprowadzany** z
 
 ```dsl
 RULE C-DECISION-001 TYPE REQUIRED
-WHEN AGENT_DECISION_AFFECTS_REPOSITORY_STATE
-DO APPEND DECISION_RECORD TO "project/{TICKET_ID}/decisions.md"
-DO REQUIRE RECORD_BINDS (DECISION_ID AND TICKET AND HEAD_SHA AND CORRELATION_ID)
-DO REQUIRE RECORD_NAMES APPLIED_RULE_ID
-FORBID DECISION_WITHOUT_RECORD
+WHEN MATERIAL_SCOPE_AUTHORITY_DESTRUCTIVE_OR_PUBLICATION_DECISION_MADE
+DO REUSE EXISTING_DECISION_OR_CONTROLLER_RECEIPT WHEN EFFECT_AND_INPUT_DIGESTS_MATCH
+DO APPEND DECISION_RECORD TO "project/{TICKET_ID}/decisions.md" WHEN NO_MATCHING_RECOMPUTABLE_EVIDENCE_EXISTS
+DO REQUIRE RECORD_BINDS (DECISION_ID AND TICKET AND HEAD_SHA AND CORRELATION_ID) WHEN NEW_DECISION_RECORD_WRITTEN
+DO REQUIRE RECORD_NAMES APPLIED_RULE_ID WHEN NEW_DECISION_RECORD_WRITTEN
+FORBID MATERIAL_DECISION_WITHOUT_RECOMPUTABLE_EVIDENCE
+FORBID DUPLICATE_RECORD_OR_RECURSIVE_RECORD_FOR_ROUTINE_EDIT_FORMAT_CHECK_OR_EVIDENCE_WRITE
 ASSERT RECORD_IS_APPEND_ONLY
 NEXT VALIDATION OR BLOCKED
 
@@ -1195,6 +1237,20 @@ FORBID ACCEPT_RECORD_THAT_CANNOT_BE_REPLAYED
 ASSERT DIVERGENCE_REPORTED_WITH_STABLE_DIAGNOSTIC_CODE
 NEXT PUBLICATION OR BLOCKED
 ```
+
+Klasyfikacja czynności jest bezskutkowym zapytaniem z zamkniętym słownikiem:
+
+```bash
+python3 scripts/decision_record.py classify-action --action local-check
+python3 scripts/decision_record.py classify-action --action publication
+```
+
+Pierwszy przypadek nie wymaga nowego decision record; drugi wymaga dowodu
+decyzji z właściwego kontrolera. Wynik `new-project.action-classification/v1`
+nie tworzy plików, worktree ani lease i nie udziela authority. Zaklasyfikowanie
+czynności jako rutynowej nie zwalnia z intentu, ACL, lease ani kontroli skutku.
+Historyczne rekordy v1 pozostają append-only; ich poprawny replay nie staje się
+zaufanym review i nie uzasadnia produkowania kolejnych rekordów lokalnych testów.
 
 Kształt wpisu (fence `dsl`):
 

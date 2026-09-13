@@ -21,6 +21,94 @@ grep -Fq 'new-ticket.sh' "$root/GEMINI.md" || fail "GEMINI.md must require new-t
 grep -Fq 'new-ticket.sh' "$root/CLAUDE.md" || fail "CLAUDE.md must require new-ticket.sh"
 grep -Fq 'alwaysApply: true' "$root/.cursor/rules/new-project-standard.mdc" || fail "Cursor rule must alwaysApply"
 
+# Host guidance must agree with the allocator and C-CONCURRENCY-002; offline
+# allocation is valid and does not authorize an unsolicited remote refresh.
+python3 - "$root" <<'PYREFRESH'
+import pathlib, sys
+root = pathlib.Path(sys.argv[1])
+for path in ('AGENTS.md', 'template/files/AGENTS.template.md'):
+    text = ' '.join((root / path).read_text().split())
+    assert 'local and already-fetched remote refs' in text, path
+    assert 'Fetch/prune only when explicitly requested via `--refresh-remote`' in text, path
+    assert 'after fetching/pruning' not in text, path
+contributing = (root / 'CONTRIBUTING.md').read_text()
+assert 'DO FETCH_AND_PRUNE_KNOWN_REMOTE_REFS WHEN REMOTE_REFRESH_EXPLICITLY_REQUESTED' in contributing
+assert '`VERSION 17`' not in contributing
+assert 'WHEN MATERIAL_SCOPE_AUTHORITY_DESTRUCTIVE_OR_PUBLICATION_DECISION_MADE' in contributing
+assert 'WHEN AGENT_DECISION_AFFECTS_REPOSITORY_STATE' not in contributing
+assert 'TO "project/{TICKET_ID}/decisions.md" WHEN NO_MATCHING_RECOMPUTABLE_EVIDENCE_EXISTS' in contributing
+assert 'FORBID RECURSIVE_CHECKPOINT_OR_DECISION_FOR_WRITING_THE_CHECKPOINT_ITSELF' in contributing
+for path in ('AGENTS.md', 'template/files/AGENTS.template.md'):
+    text = ' '.join((root / path).read_text().split())
+    assert 'Reuse the matching authorized ticket/worktree before allocating another' in text, path
+    assert 'not chat-agent count' in text, path
+    assert 'Worktrees v5 still requires a canonical linked delivery checkout' in text, path
+    assert 'classify-action --action <action>' in text, path
+    assert 'Do not recursively log the act of writing evidence' in text, path
+    assert 'branch/worktree per implementation ticket' not in text, path
+policy = (root / 'POLICY.md').read_text()
+assert 'DO REUSE_MATCHING_AUTHORIZED_CHECKOUT_BEFORE_CONSIDERING_NEW_ALLOCATION' in policy
+assert 'FORBID INFER_SINGLE_WRITER_FROM_CHAT_PARTICIPANT_COUNT' in policy
+assert 'DO FINALIZE_TRACKED_CARRIERS_AND_CHECK_FORMAT_BEFORE_SNAPSHOT_AND_LEASE_RELEASE' in policy
+sys.path.insert(0, str(root / 'scripts'))
+from policy_dsl_check import parse_markdown
+rules = {rule['id']: rule for rule in parse_markdown(contributing)['rules']}
+allocation = next(action for action in rules['C-CONCURRENCY-005']['actions'] if action['opcode'] == 'ALLOCATE')
+append = next(action for action in rules['C-DECISION-001']['actions'] if action['opcode'] == 'APPEND')
+assert allocation['guard'] is not None, 'allocation must be conditional, not an unconditional opcode'
+assert append['guard'] is not None, 'reuse must prevent unconditional duplicate append'
+parse_markdown(policy)
+PYREFRESH
+
+echo "== proportional action classification has no filesystem effects =="
+python3 - "$root" <<'PYCLASSIFY'
+import json
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+root = Path(sys.argv[1])
+sys.path.insert(0, str(root / 'scripts'))
+from decision_record import ACTION_EVIDENCE, classify_action
+
+routine = {'read-only', 'local-check', 'routine-edit', 'format', 'evidence-write', 'checkpoint'}
+material = {'scope-change', 'authority-change', 'publication', 'destructive-change'}
+assert set(ACTION_EVIDENCE) == routine | material
+expected_fields = {'schema', 'action', 'decisionRecordRequired', 'evidenceKind',
+                   'reuseMatchingEvidence', 'createsWorktree', 'grantsAuthority'}
+with tempfile.TemporaryDirectory(prefix='decision-classify-') as directory:
+    for action in sorted(routine | material):
+        result = subprocess.run(
+            [sys.executable, str(root / 'scripts/decision_record.py'),
+             'classify-action', '--action', action],
+            cwd=directory, capture_output=True, text=True, check=True)
+        report = json.loads(result.stdout)
+        assert set(report) == expected_fields, report
+        assert report == classify_action(action)
+        assert report['schema'] == 'new-project.action-classification/v1'
+        assert report['decisionRecordRequired'] == (action in material)
+        assert report['reuseMatchingEvidence'] is True
+        assert report['createsWorktree'] is False
+        assert report['grantsAuthority'] is False
+        assert 'verdict' not in report and 'APPROVE' not in result.stdout
+        assert not list(Path(directory).iterdir()), 'classification wrote artifacts'
+    for arguments in ([], ['--action', 'invented'], ['--action', 'local-check', '--approve']):
+        bad = subprocess.run([sys.executable, str(root / 'scripts/decision_record.py'),
+                              'classify-action', *arguments],
+                             cwd=directory, capture_output=True, text=True)
+        assert bad.returncode == 2, arguments
+        assert not list(Path(directory).iterdir())
+for value in ('invented', '', None, [], {'action': 'local-check'}):
+    try:
+        classify_action(value)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError('untyped or unknown action accepted')
+print('10 action classes and negative/no-effect cases: PASS')
+PYCLASSIFY
+
 # Activating the hub must resolve runtime sources instead of requiring a
 # duplicate adopter .governance tree. Missing source files still fail closed.
 python3 - "$root" "$tmp/hub" <<'PYHUB'

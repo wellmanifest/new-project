@@ -53,6 +53,9 @@ VALIDATOR_PATHS = (
     # Continuity checkpoints make active work reconstructable without model
     # memory and fail closed on unsafe snapshots, broken chains or live drift.
     Path("scripts/work_continuity.py"),
+    # Admission rejects new allocation before ticket reservation; include its
+    # stable diagnostic in the normative traceability graph.
+    Path("scripts/work_start_check.py"),
 )
 
 GOV_CODE = re.compile(r'"(GOV-[A-Z]+(?:-[A-Z]+)*-[0-9]{3})"')

@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+## [0.20.26] - 2026-09-13
+
+### Fixed
+- Prevent ceremony-only worktrees and recursive decision evidence. Local checks remain reports, not trusted review decisions.
+- Inspect pending branches, worktrees, intents and workstream capacity before allocating another ticket; prefer reuse, read-only help, controlled handoff or serialization. Ship the closed work-start report, fail-closed allocator integration and regression tests in the same material ticket [ticket-218].
+
 ## [0.20.25] - 2026-09-12
 
 ### Fixed
