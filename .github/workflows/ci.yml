@@ -110,6 +110,8 @@ jobs:
         run: bash tests/required-checks.test.sh
       - name: Test decision-record replay and append-only
         run: bash tests/decision-record.test.sh
+      - name: Test reuse-first work admission
+        run: python3 tests/work_start_test.py
       - name: Test ticket governance scripts
         run: bash tests/governance-scripts.test.sh
       - name: Test terminal receipt activity resolver
