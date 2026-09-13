@@ -1,0 +1,80 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-219",
+  "summary": "Exclude inherited feature history from worktree contention",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/worktree_overlap_check.py",
+    "tests/worktree-default-base.test.py",
+    "project/ticket-219/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3c188212b8e113f595b25bb81484e1e73e6295bb",
+    "targetBranch": "main",
+    "outcome": "Remove false worktree contention from shared feature history while preserving actual dirty/committed conflicts and conservative fallback.",
+    "nonGoals": [
+      "Change allocation policy or add a permanent gate bypass",
+      "Delete or repair existing worktrees",
+      "Implement Planfile registration or change protected publication authority"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Intersect contributions against the shared origin default with successfully observed pair-relative contributions; retain dirty paths, rename fallback and unreadable-history conservatism.",
+      "components": [
+        {
+          "name": "worktree-overlap",
+          "paths": [
+            "scripts/worktree_overlap_check.py",
+            "tests/worktree-default-base.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded correction through protected delivery without deleting worktrees or weakening ownership checks."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/worktree-default-base.test.py"
+        ],
+        "evidence": "Shared committed feature history is not a competing writer; behavior is symmetric."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/worktree-overlap.test.sh"
+        ],
+        "evidence": "Dirty/committed competition, rename conflicts, incomplete Git reads and pending-main imports remain protected."
+      }
+    ]
+  }
+}
