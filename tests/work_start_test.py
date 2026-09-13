@@ -79,8 +79,9 @@ class WorkStartTest(unittest.TestCase):
         (directory / "intent.json").write_text(json.dumps(intent))
         return path
 
-    def report(self, root=None, stream="api", paths=(), ticket=None):
-        result = start.inspect(root or self.root, stream, paths, ticket)
+    def report(self, root=None, stream="api", paths=(), ticket=None, publication=False):
+        result = start.inspect(root or self.root, stream, paths, ticket,
+                               observe_publication=publication)
         jsonschema.validate(result, json.loads((ROOT / "governance/work-start-report.schema.json").read_text()))
         self.assertFalse(result["grantsAuthority"])
         self.assertFalse(result["createsWorktree"])
@@ -93,6 +94,144 @@ class WorkStartTest(unittest.TestCase):
 
     def test_clean_primary_is_candidate_not_authority(self):
         self.assertEqual(self.report()["route"], "NEW_TICKET_CANDIDATE")
+
+    def remote(self, *, publish=True):
+        remote = Path(self.temp.name) / "remote.git"
+        self.git(self.root, "init", "--bare", str(remote))
+        self.git(self.root, "remote", "add", "origin", str(remote))
+        if publish:
+            self.git(self.root, "push", "origin", "main")
+        return remote
+
+    def test_publication_is_opt_in_and_not_release_authority(self):
+        with patch.object(start, "remote_heads", side_effect=AssertionError("network on default path")):
+            self.assertNotIn("publication", self.report())
+        self.remote()
+        projection = self.report(publication=True)["publication"]
+        self.assertEqual(projection["status"], "observed")
+        self.assertFalse(projection["grantsAuthority"])
+        entry = projection["worktrees"][0]
+        self.assertEqual(entry["unpublishedCommitCount"], 0)
+        self.assertTrue(entry["headReachableFromTarget"])
+        self.assertEqual(entry["nextAction"], "observe-review-release-deployment")
+        self.assertIn("protected-merge", projection["notObservedStages"])
+
+    def test_published_on_other_branch_is_not_unpushed_code(self):
+        self.remote()
+        self.git(self.root, "switch", "-c", "refactor/phase")
+        (self.root / "api/a.txt").write_text("already published\n")
+        self.git(self.root, "commit", "-am", "material")
+        self.git(self.root, "push", "origin", "HEAD:refs/heads/ticket/001-fixture")
+        before = self.git(self.root, "show-ref")
+        entry = self.report(publication=True)["publication"]["worktrees"][0]
+        self.assertEqual(entry["unpublishedCommitCount"], 0)
+        self.assertEqual(entry["remoteContainingRefs"], ["refs/heads/ticket/001-fixture"])
+        self.assertFalse(entry["sameBranchContainsHead"])
+        self.assertFalse(entry["headReachableFromTarget"])
+        self.assertEqual(entry["nextAction"], "reconcile-branch-binding")
+        self.assertEqual(self.git(self.root, "show-ref"), before)
+
+    def test_unpublished_and_dirty_work_are_separate(self):
+        self.remote()
+        (self.root / "api/a.txt").write_text("local commit\n")
+        self.git(self.root, "commit", "-am", "not yet published")
+        entry = self.report(publication=True)["publication"]["worktrees"][0]
+        self.assertEqual(entry["unpublishedCommitCount"], 1)
+        self.assertEqual(entry["nextAction"], "review-push-preconditions")
+        (self.root / "api/a.txt").write_text("staged\n")
+        self.git(self.root, "add", "api/a.txt")
+        (self.root / "ui/a.txt").write_text("unstaged\n")
+        (self.root / "untracked.txt").write_text("not committed\n")
+        index = (self.root / ".git/index").read_bytes()
+        entry = self.report(publication=True)["publication"]["worktrees"][0]
+        self.assertEqual(entry["uncommittedPathCount"], 3)
+        self.assertEqual(entry["unpublishedCommitCount"], 1)
+        self.assertEqual(entry["nextAction"], "preserve-local-work")
+        self.assertEqual(index, (self.root / ".git/index").read_bytes())
+
+    def test_unknown_remote_never_means_zero_unpublished(self):
+        with patch.object(start, "remote_heads", side_effect=start.ObservationError("private://credential")):
+            report = self.report(publication=True)
+        self.assertEqual(report["route"], "NEW_TICKET_CANDIDATE")
+        projection = report["publication"]
+        self.assertEqual(projection["status"], "unavailable")
+        self.assertIsNone(projection["worktrees"][0]["unpublishedCommitCount"])
+        self.assertNotIn("credential", json.dumps(report))
+
+    def test_missing_remote_object_is_partial_without_fetching(self):
+        self.remote()
+        unknown = {"refs/heads/main": "f" * 40}
+        refs = self.git(self.root, "show-ref")
+        with patch.object(start, "remote_heads", return_value=unknown):
+            projection = self.report(publication=True)["publication"]
+        self.assertEqual(projection["status"], "partial")
+        self.assertIsNone(projection["worktrees"][0]["unpublishedCommitCount"])
+        self.assertIsNone(projection["worktrees"][0]["headReachableFromTarget"])
+        self.assertEqual(refs, self.git(self.root, "show-ref"))
+
+    def test_exact_remote_head_is_proof_even_with_another_unknown_object(self):
+        self.remote()
+        advertised = {"refs/heads/main": self.base, "refs/heads/unknown": "f" * 40}
+        with patch.object(start, "remote_heads", return_value=advertised):
+            projection = self.report(publication=True)["publication"]
+        self.assertEqual(projection["status"], "partial")
+        self.assertEqual(projection["worktrees"][0]["unpublishedCommitCount"], 0)
+        self.assertTrue(projection["worktrees"][0]["headReachableFromTarget"])
+
+    def test_git_observation_disables_lazy_fetch_and_prompt(self):
+        result = subprocess.CompletedProcess([], 0, stdout=b"", stderr=b"")
+        with patch.object(start.subprocess, "run", return_value=result) as run:
+            start.git(self.root, "cat-file", "-e", "f" * 40)
+        self.assertEqual(run.call_args.kwargs["env"]["GIT_NO_LAZY_FETCH"], "1")
+        self.assertEqual(run.call_args.kwargs["env"]["GIT_TERMINAL_PROMPT"], "0")
+
+    def test_real_shallow_clone_does_not_claim_complete_unpublished_count(self):
+        (self.root / "api/a.txt").write_text("second revision\n")
+        self.git(self.root, "commit", "-am", "second")
+        remote = self.remote()
+        shallow = Path(self.temp.name) / "shallow"
+        self.git(self.root, "clone", "--branch", "main", "--depth", "1", remote.as_uri(), str(shallow))
+        self.assertEqual(self.git(shallow, "rev-parse", "--is-shallow-repository"), "true")
+        # Exact advertised HEAD remains positive proof with incomplete history.
+        projection = self.report(root=shallow, publication=True)["publication"]
+        self.assertEqual(projection["status"], "partial")
+        self.assertEqual(projection["worktrees"][0]["unpublishedCommitCount"], 0)
+        self.git(shallow, "config", "user.name", "Fixture")
+        self.git(shallow, "config", "user.email", "fixture@example.invalid")
+        (shallow / "api/a.txt").write_text("local shallow change\n")
+        self.git(shallow, "commit", "-am", "local")
+        projection = self.report(root=shallow, publication=True)["publication"]
+        self.assertEqual(projection["status"], "partial")
+        self.assertIsNone(projection["worktrees"][0]["unpublishedCommitCount"])
+        self.assertIsNone(projection["worktrees"][0]["sameBranchContainsHead"])
+
+    def test_changed_remote_invalidates_positive_observation(self):
+        self.remote()
+        with patch.object(start, "remote_heads", side_effect=[{"refs/heads/main": self.base}, {}]):
+            projection = self.report(publication=True)["publication"]
+        self.assertEqual(projection["status"], "changed")
+        self.assertIsNone(projection["remoteRefsDigest"])
+        self.assertIsNone(projection["worktrees"][0]["unpublishedCommitCount"])
+        self.assertEqual(projection["worktrees"][0]["remoteContainingRefs"], [])
+
+    def test_empty_remote_is_known_not_unavailable(self):
+        self.remote(publish=False)
+        projection = self.report(publication=True)["publication"]
+        self.assertEqual(projection["status"], "observed")
+        self.assertGreater(projection["worktrees"][0]["unpublishedCommitCount"], 0)
+
+    def test_malformed_remote_and_unknown_projection_fields_rejected(self):
+        self.remote()
+        real_git = start.git
+        for raw in ("invalid", self.base + "\trefs/heads/main\n" + self.base + "\trefs/heads/main\n"):
+            def observe(root, *args, **kwargs):
+                return raw if args[:1] == ("ls-remote",) else real_git(root, *args, **kwargs)
+            with patch.object(start, "git", side_effect=observe):
+                self.assertEqual(self.report(publication=True)["publication"]["status"], "unavailable")
+        report = self.report(publication=True)
+        report["publication"]["mergeAuthorized"] = True
+        with self.assertRaises(jsonschema.ValidationError):
+            jsonschema.validate(report, json.loads((ROOT / "governance/work-start-report.schema.json").read_text()))
 
     def allocate(self, *args):
         return subprocess.run(["bash", "project/new-ticket.sh", "--workstream", "api", *args],

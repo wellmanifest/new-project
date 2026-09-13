@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
@@ -35,6 +36,8 @@ def git(root, *args, optional=False):
     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
     env["GIT_OPTIONAL_LOCKS"] = "0"
     env["GIT_NO_REPLACE_OBJECTS"] = "1"
+    env["GIT_NO_LAZY_FETCH"] = "1"
+    env["GIT_TERMINAL_PROMPT"] = "0"
     try:
         result = subprocess.run(["git", "-C", str(root), *args], env=env,
                                 capture_output=True, timeout=20)
@@ -151,7 +154,109 @@ def dirty_observation(root):
     return material(sorted(paths)), digest({"status": status, "files": hashes}), sorted(paths)
 
 
-def inspect(root, workstream, requested_paths=(), ticket=None, storage=None):
+def remote_heads(root):
+    """Read advertisements, never fetch or print URLs/credential diagnostics."""
+    result = {}
+    for line in git(root, "ls-remote", "--heads", "origin").splitlines():
+        fields = line.split("\t")
+        if (len(fields) != 2 or
+                not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", fields[0]) or
+                not fields[1].startswith("refs/heads/") or fields[1] in result or
+                git(root, "check-ref-format", fields[1], optional=True) is None):
+            raise ObservationError("Invalid remote advertisement")
+        result[fields[1]] = fields[0]
+    return result
+
+
+def publication_observation(root, entries, target):
+    """Evidence for a UI/CLI, not push permission or protected merge proof."""
+    observation = {
+        "schema": "new-project.publication-observation/v1",
+        "observedAt": datetime.now(timezone.utc).isoformat(),
+        "readOnly": True, "grantsAuthority": False, "remote": "origin",
+        "scope": "origin-heads",
+        "status": "unavailable", "remoteRefsDigest": None,
+        "targetRef": "refs/heads/" + target,
+        "notObservedStages": ["pull-request", "checks", "approval",
+                              "protected-merge", "release", "deployment"],
+        "worktrees": [],
+    }
+
+    def unknown():
+        observation["remoteRefsDigest"] = None
+        observation["worktrees"] = [
+            {"path": e["path"], "branch": e["branch"], "headSha": e["headSha"],
+             "uncommittedPathCount": len(e["allDirtyPaths"]),
+             "remoteContainingRefs": [], "unpublishedCommitCount": None,
+             "sameBranchContainsHead": None, "headReachableFromTarget": None,
+             "nextAction": "observe-remote"} for e in entries]
+        return observation
+
+    try:
+        before = remote_heads(root)
+        shallow = git(root, "rev-parse", "--is-shallow-repository").strip()
+        if shallow not in {"true", "false"}:
+            raise ObservationError("Shallow history observation unavailable")
+        shallow = shallow == "true"
+        known = {sha for sha in before.values()
+                 if git(root, "cat-file", "-e", sha + "^{commit}", optional=True) is not None}
+        unknown_objects = set(before.values()) - known
+        observation["status"] = "partial" if unknown_objects or shallow else "observed"
+        observation["remoteRefsDigest"] = digest(before)
+        containment = {}
+
+        def contains(head, remote_sha):
+            if remote_sha == head:
+                return True
+            if remote_sha not in known:
+                return None
+            # rev-list errors are unavailable evidence, not a negative proof.
+            key = (head, remote_sha)
+            if key not in containment:
+                count = int(git(root, "rev-list", "--count", head, "--not", remote_sha).strip())
+                containment[key] = True if count == 0 else None if shallow else False
+            return containment[key]
+
+        for entry in entries:
+            head = entry["headSha"]
+            refs = sorted(ref for ref, sha in before.items() if contains(head, sha) is True)
+            count = 0 if refs else None
+            if count is None and not unknown_objects and not shallow:
+                count = int(git(root, "rev-list", "--count", head, "--not", *sorted(known)).strip())
+            branch_sha = before.get(entry["branch"])
+            branch_contains = contains(head, branch_sha) if branch_sha else False
+            target_sha = before.get(observation["targetRef"])
+            target_contains = contains(head, target_sha) if target_sha else None
+            dirty_count = len(entry["allDirtyPaths"])
+            if dirty_count:
+                action = "preserve-local-work"
+            elif count is None:
+                action = "observe-remote"
+            elif count:
+                action = "review-push-preconditions"
+            elif branch_contains is not True:
+                action = "reconcile-branch-binding"
+            elif target_contains is not True:
+                action = "observe-integration-evidence"
+            else:
+                action = "observe-review-release-deployment"
+            observation["worktrees"].append({
+                "path": entry["path"], "branch": entry["branch"], "headSha": head,
+                "uncommittedPathCount": dirty_count, "remoteContainingRefs": refs,
+                "unpublishedCommitCount": count, "sameBranchContainsHead": branch_contains,
+                "headReachableFromTarget": target_contains, "nextAction": action,
+            })
+        if before != remote_heads(root):
+            observation["status"] = "changed"
+            return unknown()
+        return observation
+    except (ObservationError, ValueError):
+        observation["status"] = "unavailable"
+        return unknown()
+
+
+def inspect(root, workstream, requested_paths=(), ticket=None, storage=None,
+            observe_publication=False):
     root = Path(git(root, "rev-parse", "--show-toplevel").strip()).resolve()
     manifest = manifest_at(root)
     coordination = manifest["coordination"]
@@ -344,6 +449,8 @@ def inspect(root, workstream, requested_paths=(), ticket=None, storage=None):
                                   "files": {name: hashlib.sha256(value[0]).hexdigest()
                                             for name, value in row["files"].items()}}
                              for key, row in records.items()})
+    if observe_publication:
+        payload["publication"] = publication_observation(root, entries, target)
     payload["observationDigest"] = digest({"refs": refs, "manifest": manifest, "report": payload,
                                           "ticketStorage": mode, "ticketInputDigest": storage_digest})
     if refs != git(root, "for-each-ref", "--format=%(refname) %(objectname)", "refs/heads", "refs/remotes"):
@@ -367,9 +474,12 @@ def main(argv=None):
     parser.add_argument("--path", action="append", default=[])
     parser.add_argument("--allocation-check", action="store_true")
     parser.add_argument("--storage", choices=["files", "sqlite"])
+    parser.add_argument("--observe-publication", action="store_true",
+                        help="Read origin refs twice without fetching; distinguish remote code from integration/release authority.")
     args = parser.parse_args(argv)
     try:
-        payload = inspect(args.root, args.workstream, args.path, args.ticket, args.storage)
+        payload = inspect(args.root, args.workstream, args.path, args.ticket, args.storage,
+                          args.observe_publication)
     except (ObservationError, ActivityError, KeyError, TypeError, ValueError, OSError, StopIteration):
         # No exception content: remote URLs or secret-bearing input never leak.
         print(json.dumps({"schema": SCHEMA, "readOnly": True, "grantsAuthority": False,

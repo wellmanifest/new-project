@@ -56,6 +56,27 @@ hand, add a blanket ignore, or delete evidence merely to make a gate green.
 
 ## Report the achieved stage
 
+### Cheap preflight before expensive validation
+
+First resolve the existing ticket and checkout, dirty paths, actual remote
+publication and the next requested effect. The managed work-start query's
+optional `--observe-publication` reports remote branch evidence without fetch;
+its default local admission and authority boundaries remain unchanged. A local
+branch ahead of `main` or its upstream can already be published on a different
+remote ticket branch. Reconcile that binding, not an imaginary lost push.
+
+Before launching a long publication suite, use the declared publisher's
+read-only preflight, when available, to check ticket/branch identity, accepted
+base, commit-message syntax, delivery mode, configuration and pinned tools.
+Report an unavailable preflight rather than inventing a command or bypassing
+the publisher. Put the cheap checks first; still run required validation and
+recheck exact HEAD and fencing at the effect boundary. There is no new gate.
+
+Report the current phase, elapsed time, evidence timestamp, exact HEAD and
+next bounded action. Do not reset a retry counter or rerun an unchanged
+deterministic failure as if it were progress. Cache only against all evidence
+inputs; a cached test result never becomes trusted approval.
+
 ### Recovery before another attempt
 
 Resolve the emitted diagnostic in the canonical diagnostics registry and use

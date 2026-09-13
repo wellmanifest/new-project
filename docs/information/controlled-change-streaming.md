@@ -3,14 +3,14 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "controlled-change-streaming",
   "kind": "information",
-  "version": 3,
+  "version": 4,
   "title": "Kontrolowane streamowanie i recepty odzyskiwania postępu",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
   "created": "2026-09-13",
   "updated": "2026-09-14",
   "review_after": "2026-10-13",
-  "source_revision": "e162ce9f7af8e8243df8ad9b994a156afb2c6c2f",
+  "source_revision": "12fc394e7e312d8869064bdf8e971c91534ed43f",
   "affected_repositories": ["wellmanifest/new-project"],
   "evidence": [
     "https://github.com/wellmanifest/new-project/blob/a5ffa7dd5d0bb5cafbcefbb180204874787c0758/scripts/branch_lifecycle_check.py",
@@ -52,6 +52,10 @@ patch-id ani zgodność samego HEAD. Brudne/aktywne worktree i WIP zachowują
 dotychczasowe kontrole. To nie jest nowy tryb push, dowód aktualnego zachowania,
 zamknięcie ticketu ani zgoda na cleanup.
 
+Ticket 226 dodaje **działający, opcjonalny odczyt publikacji**, opisany poniżej.
+Nie dodaje publikatora, dashboardu ani uprawnień i nie wymaga sieci w domyślnym
+admission. Odczyt można wykorzystać jako wejście do CLI/Web wykonawcy.
+
 Publikacja tej poprawki oznacza zmianę źródeł, nie nowe wydanie standardu.
 Próba aktualizacji VERSION ujawniła literalne `0.20.27` w testach adopcji
 i walidatora. Kolejny zakres wydania musi najpierw usunąć zależność testów od
@@ -76,6 +80,43 @@ ale nie oznacza, że obecny publikator wellmanifest już takie tryby obsługuje.
 [ochrona branchy](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
 
 <!-- docs:section content -->
+## Dostępne teraz: jeden odczyt zamiast zgadywania stanu push
+
+```bash
+python3 scripts/work_start_check.py --root . --workstream governance \
+  --ticket ticket-226 --observe-publication
+```
+
+Adopter używa `.governance/work_start_check.py` oraz własnego deklarowanego
+workstreamu i ticketu. Pole `publication` ma wersję
+`new-project.publication-observation/v1` i adres schematu
+`urn:wellmanifest:new-project:schema:work-start-report:v1#publicationObservation`.
+Przenosi czas obserwacji, digest refów, HEAD każdego worktree, liczbę brudnych
+ścieżek, liczbę commitów nieobecnych na obserwowanych branchach `origin`,
+branche zawierające HEAD, zgodność brancha oraz ancestry targetu. Ten sam
+model jest niezależny od języka konsumenta; CLI/Web nie powinny odtwarzać
+tych reguł osobnymi heurystykami.
+
+Przykład rozstrzygnięcia: `unpublishedCommitCount=0`,
+`sameBranchContainsHead=false`, `headReachableFromTarget=false` oznacza kod
+wysłany na inny branch, a nie wykonany merge lub utracony push. Brudne ścieżki
+nadal wymagają zachowania. Wyliczenie obejmuje tylko `origin-heads`, nie tagi,
+ukryte refy PR ani inne serwery. `null` oznacza brak dowodu, nigdy zero.
+
+Odczyt nie pobiera obiektów ani nie zmienia refów/indeksu. Niepełne obiekty
+i shallow clone dają `partial`, błąd remote — `unavailable`, zmiana ponownej
+reklamy refów — `changed` i unieważnienie zdalnych faktów. Wynik nie jest
+atomowym snapshotem serwera. Pełny raport może zawierać prywatne ścieżki
+i nazwy branchy; przechowuj go poza historią repo, a widok współdzielony
+minimalizuj. Brak dostępu do GitHub nie blokuje lokalnego admission.
+
+PR, checki, approval, chroniony merge, release i deploy są jawnie wymienione
+jako **niezaobserwowane**, a `grantsAuthority=false`. Ich stan wymaga własnych
+receiptów i aktualnego odczytu przez uprawnionego wykonawcę. Wersję helpera
+i zamkniętego schematu przypinaj razem — stary schemat nie przyjmie nowego
+opcjonalnego pola. Testy obejmują rzeczywiste lokalne remotes i płytki klon,
+błędne/zmienne odpowiedzi oraz niezmienność indeksu i refów.
+
 ## Recepta zamiast samego STOP
 
 Przed kolejną próbą zidentyfikuj konkretny skutek i zastosuj istniejący runbook.
@@ -150,10 +191,12 @@ nadpisanie cudzej pracy.
 
 ## Pozostałe implementacje
 
-1. **`wellmanifest.change-flow/v1`** — dodać mały DSL procesu. Każdy flow ma
-   identyfikator, repository scope, wejściowe lease URI, zależności, strategię
-   deeskalacji, idempotency key i oczekiwany receipt. Walidator musi odrzucać
-   cykle, niejednoznaczne scope i retry bez idempotency key.
+1. **Graf naprawy z istniejących kontraktów** — komponować remediation intent,
+   rejestr operacji i pending effects; nie tworzyć konkurencyjnego DSL/ticket
+   store. Każdy flow wiąże repository scope, lease URI, zależności, strategię
+   deeskalacji, idempotency key i oczekiwany receipt. Walidacja odrzuca cykle,
+   niejednoznaczne scope i retry bez idempotency key. Nowa wersja kontraktu
+   wymaga wykazanej luki i migracji, nie samej potrzeby kolejnego widoku.
 2. **Atomowa alokacja workspace** — rozszerzyć registered allocator tak, aby
    jeden receipt zawierał ticket, branch, kanoniczny worktree path, lease URI i
    fencing token. CLI nie może samodzielnie zgadywać numeru lub tworzyć branch
@@ -197,8 +240,10 @@ adopterów przez sam merge standardu.
 <!-- docs:section next_actions -->
 ## Kolejność małych zmian
 
-1. Dostarczyć tę naprawę nawigacji; przy adopcji przeliczyć cały zarządzany
-   pakiet z opublikowanej rewizji, bez ręcznego edytowania kopii `.governance`.
+1. Przy adopcji odczytu publikacji przeliczyć cały zarządzany pakiet
+   z opublikowanej rewizji, bez ręcznego edytowania kopii `.governance`.
+   Najpierw usunąć rozproszone literały wersji w testach wydania; dopiero
+   potem canary i kontrolowany rollout. Merge źródeł nie oznacza adopcji.
 2. W `new-project` uzgodnić efektowy profil checkpoint/merge/release z
    `wellmanifest/git-lifecycle` oraz jego wykonawcą Goal. Najpierw test canary:
    funkcjonalny FAIL pozostaje widoczny w draft; sekret, obcy scope, stale lease
@@ -214,6 +259,14 @@ adopterów przez sam merge standardu.
 5. Wykonawca utrwala pending effects i wynik obserwacji przed retry. Testy:
    utrata odpowiedzi po udanym push, restart, zmiana HEAD, konflikt writera,
    opóźniony status CI i nieudany deploy. Włączenie obowiązku dopiero po canary.
+6. W Taskand dodać wspólny widok CLI/Web: osobny stan local/push/PR/checks/
+   review/merge/release/deploy, exact HEAD, wiek dowodu, właściciel następnego
+   kroku, kod błędu i dostępna recepta. DAG pokazuje zależności, nie pozorny
+   procent ukończenia. Integracja tego UI pozostaje do wykonania w Taskand.
+7. W Goal wykonywać tani preflight tożsamości ticketu/brancha, formatu
+   commitów, konfiguracji i pinów przed długim zestawem testów. Mierzyć czas
+   faz i pokazywać heartbeat. Nie pomijać testów ani odczytu exact HEAD
+   przed efektem; nie ponawiać niezmienionego błędu deterministycznego.
 
 Mierniki: czas od pierwszej materialnej zmiany do potwierdzonego push, wiek
 niewypchniętej delty, liczba identycznych ponowień, czas oczekiwania na każdą
