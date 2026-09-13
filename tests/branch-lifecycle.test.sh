@@ -85,6 +85,44 @@ test "$status" -eq 1
 grep -q '^GOV-BRANCH-LIFECYCLE-003 ERROR:' "$fixture/malformed.out"
 grep -Fq 'snapshot fields are invalid' "$fixture/malformed.out"
 
+# Canonical navigation must follow the emitted code, not a remembered label.
+# These two cases used to have their meanings exchanged in diagnostics.json.
+python3 - "$repo_root" <<'PY'
+import importlib.util
+import json
+from pathlib import Path
+import sys
+
+root = Path(sys.argv[1])
+spec = importlib.util.spec_from_file_location("branch_navigation", root / "scripts/branch_lifecycle_check.py")
+runtime = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = runtime
+spec.loader.exec_module(runtime)
+catalog = json.loads((root / "governance/diagnostics.json").read_text())["codes"]
+snapshot = {"repository": "wellmanifest/example", "defaultBranch": "main",
+            "deleteBranchOnMerge": True, "branches": ["main"], "openPullRequests": []}
+cases = [
+    ("GOV-BRANCH-LIFECYCLE-001", {**snapshot, "deleteBranchOnMerge": False}),
+    ("GOV-BRANCH-LIFECYCLE-002", {**snapshot, "branches": ["main", "retained-work"]}),
+    ("GOV-BRANCH-LIFECYCLE-003", {**snapshot, "openPullRequests": [
+        {"number": 7, "headRepository": "wellmanifest/example", "headRef": "missing"}]}),
+]
+managed = json.loads((root / "governance/package-manifest.json").read_text())["files"]
+for code, observation in cases:
+    findings = runtime.evaluate(observation)
+    assert len(findings) == 1 and findings[0].code == code, findings
+    assert findings[0].message == catalog[code]["message"], (code, findings[0], catalog[code])
+    assert findings[0].severity == "error", "This navigation fix cannot relax a gate"
+    report = runtime.report_payload(findings)
+    assert report["status"] == "failed" and report["summary"]["errors"] == 1
+    path = catalog[code]["documentation"]
+    assert code in (root / path).read_text(), code
+    assert any(item["source"] == path and item["target"] == ".governance/" + path
+               and item["strategy"] == "managed" for item in managed), path
+assert runtime.evaluate(snapshot) == []
+print("branch diagnostic navigation: PASS (3 emitted cases, managed runbook, unchanged refusals)")
+PY
+
 python3 - "$validator" <<'PY'
 import re
 import sys

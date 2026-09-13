@@ -55,6 +55,28 @@ hand, add a blanket ignore, or delete evidence merely to make a gate green.
 
 ## Report the achieved stage
 
+### Recovery before another attempt
+
+Resolve the emitted diagnostic in the canonical diagnostics registry and use
+its managed runbook. In particular, branch lifecycle `002` means a branch
+without an open PR, whereas `003` means a missing, malformed or inconsistent
+snapshot. Neither finding grants cleanup authority. Read closed PRs and exact
+refs before deciding whether delivery, observation or reconciliation is needed.
+
+Every recovery answer names the next bounded action, its existing authority,
+the verification that completes it and what remains preserved if it fails.
+Reuse the current ticket, checkout and pending-effect journal. A repeated
+deterministic failure with unchanged inputs calls for diagnosis or a changed
+prerequisite, not another identical effect, fresh ticket or empty PR. A timed-out
+remote operation is observed before retry; a matching remote head means the
+push is already present, not that its PR was merged.
+
+Run the gate appropriate to the adopted delivery path; this guidance does not
+create a draft-push exemption or waive a failed required check. Continue safe
+diagnosis and authorized disjoint work while the dependent effect waits.
+
+### Evidence by stage
+
 Distinguish source edited, tests passed, commit created, PR open, trusted merge,
 deployment applied and public behavior verified. Each claim needs evidence
 from that stage. A local preview, HTTP 200, an unchanged version number, or a
