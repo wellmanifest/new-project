@@ -49,6 +49,22 @@ task -> registered clone observation
    owner, fencing and the governance gate at the effect boundary. A saved
    report is evidence, never a replayable admission token.
 
+For a branch without a registered worktree, distinct commit IDs alone are not
+a competing delta. Admission compares the complete Git tree of **every**
+commit unique to that branch with target trees strictly after the common
+ancestor. A new intentional rollback cannot reuse a pre-divergence snapshot.
+If all snapshots already occur there, the branch remains in `uncheckedBranches`
+but does not block admission. This narrowly handles preserved pre-rewrite
+copies without renaming or deleting them. Matching HEAD alone, matching paths,
+or matching patch IDs is insufficient. An unmatched intermediate commit or
+later new work still routes to reconciliation. Missing history fails closed.
+
+Registered checkout observations, dirty paths, active scopes and WIP limits
+are unchanged. Historical content inclusion is not current behavior, owner
+consent, a merge receipt, ticket closure or permission to discard history.
+Use the normal reconciliation process for cleanup. Target-tree indexing is
+local to one observation; a changed target cannot reuse an earlier result.
+
 ## Verification
 
 Report `new-project.work-start-report/v1` uses closed schema

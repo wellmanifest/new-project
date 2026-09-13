@@ -29,6 +29,7 @@ observation. It grants no new Git, deployment, credential or cleanup authority.
 | Same authorized scope, routine reversible fix and required tests | Proceed within the ticket. |
 | Protected delivery is part of the authorized outcome | Invoke the declared validator/controller; its trusted evidence still governs merge/apply. |
 | Detached snapshot shares the writer's HEAD and has no competing source delta | Preserve it; common history alone is not a second writer. |
+| Branch without a worktree has every unique commit tree present in target history after divergence | Preserve the branch; managed admission can exclude that historical copy from competing deltas, without closing or discarding it. |
 | Real competing dirty changes or active overlapping intent | Stop the affected write and resolve ownership; keep disjoint work progressing. |
 | Missing or contradictory evidence | Report uncertainty, gather bounded observations; do not infer permission. |
 | CI capacity, credentials or another external prerequisite is unavailable | Persist the exact blocker and remaining stages; do not manufacture successful checks. |

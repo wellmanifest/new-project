@@ -6,6 +6,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- Avoid false work-admission conflicts from unregistered historical branches only when every unique complete commit tree occurs in observed target history after divergence. Preserve refs, new rollback intent, active-worktree protection, WIP limits and cleanup authority; matching HEAD or patch IDs alone is insufficient [ticket-225].
+
 ## [0.20.27] - 2026-09-13
 
 ### Fixed
