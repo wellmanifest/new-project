@@ -65,6 +65,47 @@ consent, a merge receipt, ticket closure or permission to discard history.
 Use the normal reconciliation process for cleanup. Target-tree indexing is
 local to one observation; a changed target cannot reuse an earlier result.
 
+### Optional publication observation
+
+Add `--observe-publication` to the same query to read live `origin` branch
+advertisements, without fetch, ref updates, staging or lazy object downloads.
+For example, from an adopted checkout:
+
+```bash
+python3 .governance/work_start_check.py --root . --workstream integration \
+  --ticket ticket-001 --observe-publication
+```
+
+Use the actual declared workstream and ticket. Without this flag the query
+remains local and its admission behavior is unchanged. The optional field is
+`new-project.publication-observation/v1`, addressed by
+`urn:wellmanifest:new-project:schema:work-start-report:v1#publicationObservation`.
+Use the helper and schema from the same immutable pin; an older closed schema
+does not accept the new opt-in field. This is an observation, not a new gate.
+
+| Field per registered checkout | Meaning |
+| --- | --- |
+| `uncommittedPathCount` | Staged, unstaged and untracked paths, including tracking carriers. |
+| `unpublishedCommitCount` | Commits reachable from HEAD but not from any observed `origin` branch; `null` when not proven. |
+| `remoteContainingRefs` | Advertised branch refs proven to contain the complete HEAD history. |
+| `sameBranchContainsHead` | Whether the remote branch with the same name contains HEAD; separate from publication on another branch. |
+| `headReachableFromTarget` | Git ancestry only, never protected merge, review or release evidence. |
+| `nextAction` | Read-only recommendation, not effect authorization. |
+
+Scope is explicitly `origin-heads`: other remotes, tags and hidden PR refs are
+not queried. Being ahead of local `main` or a same-name upstream is not proof
+that code is absent from GitHub. Shallow history or missing advertised objects
+produce `partial`; exact HEAD/ancestry evidence can still prove publication,
+but incomplete history cannot prove a nonzero unpublished count. Unavailable
+or malformed remote data produces `unavailable`; a changed second advertisement
+produces `changed` and invalidates remote-derived facts. `null` is not zero.
+No prompt for credentials or Git stderr is exposed in the report. This is a
+bounded observation, not an atomic remote snapshot or a cross-machine lock.
+
+The result explicitly lists PR, checks, approval, protected merge, release and
+deployment as unobserved stages. Preserve dirty work regardless of remote
+status. Gather those stages' own exact-head receipts before claiming DONE.
+
 ## Verification
 
 Report `new-project.work-start-report/v1` uses closed schema
@@ -90,7 +131,7 @@ uses the whole workstream. A disjoint scope does not bypass an occupied WIP slot
 Revalidate admission and fencing if the eventual intent expands beyond this scope.
 
 This is not a global scheduler or an editor lock. Independent clones, live
-GitHub state, processes and writer authority require separate observations.
+GitHub PR/check/release state, processes and writer authority require separate observations.
 The query does not fetch or verify a lease. Recheck it at the effect boundary;
 the allocator's ID lock does not replace writer fencing. Unborn seed bootstrap
 retains its separate contract, not a development-gate exemption.

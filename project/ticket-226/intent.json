@@ -1,0 +1,58 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-226",
+  "summary": "Observe publication evidence separately from admission and delivery authority",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-226/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "docs/AGENT_DECISIONS.md",
+    "docs/information/controlled-change-streaming.md",
+    "error/GOV-WORK-START.md",
+    "governance/work-start-report.schema.json",
+    "scripts/work_start_check.py",
+    "tests/work_start_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "12fc394e7e312d8869064bdf8e971c91534ed43f",
+    "targetBranch": "main",
+    "outcome": "Add an opt-in read-only publication observation to the managed work-start query, separating dirty work, remote commit reachability, branch binding and target ancestry, with actionable uncertainty and recovery guidance.",
+    "nonGoals": ["No automatic push, fetch, ref mutation, branch cleanup, merge approval or deployment.", "No claim of release/PR state from Git ancestry; no new mandatory gate or fleet adoption."],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {"maxImplementationFiles": 6, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend the existing managed observer with an optional, separately versioned nested publication projection and closed schema. Default admission behavior remains unchanged. Bind two live remote ref observations and local Git evidence; missing or changed evidence is UNKNOWN, never permission.",
+      "components": [
+        {"name": "observation", "paths": ["scripts/work_start_check.py", "governance/work-start-report.schema.json", "tests/work_start_test.py"]},
+        {"name": "recovery", "paths": ["error/GOV-WORK-START.md", "docs/AGENT_DECISIONS.md"]},
+        {"name": "documentation", "paths": ["docs/information/controlled-change-streaming.md"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Optional --observe-publication and new-project.publication-observation/v1 inside the existing work-start report"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Omit the opt-in flag or revert this bounded source change; no repository or remote state is mutated by the observer."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["python3 tests/work_start_test.py"], "evidence": "Real local bare-remote fixtures distinguish published-on-another-branch, unique local commits and target ancestry."},
+      {"criterion": "AC-02", "commands": ["python3 tests/work_start_test.py"], "evidence": "Unavailable/moving remotes, missing objects, dirty files and malformed outputs cannot report a false completed publication."},
+      {"criterion": "AC-03", "commands": ["python3 tests/work_start_test.py", "git diff --check"], "evidence": "Default report compatibility, closed schema, no-write checks and canonical docs are verified; Taskand is inspected read-only."}
+    ]
+  }
+}
