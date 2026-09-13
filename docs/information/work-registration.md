@@ -3,14 +3,14 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "work-registration",
   "kind": "information",
-  "version": 1,
+  "version": 2,
   "title": "Durable project-owned work registration",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
   "created": "2026-09-13",
   "updated": "2026-09-13",
   "review_after": "2026-10-13",
-  "source_revision": "51ea009bcbff13607b4c2778abcd1bae9a15f0ca",
+  "source_revision": "e9981f2c4067f68037116e3662f5ad2e51467fed",
   "affected_repositories": ["wellmanifest/new-project"],
   "evidence": [
     "https://github.com/wellmanifest/new-project/issues/330",
@@ -238,3 +238,15 @@ unavailable, require a deployed OneDev profile with equivalent checks and an
 independent Validator; missing local coverage remains a deployment gap. Report
 source publication, installation, capability verification, controller enforcement
 and fleet adoption as separate observed stages.
+
+## Version 2 — preserve inventory history
+
+A reproduced journal transition on source `e9981f2c4067f68037116e3662f5ad2e51467fed` silently removed an unknown orphan from the next inventory and changed the report from pending to complete. [Issue #337](https://github.com/wellmanifest/new-project/issues/337) records this consistency defect.
+
+An observed checkout now keeps its opaque inventory ID across adjacent snapshots. Once its path or branch is known, neither may change or become null. A null observation can become known while retaining the same ID; dirty state can be refreshed normally. Relabelling an existing checkout does not establish recovery or a new identity.
+
+An inventory entry may disappear only when the previous snapshot already bound its exact known path and branch to a request, and the current snapshot retains that request's ticket/branch/path with a terminal state and external terminal receipt. An active or blocked checkout cannot disappear. A new terminal binding created in the same snapshot cannot retroactively retire an orphan. Unknown or unregistered observations must first be reconciled and registered; otherwise the transition is invalid with REG-INVENTORY. Known identity changes or relabelling use REG-IDENTITY.
+
+The unchanged v1 schema carries these observations. This checker verifies consistency only: the external controller must still authenticate the terminal receipt, verify ownership, archive and restore evidence, and authorize any actual Git effect. The consistency result never grants deletion authority. Known path/branch migration and inventory-ID replacement need a future explicit evidence protocol; v1 does not silently accept them. Initial snapshots cannot prove an earlier inventory, so the controller must prevent journal reset and verify the complete chain.
+
+Regression coverage includes lost external/canonical orphans, ID substitution, lost blocked work, changed or erased known paths and branches, resolution of unknown observations, cancellation and merge retirement, and terminal history retention. This source repair does not install the registration controller or package it into adopter enforcement.
