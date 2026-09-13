@@ -15,7 +15,9 @@
     "VERSION",
     "CHANGELOG.md",
     "governance/manifest.hub.json",
-    "governance/manifest.default.json"
+    "governance/manifest.default.json",
+    "tests/governance-validator.test.sh",
+    "tests/adoption-lock.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -36,14 +38,14 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 6,
+      "maxImplementationFiles": 8,
       "maxAffectedComponents": 1,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Remove the ambiguous diagnostic substring exception and its unused staged-drift helpers. The explicit legacy Goal adapter preserves all nonzero exits. Existing ordinary hook local-pin-only behavior remains covered by its tests. Include the 0.20.27 release projections in this material fix so the official adopter can consume a final canonical release. Fresh scope observation found no conflicting paths; the only active ticket is this one.",
+      "decision": "Remove the ambiguous diagnostic substring exception and its unused staged-drift helpers. The explicit legacy Goal adapter preserves all nonzero exits. Existing ordinary hook local-pin-only behavior remains covered by its tests. Include the 0.20.27 release projections in this material fix so the official adopter can consume a final canonical release. Fresh scope observation found no conflicting paths; the only active ticket is this one. Reconciled the legacy ticket-206 test-file signal: its governance-validator test content is byte-identical to independently merged PR315 head f0ab755, an ancestor of main. The proposed delta only updates version fixtures; preserve that branch and all other outstanding criteria.",
       "components": [
         {
           "name": "goal-refusal-boundary",
@@ -53,7 +55,9 @@
             "VERSION",
             "CHANGELOG.md",
             "governance/manifest.hub.json",
-            "governance/manifest.default.json"
+            "governance/manifest.default.json",
+            "tests/governance-validator.test.sh",
+            "tests/adoption-lock.test.sh"
           ]
         }
       ],
