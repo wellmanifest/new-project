@@ -11,7 +11,11 @@
   "allowedPaths": [
     "scripts/precommit_standard_update.py",
     "tests/precommit-standard-update.test.sh",
-    "project/ticket-221/**"
+    "project/ticket-221/**",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -32,20 +36,24 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 2,
+      "maxImplementationFiles": 6,
       "maxAffectedComponents": 1,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Remove the ambiguous diagnostic substring exception and its unused staged-drift helpers. The explicit legacy Goal adapter preserves all nonzero exits. Existing ordinary hook local-pin-only behavior remains covered by its tests.",
+      "decision": "Remove the ambiguous diagnostic substring exception and its unused staged-drift helpers. The explicit legacy Goal adapter preserves all nonzero exits. Existing ordinary hook local-pin-only behavior remains covered by its tests. Include the 0.20.27 release projections in this material fix so the official adopter can consume a final canonical release. Fresh scope observation found no conflicting paths; the only active ticket is this one.",
       "components": [
         {
           "name": "goal-refusal-boundary",
           "paths": [
             "scripts/precommit_standard_update.py",
-            "tests/precommit-standard-update.test.sh"
+            "tests/precommit-standard-update.test.sh",
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json"
           ]
         }
       ],

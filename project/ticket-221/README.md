@@ -15,3 +15,5 @@ SESSION_EXECUTION_AUTHORIZATION: The user requested continued standards and Mask
 No claimed installer/fleet rollout or change to the ordinary hook freshness policy.
 
 Validation: the changed regression failed on the original adapter. The complete standard-update shell suite now passes, including 3 local-pin hook tests, authority refusal, stderr/stdout diagnostic collision (exit 99), missing Goal, Koru delegation, invalid configuration and managed-drift cases. Governance passed with zero findings. Protected review and adopter rollout remain pending.
+
+Release scope: include VERSION, both governance manifest versions and CHANGELOG for 0.20.27 under the user's standing release/update instruction. Official adoption requires a final canonical release; no separate release-only ticket is created.
