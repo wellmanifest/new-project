@@ -150,6 +150,7 @@ class AllocationTests(unittest.TestCase):
     def test_linked_worktree_and_legacy_allocator_share_reserved_ids(self):
         self.create_ready_ticket()
         self.assertEqual(self.allocate().returncode, 3, 'active branch must reuse its ticket')
+        self.update('README.md', '# Ticket\n\n- **Status**: BLOCKED\n', 2)
         linked = Path(self.temp.name) / 'linked'
         self.git('worktree', 'add', '--relative-paths', '-qb', 'preparation', str(linked), self.base)
         # New helper is staged in the fixture seed, so the linked tree gets the
@@ -159,12 +160,28 @@ class AllocationTests(unittest.TestCase):
         self.assertEqual(len(ticket_input.configured_records(linked)), 2)
         self.assertFalse((linked / 'project.sqlite').exists())
         self.assertFalse((linked / 'project/ticket-002').exists())
+        self.assertEqual(self.allocate(linked).returncode, 3, 'second ticket reserves the slot too')
+        ticket_storage.invoke(self.runtime, PIN, 'update', '--repository', str(self.root),
+            '--ticket', 'ticket-002', '--file', 'README.md', '--expected-revision', '1',
+            content='# Ticket\n\n- **Status**: BLOCKED\n')
         # Even if the compatibility cache is lost, a file-mode allocator sees
         # IDs reserved only in SQLite and cannot reuse one.
         (self.root / '.git/new-project-ticket-high-water').unlink()
         result = self.allocate(linked, '--storage', 'files')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue((linked / 'project/ticket-003/intent.json').exists())
+
+    def test_scoped_sqlite_intent_retains_admitted_paths(self):
+        result = self.allocate(None, '--path', 'src/new/**', '--path', 'src/new/**')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        intent = json.loads(ticket_input.read_file(self.root, 'ticket-001', 'intent.json'))
+        self.assertEqual(intent['allowedPaths'], ['project/ticket-001/**', 'src/new/**'])
+        self.assertFalse((self.root / 'project/ticket-001').exists())
+
+    def test_invalid_scope_does_not_reserve_sqlite_identity(self):
+        self.assertNotEqual(self.allocate(None, '--path', '../outside/**').returncode, 0)
+        self.assertFalse(self.database.exists())
+        self.assertFalse((self.root / '.git/new-project-ticket-high-water').exists())
 
 
 class RuntimeBoundaryTests(unittest.TestCase):

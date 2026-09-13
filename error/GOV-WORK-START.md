@@ -63,6 +63,16 @@ lock before reserving a number. A rejected attempt leaves no new ticket,
 high-water reservation or worktree. The query exit code alone does not
 authorize development; REUSE_EXISTING also requires the current writer lease.
 
+The allocator accepts repeatable `--path` arguments for explicit implementation
+scope, for example `./project/new-ticket.sh --workstream api --path 'api/new/**'`.
+Quote glob patterns: the shell must not expand them. The managed storage bridge
+validates repository-relative paths against the gate's workstream ownership
+predicate before reservation. Malformed, unowned and tracking-only scopes fail.
+The exact arguments reach live admission under the allocation lock; the admitted
+paths are retained in file and SQLite intents. Without `--path`, admission still
+uses the whole workstream. A disjoint scope does not bypass an occupied WIP slot.
+Revalidate admission and fencing if the eventual intent expands beyond this scope.
+
 This is not a global scheduler or an editor lock. Independent clones, live
 GitHub state, processes and writer authority require separate observations.
 The query does not fetch or verify a lease. Recheck it at the effect boundary;

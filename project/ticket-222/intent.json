@@ -1,0 +1,102 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-222",
+  "summary": "Preserve bounded allocator scope and SQLite admission (#330 AC-03)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/new-ticket.sh",
+    "scripts/ticket_storage.py",
+    "tests/work_start_test.py",
+    "tests/sqlite-allocation.test.py",
+    "error/GOV-WORK-START.md",
+    "project/ticket-222/**",
+    "project/TICKETS.md",
+    "TODO.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md",
+    ".env"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6d83b42f79058f95e265df47092dcfc2c5f3b56a",
+    "targetBranch": "main",
+    "outcome": "Explicit allocator paths are checked against workstream ownership before ID reservation, passed to fresh admission and retained in file and SQLite intents.",
+    "nonGoals": [
+      "No bypass of work-start admission, lease fencing, locking or protected review.",
+      "No changes to other worktrees or ticket-198.",
+      "No release, adopter update or durable-registration validator change in this slice."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add repeatable --path to the allocator, reuse canonical pattern coverage through the existing storage bridge, preserve conservative omitted-scope behavior, and fix SQLite regression fixture reservation lifecycle without weakening WIP.",
+      "components": [
+        {
+          "name": "allocator",
+          "paths": [
+            "project/new-ticket.sh",
+            "scripts/ticket_storage.py"
+          ]
+        },
+        {
+          "name": "regressions",
+          "paths": [
+            "tests/work_start_test.py",
+            "tests/sqlite-allocation.test.py"
+          ]
+        },
+        {
+          "name": "runbook",
+          "paths": [
+            "error/GOV-WORK-START.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [
+        "Allocated intent includes the admitted implementation paths in both storage modes."
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this bounded allocator/bridge/test/runbook changeset; existing ticket identities and content remain intact."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/work_start_test.py",
+          "python3 tests/sqlite-allocation.test.py"
+        ],
+        "evidence": "Pending exact-head checks; SQLite interop uses independently pinned installed Registry runtime."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh --base 6d83b42f79058f95e265df47092dcfc2c5f3b56a --head HEAD --actor agent"
+        ],
+        "evidence": "Pending protected publication."
+      }
+    ]
+  }
+}

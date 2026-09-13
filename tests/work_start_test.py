@@ -55,7 +55,8 @@ class WorkStartTest(unittest.TestCase):
         adopted = self.root / ".governance"
         adopted.mkdir()
         (adopted / "manifest.json").write_text(json.dumps(self.manifest))
-        for filename in ("work_start_check.py", "ticket_activity.py", "worktree_overlap_check.py", "ticket_input.py"):
+        for filename in ("work_start_check.py", "ticket_activity.py", "worktree_overlap_check.py", "ticket_input.py",
+                         "ticket_storage.py", "governance_check.py"):
             shutil.copy2(ROOT / "scripts" / filename, adopted / filename)
         for filename in ("work-classification.dsl.json", "ticket-activity.json"):
             shutil.copy2(ROOT / "governance" / filename, adopted / filename)
@@ -92,6 +93,49 @@ class WorkStartTest(unittest.TestCase):
 
     def test_clean_primary_is_candidate_not_authority(self):
         self.assertEqual(self.report()["route"], "NEW_TICKET_CANDIDATE")
+
+    def allocate(self, *args):
+        return subprocess.run(["bash", "project/new-ticket.sh", "--workstream", "api", *args],
+                              cwd=self.root, capture_output=True, text=True)
+
+    def assert_no_allocation(self):
+        self.assertFalse((self.root / "project/ticket-001").exists())
+        self.assertFalse((self.root / ".git/new-project-ticket-high-water").exists())
+        self.assertFalse((self.root / ".git/new-project-ticket-allocation.lock").exists())
+
+    def test_allocator_scope_preserves_disjoint_inactive_work(self):
+        peer = self.sibling(status="BLOCKED")
+        self.git(peer, "add", "project/ticket-001")
+        self.git(peer, "commit", "-m", "Reserve peer identity")
+        (peer / "api/a.txt").write_text("unpublished peer work\n")
+        self.assertEqual(self.allocate().returncode, 3, "omitted scope must stay conservative")
+        result = self.allocate("--path", "api/new/**", "--path", 'api/quoted "name".txt',
+                               "--path", "api/new/**")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        intent = json.loads((self.root / "project/ticket-002/intent.json").read_text())
+        material = start.material(intent["allowedPaths"])
+        self.assertEqual(material, ['api/new/**', 'api/quoted "name".txt'])
+        self.assertEqual((peer / "api/a.txt").read_text(), "unpublished peer work\n")
+
+    def test_allocator_rejects_invalid_unowned_and_empty_material_scope(self):
+        for path in ("../api/a", "/api/a", "api/../ui/a", "api\\a", "api/./a", "api//a",
+                     "ui/**", "**", "TODO.md", "project/ticket-001/**", "api/\nname", ""):
+            with self.subTest(path=path):
+                self.assertNotEqual(self.allocate("--path", path).returncode, 0)
+                self.assert_no_allocation()
+
+    def test_allocator_scoped_overlap_and_wip_still_reject(self):
+        self.sibling(paths=["api/old/**"])
+        for path in ("api/old/**", "api/new/**"):
+            for extra in ((), ("--force-new",)):
+                result = self.allocate("--path", path, *extra)
+                self.assertEqual(result.returncode, 3, result.stderr)
+                self.assert_no_allocation()
+
+    def test_allocator_scope_requires_managed_bridge(self):
+        (self.root / ".governance/ticket_storage.py").unlink()
+        self.assertNotEqual(self.allocate("--path", "api/new/**").returncode, 0)
+        self.assert_no_allocation()
 
     def test_sibling_active_scope_before_first_source_edit(self):
         peer = self.sibling()
