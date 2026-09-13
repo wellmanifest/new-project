@@ -21,6 +21,12 @@ import jsonschema
 
 
 class WorkStartTest(unittest.TestCase):
+    def test_work_registration_contract(self):
+        # CI already invokes this suite: keep registration regressions covered
+        # alongside admission without creating a second workflow test list.
+        subprocess.run([sys.executable, str(ROOT / "tests/work-registration.test.py")],
+                       check=True, capture_output=True, text=True)
+
     def git(self, root, *args):
         env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
         return subprocess.run(["git", "-C", str(root), *args], env=env, check=True,

@@ -7,3 +7,5 @@
 - [Agent host activation](information/agent-host-activation.md) — local checks, preserved instructions and enforcement limits.
 
 - [SQLite ticket inputs](information/sqlite-ticket-input.md) — local database validation and independently pinned CI input, without Git carrier materialization.
+
+- [Durable project-owned work registration](information/work-registration.md) — Planfile dependency, waiting intake, Issue/worktree/PR bindings and recovery contract.
