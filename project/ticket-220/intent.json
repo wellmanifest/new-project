@@ -1,0 +1,101 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-220",
+  "summary": "Require durable per-project work registration (GitHub #330)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "scripts/work_registration.py",
+    "governance/work-registration.schema.json",
+    "docs/information/work-registration.md",
+    "tests/work-registration.test.py",
+    "project/ticket-220/**",
+    "tests/work_start_test.py",
+    "docs/README.md",
+    "docs/information/sqlite-ticket-input.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "51ea009bcbff13607b4c2778abcd1bae9a15f0ca",
+    "targetBranch": "main",
+    "outcome": "A normative per-project Planfile and work-registration contract with a deterministic read-only checker and regressions exposes missing Issue, worktree, lease, PR and recovery bindings without granting execution authority.",
+    "nonGoals": [
+      "No daemon, GitHub writer, scheduler or second ticket-ID allocator in wellmanifest.",
+      "No claim that the package, Goal controller or existing adopters already enforce this new contract.",
+      "No modification or deletion of historical branches or foreign ticket-198 work."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Define a closed portable registration snapshot with a pinned repository-scoped Planfile installation, stable request identity, phase-aware bindings, durable idempotent recovery effects, and non-authoritative validation. Product controllers remain HOME in semcod/subactor; cross-boundary observations must be acquired independently. Documentation delivery also indexes the new canonical document and normalizes a pre-existing invalid relative evidence reference in the SQLite document to its immutable source URL.",
+      "components": [
+        {
+          "name": "registration-contract",
+          "paths": [
+            "governance/work-registration.schema.json",
+            "scripts/work_registration.py"
+          ]
+        },
+        {
+          "name": "registration-tests",
+          "paths": [
+            "tests/work-registration.test.py",
+            "tests/work_start_test.py"
+          ]
+        },
+        {
+          "name": "registration-specification",
+          "paths": [
+            "docs/information/work-registration.md",
+            "docs/README.md",
+            "docs/information/sqlite-ticket-input.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the additive contract/checker/tests/documentation; no production controller or adopter is changed."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/work-registration.test.py",
+          "python3 tests/work_start_test.py"
+        ],
+        "evidence": "Pending fixtures for waiting work, exact repository bindings, missing/duplicate identities, stale leases and PR heads, recovery and orphan preservation."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh --base 51ea009bcbff13607b4c2778abcd1bae9a15f0ca --head HEAD --format json"
+        ],
+        "evidence": "Pending deterministic governance and protected publication."
+      }
+    ]
+  }
+}
