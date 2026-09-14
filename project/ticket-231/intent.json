@@ -1,0 +1,138 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-231",
+  "summary": "Validate data-impact ownership and lossless snapshot migration contracts",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P0",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "CHANGELOG.md",
+    "TODO.md",
+    "VERSION",
+    "docs/README.md",
+    "docs/information/snapshot-migration.md",
+    "error/GOV-SNAPSHOT-MIGRATION.md",
+    "governance/diagnostics.json",
+    "governance/intent.schema.json",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/package-manifest.json",
+    "governance/snapshot-migration.schema.json",
+    "project/TICKETS.md",
+    "project/ticket-231/**",
+    "scripts/governance_check.py",
+    "scripts/snapshot_migration.py",
+    "tests/governance-validator.test.sh",
+    "tests/snapshot_migration_test.py",
+    "error/GOV-ARCHITECTURE-001.md",
+    "tests/data_change_ownership_test.py",
+    "governance/rule-enforcement.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a4178b9cf6fa12540ee7406d7f38391dd4fa1f30",
+    "targetBranch": "main",
+    "outcome": "Classify private component state without integration false positives; retain independently authorized lossless snapshot migration and all ownership, scope and review gates.",
+    "nonGoals": [
+      "No Taskand repository or deployment writes.",
+      "No global budget increase, secret-scan exception, direct merge, history deletion or authorization inferred from repository prose.",
+      "No claim that source publication deploys an adopter or a CI profile."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 18,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Bind migration to exact source/base/tree and inventory plus an independently pinned external grant. Preserve the original source as a merge parent. Validate ordinary repairs separately and preserve every other governance gate. Fresh protected base and single ticket/branch binding prevent reuse after integration.",
+      "components": [
+        {
+          "name": "migration-validation",
+          "paths": [
+            "scripts/governance_check.py",
+            "scripts/snapshot_migration.py",
+            "governance/intent.schema.json",
+            "governance/snapshot-migration.schema.json",
+            "tests/snapshot_migration_test.py",
+            "tests/governance-validator.test.sh",
+            "tests/data_change_ownership_test.py"
+          ]
+        },
+        {
+          "name": "diagnostics-and-guidance",
+          "paths": [
+            "governance/diagnostics.json",
+            "error/GOV-SNAPSHOT-MIGRATION.md",
+            "docs/information/snapshot-migration.md",
+            "docs/README.md",
+            "error/GOV-ARCHITECTURE-001.md",
+            "governance/rule-enforcement.json"
+          ]
+        },
+        {
+          "name": "package",
+          "paths": [
+            "governance/package-manifest.json",
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Optional snapshot migration contract and protected authorization input.",
+        "Typed data impact records; legacy descriptions remain integration-owned."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Use a reviewed successor package; preserve source ancestry and all original refs. No adopted copy is hand-edited."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/snapshot_migration_test.py"
+        ],
+        "evidence": "Real Git fixtures preserve source ancestry and exact imported bytes, with intent in the first migration commit."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/snapshot_migration_test.py"
+        ],
+        "evidence": "Reject foreign repository, changed source/tree/base/inventory, missing grant, lost history and consumed grant; count new repairs under unchanged budgets."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 tests/data_change_ownership_test.py",
+          "bash project/governance-check.sh",
+          "python3 scripts/audit_diagnostics.py --root .",
+          "bash tests/governance-validator.test.sh",
+          "bash tests/adoption-lock.test.sh"
+        ],
+        "evidence": "Managed package, schemas, runbook and ordinary-project protections remain valid; independent review precedes adoption."
+      }
+    ]
+  }
+}

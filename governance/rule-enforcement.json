@@ -923,9 +923,9 @@
       "enforcement": "deterministic"
     },
     "P-CORE-008": {
-      "codes": [],
+      "codes": ["GOV-SNAPSHOT-MIGRATION-003"],
       "enforcement": "manual",
-      "reason": "Plan approval is a human decision; no artifact proves it was read."
+      "reason": "The migration gate rejects missing or mismatched protected grants. General session authorization and human approval remain external authority; a local contract never grants itself permission."
     },
     "P-CORE-009": {
       "codes": [
