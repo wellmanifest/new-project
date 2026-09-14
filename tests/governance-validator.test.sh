@@ -66,6 +66,26 @@ Draft202012Validator(schemas['diagnostics.schema.json']).validate(
     json.load(open(root / 'governance/diagnostics.json', encoding='utf-8'))
 )
 
+# Approval recovery stays discoverable in both the hub and the adopted payload.
+catalog = json.loads((root / 'governance/diagnostics.json').read_text())['codes']
+approval_codes = {code for code in catalog if code.startswith('GOV-APPROVAL-')}
+assert approval_codes
+runbook_path = 'error/GOV-APPROVAL.md'
+assert all(catalog[code]['documentation'] == runbook_path for code in approval_codes)
+runbook = (root / runbook_path).read_text(encoding='utf-8')
+for code in approval_codes:
+    assert code in runbook, code
+for clause in (
+    'OBSERVE_BEFORE_RETRY', 'REUSE_PENDING_EFFECT', 'INVOKE_PROTECTED_CONTROLLER',
+    'EXACT_SUBJECT', 'NO_NEW_GATE', 'NO_SELF_APPROVAL', 'MERGE_IS_NOT_RELEASE',
+):
+    assert clause in runbook, clause
+package = json.loads((root / 'governance/package-manifest.json').read_text())
+bindings = [entry for entry in package['files'] if entry['source'] == runbook_path]
+assert len(bindings) == 1
+assert bindings[0]['target'] == '.governance/' + runbook_path
+assert bindings[0]['strategy'] == 'managed' and bindings[0]['executable'] is False
+
 Draft202012Validator(schemas['manifest.schema.json']).validate(
     json.load(open(root / 'governance/manifest.default.json', encoding='utf-8'))
 )
