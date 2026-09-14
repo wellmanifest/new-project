@@ -363,3 +363,6 @@ assert not ta.delivery_landed(root, root / "project/ticket-011", target)
 PY
 
 echo "ticket activity: git-derived terminal resolution OK"
+
+# The overlap inspector batches the same resolver; exercise its isolation fence.
+python3 "$repo_root/tests/ticket_activity_batch_test.py"

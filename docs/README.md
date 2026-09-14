@@ -1,5 +1,7 @@
 # Documentation
 
+- [Ticket activity read batching](information/ticket-activity-batching.md) — invocation-local reads, input revalidation and reproducible performance evidence.
+
 - [Audit evidence storage and managed lifecycle routing](information/audit-evidence-storage.md) — private logs, receipts, durable reports, optional repository index and verified Planfile/Goal adapters.
 
 - [Controlled change streaming and recovery recipes](information/controlled-change-streaming.md) — current diagnostic navigation, preservation-first recovery and proposed effect-specific delivery gates.
