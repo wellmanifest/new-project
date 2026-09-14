@@ -2,7 +2,7 @@
 
 ```dsl
 DOCUMENT GIT_LIFECYCLE
-VERSION 2
+VERSION 3
 LANGUAGE EN
 MODE STRICT
 SCHEMA "wellmanifest.git-lifecycle/v1"
@@ -23,6 +23,15 @@ receipts used by validation and closure. `POLICY.md` remains authoritative and
 `CONTRIBUTING.md` is the procedural compatibility projection. A content change
 increments this document's declared version; incompatible request semantics use
 a new schema family rather than silently changing `/v1`.
+
+Use the repository-declared, actually installed lifecycle adapter; request
+grammars are not executors. A managed adapter may invoke Git or `gh` internally,
+but a model-authored transport command does not itself implement idempotency,
+authorization or result reconciliation. Read-only remote inspection remains a
+query. Publication still follows the declared protected Goal procedure where
+required. See [audit evidence and adapter routing](../../docs/information/audit-evidence-storage.md)
+for storage, uncertain remote outcomes and missing-capability recovery; that
+profile grants no additional Git effects or raw publication fallback.
 
 ## State machine
 

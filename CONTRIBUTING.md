@@ -2,7 +2,7 @@
 
 ```dsl
 DOCUMENT CONTRIBUTING
-VERSION 22
+VERSION 23
 LANGUAGE PL
 MODE PROCEDURAL
 PURPOSE "proces pracy nad repozytorium"
@@ -18,6 +18,39 @@ opisuje bounded intent, autoryzację, stany i dowody pracy. Ten dokument zawiera
 ich egzekwowalną projekcję zgodności. Requesty modelu muszą przejść przez
 odpowiedni request-only GBNF, zamknięte JSON Schema, preconditions kontrolera i
 dopiero potem przez URI Process/CQRS do pojedynczego skutku oraz receipt.
+
+### Audyty i wybór adaptera
+
+[Profil przechowywania dowodów](docs/information/audit-evidence-storage.md)
+rozdziela prywatne logi wykonania, receipty, trwałe raporty, stan zadania i kod
+naprawczy. Domyślnie zachowuje zewnętrzny magazyn aplikacji w XDG state;
+opcjonalny indeks repozytorium należy do primary checkout, nie do każdego
+worktree. Profil nie migruje historycznych danych i nie instaluje kontrolera.
+
+```dsl
+RULE C-EVIDENCE-001 TYPE REQUIRED
+WHEN EXECUTION_EVIDENCE_IS_STORED
+DO CLASSIFY CONTENT AS RAW_OUTPUT REQUEST_DATA OBSERVATION RECEIPT REPORT TICKET_OR_RUNTIME_SOURCE
+DO USE DECLARED_OWNER_STORAGE_AND_SUPPORTED_RECEIPT_SCHEMA
+DO BIND REPOSITORY TICKET_OR_READ_ONLY_REQUEST RUN REVISION RESULT_AND_DIGEST
+DO SANITIZE_BEFORE_PERSISTENCE_AND_PUBLICATION
+FORBID AUDIT_DIRECTORY_AS_EXECUTABLE_RUNTIME_OR_TRUST_ROOT
+ASSERT EXISTING_EVIDENCE_PRESERVED_AND_SHARED_REFERENCES_PORTABLE
+
+RULE C-ADAPTER-001 TYPE REQUIRED
+WHEN LIFECYCLE_EFFECT_IS_REQUESTED
+DO RESOLVE EXISTING_MANAGED_ADAPTER_FROM_CURRENT_POLICY_AND_REGISTERED_CAPABILITIES
+DO VERIFY INVOCATION VERSION EXACT_REPOSITORY_AND_PROJECT_STORE_BINDING
+DO REUSE REQUEST_ID_AND_QUERY_PREVIOUS_RESULT_BEFORE_RETRY
+DO REPORT MISSING_ADAPTER_AND_USE_ONLY_EXISTING_POLICY_ALLOWED_RECOVERY
+FORBID SILENT_GLOBAL_PLANFILE_FALLBACK OR_CLAIM_MANAGED_SYNC_FROM_RAW_GH
+ASSERT QUERY_REMAINS_DISTINCT_FROM_EFFECT_AND_RECEIPT_FROM_AUTHORITY
+```
+
+Są to reguły proceduralne; istniejące bramy nie egzekwują jeszcze całego
+profilu storage ani nie instalują adapterów. Read-only `gh` jest dopuszczalnym
+transportem obserwacji. Efekt wymaga procedury właściwej dla repozytorium;
+brak adaptera nie zezwala na obejście wymaganych Goal, lease ani approval.
 
 ### Szkielet standardu domenowego
 
