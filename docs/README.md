@@ -1,5 +1,7 @@
 # Documentation
 
+- [Audit evidence storage and managed lifecycle routing](information/audit-evidence-storage.md) — private logs, receipts, durable reports, optional repository index and verified Planfile/Goal adapters.
+
 - [Controlled change streaming and recovery recipes](information/controlled-change-streaming.md) — current diagnostic navigation, preservation-first recovery and proposed effect-specific delivery gates.
 
 - [Hidden repository-local worktree adoption](information/hidden-worktree-adoption.md) — Worktrees v5 pin, installer and inventory behavior.

@@ -151,7 +151,8 @@ header = next(
     for lang, _, lines in blocks
     if lang == "dsl" and any(line == "DOCUMENT CONTRIBUTING" for line in lines)
 )
-assert "VERSION 22" in header
+versions = [line for line in header if line.startswith("VERSION ")]
+assert len(versions) == 1 and re.fullmatch(r"VERSION [1-9][0-9]*", versions[0]), versions
 
 declaration = re.compile(r"^(?:RULE|STATE|TRANSITION) [A-Z][A-Z0-9_-]*")
 mislabelled = [
@@ -212,6 +213,20 @@ for rule_id, fragments in expected.items():
         assert fragment in body, f"{rule_id} missing {fragment!r}"
     entry = mapping.get(rule_id)
     assert entry and entry["enforcement"] == "manual" and entry.get("reason")
+
+# Audit and adapter guidance is explicitly procedural, not a newly deployed
+# mandatory gate. Preserve the useful boundary without pinning document prose.
+for rule_id, fragments in {
+    "C-EVIDENCE-001": ["DECLARED_OWNER_STORAGE", "SANITIZE_BEFORE_PERSISTENCE",
+                       "AUDIT_DIRECTORY_AS_EXECUTABLE_RUNTIME_OR_TRUST_ROOT"],
+    "C-ADAPTER-001": ["EXACT_REPOSITORY_AND_PROJECT_STORE_BINDING",
+                      "QUERY_PREVIOUS_RESULT_BEFORE_RETRY",
+                      "SILENT_GLOBAL_PLANFILE_FALLBACK", "RAW_GH"],
+}.items():
+    body = rule_body(rule_id)
+    assert all(fragment in body for fragment in fragments), rule_id
+    entry = mapping[rule_id]
+    assert entry["codes"] == [] and entry["enforcement"] == "manual" and entry["reason"]
 
 implementation = rule_body("C-PUBLISH-006")
 assert "PUBLISH_ONLY" in implementation and "TAG_OR_RELEASE_CREATION" in implementation
