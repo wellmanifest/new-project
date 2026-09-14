@@ -28,7 +28,8 @@
     "tests/governance-validator.test.sh",
     "tests/snapshot_migration_test.py",
     "error/GOV-ARCHITECTURE-001.md",
-    "tests/data_change_ownership_test.py"
+    "tests/data_change_ownership_test.py",
+    "governance/rule-enforcement.json"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -77,7 +78,8 @@
             "error/GOV-SNAPSHOT-MIGRATION.md",
             "docs/information/snapshot-migration.md",
             "docs/README.md",
-            "error/GOV-ARCHITECTURE-001.md"
+            "error/GOV-ARCHITECTURE-001.md",
+            "governance/rule-enforcement.json"
           ]
         },
         {
