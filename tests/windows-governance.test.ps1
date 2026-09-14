@@ -11,6 +11,11 @@ $targetRoot = Join-Path $fixtureRoot 'target repository'
 
 try {
     New-Item -ItemType Directory -Path $targetRoot -Force | Out-Null
+    # The application owns these prerequisites; adoption does not invent them.
+    New-Item -ItemType Directory -Path (Join-Path $targetRoot 'project') -Force | Out-Null
+    foreach ($required in @('README.md', 'VERSION', 'CHANGELOG.md', 'TODO.md', 'project/TICKETS.md')) {
+        New-Item -ItemType File -Path (Join-Path $targetRoot $required) -Force | Out-Null
+    }
     & python (Join-Path $repoRoot 'scripts/create_adoption_lock.py') `
         --target-root $targetRoot --source-revision $SourceRevision `
         --allow-unpublished-for-testing

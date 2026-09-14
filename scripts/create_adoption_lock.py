@@ -651,7 +651,15 @@ def main() -> int:
                 print(f"{action} {target}")
             print(f"drift detected: {len(changes)} change(s) required")
         report_missing_target_prerequisites(missing_prerequisites)
-        return 1 if changes else 0
+        return 1 if changes or missing_prerequisites else 0
+
+    # A complete payload is not a usable adoption when target-owned required
+    # files are absent. Check the projected manifest before the first write,
+    # including on upgrades that introduce new prerequisites.
+    if missing_prerequisites:
+        report_missing_target_prerequisites(missing_prerequisites)
+        print("adoption blocked: supply target prerequisites before retrying; no files written")
+        return 1
 
     conflicts = [
         target for target, content in payloads.items()
