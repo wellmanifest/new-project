@@ -2,6 +2,8 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+python3 -B "$repo_root/tests/snapshot_migration_test.py"
+python3 "$repo_root/tests/data_change_ownership_test.py"
 python3 "$repo_root/tests/delivery-post-merge-base.test.py"
 python3 "$repo_root/tests/ticket-input.test.py"
 python3 "$repo_root/tests/sqlite-allocation.test.py"
@@ -2435,6 +2437,31 @@ ambiguous_architecture="$fixture/ambiguous-architecture"
 make_fixture "$ambiguous_architecture"
 mutate_delivery "$ambiguous_architecture" ambiguous-component
 expect_code GOV-ARCHITECTURE-001 run_check "$ambiguous_architecture" --changed-file src/app.js
+
+# A private component journal must not claim cross-component data ownership.
+local_journal="$fixture/local-journal"
+make_fixture "$local_journal"
+python3 - "$local_journal/project/ticket-002/intent.json" <<'LOCALPY'
+import json, sys
+path = sys.argv[1]
+intent = json.load(open(path))
+a = intent['delivery']['architecture']
+a['responsibilityChanges'] = False
+a['dataChanges'] = [{'kind': 'component-local-state', 'component': a['components'][0]['name'], 'description': 'Private deployment journal'}]
+open(path, 'w').write(json.dumps(intent, indent=2) + '\n')
+LOCALPY
+run_check "$local_journal" --changed-file src/app.js > "$fixture/local-journal.out"
+grep -q '^GOV-PASS:' "$fixture/local-journal.out"
+# The same declaration never grants ownership of a shared integration path.
+expect_code GOV-INTEGRATION-001 run_check "$local_journal" --changed-file package.json
+python3 - "$local_journal/project/ticket-002/intent.json" <<'LOCALPY'
+import json, sys
+path = sys.argv[1]
+intent = json.load(open(path))
+intent['delivery']['architecture']['dataChanges'][0]['kind'] = 'schema-migration'
+open(path, 'w').write(json.dumps(intent, indent=2) + '\n')
+LOCALPY
+expect_code GOV-ARCHITECTURE-001 run_check "$local_journal" --changed-file src/app.js
 
 single_segment_glob="$fixture/single-segment-glob"
 make_fixture "$single_segment_glob"

@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.20.30 - 2026-09-14
+
+- Classify private component state explicitly without weakening integration ownership for migrations, transfers or legacy data-impact descriptions; distribute a deterministic remediation runbook.
+
+- Add an opt-in lossless snapshot migration proof bound to an independently pinned external grant, original Git parents and exact inventory.
+- Keep ordinary repair budgets, secret scanning and independent publication approval; reject consumed grants and changed subjects.
+
 ## 0.20.14 - 2026-09-08
 
 - Distribute published Worktrees 0.5.2 so canonical allocation preserves existing repository basenames, including .github, mixed case, underscores and spaces.

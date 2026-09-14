@@ -1,5 +1,7 @@
 # Documentation
 
+- [One-time lossless snapshot migration](information/snapshot-migration.md): exact inventory, protected authorization, preserved history and ordinary repair budgets.
+
 - [Ticket activity read batching](information/ticket-activity-batching.md) — invocation-local reads, input revalidation and reproducible performance evidence.
 
 - [Audit evidence storage and managed lifecycle routing](information/audit-evidence-storage.md) — private logs, receipts, durable reports, optional repository index and verified Planfile/Goal adapters.
