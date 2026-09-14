@@ -6,8 +6,14 @@
 
 ## [Unreleased]
 
+## [0.20.28] - 2026-09-14
+
 ### Fixed
+- Derive adoption/governance fixture versions from canonical source data instead of the current release literal. Keep mismatch tests negative even when the source version matches the usual sentinel; validate source, manifest and lock agreement [ticket-227].
 - Avoid false work-admission conflicts from unregistered historical branches only when every unique complete commit tree occurs in observed target history after divergence. Preserve refs, new rollback intent, active-worktree protection, WIP limits and cleanup authority; matching HEAD or patch IDs alone is insufficient [ticket-225].
+
+### Added
+- Offer opt-in read-only publication observation separating dirty paths, remote commit reachability, branch binding and target ancestry. Missing or changing evidence stays unknown; observation grants no push, merge, release or cleanup authority [ticket-226].
 
 ## [0.20.27] - 2026-09-13
 

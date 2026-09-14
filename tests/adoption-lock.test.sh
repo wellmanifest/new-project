@@ -197,7 +197,7 @@ grep -q '^adopted wellmanifest/new-project ' "$fixture/adopt.out"
 grep -q '^MISSING target prerequisite TODO.md$' "$fixture/adopt.out"
 test ! -e "$target/TODO.md"
 test ! -e "$target/project/TICKETS.md"
-python3 - "$target" "$revision" <<'PY'
+python3 - "$target" "$revision" "$standard/VERSION" <<'PY'
 import hashlib
 import json
 import pathlib
@@ -209,7 +209,10 @@ manifest = json.load(open(root / '.governance/manifest.json', encoding='utf-8'))
 base = json.load(open(root / '.governance/manifest.base.json', encoding='utf-8'))
 assert lock['standard']['sourceRevision'] == sys.argv[2]
 assert lock['standard']['publicationStatus'] == 'unpublished-test'
-assert lock['standard']['version'] == '0.20.27'
+source_version = pathlib.Path(sys.argv[3]).read_text(encoding='utf-8').strip()
+assert lock['standard']['version'] == source_version
+assert manifest['standard']['version'] == source_version
+assert base['standard']['version'] == source_version
 assert '.governance/docs/LOCAL_CI_PUBLICATION.md' in lock['managedFiles']
 assert 'run-local-direct-pr.sh' in (root / '.governance/docs/LOCAL_CI_PUBLICATION.md').read_text()
 assert not (root / '.governance/docs/LOCAL_CI_PUBLICATION.md').read_text().startswith('---')
@@ -413,8 +416,34 @@ grep -q -- '--check and --upgrade are mutually exclusive' "$fixture/options.err"
 
 mismatch="$fixture/mismatch"
 mkdir -p "$mismatch/.governance"
-sed 's/"version": "0.20.27"/"version": "9.9.9"/' \
-  "$standard/governance/manifest.default.json" > "$mismatch/.governance/manifest.json"
+python3 - "$standard/governance/manifest.default.json" \
+  "$mismatch/.governance/manifest.json" <<'PY'
+import copy
+import json
+import pathlib
+import sys
+
+def mismatched_manifest(source):
+    candidate = copy.deepcopy(source)
+    current = source['standard']['version']
+    candidate['standard']['version'] = '9.9.9' if current != '9.9.9' else '0.0.0'
+    assert candidate['standard']['version'] != current
+    return candidate
+
+# The sentinel must not silently stop producing a negative fixture at a later
+# release. JSON mutation must leave unrelated fields (including version) alone.
+for version in ('9.9.9', '0.0.0'):
+    source = {'standard': {'version': version}, 'version': version}
+    candidate = mismatched_manifest(source)
+    assert source['standard']['version'] == version
+    assert candidate['version'] == version
+    assert candidate['standard']['version'] != version
+
+source = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
+pathlib.Path(sys.argv[2]).write_text(
+    json.dumps(mismatched_manifest(source), indent=2) + '\n', encoding='utf-8'
+)
+PY
 if candidate_adopt "$standard" \
   --target-root "$mismatch" --source-revision "$revision" --upgrade \
   > /dev/null 2> "$fixture/mismatch.err"; then
