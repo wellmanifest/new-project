@@ -3,14 +3,14 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "controlled-change-streaming",
   "kind": "information",
-  "version": 4,
+  "version": 5,
   "title": "Kontrolowane streamowanie i recepty odzyskiwania postępu",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
   "created": "2026-09-13",
   "updated": "2026-09-14",
   "review_after": "2026-10-13",
-  "source_revision": "12fc394e7e312d8869064bdf8e971c91534ed43f",
+  "source_revision": "134f67bb0c5c00ae5cd4cd65a96a41051baa37c7",
   "affected_repositories": ["wellmanifest/new-project"],
   "evidence": [
     "https://github.com/wellmanifest/new-project/blob/a5ffa7dd5d0bb5cafbcefbb180204874787c0758/scripts/branch_lifecycle_check.py",
@@ -56,12 +56,13 @@ Ticket 226 dodaje **działający, opcjonalny odczyt publikacji**, opisany poniż
 Nie dodaje publikatora, dashboardu ani uprawnień i nie wymaga sieci w domyślnym
 admission. Odczyt można wykorzystać jako wejście do CLI/Web wykonawcy.
 
-Publikacja tej poprawki oznacza zmianę źródeł, nie nowe wydanie standardu.
-Próba aktualizacji VERSION ujawniła literalne `0.20.27` w testach adopcji
-i walidatora. Kolejny zakres wydania musi najpierw usunąć zależność testów od
-bieżącego numeru (zachowując negatywne testy mismatch), zamiast aktualizować
-rozproszone literały przy każdym wydaniu. Do tego czasu nie ogłaszamy nowej
-paczki ani automatycznej adopcji tej poprawki.
+Ticket 227 usuwa zależność testów adopcji i walidatora od bieżącego numeru
+wydania. Oczekiwana wersja pochodzi z kanonicznego VERSION lub manifestu
+danego fixture; błędna wersja jest celowo różna także wtedy, gdy źródło ma
+wersję `9.9.9`. Projekcje `0.20.28` towarzyszą tej materialnej poprawce.
+Sam merge źródeł nadal nie oznacza wydania ani adopcji: potrzebny jest
+nienadpisany tag na dokładnym zaakceptowanym merge SHA, odczyt opublikowanego
+wydania i dopiero potem zarządzana adopcja z przypiętej rewizji.
 
 <!-- docs:section evidence -->
 ## Dowody i ograniczenia wnioskowania
@@ -242,8 +243,11 @@ adopterów przez sam merge standardu.
 
 1. Przy adopcji odczytu publikacji przeliczyć cały zarządzany pakiet
    z opublikowanej rewizji, bez ręcznego edytowania kopii `.governance`.
-   Najpierw usunąć rozproszone literały wersji w testach wydania; dopiero
-   potem canary i kontrolowany rollout. Merge źródeł nie oznacza adopcji.
+   Testy wydania porównują wersję z kanonicznym źródłem; negatywny mismatch
+   nie może stać się identyczny ze źródłem po podniesieniu wersji. Po
+   opublikowaniu wydania wykonać canary i kontrolowany rollout. Nie zmieniać
+   testów na zgodę dla nieopublikowanej rewizji u produkcyjnego adoptera.
+   Merge źródeł nie oznacza adopcji.
 2. W `new-project` uzgodnić efektowy profil checkpoint/merge/release z
    `wellmanifest/git-lifecycle` oraz jego wykonawcą Goal. Najpierw test canary:
    funkcjonalny FAIL pozostaje widoczny w draft; sekret, obcy scope, stale lease
