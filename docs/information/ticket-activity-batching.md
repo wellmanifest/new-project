@@ -12,7 +12,7 @@
   "review_after": "2026-10-14",
   "source_revision": "6d51770651488d6a5bc25e82c79e2a48893d3fdb",
   "affected_repositories": ["wellmanifest/new-project"],
-  "evidence": ["https://github.com/wellmanifest/new-project/issues/352", "../../tests/ticket_activity_batch_test.py", "../../scripts/ticket_activity.py", "../../scripts/worktree_overlap_check.py"]
+  "evidence": ["https://github.com/wellmanifest/new-project/issues/352", "repo://wellmanifest/new-project/tests/ticket_activity_batch_test.py", "repo://wellmanifest/new-project/scripts/ticket_activity.py", "repo://wellmanifest/new-project/scripts/worktree_overlap_check.py"]
 }
 ---
 
