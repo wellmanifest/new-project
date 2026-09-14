@@ -1,0 +1,56 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-229",
+  "summary": "Route stalled approval to managed publication recovery",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-229/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "docs/information/controlled-change-streaming.md",
+    "error/GOV-APPROVAL.md",
+    "governance/diagnostics.json",
+    "governance/package-manifest.json",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2ff425ca98767a22c075c50eccf7d29ef34709c3",
+    "targetBranch": "main",
+    "outcome": "Make existing approval diagnostics resolve to a bounded managed-publication recovery recipe, with regression coverage and no new gate.",
+    "nonGoals": ["No direct author approval or merge, weakened checks, new runtime service or ticket database.", "No historical work cleanup, Taskand implementation change or fleet adoption claim."],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {"maxImplementationFiles": 5, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse the canonical diagnostic catalog and error runbook format; the existing publisher and protected Validator own effects. Navigation and test coverage change, not authority.",
+      "components": [
+        {"name": "diagnostic-navigation", "paths": ["governance/diagnostics.json", "governance/package-manifest.json", "error/GOV-APPROVAL.md"]},
+        {"name": "streaming-guidance", "paths": ["docs/information/controlled-change-streaming.md"]},
+        {"name": "regression-tests", "paths": ["tests/governance-validator.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the bounded catalog, runbook and test changes; existing approval policy and receipts stay unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["python3 scripts/audit_diagnostics.py --root ."], "evidence": "Every existing approval code resolves to the canonical runbook; exact-subject and trust boundaries are preserved."},
+      {"criterion": "AC-02", "commands": ["bash tests/governance-validator.test.sh", "bash project/governance-check.sh", "git diff --check"], "evidence": "Regression checks cover observation-before-retry, protected handoff and separate publication stages; existing negative governance tests still reject invalid approval."}
+    ]
+  }
+}

@@ -3,14 +3,14 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "controlled-change-streaming",
   "kind": "information",
-  "version": 5,
+  "version": 6,
   "title": "Kontrolowane streamowanie i recepty odzyskiwania postępu",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
   "created": "2026-09-13",
   "updated": "2026-09-14",
   "review_after": "2026-10-13",
-  "source_revision": "134f67bb0c5c00ae5cd4cd65a96a41051baa37c7",
+  "source_revision": "2ff425ca98767a22c075c50eccf7d29ef34709c3",
   "affected_repositories": ["wellmanifest/new-project"],
   "evidence": [
     "https://github.com/wellmanifest/new-project/blob/a5ffa7dd5d0bb5cafbcefbb180204874787c0758/scripts/branch_lifecycle_check.py",
@@ -230,6 +230,15 @@ ma monotoniczny, weryfikowalny receipt chain.
 <!-- docs:section limitations -->
 ## Ograniczenia
 
+Pozostaje luka zgodności z przypiętym `wellmanifest/docs`
+(`ebe7501063ef4f3e63ded610c2d3183010ca636e`): jego automatyczne odkrywanie
+nowego `error/GOV-APPROVAL.md` zgłasza `DOCS_METADATA`, chociaż lokalny
+kontrakt diagnostyk wymaga runbooka właśnie w `error/*.md`. Nie wolno przenosić
+recepty do pliku wyłączonego z odkrywania ani zmieniać pinów ręcznie. Następna
+poprawka u właściciela docs powinna rozpoznawać kontraktowo zarządzane runbooki
+i testować je ich właściwym walidatorem; dowolny raport w `error/` nie może
+otrzymać ogólnego wyjątku. Ta zmiana nie twierdzi, że luka została naprawiona.
+
 Recepty i poprawione opisy nie uruchamiają efektów ani nie zmieniają dziś
 `GOV-BRANCH-LIFECYCLE-002` z error na warning. Sprzeczność między zachowaniem
 niescalonej gałęzi a wymaganiem samego default brancha wymaga spójnej zmiany
@@ -240,6 +249,13 @@ adopterów przez sam merge standardu.
 
 <!-- docs:section next_actions -->
 ## Kolejność małych zmian
+
+Zielony PR bez review nie wymaga ponownego pushu. Diagnostyki `GOV-APPROVAL-*`
+prowadzą do [recepty odzyskania postępu](../../error/GOV-APPROVAL.md): odczyt
+istniejącego requestu, przekazanie do skonfigurowanego niezależnego kontrolera,
+ograniczone oczekiwanie z widoczną fazą i readback przed retry. Recepta jest
+częścią manifestu pakietu; nie instaluje kontrolera ani nie dodaje nowej bramki.
+Po źródłowym merge dopiero wydanie i zarządzana adopcja udostępnią ją adopterom.
 
 1. Przy adopcji odczytu publikacji przeliczyć cały zarządzany pakiet
    z opublikowanej rewizji, bez ręcznego edytowania kopii `.governance`.
