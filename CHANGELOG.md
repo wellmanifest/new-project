@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+## [0.20.29] - 2026-09-14
+
+### Fixed
+- Reuse repeated activity reads within one checkout inspection, then revalidate consulted Git and document inputs before accepting results. Pin ancestry targets to observed commit IDs, discard batches after each invocation, and preserve independent clone and terminal receipt authority [ticket-230].
+
 ## [0.20.28] - 2026-09-14
 
 ### Fixed
