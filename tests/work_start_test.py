@@ -79,9 +79,9 @@ class WorkStartTest(unittest.TestCase):
         (directory / "intent.json").write_text(json.dumps(intent))
         return path
 
-    def report(self, root=None, stream="api", paths=(), ticket=None, publication=False):
+    def report(self, root=None, stream="api", paths=(), ticket=None, publication=False, expected=None):
         result = start.inspect(root or self.root, stream, paths, ticket,
-                               observe_publication=publication)
+                               observe_publication=publication, expected_dirty_digest=expected)
         jsonschema.validate(result, json.loads((ROOT / "governance/work-start-report.schema.json").read_text()))
         self.assertFalse(result["grantsAuthority"])
         self.assertFalse(result["createsWorktree"])
@@ -317,6 +317,87 @@ class WorkStartTest(unittest.TestCase):
         self.sibling()
         self.sibling(number=2)
         self.assertEqual(self.report(ticket="ticket-001")["route"], "ASSIST_READ_ONLY")
+
+    def carrier(self, root, number, paths, marker):
+        directory = root / "project" / f"ticket-{number:03d}"
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / "README.md").write_text(f"- **Status**: IN_PROGRESS\n{marker}\n")
+        (directory / "intent.json").write_text(json.dumps({
+            "schema": "new-project.intent/v3", "ticket": f"ticket-{number:03d}",
+            "workstream": "api", "allowedPaths": paths, "marker": marker}))
+
+    def merged_ticket_behind_primary(self, number=5):
+        """Deliver a ticket to origin/main while the primary checkout stays behind it."""
+        self.remote()
+        branch = f"ticket/{number:03d}-delivered"
+        self.git(self.root, "switch", "-c", branch)
+        self.carrier(self.root, number, ["api/old/**"], "delivered")
+        (self.root / "api/old").mkdir()
+        (self.root / "api/old/a.txt").write_text("delivered\n")
+        self.git(self.root, "add", ".")
+        self.git(self.root, "commit", "-m", "deliver")
+        self.git(self.root, "push", "origin", f"{branch}:{branch}", f"{branch}:main")
+        self.git(self.root, "switch", "main")
+        self.git(self.root, "branch", "-D", branch)
+        self.git(self.root, "fetch", "origin")
+
+    def test_stale_carrier_of_integrated_ticket_is_named_not_silently_serialized(self):
+        self.merged_ticket_behind_primary()
+        # Allocation-time copy left in the primary checkout, older than the delivery.
+        self.carrier(self.root, 5, ["api/old/**"], "allocation draft")
+        report = self.report(paths=["api/new/**"])
+        self.assertEqual(report["route"], "RECONCILE")
+        self.assertEqual([(b["ticket"], b["reason"]) for b in report["blockers"]],
+                         [("ticket-005", "integrated-ticket-carrier")])
+        # The conservative status-projection activity is unchanged.
+        self.assertEqual(report["activeTicketCount"], 1)
+
+    def test_carrier_with_unintegrated_ticket_branch_still_holds_capacity(self):
+        self.merged_ticket_behind_primary()
+        self.git(self.root, "branch", "ticket/005-follow-up", "origin/main")
+        self.git(self.root, "switch", "ticket/005-follow-up")
+        (self.root / "api/old/a.txt").write_text("still in flight\n")
+        self.git(self.root, "commit", "-am", "follow-up")
+        self.git(self.root, "switch", "main")
+        self.carrier(self.root, 5, ["api/old/**"], "allocation draft")
+        report = self.report(paths=["api/new/**"])
+        self.assertNotIn("integrated-ticket-carrier", [b["reason"] for b in report["blockers"]])
+        self.assertEqual(report["activeTicketCount"], 1)
+
+    def test_new_unassigned_carrier_keeps_serialization(self):
+        self.remote()
+        self.carrier(self.root, 6, ["api/old/**"], "fresh allocation")
+        report = self.report(paths=["api/new/**"])
+        self.assertEqual(report["route"], "SERIALIZE")
+        self.assertEqual(report["blockers"], [])
+
+    def test_selected_checkout_writes_are_visible_and_digest_cas_blocks_change(self):
+        peer = self.sibling()
+        (peer / "api/a.txt").write_text("uncommitted change by another writer\n")
+        report = self.report(ticket="ticket-001")
+        selected = next(w for w in report["worktrees"] if w["ticket"] == "ticket-001")
+        self.assertEqual(report["route"], "REUSE_EXISTING")
+        self.assertIsNotNone(selected["dirtyNewestModifiedAt"])
+        self.assertTrue(any(selected["dirtyDigest"] in item for item in report["requiredBeforeWrite"]))
+        confirmed = self.report(ticket="ticket-001", expected=selected["dirtyDigest"])
+        self.assertEqual(confirmed["route"], "REUSE_EXISTING")
+        self.assertEqual(len(confirmed["requiredBeforeWrite"]), 4)
+        (peer / "api/a.txt").write_text("changed again since the observation\n")
+        changed = self.report(ticket="ticket-001", expected=selected["dirtyDigest"])
+        self.assertEqual(changed["route"], "ASSIST_READ_ONLY")
+        self.assertEqual([b["reason"] for b in changed["blockers"]], ["selected-checkout-changed"])
+
+    def test_disjoint_selected_checkout_writes_add_no_requirement(self):
+        peer = self.sibling()
+        (peer / "api/a.txt").write_text("unrelated uncommitted change\n")
+        report = self.report(paths=["api/b/**"], ticket="ticket-001")
+        self.assertEqual(report["route"], "REUSE_EXISTING")
+        self.assertEqual(len(report["requiredBeforeWrite"]), 4)
+
+    def test_expected_digest_requires_ticket_and_digest_shape(self):
+        self.sibling()
+        self.assertEqual(self.cli("--expect-dirty-digest", "0" * 64).returncode, 2)
+        self.assertEqual(self.cli("--ticket", "ticket-001", "--expect-dirty-digest", "not-a-digest").returncode, 2)
 
     def test_phase_branch_with_dirty_primary_requires_reconciliation(self):
         self.git(self.root, "switch", "-c", "refactor/phase-a")

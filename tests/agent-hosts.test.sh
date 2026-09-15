@@ -463,6 +463,35 @@ grep -Fq 'Existing private instruction' "$user_home/.gemini/GEMINI.md" || fail "
 grep -Fq 'Existing private instruction' "$user_home/.claude/CLAUDE.md" || fail "preserve Claude instructions"
 HOME="$user_home" "$root/scripts/install-agent-hosts.sh" --source "$root" --user
 [[ "$(grep -Fc 'wellmanifest/new-project host contract' "$user_home/.gemini/GEMINI.md")" == 1 ]] || fail "user pointer must be idempotent"
+grep -Fq 'git worktree list' "$user_home/.claude/CLAUDE.md" || fail "user pointer must discover governance from registered checkouts"
+
+# --- ticket-233: legacy pointer paragraphs converge without losing private text
+legacy_home="$tmp/legacy-home"
+mkdir -p "$legacy_home/.gemini" "$legacy_home/.claude"
+cat > "$legacy_home/.claude/CLAUDE.md" <<'EOF'
+Private preamble
+
+# wellmanifest/new-project host contract
+
+When the current repository has `./project/new-ticket.sh`, follow that
+repository's `CLAUDE.md` and `AGENTS.md`. Allocate tickets only through
+that script. Never commit on main or a dirty primary checkout.
+
+# Private section
+Keep this instruction
+EOF
+printf '# wellmanifest/new-project host contract\n\nWhen the current repository has `./project/new-ticket.sh`, follow that\nrepository'"'"'s host contract and `AGENTS.md`.\n' > "$legacy_home/.gemini/GEMINI.md"
+HOME="$legacy_home" "$root/scripts/install-agent-hosts.sh" --source "$root" --user
+for pointer in "$legacy_home/.claude/CLAUDE.md" "$legacy_home/.gemini/GEMINI.md"; do
+  [[ "$(grep -Fc 'wellmanifest/new-project host contract' "$pointer")" == 1 ]] || fail "legacy pointer must keep one marker"
+  grep -Fq 'git worktree list' "$pointer" || fail "legacy pointer must be upgraded"
+  ! grep -Fq 'When the current repository has' "$pointer" || fail "legacy paragraph must be replaced"
+done
+grep -Fq 'Private preamble' "$legacy_home/.claude/CLAUDE.md" || fail "preserve text before the pointer"
+grep -Fq 'Keep this instruction' "$legacy_home/.claude/CLAUDE.md" || fail "preserve sections after the pointer"
+before="$(sha256sum "$legacy_home/.claude/CLAUDE.md")"
+HOME="$legacy_home" "$root/scripts/install-agent-hosts.sh" --source "$root" --user
+[[ "$(sha256sum "$legacy_home/.claude/CLAUDE.md")" == "$before" ]] || fail "upgraded pointer must be byte-stable"
 
 # --- ticket-106: deterministic host and packaging validator -------------------
 
