@@ -2,6 +2,8 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+python3 -B "$repo_root/tests/snapshot_migration_test.py"
+python3 "$repo_root/tests/data_change_ownership_test.py"
 python3 "$repo_root/tests/delivery-post-merge-base.test.py"
 python3 "$repo_root/tests/ticket-input.test.py"
 python3 "$repo_root/tests/sqlite-allocation.test.py"
@@ -19,6 +21,7 @@ import sys
 from jsonschema import Draft202012Validator
 
 root = pathlib.Path(sys.argv[1])
+standard_version = (root / 'VERSION').read_text(encoding='utf-8').strip()
 policy = (root / 'POLICY.md').read_text(encoding='utf-8')
 agents = (root / 'AGENTS.md').read_text(encoding='utf-8')
 agent_template = (root / 'template/files/AGENTS.template.md').read_text(encoding='utf-8')
@@ -65,6 +68,26 @@ Draft202012Validator(schemas['diagnostics.schema.json']).validate(
     json.load(open(root / 'governance/diagnostics.json', encoding='utf-8'))
 )
 
+# Approval recovery stays discoverable in both the hub and the adopted payload.
+catalog = json.loads((root / 'governance/diagnostics.json').read_text())['codes']
+approval_codes = {code for code in catalog if code.startswith('GOV-APPROVAL-')}
+assert approval_codes
+runbook_path = 'error/GOV-APPROVAL.md'
+assert all(catalog[code]['documentation'] == runbook_path for code in approval_codes)
+runbook = (root / runbook_path).read_text(encoding='utf-8')
+for code in approval_codes:
+    assert code in runbook, code
+for clause in (
+    'OBSERVE_BEFORE_RETRY', 'REUSE_PENDING_EFFECT', 'INVOKE_PROTECTED_CONTROLLER',
+    'EXACT_SUBJECT', 'NO_NEW_GATE', 'NO_SELF_APPROVAL', 'MERGE_IS_NOT_RELEASE',
+):
+    assert clause in runbook, clause
+package = json.loads((root / 'governance/package-manifest.json').read_text())
+bindings = [entry for entry in package['files'] if entry['source'] == runbook_path]
+assert len(bindings) == 1
+assert bindings[0]['target'] == '.governance/' + runbook_path
+assert bindings[0]['strategy'] == 'managed' and bindings[0]['executable'] is False
+
 Draft202012Validator(schemas['manifest.schema.json']).validate(
     json.load(open(root / 'governance/manifest.default.json', encoding='utf-8'))
 )
@@ -100,7 +123,7 @@ hub_manifest = json.load(open(
 Draft202012Validator(schemas['manifest.schema.json']).validate(hub_manifest)
 assert 'config/artifact-registry.json' in hub_manifest['governancePaths']
 assert '.governance/standard-adoption.json' in hub_manifest['governancePaths']
-assert hub_manifest['standard']['version'] == '0.20.26'
+assert hub_manifest['standard']['version'] == standard_version
 assert hub_manifest['coordination']['workstreams'] == {
     'governance': {'ownedPaths': ['**']},
 }
@@ -202,7 +225,7 @@ Draft202012Validator(schemas['lock.schema.json']).validate({
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.20.26',
+        'version': standard_version,
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'published',
@@ -213,7 +236,7 @@ candidate_lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.20.26',
+        'version': standard_version,
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': '0' * 40,
         'publicationStatus': 'unpublished-test',
@@ -320,7 +343,7 @@ PY
 
 python3 - "$repo_root/governance/manifest.schema.json" "$repo_root/governance/manifest.default.json" \
   "$repo_root/governance/approval-evidence.schema.json" \
-  "$repo_root/governance/stack-profiles.json" <<'PY'
+  "$repo_root/governance/stack-profiles.json" "$repo_root/VERSION" <<'PY'
 import json
 import sys
 
@@ -332,7 +355,7 @@ assert schema['additionalProperties'] is False
 assert set(manifest) <= set(schema['properties'])
 assert set(schema['required']) <= set(manifest)
 assert manifest['schema'] == schema['properties']['schema']['const']
-assert manifest['standard']['version'] == '0.20.26'
+assert manifest['standard']['version'] == open(sys.argv[5], encoding='utf-8').read().strip()
 ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
@@ -1274,7 +1297,7 @@ lock = {
   'schema': 'new-project.lock/v1',
   'standard': {
     'id': 'wellmanifest/new-project',
-    'version': '0.20.26',
+    'version': json.loads((root / '.governance/manifest.json').read_text(encoding='utf-8'))['standard']['version'],
     'sourceRepository': 'wellmanifest/new-project',
     'sourceRevision': 'a' * 40,
     'publicationStatus': 'published',
@@ -1332,7 +1355,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.20.26',
+        'version': manifest['standard']['version'],
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'a' * 40,
         'publicationStatus': 'published',
@@ -1425,7 +1448,7 @@ lock = {
     'schema': 'new-project.lock/v1',
     'standard': {
         'id': 'wellmanifest/new-project',
-        'version': '0.20.26',
+        'version': json.loads((root / '.governance/manifest.json').read_text(encoding='utf-8'))['standard']['version'],
         'sourceRepository': 'wellmanifest/new-project',
         'sourceRevision': 'b' * 40,
         'publicationStatus': 'published',
@@ -2414,6 +2437,31 @@ ambiguous_architecture="$fixture/ambiguous-architecture"
 make_fixture "$ambiguous_architecture"
 mutate_delivery "$ambiguous_architecture" ambiguous-component
 expect_code GOV-ARCHITECTURE-001 run_check "$ambiguous_architecture" --changed-file src/app.js
+
+# A private component journal must not claim cross-component data ownership.
+local_journal="$fixture/local-journal"
+make_fixture "$local_journal"
+python3 - "$local_journal/project/ticket-002/intent.json" <<'LOCALPY'
+import json, sys
+path = sys.argv[1]
+intent = json.load(open(path))
+a = intent['delivery']['architecture']
+a['responsibilityChanges'] = False
+a['dataChanges'] = [{'kind': 'component-local-state', 'component': a['components'][0]['name'], 'description': 'Private deployment journal'}]
+open(path, 'w').write(json.dumps(intent, indent=2) + '\n')
+LOCALPY
+run_check "$local_journal" --changed-file src/app.js > "$fixture/local-journal.out"
+grep -q '^GOV-PASS:' "$fixture/local-journal.out"
+# The same declaration never grants ownership of a shared integration path.
+expect_code GOV-INTEGRATION-001 run_check "$local_journal" --changed-file package.json
+python3 - "$local_journal/project/ticket-002/intent.json" <<'LOCALPY'
+import json, sys
+path = sys.argv[1]
+intent = json.load(open(path))
+intent['delivery']['architecture']['dataChanges'][0]['kind'] = 'schema-migration'
+open(path, 'w').write(json.dumps(intent, indent=2) + '\n')
+LOCALPY
+expect_code GOV-ARCHITECTURE-001 run_check "$local_journal" --changed-file src/app.js
 
 single_segment_glob="$fixture/single-segment-glob"
 make_fixture "$single_segment_glob"

@@ -1,0 +1,116 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-230",
+  "summary": "Batch ticket activity reads within one fenced worktree check",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-230/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/ticket_activity.py",
+    "scripts/worktree_overlap_check.py",
+    "tests/ticket-activity.test.sh",
+    "tests/ticket_activity_batch_test.py",
+    "docs/information/ticket-activity-batching.md",
+    "docs/README.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6d51770651488d6a5bc25e82c79e2a48893d3fdb",
+    "targetBranch": "main",
+    "outcome": "Reduce repeated repository reads during ticket activity inspection with invocation-local caching and fail-closed revalidation, shipped with immutable standard release projections.",
+    "nonGoals": [
+      "No weakening publication provenance, approval or scope gates.",
+      "No manual editing of adopter payloads, historical tags or unrelated worktrees."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 11,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Cache repeated Git queries and activity document observations only inside one checkout inspection; revalidate every consulted mutable input before accepting the result. Preserve the existing standalone resolver and authority rules.",
+      "components": [
+        {
+          "name": "activity-check",
+          "paths": [
+            "scripts/ticket_activity.py",
+            "scripts/worktree_overlap_check.py",
+            "tests/ticket-activity.test.sh",
+            "tests/ticket_activity_batch_test.py"
+          ]
+        },
+        {
+          "name": "release-projections",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        },
+        {
+          "name": "documentation",
+          "paths": [
+            "docs/README.md",
+            "docs/information/ticket-activity-batching.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded material fix through a reviewed successor; never move a published tag."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/ticket-activity.test.sh",
+          "bash tests/worktree-overlap.test.sh"
+        ],
+        "evidence": "Existing terminal, rewritten history, override and overlap decisions remain unchanged."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/ticket_activity_batch_test.py"
+        ],
+        "evidence": "Repeated reads decrease; changed refs, HEAD, registry, policy, projection and subsequent calls cannot reuse stale inactivity."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh",
+          "git diff --check"
+        ],
+        "evidence": "Release projections agree; source delivery uses Goal and independent exact-head review."
+      }
+    ]
+  }
+}

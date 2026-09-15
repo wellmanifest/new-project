@@ -90,6 +90,13 @@ candidate_adopt() {
     --allow-unpublished-for-testing "$@"
 }
 
+# Target-owned prerequisites are supplied by the application, not invented by
+# the managed installer. Fixtures model that contract explicitly.
+seed_prerequisites() {
+  mkdir -p "$1/project"
+  touch "$1/README.md" "$1/VERSION" "$1/CHANGELOG.md" "$1/TODO.md" "$1/project/TICKETS.md"
+}
+
 ignored_target="$fixture/ignored-target"
 mkdir -p "$ignored_target"
 git -C "$ignored_target" init -q
@@ -137,6 +144,7 @@ fi
 test "$status" -eq 1
 ! grep -Eq '^(UPDATE|CHMOD) project\.sh$' "$fixture/collision-check.out"
 ! grep -Eq '^(UPDATE|CHMOD) project\.bat$' "$fixture/collision-check.out"
+seed_prerequisites "$collision_target"
 candidate_adopt "$standard" \
   --target-root "$collision_target" --source-revision "$revision" \
   > "$fixture/collision-adopt.out"
@@ -191,13 +199,24 @@ test -z "$(find "$target" -mindepth 1 -print -quit)"
 git -C "$target" init -q
 git -C "$target" remote add origin git@github.com:wellmanifest/adoption-fixture.git
 
+# Refusal must occur before the first payload, lock or hook is installed.
+if candidate_adopt "$standard" \
+  --target-root "$target" --source-revision "$revision" > "$fixture/incomplete.out"; then
+  echo 'expected missing target prerequisites to reject adoption' >&2
+  exit 1
+fi
+grep -q '^MISSING target prerequisite TODO.md$' "$fixture/incomplete.out"
+! grep -q '^adopted ' "$fixture/incomplete.out"
+test ! -e "$target/.governance"
+test ! -e "$target/AGENTS.md"
+test ! -e "$target/.gitignore"
+test ! -e "$target/.githooks"
+seed_prerequisites "$target"
 candidate_adopt "$standard" \
   --target-root "$target" --source-revision "$revision" > "$fixture/adopt.out"
 grep -q '^adopted wellmanifest/new-project ' "$fixture/adopt.out"
-grep -q '^MISSING target prerequisite TODO.md$' "$fixture/adopt.out"
-test ! -e "$target/TODO.md"
-test ! -e "$target/project/TICKETS.md"
-python3 - "$target" "$revision" <<'PY'
+! grep -q '^MISSING target prerequisite ' "$fixture/adopt.out"
+python3 - "$target" "$revision" "$standard/VERSION" <<'PY'
 import hashlib
 import json
 import pathlib
@@ -209,7 +228,10 @@ manifest = json.load(open(root / '.governance/manifest.json', encoding='utf-8'))
 base = json.load(open(root / '.governance/manifest.base.json', encoding='utf-8'))
 assert lock['standard']['sourceRevision'] == sys.argv[2]
 assert lock['standard']['publicationStatus'] == 'unpublished-test'
-assert lock['standard']['version'] == '0.20.26'
+source_version = pathlib.Path(sys.argv[3]).read_text(encoding='utf-8').strip()
+assert lock['standard']['version'] == source_version
+assert manifest['standard']['version'] == source_version
+assert base['standard']['version'] == source_version
 assert '.governance/docs/LOCAL_CI_PUBLICATION.md' in lock['managedFiles']
 assert 'run-local-direct-pr.sh' in (root / '.governance/docs/LOCAL_CI_PUBLICATION.md').read_text()
 assert not (root / '.governance/docs/LOCAL_CI_PUBLICATION.md').read_text().startswith('---')
@@ -302,9 +324,12 @@ test -f "$target/.governance/error/GOV-WORK-CONTINUITY.md"
 test -f "$target/.governance/package-manifest.json"
 printf '%s\n' '# target-owned seed extension' >> "$target/project.sh"
 printf '%s\r\n' 'REM target-owned seed extension' >> "$target/project.bat"
-candidate_adopt "$standard" \
+if candidate_adopt "$standard" \
   --target-root "$target" --source-revision "$revision" --check \
-  > "$fixture/current-check.out"
+  > "$fixture/current-check.out"; then
+  echo 'expected unchanged but incomplete adoption check to fail' >&2
+  exit 1
+fi
 grep -q '^up-to-date wellmanifest/new-project ' "$fixture/current-check.out"
 grep -q '^MISSING target prerequisite Dockerfile$' "$fixture/current-check.out"
 touch "$target/Dockerfile"
@@ -413,8 +438,34 @@ grep -q -- '--check and --upgrade are mutually exclusive' "$fixture/options.err"
 
 mismatch="$fixture/mismatch"
 mkdir -p "$mismatch/.governance"
-sed 's/"version": "0.20.26"/"version": "9.9.9"/' \
-  "$standard/governance/manifest.default.json" > "$mismatch/.governance/manifest.json"
+python3 - "$standard/governance/manifest.default.json" \
+  "$mismatch/.governance/manifest.json" <<'PY'
+import copy
+import json
+import pathlib
+import sys
+
+def mismatched_manifest(source):
+    candidate = copy.deepcopy(source)
+    current = source['standard']['version']
+    candidate['standard']['version'] = '9.9.9' if current != '9.9.9' else '0.0.0'
+    assert candidate['standard']['version'] != current
+    return candidate
+
+# The sentinel must not silently stop producing a negative fixture at a later
+# release. JSON mutation must leave unrelated fields (including version) alone.
+for version in ('9.9.9', '0.0.0'):
+    source = {'standard': {'version': version}, 'version': version}
+    candidate = mismatched_manifest(source)
+    assert source['standard']['version'] == version
+    assert candidate['version'] == version
+    assert candidate['standard']['version'] != version
+
+source = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
+pathlib.Path(sys.argv[2]).write_text(
+    json.dumps(mismatched_manifest(source), indent=2) + '\n', encoding='utf-8'
+)
+PY
 if candidate_adopt "$standard" \
   --target-root "$mismatch" --source-revision "$revision" --upgrade \
   > /dev/null 2> "$fixture/mismatch.err"; then
@@ -578,6 +629,7 @@ PY
 git -C "$legacy_standard" add VERSION governance/manifest.default.json governance/package-manifest.json
 git -C "$legacy_standard" commit -qm 'test: publish legacy managed manifest'
 
+seed_prerequisites "$legacy_target"
 mkdir -p "$legacy_target/.governance"
 python3 - "$legacy_standard" "$legacy_target" <<'PY'
 import hashlib
@@ -671,6 +723,16 @@ touch "$upgrade_standard/SECURITY.md"
 git -C "$upgrade_standard" add VERSION governance/manifest.default.json SECURITY.md
 git -C "$upgrade_standard" commit -qm 'test: publish extendable manifest upgrade'
 upgrade_revision="$(git -C "$upgrade_standard" rev-parse HEAD)"
+before_upgrade="$(sha256sum "$target/.governance/manifest.lock.json" "$target/.governance/manifest.json")"
+if candidate_adopt "$upgrade_standard" \
+  --target-root "$target" --source-revision "$upgrade_revision" --upgrade \
+  > "$fixture/upgrade-incomplete.out"; then
+  echo 'expected incomplete upgrade to fail before writes' >&2
+  exit 1
+fi
+grep -q '^MISSING target prerequisite SECURITY.md$' "$fixture/upgrade-incomplete.out"
+test "$(sha256sum "$target/.governance/manifest.lock.json" "$target/.governance/manifest.json")" = "$before_upgrade"
+touch "$target/SECURITY.md"
 candidate_adopt "$upgrade_standard" \
   --target-root "$target" --source-revision "$upgrade_revision" --upgrade \
   > "$fixture/upgrade.out"
@@ -697,7 +759,7 @@ candidate_adopt "$upgrade_standard" \
   --target-root "$target" --source-revision "$upgrade_revision" --check \
   > "$fixture/upgraded-check.out"
 grep -q '^up-to-date wellmanifest/new-project 0.15.1 ' "$fixture/upgraded-check.out"
-grep -q '^MISSING target prerequisite SECURITY.md$' "$fixture/upgraded-check.out"
+! grep -q '^MISSING target prerequisite ' "$fixture/upgraded-check.out"
 
 python3 - "$repo_root" <<'PY'
 import pathlib

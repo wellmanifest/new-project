@@ -119,6 +119,61 @@ class DefaultBaseTest(unittest.TestCase):
         with patch.object(overlap, "run_git", side_effect=fail_second_read):
             self.assertEqual(self.contested(), ("shared.txt",))
 
+    def share_feature_head(self):
+        # Both fixtures inherit the same unpublished feature contribution.
+        # Only disposable fixture checkouts are reset, never the source repo.
+        shared = self.git(self.old, "rev-parse", "HEAD").stdout.strip()
+        self.git(self.new, "reset", "--hard", shared)
+        return shared
+
+    def test_shared_feature_head_with_one_dirty_writer_is_not_contested(self):
+        self.share_feature_head()
+        (self.new / "shared.txt").write_text("one actual writer\n")
+        self.assertEqual(self.contested(), ())
+
+    def test_shared_feature_with_descendant_disjoint_commit_is_not_contested(self):
+        self.share_feature_head()
+        self.git(self.new, "add", "independent.txt")
+        self.git(self.new, "commit", "-m", "descendant independent contribution")
+        (self.old / "shared.txt").write_text("ancestor checkout edits inherited file\n")
+        self.assertEqual(self.contested(), ())
+
+    def test_shared_feature_with_two_dirty_writers_remains_contested(self):
+        self.share_feature_head()
+        (self.old / "shared.txt").write_text("first actual writer\n")
+        (self.new / "shared.txt").write_text("second actual writer\n")
+        self.assertEqual(self.contested(), ("shared.txt",))
+
+    def test_shared_feature_with_unique_peer_commit_remains_contested(self):
+        self.share_feature_head()
+        (self.new / "shared.txt").write_text("unique peer contribution\n")
+        self.git(self.new, "commit", "-am", "unique peer contribution")
+        (self.old / "shared.txt").write_text("competing dirty change\n")
+        self.assertEqual(self.contested(), ("shared.txt",))
+
+    def test_shared_feature_with_divergent_disjoint_commits_is_not_contested(self):
+        self.share_feature_head()
+        (self.old / "old-only.txt").write_text("old-only\n")
+        self.git(self.old, "add", "old-only.txt")
+        self.git(self.old, "commit", "-m", "old independent contribution")
+        self.git(self.new, "add", "independent.txt")
+        self.git(self.new, "commit", "-m", "new independent contribution")
+        (self.old / "shared.txt").write_text("one dirty inherited path\n")
+        self.assertEqual(self.contested(), ())
+
+    def test_shared_feature_with_unreadable_pair_retains_conservative_fallback(self):
+        shared = self.share_feature_head()
+        (self.new / "shared.txt").write_text("one actual writer\n")
+        original = overlap.run_git
+
+        def fail_pair_read(path, *args):
+            if args == ("diff", "--name-only", shared, shared):
+                raise overlap.AuditError("fixture unreadable pair contribution")
+            return original(path, *args)
+
+        with patch.object(overlap, "run_git", side_effect=fail_pair_read):
+            self.assertEqual(self.contested(), ("shared.txt",))
+
     def test_rename_modify_conflict_preserves_renamed_path(self):
         content = "".join(f"line {number}\n" for number in range(20))
         (self.main / "shared.txt").write_text(content + "base\n")

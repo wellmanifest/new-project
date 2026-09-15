@@ -1,0 +1,85 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-232",
+  "summary": "Reject incomplete adoption before writes and report missing prerequisites",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-232/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/create_adoption_lock.py",
+    "tests/adoption-lock.test.sh",
+    "tests/windows-governance.test.ps1",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "46aae350f5121874556bf9813fb9bf35854d3647",
+    "targetBranch": "main",
+    "outcome": "Reject incomplete governance adoption before any target writes, including unchanged installs and upgrades. Publish the tested source change through independent review.",
+    "nonGoals": [
+      "No history rewrite or weakening of independent publication.",
+      "No migration of target-owned documentation or test frameworks."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse the complete planned prerequisite list as a pre-write failure gate; make check mode account for prerequisites even with no payload drift.",
+      "components": [
+        {
+          "name": "adoption-generator",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "tests/adoption-lock.test.sh",
+            "tests/windows-governance.test.ps1",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Incomplete adoption returns a failure status before writing target files."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert via independently reviewed follow-up if a caller requires a separately defined preparation operation."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Regression for no-write refusal, unchanged incomplete installation, preserved existing content and successful retry after prerequisites are supplied."
+      }
+    ]
+  }
+}

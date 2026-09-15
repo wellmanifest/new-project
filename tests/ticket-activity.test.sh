@@ -295,6 +295,34 @@ assert outcome.authority == "git-ancestry", outcome
 assert outcome.reason == "delivery-on-target", outcome
 PY
 
+# Every supported ref spelling must protect live work, locally and in fetched
+# remote refs. Adjacent ticket numbers must not reserve this ticket's scope.
+python3 - "$derived" "$repo_root" <<'PY'
+import pathlib, subprocess, sys
+sys.path.insert(0, str(pathlib.Path(sys.argv[2]) / "scripts"))
+import ticket_activity as ta
+root = pathlib.Path(sys.argv[1])
+def git(*args):
+    return subprocess.check_output(["git", "-C", str(root), *args], text=True).strip()
+git("switch", "--quiet", "-c", "fixture-unfinished")
+(root / "src.txt").write_text("unfinished implementation\n")
+git("commit", "--quiet", "-am", "unfinished fixture implementation")
+head = git("rev-parse", "HEAD")
+git("switch", "--quiet", "main")
+for prefix in ("refs/heads/", "refs/remotes/origin/"):
+    for name in ("ticket/010", "ticket/010-follow-up", "ticket/010/follow-up", "ticket/0100", "ticket/011"):
+        ref = prefix + name
+        git("update-ref", ref, head)
+        expected = name in ("ticket/010", "ticket/010-follow-up", "ticket/010/follow-up")
+        try:
+            assert ta._unmerged_ticket_branch(root, "ticket-010", "main") == expected, ref
+            outcome = ta.resolve(root, root / "project/ticket-010", {"IN_PROGRESS"})
+            assert outcome.active == expected, (ref, outcome)
+            assert not ta._unmerged_ticket_branch(root, "ticket-010", head), ref
+        finally:
+            git("update-ref", "-d", ref, head)  # exact synthetic fixture ref only
+PY
+
 # An invalid target-owned override fails closed.
 printf '%s\n' '{"missingPolicy":"git-ancestry"}' > "$derived/governance/ticket-activity.override.json"
 status=0
@@ -335,3 +363,6 @@ assert not ta.delivery_landed(root, root / "project/ticket-011", target)
 PY
 
 echo "ticket activity: git-derived terminal resolution OK"
+
+# The overlap inspector batches the same resolver; exercise its isolation fence.
+python3 "$repo_root/tests/ticket_activity_batch_test.py"

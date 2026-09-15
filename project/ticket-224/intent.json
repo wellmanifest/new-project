@@ -1,0 +1,59 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-224",
+  "summary": "Correct delivery diagnostics and add preservation-first recovery recipes",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-224/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "docs/AGENT_DECISIONS.md",
+    "docs/CONTROLLED_CHANGE_STREAMING.md",
+    "docs/README.md",
+    "docs/information/controlled-change-streaming.md",
+    "error/GOV-WORKSPACE-LIFECYCLE.md",
+    "governance/diagnostics.json",
+    "scripts/branch_lifecycle_check.py",
+    "tests/branch-lifecycle.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a5ffa7dd5d0bb5cafbcefbb180204874787c0758",
+    "targetBranch": "main",
+    "outcome": "Correct diagnostic navigation and supply preservation-first delivery recovery recipes without changing authorization or merge gates.",
+    "nonGoals": ["No gate weakening, historical branch cleanup or policy/profile migration.", "No target repository adoption or runtime deployment."],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {"maxImplementationFiles": 8, "maxAffectedComponents": 2, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep emitted diagnostic identities and rejection behavior; align their canonical navigation and reuse the already managed workspace runbook and agent-decision guidance.",
+      "components": [
+        {"name": "diagnostic-navigation", "paths": ["scripts/branch_lifecycle_check.py", "tests/branch-lifecycle.test.sh", "governance/diagnostics.json", "error/GOV-WORKSPACE-LIFECYCLE.md"]},
+        {"name": "delivery-guidance", "paths": ["docs/AGENT_DECISIONS.md", "docs/CONTROLLED_CHANGE_STREAMING.md", "docs/information/controlled-change-streaming.md", "docs/README.md"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert this bounded guidance and diagnostics delta; retain all branch history and receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/branch-lifecycle.test.sh"], "evidence": "A regression compares emitted cases with canonical code meanings and verifies the managed runbook binding."},
+      {"criterion": "AC-02", "commands": ["bash tests/branch-lifecycle.test.sh", "bash tests/rule-enforcement.test.sh"], "evidence": "Existing snapshot refusals and protected effect boundaries remain unchanged."},
+      {"criterion": "AC-03", "commands": ["git diff --check"], "evidence": "Review canonical docs metadata, compatibility link, index and explicit current/proposed distinction."}
+    ]
+  }
+}

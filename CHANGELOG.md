@@ -1,10 +1,36 @@
 # CHANGELOG
 
+## 0.20.30 - 2026-09-14
+
+- Classify private component state explicitly without weakening integration ownership for migrations, transfers or legacy data-impact descriptions; distribute a deterministic remediation runbook.
+
+- Add an opt-in lossless snapshot migration proof bound to an independently pinned external grant, original Git parents and exact inventory.
+- Keep ordinary repair budgets, secret scanning and independent publication approval; reject consumed grants and changed subjects.
+
 ## 0.20.14 - 2026-09-08
 
 - Distribute published Worktrees 0.5.2 so canonical allocation preserves existing repository basenames, including .github, mixed case, underscores and spaces.
 
 ## [Unreleased]
+
+## [0.20.29] - 2026-09-14
+
+### Fixed
+- Reuse repeated activity reads within one checkout inspection, then revalidate consulted Git and document inputs before accepting results. Pin ancestry targets to observed commit IDs, discard batches after each invocation, and preserve independent clone and terminal receipt authority [ticket-230].
+
+## [0.20.28] - 2026-09-14
+
+### Fixed
+- Derive adoption/governance fixture versions from canonical source data instead of the current release literal. Keep mismatch tests negative even when the source version matches the usual sentinel; validate source, manifest and lock agreement [ticket-227].
+- Avoid false work-admission conflicts from unregistered historical branches only when every unique complete commit tree occurs in observed target history after divergence. Preserve refs, new rollback intent, active-worktree protection, WIP limits and cleanup authority; matching HEAD or patch IDs alone is insufficient [ticket-225].
+
+### Added
+- Offer opt-in read-only publication observation separating dirty paths, remote commit reachability, branch binding and target ancestry. Missing or changing evidence stays unknown; observation grants no push, merge, release or cleanup authority [ticket-226].
+
+## [0.20.27] - 2026-09-13
+
+### Fixed
+- Preserve every nonzero Goal refusal in the explicit standard-update adapter; generic diagnostic text no longer overrides errors. Remove unused drift helpers and cover stdout/stderr diagnostic collisions [ticket-221].
 
 ## [0.20.26] - 2026-09-13
 

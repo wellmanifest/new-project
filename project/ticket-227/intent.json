@@ -1,0 +1,59 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-227",
+  "summary": "Derive release fixture versions from canonical sources",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-227/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/information/controlled-change-streaming.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "134f67bb0c5c00ae5cd4cd65a96a41051baa37c7",
+    "targetBranch": "main",
+    "outcome": "Remove release-version coupling from adoption and governance test fixtures while preserving version-mismatch refusals, and ship the material fix with release projections for 0.20.28.",
+    "nonGoals": ["No weakening publication provenance, approval or scope gates.", "No manual editing of adopter payloads, historical tags or unrelated worktrees."],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {"maxImplementationFiles": 7, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Read expected versions from the canonical VERSION or each fixture manifest. Mutate only standard.version for the negative adoption case and guarantee it differs. Keep release projections in this material changeset.",
+      "components": [
+        {"name": "release-tests", "paths": ["tests/adoption-lock.test.sh", "tests/governance-validator.test.sh"]},
+        {"name": "release-projections", "paths": ["VERSION", "governance/manifest.default.json", "governance/manifest.hub.json", "CHANGELOG.md"]},
+        {"name": "documentation", "paths": ["docs/information/controlled-change-streaming.md"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the bounded material fix through a reviewed successor; never move a published tag."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["bash tests/adoption-lock.test.sh", "bash tests/governance-validator.test.sh"], "evidence": "Version 0.20.28 passes without changing test literals; source, manifest and lock versions remain checked."},
+      {"criterion": "AC-02", "commands": ["bash tests/adoption-lock.test.sh"], "evidence": "Deliberately different standard.version still rejects adoption before target mutation, including a source version equal to the usual mismatch sentinel."},
+      {"criterion": "AC-03", "commands": ["git diff --check", "bash project/governance-check.sh"], "evidence": "Release projections agree, canonical guidance is current, publication uses Goal and independent exact-head review."}
+    ]
+  }
+}

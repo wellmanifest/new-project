@@ -2,7 +2,7 @@
 
 ```dsl
 DOCUMENT TICKET_LIFECYCLE
-VERSION 4
+VERSION 5
 LANGUAGE EN
 MODE STRICT
 SCHEMA "wellmanifest.ticket-lifecycle/v1"
@@ -87,9 +87,12 @@ controller projects it as follows:
 
 ## Allocation and ownership
 
-Ticket IDs are allocated only by the managed clone-wide allocator after
-fetch/prune. The lock and high-water reservation include all linked worktrees
-and known local/remote refs. A model never chooses a numeric ID or creates the
+Ticket IDs are allocated through `project/new-ticket.sh` using the managed
+allocation policy. In local-single-clone mode the lock and high-water reservation
+include all linked worktrees and known local/already-fetched remote refs;
+fetch/prune requires explicit `--refresh-remote`. Independent writers across
+clones/nodes require the registered allocator and its exact-request receipt,
+not a local high-water mark. A model never chooses a numeric ID or creates the
 directory itself.
 
 One implementation diff resolves to exactly one active ticket. Parallel work
@@ -97,6 +100,15 @@ uses distinct manifest workstreams, non-overlapping allowed paths and separate
 worktrees. A waiting or blocked ticket releases its write reservation so it
 cannot deadlock unrelated progress. A matching active ticket is reused rather
 than replaced.
+
+Planfile and GitHub records are linked projections, not alternative governance
+ID authorities. Verify explicit project/store selection and actual readback
+before any synchronization. The [work-registration contract](../../docs/information/work-registration.md)
+describes integration requirements and its current implementation/adoption
+limits; its presence does not prove a product controller is installed.
+The [audit evidence profile](../../docs/information/audit-evidence-storage.md)
+separates task state from request payloads, raw logs and durable reports. A
+read-only audit alone does not allocate another implementation ticket/worktree.
 
 ## Plan and bounded intent
 

@@ -1,0 +1,92 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-221",
+  "summary": "Reject generic Goal diagnostic collisions (GitHub #334)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "scripts/precommit_standard_update.py",
+    "tests/precommit-standard-update.test.sh",
+    "project/ticket-221/**",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json",
+    "tests/governance-validator.test.sh",
+    "tests/adoption-lock.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "88d1a09605accbccf44fbc9f0260ea011b4bb9e6",
+    "targetBranch": "main",
+    "outcome": "Every nonzero Goal result remains a refusal; text diagnostics never authorize success.",
+    "nonGoals": [
+      "No managed adopter edits or integrity hash rewrites.",
+      "No network freshness checks in the ordinary local-pin pre-commit hook.",
+      "No changes to historical worktrees or user ticket-198."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Remove the ambiguous diagnostic substring exception and its unused staged-drift helpers. The explicit legacy Goal adapter preserves all nonzero exits. Existing ordinary hook local-pin-only behavior remains covered by its tests. Include the 0.20.27 release projections in this material fix so the official adopter can consume a final canonical release. Fresh scope observation found no conflicting paths; the only active ticket is this one. Reconciled the legacy ticket-206 test-file signal: its governance-validator test content is byte-identical to independently merged PR315 head f0ab755, an ancestor of main. The proposed delta only updates version fixtures; preserve that branch and all other outstanding criteria.",
+      "components": [
+        {
+          "name": "goal-refusal-boundary",
+          "paths": [
+            "scripts/precommit_standard_update.py",
+            "tests/precommit-standard-update.test.sh",
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json",
+            "tests/governance-validator.test.sh",
+            "tests/adoption-lock.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded adapter and regression changes."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/precommit-standard-update.test.sh"
+        ],
+        "evidence": "Changed regression failed before the source fix; complete shell suite and its 3 local-pin hook tests passed after it."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh --base 88d1a09605accbccf44fbc9f0260ea011b4bb9e6 --head HEAD --format json"
+        ],
+        "evidence": "Governance passed with zero errors and warnings; independent review remains pending."
+      }
+    ]
+  }
+}

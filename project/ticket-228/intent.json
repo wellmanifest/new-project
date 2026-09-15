@@ -1,0 +1,59 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-228",
+  "summary": "Standardize audit evidence storage and managed lifecycle routing",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-228/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CONTRIBUTING.md",
+    "docs/README.md",
+    "docs/information/audit-evidence-storage.md",
+    "governance/rule-enforcement.json",
+    "tests/rule-enforcement.test.sh",
+    "subprojects/git-lifecycle/README.md",
+    "subprojects/ticket-lifecycle/README.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c5b2581c16a4cd1ba7987f22c63116710d41a8d6",
+    "targetBranch": "main",
+    "outcome": "Define a discoverable audit-evidence storage profile and managed lifecycle routing without new storage services or stronger publication gates.",
+    "nonGoals": ["No historical audit migration, deletion or script replay.", "No new product controller, mandatory Planfile rollout, unrelated repository edits or approval bypass."],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {"maxImplementationFiles": 7, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend the existing new-project procedural and lifecycle documentation. Keep logs formatting, private execution evidence, durable reports and ticket state under their existing owners; explicitly label missing product automation.",
+      "components": [
+        {"name": "procedural-policy", "paths": ["CONTRIBUTING.md", "subprojects/git-lifecycle/README.md", "subprojects/ticket-lifecycle/README.md", "governance/rule-enforcement.json"]},
+        {"name": "documentation", "paths": ["docs/README.md", "docs/information/audit-evidence-storage.md"]},
+        {"name": "policy-regressions", "paths": ["tests/rule-enforcement.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the bounded documentation changes; existing audit paths and receipts remain unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["git diff --check"], "evidence": "Review the storage matrix, XDG semantics, relative-index constraints and no-migration/no-authority boundaries."},
+      {"criterion": "AC-02", "commands": ["python3 tests/work-registration.test.py"], "evidence": "Existing registration conformance remains valid; document verified project readback and transport recovery without inventing controller availability."},
+      {"criterion": "AC-03", "commands": ["bash project/governance-check.sh", "python3 tests/work_start_test.py", "bash tests/rule-enforcement.test.sh"], "evidence": "Hub scope and existing lifecycle admission remain valid; changed document links, normative versions and explicit manual enforcement mappings are checked."}
+    ]
+  }
+}

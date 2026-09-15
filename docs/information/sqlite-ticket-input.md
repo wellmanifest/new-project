@@ -3,16 +3,16 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "sqlite-ticket-input",
   "kind": "information",
-  "version": 3,
+  "version": 4,
   "title": "SQLite ticket input for governance validation",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
   "created": "2026-09-08",
-  "updated": "2026-09-08",
+  "updated": "2026-09-13",
   "review_after": "2026-09-22",
   "source_revision": "84061f1e1368509c72db7a45150628ebffb07b2d",
   "affected_repositories": ["wellmanifest/new-project"],
-  "evidence": ["https://github.com/wellmanifest/new-project/pull/310", "https://github.com/subactor/registry/commit/510ce294ed1e7ddcf1b877a76f72f4a41dfbebea", "tests/ticket-input.test.py"]
+  "evidence": ["https://github.com/wellmanifest/new-project/pull/310", "https://github.com/subactor/registry/commit/510ce294ed1e7ddcf1b877a76f72f4a41dfbebea", "https://github.com/wellmanifest/new-project/blob/51ea009bcbff13607b4c2778abcd1bae9a15f0ca/tests/ticket-input.test.py"]
 }
 ---
 
