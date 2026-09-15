@@ -78,11 +78,12 @@
       {"id": "policy-dsl", "repository": "wellmanifest/policy-dsl", "path": "spec/POLICY_DSL.md", "url": "https://github.com/wellmanifest/policy-dsl/blob/main/spec/POLICY_DSL.md"},
       {"id": "logs-contract", "repository": "wellmanifest/logs", "path": "contracts/logs.contract.json", "url": "https://github.com/wellmanifest/logs/blob/main/contracts/logs.contract.json"},
       {"id": "agent-schema", "repository": "wellmanifest/agent", "path": "standard/agent.schema.json", "url": "https://github.com/wellmanifest/agent/blob/main/standard/agent.schema.json"},
+      {"id": "llm-policy", "repository": "wellmanifest/llm", "path": "README.md", "url": "https://github.com/wellmanifest/llm/blob/main/README.md"},
       {"id": "offer-pointer", "repository": "wellmanifest/offer", "path": "README.md", "url": "https://github.com/wellmanifest/offer/blob/main/README.md"},
       {"id": "brand-pointer", "repository": "wellmanifest/brand", "path": "README.md", "url": "https://github.com/wellmanifest/brand/blob/main/README.md"}
     ],
     "requiredInEveryHost": ["new-project-agents", "new-project-hosts", "new-project-adoption"],
-    "requiredInAgents": ["new-project-agents", "new-project-hosts", "new-project-adoption", "worktrees-schema", "git-lifecycle-schema", "ticket-lifecycle-schema", "policy-dsl", "logs-contract", "agent-schema", "offer-pointer", "brand-pointer"]
+    "requiredInAgents": ["new-project-agents", "new-project-hosts", "new-project-adoption", "worktrees-schema", "git-lifecycle-schema", "ticket-lifecycle-schema", "policy-dsl", "logs-contract", "agent-schema", "llm-policy", "offer-pointer", "brand-pointer"]
   },
   "anomalyChecks": {
     "schema": "new-project.agent-guidance-audit/v1",

@@ -26,8 +26,8 @@ następnie aktualizację adopterów. Zadania adopterów pozostają w ich własny
 repozytoriach. Uczestnicy: unresolved:human oraz agent:taskand. Nie tworzy się
 nowego worktree na potrzeby kontynuacji. Nie edytuje się cudzych primary.
 
-Baza została odświeżona przez scalenie aktualnego `origin/main`
-`d38a85e35d1f10d5ee45ff406cb72902017b552a` do istniejącego worktree i
+Baza została odświeżona przez obserwację aktualnego `origin/main`
+`470d16da03dad3a69dfc2f1bbabc069a73b72385` w tym checkoutcie i
 zachowano upstream SQLite, >=3-cyfrowe ID i wszystkie nowe kontrakty.
 Poprzedni snapshot: `receipt:work-start-20260913/before-reconciliation`,
 SHA-256 `6617a34b2fd36cc30175a4b17cdb93d60693eef3bac100442e7cb98ac269e115`.
@@ -66,3 +66,8 @@ prozy i nie pobiera zdalnych dokumentów.
 SESSION_EXECUTION_AUTHORIZATION: użytkownik polecił kontynuować i ustandaryzować
 źródła `AGENTS.md`, zbadać `wellmanifest/agent` oraz brak `wellmanifest/agents`
 i wdrożyć bounded mechanizm aktualizacji przez istniejący pakiet/adoption.
+
+SESSION_EXECUTION_AUTHORIZATION (2026-09-15): użytkownik polecił kontynuować
+integrację standardu modeli LLM i uruchomić testy. Ta bounded kontynuacja dodaje
+kanoniczny pointer `wellmanifest/llm` do źródeł `AGENTS.md` oraz jego regresję;
+nie zmienia routingu providera ani przypięcia modelu.

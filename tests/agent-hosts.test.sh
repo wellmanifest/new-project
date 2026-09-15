@@ -24,6 +24,10 @@ grep -Fq '<!-- wellmanifest:source-links:v1 -->' "$root/AGENTS.md" \
   || fail "AGENTS.md must expose the managed source-links marker"
 grep -Fq 'https://github.com/wellmanifest/worktrees/blob/main/models/worktrees.schema.json' "$root/AGENTS.md" \
   || fail "AGENTS.md must link a concrete wellmanifest dependency file"
+grep -Fq 'https://github.com/wellmanifest/llm/blob/main/README.md' "$root/AGENTS.md" \
+  || fail "AGENTS.md must link the provider-neutral LLM policy standard"
+grep -Fq 'https://github.com/wellmanifest/llm/blob/main/README.md' "$root/template/files/AGENTS.template.md" \
+  || fail "AGENTS template must link the provider-neutral LLM policy standard"
 
 # Host guidance must agree with the allocator and C-CONCURRENCY-002; offline
 # allocation is valid and does not authorize an unsolicited remote refresh.

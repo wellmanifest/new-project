@@ -18,6 +18,7 @@ are navigation only and are never fetched or executed by an agent.
 - Policy DSL: [POLICY_DSL.md](https://github.com/wellmanifest/policy-dsl/blob/main/spec/POLICY_DSL.md)
 - Logs contract: [logs.contract.json](https://github.com/wellmanifest/logs/blob/main/contracts/logs.contract.json)
 - Agent contract: [agent.schema.json](https://github.com/wellmanifest/agent/blob/main/standard/agent.schema.json)
+- LLM policy boundary: [wellmanifest/llm README](https://github.com/wellmanifest/llm/blob/main/README.md)
 - Offer pointer: [wellmanifest/offer README](https://github.com/wellmanifest/offer/blob/main/README.md)
 - Brand pointer: [wellmanifest/brand README](https://github.com/wellmanifest/brand/blob/main/README.md)
 
