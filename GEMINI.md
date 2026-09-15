@@ -1,5 +1,19 @@
 # GEMINI.md — wellmanifest/new-project
 
+<!-- wellmanifest:source-links:v1 -->
+## Managed standard sources
+
+The local hub manifest and package are authoritative. Remote `main` links are
+navigation only and are never fetched or executed by an agent.
+
+- Local hub manifest: [governance/manifest.hub.json](governance/manifest.hub.json)
+- Local hub package: [governance/package-manifest.json](governance/package-manifest.json)
+- Canonical instructions: [AGENTS template](https://github.com/wellmanifest/new-project/blob/main/template/files/AGENTS.template.md)
+- Host contract: [agent-hosts.json](https://github.com/wellmanifest/new-project/blob/main/governance/agent-hosts.json)
+- Immutable adoption/updater: [create_adoption_lock.py](https://github.com/wellmanifest/new-project/blob/main/scripts/create_adoption_lock.py)
+
+<!-- end wellmanifest:source-links:v1 -->
+
 Fail-closed. Do not write code until this contract is followed.
 This file is the Gemini / Antigravity entry. The same rules are in
 `AGENTS.md`, `CLAUDE.md`, and `.cursor/rules/new-project-standard.mdc`.
@@ -16,3 +30,7 @@ This file is the Gemini / Antigravity entry. The same rules are in
 If authority or ownership remains unclear, pause the dependent effect and
 follow [docs/AGENT_DECISIONS.md](docs/AGENT_DECISIONS.md) to inspect evidence and existing authorization.
 Continue disjoint authorized work. Do not invent a ticket number.
+
+Bounded session controls: respect the ticket's `maxActiveMinutes`, create a
+`checkpoint` before a context or tool boundary, and leave a `handoff` then
+`stop` after a deterministic failure instead of retrying indefinitely.

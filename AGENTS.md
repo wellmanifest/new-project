@@ -1,5 +1,28 @@
 # AGENTS.md
 
+<!-- wellmanifest:source-links:v1 -->
+## Managed standard sources
+
+This file is the hub projection of the host-agnostic contract. The local
+manifest and package are authoritative for this checkout; remote `main` links
+are navigation only and are never fetched or executed by an agent.
+
+- Local hub manifest: [governance/manifest.hub.json](governance/manifest.hub.json)
+- Local hub package: [governance/package-manifest.json](governance/package-manifest.json)
+- Canonical instructions: [AGENTS template](https://github.com/wellmanifest/new-project/blob/main/template/files/AGENTS.template.md)
+- Host contract: [agent-hosts.json](https://github.com/wellmanifest/new-project/blob/main/governance/agent-hosts.json)
+- Immutable adoption/updater: [create_adoption_lock.py](https://github.com/wellmanifest/new-project/blob/main/scripts/create_adoption_lock.py)
+- Worktree contract: [worktrees.schema.json](https://github.com/wellmanifest/worktrees/blob/main/models/worktrees.schema.json)
+- Git lifecycle: [git-lifecycle.schema.json](https://github.com/wellmanifest/git-lifecycle/blob/main/standard/git-lifecycle.schema.json)
+- Ticket lifecycle: [ticket-lifecycle.schema.json](https://github.com/wellmanifest/ticket-lifecycle/blob/main/standard/ticket-lifecycle.schema.json)
+- Policy DSL: [POLICY_DSL.md](https://github.com/wellmanifest/policy-dsl/blob/main/spec/POLICY_DSL.md)
+- Logs contract: [logs.contract.json](https://github.com/wellmanifest/logs/blob/main/contracts/logs.contract.json)
+- Agent contract: [agent.schema.json](https://github.com/wellmanifest/agent/blob/main/standard/agent.schema.json)
+- Offer pointer: [wellmanifest/offer README](https://github.com/wellmanifest/offer/blob/main/README.md)
+- Brand pointer: [wellmanifest/brand README](https://github.com/wellmanifest/brand/blob/main/README.md)
+
+<!-- end wellmanifest:source-links:v1 -->
+
 ## Opted-in SQLite ticket storage
 
 When `git config --local --get new-project.ticketStorage` is `sqlite`, the
@@ -168,3 +191,11 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
        explicit adoption/updater automation owns freshness and the hook never
        fetches or mutates.
    25. **PROPORTIONAL EVIDENCE**: Use `scripts/decision_record.py classify-action --action <action>`. Routine in-scope edits, formatting and local checks use the existing intent, diff and check report, not a new decision record. Never generate APPROVE or REQUEST_CHANGES from a local PASS/FAIL; valid legacy replay is not trusted review. Material scope/authority, destructive and publication decisions retain recomputable evidence and independent control. Finalize tracked carriers and format checks before snapshot/checkpoint and lease release; reuse the matching lease and coalesce same-boundary triggers. Do not recursively log the act of writing evidence. Read-only inspection and external receipt writes do not acquire repository write leases.
+
+## Bounded session controls
+
+Every implementation session is bounded by the ticket's `maxActiveMinutes` and
+must create a `checkpoint` before a context, tool or process boundary. On a
+deterministic failure or unresolved ownership, write a concise `handoff` with
+the next observable action and `stop`; do not retry the same failed path
+indefinitely.

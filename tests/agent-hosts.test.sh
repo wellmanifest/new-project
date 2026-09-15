@@ -20,6 +20,10 @@ grep -Fq 'verify-pin --root "$root" --staged' "$root/template/files/pre-commit.t
 grep -Fq 'new-ticket.sh' "$root/GEMINI.md" || fail "GEMINI.md must require new-ticket.sh"
 grep -Fq 'new-ticket.sh' "$root/CLAUDE.md" || fail "CLAUDE.md must require new-ticket.sh"
 grep -Fq 'alwaysApply: true' "$root/.cursor/rules/new-project-standard.mdc" || fail "Cursor rule must alwaysApply"
+grep -Fq '<!-- wellmanifest:source-links:v1 -->' "$root/AGENTS.md" \
+  || fail "AGENTS.md must expose the managed source-links marker"
+grep -Fq 'https://github.com/wellmanifest/worktrees/blob/main/models/worktrees.schema.json' "$root/AGENTS.md" \
+  || fail "AGENTS.md must link a concrete wellmanifest dependency file"
 
 # Host guidance must agree with the allocator and C-CONCURRENCY-002; offline
 # allocation is valid and does not authorize an unsolicited remote refresh.
@@ -522,6 +526,9 @@ git init -q "$fixture"
 git -C "$fixture" config user.email "test@example.com"
 git -C "$fixture" config user.name "Test"
 cp "$root/governance/agent-hosts.json" "$fixture/.governance/agent-hosts.json"
+mkdir -p "$fixture/governance" "$fixture/.github/workflows"
+cp "$root/governance/required-checks.json" "$fixture/governance/required-checks.json"
+cp "$root/.github/workflows/ci.yml" "$fixture/.github/workflows/ci.yml"
 # Derive the fixture's host files from the contract, so adding a host to
 # agent-hosts.json cannot silently leave this fixture behind.
 while read -r host_file; do
@@ -532,6 +539,15 @@ import json, sys
 contract = json.load(open(sys.argv[1], encoding="utf-8"))
 print("\n".join(host["file"] for host in contract["hosts"]))
 ' "$fixture/.governance/agent-hosts.json")
+# The fixture is an adopter, so use the adopter projections rather than the
+# hub's local manifest links. This also proves every declared host receives the
+# same source-link block as a real package adoption.
+cp "$root/template/files/AGENTS.template.md" "$fixture/AGENTS.md"
+cp "$root/template/files/CLAUDE.template.md" "$fixture/CLAUDE.md"
+cp "$root/template/files/GEMINI.template.md" "$fixture/GEMINI.md"
+cp "$root/template/files/cursor-rule.template.mdc" "$fixture/.cursor/rules/new-project-standard.mdc"
+cp "$root/template/files/aider.template.yml" "$fixture/.aider.conf.yml"
+cp "$root/template/files/copilot-instructions.template.md" "$fixture/.github/copilot-instructions.md"
 printf '%s\n' '#!/usr/bin/env bash' > "$fixture/.githooks/pre-commit"
 chmod +x "$fixture/.githooks/pre-commit"
 cat > "$fixture/.governance/manifest.lock.json" <<'LOCK'
@@ -555,6 +571,82 @@ assert_lacks "$(codes "$fixture" ci)" "GOV-AGENT-HOST-006" "ci actor"
 
 git -C "$fixture" config core.hooksPath .githooks
 [[ -z "$(codes "$fixture")" ]] || fail "activated fixture must pass: $(codes "$fixture")"
+
+# Removing one concrete source link is a fail-closed host-contract finding.
+sed -i '/worktrees.schema.json/d' "$fixture/AGENTS.md"
+assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "missing AGENTS source link"
+cp "$root/template/files/AGENTS.template.md" "$fixture/AGENTS.md"
+
+# A URL that does not match its declared repository/path is also rejected.
+python3 - "$fixture/.governance/agent-hosts.json" <<'PY'
+import json
+import sys
+path = sys.argv[1]
+value = json.load(open(path, encoding='utf-8'))
+value['sourceLinks']['remote'][0]['url'] = 'https://github.com/wellmanifest/new-project/blob/main/wrong.md'
+open(path, 'w', encoding='utf-8').write(json.dumps(value, indent=2) + '\n')
+PY
+assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "non-canonical source link"
+cp "$root/governance/agent-hosts.json" "$fixture/.governance/agent-hosts.json"
+
+# Duplicate remote identifiers cannot silently shadow one another.
+python3 - "$fixture/.governance/agent-hosts.json" <<'PY'
+import json
+import sys
+path = sys.argv[1]
+value = json.load(open(path, encoding='utf-8'))
+value['sourceLinks']['remote'].append(dict(value['sourceLinks']['remote'][0]))
+open(path, 'w', encoding='utf-8').write(json.dumps(value, indent=2) + '\n')
+PY
+assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "duplicate source link id"
+cp "$root/governance/agent-hosts.json" "$fixture/.governance/agent-hosts.json"
+
+# A host that loses the bounded-session controls must fail before an agent can
+# spend a long retry loop on an impossible task.
+cp "$fixture/AGENTS.md" "$fixture/AGENTS.md.anomaly-backup"
+sed -i '/## Bounded session controls/,$d' "$fixture/AGENTS.md"
+assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "missing bounded-session controls"
+mv "$fixture/AGENTS.md.anomaly-backup" "$fixture/AGENTS.md"
+
+# Contradictory directives are checked only when both explicitly configured
+# patterns occur in one host projection; ordinary scoped prose remains valid.
+cp "$fixture/AGENTS.md" "$fixture/AGENTS.md.anomaly-backup"
+printf '%s\n' 'push directly to main' 'never push directly to main' >> "$fixture/AGENTS.md"
+assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "contradictory host directives"
+mv "$fixture/AGENTS.md.anomaly-backup" "$fixture/AGENTS.md"
+
+# A host limit that would truncate the instruction chain is a deterministic
+# blocker, not a reason to continue with partial policy.
+python3 - "$fixture/.governance/agent-hosts.json" <<'PYANOMALY_SIZE'
+import json, sys
+path = sys.argv[1]
+value = json.load(open(path, encoding='utf-8'))
+value['anomalyChecks']['maxInstructionBytes'] = 10
+open(path, 'w', encoding='utf-8').write(json.dumps(value, indent=2) + '\n')
+PYANOMALY_SIZE
+assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "oversized host guidance"
+cp "$root/governance/agent-hosts.json" "$fixture/.governance/agent-hosts.json"
+
+# Required checks that no workflow publishes would otherwise block every PR
+# forever while looking like a valid declaration.
+python3 - "$fixture/governance/required-checks.json" <<'PYANOMALY_CI'
+import json, sys
+path = sys.argv[1]
+value = json.load(open(path, encoding='utf-8'))
+value['requiredCheckNames'] = ['missing-forever']
+open(path, 'w', encoding='utf-8').write(json.dumps(value, indent=2) + '\n')
+PYANOMALY_CI
+assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "unpublished required check"
+cp "$root/governance/required-checks.json" "$fixture/governance/required-checks.json"
+
+# Bound checks to their declared workflow; a second workflow must not make the
+# first workflow's valid check look missing.
+printf '%s\n' 'name: secondary' 'on: push' 'jobs:' '  secondary:' \
+  '    name: secondary' '    runs-on: ubuntu-latest' '    steps:' \
+  '      - run: true' > "$fixture/.github/workflows/secondary.yml"
+python3 -c 'import json,sys; p=sys.argv[1]; v=json.load(open(p)); v.pop("workflowFile",None); v.pop("requiredCheckNames",None); v["requiredChecks"]=[{"name":"test","workflowFile":".github/workflows/ci.yml"},{"name":"secondary","workflowFile":".github/workflows/secondary.yml"}]; open(p,"w").write(json.dumps(v,indent=2)+"\n")' "$fixture/governance/required-checks.json"
+[[ -z "$(codes "$fixture" ci)" ]] || fail "checks must stay bound to their declared workflow"
+cp "$root/governance/required-checks.json" "$fixture/governance/required-checks.json"
 
 # A missing host instruction file fails closed.
 mv "$fixture/GEMINI.md" "$fixture/GEMINI.md.bak"
