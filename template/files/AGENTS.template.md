@@ -265,3 +265,11 @@ Unknown ownership or remote/independent-clone state must not be guessed.
 Markdown approval is an audit note, not trusted merge approval. Required
 merge approval comes from the repository's protected review, attestation and
 ruleset boundary.
+
+## Bounded session controls
+
+Every implementation session is bounded by the ticket's `maxActiveMinutes` and
+must create a `checkpoint` before a context, tool or process boundary. On a
+deterministic failure or unresolved ownership, write a concise `handoff` with
+the next observable action and `stop`; do not retry the same failed path
+indefinitely.

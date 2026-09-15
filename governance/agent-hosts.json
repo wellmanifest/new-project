@@ -1,6 +1,6 @@
 {
   "schema": "new-project.agent-hosts/v1",
-  "note": "Single source of truth for the host-agnostic agent contract (AGENTS.md rule 22). scripts/agent_host_check.py proves these files are present, that the fail-closed hook is installed and active, that source links point at the local adoption contract and concrete remote standard files, and that the packaging metadata a repository already carries actually runs the gate. Instruction files are advisory to a model; the hook, the CI job and the packaging lifecycle bindings declared here are the parts that are not. Adding a host here without adding it to governance/package-manifest.json makes the requirement unshippable, so both change together.",
+  "note": "Single source of truth for the host-agnostic agent contract (AGENTS.md rule 22). scripts/agent_host_check.py proves these files are present, that the fail-closed hook is installed and active, that source links point at the local adoption contract and concrete remote standard files, that bounded-session controls are present, and that the packaging metadata a repository already carries actually runs the gate. Instruction files are advisory to a model; the hook, the CI job and the packaging lifecycle bindings declared here are the parts that are not. Adding a host here without adding it to governance/package-manifest.json makes the requirement unshippable, so both change together.",
   "hook": {
     "path": ".githooks/pre-commit",
     "hooksPathConfig": ".githooks",
@@ -83,6 +83,27 @@
     ],
     "requiredInEveryHost": ["new-project-agents", "new-project-hosts", "new-project-adoption"],
     "requiredInAgents": ["new-project-agents", "new-project-hosts", "new-project-adoption", "worktrees-schema", "git-lifecycle-schema", "ticket-lifecycle-schema", "policy-dsl", "logs-contract", "agent-schema", "offer-pointer", "brand-pointer"]
+  },
+  "anomalyChecks": {
+    "schema": "new-project.agent-guidance-audit/v1",
+    "maxInstructionBytes": 65536,
+    "requiredTerms": ["checkpoint", "handoff", "stop", "maxActiveMinutes"],
+    "contradictions": [
+      {
+        "id": "direct-default-branch-delivery",
+        "patterns": ["push directly to main", "never push directly to main"]
+      },
+      {
+        "id": "self-merge",
+        "patterns": ["merge directly", "never merge directly"]
+      }
+    ],
+    "ci": {
+      "requiredChecksCandidates": [
+        "governance/required-checks.json",
+        ".governance/required-checks.json"
+      ]
+    }
   },
   "packaging": {
     "python": {

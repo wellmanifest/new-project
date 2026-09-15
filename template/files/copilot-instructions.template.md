@@ -30,3 +30,7 @@ rule. Copilot Chat and the Copilot coding agent load this file automatically.
 
 Suggestions that skip these steps are rejected by the pre-commit hook and by the
 `governance / enforce` CI job. Markdown is not a substitute for either.
+
+Bounded session controls: respect the ticket's `maxActiveMinutes`, create a
+`checkpoint` before a context or tool boundary, and leave a `handoff` then
+`stop` after a deterministic failure instead of retrying indefinitely.

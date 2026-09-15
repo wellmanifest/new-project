@@ -191,3 +191,11 @@ AI Agents interacting with this workspace MUST immediately read and adhere to th
        explicit adoption/updater automation owns freshness and the hook never
        fetches or mutates.
    25. **PROPORTIONAL EVIDENCE**: Use `scripts/decision_record.py classify-action --action <action>`. Routine in-scope edits, formatting and local checks use the existing intent, diff and check report, not a new decision record. Never generate APPROVE or REQUEST_CHANGES from a local PASS/FAIL; valid legacy replay is not trusted review. Material scope/authority, destructive and publication decisions retain recomputable evidence and independent control. Finalize tracked carriers and format checks before snapshot/checkpoint and lease release; reuse the matching lease and coalesce same-boundary triggers. Do not recursively log the act of writing evidence. Read-only inspection and external receipt writes do not acquire repository write leases.
+
+## Bounded session controls
+
+Every implementation session is bounded by the ticket's `maxActiveMinutes` and
+must create a `checkpoint` before a context, tool or process boundary. On a
+deterministic failure or unresolved ownership, write a concise `handoff` with
+the next observable action and `stop`; do not retry the same failed path
+indefinitely.

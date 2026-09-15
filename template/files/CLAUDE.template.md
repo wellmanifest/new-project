@@ -34,3 +34,7 @@ The pre-commit hook rejects commits that are not bound to an `IN_PROGRESS`
 `ticket-NNN`, and the `governance / enforce` CI job rejects a pull request whose
 host contract or packaging declaration drifted. Markdown is not a substitute for
 either gate.
+
+Bounded session controls: respect the ticket's `maxActiveMinutes`, create a
+`checkpoint` before a context or tool boundary, and leave a `handoff` then
+`stop` after a deterministic failure instead of retrying indefinitely.

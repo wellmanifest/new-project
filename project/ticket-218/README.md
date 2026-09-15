@@ -16,6 +16,10 @@ testy oraz projekcje wersji 0.20.26. Kontynuacja obejmuje także jeden kontrakt
 źródeł instrukcji hostów: każda zarządzana projekcja wskazuje lokalny lock/
 manifest oraz konkretne pliki zdalnych standardów; lokalny lock i digesty są
 autorytetem, a zdalne adresy `main` służą wyłącznie jako bieżąca nawigacja.
+Na podstawie regresji długiej sesji dodano deterministyczny audyt anomalii:
+rozmiar instrukcji, bounded `checkpoint`/`handoff`/`stop`, jawne pary sprzecznych
+dyrektyw oraz required checks, których workflow CI nie publikuje. Audyt jest
+offline, fail-closed i nie traktuje kolejnego retry jako remediacji.
 
 Użytkownik jawnie zlecił publikację przez PR i niezależny Validator/merge,
 następnie aktualizację adopterów. Zadania adopterów pozostają w ich własnych
@@ -39,6 +43,9 @@ To odtwarzalny dowód lokalny, nie review approval.
 - [x] AC-05: Zarządzane instrukcje hostów i `AGENTS.md` zawierają sprawdzalny
   blok źródeł lokalnych i zdalnych; walidator odrzuca brakujące lub niezgodne
   linki, bez traktowania zdalnego `main` jako źródła autorytetu.
+- [x] AC-06: Audyt anomalii odrzuca przekroczony limit instrukcji, brak kontroli
+  bounded-session, skonfigurowaną sprzeczność oraz required check niepublikowany
+  przez workflow; działa bez sieci i nie wykonuje retry.
 
 Wynik: [procedura work admission](../../error/GOV-WORK-START.md) i reguły w CONTRIBUTING.md.
 Testy lokalne w przypiętym Python 3.12 z Node.js:
@@ -52,6 +59,9 @@ authority writera. Wymaga ponownego odczytu, lease/CAS i niezależnego gate.
 Istniejące foreign/legacy/dirty checkouty i historyczne decyzje pozostają
 nietknięte. Bez blanket ignore, force push, automatycznego cleanup i
 samozatwierdzenia. Raw logs i snapshoty pozostają w prywatnym magazynie.
+Audyt anomalii jest celowo syntaktyczny: wykrywa tylko kontrakty i wzorce
+zadeklarowane w `agent-hosts.json`, więc nie udaje semantycznego arbitra każdej
+prozy i nie pobiera zdalnych dokumentów.
 
 SESSION_EXECUTION_AUTHORIZATION: użytkownik polecił kontynuować i ustandaryzować
 źródła `AGENTS.md`, zbadać `wellmanifest/agent` oraz brak `wellmanifest/agents`

@@ -34,3 +34,7 @@ Fail-closed. Do not write code until this contract is followed.
 If authority or ownership remains unclear, pause the dependent effect and
 follow [.governance/AGENT_DECISIONS.md](.governance/AGENT_DECISIONS.md) to inspect evidence and existing authorization.
 Continue disjoint authorized work. Do not invent a ticket number.
+
+Bounded session controls: respect the ticket's `maxActiveMinutes`, create a
+`checkpoint` before a context or tool boundary, and leave a `handoff` then
+`stop` after a deterministic failure instead of retrying indefinitely.

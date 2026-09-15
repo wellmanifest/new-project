@@ -16,3 +16,7 @@ read:
 # Never let the tool create commits the governance hook has not seen.
 auto-commits: false
 attribute-commit-message-author: true
+
+# Bounded session controls: respect the ticket's maxActiveMinutes, create a
+# checkpoint before a context or tool boundary, and leave a handoff then stop
+# after a deterministic failure instead of retrying indefinitely.

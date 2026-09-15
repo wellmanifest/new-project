@@ -29,3 +29,7 @@ Before writing code in a repository that has `./project/new-ticket.sh`:
 6. Run `./project/governance-check.sh` before claiming done.
 
 The pre-commit hook rejects commits that are not bound to an `IN_PROGRESS` ticket. Do not invent ticket numbers. Do not ask the human to approve a merge; invoke validator-agent when publication needs trusted approval.
+
+Bounded session controls: respect the ticket's `maxActiveMinutes`, create a
+`checkpoint` before a context or tool boundary, and leave a `handoff` then
+`stop` after a deterministic failure instead of retrying indefinitely.

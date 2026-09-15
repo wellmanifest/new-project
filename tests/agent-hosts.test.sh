@@ -526,6 +526,9 @@ git init -q "$fixture"
 git -C "$fixture" config user.email "test@example.com"
 git -C "$fixture" config user.name "Test"
 cp "$root/governance/agent-hosts.json" "$fixture/.governance/agent-hosts.json"
+mkdir -p "$fixture/governance" "$fixture/.github/workflows"
+cp "$root/governance/required-checks.json" "$fixture/governance/required-checks.json"
+cp "$root/.github/workflows/ci.yml" "$fixture/.github/workflows/ci.yml"
 # Derive the fixture's host files from the contract, so adding a host to
 # agent-hosts.json cannot silently leave this fixture behind.
 while read -r host_file; do
@@ -597,6 +600,44 @@ open(path, 'w', encoding='utf-8').write(json.dumps(value, indent=2) + '\n')
 PY
 assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "duplicate source link id"
 cp "$root/governance/agent-hosts.json" "$fixture/.governance/agent-hosts.json"
+
+# A host that loses the bounded-session controls must fail before an agent can
+# spend a long retry loop on an impossible task.
+cp "$fixture/AGENTS.md" "$fixture/AGENTS.md.anomaly-backup"
+sed -i '/## Bounded session controls/,$d' "$fixture/AGENTS.md"
+assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "missing bounded-session controls"
+mv "$fixture/AGENTS.md.anomaly-backup" "$fixture/AGENTS.md"
+
+# Contradictory directives are checked only when both explicitly configured
+# patterns occur in one host projection; ordinary scoped prose remains valid.
+cp "$fixture/AGENTS.md" "$fixture/AGENTS.md.anomaly-backup"
+printf '%s\n' 'push directly to main' 'never push directly to main' >> "$fixture/AGENTS.md"
+assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "contradictory host directives"
+mv "$fixture/AGENTS.md.anomaly-backup" "$fixture/AGENTS.md"
+
+# A host limit that would truncate the instruction chain is a deterministic
+# blocker, not a reason to continue with partial policy.
+python3 - "$fixture/.governance/agent-hosts.json" <<'PYANOMALY_SIZE'
+import json, sys
+path = sys.argv[1]
+value = json.load(open(path, encoding='utf-8'))
+value['anomalyChecks']['maxInstructionBytes'] = 10
+open(path, 'w', encoding='utf-8').write(json.dumps(value, indent=2) + '\n')
+PYANOMALY_SIZE
+assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "oversized host guidance"
+cp "$root/governance/agent-hosts.json" "$fixture/.governance/agent-hosts.json"
+
+# Required checks that no workflow publishes would otherwise block every PR
+# forever while looking like a valid declaration.
+python3 - "$fixture/governance/required-checks.json" <<'PYANOMALY_CI'
+import json, sys
+path = sys.argv[1]
+value = json.load(open(path, encoding='utf-8'))
+value['requiredCheckNames'] = ['missing-forever']
+open(path, 'w', encoding='utf-8').write(json.dumps(value, indent=2) + '\n')
+PYANOMALY_CI
+assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "unpublished required check"
+cp "$root/governance/required-checks.json" "$fixture/governance/required-checks.json"
 
 # A missing host instruction file fails closed.
 mv "$fixture/GEMINI.md" "$fixture/GEMINI.md.bak"

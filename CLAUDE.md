@@ -24,3 +24,7 @@ even when this session did not start in Cursor.
 5. Run `./scripts/install-agent-hosts.sh` once per clone, then `./project/governance-check.sh` before done.
 
 The git hook rejects unbound commits. Markdown is not a substitute for the hook.
+
+Bounded session controls: respect the ticket's `maxActiveMinutes`, create a
+`checkpoint` before a context or tool boundary, and leave a `handoff` then
+`stop` after a deterministic failure instead of retrying indefinitely.

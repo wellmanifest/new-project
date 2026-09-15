@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -379,6 +380,204 @@ def check_declaration(
     return findings
 
 
+def workflow_job_names(path: Path) -> list[str]:
+    """Parse the small, stable subset of GitHub workflow YAML we need.
+
+    The required-checks validator owns the complete workflow contract. This
+    deliberately remains a narrow, dependency-free preflight so an agent-host
+    audit can flag an impossible CI declaration before a long session starts.
+    """
+    lines = path.read_text(encoding="utf-8").splitlines()
+    in_jobs = False
+    jobs: list[str] = []
+    current_key: str | None = None
+    current_name: str | None = None
+
+    def flush() -> None:
+        nonlocal current_key, current_name
+        if current_key is not None:
+            jobs.append(current_name or current_key)
+        current_key = None
+        current_name = None
+
+    for line in lines:
+        if re.match(r"^jobs:\s*(?:#.*)?$", line):
+            in_jobs = True
+            continue
+        if not in_jobs:
+            continue
+        if (line and not line.startswith((" ", "\t"))
+                and line.strip() and not line.lstrip().startswith("#")):
+            break
+        match = re.match(r"^  ([A-Za-z0-9][A-Za-z0-9_-]*):\s*(?:#.*)?$", line)
+        if match:
+            flush()
+            current_key = match.group(1)
+            continue
+        name = re.match(r"^    name:\s*(.+?)\s*$", line)
+        if name and current_key is not None and current_name is None:
+            value = name.group(1).strip()
+            if " #" in value:
+                value = value.split(" #", 1)[0].rstrip()
+            if len(value) >= 2 and value[0] in {"'", '"'} and value[-1] == value[0]:
+                value = value[1:-1]
+            current_name = value
+    flush()
+    return jobs
+
+
+def check_guidance_anomalies(root: Path, contract: dict[str, Any]) -> list[Finding]:
+    """Catch bounded-session and impossible-CI hazards before model work begins.
+
+    This is intentionally static and offline. It does not fetch remote links,
+    infer intent from prose, or retry a failed command. A finding is a stop
+    signal with a concrete path, not an invitation to keep experimenting.
+    """
+    config = contract.get("anomalyChecks")
+    if not isinstance(config, dict):
+        return [Finding(
+            "GOV-AGENT-HOST-004",
+            "Agent host contract has no deterministic anomaly-check declaration.",
+            "Adopt the current standard package with its bounded-session audit contract.",
+            ["anomalyChecks"],
+        )]
+
+    findings: list[Finding] = []
+    max_bytes = config.get("maxInstructionBytes")
+    required_terms = config.get("requiredTerms", [])
+    contradictions = config.get("contradictions", [])
+    if not isinstance(max_bytes, int) or max_bytes < 1:
+        return [Finding(
+            "GOV-AGENT-HOST-004",
+            "Agent host anomaly contract has an invalid instruction-size limit.",
+            "Declare a positive maxInstructionBytes value in the managed contract.",
+            ["anomalyChecks"],
+        )]
+
+    for host in contract["hosts"]:
+        relative = str(host["file"])
+        path = root / relative
+        if not path.is_file():
+            continue  # check_hosts emits the more direct missing-file finding.
+        try:
+            content = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as error:
+            findings.append(Finding(
+                "GOV-AGENT-HOST-004",
+                f"Host guidance cannot be audited in {relative}: {error}",
+                "Restore the managed host projection from the pinned package.",
+                [relative],
+            ))
+            continue
+        size = len(content.encode("utf-8"))
+        if size > max_bytes:
+            findings.append(Finding(
+                "GOV-AGENT-HOST-004",
+                f"Host guidance exceeds the bounded instruction size ({size} > {max_bytes} bytes): {relative}",
+                "Split or shorten the managed guidance before the host truncates its instruction chain.",
+                [relative],
+            ))
+        folded = content.casefold()
+        missing = [
+            str(term) for term in required_terms
+            if isinstance(term, str) and term.casefold() not in folded
+        ]
+        if missing:
+            findings.append(Finding(
+                "GOV-AGENT-HOST-004",
+                f"Host guidance lacks bounded-session controls {', '.join(missing)}: {relative}",
+                "Restore checkpoint, handoff and stop conditions so a blocked session cannot retry indefinitely.",
+                [relative],
+            ))
+        for rule in contradictions:
+            if not isinstance(rule, dict):
+                continue
+            patterns = rule.get("patterns")
+            if not isinstance(patterns, list) or len(patterns) < 2:
+                continue
+            present = [str(pattern) for pattern in patterns
+                       if isinstance(pattern, str) and pattern.casefold() in folded]
+            if len(present) == len(patterns):
+                identifier = str(rule.get("id", "unnamed"))
+                findings.append(Finding(
+                    "GOV-AGENT-HOST-004",
+                    f"Host guidance contains contradictory directives ({identifier}): {relative}",
+                    "Remove one directive or split the rules by an explicit, machine-checkable scope.",
+                    [relative],
+                ))
+
+    ci = config.get("ci")
+    if not isinstance(ci, dict):
+        return findings
+    candidates = ci.get("requiredChecksCandidates", [])
+    checks_path = next(
+        (root / str(candidate) for candidate in candidates
+         if isinstance(candidate, str) and (root / candidate).is_file()),
+        None,
+    )
+    if checks_path is None:
+        findings.append(Finding(
+            "GOV-AGENT-HOST-004",
+            "CI anomaly audit cannot find a required-checks declaration.",
+            "Restore governance/required-checks.json or .governance/required-checks.json.",
+            ["required-checks"],
+        ))
+        return findings
+    try:
+        declaration = load_json(checks_path)
+    except (OSError, json.JSONDecodeError) as error:
+        findings.append(Finding(
+            "GOV-AGENT-HOST-004",
+            f"CI required-checks declaration is unreadable: {error}",
+            "Restore a valid managed required-checks declaration.",
+            [str(checks_path.relative_to(root))],
+        ))
+        return findings
+    if not isinstance(declaration, dict):
+        return findings
+    pairs: list[tuple[str, str]] = []
+    bound = declaration.get("requiredChecks")
+    if isinstance(bound, list) and bound:
+        for item in bound:
+            if isinstance(item, dict) and isinstance(item.get("name"), str) and isinstance(item.get("workflowFile"), str):
+                pairs.append((item["name"], item["workflowFile"]))
+    elif isinstance(declaration.get("requiredCheckNames"), list) and isinstance(declaration.get("workflowFile"), str):
+        pairs = [(str(name), declaration["workflowFile"])
+                 for name in declaration["requiredCheckNames"]
+                 if isinstance(name, str)]
+    if not pairs:
+        findings.append(Finding(
+            "GOV-AGENT-HOST-004",
+            "CI required-checks declaration has no usable check/workflow pairs.",
+            "Declare requiredCheckNames with workflowFile, or bound requiredChecks entries.",
+            [str(checks_path.relative_to(root))],
+        ))
+        return findings
+    for workflow in sorted({workflow for _, workflow in pairs}):
+        workflow_path = root / workflow
+        if not workflow_path.is_file():
+            findings.append(Finding(
+                "GOV-AGENT-HOST-004",
+                f"CI required-checks declaration names a missing workflow: {workflow}",
+                "Point workflowFile at a workflow present in this checkout.",
+                [workflow, str(checks_path.relative_to(root))],
+            ))
+            continue
+        try:
+            published = workflow_job_names(workflow_path)
+        except (OSError, UnicodeDecodeError):
+            published = []
+        for name, _ in pairs:
+            if name not in published:
+                findings.append(Finding(
+                    "GOV-AGENT-HOST-004",
+                    f"CI required check {name!r} is not published by {workflow}.",
+                    "Add the job or change the declaration to a job this workflow actually publishes; do not retry a permanently impossible gate.",
+                    [workflow, str(checks_path.relative_to(root))],
+                ))
+    return findings
+
+
 def load_contract(root: Path, explicit: str | None) -> tuple[dict[str, Any] | None, Finding | None]:
     if explicit is not None:
         path = root / explicit if not Path(explicit).is_absolute() else Path(explicit)
@@ -408,7 +607,7 @@ def load_contract(root: Path, explicit: str | None) -> tuple[dict[str, Any] | No
             "GOV-AGENT-HOST-004", f"Agent host contract must declare schema {SCHEMA}.",
             "Restore the pinned host contract through a standard upgrade.", [str(path.name)],
         )
-    for key in ("hook", "hosts", "sourceLinks", "packaging"):
+    for key in ("hook", "hosts", "sourceLinks", "packaging", "anomalyChecks"):
         if key not in contract:
             return None, Finding(
                 "GOV-AGENT-HOST-004", f"Agent host contract has no '{key}' section.",
@@ -427,6 +626,7 @@ def audit(root: Path, actor: str = "agent", contract_path: str | None = None) ->
             + check_source_links(root, contract)
             + check_hook(root, contract, actor)
             + check_packaging(root, contract)
+            + check_guidance_anomalies(root, contract)
         )
     findings.sort()
     return {
