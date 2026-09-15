@@ -10,7 +10,17 @@
   },
   "allowedPaths": [
     "AGENTS.md",
+    "CLAUDE.md",
+    "GEMINI.md",
+    ".cursor/rules/new-project-standard.mdc",
+    ".aider.conf.yml",
+    ".github/copilot-instructions.md",
     "template/files/AGENTS.template.md",
+    "template/files/CLAUDE.template.md",
+    "template/files/GEMINI.template.md",
+    "template/files/cursor-rule.template.mdc",
+    "template/files/aider.template.yml",
+    "template/files/copilot-instructions.template.md",
     "CONTRIBUTING.md",
     "tests/agent-hosts.test.sh",
     "POLICY.md",
@@ -21,6 +31,9 @@
     "tests/work_start_test.py",
     "tests/governance-scripts.test.sh",
     "governance/package-manifest.json",
+    "governance/agent-hosts.json",
+    "governance/agent-hosts.schema.json",
+    "scripts/agent_host_check.py",
     "governance/diagnostics.json",
     "error/GOV-WORK-START.md",
     ".github/workflows/ci.yml",
@@ -45,7 +58,7 @@
   "delivery": {
     "acceptedBaseSha": "d54878a105a20d84dd554f205bc177dcacc8730a",
     "targetBranch": "main",
-    "outcome": "Correct the reported single-agent governance escalation: reuse matching workspaces, prevent ceremony-only tickets/worktrees, classify routine actions without decision logs, preserve exact effect authority and independent publication controls. Inspect work beside main before development or allocation; prefer resume, read-only assistance, controlled handoff and bounded serialization over unnecessary new worktrees. Publish through the declared protected PR/validator/merge process and release the material standard version for immutable adoption.",
+    "outcome": "Correct the reported single-agent governance escalation: reuse matching workspaces, prevent ceremony-only tickets/worktrees, classify routine actions without decision logs, preserve exact effect authority and independent publication controls. Inspect work beside main before development or allocation; prefer resume, read-only assistance, accepted fenced handoff and bounded serialization over unnecessary new worktrees. Publish through the declared protected PR/validator/merge process and release the material standard version for immutable adoption. Add a fail-closed source-links contract to managed AGENTS.md and host projections: local lock/manifest paths remain authoritative, while concrete remote wellmanifest file URLs provide current navigation without runtime fetching or manual per-version prose edits.",
     "nonGoals": [
       "Editing managed adopter copies or installed host pins",
       "Deleting or renaming existing worktrees or foreign work",
@@ -59,18 +72,28 @@
     "budgets": {
       "maxImplementationFiles": 24,
       "maxAffectedComponents": 3,
-      "maxPublicInterfaceChanges": 1,
+      "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Current user explicitly requests repository-wide start awareness and conflict escalation prevention. Continue ticket-218 in its existing checkout, adding a read-only preflight and allocator admission, closed report schema, regression tests and canonical remediation. Retain base integration blocker and all publication authority. The user now explicitly authorizes publication and subsequent fleet adoption. Existing ticket checkout was fast-forwarded to observed main; preserve upstream SQLite input changes, revalidate scope on this exact base and include release projections in the same material ticket. Keep the material count within 24 by consolidating explanatory guidance into the indexed canonical document; update coupled release test expectations rather than weakening the file budget. Complete the rule-to-code traceability graph in the same bounded change. Consolidate strategy documentation into CONTRIBUTING and the runbook, and proportional classifier regressions into agent-host tests; retain existing decision replay tests unchanged.",
+      "decision": "Current user explicitly requests repository-wide start awareness, conflict escalation prevention and standardized concrete source links for AGENTS.md. Continue ticket-218 in its existing checkout, adding a read-only preflight and allocator admission, closed report schema, regression tests and canonical remediation. Retain base integration blocker and all publication authority. The user now explicitly authorizes publication and subsequent fleet adoption. Existing ticket checkout was fast-forwarded to observed main; preserve upstream SQLite input changes, revalidate scope on this exact base and include release projections in the same material ticket. Complete the rule-to-code traceability graph in the same bounded change. Consolidate strategy documentation into CONTRIBUTING and the runbook, proportional classifier regressions into agent-host tests, and source-links checks across every managed host projection. Local adoption locks and managed hashes are authoritative; remote main URLs are navigation only and no host instruction may fetch them at runtime.",
       "components": [
         {
           "name": "policy",
           "paths": [
             "AGENTS.md",
+            "CLAUDE.md",
+            "GEMINI.md",
+            ".cursor/rules/new-project-standard.mdc",
+            ".aider.conf.yml",
+            ".github/copilot-instructions.md",
             "template/files/AGENTS.template.md",
+            "template/files/CLAUDE.template.md",
+            "template/files/GEMINI.template.md",
+            "template/files/aider.template.yml",
+            "template/files/copilot-instructions.template.md",
+            "template/files/cursor-rule.template.mdc",
             "CONTRIBUTING.md",
             "POLICY.md",
             "docs/**",
@@ -88,11 +111,15 @@
             "governance/work-start-report.schema.json",
             "governance/package-manifest.json",
             "governance/diagnostics.json",
+            "governance/agent-hosts.json",
+            "governance/agent-hosts.schema.json",
             "error/GOV-WORK-START.md",
             "governance/manifest.hub.json",
             "governance/manifest.default.json",
             "governance/rule-enforcement.json",
-            "scripts/audit_rule_enforcement.py"
+            "scripts/audit_rule_enforcement.py",
+            "scripts/agent_host_check.py",
+            "project/ticket-218/**"
           ]
         },
         {
@@ -111,7 +138,8 @@
       ],
       "responsibilityChanges": false,
       "interfaceChanges": [
-        "Add work-start report v1 and conservative allocator admission; no grant of write or merge authority."
+        "Add work-start report v1 and conservative allocator admission; no grant of write or merge authority.",
+        "Add a managed source-links block to AGENTS.md and every declared host projection; local lock/digests remain authoritative and remote main links are navigation only."
       ],
       "dataChanges": [],
       "ui": {
@@ -151,6 +179,14 @@
           "bash tests/governance-scripts.test.sh"
         ],
         "evidence": "Real Git fixtures: sibling pending work, inherited history, disjoint scopes, uncertainty, bounded WIP, no writes and rejected allocation before reservation."
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "python3 scripts/agent_host_check.py --root . --actor ci --format json",
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Every managed host projection exposes the local hub/adopter contract and concrete remote wellmanifest files; removing one link emits GOV-AGENT-HOST-004 and no network access is attempted."
       }
     ]
   }

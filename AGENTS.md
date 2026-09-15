@@ -1,5 +1,28 @@
 # AGENTS.md
 
+<!-- wellmanifest:source-links:v1 -->
+## Managed standard sources
+
+This file is the hub projection of the host-agnostic contract. The local
+manifest and package are authoritative for this checkout; remote `main` links
+are navigation only and are never fetched or executed by an agent.
+
+- Local hub manifest: [governance/manifest.hub.json](governance/manifest.hub.json)
+- Local hub package: [governance/package-manifest.json](governance/package-manifest.json)
+- Canonical instructions: [AGENTS template](https://github.com/wellmanifest/new-project/blob/main/template/files/AGENTS.template.md)
+- Host contract: [agent-hosts.json](https://github.com/wellmanifest/new-project/blob/main/governance/agent-hosts.json)
+- Immutable adoption/updater: [create_adoption_lock.py](https://github.com/wellmanifest/new-project/blob/main/scripts/create_adoption_lock.py)
+- Worktree contract: [worktrees.schema.json](https://github.com/wellmanifest/worktrees/blob/main/models/worktrees.schema.json)
+- Git lifecycle: [git-lifecycle.schema.json](https://github.com/wellmanifest/git-lifecycle/blob/main/standard/git-lifecycle.schema.json)
+- Ticket lifecycle: [ticket-lifecycle.schema.json](https://github.com/wellmanifest/ticket-lifecycle/blob/main/standard/ticket-lifecycle.schema.json)
+- Policy DSL: [POLICY_DSL.md](https://github.com/wellmanifest/policy-dsl/blob/main/spec/POLICY_DSL.md)
+- Logs contract: [logs.contract.json](https://github.com/wellmanifest/logs/blob/main/contracts/logs.contract.json)
+- Agent contract: [agent.schema.json](https://github.com/wellmanifest/agent/blob/main/standard/agent.schema.json)
+- Offer pointer: [wellmanifest/offer README](https://github.com/wellmanifest/offer/blob/main/README.md)
+- Brand pointer: [wellmanifest/brand README](https://github.com/wellmanifest/brand/blob/main/README.md)
+
+<!-- end wellmanifest:source-links:v1 -->
+
 ## Opted-in SQLite ticket storage
 
 When `git config --local --get new-project.ticketStorage` is `sqlite`, the

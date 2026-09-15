@@ -12,7 +12,10 @@ Przed developmentem obserwuj pracę obok main; kontynuuj, pomóż tylko do
 odczytu, uzgodnij fenced handoff lub kolejkę przed nową alokacją. Zachowaj
 proporcjonalne dowody i brak rekurencyjnych ticketów/worktree/decision records.
 Implementacja obejmuje kontrolę startu i alokator, schemat raportu, dokumentację,
-testy oraz projekcje wersji 0.20.26 w jednym materialnym changesecie (24 pliki).
+testy oraz projekcje wersji 0.20.26. Kontynuacja obejmuje także jeden kontrakt
+źródeł instrukcji hostów: każda zarządzana projekcja wskazuje lokalny lock/
+manifest oraz konkretne pliki zdalnych standardów; lokalny lock i digesty są
+autorytetem, a zdalne adresy `main` służą wyłącznie jako bieżąca nawigacja.
 
 Użytkownik jawnie zlecił publikację przez PR i niezależny Validator/merge,
 następnie aktualizację adopterów. Zadania adopterów pozostają w ich własnych
@@ -33,6 +36,9 @@ To odtwarzalny dowód lokalny, nie review approval.
 - [ ] AC-03: Wymagane bramki oraz niezależny review odnoszą się do exact head.
 - [x] AC-04: Regresje realnego Git sprawdzają worktree, pending delta, kolejkę,
   brak skutków i odrzucenie alokacji przed rezerwacją numeru.
+- [x] AC-05: Zarządzane instrukcje hostów i `AGENTS.md` zawierają sprawdzalny
+  blok źródeł lokalnych i zdalnych; walidator odrzuca brakujące lub niezgodne
+  linki, bez traktowania zdalnego `main` jako źródła autorytetu.
 
 Wynik: [procedura work admission](../../error/GOV-WORK-START.md) i reguły w CONTRIBUTING.md.
 Testy lokalne w przypiętym Python 3.12 z Node.js:
@@ -46,3 +52,7 @@ authority writera. Wymaga ponownego odczytu, lease/CAS i niezależnego gate.
 Istniejące foreign/legacy/dirty checkouty i historyczne decyzje pozostają
 nietknięte. Bez blanket ignore, force push, automatycznego cleanup i
 samozatwierdzenia. Raw logs i snapshoty pozostają w prywatnym magazynie.
+
+SESSION_EXECUTION_AUTHORIZATION: użytkownik polecił kontynuować i ustandaryzować
+źródła `AGENTS.md`, zbadać `wellmanifest/agent` oraz brak `wellmanifest/agents`
+i wdrożyć bounded mechanizm aktualizacji przez istniejący pakiet/adoption.

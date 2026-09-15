@@ -20,6 +20,10 @@ grep -Fq 'verify-pin --root "$root" --staged' "$root/template/files/pre-commit.t
 grep -Fq 'new-ticket.sh' "$root/GEMINI.md" || fail "GEMINI.md must require new-ticket.sh"
 grep -Fq 'new-ticket.sh' "$root/CLAUDE.md" || fail "CLAUDE.md must require new-ticket.sh"
 grep -Fq 'alwaysApply: true' "$root/.cursor/rules/new-project-standard.mdc" || fail "Cursor rule must alwaysApply"
+grep -Fq '<!-- wellmanifest:source-links:v1 -->' "$root/AGENTS.md" \
+  || fail "AGENTS.md must expose the managed source-links marker"
+grep -Fq 'https://github.com/wellmanifest/worktrees/blob/main/models/worktrees.schema.json' "$root/AGENTS.md" \
+  || fail "AGENTS.md must link a concrete wellmanifest dependency file"
 
 # Host guidance must agree with the allocator and C-CONCURRENCY-002; offline
 # allocation is valid and does not authorize an unsolicited remote refresh.
@@ -503,6 +507,15 @@ import json, sys
 contract = json.load(open(sys.argv[1], encoding="utf-8"))
 print("\n".join(host["file"] for host in contract["hosts"]))
 ' "$fixture/.governance/agent-hosts.json")
+# The fixture is an adopter, so use the adopter projections rather than the
+# hub's local manifest links. This also proves every declared host receives the
+# same source-link block as a real package adoption.
+cp "$root/template/files/AGENTS.template.md" "$fixture/AGENTS.md"
+cp "$root/template/files/CLAUDE.template.md" "$fixture/CLAUDE.md"
+cp "$root/template/files/GEMINI.template.md" "$fixture/GEMINI.md"
+cp "$root/template/files/cursor-rule.template.mdc" "$fixture/.cursor/rules/new-project-standard.mdc"
+cp "$root/template/files/aider.template.yml" "$fixture/.aider.conf.yml"
+cp "$root/template/files/copilot-instructions.template.md" "$fixture/.github/copilot-instructions.md"
 printf '%s\n' '#!/usr/bin/env bash' > "$fixture/.githooks/pre-commit"
 chmod +x "$fixture/.githooks/pre-commit"
 cat > "$fixture/.governance/manifest.lock.json" <<'LOCK'
@@ -526,6 +539,23 @@ assert_lacks "$(codes "$fixture" ci)" "GOV-AGENT-HOST-006" "ci actor"
 
 git -C "$fixture" config core.hooksPath .githooks
 [[ -z "$(codes "$fixture")" ]] || fail "activated fixture must pass: $(codes "$fixture")"
+
+# Removing one concrete source link is a fail-closed host-contract finding.
+sed -i '/worktrees.schema.json/d' "$fixture/AGENTS.md"
+assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "missing AGENTS source link"
+cp "$root/template/files/AGENTS.template.md" "$fixture/AGENTS.md"
+
+# A URL that does not match its declared repository/path is also rejected.
+python3 - "$fixture/.governance/agent-hosts.json" <<'PY'
+import json
+import sys
+path = sys.argv[1]
+value = json.load(open(path, encoding='utf-8'))
+value['sourceLinks']['remote'][0]['url'] = 'https://github.com/wellmanifest/new-project/blob/main/wrong.md'
+open(path, 'w', encoding='utf-8').write(json.dumps(value, indent=2) + '\n')
+PY
+assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "non-canonical source link"
+cp "$root/governance/agent-hosts.json" "$fixture/.governance/agent-hosts.json"
 
 # A missing host instruction file fails closed.
 mv "$fixture/GEMINI.md" "$fixture/GEMINI.md.bak"

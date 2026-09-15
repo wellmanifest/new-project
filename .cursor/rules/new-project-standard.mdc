@@ -3,6 +3,20 @@ description: wellmanifest/new-project fail-closed ticket contract for every Curs
 alwaysApply: true
 ---
 
+<!-- wellmanifest:source-links:v1 -->
+## Managed standard sources
+
+The local hub manifest and package are authoritative. Remote `main` links are
+navigation only and are never fetched or executed by an agent.
+
+- Local hub manifest: [governance/manifest.hub.json](governance/manifest.hub.json)
+- Local hub package: [governance/package-manifest.json](governance/package-manifest.json)
+- Canonical instructions: [AGENTS template](https://github.com/wellmanifest/new-project/blob/main/template/files/AGENTS.template.md)
+- Host contract: [agent-hosts.json](https://github.com/wellmanifest/new-project/blob/main/governance/agent-hosts.json)
+- Immutable adoption/updater: [create_adoption_lock.py](https://github.com/wellmanifest/new-project/blob/main/scripts/create_adoption_lock.py)
+
+<!-- end wellmanifest:source-links:v1 -->
+
 # new-project standard (host-agnostic)
 
 Before writing code in a repository that has `./project/new-ticket.sh`:

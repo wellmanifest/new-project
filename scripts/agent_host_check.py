@@ -34,6 +34,7 @@ except ImportError:  # pragma: no cover - exercised on 3.10 runners
 SCHEMA = "new-project.agent-hosts/v1"
 CONTRACT_CANDIDATES = ("governance/agent-hosts.json", ".governance/agent-hosts.json")
 LOCK_CANDIDATES = ("governance/manifest.lock.json", ".governance/manifest.lock.json")
+SOURCE_LINK_MARKER = "<!-- wellmanifest:source-links:v1 -->"
 
 
 @dataclass(order=True)
@@ -95,6 +96,120 @@ def check_hosts(root: Path, contract: dict[str, Any]) -> list[Finding]:
                 "Bootstrap with ./scripts/install-agent-hosts.sh --source <hub> --target <repo>, or adopt the current standard package.",
                 [relative],
             ))
+    return findings
+
+
+def check_source_links(root: Path, contract: dict[str, Any]) -> list[Finding]:
+    """Require every managed host projection to expose its bounded sources.
+
+    The local files prove which package is adopted. Remote links are deliberately
+    navigation-only and point to concrete files on the current standard branch;
+    no validator fetches them and they never replace the local lock/digests.
+    """
+    findings: list[Finding] = []
+    source_links = contract.get("sourceLinks")
+    if not isinstance(source_links, dict):
+        return [Finding(
+            "GOV-AGENT-HOST-004",
+            "Agent host contract has no source-links declaration.",
+            "Adopt the current standard package with its managed source-links contract.",
+            ["sourceLinks"],
+        )]
+
+    local = source_links.get("local", [])
+    remote = source_links.get("remote", [])
+    by_id = {
+        item.get("id"): item for item in remote
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    required_every = source_links.get("requiredInEveryHost", [])
+    required_agents = source_links.get("requiredInAgents", [])
+    required_ids = set(required_every) | set(required_agents)
+    missing_ids = sorted(identifier for identifier in required_ids if identifier not in by_id)
+    if missing_ids:
+        findings.append(Finding(
+            "GOV-AGENT-HOST-004",
+            "Agent host source-links declaration references unknown remote ids: "
+            + ", ".join(missing_ids),
+            "Restore the managed source-links contract from the standard package.",
+            ["sourceLinks"],
+        ))
+        return findings
+
+    malformed_urls = []
+    for identifier, item in by_id.items():
+        repository = item.get("repository")
+        path = item.get("path")
+        url = item.get("url")
+        expected = f"https://github.com/{repository}/blob/main/{path}"
+        if not isinstance(url, str) or url != expected:
+            malformed_urls.append(identifier)
+    if malformed_urls:
+        findings.append(Finding(
+            "GOV-AGENT-HOST-004",
+            "Agent host source-links declaration contains non-canonical URLs: "
+            + ", ".join(sorted(malformed_urls)),
+            "Use the concrete main-branch URL derived from each declared repository and path.",
+            ["sourceLinks"],
+        ))
+        return findings
+
+    local_paths = [
+        str(item["path"])
+        for item in local
+        if isinstance(item, dict)
+        and isinstance(item.get("path"), str)
+        and (root / str(item["path"])).is_file()
+    ]
+    if not local_paths:
+        findings.append(Finding(
+            "GOV-AGENT-HOST-004",
+            "No declared local source link resolves in this checkout.",
+            "Restore the local adoption lock/package or the hub manifest/package before using host instructions.",
+            ["sourceLinks"],
+        ))
+        return findings
+
+    for host in contract["hosts"]:
+        relative = str(host["file"])
+        path = root / relative
+        if not path.is_file():
+            continue
+        try:
+            content = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as error:
+            findings.append(Finding(
+                "GOV-AGENT-HOST-004",
+                f"Host source links are unreadable in {relative}: {error}",
+                "Restore the managed host projection through standard adoption.",
+                [relative],
+            ))
+            continue
+        if SOURCE_LINK_MARKER not in content:
+            findings.append(Finding(
+                "GOV-AGENT-HOST-004",
+                f"Host instruction file has no managed source-links marker: {relative}",
+                "Regenerate managed host instructions from the pinned standard package.",
+                [relative],
+            ))
+        for local_path in local_paths:
+            if local_path not in content:
+                findings.append(Finding(
+                    "GOV-AGENT-HOST-004",
+                    f"Host instruction file omits local source link {local_path}: {relative}",
+                    "Regenerate managed host instructions from the pinned standard package.",
+                    [relative, local_path],
+                ))
+        remote_ids = required_agents if relative == "AGENTS.md" else required_every
+        for identifier in remote_ids:
+            url = by_id[identifier].get("url")
+            if not isinstance(url, str) or url not in content:
+                findings.append(Finding(
+                    "GOV-AGENT-HOST-004",
+                    f"Host instruction file omits remote source link {identifier}: {relative}",
+                    "Regenerate managed host instructions from the pinned standard package.",
+                    [relative, identifier],
+                ))
     return findings
 
 
@@ -280,7 +395,7 @@ def load_contract(root: Path, explicit: str | None) -> tuple[dict[str, Any] | No
             "GOV-AGENT-HOST-004", f"Agent host contract must declare schema {SCHEMA}.",
             "Restore the pinned host contract through a standard upgrade.", [str(path.name)],
         )
-    for key in ("hook", "hosts", "packaging"):
+    for key in ("hook", "hosts", "sourceLinks", "packaging"):
         if key not in contract:
             return None, Finding(
                 "GOV-AGENT-HOST-004", f"Agent host contract has no '{key}' section.",
@@ -296,6 +411,7 @@ def audit(root: Path, actor: str = "agent", contract_path: str | None = None) ->
     else:
         findings = (
             check_hosts(root, contract)
+            + check_source_links(root, contract)
             + check_hook(root, contract, actor)
             + check_packaging(root, contract)
         )
