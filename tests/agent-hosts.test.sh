@@ -26,6 +26,8 @@ grep -Fq 'https://github.com/wellmanifest/worktrees/blob/main/models/worktrees.s
   || fail "AGENTS.md must link a concrete wellmanifest dependency file"
 grep -Fq 'https://github.com/wellmanifest/llm/blob/main/README.md' "$root/AGENTS.md" \
   || fail "AGENTS.md must link the provider-neutral LLM policy standard"
+grep -Fq 'https://github.com/wellmanifest/llm/blob/main/README.md' "$root/template/files/AGENTS.template.md" \
+  || fail "AGENTS template must link the provider-neutral LLM policy standard"
 
 # Host guidance must agree with the allocator and C-CONCURRENCY-002; offline
 # allocation is valid and does not authorize an unsolicited remote refresh.
