@@ -66,3 +66,8 @@ prozy i nie pobiera zdalnych dokumentów.
 SESSION_EXECUTION_AUTHORIZATION: użytkownik polecił kontynuować i ustandaryzować
 źródła `AGENTS.md`, zbadać `wellmanifest/agent` oraz brak `wellmanifest/agents`
 i wdrożyć bounded mechanizm aktualizacji przez istniejący pakiet/adoption.
+
+SESSION_EXECUTION_AUTHORIZATION (2026-09-15): użytkownik polecił kontynuować
+integrację standardu modeli LLM i uruchomić testy. Ta bounded kontynuacja dodaje
+kanoniczny pointer `wellmanifest/llm` do źródeł `AGENTS.md` oraz jego regresję;
+nie zmienia routingu providera ani przypięcia modelu.
