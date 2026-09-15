@@ -56,7 +56,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "d54878a105a20d84dd554f205bc177dcacc8730a",
+    "acceptedBaseSha": "d38a85e35d1f10d5ee45ff406cb72902017b552a",
     "targetBranch": "main",
     "outcome": "Correct the reported single-agent governance escalation: reuse matching workspaces, prevent ceremony-only tickets/worktrees, classify routine actions without decision logs, preserve exact effect authority and independent publication controls. Inspect work beside main before development or allocation; prefer resume, read-only assistance, accepted fenced handoff and bounded serialization over unnecessary new worktrees. Publish through the declared protected PR/validator/merge process and release the material standard version for immutable adoption. Add a fail-closed source-links contract to managed AGENTS.md and host projections: local lock/manifest paths remain authoritative, while concrete remote wellmanifest file URLs provide current navigation without runtime fetching or manual per-version prose edits.",
     "nonGoals": [

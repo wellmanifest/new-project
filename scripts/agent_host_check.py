@@ -118,6 +118,19 @@ def check_source_links(root: Path, contract: dict[str, Any]) -> list[Finding]:
 
     local = source_links.get("local", [])
     remote = source_links.get("remote", [])
+    remote_ids = [
+        item.get("id") for item in remote
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    ]
+    duplicate_ids = sorted({identifier for identifier in remote_ids if remote_ids.count(identifier) > 1})
+    if duplicate_ids:
+        return [Finding(
+            "GOV-AGENT-HOST-004",
+            "Agent host source-links declaration contains duplicate remote ids: "
+            + ", ".join(duplicate_ids),
+            "Restore unique remote source identifiers in the managed host contract.",
+            ["sourceLinks"],
+        )]
     by_id = {
         item.get("id"): item for item in remote
         if isinstance(item, dict) and isinstance(item.get("id"), str)

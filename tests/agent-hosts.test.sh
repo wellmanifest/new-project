@@ -586,6 +586,18 @@ PY
 assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "non-canonical source link"
 cp "$root/governance/agent-hosts.json" "$fixture/.governance/agent-hosts.json"
 
+# Duplicate remote identifiers cannot silently shadow one another.
+python3 - "$fixture/.governance/agent-hosts.json" <<'PY'
+import json
+import sys
+path = sys.argv[1]
+value = json.load(open(path, encoding='utf-8'))
+value['sourceLinks']['remote'].append(dict(value['sourceLinks']['remote'][0]))
+open(path, 'w', encoding='utf-8').write(json.dumps(value, indent=2) + '\n')
+PY
+assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "duplicate source link id"
+cp "$root/governance/agent-hosts.json" "$fixture/.governance/agent-hosts.json"
+
 # A missing host instruction file fails closed.
 mv "$fixture/GEMINI.md" "$fixture/GEMINI.md.bak"
 assert_has "$(codes "$fixture")" "GOV-AGENT-HOST-004" "missing host file"
