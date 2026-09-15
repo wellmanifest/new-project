@@ -225,6 +225,16 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-221** | [`README.md`](./ticket-221/README.md) | - | - | - | - | - |
 | **ticket-222** | [`README.md`](./ticket-222/README.md) | - | - | - | - | - |
 | **ticket-223** | [`README.md`](./ticket-223/README.md) | - | - | - | - | - |
+| **ticket-224** | [`README.md`](./ticket-224/README.md) | - | - | - | - | - |
+| **ticket-225** | [`README.md`](./ticket-225/README.md) | - | - | - | - | - |
+| **ticket-226** | [`README.md`](./ticket-226/README.md) | - | - | - | - | - |
+| **ticket-227** | [`README.md`](./ticket-227/README.md) | - | - | - | - | - |
+| **ticket-228** | [`README.md`](./ticket-228/README.md) | - | - | - | - | - |
+| **ticket-229** | [`README.md`](./ticket-229/README.md) | - | - | - | - | - |
+| **ticket-230** | [`README.md`](./ticket-230/README.md) | - | - | - | - | - |
+| **ticket-231** | [`README.md`](./ticket-231/README.md) | - | - | - | - | - |
+| **ticket-232** | [`README.md`](./ticket-232/README.md) | - | - | - | - | - |
+| **ticket-233** | [`README.md`](./ticket-233/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 ---

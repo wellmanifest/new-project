@@ -1,0 +1,113 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-233",
+  "summary": "Surface stale carriers and selected-checkout writes in work admission; discover host contract from registered checkouts",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-233/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "error/GOV-WORK-START.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/work-start-report.schema.json",
+    "scripts/install-agent-hosts.sh",
+    "scripts/work_start_check.py",
+    "tests/agent-hosts.test.sh",
+    "tests/work_start_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2b016654cff1a1ccef2c0d6126a9c2550ae6b37a",
+    "targetBranch": "main",
+    "outcome": "Work admission explains a WIP slot held by a stale carrier of an integrated ticket, exposes uncommitted writes in the selected checkout with an opt-in digest CAS, and the user host pointer discovers governance from registered checkouts. Publish through independent review.",
+    "nonGoals": [
+      "No change to the status-projection activity default or terminal receipt validation.",
+      "No automatic cleanup, handoff or authority from modification times.",
+      "No history rewrite or weakening of independent publication."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add read-only observations and explicit blockers to the existing admission report instead of changing activity resolution; keep the digest CAS opt-in; replace only the managed pointer paragraph in user instruction files.",
+      "components": [
+        {
+          "name": "work-admission",
+          "paths": [
+            "scripts/work_start_check.py",
+            "governance/work-start-report.schema.json",
+            "tests/work_start_test.py",
+            "error/GOV-WORK-START.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        },
+        {
+          "name": "host-contract",
+          "paths": [
+            "scripts/install-agent-hosts.sh",
+            "tests/agent-hosts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Report blockers add integrated-ticket-carrier and selected-checkout-changed reasons.",
+        "Report worktrees add dirtyNewestModifiedAt; work_start_check accepts --expect-dirty-digest.",
+        "The user host pointer paragraph is replaced by a registered-checkout discovery rule."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert via an independently reviewed follow-up; reports without the new fields remain readable."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/work_start_test.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Regression reproducing a dirty carrier of a merged ticket in a checkout behind the target: RECONCILE with an explicit blocker, activity unchanged."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/work_start_test.py"
+        ],
+        "evidence": "Selected checkout dirty overlap requirement, stable modification observation and blocking digest mismatch."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Fresh and legacy user pointers converge to one current paragraph while other private instructions are preserved."
+      }
+    ]
+  }
+}
