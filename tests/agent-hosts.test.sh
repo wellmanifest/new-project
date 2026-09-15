@@ -639,6 +639,15 @@ PYANOMALY_CI
 assert_has "$(codes "$fixture" ci)" "GOV-AGENT-HOST-004" "unpublished required check"
 cp "$root/governance/required-checks.json" "$fixture/governance/required-checks.json"
 
+# Bound checks to their declared workflow; a second workflow must not make the
+# first workflow's valid check look missing.
+printf '%s\n' 'name: secondary' 'on: push' 'jobs:' '  secondary:' \
+  '    name: secondary' '    runs-on: ubuntu-latest' '    steps:' \
+  '      - run: true' > "$fixture/.github/workflows/secondary.yml"
+python3 -c 'import json,sys; p=sys.argv[1]; v=json.load(open(p)); v.pop("workflowFile",None); v.pop("requiredCheckNames",None); v["requiredChecks"]=[{"name":"test","workflowFile":".github/workflows/ci.yml"},{"name":"secondary","workflowFile":".github/workflows/secondary.yml"}]; open(p,"w").write(json.dumps(v,indent=2)+"\n")' "$fixture/governance/required-checks.json"
+[[ -z "$(codes "$fixture" ci)" ]] || fail "checks must stay bound to their declared workflow"
+cp "$root/governance/required-checks.json" "$fixture/governance/required-checks.json"
+
 # A missing host instruction file fails closed.
 mv "$fixture/GEMINI.md" "$fixture/GEMINI.md.bak"
 assert_has "$(codes "$fixture")" "GOV-AGENT-HOST-004" "missing host file"

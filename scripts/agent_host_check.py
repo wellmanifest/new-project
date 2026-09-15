@@ -567,7 +567,9 @@ def check_guidance_anomalies(root: Path, contract: dict[str, Any]) -> list[Findi
             published = workflow_job_names(workflow_path)
         except (OSError, UnicodeDecodeError):
             published = []
-        for name, _ in pairs:
+        for name, declared_workflow in pairs:
+            if declared_workflow != workflow:
+                continue
             if name not in published:
                 findings.append(Finding(
                     "GOV-AGENT-HOST-004",
