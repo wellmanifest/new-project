@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-240",
+  "summary": "PR-isolated remote lifecycle check in Hub workflows",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-240/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/governance.yml",
+    ".github/workflows/ci.yml",
+    "tests/branch-lifecycle.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7939721470f7499bb747a3143be55954f488a29f",
+    "targetBranch": "main",
+    "outcome": "Forward --focus-branch in Hub governance.yml and ci.yml workflows and assert PR lifecycle isolation in tests/branch-lifecycle.test.sh (closes #351).",
+    "nonGoals": [
+      "Do not modify branch_lifecycle_check.py contract or CLI options."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Update hub workflows to pass --focus-branch \"$HEAD_REF\" when present, matching template/files/new-project-governance.workflow.yml, and add functional coverage.",
+      "components": [
+        {
+          "name": "hub-governance-workflows",
+          "paths": [
+            ".github/workflows/governance.yml",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "branch-lifecycle-tests",
+          "paths": [
+            "tests/branch-lifecycle.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Hub workflow runs pass --focus-branch in PR context."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/branch-lifecycle.test.sh"
+        ],
+        "evidence": "branch lifecycle tests pass with 0 errors."
+      }
+    ]
+  }
+}

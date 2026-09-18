@@ -70,11 +70,17 @@ jobs:
         if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
         env:
           BRANCH_LIFECYCLE_SNAPSHOT: ${{ runner.temp }}/new-project-branch-lifecycle.json
+          HEAD_REF: ${{ github.head_ref }}
         run: |
-          python3 scripts/branch_lifecycle_check.py \
-            --snapshot "$BRANCH_LIFECYCLE_SNAPSHOT" \
-            --expected-repository "$GITHUB_REPOSITORY" \
+          arguments=(
+            --snapshot "$BRANCH_LIFECYCLE_SNAPSHOT"
+            --expected-repository "$GITHUB_REPOSITORY"
             --format text
+          )
+          if [[ -n "${HEAD_REF:-}" ]]; then
+            arguments+=(--focus-branch "$HEAD_REF")
+          fi
+          python3 scripts/branch_lifecycle_check.py "${arguments[@]}"
       - name: Install schema validator
         run: python3 -m pip install --disable-pip-version-check 'jsonschema==4.25.1'
       - name: Validate JSON contracts

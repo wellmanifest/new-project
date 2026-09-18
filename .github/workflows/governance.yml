@@ -120,11 +120,17 @@ jobs:
         env:
           BRANCH_LIFECYCLE_SNAPSHOT: ${{ runner.temp }}/new-project-branch-lifecycle.json
           EXPECTED_REPOSITORY: ${{ github.repository }}
+          HEAD_REF: ${{ github.head_ref }}
         run: |
-          python3 .new-project-standard/scripts/branch_lifecycle_check.py \
-            --snapshot "$BRANCH_LIFECYCLE_SNAPSHOT" \
-            --expected-repository "$EXPECTED_REPOSITORY" \
+          arguments=(
+            --snapshot "$BRANCH_LIFECYCLE_SNAPSHOT"
+            --expected-repository "$EXPECTED_REPOSITORY"
             --format text
+          )
+          if [[ -n "${HEAD_REF:-}" ]]; then
+            arguments+=(--focus-branch "$HEAD_REF")
+          fi
+          python3 .new-project-standard/scripts/branch_lifecycle_check.py "${arguments[@]}"
       - name: Acquire current pull request state
         if: github.event_name == 'pull_request' || github.event_name == 'pull_request_review'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

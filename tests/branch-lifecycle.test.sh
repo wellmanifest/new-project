@@ -36,6 +36,33 @@ assert report == {
 }
 PY
 
+cat > "$fixture/focus.json" <<'JSON'
+{"schema":"new-project.branch-lifecycle-snapshot/v1","repository":"wellmanifest/example","defaultBranch":"main","deleteBranchOnMerge":true,"branches":["main","ticket/018","orphan-work"],"openPullRequests":[{"number":18,"headRepository":"wellmanifest/example","headRef":"ticket/018"}]}
+JSON
+if python3 "$validator" --snapshot "$fixture/focus.json" \
+  --expected-repository wellmanifest/example > "$fixture/focus-unscoped.out"; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+grep -Fq '"orphanedBranches":["orphan-work"]' "$fixture/focus-unscoped.out"
+
+python3 "$validator" --snapshot "$fixture/focus.json" \
+  --expected-repository wellmanifest/example \
+  --focus-branch ticket/018 > "$fixture/focus-owned.out"
+grep -Fxq 'GOV-BRANCH-PASS: passed (0 errors, 0 warnings)' "$fixture/focus-owned.out"
+
+if python3 "$validator" --snapshot "$fixture/focus.json" \
+  --expected-repository wellmanifest/example \
+  --focus-branch orphan-work > "$fixture/focus-orphan.out"; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+grep -Fq '"orphanedBranches":["orphan-work"]' "$fixture/focus-orphan.out"
+
 cat > "$fixture/violations.json" <<'JSON'
 {"schema":"new-project.branch-lifecycle-snapshot/v1","repository":"wellmanifest/example","defaultBranch":"main","deleteBranchOnMerge":false,"branches":["main","old-work"],"openPullRequests":[]}
 JSON
@@ -162,8 +189,11 @@ grep -Fq 'python3 scripts/branch_lifecycle_check.py' \
 grep -Fq 'pull-requests: read' "$repo_root/.github/workflows/ci.yml"
 test "$(grep -Fc "if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'" \
   "$repo_root/.github/workflows/ci.yml")" -eq 2
+grep -Fq 'arguments+=(--focus-branch "$HEAD_REF")' "$repo_root/.github/workflows/ci.yml"
+grep -Fq 'arguments+=(--focus-branch "$HEAD_REF")' "$repo_root/.github/workflows/governance.yml"
 
 target_workflow="$repo_root/template/files/new-project-governance.workflow.yml"
+grep -Fq 'arguments+=(--focus-branch "$HEAD_REF")' "$target_workflow"
 grep -Fq '    - cron: "17 3 * * *"' "$target_workflow"
 if grep -Fq "    - cron: '17 3 * * *'" "$target_workflow"; then
   echo 'managed governance workflow uses non-canonical cron quoting' >&2
