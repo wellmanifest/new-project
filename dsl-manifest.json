@@ -3,7 +3,7 @@
   "schema": "wellmanifest.dsl/manifest/v1",
   "id": "wellmanifest.new-project.contributing",
   "name": "new-project CONTRIBUTING Policy DSL profile",
-  "version": "13.0.0",
+  "version": "24.0.0",
   "status": "experimental",
   "purpose": "Governed contributor and autonomous-agent workflow expressed as Policy DSL v1",
   "domain": "software-governance",
@@ -17,7 +17,7 @@
   "source": {
     "repository": "https://github.com/wellmanifest/new-project",
     "path": "CONTRIBUTING.md",
-    "declaredVersion": "13",
+    "declaredVersion": "24",
     "canonical": "markdown-embedded",
     "mediaType": "text/markdown",
     "selectors": ["fenced-code:dsl"]
@@ -32,7 +32,7 @@
     {
       "path": "CONTRIBUTING.md",
       "role": "normative-source",
-      "digest": "sha256:7b7e4d01d9bc6439a77db475f5c4b5d230ce08b4461e60c8e1c606837fe7bc1d"
+      "digest": "sha256:1d970d1a08fccff6177afb3ec5933e92952915f7c714487a78376dc4c99adb16"
     },
     {
       "path": "docs/POLICY_DSL.md",
@@ -42,7 +42,7 @@
     {
       "path": "tests/rule-enforcement.test.sh",
       "role": "parser-contract",
-      "digest": "sha256:d3c212b84b38ecdf17ff3a028daf4973bd1cdf542bf880c922b39960412d697d"
+      "digest": "sha256:25b51162160267666d5d663abc9a3c667d63e29f65d9b450028cdea6800d8c6d"
     }
   ],
   "namespaces": [
@@ -70,6 +70,7 @@
     "responseSchemas": [],
     "naturalLanguage": "forbidden",
     "sourceSchema": null,
+    "decisionProtocol": "none",
     "modelAuthority": "none",
     "strict": true
   },

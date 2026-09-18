@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-239",
+  "summary": "reconcile CONTRIBUTING policy DSL grammar and rule enforcement",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-239/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CONTRIBUTING.md",
+    "dsl-manifest.json",
+    "governance/rule-enforcement.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "bdbe59d7a95d8aa8dbe1a9999812f45838d1155c",
+    "targetBranch": "main",
+    "outcome": "Reconcile CONTRIBUTING.md Policy DSL grammar, version bump to 24, update digests in dsl-manifest.json, and declare manual enforcement for C-DONE-001 and C-DONE-002 in rule-enforcement.json.",
+    "nonGoals": [
+      "Do not modify implementation source code or runtime dependencies."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Update CONTRIBUTING policy DSL grammar to v24 and map manual enforcement in governance/rule-enforcement.json.",
+      "components": [
+        {
+          "name": "contributing-policy-dsl",
+          "paths": [
+            "CONTRIBUTING.md",
+            "dsl-manifest.json"
+          ]
+        },
+        {
+          "name": "rule-enforcement-catalog",
+          "paths": [
+            "governance/rule-enforcement.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Declare Policy DSL v24 rules C-DONE-001 and C-DONE-002 with manual enforcement."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/rule-enforcement.test.sh"
+        ],
+        "evidence": "rule-enforcement.test.sh passes with 0 failures."
+      }
+    ]
+  }
+}

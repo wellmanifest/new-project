@@ -1269,6 +1269,16 @@
       "codes": [],
       "enforcement": "manual",
       "reason": "Session authority, necessity of a question and the safest bounded alternative require current interaction evidence. Workspace contention itself remains deterministically checked by the overlap guard; this rule grants no effects."
+    },
+    "C-DONE-001": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Completion evidence spans the user's scope, review, secret checks, Docker and test status; no deterministic validator observes the final agent response, so the obligation stays with the reporting agent and reviewer."
+    },
+    "C-DONE-002": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "The final report is chat or PR prose outside repository state; its required fields are reviewed, not validated by a governance gate."
     }
   }
 }
