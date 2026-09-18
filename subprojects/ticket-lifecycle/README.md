@@ -10,6 +10,11 @@ REQUEST_GRAMMAR "ticket-lifecycle.v1.gbnf"
 POLICY "../../POLICY.md"
 ```
 
+> [!NOTE]
+> Canonical HOME: [`wellmanifest/ticket-lifecycle`](https://github.com/wellmanifest/ticket-lifecycle).
+> This module is a vendored copy bound by [`governance/ticket-lifecycle.lock.json`](../../governance/ticket-lifecycle.lock.json)
+> and verified by [`tests/lifecycle-adoption.test.py`](../../tests/lifecycle-adoption.test.py).
+
 ## Responsibility
 
 This module owns the lifecycle of one bounded unit of repository work. A ticket

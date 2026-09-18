@@ -1,0 +1,39 @@
+{
+  "schema": "new-project.ticket-lifecycle-lock/v1",
+  "dependency": {
+    "id": "wellmanifest/ticket-lifecycle",
+    "version": "0.2.0-dev",
+    "sourceRepository": "wellmanifest/ticket-lifecycle",
+    "sourceRevision": "ad363efa7705919ff613305172bf8115ccf50b15"
+  },
+  "artifacts": [
+    {
+      "sourcePath": "standard/lifecycle.py",
+      "packageSourcePath": "subprojects/ticket-lifecycle/lifecycle.py",
+      "managedTargetPath": null,
+      "sourceSha256": "9c3f3076b5b45408d3eefc34cd567b58821aa565d3fe3bf6339641111079ede0"
+    },
+    {
+      "sourcePath": "standard/ticket-lifecycle.lifecycle",
+      "packageSourcePath": "subprojects/ticket-lifecycle/ticket-lifecycle.lifecycle",
+      "managedTargetPath": null,
+      "sourceSha256": "af4e9eadcf336d1e295549da18ac0c24fca0e90d2946e7baee2e5541a30a32a4"
+    },
+    {
+      "sourcePath": "standard/ticket-lifecycle.schema.json",
+      "packageSourcePath": "subprojects/ticket-lifecycle/ticket-lifecycle.schema.json",
+      "managedTargetPath": null,
+      "sourceSha256": "c62f771911c27910a94d2d873bfa7d1627117fa421ec38e3438552b059a2aa31"
+    },
+    {
+      "sourcePath": "standard/ticket-lifecycle.v1.gbnf",
+      "packageSourcePath": "subprojects/ticket-lifecycle/ticket-lifecycle.v1.gbnf",
+      "managedTargetPath": null,
+      "sourceSha256": "154b052441ef0695164ba0c513b4fe4dcadbd07184292add47f89fc7443864f5"
+    }
+  ],
+  "installation": {
+    "lockTargetPath": ".governance/ticket-lifecycle.lock.json",
+    "networkRequired": false
+  }
+}

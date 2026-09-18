@@ -1,0 +1,39 @@
+{
+  "schema": "new-project.git-lifecycle-lock/v1",
+  "dependency": {
+    "id": "wellmanifest/git-lifecycle",
+    "version": "0.2.0-dev",
+    "sourceRepository": "wellmanifest/git-lifecycle",
+    "sourceRevision": "24cfe7cbbbc0d95f6b66f89124b471bee7287d0d"
+  },
+  "artifacts": [
+    {
+      "sourcePath": "standard/git-lifecycle.lifecycle",
+      "packageSourcePath": "subprojects/git-lifecycle/git-lifecycle.lifecycle",
+      "managedTargetPath": null,
+      "sourceSha256": "97bf41d9b6b1e8772e14c4caafb5b134588adad4e834d3311c948a5af91d2b20"
+    },
+    {
+      "sourcePath": "standard/git-lifecycle.schema.json",
+      "packageSourcePath": "subprojects/git-lifecycle/git-lifecycle.schema.json",
+      "managedTargetPath": null,
+      "sourceSha256": "de3bb3711cb96e90e916253bfddb211b9abba2d0666af061ae6b316a5a689268"
+    },
+    {
+      "sourcePath": "standard/git-lifecycle.v1.gbnf",
+      "packageSourcePath": "subprojects/git-lifecycle/git-lifecycle.v1.gbnf",
+      "managedTargetPath": null,
+      "sourceSha256": "6218d76eaeee770501dd24a42d038792138ec0a968afb69331fb034d3db962ef"
+    },
+    {
+      "sourcePath": "standard/lifecycle.py",
+      "packageSourcePath": "subprojects/git-lifecycle/lifecycle.py",
+      "managedTargetPath": null,
+      "sourceSha256": "9c3f3076b5b45408d3eefc34cd567b58821aa565d3fe3bf6339641111079ede0"
+    }
+  ],
+  "installation": {
+    "lockTargetPath": ".governance/git-lifecycle.lock.json",
+    "networkRequired": false
+  }
+}

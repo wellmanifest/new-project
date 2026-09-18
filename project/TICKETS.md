@@ -245,6 +245,8 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-241** | [`README.md`](./ticket-241/README.md) | - | - | - | - | - |
 | **ticket-242** | [`README.md`](./ticket-242/README.md) | - | - | - | - | - |
 | **ticket-243** | [`README.md`](./ticket-243/README.md) | - | - | - | - | - |
+| **ticket-244** | [`README.md`](./ticket-244/README.md) | - | - | - | - | - |
+| **ticket-245** | [`README.md`](./ticket-245/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 

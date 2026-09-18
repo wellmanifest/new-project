@@ -1,0 +1,89 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-245",
+  "summary": "reconcile git and ticket lifecycle contracts under vendored copy lock",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-245/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/git-lifecycle.lock.json",
+    "governance/ticket-lifecycle.lock.json",
+    "governance/lifecycle-vendored-copy.ssot.json",
+    "subprojects/git-lifecycle/**",
+    "subprojects/ticket-lifecycle/**",
+    "tests/lifecycle-adoption.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e1d265f788e600ffbb67f6570ba6ec6c10442593",
+    "targetBranch": "main",
+    "outcome": "Reconcile git-lifecycle and ticket-lifecycle contracts under vendored copy lock and parity tests (closes #347).",
+    "nonGoals": [
+      "Do not weaken exact-head verification in CI or when enforce-approval is requested.",
+      "Do not modify standalone repository histories or break independent schema digests."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Adopt the worktrees pattern: standalone repositories wellmanifest/git-lifecycle and wellmanifest/ticket-lifecycle are canonical HOME. In new-project, subprojects/git-lifecycle and subprojects/ticket-lifecycle are vendored copies bound by governance/git-lifecycle.lock.json and governance/ticket-lifecycle.lock.json. Drift is gated by tests/lifecycle-adoption.test.py and the SSOT decision is recorded in governance/lifecycle-vendored-copy.ssot.json.",
+      "components": [
+        {
+          "name": "lifecycle-subprojects",
+          "paths": [
+            "governance/git-lifecycle.lock.json",
+            "governance/ticket-lifecycle.lock.json",
+            "governance/lifecycle-vendored-copy.ssot.json",
+            "subprojects/git-lifecycle/**",
+            "subprojects/ticket-lifecycle/**",
+            "tests/lifecycle-adoption.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/lifecycle-adoption.test.py"
+        ],
+        "evidence": "tests/lifecycle-adoption.test.py passes with 6/6 tests OK."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/worktrees-adoption.test.py"
+        ],
+        "evidence": "tests/worktrees-adoption.test.py passes with 11/11 tests OK."
+      }
+    ]
+  }
+}

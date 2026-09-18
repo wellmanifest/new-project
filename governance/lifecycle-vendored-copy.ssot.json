@@ -1,0 +1,119 @@
+{
+  "$schema": "https://wellmanifest.com/schemas/ssot/decision/v1",
+  "schema": "wellmanifest.ssot/decision/v1",
+  "id": "lifecycle-vendored-copy",
+  "version": "1.0.0",
+  "purpose": "Reconcile git-lifecycle and ticket-lifecycle contracts between standalone HOME repositories and wellmanifest/new-project vendored copies under SHA-256 lock and parity tests.",
+  "context": {
+    "subject": "lifecycle-vendored-copy",
+    "languages": [
+      "json",
+      "python",
+      "markdown"
+    ],
+    "packaging": [
+      "vendored-copy"
+    ],
+    "analyzer": {
+      "present": true,
+      "kind": "other",
+      "treatAsDebtUntilInterview": false
+    }
+  },
+  "policy": {
+    "kind": "pin_policy",
+    "edit": "upstream",
+    "onChange": "bump_pin",
+    "forbid": [
+      "delete_generated_mirror",
+      "treat_analyzer_as_debt",
+      "couple_standalone_to_foreign_monorepo",
+      "fork_logic_into_consumer"
+    ]
+  },
+  "decisions": [
+    {
+      "id": "git-lifecycle-vendored-copy",
+      "kind": "vendored_copy",
+      "canonical": {
+        "ref": "github:wellmanifest/git-lifecycle",
+        "path": "standard"
+      },
+      "trees": [
+        "subprojects/git-lifecycle/git-lifecycle.lifecycle",
+        "subprojects/git-lifecycle/git-lifecycle.schema.json",
+        "subprojects/git-lifecycle/git-lifecycle.v1.gbnf",
+        "subprojects/git-lifecycle/lifecycle.py"
+      ],
+      "gate": {
+        "kind": "parity_test",
+        "path": "tests/lifecycle-adoption.test.py"
+      },
+      "rationale": "Standalone repository wellmanifest/git-lifecycle is the canonical HOME for git-lifecycle contracts. Subprojects copy in new-project is a vendored projection locked by governance/git-lifecycle.lock.json and gated against drift by tests/lifecycle-adoption.test.py.",
+      "actions": [
+        {
+          "do": "vendor_and_gate_drift"
+        },
+        {
+          "do": "keep_parity_test",
+          "target": "tests/lifecycle-adoption.test.py"
+        },
+        {
+          "do": "edit_upstream",
+          "target": "github:wellmanifest/git-lifecycle"
+        },
+        {
+          "do": "bump_pin",
+          "target": "governance/git-lifecycle.lock.json"
+        }
+      ],
+      "forbid": [
+        "delete_either_tree",
+        "fork_logic_into_consumer"
+      ]
+    },
+    {
+      "id": "ticket-lifecycle-vendored-copy",
+      "kind": "vendored_copy",
+      "canonical": {
+        "ref": "github:wellmanifest/ticket-lifecycle",
+        "path": "standard"
+      },
+      "trees": [
+        "subprojects/ticket-lifecycle/lifecycle.py",
+        "subprojects/ticket-lifecycle/ticket-lifecycle.lifecycle",
+        "subprojects/ticket-lifecycle/ticket-lifecycle.schema.json",
+        "subprojects/ticket-lifecycle/ticket-lifecycle.v1.gbnf"
+      ],
+      "gate": {
+        "kind": "parity_test",
+        "path": "tests/lifecycle-adoption.test.py"
+      },
+      "rationale": "Standalone repository wellmanifest/ticket-lifecycle is the canonical HOME for ticket-lifecycle contracts. Subprojects copy in new-project is a vendored projection locked by governance/ticket-lifecycle.lock.json and gated against drift by tests/lifecycle-adoption.test.py.",
+      "actions": [
+        {
+          "do": "vendor_and_gate_drift"
+        },
+        {
+          "do": "keep_parity_test",
+          "target": "tests/lifecycle-adoption.test.py"
+        },
+        {
+          "do": "edit_upstream",
+          "target": "github:wellmanifest/ticket-lifecycle"
+        },
+        {
+          "do": "bump_pin",
+          "target": "governance/ticket-lifecycle.lock.json"
+        }
+      ],
+      "forbid": [
+        "delete_either_tree",
+        "fork_logic_into_consumer"
+      ]
+    }
+  ],
+  "questions": [
+    "Are all adopter repos synced with the new vendored copy locks and standard pack definitions?"
+  ]
+}

@@ -9,6 +9,14 @@
 
 ## Aktywne utrzymanie standardu
 
+- [x] [`ticket-245`](project/ticket-245/README.md) — uzgodniono kontrakty
+  `git-lifecycle` i `ticket-lifecycle` jako vendored copies pod lockiem SHA-256
+  (`governance/git-lifecycle.lock.json` i `governance/ticket-lifecycle.lock.json`),
+  ze statusem HOME w samodzielnych repozytoriach `wellmanifest/git-lifecycle`
+  i `wellmanifest/ticket-lifecycle`, testami adopcji `tests/lifecycle-adoption.test.py`
+  oraz decyzją SSOT w `governance/lifecycle-vendored-copy.ssot.json` (zamyka Issue #347).
+  Stan: `DONE / DONE`; klasyfikacja: `SERVICE / P2 / health`; workstream: `governance`.
+
 - [ ] [`ticket-243`](project/ticket-243/README.md) — szybki lokalny preflight cache
   i pomiar czasów faz (`--timing`) w `scripts/governance_check.py` z zachowaniem
   pełnej weryfikacji exact-head w CI. Stan: `IN_PROGRESS / EDIT`;

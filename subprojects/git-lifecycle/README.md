@@ -10,6 +10,11 @@ REQUEST_GRAMMAR "git-lifecycle.v1.gbnf"
 POLICY "../../POLICY.md"
 ```
 
+> [!NOTE]
+> Canonical HOME: [`wellmanifest/git-lifecycle`](https://github.com/wellmanifest/git-lifecycle).
+> This module is a vendored copy bound by [`governance/git-lifecycle.lock.json`](../../governance/git-lifecycle.lock.json)
+> and verified by [`tests/lifecycle-adoption.test.py`](../../tests/lifecycle-adoption.test.py).
+
 ## Responsibility
 
 This module owns repository-state transitions. It turns a typed request into
@@ -46,6 +51,12 @@ stateDiagram-v2
     integrated --> released: immutable release
     integrated --> terminal: cleanup
     released --> terminal: cleanup
+    seeded --> seeded: checkpoint
+    ticket_ready --> ticket_ready: checkpoint
+    implementation_local --> implementation_local: checkpoint
+    review_open --> review_open: checkpoint
+    integrated --> integrated: checkpoint
+    released --> released: checkpoint
 ```
 
 ```dsl
@@ -66,6 +77,7 @@ TRANSITION review-open -> integrated ACTION integrate
 TRANSITION integrated -> released ACTION release
 TRANSITION integrated -> terminal ACTION cleanup
 TRANSITION released -> terminal ACTION cleanup
+TRANSITION [seeded, ticket-ready, implementation-local, review-open, integrated, released] -> SAME_STATE ACTION checkpoint
 ```
 
 ## Autonomous seed-baseline transaction
