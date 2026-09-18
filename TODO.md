@@ -9,6 +9,11 @@
 
 ## Aktywne utrzymanie standardu
 
+- [ ] [`ticket-243`](project/ticket-243/README.md) — szybki lokalny preflight cache
+  i pomiar czasów faz (`--timing`) w `scripts/governance_check.py` z zachowaniem
+  pełnej weryfikacji exact-head w CI. Stan: `IN_PROGRESS / EDIT`;
+  klasyfikacja: `SERVICE / P2 / health`; workstream: `governance`.
+
 - [ ] [`ticket-180`](project/ticket-180/README.md) — rozliczać chronione rebase
   i squash merges przez osiągalny terminal oraz dokładny dowód patch-id, bez
   osłabienia dotychczasowej ścieżki ancestry. Stan: `IN_PROGRESS / PUBLICATION`;

@@ -7,6 +7,7 @@ python3 "$repo_root/tests/data_change_ownership_test.py"
 python3 "$repo_root/tests/delivery-post-merge-base.test.py"
 python3 "$repo_root/tests/ticket-input.test.py"
 python3 "$repo_root/tests/sqlite-allocation.test.py"
+python3 "$repo_root/tests/governance-preflight-cache.test.py"
 fixture="$(mktemp -d "${TMPDIR:-/tmp}/new-project-validator-test.XXXXXX")"
 cleanup() {
   rm -rf "$fixture"

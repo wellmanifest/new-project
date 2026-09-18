@@ -1,0 +1,85 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-243",
+  "summary": "Separate fast local governance checks from exact-head publication checks",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-243/**",
+    "scripts/governance_check.py",
+    "tests/governance-preflight-cache.test.py",
+    "tests/governance-validator.test.sh",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "40147554f07391743fd124d6e7d97cd656512dee",
+    "targetBranch": "main",
+    "outcome": "Separate fast local governance preflight checks and phase timings from exact-head publication checks (closes #368).",
+    "nonGoals": [
+      "Do not weaken exact-head verification in CI or when enforce-approval is requested.",
+      "Do not persist sensitive or uncommitted data into git tracking."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add deterministic preflight cache in .subactor/cache/governance-preflight.json keyed by exact input digests, add --timing flag to report phase timings, eliminate repeated active ticket queries across validation phases, and bypass cache for CI/approval gates.",
+      "components": [
+        {
+          "name": "governance-validator",
+          "paths": [
+            "scripts/governance_check.py",
+            "tests/governance-preflight-cache.test.py",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "scripts/governance_check.py supports --timing, --no-cache, and --cache-file options."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/governance-preflight-cache.test.py"
+        ],
+        "evidence": "tests/governance-preflight-cache.test.py passes with 0 errors."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "tests/governance-validator.test.sh passes with 0 errors."
+      }
+    ]
+  }
+}
