@@ -26,6 +26,8 @@ semantics. The machine-readable source for this routing is
 | structured logs and diagnostics | `wellmanifest/logs` |
 | plan of action | `wellmanifest/poa` |
 | DSL interoperability | `wellmanifest/dsl` |
+| code-level semantic query and AST diagnostics | `wellmanifest/code-dsl` |
+| natural-language, canonical DSL, and adaptive LLM communication | `wellmanifest/nl-dsl-llm` |
 | repair/remediation lifecycle | `wellmanifest/repair-lifecycle` |
 | product offer and commercial registry | `wellmanifest/offer` |
 | brand vocabulary and tokens | `wellmanifest/brand` |

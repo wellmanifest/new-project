@@ -1,0 +1,25 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-244",
+  "summary": "register nl-dsl-llm and code-dsl in standard packs catalog",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-244/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/standard-packs.json",
+    "docs/STANDARD_PACK_BOUNDARIES.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
