@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [x] [`ticket-246`](project/ticket-246/README.md) — ustanowiono kanoniczny host
+  schematów `https://wellmanifest.com/schemas/`, reguły routingu przestrzeni nazw
+  i aliasów, zasadę niezmienności semantycznej schematów (schema immutability invariant)
+  oraz decyzję SSOT w `governance/canonical-schema-hosts.ssot.json` (zamyka Issue #348).
+  Stan: `DONE / DONE`; klasyfikacja: `SERVICE / P2 / health`; workstream: `governance`.
+
 - [x] [`ticket-245`](project/ticket-245/README.md) — uzgodniono kontrakty
   `git-lifecycle` i `ticket-lifecycle` jako vendored copies pod lockiem SHA-256
   (`governance/git-lifecycle.lock.json` i `governance/ticket-lifecycle.lock.json`),

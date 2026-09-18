@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-246",
+  "summary": "establish canonical schema host and schema immutability governance",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-246/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/canonical-schema-hosts.ssot.json",
+    "docs/information/canonical-schema-hosts.md",
+    "tests/canonical-schema-hosts.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4a7fc34cd87400176b57e8d41e39d71a806d91be",
+    "targetBranch": "main",
+    "outcome": "Establish canonical schema host https://wellmanifest.com/schemas/, migration aliases, and schema immutability governance (closes #348).",
+    "nonGoals": [
+      "Do not break backward compatibility with legacy schema identifiers.",
+      "Do not mutate existing deployed schemas in place."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Establish https://wellmanifest.com/schemas/ as canonical host, document legacy migration routing, record SSOT decision in governance/canonical-schema-hosts.ssot.json, and enforce schema immutability invariant via tests/canonical-schema-hosts.test.py.",
+      "components": [
+        {
+          "name": "schema-governance",
+          "paths": [
+            "governance/canonical-schema-hosts.ssot.json",
+            "docs/information/canonical-schema-hosts.md",
+            "tests/canonical-schema-hosts.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/canonical-schema-hosts.test.py"
+        ],
+        "evidence": "tests/canonical-schema-hosts.test.py passes 4/4 tests."
+      }
+    ]
+  }
+}

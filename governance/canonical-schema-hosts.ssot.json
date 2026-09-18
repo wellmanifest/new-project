@@ -1,0 +1,69 @@
+{
+  "$schema": "https://wellmanifest.com/schemas/ssot/decision/v1",
+  "schema": "wellmanifest.ssot/decision/v1",
+  "id": "canonical-schema-hosts",
+  "version": "1.0.0",
+  "purpose": "Establish https://wellmanifest.com/schemas/ as the canonical schema host for the Wellmanifest fleet, register migration aliases, and enforce schema immutability.",
+  "context": {
+    "subject": "canonical-schema-hosts",
+    "languages": [
+      "json",
+      "markdown",
+      "python"
+    ],
+    "packaging": [
+      "vendored-copy"
+    ],
+    "analyzer": {
+      "present": true,
+      "kind": "other",
+      "treatAsDebtUntilInterview": false
+    }
+  },
+  "policy": {
+    "kind": "pin_policy",
+    "edit": "upstream",
+    "onChange": "bump_pin",
+    "forbid": [
+      "delete_generated_mirror",
+      "treat_analyzer_as_debt",
+      "couple_standalone_to_foreign_monorepo",
+      "fork_logic_into_consumer"
+    ]
+  },
+  "decisions": [
+    {
+      "id": "fleet-canonical-schema-host",
+      "kind": "vendored_copy",
+      "canonical": {
+        "ref": "https://wellmanifest.com/schemas",
+        "path": "governance"
+      },
+      "trees": [
+        "governance/manifest.schema.json",
+        "governance/intent.schema.json"
+      ],
+      "gate": {
+        "kind": "parity_test",
+        "path": "tests/canonical-schema-hosts.test.py"
+      },
+      "rationale": "Canonical schema host for all Wellmanifest schemas is established as https://wellmanifest.com/schemas/. Existing schemas with legacy namespaces retain backward-compatibility aliases, while semantic updates require version bump.",
+      "actions": [
+        {
+          "do": "vendor_and_gate_drift"
+        },
+        {
+          "do": "keep_parity_test",
+          "target": "tests/canonical-schema-hosts.test.py"
+        }
+      ],
+      "forbid": [
+        "delete_either_tree",
+        "fork_logic_into_consumer"
+      ]
+    }
+  ],
+  "questions": [
+    "Should legacy adopters on 0.18.6 be provided with an automated migration script to the latest package line?"
+  ]
+}
