@@ -1,0 +1,89 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-236",
+  "summary": "Autonomous merge, cdp fallback, and worktree pruning standard update",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-236/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "template/files/AGENTS.template.md",
+    "AGENTS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "cca13a29c712947bae8ca38b3d65add629b4fda5",
+    "targetBranch": "main",
+    "outcome": "Harmonize AGENTS.template.md and AGENTS.md with autonomous merge, browser CDP fallback, conflicted PR rebuild, and post-merge worktree pruning standard.",
+    "nonGoals": [
+      "No breaking schema changes to governance contracts."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add autonomous-merge standard reference and 6 core clauses to AGENTS.template.md and synchronize AGENTS.md in hub.",
+      "components": [
+        {
+          "name": "standard-instructions",
+          "paths": [
+            "template/files/AGENTS.template.md",
+            "AGENTS.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "git checkout main -- template/files/AGENTS.template.md AGENTS.md"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "grep -q 'wellmanifest:autonomous-merge:start' template/files/AGENTS.template.md",
+          "grep -q 'AUTONOMOUS_MERGE.md' template/files/AGENTS.template.md"
+        ],
+        "evidence": "AGENTS.template.md contains link and autonomous-merge section."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "grep -q 'wellmanifest:autonomous-merge:start' AGENTS.md",
+          "grep -q 'AUTONOMOUS_MERGE.md' AGENTS.md"
+        ],
+        "evidence": "AGENTS.md contains link and autonomous-merge section."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Governance check passes cleanly."
+      }
+    ]
+  }
+}
