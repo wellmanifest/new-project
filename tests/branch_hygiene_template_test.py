@@ -53,6 +53,25 @@ def test_close_only_workflow_not_in_required_checks():
     )
     assert callers == []
 
+    multiline_close_only_workflow = """name: close-only
+on:
+  pull_request:
+    types:
+      - closed
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo noop
+"""
+    callers_multiline: list[str] = []
+    assert module.published_checks_text(
+        multiline_close_only_workflow, callers_multiline
+    ) == [], (
+        "A close-only pull_request workflow using multi-line types must not produce required checks"
+    )
+    assert callers_multiline == []
+
     governance_text = (
         REPO_ROOT / "template/files/new-project-governance.workflow.yml"
     ).read_text(encoding="utf-8")
