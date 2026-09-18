@@ -1,0 +1,71 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-242",
+  "summary": "controlled-change-streaming v7 standard specification",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "docs/information/controlled-change-streaming.md",
+    "project/ticket-242/**",
+    "TODO.md",
+    "project/TICKETS.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "394268c5b505c3b8dcb8458e689eea7fecb95742",
+    "targetBranch": "main",
+    "outcome": "Publish controlled-change-streaming v7 specification incorporating anti-deadlock evidence, closed route vocabulary (AUTO, RECIPE, DECISION, ESCALATE), and TTL de-escalation rules (closes #355).",
+    "nonGoals": [
+      "Do not modify executable validation scripts in this ticket."
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Update docs/information/controlled-change-streaming.md to version 7 with evidence table from 2026-09-14, route types per diagnostic, new recipes, de-escalation principles, and invariants.",
+      "components": [
+        {
+          "name": "controlled-change-streaming-spec",
+          "paths": [
+            "docs/information/controlled-change-streaming.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./project/governance-check.sh --base origin/main --head HEAD --actor agent"
+        ],
+        "evidence": "governance-check passes."
+      }
+    ]
+  }
+}

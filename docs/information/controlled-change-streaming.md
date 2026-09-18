@@ -3,19 +3,22 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "controlled-change-streaming",
   "kind": "information",
-  "version": 6,
+  "version": 7,
   "title": "Kontrolowane streamowanie i recepty odzyskiwania postępu",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
   "created": "2026-09-13",
-  "updated": "2026-09-14",
-  "review_after": "2026-10-13",
-  "source_revision": "2ff425ca98767a22c075c50eccf7d29ef34709c3",
-  "affected_repositories": ["wellmanifest/new-project"],
+  "updated": "2026-09-18",
+  "review_after": "2026-10-18",
+  "source_revision": "394268c171e2efd6d2a45a1f64f3319808d745aa",
+  "affected_repositories": ["wellmanifest/new-project", "wellmanifest/policy-dsl"],
   "evidence": [
     "https://github.com/wellmanifest/new-project/blob/a5ffa7dd5d0bb5cafbcefbb180204874787c0758/scripts/branch_lifecycle_check.py",
     "https://github.com/wellmanifest/new-project/blob/a5ffa7dd5d0bb5cafbcefbb180204874787c0758/governance/diagnostics.json",
+    "https://github.com/wellmanifest/new-project/issues/355",
+    "https://github.com/wellmanifest/new-project/issues/351",
     "https://github.com/wellmanifest/new-project/pull/341",
+    "https://github.com/wellmanifest/new-project/pull/358",
     "https://docs.github.com/en/pull-requests/reference/pull-requests",
     "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches"
   ]
@@ -80,6 +83,18 @@ ale nie oznacza, że obecny publikator wellmanifest już takie tryby obsługuje.
 [Draft PR](https://docs.github.com/en/pull-requests/reference/pull-requests),
 [ochrona branchy](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
 
+### Dowody z obserwacji floty (2026-09-14)
+
+| Zmiana | Otwarcie → merge | Co kosztowało czas |
+| --- | --- | --- |
+| policy-dsl #27 | 3 min 21 s | nic: walidator uruchomiony bezpośrednio po wymaganych checkach |
+| policy-dsl #22 | 23 min | rozdzielenie intent-first składane ręcznie |
+| policy-dsl #25 | 63 min | niepowiązany osierocony branch zawiódł wymagany check; dry-run zużył epokę direct-PR; brak automatycznego dispatchu |
+| #23 fix, 3 zależne tickety | ~1 dzień | jeden aktywny ticket na workstream; closure-only PR odrzucony (`GOV-MATERIAL-001`); allokator czytał status README |
+| PR controller | 5.5 dnia | `ExecStartPre` fail-closed po wypłyceniu `subactor/runtime` (subactor/autonom#155) |
+
+Po adopcji pakietu 0.20.28 przez `policy-dsl` (#26) alokacja z `origin/main` zadziałała bez rekordu zamknięcia, a pojedynczy commit niosący intent i zmianę przeszedł `governance-check --actor ci`. Blokada closure deadlock została rozwiązana pakietem standardu.
+
 <!-- docs:section content -->
 ## Dostępne teraz: jeden odczyt zamiast zgadywania stanu push
 
@@ -128,14 +143,30 @@ może być nowym źródłem uprawnień ani poleceniem dowolnego shell wygenerowa
 przez LLM. Dla wieloetapowej naprawy używaj już przyjętego remediation intent,
 nie kolejnego formatu DSL lub bazy ticketów.
 
-| Sytuacja | Zalecana następna czynność | Dowód zakończenia / bezpieczny stan |
-| --- | --- | --- |
-| Timeout push lub utworzenia PR | odczyt zdalnego refa i PR przed retry | dokładny oczekiwany SHA i istniejący PR; inaczej zachowany pending effect |
-| Ten sam deterministyczny błąd | diagnoza przyczyny, poprawka właściwego wejścia, ponowna walidacja | zmieniony digest wejścia; brak nowych ticketów za samo ponowienie |
-| Historyczny branch bez otwartego PR | odczyt zamkniętych PR, HEAD i pozostałego intentu; zachowanie pracy | kontynuacja istniejącej dostawy albo jawna dyspozycja po reconciliation; nie automatyczne usunięcie |
-| Fałszywa blokada wynikająca ze wspólnej historii | porównanie rzeczywistych delt od wspólnego przodka | test regresji u właściciela checkera; nie blanket ignore |
-| Limit nowego małego zadania naliczony od starej niezarządzanej historii | sklasyfikowanie historycznej bazy i bieżącej delty | plan kontrolowanej migracji; bez przepisywania commitów lub podnoszenia limitu całego repo |
-| Lokalny test PASS, publiczna funkcja nie działa | sprawdzenie obrazu/rewizji wdrożenia i rzeczywistego scenariusza | dowód zachowania aplikacji; HTTP 200 nie zastępuje działającego chatu |
+### Typy tras diagnostycznych
+
+Każda sytuacja lub diagnoza problemu przypisana jest do dokładnie jednej trasy:
+- `AUTO`: deterministyczny skutek z receiptem; unikalna praca nie może zostać utracona.
+- `RECIPE`: ograniczone kroki dla wykonującego agenta, w ramach istniejących uprawnień.
+- `DECISION`: decyzja właściciela ze wskazanym domyślnym wyborem i terminem (deadline); niepowiązane zakresy prac trwają dalej.
+- `ESCALATE`: powiadomienie z dokładnym niespełnionym warunkiem wstępnym.
+
+| Sytuacja | Zalecana następna czynność | Trasa | Dowód zakończenia / bezpieczny stan | Śledzenie |
+| --- | --- | --- | --- | --- |
+| Timeout push lub utworzenia PR | odczyt zdalnego refa i PR przed retry | RECIPE | dokładny oczekiwany SHA i istniejący PR; inaczej zachowany pending effect | — |
+| Ten sam deterministyczny błąd | diagnoza przyczyny, poprawka właściwego wejścia, ponowna walidacja | RECIPE | zmieniony digest wejścia; brak nowych ticketów za samo ponowienie | — |
+| Historyczny branch bez otwartego PR | odczyt zamkniętych PR, HEAD i pozostałego intentu; zachowanie pracy | DECISION | kontynuacja istniejącej dostawy albo jawna dyspozycja po reconciliation; nie automatyczne usunięcie | — |
+| Fałszywa blokada wynikająca ze wspólnej historii | porównanie rzeczywistych delt od wspólnego przodka | RECIPE | test regresji u właściciela checkera; nie blanket ignore | — |
+| Limit nowego małego zadania naliczony od starej niezarządzanej historii | sklasyfikowanie historycznej bazy i bieżącej delty | DECISION | plan kontrolowanej migracji; bez przepisywania commitów lub podnoszenia limitu całego repo | — |
+| Lokalny test PASS, publiczna funkcja nie działa | sprawdzenie obrazu/rewizji wdrożenia i rzeczywistego scenariusza | RECIPE | dowód zachowania aplikacji; HTTP 200 nie zastępuje działającego chatu | — |
+| Closure-only PR odrzucony (`GOV-MATERIAL-001`) | zewnętrzny terminal receipt (≥0.20.28); do czasu adopcji nieść rekord zamknięcia z kolejną zmianą materialną | RECIPE | receipt zamknięcia poza commitem repozytorium | — |
+| `BLOCKED_DIRECT_PR_DUPLICATE_EPOCH` po dry-run | nigdy nie uruchamiać dry-run dla HEAD przeznaczonego do publikacji | RECIPE | dowód publikacji przesuwający HEAD | subactor/validator-agent#473 |
+| Wymagany check zawodzi przez obcy osierocony branch | zawarty w default branch lub otwartym PR → receipt i usunięcie refa; unikalne commity → kolejka decyzyjna nieblokująca PR | AUTO / DECISION | PR zizolowany przez `--focus-branch` | #351 |
+| `GOV-WORKTREE-OVERLAP-002` ze starego głównego checkoutu | fast-forward czystego checkoutu do `origin/main`, ponowne uruchomienie guarda; guard porównuje z refem targetu | AUTO | czysty checkout wyrównany z bazą | — |
+| Jednostka kontrolera zawiodła bez przyczyny | raportowanie który `ExecStartPre` zawiódł; wykrywanie płytkich repozytoriów; alert po N awariach z rzędu | ESCALATE | powiadomienie z logiem jednostki | subactor/autonom#155 |
+| PR zielony, lecz nigdy nie zwalidowany | zaufany `dispatch-direct-pr.sh --wait-checks`, bez `--dry-run`; docelowo event-driven dispatch | RECIPE | receipt dispatchu lub uruchomienie workflow | subactor/validator-agent#474 |
+| `GOV-INTENT-002` (krótki SHA) | generowanie bloku delivery przez allokator i wymóg pełnych 40-znakowych SHA | AUTO | pełny hash SHA-256 | — |
+| `GOV-WORKSTREAM-003` | przeniesienie ścieżki do ticketu właściwego workstreamu; bez rozszerzania własności | RECIPE | ścieżka zmapowana zgodnie z manifestem | — |
 
 Nie resetuj licznika prób przez restart agenta lub nowe NL. Ponawianie błędów
 przejściowych ma limit i odstęp zapisane przy tej samej operacji. Po ich
@@ -189,6 +220,22 @@ Kontroler klasyfikuje kolizję przed blokadą i zapisuje decyzję oraz receipt:
 
 Żaden wariant nie zezwala na bezpośredni merge, zmianę zamrożonego headu ani
 nadpisanie cudzej pracy.
+
+### Zasady deeskalacji w streamowaniu zmian
+
+- **Zakres blokady równy zakresowi zmiany (The blocking scope equals the change scope).** Wymagany check PR może zawieść wyłącznie z powodu naprawialnego wewnątrz tego PR. Higiena repozytorium (usuwanie osieroconych branchy) działa jako audyt harmonogramowy z osobnym tracking issue (#351).
+- **Blokady i rezerwacje mają TTL (Holds carry a TTL).** Rezerwacje zakresu, dzierżawy (leases) i oczekiwanie na decyzję mają ścisły deadline. Wygaśnięcie tworzy receipt i eskalację, nigdy nieskończone oczekiwanie.
+- **SLO publikacji (Publication SLO).** Mierzone: otwarty → zwalidowany → zmergowany na PR. Cel to minuty, z dyspaczem sterowanym zakończeniem checków i cogodzinnym skanem jako zabezpieczeniem fallback.
+- **Wersjonowana semantyka bramek (Versioned gate semantics).** Zmiana walidacji podnosi wersję kontraktu (np. `intent/v4`), z oknem wsparcia i planowymi PR-ami adopcyjnymi (#348).
+
+### Niezmienniki (Invariants)
+
+- **Niezależna weryfikacja exact-head**: zatwierdzenie przez zaufaną tożsamość, nigdy self-approval.
+- **Jeden writer na scope**: ścisła izolacja ścieżek z aktywną dzierżawą (lease).
+- **Związanie digestem**: przypięta, deterministyczna adopcja na podstawie SHA-256.
+- **Fail-closed**: autoryzacja, sekrety i niszczące efekty blokują wykonanie w razie wątpliwości.
+- **Zero utraty unikalnej pracy**: każda modyfikacja jest zachowywana lub zabezpieczana przed usunięciem.
+- **Receipt dla każdego efektu**: każdy krok kończy się trwałym, weryfikowalnym potwierdzeniem.
 
 ## Pozostałe implementacje
 
