@@ -428,6 +428,12 @@
       "executable": false
     },
     {
+      "source": "template/files/new-project-branch-hygiene.workflow.yml",
+      "target": ".github/workflows/new-project-branch-hygiene.yml",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "scripts/runtime.sh",
       "target": "scripts/runtime.sh",
       "strategy": "managed",

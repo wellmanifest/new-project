@@ -1,0 +1,101 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-237",
+  "summary": "fix scheduled governance carrier fallback and add unmerged branch hygiene",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "template/files/new-project-governance.workflow.yml",
+    "template/files/new-project-branch-hygiene.workflow.yml",
+    "governance/package-manifest.json",
+    "scripts/generate_required_checks.py",
+    "scripts/governance_check.py",
+    "tests/branch_hygiene_template_test.py",
+    "project/ticket-237/**",
+    "project/TICKETS.md",
+    "TODO.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7f4df961bffe18ff1d96cedc6ebc94de943a3e84",
+    "targetBranch": "main",
+    "outcome": "Fix scheduled governance CI runs failing on carrier-only fallback and distribute branch hygiene workflow to delete unmerged branches after PR closure.",
+    "nonGoals": [
+      "No change to PR range validation logic.",
+      "No required-checks gate enforcement for branch hygiene."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Remove carrier fallback in new-project-governance.workflow.yml so scheduled runs validate repository consistency as-is. Add new-project-branch-hygiene.workflow.yml to template and package-manifest.json to automate unmerged branch deletion on PR closed.",
+      "components": [
+        {
+          "name": "governance-workflows",
+          "paths": [
+            "template/files/new-project-governance.workflow.yml",
+            "template/files/new-project-branch-hygiene.workflow.yml",
+            "governance/package-manifest.json",
+            "scripts/generate_required_checks.py",
+            "scripts/governance_check.py"
+          ]
+        },
+        {
+          "name": "workflow-tests",
+          "paths": [
+            "tests/branch_hygiene_template_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit on ticket branch."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest tests/branch_hygiene_template_test.py"
+        ],
+        "evidence": "Passed: 3/3 pytest assertions on template syntax, registration and carrier fallback."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/required-checks.test.sh"
+        ],
+        "evidence": "Passed: required-checks.test.sh suite passed."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh --base origin/main --head HEAD --actor agent"
+        ],
+        "evidence": "Passed: GOV-PASS with 0 errors and 0 warnings."
+      }
+    ]
+  }
+}

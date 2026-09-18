@@ -274,6 +274,10 @@ def load_work_classification(
 ) -> dict[str, Any] | None:
     try:
         path = safe_repo_path(root, raw_path)
+        if not path.is_file() and raw_path == ".governance/work-classification.dsl.json":
+            hub_path = safe_repo_path(root, "governance/work-classification.dsl.json")
+            if hub_path.is_file():
+                path = hub_path
         value = load_json(path)
         error = work_classification_error(value)
         if error:

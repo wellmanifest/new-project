@@ -116,7 +116,5 @@ jobs:
           # has no range, so it validates the repository as it stands.
           if [[ -n "${BASE_SHA:-}" && -n "${HEAD_SHA:-}" ]]; then
             arguments+=(--base "$BASE_SHA" --head "$HEAD_SHA")
-          else
-            arguments+=(--changed-file project/TICKETS.md)
           fi
           python3 .governance/governance_check.py "${arguments[@]}"
