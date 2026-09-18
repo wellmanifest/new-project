@@ -1,0 +1,120 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-235",
+  "summary": "Ticket index merge driver, worktree pruning standard, and branch lifecycle PR focus",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-235/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "AGENTS.md",
+    "governance/package-manifest.json",
+    "scripts/branch_lifecycle_check.py",
+    "scripts/install-agent-hosts.sh",
+    "scripts/prune_merged_worktrees.py",
+    "scripts/ticket_index_merge_driver.py",
+    "template/files/new-project-governance.workflow.yml",
+    "template/files/.gitattributes",
+    ".gitattributes",
+    "tests/prune_merged_worktrees_test.py",
+    "tests/ticket_index_merge_driver_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7be0eca13540b5cb3a71f04d863d9c0500c8030a",
+    "targetBranch": "main",
+    "outcome": "Add ticket index custom merge driver, prune_merged_worktrees utility, and focus-branch branch lifecycle isolation.",
+    "nonGoals": [
+      "No external network dependencies.",
+      "No destructive branch operations without explicit confirmation."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Introduce ticket_index_merge_driver.py for automated 3-way merge resolution of TICKETS.md/TODO.md; introduce prune_merged_worktrees.py for safely retiring linked worktrees; isolate PR check in branch_lifecycle_check.py via --focus-branch.",
+      "components": [
+        {
+          "name": "merge-and-prune-tooling",
+          "paths": [
+            "scripts/ticket_index_merge_driver.py",
+            "tests/ticket_index_merge_driver_test.py",
+            "scripts/prune_merged_worktrees.py",
+            "tests/prune_merged_worktrees_test.py",
+            ".gitattributes",
+            "template/files/.gitattributes"
+          ]
+        },
+        {
+          "name": "branch-lifecycle",
+          "paths": [
+            "scripts/branch_lifecycle_check.py",
+            "template/files/new-project-governance.workflow.yml"
+          ]
+        },
+        {
+          "name": "governance-distribution",
+          "paths": [
+            "scripts/install-agent-hosts.sh",
+            "governance/package-manifest.json",
+            "AGENTS.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "scripts/branch_lifecycle_check.py accepts optional --focus-branch.",
+        "scripts/install-agent-hosts.sh configures merge.wellmanifest-ticket-index driver."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 scripts/ticket_index_merge_driver.py --self-test",
+          "pytest tests/ticket_index_merge_driver_test.py"
+        ],
+        "evidence": "Merge driver handles 3-way conflict without errors."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "pytest tests/prune_merged_worktrees_test.py"
+        ],
+        "evidence": "Worktree pruner removes clean merged worktrees and preserves dirty ones."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/branch-lifecycle.test.sh"
+        ],
+        "evidence": "Branch lifecycle checks pass."
+      }
+    ]
+  }
+}
