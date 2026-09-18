@@ -268,4 +268,93 @@ fi
 test "$status" -eq 1
 grep -q '^GOV-WORKSPACE-LIFECYCLE-003 ERROR:' "$fixture/missing.out"
 
+# Empty directory: rejects without --allow-empty, passes with --allow-empty
+empty_dir="$fixture/empty-dir"
+mkdir -p "$empty_dir"
+if python3 "$validator" --workspace-root "$empty_dir" \
+  > "$fixture/empty-dir.out" 2>&1; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+grep -Fq 'GOV-WORKSPACE-LIFECYCLE-003 ERROR:' "$fixture/empty-dir.out"
+grep -Fq 'workspace root contains no Git repositories' "$fixture/empty-dir.out"
+
+python3 "$validator" --workspace-root "$empty_dir" --allow-empty \
+  > "$fixture/empty-dir-allowed.out"
+grep -Fxq 'GOV-WORKSPACE-PASS: passed (0 errors, 0 warnings)' "$fixture/empty-dir-allowed.out"
+
+# Unrelated root without repositories: rejects without --allow-empty, passes with --allow-empty
+unrelated_root="$fixture/unrelated-root"
+mkdir -p "$unrelated_root/sub1" "$unrelated_root/sub2"
+if python3 "$validator" --workspace-root "$unrelated_root" \
+  > "$fixture/unrelated.out" 2>&1; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+grep -Fq 'GOV-WORKSPACE-LIFECYCLE-003 ERROR:' "$fixture/unrelated.out"
+grep -Fq 'workspace root contains no Git repositories' "$fixture/unrelated.out"
+
+python3 "$validator" --workspace-root "$unrelated_root" --allow-empty \
+  > "$fixture/unrelated-allowed.out"
+grep -Fxq 'GOV-WORKSPACE-PASS: passed (0 errors, 0 warnings)' "$fixture/unrelated-allowed.out"
+
+# Target root: auditing repository checkout directly discovers it and its registered worktrees
+if python3 "$validator" --workspace-root "$allocation_primary" \
+  --format json > "$fixture/target-root.json"; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+python3 - "$fixture/target-root.json" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["status"] == "failed"
+assert len(report["inventory"]["entries"]) >= 1
+assert any(f["code"] == "GOV-TICKET-ALLOCATION-002" for f in report["findings"])
+PY
+
+# Linked worktree: auditing from linked worktree path discovers the repository group
+if python3 "$validator" --workspace-root "$allocation_linked" \
+  --format json > "$fixture/linked-root.json"; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+python3 - "$fixture/linked-root.json" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["status"] == "failed"
+assert len(report["inventory"]["entries"]) >= 1
+PY
+
+# Clean up colliding ticket to restore clean state for target verification
+rm -rf "$allocation_primary/project/ticket-008"
+
+# Explicit target coverage enforcement via --target-repository
+python3 "$validator" --workspace-root "$allocation_workspace" \
+  --target-repository "$allocation_primary" \
+  --allow "$allocation_linked" > "$fixture/target-verified.out"
+grep -Fxq 'GOV-WORKSPACE-PASS: passed (0 errors, 0 warnings)' "$fixture/target-verified.out"
+
+if python3 "$validator" --workspace-root "$allocation_workspace" \
+  --target-repository "$fixture/unrelated-root" \
+  --allow "$allocation_linked" > "$fixture/target-omitted.out" 2>&1; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+grep -Fq 'GOV-WORKSPACE-LIFECYCLE-003 ERROR:' "$fixture/target-omitted.out"
+grep -Fq 'omitted required target repository' "$fixture/target-omitted.out"
+
 echo 'workspace lifecycle validator: PASS'

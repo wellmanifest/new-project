@@ -1,0 +1,89 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-241",
+  "summary": "Workspace audit rejects empty inventory and includes target repository",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-241/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/workspace_lifecycle_check.py",
+    "scripts/generate_required_checks.py",
+    "tests/workspace-lifecycle.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "155cc51ff35aabd9725322f1983f4fd2f10fc205",
+    "targetBranch": "main",
+    "outcome": "Workspace audit rejects empty repository inventory unless deliberately requested via --allow-empty, includes target repository workspace_root if it is a git checkout, and supports multi-line close-only workflow parsing (closes #367).",
+    "nonGoals": [
+      "Do not mutate existing worktrees or delete refs automatically."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Update discover_workspace_repositories to include workspace_root if containing .git, require --allow-empty for empty inventory, and parse multi-line close-only types in required checks generator.",
+      "components": [
+        {
+          "name": "workspace-lifecycle-audit",
+          "paths": [
+            "scripts/workspace_lifecycle_check.py",
+            "tests/workspace-lifecycle.test.sh"
+          ]
+        },
+        {
+          "name": "required-checks-generator",
+          "paths": [
+            "scripts/generate_required_checks.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "scripts/workspace_lifecycle_check.py supports --allow-empty flag."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/workspace-lifecycle.test.sh"
+        ],
+        "evidence": "tests/workspace-lifecycle.test.sh passes with 0 errors."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/branch_hygiene_template_test.py"
+        ],
+        "evidence": "tests/branch_hygiene_template_test.py passes."
+      }
+    ]
+  }
+}
