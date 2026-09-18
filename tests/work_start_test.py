@@ -570,9 +570,22 @@ class WorkStartTest(unittest.TestCase):
     def test_invalid_intent_fails_closed_without_content_disclosure(self):
         peer = self.sibling()
         (peer / "project/ticket-001/intent.json").write_text("PRIVATE-FIXTURE-MARKER")
+        log_path = self.root / ".governance" / ".observation-failures.log"
+        self.assertFalse(log_path.exists())
         result = self.cli()
         self.assertEqual(result.returncode, 3)
         self.assertNotIn("PRIVATE-FIXTURE-MARKER", result.stdout + result.stderr)
+        # The real cause must still be discoverable locally — swallowing it
+        # entirely is what turns a one-line bug into a full investigation.
+        self.assertIn("read it before opening a new ticket", result.stdout)
+        self.assertTrue(log_path.exists())
+        log_text = log_path.read_text(encoding="utf-8")
+        self.assertIn("ObservationError", log_text)
+        self.assertIn("Missing or invalid governance input", log_text)
+        # The log is a local debugging aid, not a disclosure channel for the
+        # file's own content — the JSON parser error doesn't quote the
+        # rejected text, only that it was invalid.
+        self.assertNotIn("PRIVATE-FIXTURE-MARKER", log_text)
 
     def test_unknown_worktree_cannot_disappear_from_inventory(self):
         peer = self.sibling()
