@@ -87,11 +87,11 @@
       "interfaces": { "ownedPaths": ["api/**", "sdk/**", "clients/**"] },
       "infrastructure": { "ownedPaths": ["Dockerfile*", "compose*.yml", "compose*.yaml", "infra/**", ".github/**"] },
       "governance": { "ownedPaths": [".governance/**", ".subactor/**", "AGENTS.md", "README.md", "TODO.md", "CHANGELOG.md", ".env.example", "goal.yaml", "project.sh", "project.bat", "project/**", "scripts/runtime.sh"] },
-      "integration": { "ownedPaths": [".governance/manifest.base.json", ".governance/manifest.json", ".governance/manifest.lock.json", ".governance/package-manifest.json", ".governance/required-checks.json", ".governance/ticket-allocation.json", ".subactor/manifest.json", "AGENTS.md", "VERSION", "package.json", "pyproject.toml", "go.mod", "Cargo.toml", "pom.xml", "docs/**", "operations/**", "events/**", "error/**", "models/**", "proto/**"] }
+      "integration": { "ownedPaths": [".governance/manifest.base.json", ".governance/manifest.json", ".governance/manifest.lock.json", ".governance/package-manifest.json", ".governance/required-checks.json", ".governance/ticket-allocation.json", ".subactor/manifest.json", "AGENTS.md", "VERSION", "package.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "pyproject.toml", "uv.lock", "poetry.lock", "go.mod", "go.sum", "Cargo.toml", "Cargo.lock", "pom.xml", "docs/**", "operations/**", "events/**", "error/**", "models/**", "proto/**"] }
     },
     "integration": {
       "workstream": "integration",
-      "requiredForPaths": [".governance/manifest.base.json", ".governance/manifest.json", ".governance/manifest.lock.json", ".governance/package-manifest.json", ".governance/required-checks.json", ".governance/ticket-allocation.json", ".subactor/manifest.json", "AGENTS.md", "package.json", "pyproject.toml", "go.mod", "Cargo.toml", "pom.xml", "operations/**", "events/**", "error/**", "models/**", "proto/**"]
+      "requiredForPaths": [".governance/manifest.base.json", ".governance/manifest.json", ".governance/manifest.lock.json", ".governance/package-manifest.json", ".governance/required-checks.json", ".governance/ticket-allocation.json", ".subactor/manifest.json", "AGENTS.md", "package.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "pyproject.toml", "uv.lock", "poetry.lock", "go.mod", "go.sum", "Cargo.toml", "Cargo.lock", "pom.xml", "operations/**", "events/**", "error/**", "models/**", "proto/**"]
     }
   },
   "delivery": {
@@ -131,7 +131,7 @@
     },
     "targetBranches": ["main"],
     "publicInterfacePaths": ["api/**", "sdk/**", "src/public/**"],
-    "dependencyManifestPaths": ["package.json", "pyproject.toml", "go.mod", "Cargo.toml", "pom.xml"]
+    "dependencyManifestPaths": ["package.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "pyproject.toml", "uv.lock", "poetry.lock", "go.mod", "go.sum", "Cargo.toml", "Cargo.lock", "pom.xml"]
   },
   "stacks": []
 }

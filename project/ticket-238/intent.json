@@ -1,0 +1,74 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-238",
+  "summary": "add common lockfiles to ownedPaths of integration workstream",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-238/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/manifest.default.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a8f9c409e4a043b0ebfe542e75aeea279b934cef",
+    "targetBranch": "main",
+    "outcome": "Include common lockfiles (uv.lock, poetry.lock, package-lock.json, Cargo.lock, go.sum, pnpm-lock.yaml, yarn.lock) in ownedPaths and requiredForPaths of integration workstream and dependencyManifestPaths.",
+    "nonGoals": [
+      "Do not modify application source code or runtime dependencies."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add common lockfile patterns to coordination.workstreams.integration and delivery.dependencyManifestPaths in manifest.default.json.",
+      "components": [
+        {
+          "name": "integration-workstream-manifest",
+          "paths": [
+            "governance/manifest.default.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Include uv.lock, poetry.lock, package-lock.json, Cargo.lock, go.sum, pnpm-lock.yaml, yarn.lock in integration ownedPaths, requiredForPaths, and dependencyManifestPaths."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m json.tool governance/manifest.default.json > /dev/null",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "manifest.default.json is valid JSON and governance-validator test suite passes."
+      }
+    ]
+  }
+}
