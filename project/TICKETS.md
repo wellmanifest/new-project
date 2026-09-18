@@ -233,9 +233,10 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-229** | [`README.md`](./ticket-229/README.md) | - | - | - | - | - |
 | **ticket-230** | [`README.md`](./ticket-230/README.md) | - | - | - | - | - |
 | **ticket-231** | [`README.md`](./ticket-231/README.md) | - | - | - | - | - |
-| **ticket-232** | [`README.md`](./ticket-232/README.md) | - | - | - | - | - |
 | **ticket-233** | [`README.md`](./ticket-233/README.md) | - | - | - | - | - |
+| **ticket-234** | [`README.md`](./ticket-234/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
+
 
 ---
 

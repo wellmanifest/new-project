@@ -1,0 +1,92 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-234",
+  "summary": "Lower default ticket WIP cap; log real GOV-WORK-START-001 cause locally",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-234/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/manifest.default.json",
+    "scripts/work_start_check.py",
+    "tests/governance-validator.test.sh",
+    "tests/work_start_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b6ba9c21a65a6a5648ecf904b64c3b75295e136f",
+    "targetBranch": "main",
+    "outcome": "Lower default ticket WIP cap 4->3 and log real GOV-WORK-START-001 cause locally in .governance/.observation-failures.log.",
+    "nonGoals": [
+      "No automatic modification of adopted repositories manifests.",
+      "No disclosure of fixture secrets or tokens on stdout/stderr."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Lower default ticket WIP cap from 4 to 3 in manifest.default.json; log real exception in work_start_check to gitignored .governance/.observation-failures.log.",
+      "components": [
+        {
+          "name": "governance-manifest",
+          "paths": [
+            "governance/manifest.default.json",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "work-start",
+          "paths": [
+            "scripts/work_start_check.py",
+            "tests/work_start_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Default maxActiveTicketsPerWorkstream lowered from 4 to 3."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "manifest.default.json maxActiveTicketsPerWorkstream is 3."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/work_start_test.py"
+        ],
+        "evidence": "Real cause written to .observation-failures.log."
+      }
+    ]
+  }
+}
