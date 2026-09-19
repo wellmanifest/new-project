@@ -1,0 +1,78 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-252",
+  "summary": "Allow legacy base locks during standard upgrade verification",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-252/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/governance_check.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e53fdc855b1b369f2b5a1156ef11cc94c1e17496",
+    "targetBranch": "main",
+    "outcome": "Allow repositories upgrading from older standards (such as 0.14) with legacy partial-subset locks to verify and adopt modern standard versions without false-positive lock mismatch errors.",
+    "nonGoals": [
+      "No bypass of target-owned takeover checks or head lock validation."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Support set(base_hashes) <= set(base_strategies) in load_standard_adoption_evidence and check membership in base_hashes within verify_managed_base.",
+      "components": [
+        {
+          "name": "governance-checker",
+          "paths": [
+            "scripts/governance_check.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit to restore strict set equality on base locks."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 ./scripts/governance_check.py --root . --manifest governance/manifest.hub.json --lock governance/manifest.hub.lock.json"
+        ],
+        "evidence": "Internal governance gate passes."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "uv run --with pytest --with jsonschema pytest -q tests/"
+        ],
+        "evidence": "All existing pytest and validator tests pass."
+      }
+    ]
+  }
+}
