@@ -15,6 +15,8 @@ REFRESH_REMOTE=false
 TICKET_STORAGE=""
 STORE_ROOT=""
 STORE_SHA256=""
+RECOVER_REQUEST=""
+RECOVERY_LEASE_STORE=""
 
 # Work classification for intent/v3. The defaults are the contract's own answer
 # for an unclassified new ticket: rule W-CLASS-006 (work-request / maintenance)
@@ -47,6 +49,10 @@ Usage: ./project/new-ticket.sh [options]
       --ticket-store-sha256 SHA
                           Independent digest of the complete writer package
   -h, --help             Show this help
+      --recover-request FILE
+                          Explicit exact-state pre-adoption recovery request
+      --recovery-lease-store DIR
+                          Existing external local controller store (recovery only)
 
 Accepted classification values are read from the work classification contract,
 not hardcoded here. The defaults are that contract's own answer for an
@@ -111,6 +117,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --storage)
       require_value "$@"; TICKET_STORAGE="$2"; shift 2 ;;
+    --recover-request)
+      require_value "$@"; RECOVER_REQUEST="$2"; shift 2 ;;
+    --recovery-lease-store)
+      require_value "$@"; RECOVERY_LEASE_STORE="$2"; shift 2 ;;
     --ticket-store-root)
       require_value "$@"; STORE_ROOT="$2"; shift 2 ;;
     --ticket-store-sha256)
@@ -368,6 +378,20 @@ fi
 # Serialize allocation across every worktree sharing this clone. The high-water
 # mark reserves a number even before its ticket is committed and therefore
 # remains visible when another worktree cannot see the new directory.
+if [[ -n "$RECOVER_REQUEST" || -n "$RECOVERY_LEASE_STORE" ]]; then
+  if [[ -z "$RECOVER_REQUEST" || -z "$RECOVERY_LEASE_STORE" || "$TICKET_STORAGE" != files || "$ALLOCATION_MODE" != local-single-clone || "$REFRESH_REMOTE" == true || "$FORCE_NEW" == true || ${#SCOPE_ARGUMENTS[@]} -ne 0 ]]; then
+    echo "GOV-TICKET-ALLOCATION-003: recovery requires both inputs, file storage and local allocation; scope comes only from the bound request." >&2
+    exit 5
+  fi
+  for candidate in .governance/ticket_recovery.py scripts/ticket_recovery.py; do
+    if [[ -f "$candidate" ]]; then
+      exec python3 "$candidate" --root . --request "$RECOVER_REQUEST" --lease-store "$RECOVERY_LEASE_STORE" --workstream "$WORKSTREAM"
+    fi
+  done
+  echo "GOV-TICKET-ALLOCATION-003: restore the managed recovery helper." >&2
+  exit 5
+fi
+
 allocation_lock=""
 allocation_state=""
 release_allocation_lock() {
