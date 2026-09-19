@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+src/wellman/__init__.py
+src/wellman/__main__.py
+src/wellman/check.py
+src/wellman.egg-info/PKG-INFO
+src/wellman.egg-info/SOURCES.txt
+src/wellman.egg-info/dependency_links.txt
+src/wellman.egg-info/entry_points.txt
+src/wellman.egg-info/top_level.txt
+src/wellman/_bundled/__init__.py
+src/wellman/_bundled/governance_check.py

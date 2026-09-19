@@ -1,0 +1,59 @@
+# Reusable governance gate workflow
+# Adopters use this instead of vendoring governance_check.py (187KB)
+#
+# Usage in adopter repo (.github/workflows/governance.yml):
+#   jobs:
+#     governance:
+#       uses: wellmanifest/new-project/.github/workflows/governance-gate-reusable.yml@v0.20.32
+#       with:
+#         target-root: .
+name: governance-gate
+
+on:
+  workflow_call:
+    inputs:
+      target-root:
+        description: "Root directory of the governed repository"
+        required: false
+        default: "."
+        type: string
+      python-version:
+        description: "Python version to use"
+        required: false
+        default: "3.12"
+        type: string
+
+jobs:
+  governance-check:
+    name: governance / deterministic gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out governed repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Resolve standard version
+        id: version
+        run: |
+          VERSION=$(python3 -c "
+          import tomllib
+          with open('pyproject.toml', 'rb') as f:
+              d = tomllib.load(f)
+          print(d.get('tool', {}).get('wellmanifest', {}).get('standard', ''))
+          " 2>/dev/null || echo "")
+          echo "standard=$VERSION" >> $GITHUB_OUTPUT
+          echo "Resolved standard version: $VERSION"
+
+      - name: Install governance runtime
+        run: pip install "wellman==${{ steps.version.outputs.standard }}"
+
+      - name: Run governance gate
+        run: |
+          python -m wellman check \
+            --root "${{ inputs.target-root }}"
