@@ -22,6 +22,18 @@ class PreflightCacheTests(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory(prefix="preflight-cache-test-")
         self.addCleanup(self.temp_dir.cleanup)
         self.cache_file = Path(self.temp_dir.name) / "cache.json"
+        self.old_hooks = subprocess.run(
+            ["git", "-C", str(SOURCE), "config", "--get", "core.hooksPath"],
+            capture_output=True, text=True, check=False,
+        ).stdout.strip()
+        if self.old_hooks != ".githooks":
+            subprocess.run(["git", "-C", str(SOURCE), "config", "core.hooksPath", ".githooks"], check=False)
+
+    def tearDown(self):
+        if self.old_hooks:
+            subprocess.run(["git", "-C", str(SOURCE), "config", "core.hooksPath", self.old_hooks], check=False)
+        else:
+            subprocess.run(["git", "-C", str(SOURCE), "config", "--unset", "core.hooksPath"], check=False)
 
     def test_timing_payload_and_render_text(self):
         """AC-01: Report phase timings and repeated work."""

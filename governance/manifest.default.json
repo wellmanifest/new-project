@@ -85,13 +85,13 @@
     "workstreams": {
       "application": { "ownedPaths": ["src/**", "app/**", "lib/**", "packages/**", "test/**", "tests/**"] },
       "interfaces": { "ownedPaths": ["api/**", "sdk/**", "clients/**"] },
-      "infrastructure": { "ownedPaths": ["Dockerfile*", "compose*.yml", "compose*.yaml", "infra/**", ".github/**"] },
-      "governance": { "ownedPaths": [".governance/**", ".subactor/**", "AGENTS.md", "README.md", "TODO.md", "CHANGELOG.md", ".env.example", "goal.yaml", "project.sh", "project.bat", "project/**", "scripts/runtime.sh"] },
-      "integration": { "ownedPaths": [".governance/manifest.base.json", ".governance/manifest.json", ".governance/manifest.lock.json", ".governance/package-manifest.json", ".governance/required-checks.json", ".governance/ticket-allocation.json", ".subactor/manifest.json", "AGENTS.md", "VERSION", "package.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "pyproject.toml", "uv.lock", "poetry.lock", "go.mod", "go.sum", "Cargo.toml", "Cargo.lock", "pom.xml", "docs/**", "operations/**", "events/**", "error/**", "models/**", "proto/**"] }
+      "infrastructure": { "ownedPaths": ["Dockerfile*", "compose*.yml", "compose*.yaml", "infra/**"] },
+      "governance": { "ownedPaths": [".aider.conf.yml", ".cursor/rules/**", ".githooks/**", ".github/copilot-instructions.md", ".github/workflows/new-project-governance.yml", ".gitignore", ".governance/**", ".subactor/**", "AGENTS.md", "CLAUDE.md", "GEMINI.md", "README.md", "TODO.md", "CHANGELOG.md", ".env.example", "goal.yaml", "project.sh", "project.bat", "project/**", "scripts/install-agent-hosts.sh", "scripts/runtime.sh", "wellmanifest_governance.py", "worktree-guard.yaml"] },
+      "integration": { "ownedPaths": ["VERSION", "package.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "pyproject.toml", "uv.lock", "poetry.lock", "go.mod", "go.sum", "Cargo.toml", "Cargo.lock", "pom.xml", "docs/**", "operations/**", "events/**", "error/**", "models/**", "proto/**"] }
     },
     "integration": {
       "workstream": "integration",
-      "requiredForPaths": [".governance/manifest.base.json", ".governance/manifest.json", ".governance/manifest.lock.json", ".governance/package-manifest.json", ".governance/required-checks.json", ".governance/ticket-allocation.json", ".subactor/manifest.json", "AGENTS.md", "package.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "pyproject.toml", "uv.lock", "poetry.lock", "go.mod", "go.sum", "Cargo.toml", "Cargo.lock", "pom.xml", "operations/**", "events/**", "error/**", "models/**", "proto/**"]
+      "requiredForPaths": ["package.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "pyproject.toml", "uv.lock", "poetry.lock", "go.mod", "go.sum", "Cargo.toml", "Cargo.lock", "pom.xml", "operations/**", "events/**", "error/**", "models/**", "proto/**"]
     }
   },
   "delivery": {

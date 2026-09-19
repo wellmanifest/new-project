@@ -1,0 +1,94 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-247",
+  "summary": "Harmonize adopter manifest workstreams and enhance adoption upgrade tooling",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-247/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/manifest.default.json",
+    "scripts/create_adoption_lock.py",
+    "tests/adoption_upgrade_harmonization_test.py",
+    "tests/adoption-lock.test.sh",
+    "tests/governance-validator.test.sh",
+    "tests/governance-preflight-cache.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "18c32fdc5e4315e581d199bd4dc9bd2e7f21873e",
+    "targetBranch": "main",
+    "outcome": "Harmonize manifest workstream declarations and enhance adoption script post-processing.",
+    "nonGoals": [
+      "No breaking changes to existing hub governance rules.",
+      "No changes to external release APIs."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Remove governance managed files from integration workstream in manifest.default.json to prevent deadlock, filter legacy reusable callers in create_adoption_lock.py, and auto-invoke install-agent-hosts.sh and render_dsl_manifest.py.",
+      "components": [
+        {
+          "name": "adopter-template",
+          "paths": [
+            "governance/manifest.default.json"
+          ]
+        },
+        {
+          "name": "adoption-tooling",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "tests/adoption_upgrade_harmonization_test.py",
+            "tests/adoption-lock.test.sh",
+            "tests/governance-validator.test.sh",
+            "tests/governance-preflight-cache.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m unittest tests/adoption_upgrade_harmonization_test.py"
+        ],
+        "evidence": "tests/adoption_upgrade_harmonization_test.py"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-247/README.md"
+      }
+    ]
+  }
+}
