@@ -1,0 +1,63 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-254",
+  "summary": "Recover pre-adoption ticket identity with fenced allocator validation",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-254/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/package-manifest.json",
+    "packages/wellman/pyproject.toml",
+    "project/new-ticket.sh",
+    "scripts/ticket_recovery.py",
+    "scripts/work_start_check.py",
+    "tests/ticket-recovery.test.py",
+    "tests/work_start_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "cfaa0bf0ea6b0e7349fed0bb62b5ce15792d687d",
+    "targetBranch": "main",
+    "outcome": "Publish a bounded allocator recovery route for pre-adoption ticket identities without weakening ordinary admission, then adopt the immutable release in downstream delivery.",
+    "nonGoals": ["Merge authority from local recovery", "Take over expired or foreign leases", "Modify adopter repositories in this ticket", "Bypass registered allocation"],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {"maxImplementationFiles": 12, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 2, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Explicit recovery is serialized by the existing clone allocator and the external controller lock; exact owner, live lease CAS, HEAD, dirty digest, canonical worktree, unused identity and accepted scope must match before materializing intent. Ordinary allocation remains unchanged.",
+      "components": [
+        {"name": "allocation", "paths": ["project/new-ticket.sh", "scripts/ticket_recovery.py", "scripts/work_start_check.py", "tests/ticket-recovery.test.py", "tests/work_start_test.py"]},
+        {"name": "managed-package", "paths": ["governance/package-manifest.json", "docs/STANDARD_UPGRADE.md"]},
+        {"name": "release", "paths": ["VERSION", "CHANGELOG.md", "packages/wellman/pyproject.toml", "governance/manifest.hub.json", "governance/manifest.default.json"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Explicit pre-adoption recovery request for the local allocator"],
+      "dataChanges": ["Create previously absent bounded ticket carriers; retain clone high-water reservation"],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Keep failed recovery evidence and original worktree; publish a corrective immutable release, never overwrite existing tickets or retag releases."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["python3 tests/ticket-recovery.test.py", "python3 tests/work_start_test.py"], "evidence": "Positive allocator recovery and fail-closed HEAD, lease, scope, identity and competing-writer regressions."},
+      {"criterion": "AC-02", "commands": ["./project/governance-check.sh --base cfaa0bf0ea6b0e7349fed0bb62b5ce15792d687d", "git diff --check"], "evidence": "Governed material change with atomic release projections and no downstream edits."}
+    ]
+  }
+}

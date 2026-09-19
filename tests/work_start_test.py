@@ -27,6 +27,11 @@ class WorkStartTest(unittest.TestCase):
         subprocess.run([sys.executable, str(ROOT / "tests/work-registration.test.py")],
                        check=True, capture_output=True, text=True)
 
+    @unittest.skipUnless(sys.platform == "linux", "Local recovery controller uses POSIX flock and relative worktrees")
+    def test_ticket_recovery_contract(self):
+        subprocess.run([sys.executable, str(ROOT / "tests/ticket-recovery.test.py")],
+                       check=True, capture_output=True, text=True)
+
     def git(self, root, *args):
         env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
         return subprocess.run(["git", "-C", str(root), *args], env=env, check=True,

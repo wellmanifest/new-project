@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.20.36 - 2026-09-19
+
+- Recover a pre-adoption ticket through the explicit local allocator route,
+  checking live external controller ownership, exact HEAD/dirty state, scope,
+  canonical relative worktree and unused identity under controller and clone
+  locks. Ordinary allocation remains fail-closed [ticket-254].
+
 ## 0.20.35 - 2026-09-19
 
 - Support standard upgrade verification from repositories whose base revision contains legacy subset locks (e.g., standard 0.14 where not all package-manifest entries were locked into manifest.lock.json) [ticket-252].
