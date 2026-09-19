@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.35 - 2026-09-19
+
+- Support standard upgrade verification from repositories whose base revision contains legacy subset locks (e.g., standard 0.14 where not all package-manifest entries were locked into manifest.lock.json) [ticket-252].
+
 ## 0.20.34 - 2026-09-19
 
 - Generate adopted `AGENTS.md` files with one final newline, so a clean,

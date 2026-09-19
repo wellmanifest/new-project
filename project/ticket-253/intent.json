@@ -1,0 +1,79 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-253",
+  "summary": "Release Wellmanifest new-project 0.20.35",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-253/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "packages/wellman/pyproject.toml",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json",
+    "docs/STANDARD_UPGRADE.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["json", "markdown", "toml"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "347931251d1fc72a242d0f34b39b56b35ae21deb",
+    "targetBranch": "main",
+    "outcome": "Publish the legacy subset base lock upgrade verification support as Wellmanifest new-project 0.20.35 with matching runtime, manifest, package and adopter-documentation version projections.",
+    "nonGoals": [
+      "Change the managed standard contract beyond the already merged legacy lock verification support",
+      "Change adoption behavior or release transport",
+      "Modify adopter repositories in this source-release ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Advance every canonical release projection atomically and preserve the existing release workflow, so adopters resolve one unambiguous 0.20.35 standard.",
+      "components": [
+        {
+          "name": "release-projections",
+          "paths": ["VERSION", "packages/wellman/pyproject.toml", "governance/manifest.hub.json", "governance/manifest.default.json"]
+        },
+        {
+          "name": "adopter-guidance",
+          "paths": ["CHANGELOG.md", "docs/STANDARD_UPGRADE.md"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Wellmanifest new-project version 0.20.35"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Publish a corrective patch release if a release projection is inconsistent; do not retag a published version."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["python3 -c \"import json, tomllib; assert open('VERSION').read().strip() == '0.20.35'; assert tomllib.load(open('packages/wellman/pyproject.toml', 'rb'))['project']['version'] == '0.20.35'; assert json.load(open('governance/manifest.hub.json'))['standard']['version'] == '0.20.35'; assert json.load(open('governance/manifest.default.json'))['standard']['version'] == '0.20.35'\""],
+        "evidence": "All canonical release projections declare 0.20.35."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["git diff --check", "./project/governance-check.sh --base 347931251d1fc72a242d0f34b39b56b35ae21deb", "python3 tests/worktrees-adoption.test.py"],
+        "evidence": "The atomic release diff is whitespace-clean, governed and preserves adoption regression coverage."
+      }
+    ]
+  }
+}
