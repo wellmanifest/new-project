@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.20.33 - 2026-09-19
+
+- Skip the managed pytest governance gate for `--collect-only` inventory
+  sessions before any gate or Git operation. Sessions that execute tests retain
+  the existing fail-closed behavior [ticket-248].
+
 ## 0.20.30 - 2026-09-14
 
 - Classify private component state explicitly without weakening integration ownership for migrations, transfers or legacy data-impact descriptions; distribute a deterministic remediation runbook.

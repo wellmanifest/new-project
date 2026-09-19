@@ -1,0 +1,87 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-248",
+  "summary": "Skip pytest governance for collect-only probes",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-248/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "template/files/wellmanifest_governance.py",
+    "tests/pytest-plugin.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python", "bash"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "5e35cf52b06204816d7b174dcc8f148204e47179",
+    "targetBranch": "main",
+    "outcome": "The managed pytest governance bridge skips all gate and Git work for pytest --collect-only sessions while preserving fail-closed gate enforcement for sessions that execute tests.",
+    "nonGoals": [
+      "Do not weaken governance for ordinary pytest sessions.",
+      "Do not change adopter-specific scan or IDE code.",
+      "Do not publish a release outside the material implementation change."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Read pytest's collectonly option at the start of pytest_sessionstart and return before any gate or Git operation. Extend the managed shell fixture with a no-gate collect-only invocation and retain the existing ordinary and rejected-gate checks.",
+      "components": [
+        {
+          "name": "managed-pytest-bridge",
+          "paths": ["template/files/wellmanifest_governance.py", "tests/pytest-plugin.test.sh"]
+        },
+        {
+          "name": "standard-release-metadata",
+          "paths": ["VERSION", "CHANGELOG.md"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the material commit and publish a subsequent corrective standard version."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/pytest-plugin.test.sh"],
+        "evidence": "The no-gate collect-only fixture returns successfully."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/pytest-plugin.test.sh"],
+        "evidence": "Existing ordinary and negative gate fixture checks remain green."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["bash tests/pytest-plugin.test.sh", "./project/governance-check.sh"],
+        "evidence": "Focused regression and managed governance gate pass."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["test \"$(cat VERSION)\" = 0.20.33"],
+        "evidence": "Versioned payload declaration is present."
+      }
+    ]
+  }
+}
