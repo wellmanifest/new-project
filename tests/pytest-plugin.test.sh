@@ -10,6 +10,28 @@ fail() {
   exit 1
 }
 
+collect_only="$tmp/collect-only"
+mkdir -p "$collect_only"
+cp "$root/template/files/wellmanifest_governance.py" "$collect_only/"
+(
+  cd "$collect_only"
+  python3 - <<'PY'
+from pathlib import Path
+from types import SimpleNamespace
+import wellmanifest_governance
+
+session = SimpleNamespace(
+    config=SimpleNamespace(
+        option=SimpleNamespace(collectonly=True),
+        rootpath=Path.cwd(),
+    )
+)
+wellmanifest_governance.pytest_sessionstart(session)
+PY
+)
+[[ ! -e "$collect_only/.governance-invocations" ]] \
+  || fail "collect-only must not invoke the governance gate"
+
 fixture="$tmp/adopter"
 git init -q "$fixture"
 git -C "$fixture" config user.email "test@example.com"
