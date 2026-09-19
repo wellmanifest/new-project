@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wellman"
-version = "0.20.37"
+version = "0.20.38"
 description = "Wellmanifest governance gate runtime — deterministic policy-as-code checker"
 readme = "README.md"
 requires-python = ">=3.11"

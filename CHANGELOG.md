@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.20.38 - 2026-09-19
+
+- Restore the independent protected-review boundary in hub and adopted host
+  guidance; reject account, administration and browser bypasses, forced cleanup
+  and WIP waivers, with regressions for both projections [ticket-256].
+
 ## 0.20.37 - 2026-09-19
 
 - Allocate file-backed tickets in canonical Worktrees v5 linked checkouts with
