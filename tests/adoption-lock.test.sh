@@ -271,9 +271,12 @@ for path in (
     '.subactor/manifest.json',
     'AGENTS.md',
 ):
-    assert path in integration
-    assert path in required_for_integration
+    assert path not in integration
+    assert path not in required_for_integration
 governance_paths = manifest['coordination']['workstreams']['governance']['ownedPaths']
+assert '.governance/**' in governance_paths
+assert '.subactor/**' in governance_paths
+assert 'AGENTS.md' in governance_paths
 assert 'CHANGELOG.md' in governance_paths
 assert '.env.example' in governance_paths
 catalog = json.load(open(root / '.governance/diagnostics.json', encoding='utf-8'))

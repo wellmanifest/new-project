@@ -419,8 +419,14 @@ assert 'CHANGELOG.md' in governance_paths
 assert '.env.example' in governance_paths
 assert 'VERSION' in integration_paths
 assert '.subactor/**' in governance_paths
-assert '.subactor/manifest.json' in integration_paths
-assert '.subactor/manifest.json' in manifest['coordination']['integration']['requiredForPaths']
+assert '.subactor/manifest.json' not in integration_paths
+assert '.subactor/manifest.json' not in manifest['coordination']['integration']['requiredForPaths']
+assert '.governance/**' in governance_paths
+assert '.governance/manifest.json' not in integration_paths
+assert '.governance/manifest.json' not in manifest['coordination']['integration']['requiredForPaths']
+assert 'AGENTS.md' in governance_paths
+assert 'AGENTS.md' not in integration_paths
+assert 'AGENTS.md' not in manifest['coordination']['integration']['requiredForPaths']
 assert {
     'operations/**', 'events/**', 'error/**', 'models/**', 'proto/**',
 } <= set(integration_paths)
@@ -1387,9 +1393,9 @@ expect_code GOV-SYNC-001 run_check "$extendable_sync" --changed-file src/app.js 
 
 dot_path="$fixture/dot-path"
 make_fixture "$dot_path"
-sed -i 's/"workstream": "application"/"workstream": "integration"/' "$dot_path/project/ticket-002/intent.json"
+sed -i 's/"workstream": "application"/"workstream": "governance"/' "$dot_path/project/ticket-002/intent.json"
 sed -i 's#"allowedPaths": \["src/\*\*"\]#"allowedPaths": [".governance/manifest.json"]#' "$dot_path/project/ticket-002/intent.json"
-sed -i 's#"components": \[{"name": "application", "paths": \["src/\*\*"\]}\]#"components": [{"name": "integration", "paths": [".governance/manifest.json"]}]#' "$dot_path/project/ticket-002/intent.json"
+sed -i 's#"components": \[{"name": "application", "paths": \["src/\*\*"\]}\]#"components": [{"name": "governance", "paths": [".governance/manifest.json"]}]#' "$dot_path/project/ticket-002/intent.json"
 if ! run_check "$dot_path" --changed-file .governance/manifest.json > "$fixture/dot-path.out"; then
   cat "$fixture/dot-path.out"
   exit 1
@@ -1473,7 +1479,7 @@ intent = {
     'schema': 'new-project.intent/v3',
     'ticket': 'ticket-002',
     'summary': 'Initial managed adoption fixture',
-    'workstream': 'integration',
+    'workstream': 'governance',
     'allowedPaths': [
         'AGENTS.md',
         '.governance/manifest.json',
@@ -1505,7 +1511,7 @@ intent = {
         },
         'architecture': {
             'status': 'accepted',
-            'decision': 'Route the shared manifest through the integration workstream',
+            'decision': 'Route the standard adoption through the governance workstream',
             'components': [{
                 'name': 'target-adoption',
                 'paths': [
@@ -1589,7 +1595,7 @@ import sys
 root = pathlib.Path(sys.argv[1])
 intent_path = root / 'project/ticket-002/intent.json'
 intent = json.load(open(intent_path, encoding='utf-8'))
-intent['workstream'] = 'integration'
+intent['workstream'] = 'governance'
 intent['allowedPaths'] = [
     '.governance/manifest.json',
     '.governance/manifest.lock.json',
