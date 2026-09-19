@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.20.34 - 2026-09-19
+
+- Generate adopted `AGENTS.md` files with one final newline, so a clean,
+  atomic standard upgrade passes `git diff --check` [ticket-250].
+
 ## 0.20.33 - 2026-09-19
 
 - Skip the managed pytest governance gate for `--collect-only` inventory
