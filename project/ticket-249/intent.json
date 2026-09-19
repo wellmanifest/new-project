@@ -1,0 +1,48 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-249",
+  "summary": "Align Wellman package release projection",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-249/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["python", "toml"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "33e5947ccfecb734d253163a9df4018c7b7d3bb6",
+    "targetBranch": "main",
+    "outcome": "Align Wellman's package version with standard 0.20.33 so protected release publication can create an immutable package and tag.",
+    "nonGoals": ["Do not change Wellman runtime behavior or move an existing tag."],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {"maxImplementationFiles": 1, "maxAffectedComponents": 1, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Update the sole package-version projection to match the already merged standard declaration.",
+      "components": [{"name": "wellman-package-metadata", "paths": ["packages/wellman/pyproject.toml"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Publish a later corrective version; never move an immutable release tag."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["python3 -c \"import tomllib; assert tomllib.load(open('packages/wellman/pyproject.toml','rb'))['project']['version'] == '0.20.33'\""], "evidence": "Package metadata matches VERSION."},
+      {"criterion": "AC-02", "commands": ["goal -a --delivery-mode direct-main --force-publish"], "evidence": "Goal recognizes a synchronized release version after protected merge."}
+    ]
+  }
+}
