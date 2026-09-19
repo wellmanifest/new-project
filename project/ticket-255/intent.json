@@ -1,0 +1,110 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-255",
+  "summary": "Allocate canonical Worktrees v5 ticket checkouts",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-255/**",
+    "project/TICKETS.md",
+    "project/new-ticket.sh",
+    "tests/governance-scripts.test.sh",
+    "tests/ticket-allocation-worktree.test.py",
+    "tests/work_start_test.py",
+    "VERSION",
+    "CHANGELOG.md",
+    "packages/wellman/pyproject.toml",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json",
+    "governance/package-manifest.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "368085282d0caa41cfa5ef2ec65644920566ae77",
+    "targetBranch": "main",
+    "outcome": "Allocate every file-backed ticket in a canonical Worktrees v5 linked checkout with a matching lease, so allocation never writes ticket carriers into the primary checkout.",
+    "nonGoals": [
+      "Alter SQLite ticket storage",
+      "Recover foreign or expired leases",
+      "Bypass registered allocation receipts",
+      "Publish or merge without protected validation"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 11,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "The allocator reserves the clone-wide high-water mark under its existing lock, validates the canonical relative linked-worktree layout, creates the ticket branch/worktree, and writes ticket carriers only in that worktree. Partial effects remain recoverable and observable; it never moves or cleans an existing worktree.",
+      "components": [
+        {
+          "name": "ticket-allocation",
+          "paths": [
+            "project/new-ticket.sh",
+            "tests/governance-scripts.test.sh",
+            "tests/ticket-allocation-worktree.test.py",
+            "tests/work_start_test.py"
+          ]
+        },
+        {
+          "name": "delivery-carriers",
+          "paths": [
+            "project/ticket-255/**",
+            "project/TICKETS.md",
+            "VERSION",
+            "CHANGELOG.md",
+            "packages/wellman/pyproject.toml",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json",
+            "governance/package-manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "File-backed allocation accepts a canonical worktree slug and returns the linked checkout path."
+      ],
+      "dataChanges": [
+        "A ticket branch, linked worktree and matching ignored lease are created atomically enough for recovery after ticket-number reservation."
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Preserve the allocated branch, linked worktree, lease and high-water reservation; correct a defect through a new immutable ticket rather than rewriting allocation history."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket-allocation-worktree.test.py"
+        ],
+        "evidence": "Allocator regression tests demonstrate canonical relative worktree placement, matching lease metadata, and no primary ticket-carrier write."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh --base 368085282d0caa41cfa5ef2ec65644920566ae77",
+          "git diff --check"
+        ],
+        "evidence": "Managed governance gate and release projections validate the bounded change."
+      }
+    ]
+  }
+}
