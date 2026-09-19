@@ -344,6 +344,10 @@ cp "$repo_root/scripts/work_start_check.py" "$race/mine/.governance/work_start_c
 cp "$repo_root/scripts/worktree_overlap_check.py" "$race/mine/.governance/worktree_overlap_check.py"
 cp "$repo_root/scripts/ticket_input.py" "$race/mine/.governance/ticket_input.py"
 cp "$repo_root/scripts/ticket_activity.py" "$race/mine/.governance/ticket_activity.py"
+cp "$repo_root/subprojects/worktrees/conformance.py" "$race/mine/.governance/worktree_path_check.py"
+printf '%s\n' '/.worktrees/' '/.subactor/leases/' > "$race/mine/.gitignore"
+git -C "$race/mine" -c user.email=t@e -c user.name=t add .gitignore .governance template project
+git -C "$race/mine" -c user.email=t@e -c user.name=t commit -qm 'fixture managed baseline'
 
 # A third claim appears only after the worker clone exists. Explicit refresh
 # must discover it; routine offline allocation does not require network I/O.
@@ -356,21 +360,24 @@ git -C "$race/upstream" push -q origin HEAD:refs/heads/ticket/009-late
 (
   cd "$race/mine"
   bash project/new-ticket.sh --refresh-remote \
-    --title 'Must not reuse a remote claim' --workstream application > alloc.out 2>&1
+    --title 'Must not reuse a remote claim' --workstream application > "$race/alloc.out" 2>&1
 )
 # 008 and 009 exist only on unmerged remote branches; 009 was unknown locally
 # before the explicitly requested refresh.
 test ! -d "$race/mine/project/ticket-008"
 test ! -d "$race/mine/project/ticket-009"
-test -d "$race/mine/project/ticket-010"
+allocation_worktree="$race/mine/.worktrees/ticket-010--must-not-reuse-a-remote-claim"
+test -d "$allocation_worktree/project/ticket-010"
+test ! -d "$race/mine/project/ticket-010"
 
-# ticket-010 is untracked in that clone, so the index must leave it out.
+# ticket-010 is untracked in its linked checkout, so its local index must
+# leave it out without dirtying the primary checkout.
 (
-  cd "$race/mine"
+  cd "$allocation_worktree"
   bash project/readme.sh > index.out 2> index.err
 )
-grep -q 'skipping untracked project/ticket-010' "$race/mine/index.err"
-if grep -q 'ticket-010' "$race/mine/project/TICKETS.md"; then
+grep -q 'skipping untracked project/ticket-010' "$allocation_worktree/index.err"
+if grep -q 'ticket-010' "$allocation_worktree/project/TICKETS.md"; then
   echo 'Index referenced an untracked ticket' >&2
   exit 1
 fi
@@ -379,7 +386,7 @@ fi
 # directory disappears, which models allocation from another linked worktree.
 # A managed base manifest is a sufficient local contract, and the default path
 # must not contact even an unavailable remote.
-rm -rf "$race/mine/project/ticket-010"
+git -C "$race/mine" worktree remove --force "$allocation_worktree"
 mv "$race/mine/.governance/manifest.json" "$race/mine/.governance/manifest.base.json"
 # This fixture tests ID reservation, not admission of a second writer over
 # an unfinished adoption. Commit its owned scaffolding before requesting an
@@ -390,9 +397,9 @@ git -C "$race/mine" push -q origin HEAD:main
 git -C "$race/mine" remote set-url origin file:///definitely-unavailable/new-project.git
 (
   cd "$race/mine"
-  bash project/new-ticket.sh --title 'Must not recycle 010' --workstream integration > reserve.out 2>&1
+  bash project/new-ticket.sh --title 'Must not recycle 010' --workstream integration > "$race/reserve.out" 2>&1
 )
-test -d "$race/mine/project/ticket-011"
+test -d "$race/mine/.worktrees/ticket-011--must-not-recycle-010/project/ticket-011"
 test ! -d "$race/mine/project/ticket-010"
 
 # Independent clones/nodes must not use the local high-water as global
@@ -414,6 +421,8 @@ cp "$repo_root/scripts/ticket_allocation.py" "$registered/worker/.governance/tic
 cp "$repo_root/scripts/work_start_check.py" "$registered/worker/.governance/work_start_check.py"
 cp "$repo_root/scripts/worktree_overlap_check.py" "$registered/worker/.governance/worktree_overlap_check.py"
 cp "$repo_root/scripts/ticket_input.py" "$registered/worker/.governance/ticket_input.py"
+cp "$repo_root/subprojects/worktrees/conformance.py" "$registered/worker/.governance/worktree_path_check.py"
+printf '%s\n' '/.worktrees/' '/.subactor/leases/' > "$registered/worker/.gitignore"
 printf '%s\n' '# Existing ticket 001' > "$registered/worker/project/ticket-001/README.md"
 cat > "$registered/worker/.governance/ticket-allocation.json" <<'JSON'
 {
@@ -446,14 +455,14 @@ registered_args=(
 registered_status=0
 (
   cd "$registered/worker"
-  bash project/new-ticket.sh "${registered_args[@]}" > request.json 2> missing-receipt.err
+  bash project/new-ticket.sh "${registered_args[@]}" > "$registered/request.json" 2> "$registered/missing-receipt.err"
 ) || registered_status=$?
 test "$registered_status" -eq 5
-grep -Fq 'GOV-TICKET-ALLOCATION-003' "$registered/worker/missing-receipt.err"
-grep -Fq 'new-project.ticket-allocation-request/v1' "$registered/worker/request.json"
+grep -Fq 'GOV-TICKET-ALLOCATION-003' "$registered/missing-receipt.err"
+grep -Fq 'new-project.ticket-allocation-request/v1' "$registered/request.json"
 test ! -d "$registered/worker/project/ticket-002"
 
-python3 - "$registered/worker/request.json" "$registered/worker" <<'PY'
+python3 - "$registered/request.json" "$registered" <<'PY'
 import datetime as dt
 import hashlib
 import json
@@ -499,10 +508,10 @@ for invalid in bad-issuer bad-digest expired; do
   (
     cd "$registered/worker"
     bash project/new-ticket.sh "${registered_args[@]}" \
-      --allocation-receipt "$invalid.json" > "$invalid.out" 2>&1
+      --allocation-receipt "$registered/$invalid.json" > "$registered/$invalid.out" 2>&1
   ) || registered_status=$?
   test "$registered_status" -eq 5
-  grep -Fq 'GOV-TICKET-ALLOCATION-003' "$registered/worker/$invalid.out"
+  grep -Fq 'GOV-TICKET-ALLOCATION-003' "$registered/$invalid.out"
   test ! -d "$registered/worker/project/ticket-002"
 done
 
@@ -510,18 +519,19 @@ registered_status=0
 (
   cd "$registered/worker"
   bash project/new-ticket.sh "${registered_args[@]}" \
-    --allocation-receipt visible.json > visible.out 2>&1
+    --allocation-receipt "$registered/visible.json" > "$registered/visible.out" 2>&1
 ) || registered_status=$?
 test "$registered_status" -eq 5
-grep -Fq 'GOV-TICKET-ALLOCATION-004' "$registered/worker/visible.out"
+grep -Fq 'GOV-TICKET-ALLOCATION-004' "$registered/visible.out"
 
 (
   cd "$registered/worker"
   bash project/new-ticket.sh "${registered_args[@]}" \
-    --allocation-receipt valid.json > registered.out 2>&1
+    --allocation-receipt "$registered/valid.json" > "$registered/registered.out" 2>&1
 )
-test -d "$registered/worker/project/ticket-002"
-grep -Fq 'Successfully scaffolded project/ticket-002' "$registered/worker/registered.out"
+test -d "$registered/worker/.worktrees/ticket-002--registered-autonomous-change/project/ticket-002"
+test ! -d "$registered/worker/project/ticket-002"
+grep -Fq 'Successfully allocated ticket-002' "$registered/registered.out"
 
 # The adopted Bash entrypoint executes a dependency-free TypeScript-compatible
 # runtime. Exercise exact Git/contract bindings and adversarial evidence here so
@@ -1230,6 +1240,11 @@ mkdir -p "$wide/project" "$wide/.governance" "$wide/.githooks"
 cp "$repo_root/project/new-ticket.sh" "$wide/project/new-ticket.sh"
 cp "$repo_root/governance/manifest.default.json" "$wide/.governance/manifest.json"
 cp "$repo_root/governance/work-classification.dsl.json" "$wide/.governance/work-classification.dsl.json"
+cp "$repo_root/scripts/work_start_check.py" "$wide/.governance/work_start_check.py"
+cp "$repo_root/scripts/worktree_overlap_check.py" "$wide/.governance/worktree_overlap_check.py"
+cp "$repo_root/scripts/ticket_input.py" "$wide/.governance/ticket_input.py"
+cp "$repo_root/scripts/ticket_activity.py" "$wide/.governance/ticket_activity.py"
+cp "$repo_root/subprojects/worktrees/conformance.py" "$wide/.governance/worktree_path_check.py"
 cp "$repo_root/template/files/pre-commit.template.sh" "$wide/.githooks/pre-commit"
 chmod +x "$wide/.githooks/pre-commit"
 # Only the hook's ticket binding is exercised here; full policy is covered by
@@ -1237,15 +1252,19 @@ chmod +x "$wide/.githooks/pre-commit"
 printf '%s\n' 'raise SystemExit(0)' > "$wide/.governance/worktree_guard.py"
 (
   cd "$wide"
-  git init -q
+  git init -q -b main
   git config user.name 'Fixture'
   git config user.email 'fixture@example.invalid'
+  printf '%s\n' '/.worktrees/' '/.subactor/leases/' > .gitignore
+  git add .
+  git commit -qm 'fixture baseline'
   git config core.hooksPath .githooks
   printf '%s\n' 999 > .git/new-project-ticket-high-water
   bash project/new-ticket.sh --title 'Allocated beyond display width' --agent codex \
-    --workstream application > allocation.out
-  test -f project/ticket-1000/intent.json
-  git checkout -qb ticket/1000-wide
+    --workstream application > "$fixture/wide-allocation.out"
+  delivery="$wide/.worktrees/ticket-1000--allocated-beyond-display-width"
+  test -f "$delivery/project/ticket-1000/intent.json"
+  cd "$delivery"
   printf '%s\n' 'value = 1' > app.py
   git add project/ticket-1000 app.py
   git commit -qm 'Exercise complete four-digit hook binding'
@@ -1256,9 +1275,10 @@ root, wide = map(pathlib.Path, sys.argv[1:])
 sys.path.insert(0, str(root / 'scripts'))
 import governance_check as gate
 import ticket_input
-config = json.loads((wide / '.governance/manifest.json').read_text())['ticket']
-assert [p.name for p in gate.ticket_directories(wide, config)] == ['ticket-1000']
-intent = json.loads((wide / 'project/ticket-1000/intent.json').read_text())
+delivery = wide / '.worktrees/ticket-1000--allocated-beyond-display-width'
+config = json.loads((delivery / '.governance/manifest.json').read_text())['ticket']
+assert [p.name for p in gate.ticket_directories(delivery, config)] == ['ticket-1000']
+intent = json.loads((delivery / 'project/ticket-1000/intent.json').read_text())
 intent.update(dependsOn=['ticket-1001'], conflictsWith=['ticket-13632'], integrationTicket='ticket-1002')
 assert gate.validate_intent_value(intent, 'ticket-1000')[1] is None
 for bad in ['ticket-01', 'ticket-1000x', 'ticket-../1000']:

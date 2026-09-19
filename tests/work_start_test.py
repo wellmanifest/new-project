@@ -45,7 +45,7 @@ class WorkStartTest(unittest.TestCase):
         self.git(self.root, "init", "-b", "main")
         self.git(self.root, "config", "user.name", "Fixture")
         self.git(self.root, "config", "user.email", "fixture@example.invalid")
-        (self.root / ".gitignore").write_text("/.worktrees/\n")
+        (self.root / ".gitignore").write_text("/.worktrees/\n/.subactor/leases/\n")
         self.manifest = {
             "schema": "new-project.governance/v2",
             "ticket": {"activeStatuses": ["IN_PROGRESS"]},
@@ -65,6 +65,8 @@ class WorkStartTest(unittest.TestCase):
             shutil.copy2(ROOT / "scripts" / filename, adopted / filename)
         for filename in ("work-classification.dsl.json", "ticket-activity.json"):
             shutil.copy2(ROOT / "governance" / filename, adopted / filename)
+        shutil.copy2(ROOT / "subprojects/worktrees/conformance.py",
+                     adopted / "worktree_path_check.py")
         project = self.root / "project"
         project.mkdir()
         shutil.copy2(ROOT / "project/new-ticket.sh", project / "new-ticket.sh")
@@ -256,7 +258,7 @@ class WorkStartTest(unittest.TestCase):
         result = self.allocate("--path", "api/new/**", "--path", 'api/quoted "name".txt',
                                "--path", "api/new/**")
         self.assertEqual(result.returncode, 0, result.stderr)
-        intent = json.loads((self.root / "project/ticket-002/intent.json").read_text())
+        intent = json.loads((self.root / ".worktrees/ticket-002--new-task-ticket/project/ticket-002/intent.json").read_text())
         material = start.material(intent["allowedPaths"])
         self.assertEqual(material, ['api/new/**', 'api/quoted "name".txt'])
         self.assertEqual((peer / "api/a.txt").read_text(), "unpublished peer work\n")
@@ -613,11 +615,12 @@ class WorkStartTest(unittest.TestCase):
         result = subprocess.run(["bash", "project/new-ticket.sh", "--workstream", "api"],
                                 cwd=self.root, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertTrue((self.root / "project/ticket-001/intent.json").exists())
+        self.assertTrue((self.root / ".worktrees/ticket-001--new-task-ticket/project/ticket-001/intent.json").exists())
+        self.assertFalse((self.root / "project/ticket-001").exists())
         repeat = subprocess.run(["bash", "project/new-ticket.sh", "--workstream", "api"],
                                 cwd=self.root, capture_output=True, text=True)
         self.assertEqual(repeat.returncode, 3)
-        self.assertFalse((self.root / "project/ticket-002").exists())
+        self.assertFalse((self.root / ".worktrees/ticket-002--new-task-ticket").exists())
 
     def test_closed_report_schema_and_package_binding(self):
         report = self.report()

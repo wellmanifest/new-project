@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.20.37 - 2026-09-19
+
+- Allocate file-backed tickets in canonical Worktrees v5 linked checkouts with
+  a matching local lease, preserving the clone-wide reservation and leaving
+  primary ticket carriers untouched [ticket-255].
+
 ## 0.20.36 - 2026-09-19
 
 - Recover a pre-adoption ticket through the explicit local allocator route,
