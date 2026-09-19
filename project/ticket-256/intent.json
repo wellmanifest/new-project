@@ -1,0 +1,105 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-256",
+  "summary": "Restore protected review boundary in managed host guidance",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-256/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "template/files/AGENTS.template.md",
+    "tests/agent-hosts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "64d0b87f140032b4db4757a260e716464f749049",
+    "targetBranch": "main",
+    "outcome": "Publish corrected immutable managed host guidance requiring protected independent review, then adopt it in the existing Wellman ticket-002 delivery.",
+    "nonGoals": [
+      "Change protected review policy or grant merge authority",
+      "Modify adopter files or protected Validator runtime in this ticket",
+      "Discard foreign work or waive WIP limits"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Replace contradictory autonomous-merge guidance in the hub and adoption template with one protected-delivery boundary; regression-check both projections and ship atomic release metadata.",
+      "components": [
+        {
+          "name": "host-guidance",
+          "paths": [
+            "AGENTS.md",
+            "template/files/AGENTS.template.md"
+          ]
+        },
+        {
+          "name": "regression",
+          "paths": [
+            "tests/agent-hosts.test.sh"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Retain immutable history and publish a corrective standard revision; never relax protected review or edit adopter lock hashes by hand."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Both host projections require protected review and reject the known bypass, forced-cleanup and WIP-waiver guidance."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh --base 64d0b87f140032b4db4757a260e716464f749049",
+          "git diff --check"
+        ],
+        "evidence": "Managed governance gate accepts the bounded material change and consistent release metadata."
+      }
+    ]
+  }
+}

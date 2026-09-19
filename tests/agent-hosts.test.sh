@@ -68,6 +68,46 @@ assert append['guard'] is not None, 'reuse must prevent unconditional duplicate 
 parse_markdown(policy)
 PYREFRESH
 
+# The same managed instruction reaches every adopter. Local green tests and
+# navigation links must never turn into authority to evade protected review.
+python3 - "$root" <<'PYREVIEW'
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+sections = []
+for path in ('AGENTS.md', 'template/files/AGENTS.template.md'):
+    text = (root / path).read_text()
+    normalized = ' '.join(text.split())
+    start = '<!-- wellmanifest:protected-delivery:start -->'
+    end = '<!-- wellmanifest:protected-delivery:end -->'
+    assert text.count(start) == text.count(end) == 1, path
+    sections.append(text.split(start)[1].split(end)[0])
+    for forbidden in (
+        'wellmanifest:autonomous-merge',
+        'Autonomous Merge Authorized',
+        'automated reviewer profile rotation',
+        'submitting approval via an alternate authorized account',
+        'gh pr merge --admin',
+        'git worktree remove --force',
+        'WIP concurrency limits in `ticket-lifecycle` are waived',
+    ):
+        assert forbidden not in normalized, (path, forbidden)
+    for required in (
+        'Passing tests is necessary, but never grants review or merge authority.',
+        'only the protected controller may merge',
+        'Approval must bind the exact repository, PR, HEAD, ticket and trusted actor',
+        'Never self-approve, rotate reviewer accounts, bypass branch protection',
+        'preserve the exact-head checkpoint and signed review progress',
+        'obtain fresh validation for the resulting HEAD',
+        'Review and publication retain the declared WIP limits.',
+        'Preserve unknown or unique data',
+    ):
+        assert required in normalized, (path, required)
+assert sections[0] == sections[1], 'hub and adopted protected guidance diverge'
+print('Protected review boundary in hub and adopter guidance: PASS')
+PYREVIEW
+
 echo "== proportional action classification has no filesystem effects =="
 python3 - "$root" <<'PYCLASSIFY'
 import json
