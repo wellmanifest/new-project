@@ -1,0 +1,79 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-251",
+  "summary": "Release Wellmanifest new-project 0.20.34",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-251/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "packages/wellman/pyproject.toml",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json",
+    "docs/STANDARD_UPGRADE.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": ["json", "markdown", "toml"],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3d4cd49a2c3d51650480e1387a3efe8c701b5dda",
+    "targetBranch": "main",
+    "outcome": "Publish the AGENTS template EOF correction as Wellmanifest new-project 0.20.34 with matching runtime, manifest, package and adopter-documentation version projections.",
+    "nonGoals": [
+      "Change the managed AGENTS contract beyond the already merged EOF correction",
+      "Change adoption behavior or release transport",
+      "Modify adopter repositories in this source-release ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Advance every canonical release projection atomically and preserve the existing release workflow, so adopters resolve one unambiguous 0.20.34 standard.",
+      "components": [
+        {
+          "name": "release-projections",
+          "paths": ["VERSION", "packages/wellman/pyproject.toml", "governance/manifest.hub.json", "governance/manifest.default.json"]
+        },
+        {
+          "name": "adopter-guidance",
+          "paths": ["CHANGELOG.md", "docs/STANDARD_UPGRADE.md"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Wellmanifest new-project version 0.20.34"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Publish a corrective patch release if a release projection is inconsistent; do not retag a published version."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["python3 -c \"import json, tomllib; assert open('VERSION').read().strip() == '0.20.34'; assert tomllib.load(open('packages/wellman/pyproject.toml', 'rb'))['project']['version'] == '0.20.34'; assert json.load(open('governance/manifest.hub.json'))['standard']['version'] == '0.20.34'; assert json.load(open('governance/manifest.default.json'))['standard']['version'] == '0.20.34'\""],
+        "evidence": "All canonical release projections declare 0.20.34."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["git diff --check", "./project/governance-check.sh --base 3d4cd49a2c3d51650480e1387a3efe8c701b5dda", "python3 tests/worktrees-adoption.test.py"],
+        "evidence": "The atomic release diff is whitespace-clean, governed and preserves adoption regression coverage."
+      }
+    ]
+  }
+}

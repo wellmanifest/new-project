@@ -6,7 +6,7 @@ When a new `wellmanifest/new-project` release is published, all adopting
 repositories receive the update through three independent layers:
 
 ```
-Release v0.20.33
+Release v0.20.34
   ├── Layer 1: Pre-commit hook  →  auto-upgrade on next commit (local)
   ├── Layer 2: CI reusable gate →  fail-fast on outdated standard (CI)
   └── Layer 3: Org-wide auto-PR →  upgrade PR in all 100+ repos (batch)
@@ -37,7 +37,7 @@ Adopter repos reference the governance gate as a reusable workflow:
 # .github/workflows/governance.yml
 jobs:
   governance:
-    uses: wellmanifest/new-project/.github/workflows/governance-gate-reusable.yml@v0.20.33
+    uses: wellmanifest/new-project/.github/workflows/governance-gate-reusable.yml@v0.20.34
     with:
       target-root: .
 ```
@@ -50,9 +50,9 @@ On new release, `propagate-standard.yml` scans all orgs for adopters and
 creates upgrade PRs:
 
 ```
-wellmanifest/new-project release v0.20.33
+wellmanifest/new-project release v0.20.34
   → Scans semcod/*, subactor/*, autogrammar/*, ...
-  → Creates PR "chore: upgrade wellmanifest standard to 0.20.33"
+  → Creates PR "chore: upgrade wellmanifest standard to 0.20.34"
   → PR runs governance gate → auto-merge if green
 ```
 
@@ -65,7 +65,7 @@ wellmanifest/new-project release v0.20.33
 .governance/governance_check.py   # 4343 lines, vendored
 
 # After (1KB wrapper + package dependency):
-uv add --group governance wellman==0.20.32
+uv add --group governance wellman==0.20.34
 # .governance/governance_check.py is no longer needed
 ```
 
