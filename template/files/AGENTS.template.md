@@ -305,4 +305,3 @@ is mergeable (`mergeable: true`):
 6. **WIP Lock Waiver**: WIP concurrency limits in `ticket-lifecycle` are waived for
    tickets awaiting review approval or merge execution.
 <!-- wellmanifest:autonomous-merge:end -->
-
