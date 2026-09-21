@@ -677,6 +677,7 @@ make_fixture() {
   local target="$1"
   mkdir -p "$target/.governance" "$target/project/ticket-001" "$target/project/ticket-002" "$target/src"
   cp "$repo_root/scripts/governance_check.py" "$target/.governance/governance_check.py"
+  cp "$repo_root/scripts/repository_policy.py" "$target/.governance/repository_policy.py"
   cp "$repo_root/scripts/ticket_activity.py" "$target/.governance/ticket_activity.py"
   cp "$repo_root/governance/adoption-bindings.json" "$target/.governance/adoption-bindings.json"
   cp "$repo_root/governance/manifest.default.json" "$target/.governance/manifest.json"
@@ -1417,6 +1418,7 @@ initial_base="$(git -C "$initial_adoption" rev-parse HEAD)"
 git -C "$initial_adoption" switch -qc ticket-002-initial-adoption
 mkdir -p "$initial_adoption/.governance" "$initial_adoption/project/ticket-002"
 cp "$repo_root/scripts/governance_check.py" "$initial_adoption/.governance/governance_check.py"
+cp "$repo_root/scripts/repository_policy.py" "$initial_adoption/.governance/repository_policy.py"
 cp "$repo_root/scripts/ticket_activity.py" "$initial_adoption/.governance/ticket_activity.py"
 cp "$repo_root/governance/manifest.default.json" "$initial_adoption/.governance/manifest.json"
 cp "$repo_root/governance/stack-profiles.json" "$initial_adoption/.governance/stack-profiles.json"
@@ -1443,6 +1445,7 @@ package = {
         {'source': 'template/files/AGENTS.template.md', 'target': 'AGENTS.md', 'strategy': 'managed', 'executable': False},
         {'source': 'governance/package-manifest.json', 'target': '.governance/package-manifest.json', 'strategy': 'managed', 'executable': False},
         {'source': 'scripts/governance_check.py', 'target': '.governance/governance_check.py', 'strategy': 'managed', 'executable': False},
+        {'source': 'scripts/repository_policy.py', 'target': '.governance/repository_policy.py', 'strategy': 'managed', 'executable': True},
         {'source': 'scripts/ticket_activity.py', 'target': '.governance/ticket_activity.py', 'strategy': 'managed', 'executable': False},
         {'source': 'governance/stack-profiles.json', 'target': '.governance/stack-profiles.json', 'strategy': 'managed', 'executable': False},
         {'source': 'governance/work-classification.dsl.json', 'target': '.governance/work-classification.dsl.json', 'strategy': 'managed', 'executable': False},
@@ -1466,6 +1469,7 @@ lock = {
             'AGENTS.md',
             '.governance/package-manifest.json',
             '.governance/governance_check.py',
+            '.governance/repository_policy.py',
             '.governance/ticket_activity.py',
             '.governance/stack-profiles.json',
             '.governance/work-classification.dsl.json',

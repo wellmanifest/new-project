@@ -346,6 +346,11 @@
       "remediation": "Keep the owning ticket IN_PROGRESS through implementation publication; after merge, let the protected controller emit the external terminal receipt without a repository closure commit.",
       "documentation": "error/GOV-TICKET-001.md"
     },
+    "GOV-TICKET-EXTERNAL-001": {
+      "message": "The selected external ticket backend has no valid active local adapter.",
+      "remediation": "Refresh the repository-local adapter from the external ticket system and keep its bounded scope, state and source evidence consistent.",
+      "documentation": null
+    },
     "GOV-TICKET-ACTIVITY-001": {
       "message": "Ticket activity cannot be resolved safely from the managed policy and clone-external terminal receipt registry.",
       "remediation": "Keep the status projection active, then reconcile or recover the clone-external registry from protected evidence.",

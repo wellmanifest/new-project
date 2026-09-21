@@ -16,8 +16,18 @@
     "governance/package-manifest.json",
     "governance/standard-adoption.default.json",
     "governance/standard-packs.json",
+    "governance/manifest.schema.json",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "template/files/pre-commit.template.sh",
     "template/files/new-project-governance.workflow.yml",
+    "scripts/governance_check.py",
+    "scripts/repository_policy.py",
     "scripts/fleet_report.py",
+    "tests/repository-policy.test.sh",
+    "tests/governance-validator.test.sh",
+    "VERSION",
+    "CHANGELOG.md",
     "tests/fleet-report.test.sh",
     "tests/required-checks.test.sh"
   ],
@@ -27,5 +37,41 @@
   "stacks": [],
   "dependsOn": [],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e2fd653ff801fb228fca818e1d874ee685a4da62",
+    "targetBranch": "main",
+    "outcome": "Every adopter can select a delivery profile and main-only Planfile repositories are checked fail-closed.",
+    "nonGoals": [
+      "No change to protected publication approval or worktree v5 semantics",
+      "No automatic migration of existing external ticket systems"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep adoption packs separate from repository delivery profiles and project an external Planfile ticket through a bounded local adapter.",
+      "components": [
+        {"name": "profile-contract", "paths": ["governance/manifest.schema.json", "governance/manifest.default.json", "governance/package-manifest.json", "governance/standard-adoption.default.json", "governance/standard-packs.json"]},
+        {"name": "profile-enforcement", "paths": ["scripts/repository_policy.py", "scripts/governance_check.py", "template/files/pre-commit.template.sh", "template/files/new-project-governance.workflow.yml"]},
+        {"name": "profile-regression", "paths": ["tests/repository-policy.test.sh", "tests/fleet-report.test.sh", "tests/required-checks.test.sh", "governance/diagnostics.json", "scripts/fleet_report.py", ".github/workflows/propagate-standard.yml"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["repositoryPolicy profile selection", "wellmanifest.external-ticket-adapter/v1"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Remove repositoryPolicy extensions from adopters and retain the default ticket-worktree profile."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-05", "commands": ["bash tests/repository-policy.test.sh", "bash tests/agent-hosts.test.sh"], "evidence": "Profile selection, active Planfile source and staged scope checks pass."},
+      {"criterion": "AC-06", "commands": ["bash tests/governance-validator.test.sh", "bash tests/adoption-lock.test.sh"], "evidence": "Existing manifest, adoption and managed-file regressions pass."}
+    ]
+  }
 }

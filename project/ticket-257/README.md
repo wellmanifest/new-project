@@ -25,6 +25,11 @@ ani worktree dla innych repozytoriów.
   katalog pakietów, kontrakt worktrees i workflow wymagający `wellman`.
 - [x] AC-04: Testy raportu obejmują repozytorium zagnieżdżone oraz przypadek
   repozytorium bez adopcji.
+- [ ] AC-05: Manifest rozróżnia profil ticket/worktree od profilu dostawy
+  `main-only`, a hook i gate respektują profil `main-only-planfile`.
+- [ ] AC-06: Adopter może zadeklarować zewnętrzny backend ticketów z lokalnym,
+  weryfikowalnym adapterem zakresu; brak aktywnego ticketu lub zakresu kończy
+  się błędem, nie ostrzeżeniem.
 
 ## Ryzyka i Uwagi
 - Risk: raport może objąć repozytoria archiwalne lub checkouty techniczne;

@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.20.39 - 2026-09-21
+
+- Add explicit repository delivery profiles, including `main-only-planfile`,
+  and validate external ticket adapters with bounded staged scopes [ticket-257].
+
 ## 0.20.38 - 2026-09-19
 
 - Restore the independent protected-review boundary in hub and adopted host

@@ -428,6 +428,12 @@
       "executable": true
     },
     {
+      "source": "scripts/repository_policy.py",
+      "target": ".governance/repository_policy.py",
+      "strategy": "managed",
+      "executable": true
+    },
+    {
       "source": "template/files/new-project-governance.workflow.yml",
       "target": ".github/workflows/new-project-governance.yml",
       "strategy": "managed",
