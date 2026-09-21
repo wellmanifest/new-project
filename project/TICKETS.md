@@ -255,8 +255,9 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-251** | [`README.md`](./ticket-251/README.md) | - | - | - | - | - |
 | **ticket-252** | [`README.md`](./ticket-252/README.md) | - | - | - | - | - |
 | **ticket-253** | [`README.md`](./ticket-253/README.md) | - | - | - | - | - |
-| **ticket-255** | [`README.md`](./ticket-255/README.md) | - | [`intent.json`](./ticket-255/intent.json) | - | - | - |
-| **ticket-256** | [`README.md`](./ticket-256/README.md) | - | [`intent.json`](./ticket-256/intent.json) | - | - | - |
+| **ticket-254** | [`README.md`](./ticket-254/README.md) | - | - |  [`ai-codex.md`](./ticket-254/ai-codex.md) | - | - |
+| **ticket-255** | [`README.md`](./ticket-255/README.md) | - | - | - | - | - |
+| **ticket-256** | [`README.md`](./ticket-256/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 

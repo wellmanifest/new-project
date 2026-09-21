@@ -46,6 +46,10 @@ JSON
 adopter current 0.2.0
 adopter stale 0.1.0
 
+mkdir -p "$workspace/team/nested"
+git init -q "$workspace/team/nested"
+printf 'nested\n' > "$workspace/team/nested/README.md"
+
 # A repository that follows the standard on paper but pins nothing is the most
 # dangerous state, because it looks compliant.
 mkdir -p "$workspace/claimed"
@@ -64,6 +68,20 @@ assert by_name["stale"]["releasesBehind"] == 1, by_name["stale"]
 assert by_name["current"]["digestDrift"] == [], by_name["current"]
 assert report["claimed"] == ["claimed"], report["claimed"]
 assert by_name["stale"]["checksVsValidator"] == "unregistered"
+assert by_name["current"]["baseline"]["wellman"] is False
+assert "wellmanifest/worktrees" in by_name["current"]["baseline"]["baselineMissing"]
+PY
+
+observed="$(python3 "$REPORT" --workspace "$workspace" --recursive \
+  --validator-registry /nonexistent --format json)"
+python3 - "$observed" <<'PY'
+import json, sys
+report = json.loads(sys.argv[1])
+assert report["recursive"] is True, report
+assert "team/nested" in report["outside"], report["outside"]
+observed_by_name = {row["repository"]: row for row in report["repositories"]}
+assert observed_by_name["team/nested"]["state"] == "outside"
+assert observed_by_name["team/nested"]["baseline"]["tickets"] is False
 PY
 
 # Editing a managed file must show as drift against the lock.

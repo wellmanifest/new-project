@@ -383,6 +383,8 @@ published = set(re.findall(r"^    name:\s*(.+?)\s*$", workflow, re.MULTILINE))
 assert declared == published, f"seed {sorted(declared)} != template workflow {sorted(published)}"
 targets = {entry["workflowFile"] for entry in seed["requiredChecks"]}
 assert targets == {".github/workflows/new-project-governance.yml"}, targets
+assert "Install wellman governance runtime" in workflow
+assert "wellman check --root . --json" in workflow
 PY
 
 # The package manifest must seed adopters from the template, never from the

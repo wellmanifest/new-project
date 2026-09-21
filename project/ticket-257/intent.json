@@ -1,0 +1,31 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-257",
+  "summary": "Enforce wellman worktrees and ticket baseline across active repositories",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-257/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/propagate-standard.yml",
+    "governance/package-manifest.json",
+    "governance/standard-adoption.default.json",
+    "governance/standard-packs.json",
+    "template/files/new-project-governance.workflow.yml",
+    "scripts/fleet_report.py",
+    "tests/fleet-report.test.sh",
+    "tests/required-checks.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
