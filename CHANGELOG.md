@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.20.40 - 2026-09-22
+
+- Harden repository delivery profiles against staged/working-tree drift,
+  out-of-scope deletions, unsafe paths and same-commit adapter expansion;
+  support audit-only hook dispatch [ticket-257].
+
 ## 0.20.39 - 2026-09-21
 
 - Add explicit repository delivery profiles, including `main-only-planfile`,
