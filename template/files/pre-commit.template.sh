@@ -47,6 +47,10 @@ run_commit_guards() {
 policy_runner="$root/.governance/repository_policy.py"
 if [[ -f "$policy_runner" ]]; then
   repository_profile="$(PYTHONDONTWRITEBYTECODE=1 python3 "$policy_runner" --root "$root" --profile 2>/dev/null || true)"
+  if [[ "$repository_profile" == "local-audit" ]]; then
+    PYTHONDONTWRITEBYTECODE=1 python3 "$policy_runner" --root "$root" --staged >/dev/null || true
+    exit 0
+  fi
   if [[ "$repository_profile" == "main-only-planfile" || "$repository_profile" == "main-only-files" ]]; then
     if [[ -z "$branch" || "$branch" == "HEAD" ]]; then
       echo "GOV-AGENT-HOST-001: detached HEAD is not allowed by the main-only delivery profile." >&2
