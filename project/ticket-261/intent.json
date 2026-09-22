@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-261",
+  "summary": "Release standard 0.20.45 with LICENSE recognition",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-261/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c7dc601b94fd24fb4940488b8fc69445a593df51",
+    "targetBranch": "main",
+    "outcome": "Synchronize manifests and changelog for standard 0.20.45 release.",
+    "nonGoals": [
+      "No change to terminal receipt schema"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Synchronize standard versions to 0.20.45.",
+      "components": [
+        {
+          "name": "release-version",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md"
+          ]
+        },
+        {
+          "name": "release-manifests",
+          "paths": [
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "git revert"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -c \"assert open('VERSION').read().strip() == '0.20.45'\""
+        ],
+        "evidence": "VERSION is 0.20.45"
+      }
+    ]
+  }
+}
