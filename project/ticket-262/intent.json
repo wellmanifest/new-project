@@ -21,5 +21,53 @@
   "stacks": [],
   "dependsOn": [],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b2d596c01cec0c7fda934cc639ba2335971eccfe",
+    "targetBranch": "main",
+    "outcome": "Raise the managed default active-ticket capacity per workstream to eight and keep its regression test synchronized.",
+    "nonGoals": [
+      "Do not disable lease, scope-overlap or canonical-worktree checks",
+      "Do not change repository-local adopter projections directly"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Change the single managed default and its deterministic regression assertion atomically; existing adopters consume the value only through a verified immutable standard release.",
+      "components": [
+        {
+          "name": "governance-default",
+          "paths": ["governance/manifest.default.json"]
+        },
+        {
+          "name": "governance-regression",
+          "paths": ["tests/governance-validator.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "git revert"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/governance-validator.test.sh"],
+        "evidence": "The deterministic governance validator passes with the managed capacity set to eight."
+      }
+    ]
+  }
 }
