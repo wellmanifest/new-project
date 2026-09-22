@@ -361,7 +361,9 @@ ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
 assert not set(ticket['activeStatuses']) & set(ticket['nonActiveStatuses'])
-assert manifest['coordination']['maxActiveTicketsPerWorkstream'] == 3
+agent_profiles = {'devin', 'codex', 'claude', 'agy', 'aider', 'gemini', 'cursor', 'cline'}
+assert manifest['coordination']['maxActiveTicketsPerWorkstream'] >= len(agent_profiles)
+assert manifest['coordination']['maxActiveTicketsPerWorkstream'] == 8
 assert manifest['delivery']['requiredForImplementation'] is False
 assert manifest['delivery']['maxActiveMinutes'] == 120
 assert manifest['delivery']['checkpointMinutes'] == 30
@@ -2652,7 +2654,7 @@ intent = json.loads(path.read_text(encoding='utf-8'))
 intent['allowedPaths'] = ['src/app.js']
 path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
 PY
-for suffix in one two three four; do
+for suffix in one two three four five six seven eight nine; do
   printf '%s\n' "export const $suffix = true;" > "$same_workstream/src/$suffix.js"
 done
 add_active_ticket "$same_workstream" ticket-003 application '["src/one.js"]'
@@ -2661,7 +2663,12 @@ add_active_ticket "$same_workstream" ticket-005 application '["src/three.js"]'
 run_check "$same_workstream" --changed-file src/app.js > "$fixture/same-workstream.out"
 grep -q '^GOV-PASS:' "$fixture/same-workstream.out"
 add_active_ticket "$same_workstream" ticket-006 application '["src/four.js"]'
-expect_code GOV-WORKSTREAM-002 run_check "$same_workstream" --changed-file TODO.md
+add_active_ticket "$same_workstream" ticket-007 application '["src/five.js"]'
+add_active_ticket "$same_workstream" ticket-008 application '["src/six.js"]'
+add_active_ticket "$same_workstream" ticket-009 application '["src/seven.js"]'
+add_active_ticket "$same_workstream" ticket-010 application '["src/eight.js"]'
+add_active_ticket "$same_workstream" ticket-011 application '["src/nine.js"]'
+expect_code GOV-WORKSTREAM-002 run_check "$same_workstream" --changed-file src/unknown.js
 
 clean_integrated="$fixture/clean-integrated"
 make_fixture "$clean_integrated"
