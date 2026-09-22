@@ -656,6 +656,12 @@
       "executable": false
     },
     {
+      "source": "governance/managed-copies.json",
+      "target": ".governance/managed-copies.json",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "error/GOV-ARCHITECTURE-001.md",
       "target": ".governance/error/GOV-ARCHITECTURE-001.md",
       "strategy": "managed",

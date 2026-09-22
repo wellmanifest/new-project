@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.20.43 - 2026-09-22
+
+- Publish a digest-bound managed-copy inventory so Docs validation excludes
+  standard-provided `.governance/docs` files from product-document checks
+  [ticket-257].
+
 ## 0.20.42 - 2026-09-22
 
 - Add strict standard-pack enforcement for CI while preserving audit-only local
