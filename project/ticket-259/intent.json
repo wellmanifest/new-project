@@ -1,0 +1,80 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-259",
+  "summary": "Fix stale adoption validation base resolution",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-259/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/governance_check.py",
+    "tests/delivery-post-merge-base.test.py",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "be252d86027a622e4696831229ac45c1a55c9a08",
+    "targetBranch": "main",
+    "outcome": "resolve_validation_base excludes landed adoption tickets from implicit validation base resolution.",
+    "nonGoals": [
+      "No change to terminal receipt schema",
+      "No change to worktree reservation semantics"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Filter out adoption records in resolve_validation_base if delivery_landed reports their delivery is present on the remote target branch.",
+      "components": [
+        {
+          "name": "governance-validator",
+          "paths": [
+            "scripts/governance_check.py"
+          ]
+        },
+        {
+          "name": "governance-tests",
+          "paths": [
+            "tests/delivery-post-merge-base.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert unlanded adoption filtering in resolve_validation_base."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/delivery-post-merge-base.test.py"
+        ],
+        "evidence": "30 delivery-post-merge-base tests pass."
+      }
+    ]
+  }
+}
