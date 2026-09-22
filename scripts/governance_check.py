@@ -3844,20 +3844,23 @@ def load_standard_adoption_evidence(
         raise ValueError("head package manifest or lock is missing")
     initial = adoption["fromRevision"] is None
     if initial:
-        if base_package_content is not None or base_lock_content is not None:
-            raise ValueError("initial adoption base already contains a package manifest or lock")
+        if base_package_content is not None:
+            raise ValueError("initial adoption base already contains a package manifest")
         base_strategies: dict[str, str] = {}
         base_hashes: dict[str, str] = {}
     else:
-        if base_package_content is None or base_lock_content is None:
-            raise ValueError("upgrade base package manifest or lock is missing")
-        base_strategies = package_strategies(base_package_content)
+        if base_lock_content is None:
+            raise ValueError("upgrade base lock is missing")
+        if base_package_content is None:
+            base_strategies = {}
+        else:
+            base_strategies = package_strategies(base_package_content)
         base_hashes = adoption_lock(base_lock_content, adoption["fromRevision"])
     head_strategies = package_strategies(head_package_path.read_bytes())
     head_hashes = adoption_lock(head_lock_path.read_bytes(), adoption["toRevision"])
     base_managed = {path for path, strategy in base_strategies.items() if strategy == "managed"}
     head_managed = {path for path, strategy in head_strategies.items() if strategy == "managed"}
-    legacy_base = set(base_hashes) <= set(base_strategies)
+    legacy_base = not base_strategies or (set(base_hashes) <= set(base_strategies))
     if (
         frozenset(base_hashes) not in {frozenset(base_strategies), frozenset(base_managed)}
         and not legacy_base

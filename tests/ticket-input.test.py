@@ -22,7 +22,7 @@ import ticket_input
 class TicketInputTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.seed_temp = tempfile.TemporaryDirectory(prefix="ticket-input-seed-")
+        cls.seed_temp = tempfile.TemporaryDirectory(prefix="ticket-input-seed-", ignore_cleanup_errors=True)
         cls.seed = Path(cls.seed_temp.name)
         paths = subprocess.check_output(["git", "-C", str(SOURCE), "ls-files", "-z"]).decode().split("\0")
         for name in {*paths, "scripts/ticket_input.py"} - {""}:
@@ -40,7 +40,7 @@ class TicketInputTests(unittest.TestCase):
         cls.seed_temp.cleanup()
 
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix="ticket-input-test-")
+        self.temp = tempfile.TemporaryDirectory(prefix="ticket-input-test-", ignore_cleanup_errors=True)
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name) / "repo"
         shutil.copytree(self.seed, self.root)

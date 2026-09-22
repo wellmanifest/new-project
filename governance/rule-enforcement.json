@@ -545,7 +545,8 @@
     },
     "C-TICKET-001": {
       "codes": [
-        "GOV-TICKET-001"
+        "GOV-TICKET-001",
+        "GOV-TICKET-EXTERNAL-001"
       ],
       "enforcement": "deterministic"
     },

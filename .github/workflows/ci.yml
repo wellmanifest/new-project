@@ -151,6 +151,10 @@ jobs:
         run: bash tests/pytest-plugin.test.sh
       - name: Test proactive worktree overlap guard
         run: bash tests/worktree-overlap.test.sh
+      - name: Test repository delivery profiles
+        run: bash tests/repository-policy.test.sh
+      - name: Test standard pack catalog and adoption conformance
+        run: bash tests/standard-pack-check.test.sh
       - name: Test fleet drift report
         run: bash tests/fleet-report.test.sh
       - name: Assert every test suite is wired into this workflow

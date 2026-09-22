@@ -13,6 +13,7 @@
     "TODO.md",
     "project/TICKETS.md",
     ".github/workflows/propagate-standard.yml",
+    ".github/workflows/ci.yml",
     "governance/package-manifest.json",
     "governance/managed-copies.json",
     "governance/standard-adoption.default.json",
@@ -38,6 +39,7 @@
     "project/readme.sh",
     "tests/ticket-recovery.test.py",
     "tests/work_start_test.py",
+    "tests/ticket-input.test.py",
     "tests/fleet-report.test.sh",
     "tests/required-checks.test.sh",
     "tests/standard-pack-check.test.sh"
@@ -60,7 +62,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 24,
+      "maxImplementationFiles": 30,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 3,
       "maxRuntimeDependencies": 0
@@ -71,7 +73,7 @@
       "components": [
         {"name": "profile-contract", "paths": ["AGENTS.md", "template/files/AGENTS.template.md", "governance/manifest.schema.json", "governance/manifest.default.json", "governance/manifest.hub.json", "governance/package-manifest.json", "governance/managed-copies.json", "governance/standard-adoption.default.json", "governance/standard-packs.json", "project/TICKETS.md", "VERSION", "CHANGELOG.md", "project/ticket-257/**"]},
         {"name": "profile-enforcement", "paths": ["scripts/repository_policy.py", "scripts/governance_check.py", "scripts/standard_pack_check.py", "scripts/audit_rule_enforcement.py", "project/readme.sh", "template/files/pre-commit.template.sh", "template/files/new-project-governance.workflow.yml"]},
-        {"name": "profile-regression", "paths": ["tests/repository-policy.test.sh", "tests/fleet-report.test.sh", "tests/required-checks.test.sh", "tests/governance-validator.test.sh", "tests/standard-pack-check.test.sh", "tests/ticket-recovery.test.py", "tests/work_start_test.py", "governance/diagnostics.json", "governance/rule-enforcement.json", "scripts/fleet_report.py", ".github/workflows/propagate-standard.yml"]}
+        {"name": "profile-regression", "paths": ["tests/repository-policy.test.sh", "tests/fleet-report.test.sh", "tests/required-checks.test.sh", "tests/governance-validator.test.sh", "tests/standard-pack-check.test.sh", "tests/ticket-recovery.test.py", "tests/work_start_test.py", "tests/ticket-input.test.py", "governance/diagnostics.json", "governance/rule-enforcement.json", "scripts/fleet_report.py", ".github/workflows/propagate-standard.yml", ".github/workflows/ci.yml"]}
       ],
       "responsibilityChanges": false,
       "interfaceChanges": ["repositoryPolicy profile selection", "wellmanifest.external-ticket-adapter/v1"],

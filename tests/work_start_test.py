@@ -61,7 +61,7 @@ class WorkStartTest(unittest.TestCase):
         adopted.mkdir()
         (adopted / "manifest.json").write_text(json.dumps(self.manifest))
         for filename in ("work_start_check.py", "ticket_activity.py", "worktree_overlap_check.py", "ticket_input.py",
-                         "ticket_storage.py", "governance_check.py"):
+                         "ticket_storage.py", "governance_check.py", "repository_policy.py"):
             shutil.copy2(ROOT / "scripts" / filename, adopted / filename)
         for filename in ("work-classification.dsl.json", "ticket-activity.json"):
             shutil.copy2(ROOT / "governance" / filename, adopted / filename)

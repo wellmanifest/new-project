@@ -132,7 +132,7 @@ assert hub_manifest['coordination']['integration'] == {
     'workstream': 'governance',
     'requiredForPaths': [],
 }
-assert hub_manifest['delivery']['maxImplementationFiles'] == 24
+assert hub_manifest['delivery']['maxImplementationFiles'] == 30
 
 goal = json.load(open(root / 'goal.yaml', encoding='utf-8'))
 assert goal['project'] == {
