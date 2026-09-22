@@ -2663,7 +2663,7 @@ add_active_ticket "$same_workstream" ticket-005 application '["src/three.js"]'
 run_check "$same_workstream" --changed-file src/app.js > "$fixture/same-workstream.out"
 grep -q '^GOV-PASS:' "$fixture/same-workstream.out"
 add_active_ticket "$same_workstream" ticket-006 application '["src/four.js"]'
-expect_code GOV-WORKSTREAM-002 run_check "$same_workstream" --changed-file TODO.md
+expect_code GOV-WORKSTREAM-002 run_check "$same_workstream" --changed-file src/four.js
 
 clean_integrated="$fixture/clean-integrated"
 make_fixture "$clean_integrated"
