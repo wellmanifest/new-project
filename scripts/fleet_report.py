@@ -7,7 +7,8 @@ copy is intact, and its workflows say whether anything runs the gate. Nothing
 collects them, so a fleet spread across five minor versions looks healthy from
 inside any single repository.
 
-Read-only. Run from the workspace root that holds the sibling repositories.
+Read-only. Run from the workspace root that holds the repositories. Use
+``--recursive`` for an organization checkout containing nested repositories.
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -31,6 +33,32 @@ DEFAULT_VALIDATOR_REGISTRY = (
 )
 GATE_MARKERS = ("governance_check.py", "governance-check.sh", "governance-check.bat")
 HOST_CONTRACT = ".governance/agent-hosts.json"
+BASELINE_PACKS = (
+    "wellmanifest/new-project",
+    "wellmanifest/git-lifecycle",
+    "wellmanifest/worktrees",
+    "wellmanifest/merge",
+    "wellmanifest/validation-attestation",
+    "wellmanifest/ticket-lifecycle",
+    "wellmanifest/logs",
+    "wellmanifest/docs",
+)
+SKIPPED_DIRS = {
+    ".git", ".worktrees", "worktrees", ".subactor", ".deployments",
+    "node_modules", ".venv", "venv", "db", "postgres-data", "data_new",
+}
+
+
+def excluded_repository(root: Path, workspace: Path) -> bool:
+    """Exclude operational and historical trees from an active-fleet scan."""
+    try:
+        parts = root.relative_to(workspace).parts
+    except ValueError:
+        return True
+    return any(
+        part in {".rescue", "archive"} or "retired" in part
+        for part in parts
+    )
 
 
 def git(root: Path, *args: str) -> str | None:
@@ -92,6 +120,54 @@ def gate_workflows(root: Path) -> list[str]:
     return found
 
 
+def wellman_binding(root: Path) -> bool:
+    """Observe a declared wellman runtime without executing repository code."""
+    candidates = [
+        root / "pyproject.toml",
+        root / "requirements.txt",
+        root / "requirements-dev.txt",
+        root / "uv.lock",
+        root / ".githooks/pre-commit",
+        root / ".governance/standard_pack_check.py",
+    ]
+    workflow_dir = root / ".github/workflows"
+    if workflow_dir.is_dir():
+        candidates.extend(sorted(workflow_dir.glob("*.y*ml")))
+    for path in candidates:
+        try:
+            if path.is_file() and re.search(r"\bwellman\b", path.read_text(encoding="utf-8")):
+                return True
+        except OSError:
+            continue
+    return False
+
+
+def baseline_observation(root: Path) -> dict[str, Any]:
+    """Return only filesystem observations needed for the baseline rollout."""
+    adoption = load_json(root / ".governance/standard-adoption.json")
+    records = adoption.get("adoptions", []) if isinstance(adoption, dict) else []
+    adopted = {
+        record.get("id") for record in records
+        if isinstance(record, dict) and isinstance(record.get("id"), str)
+    }
+    missing = [pack for pack in BASELINE_PACKS if pack not in adopted]
+    worktree_projection = (
+        (root / ".governance/worktrees.schema.json").is_file()
+        and (root / ".governance/worktrees.lock.json").is_file()
+    )
+    ticket_carrier = (
+        (root / "project/new-ticket.sh").is_file()
+        and (root / "project").is_dir()
+    )
+    return {
+        "adoptionMode": adoption.get("mode") if isinstance(adoption, dict) else None,
+        "baselineMissing": missing,
+        "wellman": wellman_binding(root),
+        "worktrees": worktree_projection,
+        "tickets": ticket_carrier,
+    }
+
+
 def required_checks_truth(root: Path, actual_repository: str | None) -> str:
     """The declared SSOT for check names is false when it describes another repo."""
     declaration = load_json(root / ".governance/required-checks.json")
@@ -135,7 +211,10 @@ def checks_agreement(
 
 
 def inspect(
-    root: Path, releases: list[str], registry: dict[str, list[str]]
+    root: Path,
+    releases: list[str],
+    registry: dict[str, list[str]],
+    display_name: str | None = None,
 ) -> dict[str, Any] | None:
     lock = load_json(root / ".governance/manifest.lock.json")
     if lock is None:
@@ -148,7 +227,8 @@ def inspect(
         behind = None
     repository = repository_name(root)
     return {
-        "repository": root.name,
+        "repository": display_name or root.name,
+        "state": "adopted",
         "remote": repository,
         "version": version,
         "revision": (standard.get("sourceRevision") or "")[:8],
@@ -158,6 +238,7 @@ def inspect(
         "hostContract": (root / HOST_CONTRACT).is_file(),
         "requiredChecks": required_checks_truth(root, repository),
         "checksVsValidator": checks_agreement(root, repository, registry),
+        "baseline": baseline_observation(root),
         "tickets": (
             len(list((root / "project").glob("ticket-*")))
             if (root / "project").is_dir() else 0
@@ -174,7 +255,36 @@ def classify(root: Path) -> str:
     return "outside"
 
 
-def collect(workspace: Path, registry_path: Path | None = None) -> dict[str, Any]:
+def repository_roots(workspace: Path, recursive: bool) -> list[Path]:
+    if not recursive:
+        return [
+            child for child in sorted(workspace.iterdir())
+            if child.is_dir() and not child.is_symlink()
+            and not excluded_repository(child, workspace)
+            and (child / ".git").exists()
+        ]
+
+    roots: list[Path] = []
+    for current, dirs, files in os.walk(workspace, topdown=True, followlinks=False):
+        current_path = Path(current)
+        is_repo = ".git" in dirs or ".git" in files
+        dirs[:] = sorted(d for d in dirs if d not in SKIPPED_DIRS and not d.startswith("."))
+        if current_path == workspace:
+            continue
+        if excluded_repository(current_path, workspace):
+            dirs[:] = []
+            continue
+        if is_repo:
+            roots.append(current_path)
+            dirs[:] = []
+    return roots
+
+
+def collect(
+    workspace: Path,
+    registry_path: Path | None = None,
+    recursive: bool = False,
+) -> dict[str, Any]:
     hub = workspace / HUB
     releases = released_versions(hub) if hub.is_dir() else []
     current = releases[0] if releases else None
@@ -182,23 +292,37 @@ def collect(workspace: Path, registry_path: Path | None = None) -> dict[str, Any
     adopters: list[dict[str, Any]] = []
     claimed: list[str] = []
     outside: list[str] = []
-    for child in sorted(workspace.iterdir()):
+    observations: list[dict[str, Any]] = []
+    for child in repository_roots(workspace, recursive):
         # Symlinks alias a repository that is already listed under its real name.
         if child.is_symlink() or not child.is_dir() or child.name == HUB:
             continue
         if not (child / ".git").exists():
             continue
+        display_name = (
+            child.relative_to(workspace).as_posix() if recursive else child.name
+        )
         state = classify(child)
         if state == "adopted":
-            record = inspect(child, releases, registry)
+            record = inspect(child, releases, registry, display_name)
             if record is not None:
                 adopters.append(record)
+                observations.append(record)
                 continue
             state = "claimed"
-        (claimed if state == "claimed" else outside).append(child.name)
+        (claimed if state == "claimed" else outside).append(display_name)
+        observations.append({
+            "repository": display_name,
+            "state": state,
+            "remote": repository_name(child),
+            "version": None,
+            "baseline": baseline_observation(child),
+        })
     return {
         "schema": "wellmanifest.fleet-report/v1",
         "currentStandard": current,
+        "recursive": recursive,
+        "repositories": sorted(observations, key=lambda item: item["repository"]),
         "adopters": adopters,
         "claimed": claimed,
         "outside": outside,
@@ -233,6 +357,10 @@ def render(report: dict[str, Any]) -> str:
     median = behind_counts[len(behind_counts) // 2] if behind_counts else "n/a"
     lines += [
         "",
+        f"repositories observed: {len(report['repositories'])}",
+        f"with wellman binding: {sum(1 for r in report['repositories'] if r['baseline']['wellman'])}",
+        f"with worktrees projection: {sum(1 for r in report['repositories'] if r['baseline']['worktrees'])}",
+        f"with ticket carrier: {sum(1 for r in report['repositories'] if r['baseline']['tickets'])}",
         f"adopters: {len(rows)}",
         f"on the published standard: {sum(1 for b in behind_counts if b == 0)}",
         f"median releases behind: {median}",
@@ -260,6 +388,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--workspace", default=".", help="Directory holding the sibling repositories"
     )
+    parser.add_argument(
+        "--recursive", action="store_true",
+        help="Scan nested repositories and skip historical/operational trees",
+    )
     parser.add_argument("--format", choices=("text", "json"), default="text")
     parser.add_argument(
         "--validator-registry", default=None,
@@ -276,7 +408,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.validator_registry
         else DEFAULT_VALIDATOR_REGISTRY
     )
-    report = collect(Path(args.workspace).resolve(), registry_path)
+    report = collect(Path(args.workspace).resolve(), registry_path, args.recursive)
     sys.stdout.write(
         json.dumps(report, indent=2) + "\n" if args.format == "json" else render(report)
     )

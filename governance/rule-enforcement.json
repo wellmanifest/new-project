@@ -545,7 +545,8 @@
     },
     "C-TICKET-001": {
       "codes": [
-        "GOV-TICKET-001"
+        "GOV-TICKET-001",
+        "GOV-TICKET-EXTERNAL-001"
       ],
       "enforcement": "deterministic"
     },
@@ -1073,7 +1074,8 @@
     "P-CORE-024": {
       "codes": [
         "GOV-DIAGNOSTIC-001",
-        "GOV-DIAGNOSTIC-002"
+        "GOV-DIAGNOSTIC-002",
+        "GOV-STANDARD-PACK-001"
       ],
       "enforcement": "deterministic"
     },

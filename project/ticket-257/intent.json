@@ -1,0 +1,90 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-257",
+  "summary": "Enforce wellman worktrees and ticket baseline across active repositories",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-257/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/propagate-standard.yml",
+    ".github/workflows/ci.yml",
+    "governance/package-manifest.json",
+    "governance/managed-copies.json",
+    "governance/standard-adoption.default.json",
+    "governance/standard-packs.json",
+    "governance/manifest.schema.json",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
+    "template/files/pre-commit.template.sh",
+    "template/files/AGENTS.template.md",
+    "AGENTS.md",
+    "template/files/new-project-governance.workflow.yml",
+    "scripts/governance_check.py",
+    "scripts/repository_policy.py",
+    "scripts/standard_pack_check.py",
+    "scripts/audit_rule_enforcement.py",
+    "scripts/fleet_report.py",
+    "tests/repository-policy.test.sh",
+    "tests/governance-validator.test.sh",
+    "VERSION",
+    "CHANGELOG.md",
+    "project/readme.sh",
+    "tests/ticket-recovery.test.py",
+    "tests/work_start_test.py",
+    "tests/ticket-input.test.py",
+    "tests/fleet-report.test.sh",
+    "tests/required-checks.test.sh",
+    "tests/standard-pack-check.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e2fd653ff801fb228fca818e1d874ee685a4da62",
+    "targetBranch": "main",
+    "outcome": "Every adopter can select a delivery profile and main-only Planfile repositories are checked fail-closed.",
+    "nonGoals": [
+      "No change to protected publication approval or worktree v5 semantics",
+      "No automatic migration of existing external ticket systems"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 30,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep adoption packs separate from repository delivery profiles and project an external Planfile ticket through a bounded local adapter.",
+      "components": [
+        {"name": "profile-contract", "paths": ["AGENTS.md", "template/files/AGENTS.template.md", "governance/manifest.schema.json", "governance/manifest.default.json", "governance/manifest.hub.json", "governance/package-manifest.json", "governance/managed-copies.json", "governance/standard-adoption.default.json", "governance/standard-packs.json", "project/TICKETS.md", "VERSION", "CHANGELOG.md", "project/ticket-257/**"]},
+        {"name": "profile-enforcement", "paths": ["scripts/repository_policy.py", "scripts/governance_check.py", "scripts/standard_pack_check.py", "scripts/audit_rule_enforcement.py", "project/readme.sh", "template/files/pre-commit.template.sh", "template/files/new-project-governance.workflow.yml"]},
+        {"name": "profile-regression", "paths": ["tests/repository-policy.test.sh", "tests/fleet-report.test.sh", "tests/required-checks.test.sh", "tests/governance-validator.test.sh", "tests/standard-pack-check.test.sh", "tests/ticket-recovery.test.py", "tests/work_start_test.py", "tests/ticket-input.test.py", "governance/diagnostics.json", "governance/rule-enforcement.json", "scripts/fleet_report.py", ".github/workflows/propagate-standard.yml", ".github/workflows/ci.yml"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["repositoryPolicy profile selection", "wellmanifest.external-ticket-adapter/v1"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Remove repositoryPolicy extensions from adopters and retain the default ticket-worktree profile."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-05", "commands": ["bash tests/repository-policy.test.sh", "bash tests/agent-hosts.test.sh"], "evidence": "Profile selection, active Planfile source and staged scope checks pass."},
+      {"criterion": "AC-06", "commands": ["bash tests/governance-validator.test.sh", "bash tests/adoption-lock.test.sh"], "evidence": "Existing manifest, adoption and managed-file regressions pass."}
+    ]
+  }
+}

@@ -56,6 +56,9 @@ VALIDATOR_PATHS = (
     # Admission rejects new allocation before ticket reservation; include its
     # stable diagnostic in the normative traceability graph.
     Path("scripts/work_start_check.py"),
+    # Standard-pack profile validation is a deterministic governance gate;
+    # keep its stable diagnostic in the same rule/code traceability graph.
+    Path("scripts/standard_pack_check.py"),
 )
 
 GOV_CODE = re.compile(r'"(GOV-[A-Z]+(?:-[A-Z]+)*-[0-9]{3})"')

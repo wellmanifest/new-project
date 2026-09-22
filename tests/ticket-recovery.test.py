@@ -34,7 +34,7 @@ class RecoveryTest(unittest.TestCase):
         (self.root / "api/a.txt").write_text("existing material work\n")
         self.git(self.root, "commit", "-am", "pre-adoption material")
         # Deliver the managed helper and dependencies before observing dirty CAS.
-        for name in ("ticket_recovery.py", "ticket_allocation.py"):
+        for name in ("ticket_recovery.py", "ticket_allocation.py", "repository_policy.py"):
             shutil.copy2(ROOT / "scripts" / name, self.root / ".governance" / name)
         manifest_path = self.root / ".governance/manifest.json"
         manifest = json.loads(manifest_path.read_text())

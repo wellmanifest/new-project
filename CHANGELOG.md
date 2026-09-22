@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## 0.20.43 - 2026-09-22
+
+- Publish a digest-bound managed-copy inventory so Docs validation excludes
+  standard-provided `.governance/docs` files from product-document checks
+  [ticket-257].
+
+## 0.20.42 - 2026-09-22
+
+- Add strict standard-pack enforcement for CI while preserving audit-only local
+  rollout mode [ticket-257].
+
+## 0.20.41 - 2026-09-22
+
+- Add `wellmanifest/docs` to the baseline pack and expose its canonical policy
+  from agent host guidance [ticket-257].
+
+## 0.20.40 - 2026-09-22
+
+- Harden repository delivery profiles against staged/working-tree drift,
+  out-of-scope deletions, unsafe paths and same-commit adapter expansion;
+  support audit-only hook dispatch [ticket-257].
+
+## 0.20.39 - 2026-09-21
+
+- Add explicit repository delivery profiles, including `main-only-planfile`,
+  and validate external ticket adapters with bounded staged scopes [ticket-257].
+
 ## 0.20.38 - 2026-09-19
 
 - Restore the independent protected-review boundary in hub and adopted host
