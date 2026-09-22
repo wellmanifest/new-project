@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.20.46 - 2026-09-22
+
+- Raise the default active-ticket capacity per workstream from 3 to 8 for
+  concurrent work by multiple agent providers, while retaining leases,
+  canonical worktrees, scope ownership and overlap fencing [ticket-262,
+  ticket-263].
+
 ## 0.20.45 - 2026-09-22
 
 - Standardize root LICENSE recognition in governance workstream and provide Apache-2.0 template [ticket-260, ticket-261].
