@@ -1,0 +1,75 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-263",
+  "summary": "Publish immutable standard release with multi-agent WIP capacity",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-263/**",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "5ab72d4ea0f988e3a530719de9a62d19198f60e1",
+    "targetBranch": "main",
+    "outcome": "Publish immutable wellmanifest/new-project 0.20.46 with default multi-agent WIP capacity 8 and synchronized canonical manifests.",
+    "nonGoals": [
+      "Change lease expiry or takeover semantics",
+      "Disable canonical worktree admission or scope fencing",
+      "Modify adopter repositories in this source-release ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Advance the immutable standard version and its two canonical governance projections atomically; publish only the exact protected merge.",
+      "components": [
+        {"name": "release-metadata", "paths": ["VERSION", "CHANGELOG.md"]},
+        {"name": "standard-manifests", "paths": ["governance/manifest.default.json", "governance/manifest.hub.json"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["wellmanifest/new-project@0.20.46"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Do not move v0.20.46; publish a later corrective version."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["python3 -c \"import json; assert open('VERSION').read().strip() == '0.20.46'; assert json.load(open('governance/manifest.default.json'))['standard']['version'] == '0.20.46'; assert json.load(open('governance/manifest.hub.json'))['standard']['version'] == '0.20.46'\""],
+        "evidence": "All canonical release projections declare 0.20.46."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["git diff --check", "bash tests/governance-validator.test.sh", "bash tests/adoption-lock.test.sh"],
+        "evidence": "Release projections and immutable adoption validation pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["protected post-merge release controller"],
+        "evidence": "Final tag and GitHub Release bind to the exact merged head."
+      }
+    ]
+  }
+}
