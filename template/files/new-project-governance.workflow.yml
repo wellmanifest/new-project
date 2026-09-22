@@ -116,7 +116,7 @@ jobs:
         run: |
           set -euo pipefail
           wellman check --root . --json
-          python3 .governance/standard_pack_check.py --root . --format json
+          python3 .governance/standard_pack_check.py --root . --strict --format json
           arguments=(--root . --manifest .governance/manifest.json
             --lock .governance/manifest.lock.json
             --stack-profiles .governance/stack-profiles.json --actor ci)

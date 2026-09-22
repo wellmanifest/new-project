@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.20.42 - 2026-09-22
+
+- Add strict standard-pack enforcement for CI while preserving audit-only local
+  rollout mode [ticket-257].
+
 ## 0.20.41 - 2026-09-22
 
 - Add `wellmanifest/docs` to the baseline pack and expose its canonical policy

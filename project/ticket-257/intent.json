@@ -63,7 +63,7 @@
       "components": [
         {"name": "profile-contract", "paths": ["AGENTS.md", "template/files/AGENTS.template.md", "governance/manifest.schema.json", "governance/manifest.default.json", "governance/manifest.hub.json", "governance/package-manifest.json", "governance/standard-adoption.default.json", "governance/standard-packs.json", "project/TICKETS.md", "VERSION", "CHANGELOG.md", "project/ticket-257/**"]},
         {"name": "profile-enforcement", "paths": ["scripts/repository_policy.py", "scripts/governance_check.py", "template/files/pre-commit.template.sh", "template/files/new-project-governance.workflow.yml"]},
-        {"name": "profile-regression", "paths": ["tests/repository-policy.test.sh", "tests/fleet-report.test.sh", "tests/required-checks.test.sh", "tests/governance-validator.test.sh", "governance/diagnostics.json", "scripts/fleet_report.py", ".github/workflows/propagate-standard.yml"]}
+        {"name": "profile-regression", "paths": ["tests/repository-policy.test.sh", "tests/fleet-report.test.sh", "tests/required-checks.test.sh", "tests/governance-validator.test.sh", "tests/standard-pack-check.test.sh", "governance/diagnostics.json", "scripts/fleet_report.py", ".github/workflows/propagate-standard.yml"]}
       ],
       "responsibilityChanges": false,
       "interfaceChanges": ["repositoryPolicy profile selection", "wellmanifest.external-ticket-adapter/v1"],
