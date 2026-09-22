@@ -361,7 +361,7 @@ ticket = manifest['ticket']
 assert ticket['activeStatuses'] == ['IN_PROGRESS']
 assert ticket['nonActiveStatuses'] == ['BACKLOG', 'PLAN', 'BLOCKED']
 assert not set(ticket['activeStatuses']) & set(ticket['nonActiveStatuses'])
-assert manifest['coordination']['maxActiveTicketsPerWorkstream'] == 3
+assert manifest['coordination']['maxActiveTicketsPerWorkstream'] == 8
 assert manifest['delivery']['requiredForImplementation'] is False
 assert manifest['delivery']['maxActiveMinutes'] == 120
 assert manifest['delivery']['checkpointMinutes'] == 30
