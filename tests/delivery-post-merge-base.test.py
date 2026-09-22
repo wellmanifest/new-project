@@ -267,6 +267,26 @@ class PublishedDeliveryBaseTest(unittest.TestCase):
         with patch.object(governance, "git_output", side_effect=observe):
             self.assertEqual(self.accepted, self.implicit_base())
 
+    def test_implicit_base_ignores_adoption_if_delivery_already_landed(self):
+        ticket_dir = self.root / "project" / "ticket-001"
+        ticket_dir.mkdir(parents=True, exist_ok=True)
+        (ticket_dir / "README.md").write_text("Status: IN_PROGRESS\n", encoding="utf-8")
+        self.git("add", "project/ticket-001/README.md")
+        self.git("commit", "-qm", "landed adoption commit")
+        self.publish()
+        record = SimpleNamespace(
+            directory=ticket_dir,
+            intent={
+                "delivery": {
+                    "acceptedBaseSha": self.accepted,
+                    "targetBranch": "main",
+                    "standardAdoption": {},
+                }
+            },
+        )
+        with patch.object(governance, "active_ticket_records", return_value=[record]):
+            self.assertIsNone(governance.resolve_validation_base(None, self.root, [], {}, "HEAD"))
+
 
 if __name__ == "__main__":
     unittest.main()
