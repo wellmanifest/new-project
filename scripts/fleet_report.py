@@ -41,6 +41,7 @@ BASELINE_PACKS = (
     "wellmanifest/validation-attestation",
     "wellmanifest/ticket-lifecycle",
     "wellmanifest/logs",
+    "wellmanifest/docs",
 )
 SKIPPED_DIRS = {
     ".git", ".worktrees", "worktrees", ".subactor", ".deployments",

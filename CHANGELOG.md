@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.20.41 - 2026-09-22
+
+- Add `wellmanifest/docs` to the baseline pack and expose its canonical policy
+  from agent host guidance [ticket-257].
+
 ## 0.20.40 - 2026-09-22
 
 - Harden repository delivery profiles against staged/working-tree drift,
