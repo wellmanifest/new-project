@@ -2,7 +2,7 @@
 
 - **ID**: ticket-257
 - **Owner**: unresolved:human
-- **Status**: IN_PROGRESS
+- **Status**: DONE
 - **Workflow state**: EDIT
 - **Utworzono**: 2026-09-21
 

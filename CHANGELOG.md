@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.44 - 2026-09-22
+
+- Support Windows batch gate execution in pytest governance plugin template [ticket-258].
+
 ## 0.20.43 - 2026-09-22
 
 - Publish a digest-bound managed-copy inventory so Docs validation excludes
