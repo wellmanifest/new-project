@@ -13,6 +13,7 @@ from typing import Any
 LEVELS = {f"S{index}": index for index in range(6)}
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
 SHA64 = re.compile(r"^[0-9a-f]{64}$")
+DIAGNOSTIC_CODE = "GOV-STANDARD-PACK-001"
 
 
 def load_json(path: Path) -> Any:
@@ -29,7 +30,12 @@ def sha256(path: Path) -> str:
 
 
 def finding(code: str, message: str, path: str = "") -> dict[str, str]:
-    return {"code": code, "message": message, "path": path}
+    return {
+        "code": code,
+        "diagnostic": DIAGNOSTIC_CODE,
+        "message": message,
+        "path": path,
+    }
 
 
 def catalog_ownership_findings(packs, pack_ids, concerns, findings) -> None:

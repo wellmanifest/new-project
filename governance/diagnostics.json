@@ -336,6 +336,11 @@
       "remediation": "Install a compatible Goal release and use one active standard-adoption ticket to prepare, review and restage the immutable update.",
       "documentation": "error/GOV-STANDARD-UPDATE.md"
     },
+    "GOV-STANDARD-PACK-001": {
+      "message": "The repository does not satisfy the standard-pack baseline selected by its governance profile.",
+      "remediation": "Adopt every pack required by the selected profile at or above its minimum level, then rerun standard_pack_check.py --strict.",
+      "documentation": null
+    },
     "GOV-SYNC-001": {
       "message": "A managed governance file does not match its pinned SHA-256 digest.",
       "remediation": "Adopt or upgrade the complete immutable package through Goal; do not patch managed payload files manually.",

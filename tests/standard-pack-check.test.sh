@@ -7,9 +7,12 @@ catalog="governance/standard-packs.json"
 adoption="governance/standard-adoption.default.json"
 
 python3 "$checker" --root "$root" --catalog "$catalog" --adoption "$adoption" --format json >/dev/null
-if python3 "$checker" --root "$root" --catalog "$catalog" --adoption "$adoption" --strict --format json >/dev/null; then
+strict_report="$(mktemp)"
+trap ':' EXIT
+if python3 "$checker" --root "$root" --catalog "$catalog" --adoption "$adoption" --strict --format json >"$strict_report"; then
   echo "strict standard-pack check unexpectedly accepted audit findings" >&2
   exit 1
 fi
+grep -q 'GOV-STANDARD-PACK-001' "$strict_report"
 
 echo "standard-pack-check.test.sh OK"
