@@ -1073,7 +1073,8 @@
     "P-CORE-024": {
       "codes": [
         "GOV-DIAGNOSTIC-001",
-        "GOV-DIAGNOSTIC-002"
+        "GOV-DIAGNOSTIC-002",
+        "GOV-STANDARD-PACK-001"
       ],
       "enforcement": "deterministic"
     },
