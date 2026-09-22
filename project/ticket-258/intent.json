@@ -1,0 +1,95 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-258",
+  "summary": "Support Windows batch gate in pytest governance plugin",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-258/**",
+    "project/ticket-257/README.md",
+    "project/TICKETS.md",
+    "template/files/wellmanifest_governance.py",
+    "tests/pytest-plugin.test.sh",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "56223848ea416d59e53123cdcab6e9155a11fe2b",
+    "targetBranch": "main",
+    "outcome": "Pytest governance plugin template transparently supports Windows batch gate execution.",
+    "nonGoals": [
+      "No breaking changes to POSIX / macOS execution",
+      "No changes to gate arguments or contract"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Inspect platform in pytest_sessionstart and execute governance-check.bat on Windows when available.",
+      "components": [
+        {
+          "name": "plugin-contract",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "project/TICKETS.md",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json",
+            "project/ticket-258/**",
+            "project/ticket-257/**"
+          ]
+        },
+        {
+          "name": "plugin-template",
+          "paths": [
+            "template/files/wellmanifest_governance.py"
+          ]
+        },
+        {
+          "name": "plugin-regression",
+          "paths": [
+            "tests/pytest-plugin.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert template/files/wellmanifest_governance.py to POSIX-only gate execution."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/pytest-plugin.test.sh"
+        ],
+        "evidence": "Plugin tests pass on Linux and verify Windows batch gate invocation."
+      }
+    ]
+  }
+}

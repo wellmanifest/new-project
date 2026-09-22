@@ -141,4 +141,36 @@ grep -Fxq -- "$event_base" "$shallow/.governance-arguments" \
 grep -Fxq -- "tracked.txt" "$shallow/.governance-arguments" \
   || fail "plugin must derive changed paths from the fetched PR base"
 
+windows_fixture="$tmp/windows-fixture"
+mkdir -p "$windows_fixture/project"
+cp "$root/template/files/wellmanifest_governance.py" "$windows_fixture/"
+touch "$windows_fixture/project/governance-check.bat"
+(
+  cd "$windows_fixture"
+  python3 - <<'PY'
+import sys
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+import wellmanifest_governance
+
+session = SimpleNamespace(config=SimpleNamespace(rootpath=Path.cwd()))
+invoked_command = None
+def fake_run(cmd, *args, **kwargs):
+    global invoked_command
+    invoked_command = cmd
+    return SimpleNamespace(stdout="", stderr="", returncode=0)
+
+with patch.object(sys, "platform", "win32"), \
+     patch("subprocess.run", side_effect=fake_run), \
+     patch.object(wellmanifest_governance, "_activate_managed_hook"), \
+     patch.object(wellmanifest_governance, "_resolve_base", return_value="HEAD"), \
+     patch.object(wellmanifest_governance, "_changed_paths", return_value=[]):
+    wellmanifest_governance.pytest_sessionstart(session)
+
+assert invoked_command is not None, "subprocess.run was not invoked"
+assert "governance-check.bat" in str(invoked_command[2]), f"expected bat in command, got {invoked_command}"
+PY
+)
+
 echo "pytest governance plugin tests passed"
