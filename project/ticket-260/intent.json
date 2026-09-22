@@ -1,0 +1,78 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-260",
+  "summary": "Standardize root LICENSE in governance workstream",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-260/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/manifest.default.json",
+    "template/files/LICENSE.template"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d5454d8b53e2a7f87daa5cc52e34cf5cd0e4d77c",
+    "targetBranch": "main",
+    "outcome": "LICENSE* is included in governance ownedPaths and LICENSE.template is provided.",
+    "nonGoals": [
+      "No change to terminal receipt schema"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add LICENSE* pattern to governance ownedPaths in default manifest and provide template/files/LICENSE.template.",
+      "components": [
+        {
+          "name": "governance-manifest",
+          "paths": [
+            "governance/manifest.default.json"
+          ]
+        },
+        {
+          "name": "governance-template",
+          "paths": [
+            "template/files/LICENSE.template"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "git revert"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -c \"import json; manifest = json.load(open('governance/manifest.default.json')); assert 'LICENSE*' in manifest['coordination']['workstreams']['governance']['ownedPaths']\""
+        ],
+        "evidence": "LICENSE* is present in governance ownedPaths."
+      }
+    ]
+  }
+}
