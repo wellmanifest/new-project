@@ -15,7 +15,9 @@
     "template/files/wellmanifest_governance.py",
     "tests/pytest-plugin.test.sh",
     "CHANGELOG.md",
-    "VERSION"
+    "VERSION",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -50,6 +52,8 @@
             "VERSION",
             "CHANGELOG.md",
             "project/TICKETS.md",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json",
             "project/ticket-258/**",
             "project/ticket-257/**"
           ]
