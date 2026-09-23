@@ -5,7 +5,6 @@ from the adopted standard, distributed as part of this package.
 """
 from __future__ import annotations
 
-import importlib.resources
 import runpy
 import sys
 from pathlib import Path
@@ -26,6 +25,16 @@ def _find_checker() -> Path:
     )
 
 
+def _checker_args(args: list[str]) -> list[str]:
+    """Translate the documented ``wellman check [--json]`` form to checker flags."""
+    if args[:1] == ["check"]:
+        args = args[1:]
+    translated: list[str] = []
+    for arg in args:
+        translated.extend(["--format", "json"] if arg == "--json" else [arg])
+    return translated
+
+
 def run_check(root: str | Path | None = None, args: list[str] | None = None) -> int:
     """Run the governance gate programmatically."""
     checker = _find_checker()
@@ -33,7 +42,7 @@ def run_check(root: str | Path | None = None, args: list[str] | None = None) -> 
     if root:
         argv.extend(["--root", str(root)])
     if args:
-        argv.extend(args)
+        argv.extend(_checker_args(args))
     old_argv = sys.argv
     try:
         sys.argv = argv
@@ -47,6 +56,11 @@ def run_check(root: str | Path | None = None, args: list[str] | None = None) -> 
 
 def main() -> None:
     """CLI entry point."""
+    if sys.argv[1:] == ["--version"]:
+        from wellman import __version__
+
+        print(f"wellman {__version__}")
+        return
     checker = _find_checker()
-    sys.argv[0] = str(checker)
+    sys.argv = [str(checker), *_checker_args(sys.argv[1:])]
     runpy.run_path(str(checker), run_name="__main__")

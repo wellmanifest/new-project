@@ -1,0 +1,108 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-266",
+  "summary": "Bundle complete governance checker runtime in wellman package",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-266/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/**",
+    "tests/wellman-package.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "786e43f64c772706e8e0769f97992e1057478913",
+    "targetBranch": "main",
+    "outcome": "Publish standard 0.20.48 whose wellman runtime ships the complete governance checker closure and supports the documented CLI, verified by an installed-wheel test in CI.",
+    "nonGoals": [
+      "Mutate the immutable 0.20.46 or 0.20.47 releases",
+      "Change governance_check.py behavior",
+      "Fix PyPI trusted publisher configuration",
+      "Modify downstream adopters without their own ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 24,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Vendor the checker closure into _bundled byte-for-byte from scripts/ via a sync script with a --check drift mode, because sdist/wheel builds from packages/wellman cannot reach scripts/. The wrapper handles --version and translates the documented check/--json form; checker behavior is unchanged.",
+      "components": [
+        {
+          "name": "runtime-package",
+          "paths": [
+            "packages/wellman/**",
+            "tests/wellman-package.test.sh"
+          ]
+        },
+        {
+          "name": "ci",
+          "paths": [
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "standard-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "CI runs tests/wellman-package.test.sh"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Publish a later corrective immutable standard version; never retag published releases."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check"
+        ],
+        "evidence": "Bundled closure is byte-identical to scripts/."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "bash tests/required-checks.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "git diff --check"
+        ],
+        "evidence": "Installed wheel reports 0.20.48 and runs the checker without missing modules; existing gates pass."
+      }
+    ]
+  }
+}

@@ -114,6 +114,8 @@ jobs:
         run: python3 scripts/check_required_checks.py
       - name: Test required-checks gate
         run: bash tests/required-checks.test.sh
+      - name: Test installed wellman runtime package
+        run: bash tests/wellman-package.test.sh
       - name: Test decision-record replay and append-only
         run: bash tests/decision-record.test.sh
       - name: Test reuse-first work admission

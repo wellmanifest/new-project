@@ -9,4 +9,12 @@ src/wellman.egg-info/dependency_links.txt
 src/wellman.egg-info/entry_points.txt
 src/wellman.egg-info/top_level.txt
 src/wellman/_bundled/__init__.py
+src/wellman/_bundled/agent_host_check.py
+src/wellman/_bundled/change_lease_check.py
+src/wellman/_bundled/check_required_checks.py
+src/wellman/_bundled/decision_record.py
 src/wellman/_bundled/governance_check.py
+src/wellman/_bundled/repository_policy.py
+src/wellman/_bundled/snapshot_migration.py
+src/wellman/_bundled/ticket_activity.py
+src/wellman/_bundled/ticket_input.py

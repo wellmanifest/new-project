@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 0.20.48 - 2026-09-23
+
+- Bundle the complete governance checker closure (`governance_check.py` and
+  the eight sibling modules it loads) in the `wellman` package, synchronized
+  byte-for-byte from `scripts/` by `packages/wellman/sync_bundled.py`; support
+  the documented `wellman --version` and `wellman check [--json]` invocations;
+  test the installed wheel in CI [ticket-266].
+
 ## 0.20.47 - 2026-09-23
 
 - Install the governance runtime from the immutable `wellman-v<standard>` Git
