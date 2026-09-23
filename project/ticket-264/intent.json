@@ -34,7 +34,7 @@
       "Bypass trusted PyPI publication"
     ],
     "complexity": "S",
-    "estimatedMinutes": 45,
+    "estimatedMinutes": 30,
     "budgets": {
       "maxImplementationFiles": 5,
       "maxAffectedComponents": 2,
@@ -45,7 +45,7 @@
       "status": "accepted",
       "decision": "Keep the runtime package version equal to the published standard version and use the existing tag-triggered trusted publisher. Do not retag or mutate the immutable standard release.",
       "components": [
-        {"name": "runtime-package", "paths": ["packages/wellman/pyproject.toml"]},
+        {"name": "runtime-package", "paths": ["packages/wellman/pyproject.toml", "packages/wellman/src/wellman.egg-info/PKG-INFO"]},
         {"name": "release-projection", "paths": ["VERSION", "CHANGELOG.md", ".github/workflows/wellman-publish.yml"]}
       ],
       "responsibilityChanges": false,

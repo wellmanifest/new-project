@@ -1,5 +1,9 @@
 # wellman
 
+The runtime package version is synchronized with the immutable Wellmanifest
+standard release. For the current release, install `wellman==0.20.46` when
+the adopted governance manifest pins standard `0.20.46`.
+
 Wellmanifest governance gate runtime — deterministic policy-as-code checker.
 
 Distributes `governance_check.py` as an installable Python package instead of
