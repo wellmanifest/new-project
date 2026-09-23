@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.20.50 - 2026-09-24
+
+- Adopter workflows run `wellman check` with `--actor ci`, so CI no longer
+  fails on developer-clone checks such as an unset `core.hooksPath`
+  (`GOV-AGENT-HOST-006`) [ticket-269].
+
 ## 0.20.49 - 2026-09-23
 
 - The adopter governance workflow no longer forces `standard_pack_check.py
