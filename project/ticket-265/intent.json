@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-265",
+  "summary": "Make governance runtime acquisition independent of PyPI publisher configuration",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-265/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/governance-gate-reusable.yml",
+    ".github/workflows/wellman-publish.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "template/files/new-project-governance.workflow.yml",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e9a2e1fcde9677dbad82c6aa200c05c03035aeae",
+    "targetBranch": "main",
+    "outcome": "Publish standard 0.20.47 with deterministic Git-tag runtime acquisition so adopter CI is independent of PyPI trusted publisher configuration.",
+    "nonGoals": [
+      "Mutate the immutable 0.20.46 release",
+      "Hide PyPI publication failures",
+      "Modify downstream adopters without their own ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Pin runtime acquisition to the immutable standard repository tag derived from the adopted version. Keep PyPI as an observable optional channel and always publish the GitHub release asset after building.",
+      "components": [
+        {"name": "adopter-workflows", "paths": [".github/workflows/governance-gate-reusable.yml", "template/files/new-project-governance.workflow.yml"]},
+        {"name": "runtime-publisher", "paths": [".github/workflows/wellman-publish.yml", "packages/wellman/**"]},
+        {"name": "standard-release", "paths": ["VERSION", "CHANGELOG.md", "governance/manifest.default.json", "governance/manifest.hub.json"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Install runtime from wellman-v<standard> immutable tag"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Publish a later corrective immutable standard version; never retag 0.20.46 or 0.20.47."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -c \"import json, tomllib; assert open('VERSION').read().strip() == '0.20.47'; assert tomllib.load(open('packages/wellman/pyproject.toml','rb'))['project']['version'] == '0.20.47'; assert json.load(open('governance/manifest.default.json'))['standard']['version'] == '0.20.47'; assert json.load(open('governance/manifest.hub.json'))['standard']['version'] == '0.20.47'\"",
+          "python3 -m build packages/wellman",
+          "bash tests/governance-validator.test.sh",
+          "git diff --check"
+        ],
+        "evidence": "Version projections, package build, governance fixtures and whitespace validation pass."
+      }
+    ]
+  }
+}

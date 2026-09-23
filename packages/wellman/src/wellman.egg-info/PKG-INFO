@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: wellman
-Version: 0.20.46
+Version: 0.20.47
 Summary: Wellmanifest governance gate runtime — deterministic policy-as-code checker
 Author: wellmanifest
 License: MIT
@@ -16,6 +16,11 @@ Requires-Python: >=3.11
 Description-Content-Type: text/markdown
 
 # wellman
+
+The runtime package version is synchronized with the immutable Wellmanifest
+standard release. For the current release, install `wellman==0.20.46` when
+the adopted governance manifest pins standard `0.20.46`. The corresponding
+release is published by the `wellman-v0.20.46` trusted-publishing workflow.
 
 Wellmanifest governance gate runtime — deterministic policy-as-code checker.
 

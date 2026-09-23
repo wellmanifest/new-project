@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.20.47 - 2026-09-23
+
+- Install the governance runtime from the immutable `wellman-v<standard>` Git
+  tag so adopter CI does not depend on PyPI trusted-publisher configuration;
+  keep PyPI publication failures visible (failed run) while still creating the GitHub release
+  asset [ticket-265].
+
 ## 0.20.46 - 2026-09-22
 
 - Raise the default active-ticket capacity per workstream from 3 to 8 for

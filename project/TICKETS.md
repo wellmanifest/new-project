@@ -265,6 +265,7 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-261** | [`README.md`](./ticket-261/README.md) | - | - | - | - | - |
 | **ticket-262** | [`README.md`](./ticket-262/README.md) | - | - | - | - | - |
 | **ticket-263** | [`README.md`](./ticket-263/README.md) | - | - | - | - | - |
+| **ticket-264** | [`README.md`](./ticket-264/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 
