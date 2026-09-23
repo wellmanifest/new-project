@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.20.49 - 2026-09-23
+
+- The adopter governance workflow no longer forces `standard_pack_check.py
+  --strict`; the adopter's `standard-adoption.json` mode decides, so `enforce`
+  fails on missing packs and `audit` reports them without failing CI
+  [ticket-268].
+
 ## 0.20.48 - 2026-09-23
 
 - Bundle the complete governance checker closure (`governance_check.py` and
