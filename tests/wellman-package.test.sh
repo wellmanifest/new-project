@@ -61,4 +61,19 @@ if not re.search(r'^\s+make_latest:\s*"?false"?\s*$', text, re.M):
     raise SystemExit("wellman-publish.yml must set make_latest: false on the GitHub Release")
 PY2
 
+echo "== adopter workflows run the wellman gate as the ci actor =="
+python3 - <<'PY3'
+import re
+from pathlib import Path
+
+for workflow in (
+    "template/files/new-project-governance.workflow.yml",
+    ".github/workflows/governance-gate-reusable.yml",
+):
+    text = Path(workflow).read_text(encoding="utf-8")
+    calls = re.findall(r"wellman check\b(?:[^\n]*\\\n)*[^\n]*", text)
+    if not calls or any("--actor ci" not in call for call in calls):
+        raise SystemExit(f"{workflow}: every 'wellman check' must pass --actor ci")
+PY3
+
 echo "wellman package: PASS"

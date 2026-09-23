@@ -1,0 +1,103 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-269",
+  "summary": "Run the wellman gate as the CI actor in adopter workflows",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-269/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/governance-gate-reusable.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/**",
+    "template/files/new-project-governance.workflow.yml",
+    "tests/wellman-package.test.sh",
+    "tests/required-checks.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a939efa78049d9a62414671b4cd026c548a025da",
+    "targetBranch": "main",
+    "outcome": "Publish standard 0.20.50 whose adopter workflows run the wellman gate as the ci actor, so CI does not fail on developer-clone host checks.",
+    "nonGoals": [
+      "Change agent_host_check.py behavior",
+      "Relax host checks for local agent runs",
+      "Modify downstream adopters without their own ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Pass --actor ci to every wellman check invocation in adopter workflows, matching the existing governance_check.py CI invocation.",
+      "components": [
+        {
+          "name": "adopter-workflows",
+          "paths": [
+            "template/files/new-project-governance.workflow.yml",
+            ".github/workflows/governance-gate-reusable.yml",
+            "tests/wellman-package.test.sh",
+            "tests/required-checks.test.sh"
+          ]
+        },
+        {
+          "name": "runtime-package",
+          "paths": [
+            "packages/wellman/**"
+          ]
+        },
+        {
+          "name": "standard-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Adopter CI runs wellman check as the ci actor"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Publish a later corrective standard version; never retag published releases."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "bash tests/required-checks.test.sh",
+          "git diff --check"
+        ],
+        "evidence": "Both workflows pass --actor ci; runtime reports 0.20.50."
+      }
+    ]
+  }
+}

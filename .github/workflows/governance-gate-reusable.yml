@@ -59,4 +59,5 @@ jobs:
       - name: Run governance gate
         run: |
           python -m wellman check \
-            --root "${{ inputs.target-root }}"
+            --root "${{ inputs.target-root }}" \
+            --actor ci
