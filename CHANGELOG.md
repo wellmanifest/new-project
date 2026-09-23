@@ -4,7 +4,7 @@
 
 - Install the governance runtime from the immutable `wellman-v<standard>` Git
   tag so adopter CI does not depend on PyPI trusted-publisher configuration;
-  keep PyPI publication observable while still creating the GitHub release
+  keep PyPI publication failures visible (failed run) while still creating the GitHub release
   asset [ticket-265].
 
 ## 0.20.46 - 2026-09-22
