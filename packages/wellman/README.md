@@ -2,7 +2,8 @@
 
 The runtime package version is synchronized with the immutable Wellmanifest
 standard release. For the current release, install `wellman==0.20.46` when
-the adopted governance manifest pins standard `0.20.46`.
+the adopted governance manifest pins standard `0.20.46`. The corresponding
+release is published by the `wellman-v0.20.46` trusted-publishing workflow.
 
 Wellmanifest governance gate runtime — deterministic policy-as-code checker.
 
