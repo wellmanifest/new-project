@@ -48,3 +48,6 @@ jobs:
         with:
           files: packages/wellman/dist/*
           generate_release_notes: true
+          # "Latest" must stay a vX.Y.Z standard release: `goal governance
+          # adopt --latest` rejects any other tag.
+          make_latest: "false"
