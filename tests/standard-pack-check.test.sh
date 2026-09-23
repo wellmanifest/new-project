@@ -15,6 +15,25 @@ if python3 "$checker" --root "$root" --catalog "$catalog" --adoption "$adoption"
 fi
 grep -q 'GOV-STANDARD-PACK-001' "$strict_report"
 
+# ticket-268: CI honours the adopter's declared mode instead of forcing --strict.
+enforce_adoption="$(mktemp)"
+python3 - "$root/$adoption" "$enforce_adoption" <<'PY2'
+import json
+import sys
+
+record = json.load(open(sys.argv[1], encoding="utf-8"))
+record["mode"] = "enforce"
+json.dump(record, open(sys.argv[2], "w", encoding="utf-8"))
+PY2
+if python3 "$checker" --root "$root" --catalog "$catalog" --adoption "$enforce_adoption" --format json >/dev/null; then
+  echo "enforce-mode adoption unexpectedly accepted missing packs" >&2
+  exit 1
+fi
+if grep -q 'standard_pack_check.py.*--strict' "$root/template/files/new-project-governance.workflow.yml"; then
+  echo "adopter workflow must not force --strict; the adoption mode decides" >&2
+  exit 1
+fi
+
 python3 - "$root" <<'PY'
 import hashlib
 import json

@@ -1,0 +1,100 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-268",
+  "summary": "Enforce standard pack baseline only for adopters in enforce mode",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-268/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/**",
+    "template/files/new-project-governance.workflow.yml",
+    "tests/standard-pack-check.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7a8f8cac3676f66f37e3ea895508f1fcd5526d56",
+    "targetBranch": "main",
+    "outcome": "Publish standard 0.20.49 whose adopter workflow applies the standard-pack baseline according to the adopter's declared audit/enforce mode.",
+    "nonGoals": [
+      "Remove the --strict option from standard_pack_check.py",
+      "Change pack catalog or baseline profile requirements",
+      "Declare pack adoptions for any adopter"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Drop --strict from the managed adopter workflow; standard_pack_check.py already fails findings in enforce mode and treats a missing mode as enforce.",
+      "components": [
+        {
+          "name": "adopter-workflow",
+          "paths": [
+            "template/files/new-project-governance.workflow.yml",
+            "tests/standard-pack-check.test.sh"
+          ]
+        },
+        {
+          "name": "runtime-package",
+          "paths": [
+            "packages/wellman/**"
+          ]
+        },
+        {
+          "name": "standard-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Adopter CI honours standard-adoption mode for pack findings"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Publish a later corrective standard version; never retag published releases."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/standard-pack-check.test.sh",
+          "bash tests/wellman-package.test.sh",
+          "python3 tests/branch_hygiene_template_test.py",
+          "git diff --check"
+        ],
+        "evidence": "Mode-driven pack enforcement and template guard pass; runtime reports 0.20.49."
+      }
+    ]
+  }
+}
