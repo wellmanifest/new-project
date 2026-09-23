@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-267",
+  "summary": "Keep runtime releases from becoming the latest standard release",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-267/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/wellman-publish.yml",
+    "tests/wellman-package.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "26cbecf4d461250a5b696d573dc300b2acd1b929",
+    "targetBranch": "main",
+    "outcome": "Runtime GitHub releases are published with make_latest false so the canonical latest release remains a vX.Y.Z standard release.",
+    "nonGoals": [
+      "Publish or relabel any existing release",
+      "Change the standard version",
+      "Fix PyPI trusted publisher configuration"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Set make_latest false on the runtime release step and guard it in the existing package test.",
+      "components": [
+        {
+          "name": "runtime-publisher",
+          "paths": [
+            ".github/workflows/wellman-publish.yml",
+            "tests/wellman-package.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the workflow change; existing releases are unaffected."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "git diff --check"
+        ],
+        "evidence": "Package test passes and asserts make_latest false."
+      }
+    ]
+  }
+}

@@ -51,4 +51,14 @@ if missing:
     raise SystemExit(f"bundled checker is missing sibling modules: {sorted(missing)}")
 PY
 
+echo "== runtime releases never take the latest standard release =="
+python3 - <<'PY2'
+import re
+from pathlib import Path
+
+text = Path(".github/workflows/wellman-publish.yml").read_text(encoding="utf-8")
+if not re.search(r'^\s+make_latest:\s*"?false"?\s*$', text, re.M):
+    raise SystemExit("wellman-publish.yml must set make_latest: false on the GitHub Release")
+PY2
+
 echo "wellman package: PASS"
