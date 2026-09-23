@@ -1,0 +1,70 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-264",
+  "summary": "Synchronize Wellman runtime package with standard 0.20.46",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-264/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/wellman-publish.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "packages/wellman/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+  ,"delivery": {
+    "acceptedBaseSha": "44fb615715f64ca3be6502669d508dfe8e3078da",
+    "targetBranch": "main",
+    "outcome": "Publish the Wellman runtime package at 0.20.46 so adopters of the immutable standard can install the exact runtime requested by the governance workflow.",
+    "nonGoals": [
+      "Change the already published immutable standard release",
+      "Modify downstream adopter repositories",
+      "Bypass trusted PyPI publication"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the runtime package version equal to the published standard version and use the existing tag-triggered trusted publisher. Do not retag or mutate the immutable standard release.",
+      "components": [
+        {"name": "runtime-package", "paths": ["packages/wellman/pyproject.toml"]},
+        {"name": "release-projection", "paths": ["VERSION", "CHANGELOG.md", ".github/workflows/wellman-publish.yml"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Publish wellman runtime 0.20.46"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the unpublished branch; never retag the existing standard release."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -c \"import json, tomllib; assert open('VERSION').read().strip() == '0.20.46'; assert tomllib.load(open('packages/wellman/pyproject.toml','rb'))['project']['version'] == '0.20.46'; assert json.load(open('governance/manifest.default.json'))['standard']['version'] == '0.20.46'; assert json.load(open('governance/manifest.hub.json'))['standard']['version'] == '0.20.46'\"",
+          "python3 -m build packages/wellman",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Runtime and standard projections agree, the package builds, and governance fixtures pass."
+      }
+    ]
+  }
+}
