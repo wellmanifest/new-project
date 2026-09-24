@@ -1,0 +1,118 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-274",
+  "summary": "Re-pin local CI publication references to merged revision and release 0.20.53",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-274/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "docs/information/local-ci-publication.md",
+    "template/files/LOCAL_CI_PUBLICATION.template.md",
+    "governance/managed-copies.json",
+    "tests/adoption-lock.test.sh",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d4dab328fbea876eadd3f4ad4e2349d520a2b15a",
+    "targetBranch": "main",
+    "outcome": "Adopter-facing local CI publication references pin the merged ticket-270 revision instead of superseded 0.20.10/d5f77d8, and the correction ships as standard 0.20.53.",
+    "nonGoals": [
+      "Change the local CI publication policy itself",
+      "Re-pin adopters inside their own repositories",
+      "Waive protected checks, independent Validator or review",
+      "Publish before exact merged-SHA retesting"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Bind the authored document and adopter template to merge d4dab328 (which already carries the v3 policy text), bump the managed-copy digest, and advance version projections atomically to 0.20.53 for the release tag on this ticket's merge.",
+      "components": [
+        {
+          "name": "policy-references",
+          "paths": [
+            "docs/information/local-ci-publication.md",
+            "template/files/LOCAL_CI_PUBLICATION.template.md",
+            "governance/managed-copies.json",
+            "tests/adoption-lock.test.sh"
+          ]
+        },
+        {
+          "name": "release-projections",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        },
+        {
+          "name": "changelog",
+          "paths": [
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Publish a reviewed corrective release; never retarget an immutable version."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/local-ci-publication.test.sh"
+        ],
+        "evidence": "The regression proves the policy text, AGENTS rule 11a and adopter reference still describe the unrestricted default after re-pinning."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/wellman-package.test.sh",
+          "./project/governance-check.sh",
+          "git diff --check"
+        ],
+        "evidence": "Package regression, managed governance, scoped intent and formatting pass before publication."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "Goal pull-request delivery and independent exact-head Validator",
+          "Goal direct-main publication after clean merged-SHA retest"
+        ],
+        "evidence": "Protected PR gates and trusted exact-head approval precede merge; the v0.20.53 release binds the merged commit."
+      }
+    ]
+  }
+}

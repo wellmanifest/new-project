@@ -3,14 +3,14 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "local-ci-publication",
   "kind": "information",
-  "version": 3,
+  "version": 4,
   "title": "Local OneDev verification and independent Validator publication",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
   "created": "2026-09-07",
   "updated": "2026-09-24",
   "review_after": "2026-10-07",
-  "source_revision": "d5f77d83b3752477cfb95a535d0e1ce77f148576",
+  "source_revision": "d4dab328fbea876eadd3f4ad4e2349d520a2b15a",
   "affected_repositories": [
     "wellmanifest/new-project"
   ],

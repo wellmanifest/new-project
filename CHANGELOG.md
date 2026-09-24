@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 0.20.53 - 2026-09-24
 
 - Local OneDev verification followed by the independent Validator is the
   default publication route for every repository, not only `semcod/*` and
@@ -8,6 +8,10 @@
   `.governance/local-ci-publication.json`
   (`new-project.local-ci-publication/v1`); absent or `mode: "all"` means
   unrestricted, and a restriction never grants authority [ticket-270].
+- The authored local-ci-publication document and the adopter reference copy
+  now pin the merged ticket-270 revision `d4dab328` under standard 0.20.53
+  instead of the superseded 0.20.10 revision `d5f77d8`, with document and
+  managed-copy digests updated [ticket-274].
 
 ## 0.20.50 - 2026-09-24
 
