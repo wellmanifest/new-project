@@ -65,7 +65,7 @@ jobs:
       - name: Install governance runtime
         run: |
           set -euo pipefail
-          runtime_ref="wellman-v${{ steps.version.outputs.standard }}"
+          runtime_ref="v${{ steps.version.outputs.standard }}"
           python3 -m pip install "git+https://github.com/wellmanifest/new-project.git@${runtime_ref}#subdirectory=packages/wellman"
 
       - name: Run governance gate

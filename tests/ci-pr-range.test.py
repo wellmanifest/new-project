@@ -210,6 +210,11 @@ jobs:
         text = (ROOT / WORKFLOWS["reusable"][0]).read_text()
         self.assertIn("ref: ${{ github.event.pull_request.head.sha || github.sha }}", text)
 
+    def test_reusable_installs_runtime_from_standard_release_tag(self):
+        text = (ROOT / WORKFLOWS["reusable"][0]).read_text()
+        self.assertIn('runtime_ref="v${{ steps.version.outputs.standard }}"', text)
+        self.assertIn('git+https://github.com/wellmanifest/new-project.git@${runtime_ref}', text)
+
 
 if __name__ == "__main__":
     unittest.main()

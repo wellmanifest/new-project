@@ -8,7 +8,7 @@
 
 ## Outcome
 
-The reusable governance workflow currently reads `pyproject.toml` at the checkout root when installing Wellman, even when `target-root` selects another governed component. Read the standard identity and version from `target-root/.governance/manifest.json` and reject an invalid identity/version. Release this material correction together with the merged exact PR-range fix as immutable standard `0.20.51`, so Paxlet can adopt a published revision.
+The reusable governance workflow currently reads `pyproject.toml` at the checkout root when installing Wellman, even when `target-root` selects another governed component. Read the standard identity and version from `target-root/.governance/manifest.json`, reject an invalid identity/version, and install Wellman from the canonical `v<version>` standard release tag. Release this material correction together with the merged exact PR-range fix as immutable standard `0.20.51`, so Paxlet can adopt a published revision.
 
 ## Acceptance criteria
 
@@ -26,4 +26,4 @@ The release must bind the tested merged SHA. A checkout-level `pyproject.toml` i
 
 ## Validation
 
-The freshly built 0.20.51 Wellman wheel passed the installed-runtime suite, including six detached PR/workflow cases and the nested target-root identity rejection. Required-checks regressions, the managed governance gate, and `git diff --check` passed. AC-03 remains pending protected exact-head review, merge, clean merged-SHA retest, and immutable release.
+The freshly built 0.20.51 Wellman wheel passed the installed-runtime suite, including seven detached PR/workflow cases, the nested target-root identity rejection, and the canonical runtime source tag. Required-checks regressions, the managed governance gate, and `git diff --check` passed. AC-03 remains pending protected exact-head review, merge, clean merged-SHA retest, and immutable release.
