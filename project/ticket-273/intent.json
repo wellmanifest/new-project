@@ -1,0 +1,111 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-273",
+  "summary": "Use canonical release tag in adopter runtime install and publish 0.20.52",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-273/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "template/files/new-project-governance.workflow.yml",
+    "tests/wellman-package.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "247b4c6e2c0e338629cc7f29aedc887dd869c1c9",
+    "targetBranch": "main",
+    "outcome": "Make adopter runtime installation use the canonical immutable Wellmanifest v<standard-version> tag and publish the corrected standard 0.20.52 for reliable adoption.",
+    "nonGoals": [
+      "Change ticket-270 or its reserved paths",
+      "Change permanent WIP limits",
+      "Waive protected checks, independent Validator or review",
+      "Publish before exact merged-SHA retesting"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the canonical v<version> immutable standard release tag in both reusable CI and generated adopter workflow; assert both sources in a Wellman package regression; advance version projections atomically with the material correction.",
+      "components": [
+        {
+          "name": "release-projections",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        },
+        {
+          "name": "adopter-runtime-source",
+          "paths": [
+            "template/files/new-project-governance.workflow.yml"
+          ]
+        },
+        {
+          "name": "regression",
+          "paths": [
+            "tests/wellman-package.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Publish a reviewed corrective release; never retarget an immutable version."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/wellman-package.test.sh"
+        ],
+        "evidence": "The package regression proves generated adopter CI and reusable CI both install Wellman from canonical v<version>."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/required-checks.test.sh",
+          "./project/governance-check.sh",
+          "git diff --check"
+        ],
+        "evidence": "Required checks, managed governance, scoped intent and formatting pass before publication."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "Goal pull-request delivery and independent exact-head Validator",
+          "Goal direct-main publication after clean merged-SHA retest"
+        ],
+        "evidence": "Protected PR gates and trusted exact-head approval precede merge; the v0.20.52 release binds the merged commit."
+      }
+    ]
+  }
+}

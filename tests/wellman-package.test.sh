@@ -66,14 +66,17 @@ python3 - <<'PY3'
 import re
 from pathlib import Path
 
-for workflow in (
-    "template/files/new-project-governance.workflow.yml",
-    ".github/workflows/governance-gate-reusable.yml",
-):
+runtime_refs = {
+    "template/files/new-project-governance.workflow.yml": 'runtime_ref="v${standard_version}"',
+    ".github/workflows/governance-gate-reusable.yml": 'runtime_ref="v${{ steps.version.outputs.standard }}"',
+}
+for workflow, expected_ref in runtime_refs.items():
     text = Path(workflow).read_text(encoding="utf-8")
     calls = re.findall(r"wellman check\b(?:[^\n]*\\\n)*[^\n]*", text)
     if not calls or any("--actor ci" not in call for call in calls):
         raise SystemExit(f"{workflow}: every 'wellman check' must pass --actor ci")
+    if expected_ref not in text:
+        raise SystemExit(f"{workflow}: install Wellman from the canonical standard release tag")
 PY3
 
 echo "== detached PR workflow regression with the installed runtime =="
