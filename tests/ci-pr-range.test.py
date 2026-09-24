@@ -171,6 +171,41 @@ jobs:
         self.assertNotEqual(0, result.returncode)
         self.assertIn("Managed governance file digest differs: policy.txt", result.stdout)
 
+    def test_reusable_resolves_version_from_target_root(self):
+        nested = self.root / "nested product"
+        (nested / ".governance").mkdir(parents=True)
+        shutil.copy2(self.root / ".governance/manifest.json",
+                     nested / ".governance/manifest.json")
+        # A checkout-level pyproject may belong to another component.
+        self.write("pyproject.toml", "[tool.wellmanifest]\nstandard = '0.1.0'\n")
+        output = self.root / "github-output.txt"
+        env = dict(os.environ, GOVERNANCE_ROOT=str(nested), GITHUB_OUTPUT=str(output))
+        workflow = (ROOT / WORKFLOWS["reusable"][0]).read_text()
+        lines = workflow.splitlines()
+        start = next(i for i, line in enumerate(lines)
+                     if line.strip() == "- name: Resolve standard version")
+        start = next(i for i in range(start, len(lines)) if lines[i].strip() == "run: |") + 1
+        script = []
+        for line in lines[start:]:
+            if line.strip() and not line.startswith("          "):
+                break
+            script.append(line[10:])
+        result = subprocess.run(["bash", "-c", "\n".join(script)], cwd=self.root,
+                                env=env, capture_output=True, text=True)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        expected = json.loads((nested / ".governance/manifest.json").read_text())["standard"]["version"]
+        self.assertEqual(f"standard={expected}\n", output.read_text())
+
+        invalid = json.loads((nested / ".governance/manifest.json").read_text())
+        invalid["standard"]["id"] = "another/standard"
+        self.write_json("nested product/.governance/manifest.json", invalid)
+        output.unlink()
+        rejected = subprocess.run(["bash", "-c", "\n".join(script)], cwd=self.root,
+                                  env=env, capture_output=True, text=True)
+        self.assertNotEqual(0, rejected.returncode)
+        self.assertIn("Unsupported standard identity", rejected.stderr)
+        self.assertFalse(output.exists())
+
     def test_reusable_checks_out_event_head(self):
         text = (ROOT / WORKFLOWS["reusable"][0]).read_text()
         self.assertIn("ref: ${{ github.event.pull_request.head.sha || github.sha }}", text)

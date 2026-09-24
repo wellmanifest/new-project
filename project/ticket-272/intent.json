@@ -1,0 +1,111 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-272",
+  "summary": "Resolve reusable target-root version and publish standard 0.20.51",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-272/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/governance-gate-reusable.yml",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "tests/ci-pr-range.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d0d904c0825841414ebbc5a151958f7bbd903c95",
+    "targetBranch": "main",
+    "outcome": "Reusable governance CI resolves the governed standard version from the declared target-root, then publish integrated Wellmanifest 0.20.51 through exact-head independent review and immutable release for Paxlet adoption.",
+    "nonGoals": [
+      "Change ticket-270 or its reserved paths",
+      "Change permanent WIP limits",
+      "Waive protected checks or review",
+      "Publish before merged source is retested"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Read standard identity and version from the target-root governance manifest, validate identity and version, then use the value consistently for runtime installation. Include the material correction and its regression in the 0.20.51 release.",
+      "components": [
+        {
+          "name": "reusable-workflow",
+          "paths": [
+            ".github/workflows/governance-gate-reusable.yml"
+          ]
+        },
+        {
+          "name": "regression",
+          "paths": [
+            "tests/ci-pr-range.test.py"
+          ]
+        },
+        {
+          "name": "release-projections",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Publish a reviewed corrective release; never retarget an immutable version."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m unittest discover -s tests -p ci-pr-range.test.py"
+        ],
+        "evidence": "Actual workflow shell block selects the nested governed manifest over an unrelated checkout pyproject and rejects wrong standard identity."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "bash tests/required-checks.test.sh",
+          "./project/governance-check.sh",
+          "git diff --check"
+        ],
+        "evidence": "Runtime packaging, required checks, managed gate and diff pass before trusted publication."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "After trusted merge and clean SHA retest, immutable v0.20.51 tag and published GitHub Release bind the exact commit."
+      }
+    ]
+  }
+}
