@@ -43,7 +43,7 @@
     "estimatedMinutes": 30,
     "budgets": {
       "maxImplementationFiles": 9,
-      "maxAffectedComponents": 4,
+      "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
     },
@@ -56,7 +56,8 @@
           "paths": [
             "docs/information/local-ci-publication.md",
             "template/files/LOCAL_CI_PUBLICATION.template.md",
-            "governance/managed-copies.json"
+            "governance/managed-copies.json",
+            "tests/adoption-lock.test.sh"
           ]
         },
         {
@@ -72,12 +73,6 @@
           "name": "changelog",
           "paths": [
             "CHANGELOG.md"
-          ]
-        },
-        {
-          "name": "regression",
-          "paths": [
-            "tests/adoption-lock.test.sh"
           ]
         }
       ],

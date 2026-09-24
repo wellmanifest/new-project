@@ -237,6 +237,7 @@ assert 'run-local-direct-pr.sh' in (root / '.governance/docs/LOCAL_CI_PUBLICATIO
 assert not (root / '.governance/docs/LOCAL_CI_PUBLICATION.md').read_text().startswith('---')
 assert 'd4dab328fbea876eadd3f4ad4e2349d520a2b15a' in (root / '.governance/docs/LOCAL_CI_PUBLICATION.md').read_text()
 assert 'new-project 0.20.53' in (root / '.governance/docs/LOCAL_CI_PUBLICATION.md').read_text()
+assert '58416ae05eb5513fd1c082c81c9c4be18cb8e6b2672c864bc20e9a8957401b59' in (root / '.governance/docs/LOCAL_CI_PUBLICATION.md').read_text()
 assert '.governance/docs/LOCAL_CI_PUBLICATION.md' in (root / 'AGENTS.md').read_text()
 assert '.governance/manifest.base.json' in lock['managedFiles']
 assert '.governance/adoption-bindings.json' in lock['managedFiles']
