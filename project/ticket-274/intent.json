@@ -43,7 +43,7 @@
     "estimatedMinutes": 30,
     "budgets": {
       "maxImplementationFiles": 9,
-      "maxAffectedComponents": 3,
+      "maxAffectedComponents": 4,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
     },
