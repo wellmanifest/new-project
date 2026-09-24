@@ -118,6 +118,8 @@ jobs:
         run: bash tests/wellman-package.test.sh
       - name: Test decision-record replay and append-only
         run: bash tests/decision-record.test.sh
+      - name: Test local OneDev and Validator publication scope
+        run: bash tests/local-ci-publication.test.sh
       - name: Test reuse-first work admission
         run: python3 tests/work_start_test.py
       - name: Test ticket governance scripts

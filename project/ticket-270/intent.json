@@ -18,7 +18,8 @@
     "template/files/AGENTS.template.md",
     "template/files/LOCAL_CI_PUBLICATION.template.md",
     "tests/local-ci-publication.test.sh",
-    "governance/managed-copies.json"
+    "governance/managed-copies.json",
+    ".github/workflows/ci.yml"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -43,7 +44,7 @@
     "budgets": {
       "maxImplementationFiles": 10,
       "maxAffectedComponents": 3,
-      "maxPublicInterfaceChanges": 1,
+      "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
@@ -59,13 +60,15 @@
             "template/files/AGENTS.template.md",
             "tests/local-ci-publication.test.sh",
             "governance/managed-copies.json",
-            "CHANGELOG.md"
+            "CHANGELOG.md",
+            ".github/workflows/ci.yml"
           ]
         }
       ],
       "responsibilityChanges": false,
       "interfaceChanges": [
-        "Optional adopter file .governance/local-ci-publication.json (new-project.local-ci-publication/v1)"
+        "Optional adopter file .governance/local-ci-publication.json (new-project.local-ci-publication/v1)",
+        "CI runs tests/local-ci-publication.test.sh"
       ],
       "dataChanges": [],
       "ui": {
