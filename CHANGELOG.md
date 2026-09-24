@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## Unreleased
+
+- Local OneDev verification followed by the independent Validator is the
+  default publication route for every repository, not only `semcod/*` and
+  `subactor/*`. An adopter may only narrow that default with the optional
+  `.governance/local-ci-publication.json`
+  (`new-project.local-ci-publication/v1`); absent or `mode: "all"` means
+  unrestricted, and a restriction never grants authority [ticket-270].
+
 ## 0.20.50 - 2026-09-24
 
 - Adopter workflows run `wellman check` with `--actor ci`, so CI no longer

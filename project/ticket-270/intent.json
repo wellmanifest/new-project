@@ -1,0 +1,102 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-270",
+  "summary": "Apply local OneDev and Validator publication to every repository by default",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-270/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "docs/information/local-ci-publication.md",
+    "governance/local-ci-publication.schema.json",
+    "template/files/AGENTS.template.md",
+    "template/files/LOCAL_CI_PUBLICATION.template.md",
+    "tests/local-ci-publication.test.sh",
+    "governance/managed-copies.json",
+    ".github/workflows/ci.yml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "42dce766825f35b2a97cf16c9bf72e80a4a0c2d3",
+    "targetBranch": "main",
+    "outcome": "Local OneDev verification plus the independent Validator is the default publication route for every repository; an adopter may only narrow that default through .governance/local-ci-publication.json. Release and adopter re-pin follow in a dependent ticket.",
+    "nonGoals": [
+      "Grant publication or merge authority",
+      "Change OneDev or Validator runtime configuration",
+      "Re-pin the adopter reference copy (follow-up ticket after merge)",
+      "Modify downstream adopters without their own ticket",
+      "Bump VERSION or release; the dependent release ticket publishes 0.20.51"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Scope the local-CI transport rule to all repositories by default; a closed JSON schema lets an adopter declare an allowlist restriction, which only narrows where the rule is preferred and never grants authority.",
+      "components": [
+        {
+          "name": "policy",
+          "paths": [
+            "docs/information/local-ci-publication.md",
+            "governance/local-ci-publication.schema.json",
+            "template/files/LOCAL_CI_PUBLICATION.template.md",
+            "template/files/AGENTS.template.md",
+            "tests/local-ci-publication.test.sh",
+            "governance/managed-copies.json",
+            "CHANGELOG.md",
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Optional adopter file .governance/local-ci-publication.json (new-project.local-ci-publication/v1)",
+        "CI runs tests/local-ci-publication.test.sh"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Publish a later corrective standard version; never retag published releases."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/local-ci-publication.test.sh",
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/standard-pack-check.test.sh",
+          "git diff --check"
+        ],
+        "evidence": "No org-limited scope sentence remains; adopter reference and AGENTS rule state the default."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/local-ci-publication.test.sh"
+        ],
+        "evidence": "Schema accepts mode all and restricted allowlists and rejects unknown fields."
+      }
+    ]
+  }
+}

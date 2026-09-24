@@ -3,12 +3,12 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "local-ci-publication",
   "kind": "information",
-  "version": 2,
+  "version": 3,
   "title": "Local OneDev verification and independent Validator publication",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
   "created": "2026-09-07",
-  "updated": "2026-09-08",
+  "updated": "2026-09-24",
   "review_after": "2026-10-07",
   "source_revision": "d5f77d83b3752477cfb95a535d0e1ce77f148576",
   "affected_repositories": [
@@ -26,12 +26,31 @@
 <!-- docs:section purpose -->
 ## Purpose
 
-For `semcod/*` and `subactor/*`, prefer local OneDev verification followed by
-the independent local Validator App. GitHub may remain the repository and PR
-host; GitHub Actions execution is not a prerequisite for this local route.
+For every repository, prefer local OneDev verification followed by the
+independent local Validator App. This is the default for all owners and
+organizations; no organization list limits it. GitHub may remain the repository
+and PR host; GitHub Actions execution is not a prerequisite for this local route.
 This standard does not promise zero infrastructure or provider cost.
-For these two organizations this transport-selection rule supersedes older
-unconditional `dispatch-direct-pr.sh` examples in governance documentation.
+This transport-selection rule supersedes older unconditional
+`dispatch-direct-pr.sh` examples in governance documentation.
+
+### Optional scope restriction
+
+The default is unrestricted. An adopter may narrow where this route is the
+preferred default by committing `.governance/local-ci-publication.json`
+(schema `new-project.local-ci-publication/v1`, defined in
+`governance/local-ci-publication.schema.json`):
+
+```json
+{"schema": "new-project.local-ci-publication/v1", "scope": {"mode": "all"}}
+```
+
+`mode: "all"` and an absent file mean unrestricted. `mode: "restricted"` with a
+non-empty `repositories` allowlist of `OWNER/REPO` or `OWNER/*` entries limits
+the default to matching repositories. A restriction only narrows the default;
+it never grants, widens or removes publication authority, required checks,
+Validator policy or branch protection. A malformed file is reported by the
+governance check and the unrestricted default applies.
 
 <!-- docs:section scope -->
 ## Scope and authority
