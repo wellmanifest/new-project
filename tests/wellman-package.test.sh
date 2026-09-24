@@ -76,4 +76,7 @@ for workflow in (
         raise SystemExit(f"{workflow}: every 'wellman check' must pass --actor ci")
 PY3
 
+echo "== detached PR workflow regression with the installed runtime =="
+"$PY" "$ROOT/tests/ci-pr-range.test.py"
+
 echo "wellman package: PASS"

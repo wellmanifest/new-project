@@ -270,6 +270,8 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-266** | [`README.md`](./ticket-266/README.md) | - | - | - | - | - |
 | **ticket-267** | [`README.md`](./ticket-267/README.md) | - | - | - | - | - |
 | **ticket-268** | [`README.md`](./ticket-268/README.md) | - | - | - | - | - |
+| **ticket-269** | [`README.md`](./ticket-269/README.md) | - | - | - | - | - |
+| **ticket-271** | [`README.md`](./ticket-271/README.md) | - | - |  [`ai-codex.md`](./ticket-271/ai-codex.md) | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 
