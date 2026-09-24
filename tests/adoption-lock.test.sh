@@ -235,7 +235,7 @@ assert base['standard']['version'] == source_version
 assert '.governance/docs/LOCAL_CI_PUBLICATION.md' in lock['managedFiles']
 assert 'run-local-direct-pr.sh' in (root / '.governance/docs/LOCAL_CI_PUBLICATION.md').read_text()
 assert not (root / '.governance/docs/LOCAL_CI_PUBLICATION.md').read_text().startswith('---')
-assert 'd5f77d83b3752477cfb95a535d0e1ce77f148576' in (root / '.governance/docs/LOCAL_CI_PUBLICATION.md').read_text()
+assert 'd4dab328fbea876eadd3f4ad4e2349d520a2b15a' in (root / '.governance/docs/LOCAL_CI_PUBLICATION.md').read_text()
 assert '.governance/docs/LOCAL_CI_PUBLICATION.md' in (root / 'AGENTS.md').read_text()
 assert '.governance/manifest.base.json' in lock['managedFiles']
 assert '.governance/adoption-bindings.json' in lock['managedFiles']

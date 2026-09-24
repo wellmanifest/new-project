@@ -16,6 +16,7 @@
     "docs/information/local-ci-publication.md",
     "template/files/LOCAL_CI_PUBLICATION.template.md",
     "governance/managed-copies.json",
+    "tests/adoption-lock.test.sh",
     "VERSION",
     "governance/manifest.default.json",
     "governance/manifest.hub.json",
@@ -41,7 +42,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 8,
+      "maxImplementationFiles": 9,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
@@ -72,6 +73,12 @@
           "paths": [
             "CHANGELOG.md"
           ]
+        },
+        {
+          "name": "regression",
+          "paths": [
+            "tests/adoption-lock.test.sh"
+          ]
         }
       ],
       "responsibilityChanges": false,
@@ -96,6 +103,7 @@
       {
         "criterion": "AC-02",
         "commands": [
+          "bash tests/adoption-lock.test.sh",
           "bash tests/wellman-package.test.sh",
           "./project/governance-check.sh",
           "git diff --check"
