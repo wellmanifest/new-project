@@ -41,20 +41,31 @@ jobs:
 
       - name: Resolve standard version
         id: version
+        shell: bash
+        env:
+          GOVERNANCE_ROOT: ${{ inputs.target-root }}
         run: |
-          VERSION=$(python3 -c "
-          import tomllib
-          with open('pyproject.toml', 'rb') as f:
-              d = tomllib.load(f)
-          print(d.get('tool', {}).get('wellmanifest', {}).get('standard', ''))
-          " 2>/dev/null || echo "")
-          echo "standard=$VERSION" >> $GITHUB_OUTPUT
-          echo "Resolved standard version: $VERSION"
+          set -euo pipefail
+          standard_version="$(python3 - <<'PY_VERSION'
+          import json
+          import os
+          from pathlib import Path
+
+          manifest_path = Path(os.environ['GOVERNANCE_ROOT']) / '.governance/manifest.json'
+          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          if manifest['standard']['id'] != 'wellmanifest/new-project':
+              raise SystemExit('Unsupported standard identity')
+          print(manifest['standard']['version'])
+          PY_VERSION
+          )"
+          [[ "$standard_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          echo "standard=$standard_version" >> "$GITHUB_OUTPUT"
+          echo "Resolved standard version: $standard_version"
 
       - name: Install governance runtime
         run: |
           set -euo pipefail
-          runtime_ref="wellman-v${{ steps.version.outputs.standard }}"
+          runtime_ref="v${{ steps.version.outputs.standard }}"
           python3 -m pip install "git+https://github.com/wellmanifest/new-project.git@${runtime_ref}#subdirectory=packages/wellman"
 
       - name: Run governance gate
