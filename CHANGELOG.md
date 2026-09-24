@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## Unreleased
+
+- `propagate-standard` fails with an explicit error when `ORG_GOVERNANCE_TOKEN`
+  is unset or an organization cannot be listed, and skips the upgrade matrix
+  when no adopter is found. Previously an unset secret silently discovered zero
+  adopters and every release run failed on an empty matrix, so adopters were
+  never upgraded [ticket-275].
+
 ## 0.20.53 - 2026-09-24
 
 - Local OneDev verification followed by the independent Validator is the
