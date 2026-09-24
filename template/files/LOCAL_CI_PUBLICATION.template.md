@@ -8,8 +8,11 @@ This managed file is an adoption reference. The authored document and its
 metadata remain at the canonical Wellmanifest home; do not register this copy
 as a new document owned by the adopting repository.
 
-For Semcod and Subactor, prefer protected local OneDev verification followed
-by the independent local Validator App. Resolve the actual protected profile,
+For every repository, by default, prefer protected local OneDev verification
+followed by the independent local Validator App. No organization list limits
+this default; only `.governance/local-ci-publication.json` with
+`scope.mode: "restricted"` (schema `new-project.local-ci-publication/v1`) may
+narrow it, and a restriction never grants or removes authority. Resolve the actual protected profile,
 observe existing reconciliation, require fresh verification of the PR head
 merged with the current base, then invoke the trusted local Validator adapter
 under existing publication authorization. The supported local adapter is

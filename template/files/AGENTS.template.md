@@ -153,8 +153,10 @@ Unknown ownership or remote/independent-clone state must not be guessed.
    either a `User` login is in protected `trusted-reviewers` or a `Bot` login
    is in the separate protected `trusted-validator-apps` input. Never trust an
    arbitrary Bot review.
-11a. **USE LOCAL ONEDEV AND THE INDEPENDENT VALIDATOR.** For `semcod/*` and
-   `subactor/*`, follow [.governance/docs/LOCAL_CI_PUBLICATION.md](.governance/docs/LOCAL_CI_PUBLICATION.md).
+11a. **USE LOCAL ONEDEV AND THE INDEPENDENT VALIDATOR.** For every repository,
+   follow [.governance/docs/LOCAL_CI_PUBLICATION.md](.governance/docs/LOCAL_CI_PUBLICATION.md).
+   This is the default for all owners; only `.governance/local-ci-publication.json`
+   with `scope.mode: "restricted"` narrows it, and never grants authority.
    Resolve the protected repository profile, observe the current OneDev
    head/base receipt and reuse any existing local reconciliation result.
    Invoke the trusted `subactor/validator-agent/bin/run-local-direct-pr.sh`

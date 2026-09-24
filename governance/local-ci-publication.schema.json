@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wellmanifest.com/schemas/new-project/local-ci-publication/v1",
+  "title": "Local OneDev and Validator publication scope",
+  "description": "Optional adopter file .governance/local-ci-publication.json. Absent file or mode all: the local route is the default for every repository. mode restricted narrows that default to the listed repositories; it never grants authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "scope"],
+  "properties": {
+    "schema": {"const": "new-project.local-ci-publication/v1"},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": {"enum": ["all", "restricted"], "default": "all"},
+        "repositories": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*/(\\*|[A-Za-z0-9._-]+)$"}
+        }
+      },
+      "allOf": [
+        {"if": {"properties": {"mode": {"const": "restricted"}}}, "then": {"required": ["repositories"]}},
+        {"if": {"properties": {"mode": {"const": "all"}}}, "then": {"not": {"required": ["repositories"]}}}
+      ]
+    }
+  }
+}
