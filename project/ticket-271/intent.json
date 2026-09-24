@@ -1,0 +1,94 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-271",
+  "summary": "Pass exact PR range to Wellman governance gates",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-271/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/governance-gate-reusable.yml",
+    "template/files/new-project-governance.workflow.yml",
+    "tests/ci-pr-range.test.py",
+    "tests/wellman-package.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "42dce766825f35b2a97cf16c9bf72e80a4a0c2d3",
+    "targetBranch": "main",
+    "outcome": "Both CI governance workflows validate the exact PR base/head on detached checkouts; regression coverage preserves no-PR and integrity rejection behavior. Publish through independent review and protected merge.",
+    "nonGoals": [
+      "Change policy or permanent WIP limits",
+      "Modify ticket-270 or its reserved paths",
+      "Relax integrity, approval or merge checks",
+      "Release or adopter re-pin before source integration"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Pass one validated optional base/head pair to every governance invocation; validate the behavior with real Git history and the installed runtime.",
+      "components": [
+        {
+          "name": "ci-gates",
+          "paths": [
+            "template/files/new-project-governance.workflow.yml",
+            ".github/workflows/governance-gate-reusable.yml"
+          ]
+        },
+        {
+          "name": "regression",
+          "paths": [
+            "tests/ci-pr-range.test.py",
+            "tests/wellman-package.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the workflow change through a reviewed corrective change."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/wellman-package.test.sh"
+        ],
+        "evidence": "Detached checkout regression runs the workflow body against installed Wellman; both gates receive the same exact range."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/required-checks.test.sh",
+          "./project/governance-check.sh",
+          "git diff --check"
+        ],
+        "evidence": "No-PR behavior remains available, incomplete pairs fail closed, and managed drift is rejected."
+      }
+    ]
+  }
+}
