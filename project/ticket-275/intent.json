@@ -1,0 +1,75 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-275",
+  "summary": "Fail propagation explicitly when the org token is missing or no adopter is found",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-275/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/propagate-standard.yml",
+    "CHANGELOG.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "bed2d22ed0fc5ddec0805925c80d525f8a5827bd",
+    "targetBranch": "main",
+    "outcome": "The org-wide standard propagation reports a missing or insufficient ORG_GOVERNANCE_TOKEN as an explicit failure and does not start an empty upgrade matrix.",
+    "nonGoals": [
+      "Configure the secret itself",
+      "Change the upgrade or PR creation steps"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Guard the discover step on GH_TOKEN and gh failures; gate the upgrade job on a non-empty repository list.",
+      "components": [
+        {
+          "name": "propagation",
+          "paths": [
+            ".github/workflows/propagate-standard.yml",
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the workflow change."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -c \"import yaml;yaml.safe_load(open('.github/workflows/propagate-standard.yml'))\"",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Workflow parses; governance passes."
+      }
+    ]
+  }
+}

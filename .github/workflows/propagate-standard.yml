@@ -52,10 +52,19 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.ORG_GOVERNANCE_TOKEN }}
         run: |
+          # An unset secret made every scan return zero adopters and the
+          # upgrade matrix then failed on an empty list; fail with the cause.
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::error::ORG_GOVERNANCE_TOKEN is not configured; cannot list adopter repositories."
+            exit 1
+          fi
           # Search across all orgs for repos adopting this standard
           REPOS="[]"
           for ORG in semcod subactor autogrammar wellmanifest maskservice; do
-            FOUND=$(gh repo list "$ORG" --json nameWithOwner --limit 200 --jq '.[].nameWithOwner' 2>/dev/null || true)
+            if ! FOUND=$(gh repo list "$ORG" --json nameWithOwner --limit 200 --jq '.[].nameWithOwner'); then
+              echo "::error::Cannot list repositories of ${ORG} with ORG_GOVERNANCE_TOKEN."
+              exit 1
+            fi
             for REPO in $FOUND; do
               # Check if repo has governance manifest
               HAS_LOCK=$(gh api "repos/${REPO}/contents/.governance/manifest.lock.json" --jq '.content' 2>/dev/null || echo "")
@@ -70,7 +79,7 @@ jobs:
   create-upgrade-prs:
     name: Upgrade ${{ matrix.repo }}
     needs: discover-adopters
-    if: ${{ github.event_name == 'release' || !inputs.dry-run }}
+    if: ${{ (github.event_name == 'release' || !inputs.dry-run) && needs.discover-adopters.outputs.repos != '[]' }}
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 5
