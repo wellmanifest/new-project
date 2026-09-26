@@ -1,0 +1,80 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-276",
+  "summary": "Add proprietary anti-AI mining license template and update owner",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-276/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "template/files/LICENSE.template",
+    "template/files/LICENSE.proprietary.template"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "cf0d14d6ecb5bd0ef59401de11c0b8b929c61d29",
+    "targetBranch": "main",
+    "outcome": "Add template/files/LICENSE.proprietary.template and update template/files/LICENSE.template with Tomasz Sapletta Prototypowanie.pl ownership attribution.",
+    "nonGoals": [
+      "No changes outside license templates"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add LICENSE.proprietary.template and update LICENSE.template with Tomasz Sapletta Prototypowanie.pl NIP: 5881918662, REGON: 220665410 attribution.",
+      "components": [
+        {
+          "name": "governance-template",
+          "paths": [
+            "template/files/LICENSE.template",
+            "template/files/LICENSE.proprietary.template"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "git revert"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -c \"assert 'Tomasz Sapletta' in open('template/files/LICENSE.template').read() and 'Tomasz Sapletta' in open('template/files/LICENSE.proprietary.template').read()\""
+        ],
+        "evidence": "project/ticket-276/validation.txt"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-276/validation.txt"
+      }
+    ]
+  }
+}
