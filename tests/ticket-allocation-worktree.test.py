@@ -25,6 +25,7 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
         self.git("init", "-b", "main")
         self.git("config", "user.name", "Fixture")
         self.git("config", "user.email", "fixture@example.invalid")
+        self.git("config", "core.excludesFile", os.devnull)
         (self.root / "project").mkdir()
         (self.root / ".governance").mkdir()
         shutil.copy2(ROOT / "project/new-ticket.sh", self.root / "project/new-ticket.sh")
@@ -34,7 +35,8 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
             source = ROOT / "governance" / name
             target = self.root / ".governance" / ("manifest.json" if name == "manifest.default.json" else name)
             shutil.copy2(source, target)
-        for name in ("ticket_activity.py", "ticket_input.py", "work_start_check.py", "worktree_overlap_check.py"):
+        for name in ("ticket_activity.py", "ticket_input.py", "work_start_check.py", "worktree_overlap_check.py",
+                     "ticket_storage.py", "governance_check.py", "repository_policy.py"):
             shutil.copy2(ROOT / "scripts" / name, self.root / ".governance" / name)
         shutil.copy2(ROOT / "subprojects/worktrees/conformance.py", self.root / ".governance/worktree_path_check.py")
         (self.root / ".gitignore").write_text("/.worktrees/\n/.subactor/leases/\n", encoding="utf-8")
@@ -47,10 +49,10 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
                               capture_output=True, env={key: value for key, value in os.environ.items()
                                                          if not key.startswith("GIT_")})
 
-    def allocate(self) -> subprocess.CompletedProcess[str]:
+    def allocate(self, *args: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             ["bash", "project/new-ticket.sh", "--title", "Canonical ticket", "--agent", "codex",
-             "--workstream", "application", "--worktree-slug", "canonical-ticket"],
+             "--workstream", "application", "--worktree-slug", "canonical-ticket", *args],
             cwd=self.root, text=True, capture_output=True,
             env={key: value for key, value in os.environ.items() if not key.startswith("GIT_")},
         )
@@ -89,6 +91,55 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
         self.assertFalse((self.root / "project/ticket-001").exists())
         self.assertFalse((self.root / ".git/new-project-ticket-high-water").exists())
         self.assertFalse((outside / "ticket-001--canonical-ticket").exists())
+
+    def dirty_primary(self) -> dict[str, bytes]:
+        (self.root / "src").mkdir()
+        (self.root / "src/other.py").write_text("original\n")
+        self.git("add", "src/other.py")
+        self.git("commit", "-m", "tracked unrelated source")
+        (self.root / "src/other.py").write_text("staged change\n")
+        self.git("add", "src/other.py")
+        (self.root / "src/other.py").write_text("unstaged change\n")
+        (self.root / ".planfile").mkdir()
+        (self.root / ".planfile/current.yaml").write_text("operational: unchanged\n")
+        return {name: (self.root / name).read_bytes()
+                for name in ("src/other.py", ".planfile/current.yaml", ".git/index")}
+
+    def test_scoped_allocation_preserves_unrelated_dirty_primary(self) -> None:
+        before = self.dirty_primary()
+        status = self.git("status", "--porcelain=v1", "--untracked-files=all").stdout
+        head = self.git("rev-parse", "HEAD").stdout.strip()
+        result = self.allocate("--path", "src/fix.py")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for name, content in before.items():
+            self.assertEqual((self.root / name).read_bytes(), content, name)
+        self.assertEqual(self.git("status", "--porcelain=v1", "--untracked-files=all").stdout, status)
+        self.assertEqual(self.git("rev-parse", "HEAD").stdout.strip(), head)
+        self.assertEqual(self.git("branch", "--show-current").stdout.strip(), "main")
+        worktree = self.root / ".worktrees/ticket-001--canonical-ticket"
+        self.assertEqual(self.git("-C", str(worktree), "rev-parse", "HEAD").stdout.strip(), head)
+        self.assertEqual((worktree / "src/other.py").read_text(), "original\n")
+        self.assertFalse((worktree / ".planfile/current.yaml").exists())
+
+    def test_overlapping_dirty_primary_refused_without_reservation(self) -> None:
+        before = self.dirty_primary()
+        result = self.allocate("--path", "src/other.py")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("pending-delta", result.stdout + result.stderr)
+        self.assertFalse((self.root / ".git/new-project-ticket-high-water").exists())
+        self.assertEqual(self.git("branch", "--list", "ticket/*").stdout, "")
+        for name, content in before.items():
+            self.assertEqual((self.root / name).read_bytes(), content, name)
+
+    def test_unscoped_dirty_primary_refused_without_reservation(self) -> None:
+        (self.root / ".planfile").mkdir()
+        (self.root / ".planfile/current.yaml").write_text("operational: unchanged\n")
+        result = self.allocate()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("explicit", result.stderr)
+        self.assertFalse((self.root / ".git/new-project-ticket-high-water").exists())
+        self.assertEqual(self.git("branch", "--list", "ticket/*").stdout, "")
+        self.assertEqual((self.root / ".planfile/current.yaml").read_text(), "operational: unchanged\n")
 
     def test_linked_checkout_request_still_materializes_only_in_primary_layout(self) -> None:
         first = self.allocate()

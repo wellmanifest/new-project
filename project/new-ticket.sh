@@ -643,8 +643,13 @@ if [[ -n "$PRIMARY_CHECKOUT" ]]; then
     echo "GOV-TICKET-ALLOCATION-003: Git 2.51+ with relative worktree add and repair support is required." >&2
     exit 5
   fi
-  if [[ -n "$(git -C "$PRIMARY_CHECKOUT" status --porcelain=v1 --untracked-files=all)" ]]; then
-    echo "GOV-TICKET-ALLOCATION-003: primary checkout is dirty; preserve it and allocate after reconciliation." >&2
+  # The mandatory work-start check above rejects overlapping dirty changes
+  # and reservations. With an explicit admitted scope, unrelated primary
+  # changes are preserved: the new worktree starts from the committed base.
+  # Without a bounded scope, retain the conservative dirty-primary refusal.
+  if (( ${#SCOPE_ARGUMENTS[@]} == 0 )) \
+      && [[ -n "$(git -C "$PRIMARY_CHECKOUT" status --porcelain=v1 --untracked-files=all)" ]]; then
+    echo "GOV-TICKET-ALLOCATION-003: dirty primary requires an explicit disjoint --path scope admitted by work-start; preserve existing changes." >&2
     exit 5
   fi
   if [[ "$(git -C "$PRIMARY_CHECKOUT" symbolic-ref --quiet --short HEAD 2>/dev/null || true)" != "$TARGET_BRANCH" ]]; then
