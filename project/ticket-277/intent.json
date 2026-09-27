@@ -1,0 +1,92 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-277",
+  "summary": "Preserve unrelated dirty primary state during isolated ticket allocation",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-277/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "project/new-ticket.sh",
+    "tests/ticket-allocation-worktree.test.py",
+    "tests/governance-scripts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "31f834cf153830c871145aaaa0b4321bd03e3517",
+    "targetBranch": "main",
+    "outcome": "Allow isolated scoped allocation while preserving unrelated dirty primary changes.",
+    "nonGoals": [
+      "Edit adopter packages before protected publication",
+      "Alter scope conflict, review or ownership policy",
+      "Clean or take over another writer checkout"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse mandatory work-start admission for dirty-scope conflict detection; require explicit scope before permitting dirty primary allocation from committed target SHA.",
+      "components": [
+        {
+          "name": "ticket-allocation",
+          "paths": [
+            "project/new-ticket.sh",
+            "tests/ticket-allocation-worktree.test.py",
+            "tests/governance-scripts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the allocator correction; preserve all previously allocated worktrees."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket-allocation-worktree.test.py"
+        ],
+        "evidence": "Integration tests check staged/unstaged/untracked preservation and committed-base isolation."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/ticket-allocation-worktree.test.py"
+        ],
+        "evidence": "Integration tests verify conflicting and unscoped requests reserve no identity."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh",
+          "bash tests/governance-scripts.test.sh"
+        ],
+        "evidence": "Canonical worktree regressions and managed gate; protected exact-head checks required before merge."
+      }
+    ]
+  }
+}
