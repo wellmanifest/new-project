@@ -8,6 +8,16 @@
   adopters and every release run failed on an empty matrix, so adopters were
   never upgraded [ticket-275].
 
+## 0.20.54 - 2026-09-28
+
+- Managed snapshot proposals reserve an identity without writer authority. Exact
+  external grants and live controller fencing are required before materializing
+  a lossless two-parent import; failed candidates remain detached for recovery
+  [ticket-279].
+- Verified unchanged imports retain source history while repairs keep normal
+  scope, ownership and budgets; import-only publication still needs independent
+  exact-head approval [ticket-278].
+
 ## 0.20.53 - 2026-09-24
 
 - Local OneDev verification followed by the independent Validator is the

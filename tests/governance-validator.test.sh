@@ -3,6 +3,9 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 python3 -B "$repo_root/tests/snapshot_migration_test.py"
+if [[ "$(uname -s)" == Linux ]]; then
+  python3 -B "$repo_root/tests/snapshot_allocation_test.py"
+fi
 python3 "$repo_root/tests/data_change_ownership_test.py"
 python3 "$repo_root/tests/delivery-post-merge-base.test.py"
 python3 "$repo_root/tests/ticket-input.test.py"

@@ -2,6 +2,12 @@
   "schema": "new-project.package-manifest/v1",
   "files": [
     {
+      "source": "scripts/snapshot_allocation.py",
+      "target": ".governance/snapshot_allocation.py",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "scripts/ticket_recovery.py",
       "target": ".governance/ticket_recovery.py",
       "strategy": "managed",
