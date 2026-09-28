@@ -1,0 +1,94 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-278",
+  "summary": "Verify unchanged snapshot imports without granting repair ownership",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "docs/information/snapshot-migration.md",
+    "governance/managed-copies.json",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "project/ticket-278/**",
+    "scripts/governance_check.py",
+    "tests/snapshot_migration_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "52e4c3778bee92c2df3587dedb4d669f5aeb36b6",
+    "targetBranch": "main",
+    "outcome": "Treat pinned unchanged snapshot imports as historical context; retain ordinary repair scope, ownership, budget and independent approval.",
+    "nonGoals": [
+      "Issue or consume production migration grants in the standard",
+      "Rewrite preserved source refs or alter ordinary scope/budget/review requirements",
+      "Take over peer worktrees or modify adopter repositories before independent publication"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use successful exact-source proof to distinguish import history from repairs; even an import-only candidate requires normal independent exact-head approval.",
+      "components": [
+        {
+          "name": "migration-proof",
+          "paths": [
+            "scripts/governance_check.py",
+            "tests/snapshot_migration_test.py"
+          ]
+        },
+        {
+          "name": "published-projection",
+          "paths": [
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "docs/information/snapshot-migration.md",
+            "governance/managed-copies.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Verified import paths in ordinary governance validation"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert reviewed standard change; preserve all reservations, original sources and candidate refs."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/snapshot_migration_test.py"
+        ],
+        "evidence": "Real Git proof and scope/budget/approval regression fixtures."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Full ordinary gate regression suite."
+      }
+    ]
+  }
+}

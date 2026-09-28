@@ -922,7 +922,15 @@ def prepare_snapshot_migrations(args, root, records, base, changed, report):
             authorization_path=authorization,
             authorization_sha256=getattr(args, "migration_authorization_sha256", None),
         )
-    except (OSError, ValueError, TypeError, KeyError, UnicodeError) as error:
+        # An index-only edit is a pending repair even when the worktree still
+        # matches HEAD. Never exempt staged content from ordinary path checks.
+        staged = git_output(root, ["diff", "--cached", "--no-ext-diff", "--no-textconv",
+                                   "--name-only", "-z", args.head])
+        staged_paths = {p for p in staged.decode("utf-8").split("\0") if p}
+        proof["repairPaths"] = sorted(set(proof["repairPaths"]) | staged_paths)
+        proof["importedPaths"] = sorted(set(proof["importedPaths"]) - set(proof["repairPaths"]))
+        proof["unchangedImportedFiles"] = len(proof["importedPaths"])
+    except (OSError, ValueError, TypeError, KeyError, UnicodeError, subprocess.CalledProcessError) as error:
         report.add(getattr(error, "code", "GOV-SNAPSHOT-MIGRATION-003"),
                    "Snapshot migration proof was rejected: " + str(error),
                    "Reobserve the protected subject and follow error/GOV-SNAPSHOT-MIGRATION.md.")
@@ -4059,6 +4067,12 @@ def change_scoped_records(root, active, changed, governance_patterns, adoption_p
     return active, implementation
 
 
+def verified_import_paths(report: Report) -> set[str]:
+    """Only immutable paths proven against a pinned grant are history context."""
+    return {path for proof in report.snapshot_migrations.values()
+            for path in proof["importedPaths"]}
+
+
 def check_change_gate(
     root: Path,
     manifest: dict[str, Any],
@@ -4081,8 +4095,10 @@ def check_change_gate(
     governance_patterns = manifest["governancePaths"]
     config = manifest["ticket"]
     active = active_records if active_records is not None else active_ticket_records(root, config, records, report)
-    active, implementation = change_scoped_records(root, active, changed, governance_patterns, adoption_paths)
-    if not implementation:
+    repair_changed = [path for path in changed if path not in verified_import_paths(report)]
+    active, implementation = change_scoped_records(root, active, repair_changed, governance_patterns, adoption_paths)
+    migrations = [record for record in active if record.directory.name in report.snapshot_migrations]
+    if not implementation and not migrations:
         if changed and not adoption_paths:
             report.add(
                 "GOV-MATERIAL-001",
@@ -4106,7 +4122,10 @@ def check_change_gate(
                 outside_roots,
                 {"componentRoots": repository["componentRoots"]},
             )
-    selected = select_change_ticket(root, active, manifest.get("coordination"), implementation, report)
+    # Import-only delivery is still material and requires the ordinary current
+    # ticket, chronology, bounded intent and independent exact-head approval.
+    selected = (migrations[0] if not implementation and len(migrations) == 1 else
+                select_change_ticket(root, active, manifest.get("coordination"), implementation, report))
     if selected is None:
         return None
     check_selected_ticket_state(root, config, selected, implementation, base, head, governance_patterns, report)
@@ -4630,7 +4649,8 @@ def run_governance_checks(
     timed_step(report, "check_docker_image_references", check_docker_image_references, root, manifest, report)
     timed_step(report, "check_stacks", check_stacks, root, manifest, profiles_path, report)
     timed_step(report, "check_ticket_content", check_ticket_content, root, directories, active, manifest["ticket"], report, records)
-    timed_step(report, "check_coordination", check_coordination, root, manifest, records, changed, adoption_paths, report, active)
+    repair_changed = [path for path in changed if path not in verified_import_paths(report)]
+    timed_step(report, "check_coordination", check_coordination, root, manifest, records, repair_changed, adoption_paths, report, active)
     timed_step(report, "check_change_lease", check_change_lease, root, report)
     timed_step(report, "check_changed_content", check_changed_content, root, changed, args.actor, args.trusted_human_change, report)
     return timed_step(

@@ -3,13 +3,14 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "snapshot-migration",
   "kind": "information",
-  "version": 1,
+  "version": 2,
   "title": "One-time lossless snapshot migration",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
+  "scope": "repository",
   "created": "2026-09-14",
-  "updated": "2026-09-14",
-  "review_after": "2026-09-21",
+  "updated": "2026-09-28",
+  "review_after": "2026-10-05",
   "source_revision": "a4178b9cf6fa12540ee7406d7f38391dd4fa1f30",
   "affected_repositories": ["wellmanifest/new-project"],
   "evidence": ["repo://wellmanifest/new-project/scripts/snapshot_migration.py", "repo://wellmanifest/new-project/tests/snapshot_migration_test.py"]
@@ -61,6 +62,14 @@ README. Do not run a merge experiment on the predecessor branch. A conflicting
 or interrupted import remains a local recovery operation; preserve both parents
 and stop before publication.
 
+The exact paths proven unchanged against the protected grant are historical
+context when selecting the new ticket and checking changed-path ownership.
+They do not need to be claimed in its ordinary repair scope. The scope patterns
+it does declare must still belong to its workstream. This distinction grants no
+ownership to change an imported file, close an old ticket or take over a lease.
+An import-only candidate is material delivery: it selects the current migration
+ticket and still requires ordinary independent approval for the exact subject.
+
 Ordinary follow-up commits may contain only separately authorized repairs. A file
 changed from the snapshot consumes the ordinary repair budget, even when that
 change restores the original base contents. Working-directory repairs also stop
@@ -69,7 +78,7 @@ scanning, immutable adoption, tests and independent review remain required.
 Only history already reachable from the proven source is excluded from the new
 ticket's chronology check. Equal trees with missing ancestry do not qualify.
 
-<!-- docs:section authority -->
+<!-- docs:section evidence -->
 ## Protected authorization and single use
 
 The authorization schema is `new-project.snapshot-migration-authorization/v1`,
@@ -98,13 +107,14 @@ A timeout requires readback of the same transaction before another effect. This
 read-only checker neither operates that journal nor manufactures approval. A
 publisher unable to enforce consumption must refuse migration publication.
 
-<!-- docs:section validation -->
+<!-- docs:section next_actions -->
 ## Validation and adoption
 
 Run `python3 tests/snapshot_migration_test.py`, the existing governance regression
 suite, package/adoption checks and the managed gate. Fixtures cover changed pins,
 foreign subjects, additional import files, missing source history, missing intent,
-consumed grants, changed bases, dirty repairs and unchanged ordinary budgets.
+consumed grants, changed bases, dirty repairs, import-only approval rejection,
+wrong-head reviews and unchanged ordinary scope, ownership and budgets.
 Passing fixtures proves the standard implementation only. A consumer still needs
 the independently published immutable package, supported CI pin, a real grant,
 full application tests and a protected exact-head result before review and merge.
