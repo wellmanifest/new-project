@@ -215,6 +215,109 @@ class MigrationTests(unittest.TestCase):
         self.assertFalse(historical or repairs or report.findings)
         self.assertFalse(report.snapshot_migrations)
 
+    def policy_fixture(self):
+        self.manifest = json.loads((ROOT / 'governance/manifest.hub.json').read_text())
+        self.manifest['coordination']['workstreams']['api'] = {'ownedPaths': ['api/**']}
+        self.intent.update(schema='new-project.intent/v3', summary='Preserve approved import',
+            workstream='api', classification={'kind': 'BUG', 'priority': 'P1', 'origin': 'health'},
+            allowedPaths=['api/**', 'project/ticket-001/**'], forbiddenPaths=['project/ticket-*/user-*.md'],
+            stacks=[], dependsOn=[], conflictsWith=[], integrationTicket=None)
+        self.intent['delivery'].update(outcome='Preserve original import with independent approval',
+            nonGoals=['Grant ordinary repair ownership'], complexity='S', estimatedMinutes=15,
+            budgets={'maxImplementationFiles': 1, 'maxAffectedComponents': 1,
+                     'maxPublicInterfaceChanges': 0, 'maxRuntimeDependencies': 0},
+            architecture={'status': 'accepted', 'decision': 'Preserve exact-source history',
+                'components': [{'name': 'api', 'paths': ['api/**']}], 'responsibilityChanges': False,
+                'interfaceChanges': [], 'dataChanges': [], 'ui': {'impact': 'none', 'states': [], 'evidence': []},
+                'rollback': 'Preserve original source refs'}, runtimeDependencies=[],
+            validation=[{'criterion': 'AC-01', 'commands': ['true'], 'evidence': 'Fixture only'}])
+        self.write_intent()
+        self.authorize()
+        self.boundary = self.make_commit([self.base, self.source], 'approved bounded import fixture')
+        self.git('update-ref', 'refs/heads/' + self.branch, self.boundary)
+        self.record = governance.TicketRecord(self.root / 'project/ticket-001', 'IN_PROGRESS', 'EDIT', self.intent, None)
+
+    def policy_gate(self, *, enforce=False, proof=True, approval=None):
+        from types import SimpleNamespace
+        report = governance.Report(self.root)
+        changed = self.git('diff', '--name-only', self.base, 'HEAD').splitlines()
+        if proof:
+            args = SimpleNamespace(migration_authorization=self.grant_path,
+                migration_authorization_sha256=self.grant_sha, migration_branch=self.branch,
+                expected_repository='fixture/product', head='HEAD')
+            _, repairs = governance.prepare_snapshot_migrations(args, self.root, [self.record], self.base, changed, report)
+            changed = sorted(set(changed) | repairs)
+        repair_changed = [p for p in changed if p not in governance.verified_import_paths(report)]
+        governance.check_coordination(self.root, self.manifest, [self.record], repair_changed, set(), report, [self.record])
+        selected = governance.check_change_gate(self.root, self.manifest, [self.record], changed,
+            self.base, 'HEAD', 'github-app-review' if approval else None, 'ticket-001' if approval else None,
+            str(approval) if approval else None, 'fixture/product', 1, self.git('rev-parse', 'HEAD'),
+            enforce, None, set(), report, [self.record])
+        return selected, report
+
+    def test_import_only_delivery_is_material_and_still_requires_approval(self):
+        self.policy_fixture()
+        selected, report = self.policy_gate()
+        self.assertEqual(selected, 'ticket-001')
+        self.assertFalse(report.findings, [(f.code, f.message) for f in report.findings])
+        selected, report = self.policy_gate(enforce=True)
+        self.assertEqual(selected, 'ticket-001')
+        self.assertTrue(any(f.code == 'GOV-APPROVAL-001' for f in report.findings))
+        self.assertFalse(any(f.code in {'GOV-MATERIAL-001', 'GOV-SCOPE-001', 'GOV-WORKSTREAM-003'} for f in report.findings))
+
+    def test_import_only_wrong_head_approval_is_rejected(self):
+        self.policy_fixture()
+        evidence = self.outer / 'review.json'
+        evidence.write_text(json.dumps({'schema': 'new-project.approval-evidence/v1',
+            'source': 'github-app-review', 'repository': 'fixture/product', 'pullRequest': 1,
+            'headSha': self.source, 'ticket': 'ticket-001',
+            'actor': {'login': 'fixture-validator[bot]', 'type': 'Bot'},
+            'verification': {'method': 'github-api-allowlist', 'verified': True}}))
+        _, report = self.policy_gate(enforce=True, approval=evidence)
+        self.assertTrue(any(f.code == 'GOV-APPROVAL-004' for f in report.findings))
+
+    def test_changed_import_keeps_normal_scope_and_ownership_rejections(self):
+        self.policy_fixture()
+        (self.root / 'file-00.py').write_text('value = 100\n')
+        _, report = self.policy_gate()
+        codes = {f.code for f in report.findings}
+        self.assertIn('GOV-SCOPE-001', codes)
+        self.assertIn('GOV-WORKSTREAM-003', codes)
+        self.assertNotIn('file-00.py', governance.verified_import_paths(report))
+
+    def test_new_owned_repairs_pass_only_within_the_ordinary_budget(self):
+        self.policy_fixture()
+        (self.root / 'api').mkdir()
+        (self.root / 'api/repair.py').write_text('value = 1\n')
+        selected, report = self.policy_gate()
+        self.assertEqual(selected, 'ticket-001')
+        self.assertFalse(report.findings, [(f.code, f.message) for f in report.findings])
+        (self.root / 'api/second.py').write_text('value = 2\n')
+        _, report = self.policy_gate()
+        self.assertTrue(any(f.code == 'GOV-BUDGET-001' for f in report.findings))
+
+    def test_index_only_edit_cannot_hide_behind_unchanged_worktree(self):
+        self.policy_fixture()
+        target = self.root / 'file-00.py'
+        original = target.read_bytes()
+        staged = self.git('hash-object', '-w', 'base.txt')
+        self.git('update-index', '--cacheinfo', '100644', staged, 'file-00.py')
+        self.assertEqual(target.read_bytes(), original)
+        _, report = self.policy_gate()
+        codes = {f.code for f in report.findings}
+        self.assertIn('GOV-SCOPE-001', codes)
+        self.assertIn('GOV-WORKSTREAM-003', codes)
+        self.assertNotIn('file-00.py', governance.verified_import_paths(report))
+
+    def test_invalid_grant_does_not_relax_scope_or_budget(self):
+        self.policy_fixture()
+        self.grant_sha = '0' * 64
+        _, report = self.policy_gate()
+        codes = {f.code for f in report.findings}
+        self.assertIn('GOV-SNAPSHOT-MIGRATION-003', codes)
+        self.assertIn('GOV-SCOPE-001', codes)
+        self.assertIn('GOV-BUDGET-001', codes)
+
     def test_ordinary_budget_has_no_implicit_migration_exception(self):
         report = governance.Report(self.root)
         delivery = {'budgets': {'maxImplementationFiles': 1, 'maxAffectedComponents': 1, 'maxPublicInterfaceChanges': 0},
