@@ -1,0 +1,115 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-279",
+  "summary": "Controller-fenced snapshot allocator and immutable package",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/information/snapshot-migration.md",
+    "governance/managed-copies.json",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/package-manifest.json",
+    "packages/wellman/pyproject.toml",
+    "project/new-ticket.sh",
+    "project/ticket-279/**",
+    "scripts/snapshot_allocation.py",
+    "tests/governance-validator.test.sh",
+    "tests/snapshot_allocation_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "26e2ba2c81cc53b20ef84117a26f17cb6f010ac8",
+    "targetBranch": "main",
+    "outcome": "Reserve exact no-writer snapshot proposals and materialize them only under reviewed external grant and current controller CAS; publish immutable 0.20.54 source package.",
+    "nonGoals": [
+      "Issue production grants or merge adopter branches",
+      "Modify preserved bootstrap sources, peer refs or candidate historical package",
+      "Deploy consumer services before independent publication"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Separate no-authority clone-local proposal reservation from fenced import materialization; resolve immutable allocator helper from its installed package before candidate fallback.",
+      "components": [
+        {
+          "name": "allocator",
+          "paths": [
+            "scripts/snapshot_allocation.py",
+            "project/new-ticket.sh",
+            "tests/snapshot_allocation_test.py",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "package",
+          "paths": [
+            "governance/package-manifest.json",
+            "VERSION",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        },
+        {
+          "name": "documentation",
+          "paths": [
+            "docs/information/snapshot-migration.md",
+            "governance/managed-copies.json",
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Managed snapshot proposal and materialization request",
+        "Installed allocator command dispatch"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert reviewed standard change; preserve all reservations, original sources and candidate refs."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/snapshot_allocation_test.py",
+          "python3 tests/snapshot_migration_test.py"
+        ],
+        "evidence": "Real Git transport, concurrent reservation, grant and controller CAS failures; full unpatched governance integration."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh",
+          "bash tests/wellman-package.test.sh"
+        ],
+        "evidence": "Normal managed gates and immutable package projections."
+      }
+    ]
+  }
+}

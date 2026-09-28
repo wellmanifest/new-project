@@ -3,7 +3,7 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "snapshot-migration",
   "kind": "information",
-  "version": 2,
+  "version": 3,
   "title": "One-time lossless snapshot migration",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
@@ -77,6 +77,38 @@ qualifying as unchanged imports. Component ownership, allowed paths, secret
 scanning, immutable adoption, tests and independent review remain required.
 Only history already reachable from the proven source is excluded from the new
 ticket's chronology check. Equal trees with missing ancestry do not qualify.
+
+## Managed allocation before publication
+
+Run the independently installed immutable package's `project/new-ticket.sh`
+from the target checkout, with `--workstream ID --snapshot-proposal REQUEST`.
+The closed `new-project.snapshot-proposal-request/v1` request contains a stable
+`requestId`, repository, exact base/source, target branch, canonical slug and a
+complete `intentTemplate` without a manual ticket ID or migration contract.
+The allocator reserves the next ID under the clone-wide lock/high-water mark,
+returns the proposal path and digest, and creates no branch, checkout or lease.
+Changed input under the same request ID is rejected; interrupted reservations
+are preserved. This proposal grants no authority.
+
+After the protected consumer has reviewed the exact import and acquired its
+own controller lease, invoke `--snapshot-materialize REQUEST`,
+`--recovery-lease-store DIR`, `--migration-authorization FILE` and
+`--migration-authorization-sha256 SHA`. The closed materialization request binds
+`proposalPath`, `proposalSha256`, lease ID, revision, fencing token and owner
+actor/session. The controller must already hold an unexpired editing lease for
+the exact repository, branch, worktree, scope and complete plan bytes.
+Authority inputs must reside outside all registered checkouts and Git metadata.
+The standard neither issues a grant nor acquires or renews a lease.
+
+The installed package supplies executable helpers; target files supply target
+policy and source data. An isolated index builds the unpublished import object.
+The managed checker validates the detached candidate before a branch can be
+created, then rechecks refs, peer dirty state, proposal, protected grant and
+controller CAS. Source branches and the primary index remain intact. A failure
+preserves the detached candidate and reservation for reconciliation; it never
+pushes, approves, merges or consumes a grant. Local single-clone file storage is
+the supported adapter; registered and SQLite allocation retain their own
+protected controllers.
 
 <!-- docs:section evidence -->
 ## Protected authorization and single use

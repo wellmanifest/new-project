@@ -15,10 +15,15 @@ REFRESH_REMOTE=false
 TICKET_STORAGE=""
 STORE_ROOT=""
 STORE_SHA256=""
+SNAPSHOT_PROPOSAL=""
+SNAPSHOT_MATERIALIZE=""
+MIGRATION_AUTHORIZATION=""
+MIGRATION_AUTHORIZATION_SHA256=""
 RECOVER_REQUEST=""
 RECOVERY_LEASE_STORE=""
 WORKTREE_SLUG=""
 CALLER_CHECKOUT="$(pwd -P)"
+ALLOCATOR_PACKAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 
 # Work classification for intent/v3. The defaults are the contract's own answer
 # for an unclassified new ticket: rule W-CLASS-006 (work-request / maintenance)
@@ -51,6 +56,14 @@ Usage: ./project/new-ticket.sh [options]
       --ticket-store-sha256 SHA
                           Independent digest of the complete writer package
   -h, --help             Show this help
+      --snapshot-proposal FILE
+                          Reserve a snapshot identity; no writer or approval
+      --snapshot-materialize FILE
+                          External exact proposal and controller CAS request
+      --migration-authorization FILE
+                          Protected import grant (materialization only)
+      --migration-authorization-sha256 SHA
+                          Independently pinned grant digest
       --recover-request FILE
                           Explicit exact-state pre-adoption recovery request
       --recovery-lease-store DIR
@@ -121,6 +134,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --storage)
       require_value "$@"; TICKET_STORAGE="$2"; shift 2 ;;
+    --snapshot-proposal)
+      require_value "$@"; SNAPSHOT_PROPOSAL="$2"; shift 2 ;;
+    --snapshot-materialize)
+      require_value "$@"; SNAPSHOT_MATERIALIZE="$2"; shift 2 ;;
+    --migration-authorization)
+      require_value "$@"; MIGRATION_AUTHORIZATION="$2"; shift 2 ;;
+    --migration-authorization-sha256)
+      require_value "$@"; MIGRATION_AUTHORIZATION_SHA256="$2"; shift 2 ;;
     --recover-request)
       require_value "$@"; RECOVER_REQUEST="$2"; shift 2 ;;
     --recovery-lease-store)
@@ -193,6 +214,14 @@ if [[ "$TICKET_STORAGE" != files && "$TICKET_STORAGE" != sqlite ]]; then
   echo "GOV-TICKET-ALLOCATION-003: unknown ticket storage mode." >&2
   exit 1
 fi
+# Reject incompatible snapshot inputs before any candidate executable bridge.
+if [[ -n "$SNAPSHOT_PROPOSAL" || -n "$SNAPSHOT_MATERIALIZE" || -n "$MIGRATION_AUTHORIZATION" || -n "$MIGRATION_AUTHORIZATION_SHA256" ]]; then
+  if [[ "$TICKET_STORAGE" != files || "$REFRESH_REMOTE" == true || "$FORCE_NEW" == true || ${#SCOPE_ARGUMENTS[@]} -ne 0 || -n "$RECOVER_REQUEST" ]]; then
+    echo "GOV-TICKET-ALLOCATION-003: snapshot inputs require local file allocation and an exclusive bounded request." >&2
+    exit 5
+  fi
+fi
+
 TICKET_STORAGE_HELPER=""
 for candidate in .governance/ticket_storage.py scripts/ticket_storage.py; do
   if [[ -f "$candidate" ]]; then TICKET_STORAGE_HELPER="$candidate"; break; fi
@@ -375,6 +404,12 @@ allocation_config() {
 
 allocation_runtime() {
   local candidate
+  if [[ -n "$SNAPSHOT_PROPOSAL" || -n "$SNAPSHOT_MATERIALIZE" || -n "$MIGRATION_AUTHORIZATION" || -n "$MIGRATION_AUTHORIZATION_SHA256" ]]; then
+    for candidate in "$ALLOCATOR_PACKAGE_ROOT/scripts/ticket_allocation.py" "$ALLOCATOR_PACKAGE_ROOT/.governance/ticket_allocation.py"; do
+      if [[ -f "$candidate" ]]; then printf '%s' "$candidate"; return 0; fi
+    done
+    return 1
+  fi
   for candidate in .governance/ticket_allocation.py scripts/ticket_allocation.py; do
     if [[ -f "$candidate" ]]; then
       printf '%s' "$candidate"
@@ -407,6 +442,34 @@ fi
 # Serialize allocation across every worktree sharing this clone. The high-water
 # mark reserves a number even before its ticket is committed and therefore
 # remains visible when another worktree cannot see the new directory.
+if [[ -n "$SNAPSHOT_PROPOSAL" || -n "$SNAPSHOT_MATERIALIZE" || -n "$MIGRATION_AUTHORIZATION" || -n "$MIGRATION_AUTHORIZATION_SHA256" ]]; then
+  if [[ "$TICKET_STORAGE" != files || "$ALLOCATION_MODE" != local-single-clone || "$REFRESH_REMOTE" == true || "$FORCE_NEW" == true || ${#SCOPE_ARGUMENTS[@]} -ne 0 || -n "$RECOVER_REQUEST" || ( -n "$SNAPSHOT_PROPOSAL" && -n "$SNAPSHOT_MATERIALIZE" ) ]]; then
+    echo "GOV-TICKET-ALLOCATION-003: snapshot inputs require local file allocation and an exclusive bounded request." >&2
+    exit 5
+  fi
+  snapshot_arguments=(--root "$CALLER_CHECKOUT" --workstream "$WORKSTREAM")
+  if [[ -n "$SNAPSHOT_PROPOSAL" ]]; then
+    if [[ -n "$RECOVERY_LEASE_STORE" || -n "$MIGRATION_AUTHORIZATION" || -n "$MIGRATION_AUTHORIZATION_SHA256" ]]; then
+      echo "GOV-TICKET-ALLOCATION-003: proposal reservation has no authority inputs." >&2
+      exit 5
+    fi
+    snapshot_arguments+=(--prepare "$SNAPSHOT_PROPOSAL")
+  elif [[ -n "$SNAPSHOT_MATERIALIZE" && -n "$RECOVERY_LEASE_STORE" && -n "$MIGRATION_AUTHORIZATION" && -n "$MIGRATION_AUTHORIZATION_SHA256" ]]; then
+    snapshot_arguments+=(--materialize "$SNAPSHOT_MATERIALIZE" --lease-store "$RECOVERY_LEASE_STORE" --authorization "$MIGRATION_AUTHORIZATION" --authorization-sha256 "$MIGRATION_AUTHORIZATION_SHA256")
+  else
+    echo "GOV-TICKET-ALLOCATION-003: incomplete protected materialization inputs." >&2
+    exit 5
+  fi
+  cd "$CALLER_CHECKOUT"
+  for candidate in "$ALLOCATOR_PACKAGE_ROOT/scripts/snapshot_allocation.py" "$ALLOCATOR_PACKAGE_ROOT/.governance/snapshot_allocation.py"; do
+    if [[ -f "$candidate" ]]; then
+      exec python3 "$candidate" "${snapshot_arguments[@]}"
+    fi
+  done
+  echo "GOV-TICKET-ALLOCATION-003: restore the managed snapshot allocator." >&2
+  exit 5
+fi
+
 if [[ -n "$RECOVER_REQUEST" || -n "$RECOVERY_LEASE_STORE" ]]; then
   if [[ -z "$RECOVER_REQUEST" || -z "$RECOVERY_LEASE_STORE" || "$TICKET_STORAGE" != files || "$ALLOCATION_MODE" != local-single-clone || "$REFRESH_REMOTE" == true || "$FORCE_NEW" == true || ${#SCOPE_ARGUMENTS[@]} -ne 0 ]]; then
     echo "GOV-TICKET-ALLOCATION-003: recovery requires both inputs, file storage and local allocation; scope comes only from the bound request." >&2
