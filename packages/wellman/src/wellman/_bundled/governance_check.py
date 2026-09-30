@@ -735,6 +735,118 @@ def delivery_validation_error(validation: Any) -> str | None:
     return "delivery validation criteria must be unique" if len(criteria) != len(set(criteria)) else None
 
 
+PHYSICAL_CONTRACT_FILES = (".governance/physical-contracts.json", "governance/physical-contracts.json")
+PHYSICAL_PROPERTIES = {
+    "pin-assignment", "active-level", "pull", "capability-set",
+    "unit-scale", "limit-range", "timing", "none",
+}
+PHYSICAL_HAZARDS = {"motion", "pressure", "electrical", "thermal", "none"}
+
+
+def physical_contracts_error(value: Any) -> str | None:
+    """Adopter declaration of files whose values carry physical meaning."""
+    if not isinstance(value, dict) or set(value) != {"schema", "contracts"}:
+        return "physical contracts must contain exactly schema and contracts"
+    if value.get("schema") != "new-project.physical-contracts/v1":
+        return "physical contracts schema is unsupported"
+    contracts = value.get("contracts")
+    if not isinstance(contracts, list) or not contracts:
+        return "physical contracts must declare at least one contract"
+    ids: list[str] = []
+    for contract in contracts:
+        if not isinstance(contract, dict) or set(contract) != {"id", "paths", "properties", "hazard", "acceptance"}:
+            return "physical contract requires id, paths, properties, hazard and acceptance"
+        if not isinstance(contract["id"], str) or re.fullmatch(r"[a-z0-9][a-z0-9.-]*", contract["id"]) is None:
+            return "physical contract id is invalid"
+        if not relative_pattern_list(contract["paths"], nonempty=True):
+            return "physical contract paths must be repository-relative patterns"
+        if not string_list(contract["properties"], nonempty=True) or not set(contract["properties"]) <= PHYSICAL_PROPERTIES - {"none"}:
+            return "physical contract properties are invalid"
+        if contract["hazard"] not in PHYSICAL_HAZARDS:
+            return "physical contract hazard is invalid"
+        if not isinstance(contract["acceptance"], str) or not contract["acceptance"].strip():
+            return "physical contract acceptance procedure is blank"
+        ids.append(contract["id"])
+    return "physical contract ids must be unique" if len(ids) != len(set(ids)) else None
+
+
+def physical_changes_error(changes: Any) -> str | None:
+    """Every changed physical property is declared on its own, before and after.
+
+    A pin move and a polarity flip are two entries, so neither can hide
+    inside the other; "none" records an edit that keeps physical meaning.
+    """
+    if not isinstance(changes, list) or not changes:
+        return "intent physicalChanges must be a non-empty list"
+    seen = set()
+    for change in changes:
+        if not isinstance(change, dict) or change.get("property") not in PHYSICAL_PROPERTIES:
+            return "physical change property is invalid"
+        if change["property"] == "none":
+            if set(change) != {"contract", "property", "rationale"}:
+                return "a no-semantics physical change requires contract, property and rationale"
+            if not isinstance(change["rationale"], str) or not change["rationale"].strip():
+                return "physical change rationale is blank"
+        else:
+            if set(change) != {"contract", "property", "signal", "before", "after", "acceptance"}:
+                return "physical change requires contract, property, signal, before, after and acceptance"
+            for name in ("signal", "before", "after"):
+                if not isinstance(change[name], str) or not change[name].strip():
+                    return f"physical change {name} is blank"
+            if change["before"] == change["after"]:
+                return "physical change before and after must differ; use property none"
+            if not string_list(change["acceptance"], nonempty=True):
+                return "physical change acceptance must list observable hardware checks"
+        if not isinstance(change["contract"], str) or not change["contract"].strip():
+            return "physical change contract is blank"
+        key = json.dumps(change, sort_keys=True)
+        if key in seen:
+            return "physical changes must be unique"
+        seen.add(key)
+    return None
+
+
+def load_physical_contracts(root: Path) -> tuple[Path | None, dict[str, Any] | None, str | None]:
+    for raw in PHYSICAL_CONTRACT_FILES:
+        path = root / raw
+        if path.is_file():
+            try:
+                value = load_json(path)
+            except (OSError, json.JSONDecodeError) as error:
+                return path, None, str(error)
+            return path, value, physical_contracts_error(value)
+    return None, None, None
+
+
+def check_physical_contract_changes(
+    root: Path, intent: dict[str, Any], ticket: str, implementation: list[str], report: Report,
+) -> None:
+    path, contracts, error = load_physical_contracts(root)
+    if path is None:
+        return
+    if error:
+        report.add(
+            "GOV-PHYS-002", f"Physical contract declaration is invalid: {error}",
+            "Repair the adopter's physical-contracts.json; the gate fails closed while it is unreadable.",
+            [rel(root, path)],
+        )
+        return
+    assert contracts is not None
+    declared = {change.get("contract") for change in intent.get("physicalChanges", []) if isinstance(change, dict)}
+    for contract in contracts["contracts"]:
+        touched = [item for item in implementation if matches(item, contract["paths"])]
+        if not touched or contract["id"] in declared:
+            continue
+        report.add(
+            "GOV-PHYS-001",
+            f"Changed paths carry physical contract '{contract['id']}' but the intent declares no physicalChanges for it.",
+            "Declare each changed property (pin, active level, pull, capability set, scale, range, timing) with before, "
+            f"after and hardware acceptance checks, or property none with a rationale. Acceptance: {contract['acceptance']}",
+            touched, {"ticket": ticket, "contract": contract["id"], "hazard": contract["hazard"],
+                      "properties": contract["properties"]},
+        )
+
+
 PLACEMENT_HOMES = {"wellmanifest", "subactor", "semcod"}
 PLACEMENT_SHAPES = {"domain_pack", "runtime_service", "both"}
 PLACEMENT_ADOPT = re.compile(r"^wellmanifest/[a-z0-9][a-z0-9-]*$")
@@ -1584,6 +1696,10 @@ def intent_v2_error(intent: dict[str, Any], ticket_name: str) -> str | None:
         error = delivery_intent_error(intent["delivery"])
         if error:
             return error
+    if "physicalChanges" in intent:
+        error = physical_changes_error(intent["physicalChanges"])
+        if error:
+            return error
     if "placement" in intent:
         return placement_error(intent["placement"])
     return None
@@ -1611,16 +1727,8 @@ def intent_fields_error(intent: Any) -> str | None:
     expected = v1_fields if intent["schema"] == "new-project.intent/v1" else v2_fields
     if intent["schema"] == "new-project.intent/v3":
         expected |= {"classification"}
-    if intent["schema"] == "new-project.intent/v1":
-        allowed = [expected]
-    else:
-        allowed = [
-            expected,
-            expected | {"delivery"},
-            expected | {"placement"},
-            expected | {"delivery", "placement"},
-        ]
-    if set(intent) not in allowed:
+    optional = set() if intent["schema"] == "new-project.intent/v1" else {"delivery", "placement", "physicalChanges"}
+    if not expected <= set(intent) <= expected | optional:
         return f"intent must contain exactly the {intent['schema'].rsplit('/', 1)[-1]} fields"
     return None
 
@@ -3462,6 +3570,7 @@ def check_selected_ticket_intent(
         coordination = manifest.get("coordination")
         if isinstance(coordination, dict) and intent.get("schema") in {"new-project.intent/v2", "new-project.intent/v3"}:
             check_workstream_change_scope(root, manifest, records, coordination, selected, implementation, report)
+        check_physical_contract_changes(root, intent, directory.name, implementation, report)
         if intent is not None and not selected.external:
             check_delivery_gate(root, manifest, selected, implementation, base, elapsed_minutes, report)
 

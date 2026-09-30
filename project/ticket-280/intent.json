@@ -28,7 +28,8 @@
     "scripts/governance_check.py",
     "tests/**",
     "error/GOV-PHYS.md",
-    "governance/physical-contracts.schema.json"
+    "governance/physical-contracts.schema.json",
+    "packages/wellman/src/wellman/_bundled/governance_check.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -49,7 +50,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 14,
+      "maxImplementationFiles": 15,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
@@ -63,7 +64,8 @@
           "paths": [
             "scripts/governance_check.py",
             "tests/physical_contracts_test.py",
-            "tests/governance-validator.test.sh"
+            "tests/governance-validator.test.sh",
+            "packages/wellman/src/wellman/_bundled/governance_check.py"
           ]
         },
         {
