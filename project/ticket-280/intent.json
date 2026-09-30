@@ -50,7 +50,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 15,
+      "maxImplementationFiles": 16,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
@@ -75,7 +75,8 @@
             "governance/physical-contracts.schema.json",
             "governance/diagnostics.json",
             "governance/rule-enforcement.json",
-            "POLICY.md"
+            "POLICY.md",
+            "governance/package-manifest.json"
           ]
         },
         {

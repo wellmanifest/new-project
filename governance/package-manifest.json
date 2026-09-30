@@ -236,6 +236,18 @@
       "executable": false
     },
     {
+      "source": "error/GOV-PHYS.md",
+      "target": ".governance/error/GOV-PHYS.md",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
+      "source": "governance/physical-contracts.schema.json",
+      "target": ".governance/physical-contracts.schema.json",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "subprojects/change-lease/change-lease.schema.json",
       "target": ".governance/change-lease.schema.json",
       "strategy": "managed",
