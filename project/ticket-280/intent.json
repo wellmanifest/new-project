@@ -1,0 +1,129 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-280",
+  "summary": "Physical interface contracts: declared semantics changes need hardware acceptance",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-280/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "POLICY.md",
+    "VERSION",
+    "docs/README.md",
+    "docs/information/physical-interface-contracts.md",
+    "governance/diagnostics.json",
+    "governance/intent.schema.json",
+    "governance/managed-copies.json",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/manifest.schema.json",
+    "governance/package-manifest.json",
+    "governance/rule-enforcement.json",
+    "scripts/governance_check.py",
+    "tests/**",
+    "error/GOV-PHYS.md",
+    "governance/physical-contracts.schema.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "fa7972da8f6a28a0afe2914aacf46bee4a846943",
+    "targetBranch": "main",
+    "outcome": "Adopters declare physical interface contracts; changes to matching paths require per-property physicalChanges intent entries with before, after and hardware acceptance, reported as GOV-PHYS-001/002.",
+    "nonGoals": [
+      "Adopt the declaration in maskservice repositories (separate adopter tickets)",
+      "Produce or verify hardware acceptance receipts",
+      "Release a new standard VERSION or package"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 14,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend the existing intent gate: an optional adopter declaration lists physical contract paths; check_selected_ticket_intent requires a matching physicalChanges entry, validated like delivery dataChanges.",
+      "components": [
+        {
+          "name": "gate",
+          "paths": [
+            "scripts/governance_check.py",
+            "tests/physical_contracts_test.py",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "contracts",
+          "paths": [
+            "governance/intent.schema.json",
+            "governance/physical-contracts.schema.json",
+            "governance/diagnostics.json",
+            "governance/rule-enforcement.json",
+            "POLICY.md"
+          ]
+        },
+        {
+          "name": "documentation",
+          "paths": [
+            "docs/information/physical-interface-contracts.md",
+            "docs/README.md",
+            "error/GOV-PHYS.md",
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Optional intent field physicalChanges",
+        "Adopter declaration .governance/physical-contracts.json"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the reviewed commit; the declaration is optional, so adopters without it are unaffected."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/physical_contracts_test.py"
+        ],
+        "evidence": "Undeclared change to a declared contract fails; adopters without a declaration and unrelated paths pass; both 2026-09-29 regressions are modelled."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/physical_contracts_test.py",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Invalid declaration fails closed; before==after, empty acceptance and unknown property are rejected; existing validator suite passes."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/rule-enforcement.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "P-PHYS rules mapped, GOV-PHYS codes documented in error/GOV-PHYS.md, managed gate passes."
+      }
+    ]
+  }
+}

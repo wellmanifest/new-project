@@ -281,6 +281,16 @@
       "remediation": "Replace the local path with a repository-relative reference and sanitize committed logs.",
       "documentation": null
     },
+    "GOV-PHYS-001": {
+      "message": "A changed path carries a declared physical contract but the intent declares no physical change for it.",
+      "remediation": "Declare every changed physical property with before, after and hardware acceptance checks, or property none with a rationale.",
+      "documentation": "error/GOV-PHYS.md"
+    },
+    "GOV-PHYS-002": {
+      "message": "The adopter's physical contract declaration is missing required fields or unreadable.",
+      "remediation": "Repair physical-contracts.json; the gate fails closed while it is invalid.",
+      "documentation": "error/GOV-PHYS.md"
+    },
     "GOV-POLICY-DSL-001": {
       "message": "CONTRIBUTING.md or its pinned Policy DSL runtime is invalid.",
       "remediation": "Restore the managed Policy DSL files or correct the selected dsl fences, then rerun the governance gate.",
