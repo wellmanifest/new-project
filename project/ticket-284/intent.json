@@ -1,0 +1,114 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-284",
+  "summary": "Correct repository identity and continuous workspace overlap observation",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-284/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/workspace_lifecycle_check.py",
+    "scripts/worktree_guard.py",
+    "scripts/worktree_overlap_check.py",
+    "tests/workspace_observation_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "cfcc2f9c3d16e4306deb5606599b7f6393008682",
+    "targetBranch": "main",
+    "outcome": "Distinguish non-default network ports in repository identities, derive complete overlap inventory and rescan dirty work each watch interval; publish immutable standard 0.20.58 after independent protected merge.",
+    "nonGoals": [
+      "Grant execution or merge authority",
+      "Change ticket allocation or scope discovery semantics",
+      "Introduce dependencies or filesystem mutation in observation"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Preserve default-port and scp equivalence, reject malformed ports, derive omitted inventory and reject incomplete inventory, and run the read-only checker on every configured watch interval.",
+      "components": [
+        {
+          "name": "workspace-observation",
+          "paths": [
+            "scripts/worktree_overlap_check.py",
+            "scripts/workspace_lifecycle_check.py",
+            "scripts/worktree_guard.py"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/workspace_observation_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/workspace_observation_test.py"
+        ],
+        "evidence": "Real disposable Git worktrees reproduce omitted inventory and dirty edits without topology changes; network port identities remain distinct."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Native governance and required CI pass without changing protected authority."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent exact-head merge and immutable standard v0.20.58 release verified."
+      }
+    ]
+  }
+}
