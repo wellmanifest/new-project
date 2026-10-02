@@ -101,6 +101,14 @@ class PhysicalContractTests(unittest.TestCase):
             with self.subTest(property=prop):
                 self.assertIsNotNone(gate.physical_changes_error([dict(PIN_MOVE, property=prop)]))
 
+    def test_duplicate_contract_paths_and_properties_match_schema_rejection(self):
+        original = CONTRACTS["contracts"][0]
+        for field in ("paths", "properties"):
+            with self.subTest(field=field):
+                broken = {"schema": "new-project.physical-contracts/v1",
+                          "contracts": [dict(original, **{field: original[field] + original[field]})]}
+                self.assertEqual(self.run_gate(["README.md"], contracts=broken), ["GOV-PHYS-002"])
+
     def test_each_property_change_is_explicit(self):
         self.assertIsNone(gate.physical_changes_error([PIN_MOVE, POLARITY_FLIP]))
         self.assertIn("differ", gate.physical_changes_error([dict(PIN_MOVE, after="SCL/SDA")]))

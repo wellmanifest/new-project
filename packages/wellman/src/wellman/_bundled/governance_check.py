@@ -760,8 +760,12 @@ def physical_contracts_error(value: Any) -> str | None:
             return "physical contract id is invalid"
         if not relative_pattern_list(contract["paths"], nonempty=True):
             return "physical contract paths must be repository-relative patterns"
+        if len(contract["paths"]) != len(set(contract["paths"])):
+            return "physical contract paths must be unique"
         if not string_list(contract["properties"], nonempty=True) or not set(contract["properties"]) <= PHYSICAL_PROPERTIES - {"none"}:
             return "physical contract properties are invalid"
+        if len(contract["properties"]) != len(set(contract["properties"])):
+            return "physical contract properties must be unique"
         if not isinstance(contract["hazard"], str) or contract["hazard"] not in PHYSICAL_HAZARDS:
             return "physical contract hazard is invalid"
         if not isinstance(contract["acceptance"], str) or not contract["acceptance"].strip():
