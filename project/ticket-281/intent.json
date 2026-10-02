@@ -16,7 +16,9 @@
     "tests/ticket-recovery.test.py",
     "VERSION",
     "CHANGELOG.md",
-    "packages/wellman/pyproject.toml"
+    "packages/wellman/pyproject.toml",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -38,7 +40,7 @@
     "complexity": "S",
     "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 5,
+      "maxImplementationFiles": 7,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
@@ -64,7 +66,9 @@
           "paths": [
             "VERSION",
             "CHANGELOG.md",
-            "packages/wellman/pyproject.toml"
+            "packages/wellman/pyproject.toml",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
           ]
         }
       ],
@@ -91,7 +95,8 @@
         "criterion": "AC-02",
         "commands": [
           "python3 tests/ticket-recovery.test.py",
-          "./project/governance-check.sh --actor agent"
+          "./project/governance-check.sh --actor agent",
+          "bash tests/governance-validator.test.sh"
         ],
         "evidence": "Divergent origin, other remote, duplicate ticket branch and stale controller remain rejected."
       },

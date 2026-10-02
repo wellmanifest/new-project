@@ -27,3 +27,5 @@ A matching commit alone does not establish identity or authority: the branch spe
 Version projections join the material recovery fix in this same ticket. PR415 was withdrawn to draft and its previous frozen controller lease was cancelled and released before extending scope. No product adoption is performed from an unpublished revision.
 
 The published alias is rechecked under the existing controller lock: a matching remote ref changed between observations is rejected before identity reservation. VERSION and wellman package version both declare 0.20.55. Release publication remains pending trusted merge and clean-source retest.
+
+Full deterministic governance validator suite: PASS after reconciling both source manifests to 0.20.55. Native governance gate: GOV-PASS. Hosted Windows adoption is revalidated against the final candidate.
