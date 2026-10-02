@@ -41,7 +41,8 @@ def finding(code: str, message: str, path: str = "") -> dict[str, str]:
 def catalog_ownership_findings(packs, pack_ids, concerns, findings) -> None:
     for pack in packs:
         owns = pack.get("owns") if isinstance(pack, dict) else None
-        if not isinstance(pack, dict) or not isinstance(pack.get("id"), str) or not isinstance(owns, list):
+        if (not isinstance(pack, dict) or not isinstance(pack.get("id"), str)
+                or not pack["id"] or not isinstance(owns, list)):
             findings.append(finding("STD-PACK-CATALOG", "each pack needs an id and ownership list"))
             continue
         pack_id = pack["id"]
@@ -51,6 +52,7 @@ def catalog_ownership_findings(packs, pack_ids, concerns, findings) -> None:
         for concern in owns:
             if not isinstance(concern, str) or not concern:
                 findings.append(finding("STD-PACK-CATALOG", f"invalid ownership claim in {pack_id}"))
+                continue
             elif concern in concerns:
                 findings.append(finding("STD-PACK-DUPLICATE-OWNER", f"duplicate normative owner: {concern}"))
             concerns.add(concern)
@@ -61,11 +63,23 @@ def catalog_profile_findings(profiles, pack_ids, findings) -> None:
         if not isinstance(profile, dict):
             findings.append(finding("STD-PACK-PROFILE", f"profile {name} is not an object"))
             continue
-        for parent in profile.get("extends", []):
-            if parent not in profiles or parent == name:
+        parents = profile.get("extends", [])
+        if not isinstance(parents, list):
+            findings.append(finding("STD-PACK-PROFILE", f"profile {name} extends must be an array"))
+            parents = []
+        for parent in parents:
+            if not isinstance(parent, str) or parent not in profiles or parent == name:
                 findings.append(finding("STD-PACK-PROFILE", f"profile {name} has invalid parent {parent}"))
-        for requirement in profile.get("requirements", []):
-            if requirement.get("id") not in pack_ids or requirement.get("minimumLevel") not in LEVELS:
+        requirements = profile.get("requirements", [])
+        if not isinstance(requirements, list):
+            findings.append(finding("STD-PACK-PROFILE", f"profile {name} requirements must be an array"))
+            requirements = []
+        for requirement in requirements:
+            if (not isinstance(requirement, dict)
+                    or not isinstance(requirement.get("id"), str)
+                    or requirement["id"] not in pack_ids
+                    or not isinstance(requirement.get("minimumLevel"), str)
+                    or requirement["minimumLevel"] not in LEVELS):
                 findings.append(finding("STD-PACK-PROFILE", f"profile {name} has invalid requirement"))
 
 
@@ -81,8 +95,13 @@ def catalog_findings(catalog: Any) -> list[dict[str, str]]:
     pack_ids: set[str] = set()
     concerns: set[str] = set()
     catalog_ownership_findings(packs, pack_ids, concerns, findings)
-    for alias, target in (catalog.get("aliases") or {}).items():
-        if alias in pack_ids or target not in pack_ids:
+    aliases = catalog.get("aliases", {})
+    if not isinstance(aliases, dict):
+        findings.append(finding("STD-PACK-ALIAS", "aliases must be an object"))
+        aliases = {}
+    for alias, target in aliases.items():
+        if (not isinstance(alias, str) or not alias or alias in pack_ids
+                or not isinstance(target, str) or target not in pack_ids):
             findings.append(finding("STD-PACK-ALIAS", f"invalid compatibility alias: {alias} -> {target}"))
     catalog_profile_findings(profiles, pack_ids, findings)
     return findings

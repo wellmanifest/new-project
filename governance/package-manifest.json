@@ -326,7 +326,7 @@
       "executable": true
     },
     {
-      "source": "worktree-guard.yaml",
+      "source": "template/files/worktree-guard.template.yaml",
       "target": "worktree-guard.yaml",
       "strategy": "managed",
       "executable": false
