@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.59] - 2026-10-03
+
+- Fail overlap audits on incomplete Git inspection or malformed active file/SQLite intent. Share ticket branch matching so outstanding supported local and origin branch forms retain activity even when ticket content already exists on the target.
+
 ## [0.20.58] - 2026-10-03
 
 - Preserve non-default network ports in repository identities, reject incomplete overlap inventory and derive omitted inventory. Rescan existing worktrees each watch interval so dirty edits update overlap reports without a topology change.

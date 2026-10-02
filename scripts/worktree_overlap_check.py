@@ -651,16 +651,25 @@ def ticket_status_override(virtual, directory):
 
 def scope_intent(directory, virtual):
     intent_path = directory / "intent.json"
-    intent: dict[str, Any] = {}
     try:
         raw = virtual[directory.name]["intent.json"][0] if virtual is not None else intent_path.read_bytes()
         value = json.loads(raw.decode("utf-8"))
-        if isinstance(value, dict):
-            intent = value
     except (OSError, ValueError, KeyError) as error:
-        if virtual is not None:
-            raise AuditError("configured SQLite ticket intent is invalid") from error
-    return intent
+        raise AuditError(f"Active ticket intent is unavailable or invalid: {directory.name}") from error
+    if not isinstance(value, dict):
+        raise AuditError(f"Active ticket intent must be an object: {directory.name}")
+    allowed = value.get("allowedPaths")
+    conflicts = value.get("conflictsWith", [])
+    if not isinstance(allowed, list) or not allowed or not all(
+        isinstance(path, str) and path for path in allowed
+    ):
+        raise AuditError(f"Active ticket intent requires valid allowedPaths: {directory.name}")
+    if not isinstance(conflicts, list) or not all(
+        isinstance(ticket, str) and ticket for ticket in conflicts
+    ):
+        raise AuditError(f"Active ticket intent requires valid conflictsWith: {directory.name}")
+    return value
+
 
 
 def ticket_scope_record(directory, intent):
@@ -698,7 +707,13 @@ def ticket_scopes(root: Path) -> tuple[tuple[TicketScope, ...], tuple[str, ...]]
                     resolution = None
                 if resolution is not None and not resolution.active:
                     continue
-                intent = scope_intent(directory, virtual)
+                try:
+                    intent = scope_intent(directory, virtual)
+                except AuditError as error:
+                    # Keep the checkout and its known identity. The error
+                    # fails its audit without blocking an unrelated identity.
+                    errors.append(f"{directory.name}: {error}")
+                    continue
                 scopes.append(ticket_scope_record(directory, intent))
     except ActivityError as error:
         errors.append(str(error))
@@ -805,8 +820,8 @@ def discover_checkouts(workspace_root: Path, ignore: tuple[str, ...]) -> list[Ch
                 for worktree in registered_worktrees(candidate)
                 if worktree not in candidate_paths
             }
-        except AuditError:
-            continue
+        except AuditError as error:
+            raise AuditError(f"Cannot inspect registered worktrees for {candidate}: {error}") from error
         candidate_paths.update(discovered)
         pending.extend(sorted(discovered, key=str))
 
@@ -814,8 +829,8 @@ def discover_checkouts(workspace_root: Path, ignore: tuple[str, ...]) -> list[Ch
     for candidate in sorted(candidate_paths, key=str):
         try:
             checkouts.append(inspect_checkout(candidate, ignore))
-        except AuditError:
-            continue
+        except AuditError as error:
+            raise AuditError(f"Cannot inspect checkout {candidate}: {error}") from error
     return checkouts
 
 
@@ -983,7 +998,7 @@ def activity_findings(checkouts, only_identity, findings):
                 code="GOV-TICKET-ACTIVITY-001",
                 severity="error",
                 message="Ticket activity could not be resolved safely.",
-                remediation="Reconcile or quarantine the clone-external registry from protected evidence; follow error/GOV-TICKET-ACTIVITY.md.",
+                remediation="Repair active ticket intent or reconcile the clone-external registry from protected evidence; follow error/GOV-TICKET-ACTIVITY.md.",
                 evidence={"checkout": str(checkout.path), "detail": error, "fallback": "remain-active"},
             ))
 
