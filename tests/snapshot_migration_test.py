@@ -100,6 +100,18 @@ class WorkspaceEntryTests(unittest.TestCase):
             self.assertEqual(migration.workspace_entry(self.root, 'entry'),
                              {'unsupported': True})
 
+    def test_symlink_to_regular_replacement_before_readlink_is_rejected(self):
+        link = self.root / 'link'
+        link.symlink_to('entry')
+        original = os.readlink
+        def readlink(path, *args, **kwargs):
+            link.unlink()
+            link.write_bytes(b'replacement regular file')
+            return original(path, *args, **kwargs)
+        with mock.patch.object(migration.os, 'readlink', side_effect=readlink):
+            self.assertEqual(migration.workspace_entry(self.root, 'link'),
+                             {'unsupported': True})
+
     def test_nonregular_entry_and_parent_symlink_are_rejected(self):
         os.mkfifo(self.root / 'fifo')
         self.assertEqual(migration.workspace_entry(self.root, 'fifo'), {'unsupported': True})
