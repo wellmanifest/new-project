@@ -180,6 +180,29 @@ class RecoveryTest(unittest.TestCase):
         self.git(self.primary, "branch", "ticket/001-other", self.head)
         self.reject()
 
+    def test_exact_published_origin_alias_preserves_work(self):
+        ref = "refs/remotes/origin/ticket/001-fixture"
+        self.git(self.primary, "update-ref", ref, self.head)
+        before = (self.root / "api/a.txt").read_bytes()
+        result = self.run_recovery()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(json.loads(result.stdout)["grantsMergeAuthority"])
+        self.assertEqual(self.git(self.root, "rev-parse", "HEAD"), self.head)
+        self.assertEqual(self.git(self.primary, "rev-parse", ref), self.head)
+        self.assertEqual((self.root / "api/a.txt").read_bytes(), before)
+
+    def test_divergent_origin_alias_rejected(self):
+        self.git(self.primary, "update-ref", "refs/remotes/origin/ticket/001-fixture", self.fixture.base)
+        self.reject()
+
+    def test_other_origin_branch_identity_rejected(self):
+        self.git(self.primary, "update-ref", "refs/remotes/origin/ticket/001-other", self.head)
+        self.reject()
+
+    def test_other_remote_matching_branch_rejected(self):
+        self.git(self.primary, "update-ref", "refs/remotes/foreign/ticket/001-fixture", self.head)
+        self.reject()
+
     def test_peer_writer_rejected(self):
         self.fixture.sibling(number=2)
         self.reject()

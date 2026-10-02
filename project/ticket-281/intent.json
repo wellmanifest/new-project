@@ -1,0 +1,91 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-281",
+  "summary": "Preserve exact published branch aliases during fenced recovery",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-281/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "packages/wellman/src/wellman/_bundled/ticket_recovery.py",
+    "scripts/ticket_recovery.py",
+    "tests/ticket-recovery.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d93f9a3a6f5d325b87a6b24b56ba095541129983",
+    "targetBranch": "main",
+    "outcome": "Recover an already published canonical ticket branch when origin tracks the exact bound head, retaining rejection of conflicting identities and controller mismatches.",
+    "nonGoals": [
+      "Grant protected merge approval",
+      "Delete or hide remote refs",
+      "Permit divergent remote heads",
+      "Change controller or ticket identity semantics"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Treat only the same canonical origin branch at the exact request head as an alias of the existing local branch.",
+      "components": [
+        {
+          "name": "fenced-recovery",
+          "paths": [
+            "scripts/ticket_recovery.py",
+            "packages/wellman/src/wellman/_bundled/ticket_recovery.py"
+          ]
+        },
+        {
+          "name": "recovery-regressions",
+          "paths": [
+            "tests/ticket-recovery.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material fix while preserving ticket and controller receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket-recovery.test.py"
+        ],
+        "evidence": "Published exact origin alias succeeds without rewriting existing source or head."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/ticket-recovery.test.py",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Divergent origin, other remote, duplicate ticket branch and stale controller remain rejected."
+      }
+    ]
+  }
+}
