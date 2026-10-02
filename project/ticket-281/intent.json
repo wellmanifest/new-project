@@ -12,9 +12,11 @@
     "project/ticket-281/**",
     "TODO.md",
     "project/TICKETS.md",
-    "packages/wellman/src/wellman/_bundled/ticket_recovery.py",
     "scripts/ticket_recovery.py",
-    "tests/ticket-recovery.test.py"
+    "tests/ticket-recovery.test.py",
+    "VERSION",
+    "CHANGELOG.md",
+    "packages/wellman/pyproject.toml"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -26,7 +28,7 @@
   "delivery": {
     "acceptedBaseSha": "d93f9a3a6f5d325b87a6b24b56ba095541129983",
     "targetBranch": "main",
-    "outcome": "Recover an already published canonical ticket branch when origin tracks the exact bound head, retaining rejection of conflicting identities and controller mismatches.",
+    "outcome": "Recover an already published canonical ticket branch when origin tracks the exact bound head, retaining rejection of conflicting identities and controller mismatches. Publish the fix as immutable standard version 0.20.55 after independent exact-head merge and clean merged-source verification.",
     "nonGoals": [
       "Grant protected merge approval",
       "Delete or hide remote refs",
@@ -36,8 +38,8 @@
     "complexity": "S",
     "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 3,
-      "maxAffectedComponents": 2,
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
     },
@@ -48,14 +50,21 @@
         {
           "name": "fenced-recovery",
           "paths": [
-            "scripts/ticket_recovery.py",
-            "packages/wellman/src/wellman/_bundled/ticket_recovery.py"
+            "scripts/ticket_recovery.py"
           ]
         },
         {
           "name": "recovery-regressions",
           "paths": [
             "tests/ticket-recovery.test.py"
+          ]
+        },
+        {
+          "name": "immutable-standard-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "packages/wellman/pyproject.toml"
           ]
         }
       ],
@@ -85,6 +94,14 @@
           "./project/governance-check.sh --actor agent"
         ],
         "evidence": "Divergent origin, other remote, duplicate ticket branch and stale controller remain rejected."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal governance verify-delivery --delivery-mode direct-main",
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "After trusted exact-head merge and clean-source retest, verify annotated v0.20.55 and final GitHub Release point to the same immutable merge SHA; no overwritten tags or bypassed publication gates."
       }
     ]
   }

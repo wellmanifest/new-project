@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.20.55 - 2026-10-02
+
+- Fenced pre-adoption recovery accepts its exact published origin branch alias
+  while rejecting divergent heads, duplicate identities and foreign remotes.
+  Existing source, refs and protected approval requirements are preserved
+  [ticket-281].
+
 - Adopters can declare files with physical meaning in
   `.governance/physical-contracts.json`. A change to such a file needs a
   `physicalChanges` intent entry per changed property (pin, active level,

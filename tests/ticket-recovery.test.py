@@ -203,6 +203,23 @@ class RecoveryTest(unittest.TestCase):
         self.git(self.primary, "update-ref", "refs/remotes/foreign/ticket/001-fixture", self.head)
         self.reject()
 
+    def test_published_alias_changed_between_observations_rejected(self):
+        ref = "refs/remotes/origin/ticket/001-fixture"
+        self.git(self.primary, "update-ref", ref, self.head)
+        original = recovery.inspect_recovery
+        observations = []
+        def inspect(*args):
+            if observations:
+                self.git(self.primary, "update-ref", ref, self.fixture.base)
+            observations.append(True)
+            return original(*args)
+        with patch.object(recovery, "inspect_recovery", side_effect=inspect):
+            with self.assertRaises(recovery.RecoveryError):
+                recovery.recover(self.root, self.request_path, self.store, "api")
+        self.assertFalse((self.primary / ".git/new-project-ticket-high-water").exists())
+        self.assertFalse((self.root / "project/ticket-001").exists())
+        self.assertEqual(self.git(self.root, "rev-parse", "HEAD"), self.head)
+
     def test_peer_writer_rejected(self):
         self.fixture.sibling(number=2)
         self.reject()
