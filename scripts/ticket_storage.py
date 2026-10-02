@@ -8,9 +8,11 @@ sys.dont_write_bytecode = True
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import shutil
+import stat
 import subprocess
 
 from ticket_input import database_rows, no_links, primary_database, read_file
@@ -18,35 +20,111 @@ from ticket_input import database_rows, no_links, primary_database, read_file
 # Versioned Registry ticket CLI integration: these are its complete relative
 # module dependencies. A source update needs a newly acquired independent pin.
 RUNTIME_FILES = ("storage-common.mjs", "ticket-store-cli.mjs", "ticket-store.mjs")
+MAX_MODULE_BYTES = 1024 * 1024
+
+# Sources travel through a bounded stdin frame, never an executable path or an
+# argv-sized source string. Read exactly the frame so the writer retains its
+# original stdin. The loader uses original URLs for ESM/argv identity while
+# serving only bytes from the verified closure. Node builtins remain available
+# to the independently trusted writer; this is integrity binding, not a sandbox.
+CAPTURED_LOADER = r"""
+import {isBuiltin} from 'node:module';
+let sources;
+export function initialize(data) { sources = data.sources; }
+export async function resolve(specifier, context, nextResolve) {
+  if (isBuiltin(specifier)) return nextResolve(specifier, context);
+  const url = new URL(specifier, context.parentURL).href;
+  if (!Object.hasOwn(sources, url)) throw Error('Unpinned Registry module');
+  return {url, shortCircuit: true};
+}
+export async function load(url, context, nextLoad) {
+  if (url.startsWith('node:')) return nextLoad(url, context);
+  if (!Object.hasOwn(sources, url)) throw Error('Unpinned Registry module');
+  return {format: 'module', source: sources[url], shortCircuit: true};
+}
+"""
+CAPTURED_BOOTSTRAP = r"""
+import {readSync} from 'node:fs';
+import {register} from 'node:module';
+function exact(size) {
+  const bytes = Buffer.alloc(size);
+  for (let offset = 0; offset < size;) {
+    const count = readSync(0, bytes, offset, size - offset, null);
+    if (!count) throw Error('Incomplete Registry frame');
+    offset += count;
+  }
+  return bytes;
+}
+const size = exact(4).readUInt32BE(0);
+if (!size || size > 24 * 1024 * 1024) throw Error('Unbounded Registry frame');
+const payload = JSON.parse(exact(size).toString('utf8'));
+register('data:text/javascript,' + encodeURIComponent(payload.loader), {
+  data: {sources: payload.sources}
+});
+process.argv = [process.execPath, payload.entryPath, ...payload.args];
+await import(payload.entryURL);
+"""
 
 
-def runtime_digest(root):
+def captured_runtime(root):
+    """Read each bounded regular source through the same inspected descriptor."""
     root = Path(root).absolute()
     no_links(root)
-    hashes = {}
+    sources = {}
     for name in RUNTIME_FILES:
         file = root / name
         no_links(file)
-        if not file.is_file() or file.stat().st_size > 1024 * 1024:
-            raise ValueError("bounded complete Registry runtime required")
-        hashes[name] = hashlib.sha256(file.read_bytes()).hexdigest()
+        flags = (os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+                 | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_BINARY", 0))
+        with os.fdopen(os.open(file, flags), "rb") as stream:
+            metadata = os.fstat(stream.fileno())
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > MAX_MODULE_BYTES:
+                raise ValueError("bounded complete Registry runtime required")
+            source = stream.read(MAX_MODULE_BYTES + 1)
+            if len(source) > MAX_MODULE_BYTES:
+                raise ValueError("bounded complete Registry runtime required")
+            sources[name] = source
+    return sources
+
+
+def sources_digest(sources):
+    hashes = {name: hashlib.sha256(source).hexdigest() for name, source in sources.items()}
     return hashlib.sha256(json.dumps(hashes, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
 
 
-def verify_runtime(root, expected):
+def runtime_digest(root):
+    return sources_digest(captured_runtime(root))
+
+
+def verified_sources(root, expected):
     if not isinstance(expected, str) or re.fullmatch(r"[a-f0-9]{64}", expected) is None:
         raise ValueError("independent Registry runtime pin required")
-    if runtime_digest(root) != expected:
+    sources = captured_runtime(root)
+    if sources_digest(sources) != expected:
         raise ValueError("Registry runtime digest mismatch")
+    return sources
+
+
+def verify_runtime(root, expected):
+    verified_sources(root, expected)
 
 
 def invoke(root, pin, *args, content=None):
-    verify_runtime(root, pin)
+    sources = verified_sources(root, pin)
     node = shutil.which("node")
     if node is None:
         raise ValueError("Node runtime required")
-    result = subprocess.run([node, str(Path(root) / "ticket-store-cli.mjs"), *args],
-        input=content, capture_output=True, text=True, timeout=60)
+    root = Path(root).absolute()
+    entry = root / "ticket-store-cli.mjs"
+    payload = json.dumps({"sources": {(root / name).as_uri(): source.decode("utf-8")
+                                     for name, source in sources.items()},
+                          "loader": CAPTURED_LOADER, "entryPath": str(entry),
+                          "entryURL": entry.as_uri(), "args": list(args)}).encode()
+    if len(payload) > 24 * MAX_MODULE_BYTES:
+        raise ValueError("bounded Registry frame required")
+    frame = len(payload).to_bytes(4, "big") + payload + (content or "").encode("utf-8")
+    result = subprocess.run([node, "--input-type=module", "--eval", CAPTURED_BOOTSTRAP],
+        input=frame, capture_output=True, timeout=60)
     if result.returncode:
         raise ValueError("Registry ticket operation failed")
     return json.loads(result.stdout)
