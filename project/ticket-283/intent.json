@@ -1,0 +1,121 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-283",
+  "summary": "Reject malformed validation inputs and correct adopted guard paths",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-283/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/package-manifest.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/standard_pack_check.py",
+    "packages/wellman/src/wellman/_bundled/work_continuity.py",
+    "scripts/standard_pack_check.py",
+    "scripts/work_continuity.py",
+    "template/files/worktree-guard.template.yaml",
+    "tests/input_validation_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4984ed1607b7d96a4360aef4ab2fdb70b3f6818a",
+    "targetBranch": "main",
+    "outcome": "Reject malformed standard catalogs and Boolean checkpoint indexes with deterministic diagnostics; install a guard configuration pointing to the actual managed adopter checker and publish immutable standard 0.20.57 after independent merge.",
+    "nonGoals": [
+      "Grant execution or merge authority",
+      "Relax required checks or complexity limits",
+      "Mutate adopter managed copies directly",
+      "Change unrelated concurrency or Registry execution behavior"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Validate container and member types before iteration, hashing or membership. Keep canonical/bundled validators equal. Map an adopter-specific guard template through the managed package while preserving the hub configuration.",
+      "components": [
+        {
+          "name": "typed-validation",
+          "paths": [
+            "scripts/standard_pack_check.py",
+            "scripts/work_continuity.py",
+            "packages/wellman/src/wellman/_bundled/standard_pack_check.py",
+            "packages/wellman/src/wellman/_bundled/work_continuity.py",
+            "tests/input_validation_test.py"
+          ]
+        },
+        {
+          "name": "adopter-guard-projection",
+          "paths": [
+            "governance/package-manifest.json",
+            "template/files/worktree-guard.template.yaml"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/input_validation_test.py"
+        ],
+        "evidence": "Malformed catalog JSON returns stable findings without TypeError or AttributeError; Boolean index sequence is rejected while positive integers remain valid."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Package-projected guard command executes the actual adopter checker; bundled runtime equals source; native governance and CI pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected exact-head merge and final immutable standard v0.20.57 are verified."
+      }
+    ]
+  }
+}

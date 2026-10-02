@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.57] - 2026-10-02
+
+- Return deterministic catalog findings for malformed ownership, inheritance, requirement and alias inputs; reject Boolean checkpoint sequence values. Install an adopter-specific guard configuration pointing to its managed checker, with command execution regressions.
+
 ## [0.20.56] - 2026-10-02
 
 - Bind snapshot entry mode and bytes to the same no-follow descriptor and reject observed replacement or mutation during proof collection. Add deterministic filesystem-race regressions and synchronize the bundled runtime.

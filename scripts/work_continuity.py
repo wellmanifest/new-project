@@ -394,7 +394,9 @@ def validate_index(value: Any) -> dict[str, Any]:
         safe_id(entry["sessionId"], "index sessionId")
         reference(entry["eventRef"], "index eventRef", kind="receipt")
         reference(entry["checkpointRef"], "index checkpointRef", kind="receipt")
-        if not isinstance(entry["checkpointSequence"], int) or entry["checkpointSequence"] < 1:
+        if (not isinstance(entry["checkpointSequence"], int)
+                or isinstance(entry["checkpointSequence"], bool)
+                or entry["checkpointSequence"] < 1):
             fail("GOV-CONTINUITY-001", "index checkpointSequence is invalid")
         timestamp(entry["recordedAt"], "index recordedAt")
     timestamp(index["updatedAt"], "index updatedAt")
