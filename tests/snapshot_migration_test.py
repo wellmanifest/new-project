@@ -8,12 +8,115 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / 'scripts'))
 import snapshot_migration as migration
 import governance_check as governance
+
+
+class WorkspaceEntryTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.file = self.root / 'entry'
+        self.file.write_bytes(b'original')
+        self.file.chmod(0o755)
+
+    def proof(self, raw, mode):
+        return {'mode': mode, 'oid': hashlib.sha1(
+            b'blob ' + str(len(raw)).encode() + b'\0' + raw).hexdigest()}
+
+    def test_stable_regular_and_symlink_entries(self):
+        self.assertEqual(migration.workspace_entry(self.root, 'entry'),
+                         self.proof(b'original', '100755'))
+        self.file.chmod(0o644)
+        self.assertEqual(migration.workspace_entry(self.root, 'entry'),
+                         self.proof(b'original', '100644'))
+        (self.root / 'link').symlink_to('entry')
+        self.assertEqual(migration.workspace_entry(self.root, 'link'),
+                         self.proof(b'entry', '120000'))
+
+    def replace(self):
+        self.file.rename(self.root / 'old')
+        self.file.write_bytes(b'replacement')
+        self.file.chmod(0o644)
+
+    def test_replacement_before_open_never_mixes_old_mode_and_new_content(self):
+        original = os.open
+        def open_entry(path, flags, *args, **kwargs):
+            if path == 'entry':
+                self.replace()
+            return original(path, flags, *args, **kwargs)
+        with mock.patch.object(migration.os, 'open', side_effect=open_entry):
+            self.assertEqual(migration.workspace_entry(self.root, 'entry'),
+                             self.proof(b'replacement', '100644'))
+
+    def test_replacement_after_open_is_rejected(self):
+        original = os.open
+        def open_entry(path, flags, *args, **kwargs):
+            descriptor = original(path, flags, *args, **kwargs)
+            if path == 'entry':
+                self.replace()
+            return descriptor
+        with mock.patch.object(migration.os, 'open', side_effect=open_entry):
+            self.assertEqual(migration.workspace_entry(self.root, 'entry'),
+                             {'unsupported': True})
+
+    def test_symlink_replacement_after_open_is_rejected(self):
+        original = os.open
+        def open_entry(path, flags, *args, **kwargs):
+            descriptor = original(path, flags, *args, **kwargs)
+            if path == 'entry':
+                self.file.rename(self.root / 'old')
+                self.file.symlink_to('old')
+            return descriptor
+        with mock.patch.object(migration.os, 'open', side_effect=open_entry):
+            self.assertEqual(migration.workspace_entry(self.root, 'entry'),
+                             {'unsupported': True})
+
+    def test_mode_mutation_during_read_is_rejected(self):
+        original = os.fdopen
+        file = self.file
+        class MutatingReader:
+            def __init__(self, stream):
+                self.stream = stream
+            def __enter__(self):
+                self.stream.__enter__()
+                return self
+            def __exit__(self, *args):
+                return self.stream.__exit__(*args)
+            def fileno(self):
+                return self.stream.fileno()
+            def read(self):
+                raw = self.stream.read()
+                file.chmod(0o644)
+                return raw
+        with mock.patch.object(migration.os, 'fdopen', side_effect=lambda *a, **k:
+                               MutatingReader(original(*a, **k))):
+            self.assertEqual(migration.workspace_entry(self.root, 'entry'),
+                             {'unsupported': True})
+
+    def test_symlink_to_regular_replacement_before_readlink_is_rejected(self):
+        link = self.root / 'link'
+        link.symlink_to('entry')
+        original = os.readlink
+        def readlink(path, *args, **kwargs):
+            link.unlink()
+            link.write_bytes(b'replacement regular file')
+            return original(path, *args, **kwargs)
+        with mock.patch.object(migration.os, 'readlink', side_effect=readlink):
+            self.assertEqual(migration.workspace_entry(self.root, 'link'),
+                             {'unsupported': True})
+
+    def test_nonregular_entry_and_parent_symlink_are_rejected(self):
+        os.mkfifo(self.root / 'fifo')
+        self.assertEqual(migration.workspace_entry(self.root, 'fifo'), {'unsupported': True})
+        (self.root / 'parent').symlink_to(self.root, target_is_directory=True)
+        self.assertEqual(migration.workspace_entry(self.root, 'parent/entry'), {'unsupported': True})
 
 
 class MigrationTests(unittest.TestCase):
