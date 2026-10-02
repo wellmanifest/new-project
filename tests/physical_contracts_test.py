@@ -78,6 +78,29 @@ class PhysicalContractTests(unittest.TestCase):
                   "contracts": [dict(CONTRACTS["contracts"][0], hazard="unknown")]}
         self.assertEqual(self.run_gate(["README.md"], contracts=broken), ["GOV-PHYS-002"])
 
+    def test_declared_property_must_belong_to_the_named_contract(self):
+        for prop in ("timing", "capability-set"):
+            with self.subTest(property=prop):
+                invalid = dict(PIN_MOVE, property=prop)
+                self.assertIn("GOV-PHYS-001", self.run_gate(
+                    ["contracts/hardware/tic249-nvm.json"], [invalid]))
+        self.assertIn("GOV-PHYS-001", self.run_gate(
+            ["contracts/hardware/tic249-nvm.json"], [dict(PIN_MOVE, contract="unknown")]))
+        self.assertIn("GOV-PHYS-001", self.run_gate(
+            ["contracts/hardware/tic249-nvm.json"], [PIN_MOVE, dict(PIN_MOVE, property="timing")]))
+        keep = {"contract": "tic249-limit-switches", "property": "none", "rationale": "Reformat only"}
+        self.assertEqual(self.run_gate(["contracts/hardware/tic249-nvm.json"], [keep]), [])
+
+    def test_non_string_hazards_and_properties_fail_closed(self):
+        for hazard in ([], {}, None, 42):
+            with self.subTest(hazard=hazard):
+                broken = {"schema": "new-project.physical-contracts/v1",
+                          "contracts": [dict(CONTRACTS["contracts"][0], hazard=hazard)]}
+                self.assertEqual(self.run_gate(["README.md"], contracts=broken), ["GOV-PHYS-002"])
+        for prop in ([], {}, None, 42):
+            with self.subTest(property=prop):
+                self.assertIsNotNone(gate.physical_changes_error([dict(PIN_MOVE, property=prop)]))
+
     def test_each_property_change_is_explicit(self):
         self.assertIsNone(gate.physical_changes_error([PIN_MOVE, POLARITY_FLIP]))
         self.assertIn("differ", gate.physical_changes_error([dict(PIN_MOVE, after="SCL/SDA")]))

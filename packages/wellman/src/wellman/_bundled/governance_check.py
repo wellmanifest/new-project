@@ -762,7 +762,7 @@ def physical_contracts_error(value: Any) -> str | None:
             return "physical contract paths must be repository-relative patterns"
         if not string_list(contract["properties"], nonempty=True) or not set(contract["properties"]) <= PHYSICAL_PROPERTIES - {"none"}:
             return "physical contract properties are invalid"
-        if contract["hazard"] not in PHYSICAL_HAZARDS:
+        if not isinstance(contract["hazard"], str) or contract["hazard"] not in PHYSICAL_HAZARDS:
             return "physical contract hazard is invalid"
         if not isinstance(contract["acceptance"], str) or not contract["acceptance"].strip():
             return "physical contract acceptance procedure is blank"
@@ -780,7 +780,7 @@ def physical_changes_error(changes: Any) -> str | None:
         return "intent physicalChanges must be a non-empty list"
     seen = set()
     for change in changes:
-        if not isinstance(change, dict) or change.get("property") not in PHYSICAL_PROPERTIES:
+        if not isinstance(change, dict) or not isinstance(change.get("property"), str) or change["property"] not in PHYSICAL_PROPERTIES:
             return "physical change property is invalid"
         if change["property"] == "none":
             if set(change) != {"contract", "property", "rationale"}:
@@ -832,7 +832,26 @@ def check_physical_contract_changes(
         )
         return
     assert contracts is not None
-    declared = {change.get("contract") for change in intent.get("physicalChanges", []) if isinstance(change, dict)}
+    changes = intent.get("physicalChanges", [])
+    change_error = physical_changes_error(changes) if "physicalChanges" in intent else None
+    by_id = {contract["id"]: contract for contract in contracts["contracts"]}
+    if change_error is None:
+        for change in changes:
+            contract = by_id.get(change["contract"])
+            if contract is None:
+                change_error = f"Unknown physical contract '{change['contract']}'"
+                break
+            if change["property"] != "none" and change["property"] not in contract["properties"]:
+                change_error = f"Property '{change['property']}' is not declared by physical contract '{contract['id']}'"
+                break
+    if change_error:
+        report.add(
+            "GOV-PHYS-001", f"Intent physicalChanges are invalid: {change_error}",
+            "Name an existing physical contract and one of its declared properties, or property none with a rationale.",
+            [f"project/{ticket}/intent.json"], {"ticket": ticket},
+        )
+        return
+    declared = {change["contract"] for change in changes}
     for contract in contracts["contracts"]:
         touched = [item for item in implementation if matches(item, contract["paths"])]
         if not touched or contract["id"] in declared:
