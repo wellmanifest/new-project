@@ -607,6 +607,35 @@ DO SANITIZE_TO_RELATIVE_PATH
 ASSERT ONLY_RELATIVE_PATHS_ALLOWED
 ```
 
+## Kontrakty fizyczne
+
+Pliki, których wartości mają znaczenie fizyczne (przypisanie pinu, poziom
+aktywny, podciąganie, zestaw modułów sprzętowych profilu, skala, zakres,
+czasy), repozytorium deklaruje w `.governance/physical-contracts.json`. Test
+jednostkowy, który porównuje plik z nowym oczekiwaniem, potwierdza tylko
+intencję autora, a nie zachowanie urządzenia. Dlatego każda zmiana takiej
+właściwości musi być nazwana osobno i przyjęta na sprzęcie. Szczegóły:
+[physical-interface-contracts.md](docs/information/physical-interface-contracts.md).
+
+```dsl
+RULE P-PHYS-001 TYPE REQUIRED
+WHEN CHANGED_PATH_MATCHES_DECLARED_PHYSICAL_CONTRACT
+DO REQUIRE INTENT_PHYSICAL_CHANGES_ONE_ENTRY_PER_PROPERTY_WITH_BEFORE_AFTER_AND_ACCEPTANCE
+FORBID BUNDLE_UNDECLARED_PROPERTY_CHANGE_WITH_DECLARED_ONE
+ASSERT EVERY_PHYSICAL_SEMANTICS_CHANGE_IS_EXPLICIT
+
+RULE P-PHYS-002 TYPE REQUIRED
+WHEN PHYSICAL_PROPERTY_CHANGED_OR_CAPABILITY_REMOVED
+DO REQUIRE HARDWARE_ACCEPTANCE_RECEIPT_REST_AND_ACTUATED_STATE_PER_SIGNAL_BEFORE_DEPLOYMENT
+FORBID ACCEPT_CONFIG_ASSERTING_TEST_AS_PHYSICAL_EVIDENCE
+ASSERT DEVICE_BEHAVIOUR_OBSERVED_NOT_INFERRED
+
+RULE P-PHYS-003 TYPE FORBIDDEN
+WHEN DEPLOYABLE_PROFILE_REPLACED_OR_DERIVED
+DO FORBID DROP_CAPABILITY_OF_DEPLOYED_PROFILE_WITHOUT_CAPABILITY_SET_ENTRY
+ASSERT CAPABILITY_PARITY_OR_DECLARED_REMOVAL
+```
+
 ## Obsługa konfliktów i blokad
 
 ```dsl

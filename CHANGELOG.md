@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Adopters can declare files with physical meaning in
+  `.governance/physical-contracts.json`. A change to such a file needs a
+  `physicalChanges` intent entry per changed property (pin, active level,
+  pull, capability set, scale, range, timing) with before, after and hardware
+  acceptance checks; otherwise the gate reports `GOV-PHYS-001`. Motivated by a
+  limit-switch polarity flip and a dropped pump module that both passed their
+  repository tests [ticket-280].
+
 - `propagate-standard` fails with an explicit error when `ORG_GOVERNANCE_TOKEN`
   is unset or an organization cannot be listed, and skips the upgrade matrix
   when no adopter is found. Previously an unset secret silently discovered zero

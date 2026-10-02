@@ -1,5 +1,7 @@
 # Documentation
 
+- [Physical interface contracts](information/physical-interface-contracts.md) — declared pin, polarity and capability semantics, per-property intent entries and hardware acceptance.
+
 - [One-time lossless snapshot migration](information/snapshot-migration.md): exact inventory, protected authorization, preserved history and ordinary repair budgets.
 
 - [Ticket activity read batching](information/ticket-activity-batching.md) — invocation-local reads, input revalidation and reproducible performance evidence.

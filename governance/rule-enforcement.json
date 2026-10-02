@@ -17,6 +17,20 @@
       "enforcement": "manual",
       "reason": "Reuse and proportional isolation remain operator/controller obligations; the read-only query cannot establish writer authority or prevent arbitrary editor writes."
     },
+    "P-PHYS-001": {
+      "codes": ["GOV-PHYS-001", "GOV-PHYS-002"],
+      "enforcement": "deterministic"
+    },
+    "P-PHYS-002": {
+      "codes": [],
+      "enforcement": "manual",
+      "reason": "Rest and actuated behaviour exists only on the device. The gate verifies that acceptance checks are declared per property; the owning hardware runtime must produce the observation receipt before deployment."
+    },
+    "P-PHYS-003": {
+      "codes": ["GOV-PHYS-001"],
+      "enforcement": "manual",
+      "reason": "A touched profile file requires a declared capability-set entry, but a removed module cannot be recognised generically; the adopter's own profile tests must assert parity with the deployed profile."
+    },
     "P-WORKSPACE-006": {
       "codes": ["GOV-WORK-START-001"],
       "enforcement": "manual",

@@ -7,6 +7,7 @@ if [[ "$(uname -s)" == Linux ]]; then
   python3 -B "$repo_root/tests/snapshot_allocation_test.py"
 fi
 python3 "$repo_root/tests/data_change_ownership_test.py"
+python3 "$repo_root/tests/physical_contracts_test.py"
 python3 "$repo_root/tests/delivery-post-merge-base.test.py"
 python3 "$repo_root/tests/ticket-input.test.py"
 python3 "$repo_root/tests/sqlite-allocation.test.py"
