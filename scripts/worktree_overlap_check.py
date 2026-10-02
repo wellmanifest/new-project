@@ -180,10 +180,17 @@ def local_remote_path(root: Path, remote: str) -> Path | None:
 
 def normalized_network_remote(remote: str) -> str:
     value = remote.strip().rstrip("/")
-    parsed = urlparse(value)
+    try:
+        parsed = urlparse(value)
+        port = parsed.port
+    except ValueError as error:
+        raise AuditError("Network remote has an invalid host or port") from error
     if parsed.scheme and parsed.hostname:
         path = parsed.path.lstrip("/")
         host = parsed.hostname.lower()
+        default_port = {"ssh": 22, "https": 443, "http": 80, "git": 9418}.get(parsed.scheme)
+        if port is not None and port != default_port:
+            host = f"[{host}]:{port}" if ":" in host else f"{host}:{port}"
     else:
         match = SCP_REMOTE_RE.fullmatch(value)
         if not match:
@@ -989,10 +996,21 @@ def overlap_findings(
     inventory: dict[str, Any] | None = None,
 ) -> list[Finding]:
     findings: list[Finding] = []
-    inventory_by_path = {
-        Path(entry["path"]): entry
-        for entry in (inventory or {"entries": []})["entries"]
-    }
+    if inventory is None:
+        inventory = workspace_inventory(checkouts)
+    if not isinstance(inventory, dict) or not isinstance(inventory.get("entries"), list):
+        raise AuditError("Worktrees inventory entries must be an array")
+    inventory_by_path = {}
+    for entry in inventory["entries"]:
+        if not isinstance(entry, dict) or not isinstance(entry.get("path"), str):
+            raise AuditError("Worktrees inventory entry must have a path")
+        path = Path(entry["path"])
+        if path in inventory_by_path:
+            raise AuditError(f"Worktrees inventory duplicates {path}")
+        inventory_by_path[path] = entry
+    for checkout in checkouts:
+        if checkout.path not in inventory_by_path:
+            raise AuditError(f"Worktrees inventory omitted {checkout.path}")
     activity_findings(checkouts, only_identity, findings)
     groups: dict[str, list[Checkout]] = {}
     for checkout in checkouts:

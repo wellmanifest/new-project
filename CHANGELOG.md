@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.58] - 2026-10-03
+
+- Preserve non-default network ports in repository identities, reject incomplete overlap inventory and derive omitted inventory. Rescan existing worktrees each watch interval so dirty edits update overlap reports without a topology change.
+
 ## [0.20.57] - 2026-10-02
 
 - Return deterministic catalog findings for malformed ownership, inheritance, requirement and alias inputs; reject Boolean checkpoint sequence values. Install an adopter-specific guard configuration pointing to its managed checker, with command execution regressions.
