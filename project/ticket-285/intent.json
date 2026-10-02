@@ -1,0 +1,114 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-285",
+  "summary": "Keep incomplete workspace observations and outstanding ticket branches conservative",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-285/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+    "scripts/ticket_activity.py",
+    "scripts/worktree_overlap_check.py",
+    "tests/workspace_activity_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c3b3e4b3c9818db027e6c171a8131f866128499b",
+    "targetBranch": "main",
+    "outcome": "Keep incomplete workspace inspection and malformed active intent conservative, recognize all supported outstanding ticket branch forms, and publish immutable standard 0.20.59 through protected delivery.",
+    "nonGoals": [
+      "Grant execution or merge authority",
+      "Introduce dependencies or mutate foreign checkouts",
+      "Change terminal receipt or branch deletion policy"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Surface failed Git and active-intent observations as stable audit failures. Share ticket-branch matching between advanced and outstanding-branch checks using one strict branch inventory.",
+      "components": [
+        {
+          "name": "workspace-observation",
+          "paths": [
+            "scripts/worktree_overlap_check.py",
+            "scripts/ticket_activity.py",
+            "packages/wellman/src/wellman/_bundled/ticket_activity.py"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/workspace_activity_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/workspace_activity_test.py"
+        ],
+        "evidence": "Real disposable Git worktrees reproduce omitted broken checkouts, malformed active intents and outstanding local/origin ticket branches in supported naming forms."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Native governance and required CI pass without changing protected authority."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent exact-head merge and final immutable standard v0.20.59 release are verified."
+      }
+    ]
+  }
+}
