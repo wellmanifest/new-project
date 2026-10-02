@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.56] - 2026-10-02
+
+- Bind snapshot entry mode and bytes to the same no-follow descriptor and reject observed replacement or mutation during proof collection. Add deterministic filesystem-race regressions and synchronize the bundled runtime.
+
 ## Unreleased
 
 ## 0.20.55 - 2026-10-02

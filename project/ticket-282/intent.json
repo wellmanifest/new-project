@@ -1,0 +1,113 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-282",
+  "summary": "Bind snapshot entry proofs to the opened descriptor",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-282/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/snapshot_migration.py",
+    "scripts/snapshot_migration.py",
+    "tests/snapshot_migration_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "51d2a12d8a0888f9c8aa7958b177806647e7ef70",
+    "targetBranch": "main",
+    "outcome": "Bind snapshot proof content, type and executable mode to the same opened descriptor; reject concurrent replacement or mutation and publish the material fix as immutable standard 0.20.56 through protected merge and Goal.",
+    "nonGoals": [
+      "Grant migration or merge authority",
+      "Relax required checks",
+      "Modify product runtime",
+      "Rewrite user-owned source"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use descriptor-derived metadata with stable pre/post-read checks and anchored path observation. Keep the bundled runtime byte-identical to canonical source.",
+      "components": [
+        {
+          "name": "snapshot-proof",
+          "paths": [
+            "scripts/snapshot_migration.py",
+            "packages/wellman/src/wellman/_bundled/snapshot_migration.py"
+          ]
+        },
+        {
+          "name": "race-regressions",
+          "paths": [
+            "tests/snapshot_migration_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "packages/wellman/pyproject.toml",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material fix with retained controller receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/snapshot_migration_test.py"
+        ],
+        "evidence": "Stable entries retain Git mode/hash, races and nonregular replacements are rejected without blocking."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Bundled runtime equals canonical source; native gate and protected CI pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent exact-head merge and immutable v0.20.56 release from clean verified merged source."
+      }
+    ]
+  }
+}
