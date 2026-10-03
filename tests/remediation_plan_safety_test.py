@@ -6,6 +6,7 @@ import importlib.util
 import json
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 import unittest
 
@@ -125,6 +126,98 @@ class RemediationPlanSafetyTests(unittest.TestCase):
         after, _ = self.analyze("delete")
         self.assertNotEqual(before["plansDigest"], after["plansDigest"])
         self.assertEqual(before["intentDigest"], after["intentDigest"])
+
+
+    def test_malformed_collections_return_diagnostics_without_mutating_input(self):
+        self.assertTrue(runtime.validate_document(self.intent)["ok"])
+        fields = {
+            "findings": ("affectedPaths", "dependsOn", "acceptanceCriteria", "evidence"),
+            "actions": ("paths", "dependsOn", "findingIds", "verificationIds"),
+            "verifications": ("covers",),
+            "acceptanceCriteria": ("findingIds", "verificationIds"),
+        }
+        for collection, names in fields.items():
+            for field in names:
+                for value in (None, 17, [{}]):
+                    with self.subTest(collection=collection, field=field, value=value):
+                        document = deepcopy(self.intent)
+                        document[collection][0][field] = deepcopy(value)
+                        original = deepcopy(document)
+                        report = runtime.validate_document(document)
+                        self.assertFalse(report["ok"])
+                        expected = f"{collection}[0].{field}"
+                        self.assertTrue(any(error["path"].startswith(expected)
+                                            for error in report["errors"]), report)
+                        self.assertEqual(document, original)
+                        self.assertEqual(report["intentDigest"], runtime.intent_digest(original))
+
+    def test_non_object_source_returns_structured_rejection(self):
+        for value in (None, [], 17, "source"):
+            with self.subTest(value=value):
+                document = deepcopy(self.intent)
+                document["source"] = value
+                original = deepcopy(document)
+                report = runtime.validate_document(document)
+                self.assertFalse(report["ok"])
+                self.assertTrue(any(error["path"] == "source" for error in report["errors"]))
+                self.assertEqual(document, original)
+
+    def test_source_timestamp_requires_full_time_and_explicit_zone(self):
+        for value in ("2026-10-03", "2026-10-03T12:30:00", "2026-10-03T12:30Z",
+                      "2026-10-03 12:30:00Z", "2026-10-03T12:30:00+0200",
+                      "2026-02-30T12:30:00Z", "2026-10-03T12:30:00+25:00"):
+            with self.subTest(value=value):
+                document = deepcopy(self.intent)
+                document["source"]["observedAt"] = value
+                report = runtime.validate_document(document)
+                self.assertFalse(report["ok"])
+                self.assertTrue(any(error["path"] == "source.observedAt"
+                                    for error in report["errors"]), report)
+        for value in ("2026-10-03T12:30:00Z", "2026-10-03T12:30:00.123Z",
+                      "2026-10-03T12:30:00+02:00", "2026-10-03T12:30:00-05:30",
+                      "2026-10-03t12:30:00z"):
+            with self.subTest(value=value):
+                document = deepcopy(self.intent)
+                document["source"]["observedAt"] = value
+                original = deepcopy(document)
+                self.assertTrue(runtime.validate_document(document)["ok"])
+                self.assertEqual(document, original)
+
+    def test_cross_checks_keep_exact_scope_and_unknown_references(self):
+        for collection, field, value in (
+            ("findings", "affectedPaths", " src/discovery.py"),
+            ("findings", "dependsOn", "F-UNKNOWN"),
+            ("actions", "dependsOn", "A-UNKNOWN"),
+            ("verifications", "covers", "F-UNKNOWN"),
+        ):
+            with self.subTest(collection=collection, field=field):
+                document = deepcopy(self.intent)
+                document[collection][0][field] = [value]
+                original = deepcopy(document)
+                self.assertFalse(runtime.validate_document(document)["ok"])
+                self.assertEqual(document, original)
+        document = deepcopy(self.intent)
+        document["llmGuidance"]["planningOrder"].append(document["llmGuidance"]["planningOrder"][0])
+        self.assertFalse(runtime.validate_document(document)["ok"])
+        document = deepcopy(self.intent)
+        del document["findings"][0]["id"]
+        self.assertFalse(runtime.validate_document(document)["ok"])
+
+    def test_cli_reports_malformed_coverage_as_json_and_blocks_projection(self):
+        document = deepcopy(self.intent)
+        document["verifications"][0]["covers"] = None
+        with tempfile.TemporaryDirectory(prefix="remediation-malformed-cli-") as temporary:
+            path = Path(temporary) / "intent.json"
+            path.write_text(json.dumps(document), encoding="utf-8")
+            result = subprocess.run([sys.executable, str(ROOT / "scripts/remediation_intent.py"),
+                                     "validate", str(path), "--format", "json"],
+                                    capture_output=True, text=True, check=False)
+            self.assertEqual(result.returncode, 1, result.stderr)
+            report = json.loads(result.stdout)
+            self.assertFalse(report["ok"])
+            self.assertEqual(result.stderr, "")
+            with self.assertRaises(ValueError):
+                runtime.render_llm(document)
 
 
 if __name__ == "__main__":

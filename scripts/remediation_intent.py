@@ -37,6 +37,10 @@ VERIFICATION_ID = re.compile(r"V-[A-Z0-9][A-Z0-9-]*")
 CRITERION_ID = re.compile(r"AC-[0-9]+")
 DIAGNOSTIC_CODE = re.compile(r"[A-Z][A-Z0-9]*(?:[_-][A-Z0-9]+)*")
 DIGEST = re.compile(r"[0-9a-f]{64}")
+SOURCE_DATE_TIME = re.compile(
+    r"[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}"
+    r"(?:\.[0-9]+)?(?:[Zz]|[+-][0-9]{2}:[0-9]{2})"
+)
 
 FINDING_CATEGORIES = {
     "FALSE_POSITIVE",
@@ -134,6 +138,30 @@ def _expect_object(
         errors.append(_issue(MALFORMED_CODE, path, "must be an object"))
         return {}
     return value
+
+
+
+def _cross_check_record(
+    value: dict[str, Any],
+    string_fields: tuple[str, ...],
+    object_fields: tuple[str, ...] = (),
+) -> dict[str, Any]:
+    """Copy already diagnosed collections for safe cross-field checks.
+
+    Preserve exact string bytes and the original input/digest. Invalid entries
+    remain rejected by the preceding field validators, never repaired or
+    promoted into a valid plan by this private view.
+    """
+    result = dict(value)
+    for field in string_fields:
+        raw = value.get(field)
+        result[field] = ([item for item in raw if isinstance(item, str)]
+                         if isinstance(raw, list) else [])
+    for field in object_fields:
+        raw = value.get(field)
+        result[field] = ([item for item in raw if isinstance(item, dict)]
+                         if isinstance(raw, list) else [])
+    return result
 
 
 def _exact_fields(
@@ -348,10 +376,12 @@ def _validate_source(
     observed = _nonempty_text(source.get("observedAt"), "source.observedAt", errors)
     if observed:
         try:
-            datetime.fromisoformat(observed.replace("Z", "+00:00"))
+            if SOURCE_DATE_TIME.fullmatch(source["observedAt"]) is None:
+                raise ValueError("date-time requires full time and an explicit zone")
+            datetime.fromisoformat(observed.upper().replace("Z", "+00:00"))
         except ValueError:
             errors.append(
-                _issue(MALFORMED_CODE, "source.observedAt", "must be an ISO-8601 date-time")
+                _issue(MALFORMED_CODE, "source.observedAt", "must be a full ISO-8601 date-time with an explicit timezone")
             )
     report_digest = _nonempty_text(
         source.get("reportDigest"), "source.reportDigest", errors
@@ -516,7 +546,9 @@ def _validate_findings(
 
         _validate_finding_transition(category, current, required, required_signals, excluded_signals, path, errors)
         if finding_id and code:
-            findings.append(finding)
+            findings.append(_cross_check_record(
+                finding, ("affectedPaths", "dependsOn", "acceptanceCriteria"), ("evidence",)
+            ))
     finding_by_id = {item["id"]: item for item in findings}
     graph: dict[str, list[str]] = {}
     for index, finding in enumerate(findings):
@@ -572,7 +604,7 @@ def _validate_verifications(
             errors.append(_issue(MALFORMED_CODE, f"{path}.deterministic", "must be boolean"))
         _string_list(item.get("covers"), f"{path}.covers", errors, minimum=1)
         if verification_id:
-            result.append(item)
+            result.append(_cross_check_record(item, ("covers",)))
     return result, {item["id"]: item for item in result}
 
 
@@ -796,7 +828,9 @@ def _validate_actions(
                 )
             )
         if action_id:
-            actions.append(item)
+            actions.append(_cross_check_record(
+                item, ("paths", "dependsOn", "findingIds", "verificationIds")
+            ))
 
     graph = _validate_action_dependencies(actions, finding_by_id, errors)
     return actions, graph
@@ -985,7 +1019,7 @@ def _validate_criteria_guidance_t2c(
                     )
                 )
             if criterion_id:
-                criteria.append(item)
+                criteria.append(_cross_check_record(item, ("findingIds", "verificationIds")))
 
     _validate_finding_criteria(criteria, finding_by_id, errors)
     _validate_planning_guidance(document, action_graph, errors)
@@ -1103,9 +1137,11 @@ def _validate_finding_paths(findings, allowed, forbidden, errors):
 
 def _validate_unresolved_paths(document, status, owner_route, allowed, findings, actions, errors, warnings):
     unresolved_paths: list[str] = []
+    source = document.get("source")
     if (
         status in {"READY", "ANALYZED"}
-        and document.get("source", {}).get("reportDigest") == "unresolved:agent"
+        and isinstance(source, dict)
+        and source.get("reportDigest") == "unresolved:agent"
     ):
         unresolved_paths.append("source.reportDigest")
     if owner_route in {"unresolved:human", "unresolved:agent"}:
