@@ -23,7 +23,8 @@
     "packages/wellman/pyproject.toml",
     "packages/wellman/sync_bundled.py",
     "packages/wellman/src/wellman/_bundled/change_lease_check.py",
-    "packages/wellman/src/wellman/_bundled/change-lease.schema.json"
+    "packages/wellman/src/wellman/_bundled/change-lease.schema.json",
+    "project/new-ticket.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -37,7 +38,7 @@
   "delivery": {
     "acceptedBaseSha": "30ada2d6f171ee11d029a07ea55d1993c25c7fe0",
     "targetBranch": "main",
-    "outcome": "Enforce the already declared scalar types, nullable references, string bounds and explicit-offset timestamps in portable lease/request/receipt validation; publish immutable standard 0.20.66. Malformed-transition receipt handling and rejected-trace anchoring remain a dependent continuation.",
+    "outcome": "Enforce the already declared scalar types, nullable references, string bounds and explicit-offset timestamps in portable lease/request/receipt validation; publish immutable standard 0.20.66. Malformed-transition receipt handling and rejected-trace anchoring remain a dependent continuation. Ensure the native local allocator produces a schema-conforming advisory lease.",
     "nonGoals": [
       "Change or deploy the effectful Subactor controller",
       "Grant authority through local replay or alter the canonical lease schema",
@@ -47,20 +48,21 @@
     "complexity": "S",
     "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 12,
+      "maxImplementationFiles": 13,
       "maxAffectedComponents": 3,
-      "maxPublicInterfaceChanges": 1,
+      "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Use a bounded dependency-free matcher for the already shipped canonical flat scalar schema, then retain existing semantic guards. Boolean counters, invalid references and offset-free timestamps fail. Keep all transition reply and trace behavior unchanged for the dependent slice. The installed Wellman package receives the same canonical schema and byte-identical runtime through the existing bundled synchronizer; this is required distribution closure, not another behavior slice.",
+      "decision": "Use a bounded dependency-free matcher for the already shipped canonical flat scalar schema, then retain existing semantic guards. Boolean counters, invalid references and offset-free timestamps fail. Keep all transition reply and trace behavior unchanged for the dependent slice. The installed Wellman package receives the same canonical schema and byte-identical runtime through the existing bundled synchronizer; this is required distribution closure, not another behavior slice. CI exposed a pre-existing allocator shape violation: local basename-only repositoryRef. Keep these ignored projections explicitly local and nonauthoritative, represented in the existing schema vocabulary.",
       "components": [
         {
           "name": "lease-validation",
           "paths": [
             "scripts/change_lease_check.py",
-            "subprojects/change-lease/README.md"
+            "subprojects/change-lease/README.md",
+            "project/new-ticket.sh"
           ]
         },
         {
@@ -86,7 +88,8 @@
       ],
       "responsibilityChanges": false,
       "interfaceChanges": [
-        "Run portable scalar document safety regressions in the existing Linux and Windows workflow."
+        "Run portable scalar document safety regressions in the existing Linux and Windows workflow.",
+        "Locally allocated advisory lease repository references use an explicit local namespace when no organization/repository identity was supplied."
       ],
       "dataChanges": [],
       "ui": {

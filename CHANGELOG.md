@@ -3,7 +3,7 @@
 ## [0.20.66] - 2026-10-03
 
 ### Fixed
-- Enforce canonical scalar types, string bounds, patterns, nullable references and explicit-offset timestamps in lease, request and receipt validation without new runtime dependencies. Preserve transition reply and trace behavior; run portable scalar and installed CLI regressions on Linux and Windows.
+- Enforce canonical scalar types, string bounds, patterns, nullable references and explicit-offset timestamps in lease, request and receipt validation without new runtime dependencies. Preserve transition reply and trace behavior; run portable scalar and installed CLI regressions on Linux and Windows. Make basename-only native allocator projections schema-conforming through an explicit nonauthoritative local namespace.
 
 ## [0.20.65] - 2026-10-03
 

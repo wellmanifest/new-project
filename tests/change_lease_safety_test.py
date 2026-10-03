@@ -3,6 +3,7 @@
 from copy import deepcopy
 import importlib.util
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -95,6 +96,24 @@ class LeaseSafetyTests(unittest.TestCase):
                 changed["heartbeatAt"] = value
                 self.assertEqual(runtime.validate_lease(changed), [])
 
+
+    @unittest.skipIf(os.name == "nt", "native allocation integration uses POSIX Bash")
+    def test_native_local_allocator_emits_a_canonical_advisory_lease(self):
+        fixture_spec = importlib.util.spec_from_file_location(
+            "lease_allocator_fixture", ROOT / "tests/ticket-allocation-worktree.test.py")
+        fixture_module = importlib.util.module_from_spec(fixture_spec)
+        fixture_spec.loader.exec_module(fixture_module)
+        fixture = fixture_module.TicketAllocationWorktreeTest()
+        fixture.setUp()
+        try:
+            result = fixture.allocate()
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            value = json.loads((fixture.root /
+                ".subactor/leases/ticket-001--canonical-ticket.json").read_text(encoding="utf-8"))
+            self.assertRegex(value["repositoryRef"], r"^local/[0-9a-f]{64}$")
+            self.assertEqual(runtime.validate_lease(value), [])
+        finally:
+            fixture.doCleanups()
 
     def test_installed_cli_rejects_boolean_revision(self):
         # Both adopter-managed and wheel-bundled layouts must work outside the

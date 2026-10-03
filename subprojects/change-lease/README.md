@@ -54,3 +54,8 @@ This bounded matcher is not a general JSON Schema engine.
 This validation change preserves transition replies and rejected-event trace
 semantics. The checker remains a reference validator; actual controller authority
 and protected publication stay with Subactor.
+
+The native local allocator creates only an ignored advisory projection. When
+its layout has a basename rather than an organization/repository reference,
+it uses `local/<primary-checkout SHA-256>` as an explicit local identity. This
+does not identify a remote repository or grant controller/publication authority.

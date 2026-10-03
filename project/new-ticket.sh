@@ -914,7 +914,11 @@ issued = datetime.fromisoformat(issued_at.replace("Z", "+00:00"))
 lease = {
     "schema": "wellmanifest.change-lease/v1",
     "leaseId": f"allocation-{ticket}-{slug}",
-    "repositoryRef": repository,
+    # This ignored allocator projection is advisory local state, not a
+    # controller grant or a claim about a remote organization. The layout
+    # label may be a basename; scope that case explicitly to this primary.
+    "repositoryRef": repository if "/" in repository else "local/" + hashlib.sha256(
+        str(lease_file.parent.parent.parent.resolve()).encode("utf-8")).hexdigest(),
     "targetBranch": target_branch,
     "ticketId": ticket,
     "workstream": workstream,

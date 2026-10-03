@@ -12,4 +12,4 @@ Enforce the existing canonical scalar schema in portable lease, request and rece
 - AC-03: Independent protected merge and immutable standard 0.20.66 publication are verified.
 
 ## Bounds
-S / 25 minutes; twelve implementation files (including required installed package closure), three components, one CI interface, no dependencies. No canonical schema or effectful controller changes.
+S / 25 minutes; thirteen implementation files (including required package and allocator closure), three components, two interfaces (CI and advisory allocation identity), no dependencies. No canonical schema or effectful controller changes.
