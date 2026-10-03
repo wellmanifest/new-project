@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.20.68] - 2026-10-03
+
+### Fixed
+- Constrain declared host paths to portable repository-relative paths without parent traversal, drive prefixes, control characters or empty segments. Reject package governance gates outside the checkout or reached through symbolic links, including when lock metadata is unavailable. Preserve valid hub/adopter paths and Unicode file names; retain existing finding shape and installed-package parity.
+
 ## [0.20.67] - 2026-10-03
 
 ### Fixed
