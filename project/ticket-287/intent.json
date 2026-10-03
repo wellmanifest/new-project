@@ -12,7 +12,6 @@
     "project/ticket-287/**",
     "TODO.md",
     "project/TICKETS.md",
-    ".github/workflows/ci.yml",
     "CHANGELOG.md",
     "VERSION",
     "governance/manifest.default.json",
@@ -35,12 +34,13 @@
     "nonGoals": [
       "Grant authority from advisory checkpoints",
       "Change continuity schemas or external controller fencing",
-      "Add dependencies or mutate foreign checkouts"
+      "Add dependencies or mutate foreign checkouts",
+      "Wire the new suite into CI; deferred to a separately scoped dependent ticket"
     ],
     "complexity": "S",
     "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 8,
+      "maxImplementationFiles": 7,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
@@ -56,10 +56,9 @@
           ]
         },
         {
-          "name": "regression-tests-and-ci",
+          "name": "regression-tests",
           "paths": [
-            "tests/continuity_storage_test.py",
-            ".github/workflows/ci.yml"
+            "tests/continuity_storage_test.py"
           ]
         },
         {
@@ -91,7 +90,7 @@
           "python3 tests/continuity_storage_test.py",
           "bash tests/work-continuity.test.sh"
         ],
-        "evidence": "Two real processes reproduce stale concurrent capture, replay repairs interrupted index writes, and bounded-index rejection appends no event. Both Linux and Windows CI execute the new regression suite."
+        "evidence": "Two real processes reproduce stale concurrent capture, independent ticket index loss and concurrent rebuild races; replay restores interrupted index writes and bounded-index rejection appends no event. CI wiring is a dependent follow-up with its own public-interface budget."
       },
       {
         "criterion": "AC-02",

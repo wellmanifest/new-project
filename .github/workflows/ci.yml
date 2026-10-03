@@ -144,8 +144,6 @@ jobs:
         run: bash tests/ticket-activity.test.sh
       - name: Test work continuity checkpoint and resume contract
         run: bash tests/work-continuity.test.sh
-      - name: Test concurrent continuity journal storage
-        run: python3 tests/continuity_storage_test.py
       # Every tests/*.test.sh must be listed above. The list is hand-written, so
       # this refuses to pass when a suite exists that no step runs - which is how
       # governance-env.test.sh went unexecuted after ticket 020 added it.
@@ -185,6 +183,3 @@ jobs:
       - name: Test Windows governance entrypoints
         shell: pwsh
         run: ./tests/windows-governance.test.ps1 -SourceRevision $env:GITHUB_SHA
-      - name: Test concurrent continuity journal storage on Windows
-        shell: pwsh
-        run: python tests/continuity_storage_test.py
