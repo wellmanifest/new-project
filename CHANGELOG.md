@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.75] - 2026-10-03
+
+- Reject repeated physical change identities even when their before/after states or acceptance metadata differ.
+- Reject no-change markers mixed with changes to the same contract while preserving independent properties, signals and contracts.
+- Exercise the actual physical contract gate and source/bundle parity in portable regression tests without executing hardware effects.
+
 ## [0.20.74] - 2026-10-03
 
 - Align branch-name checks in the intent schema, source runtime and installed bundle with Git's ref rules; reserve standalone `@` because its revision meaning is HEAD.

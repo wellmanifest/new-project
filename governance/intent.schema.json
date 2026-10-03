@@ -35,7 +35,7 @@
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
-      "description": "Required when a changed path matches an adopter physical contract (P-PHYS-001). One entry per changed physical property; property none records an edit that keeps physical meaning.",
+      "description": "Required when a changed path matches an adopter physical contract (P-PHYS-001). One entry per exact contract/property/signal; the runtime rejects repeated claims even when before, after or acceptance differ. Property none records an edit that keeps physical meaning and must be the only entry for that contract.",
       "items": {
         "oneOf": [
           {

@@ -323,5 +323,36 @@ exec "$TASK_SIGNAL_REAL_GIT" "$@"
             self.assertEqual(git("rev-parse", "--verify", "@"), second)
 
 
+    def test_physical_claim_identity_is_consistent_in_source_and_bundle(self):
+        from copy import deepcopy
+        pin = {"contract": "switch", "property": "pin-assignment", "signal": "forward",
+               "before": "SDA", "after": "TX", "acceptance": ["Actuate switch on rig"]}
+        keep = {"contract": "switch", "property": "none", "rationale": "Format only"}
+        invalid = (
+            [pin, dict(pin)], [pin, dict(pin, after="RX")],
+            [pin, dict(pin, before="SCL")], [pin, dict(pin, acceptance=["Different check"])],
+            [pin, keep], [keep, pin], [keep, dict(keep, rationale="Other explanation")],
+        )
+        valid = (
+            [pin], [keep], [pin, dict(pin, property="active-level")],
+            [pin, dict(pin, signal="reverse")], [pin, dict(pin, contract="other switch")],
+            [pin, dict(keep, contract="other switch")],
+            [pin, dict(pin, signal="forward ")], [pin, dict(pin, contract="switch ")],
+        )
+        for index, relative in enumerate(("scripts/governance_check.py",
+                "packages/wellman/src/wellman/_bundled/governance_check.py")):
+            name = f"physical_claim_runtime_{index}"
+            spec = importlib.util.spec_from_file_location(name, ROOT / relative)
+            checker = importlib.util.module_from_spec(spec)
+            sys.modules[name] = checker
+            spec.loader.exec_module(checker)
+            for expected_valid, cases in ((False, invalid), (True, valid)):
+                for changes in cases:
+                    original = deepcopy(changes)
+                    with self.subTest(runtime=relative, changes=changes):
+                        self.assertEqual(checker.physical_changes_error(changes) is None, expected_valid)
+                        self.assertEqual(changes, original)
+
+
 if __name__ == "__main__":
     unittest.main()
