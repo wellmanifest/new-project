@@ -1,0 +1,121 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-302",
+  "summary": "Validate execution-model policy and confined adoption artifacts",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-302/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/standard_pack_check.py",
+    "tests/standard-pack-check.test.sh",
+    "tests/runtime_safety_test.py",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-301"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "dbf8c87ce46c0dfd34c86283d8f6bf2ae3b677c7",
+    "targetBranch": "main",
+    "outcome": "Reject malformed catalog execution-model names/records, unknown levels and non-boolean effect flags before adoption checks. Reject drive/root-qualified or escaping managed-artifact targets before file hashing; preserve valid declarations and confined artifacts. Publish standard 0.20.76 after protected merge.",
+    "nonGoals": [
+      "Authorize runtime effects or infer permission from catalog flags",
+      "Change pack identity, record levels, profile selection, workflow parsing or preflight caching",
+      "Add a bundled standard-pack module, runtime dependencies or change schema identity",
+      "Claim resistance to arbitrary same-user concurrent path mutations",
+      "Mutate foreign or frozen target state"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Validate each execution model in catalog_findings before any adoption policy consumes it. Require a nonempty name, object declaration, recognized string maximumLevel and actual boolean authorizesEffects; preserve exact names and valid metadata. Exercise actual strict JSON CLI and source validation through existing shell and native portable suites. Resolve managed-artifact targets under the canonical root after portable absolute/drive/parent-path checks, and reject escapes before is_file or hashing. Keep existing artifact finding codes and confined paths, including confined symlinks; no race-proof claim.",
+      "components": [
+        {
+          "name": "catalog-model-validation",
+          "paths": [
+            "scripts/standard_pack_check.py"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/standard-pack-check.test.sh",
+            "tests/runtime_safety_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Existing standard-adoption conformance rejects malformed execution-model policy and unmanaged escaping artifact targets before data access."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/standard-pack-check.test.sh",
+          "python3 tests/runtime_safety_test.py"
+        ],
+        "evidence": "Actual strict CLI rejects malformed model objects, maximumLevel values and authorizesEffects types; all valid S0-S5 and boolean values and exact names remain accepted. Actual external symlink and drive-qualified declarations fail before hashing; ordinary confined files and in-root symlinks remain valid. Native Windows and POSIX path cases exercise the same validator."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing integration, wheel/parity, native and exact-head Linux/Windows/OneDev checks pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and final standard v0.20.75 release verified."
+      }
+    ]
+  }
+}

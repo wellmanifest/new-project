@@ -7,7 +7,7 @@ import argparse
 import hashlib
 import json
 import re
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
 
 LEVELS = {f"S{index}": index for index in range(6)}
@@ -104,6 +104,17 @@ def catalog_findings(catalog: Any) -> list[dict[str, str]]:
                 or not isinstance(target, str) or target not in pack_ids):
             findings.append(finding("STD-PACK-ALIAS", f"invalid compatibility alias: {alias} -> {target}"))
     catalog_profile_findings(profiles, pack_ids, findings)
+    for name, model in models.items():
+        if not isinstance(name, str) or not name.strip():
+            findings.append(finding("STD-PACK-CATALOG", "execution model name must be nonempty"))
+        if not isinstance(model, dict):
+            findings.append(finding("STD-PACK-CATALOG", f"execution model {name} must be an object"))
+            continue
+        level = model.get("maximumLevel")
+        if not isinstance(level, str) or level not in LEVELS:
+            findings.append(finding("STD-PACK-CATALOG", f"execution model {name} has invalid maximumLevel"))
+        if not isinstance(model.get("authorizesEffects"), bool):
+            findings.append(finding("STD-PACK-CATALOG", f"execution model {name} authorizesEffects must be boolean"))
     return findings
 
 
@@ -143,14 +154,24 @@ def adoption_artifact_findings(root, pack_id, record, level, findings) -> None:
             continue
         target = artifact.get("target")
         expected_digest = artifact.get("sha256")
-        if not isinstance(target, str) or target.startswith("/") or ".." in Path(target).parts:
+        if (not isinstance(target, str) or not target
+                or PureWindowsPath(target).drive or PureWindowsPath(target).root
+                or ".." in PureWindowsPath(target).parts or ".." in Path(target).parts):
             findings.append(finding("STD-ADOPTION-ARTIFACT", f"unsafe target for {pack_id}"))
             continue
-        target_path = root / target
-        if not target_path.is_file():
-            findings.append(finding("STD-ADOPTION-MISSING", f"managed projection is missing for {pack_id}", target))
-        elif SHA64.fullmatch(str(expected_digest or "")) is None or sha256(target_path) != expected_digest:
-            findings.append(finding("STD-ADOPTION-DRIFT", f"managed projection drift for {pack_id}", target))
+        try:
+            target_path = (root / target).resolve()
+            target_path.relative_to(root.resolve())
+        except (OSError, ValueError, RuntimeError):
+            findings.append(finding("STD-ADOPTION-ARTIFACT", f"unsafe target for {pack_id}", target))
+            continue
+        try:
+            if not target_path.is_file():
+                findings.append(finding("STD-ADOPTION-MISSING", f"managed projection is missing for {pack_id}", target))
+            elif SHA64.fullmatch(str(expected_digest or "")) is None or sha256(target_path) != expected_digest:
+                findings.append(finding("STD-ADOPTION-DRIFT", f"managed projection drift for {pack_id}", target))
+        except OSError:
+            findings.append(finding("STD-ADOPTION-ARTIFACT", f"cannot read managed projection for {pack_id}", target))
 
 def adoption_record_findings(root, pack_id, record, models, findings) -> None:
     level = record.get("level")
