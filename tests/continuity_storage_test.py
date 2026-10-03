@@ -82,7 +82,9 @@ class ContinuityStorageTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        # Production derives storage paths from a resolved root. Use the same
+        # canonical root in the mock (Windows expands temporary 8.3 aliases).
+        self.root = Path(self.temp.name).resolve()
         self.paths = (self.root / "events.jsonl", self.root / "index.json", 128, 262144)
         for name, value in (("repository_ref", REPOSITORY), ("storage_paths", self.paths)):
             mock = patch.object(continuity, name, return_value=value)

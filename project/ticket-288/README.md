@@ -4,7 +4,7 @@
 - **Workflow state**: EDIT
 
 ## Goal and scope
-Respect the ancestor when merging ticket rows and surrounding target-owned prose. Preserve one-sided deletions and edits; expose conflicting changes through Git merge-file instead of choosing a row by populated cells. Reject ambiguous duplicate or unrecognized table content from custom merging. Complete ticket-287's deferred CI outcome by running ticket-index and continuity storage regressions on Linux and Windows. Keep captured Registry regressions on Linux and exact-byte fixture diagnostics. Windows Registry URL canonicalization and its Windows CI wiring are explicitly deferred to a dependent runtime ticket.
+Respect the ancestor when merging ticket rows and surrounding target-owned prose. Preserve one-sided deletions and edits; expose conflicting changes through Git merge-file instead of choosing a row by populated cells. Reject ambiguous duplicate or unrecognized table content from custom merging. Complete ticket-287's deferred CI outcome by running ticket-index and continuity storage regressions on Linux and Windows. Canonicalize the mocked continuity fixture root as production does. Keep captured Registry regressions on Linux. Windows Registry URL canonicalization, its byte-exact fixtures and Windows CI wiring are explicitly deferred to a dependent runtime ticket.
 
 ## Acceptance criteria
 - AC-01: Real merge-file and pure merge regressions cover deletions, concurrent additions, conflicting edits and retained text. All three durability suites pass locally; Linux runs all three and Windows runs continuity and ticket-index suites. Retain and report the deferred Windows Registry failure.

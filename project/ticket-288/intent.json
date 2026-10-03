@@ -19,8 +19,9 @@
     "governance/manifest.hub.json",
     "packages/wellman/pyproject.toml",
     "scripts/ticket_index_merge_driver.py",
-    "tests/registry_runtime_test.py",
-    "tests/ticket_index_merge_test.py"
+    "tests/continuity_storage_test.py",
+    "tests/ticket_index_merge_test.py",
+    "tests/registry_runtime_test.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -51,7 +52,7 @@
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Use ancestor-aware selection for ticket rows and surrounding content, with Git merge-file fallback for conflicts. Run ticket-index and continuity storage regressions on Linux and Windows. Keep captured Registry regressions on Linux and exact-byte controlled diagnostics; Windows Registry fails on Python/Node URL canonicalization and its runtime fix plus Windows wiring belong to a dependent ticket.",
+      "decision": "Use ancestor-aware three-way ticket merging and Git conflict fallback; run ticket-index and continuity storage tests on Linux and Windows. Canonicalize continuity fixture paths before mocking production storage paths, which are already derived from the resolved root. Registry Windows URL canonicalization, byte-exact fixtures, diagnostics and Windows wiring remain in a separate dependent runtime ticket. The retained Registry fixture path authorizes only restoring this ticket's own diagnostic changes to the accepted base; it has no net publication diff and does not increase the nine-file implementation budget.",
       "components": [
         {
           "name": "ticket-index-merging",
@@ -63,8 +64,9 @@
           "name": "regressions-and-ci",
           "paths": [
             "tests/ticket_index_merge_test.py",
-            "tests/registry_runtime_test.py",
-            ".github/workflows/ci.yml"
+            "tests/continuity_storage_test.py",
+            ".github/workflows/ci.yml",
+            "tests/registry_runtime_test.py"
           ]
         },
         {
@@ -99,7 +101,7 @@
           "python3 tests/registry_runtime_test.py",
           "python3 tests/continuity_storage_test.py"
         ],
-        "evidence": "Real merge-file regressions preserve deletions, additions and target-owned text, surface conflicts and reject ambiguity. Linux runs all three suites; Windows runs ticket-index and continuity. Registry Windows failure is retained as diagnostic evidence and explicitly deferred with its runtime fix."
+        "evidence": "Real merge-file regressions preserve deletions, additions and text and expose conflicts; real process tests retain concurrency/recovery assertions. Both OS workflows run ticket-index and continuity. Linux additionally checks Registry; its Windows failure and runtime correction are deferred."
       },
       {
         "criterion": "AC-02",
