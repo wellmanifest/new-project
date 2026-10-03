@@ -57,6 +57,8 @@ printf '%s\n' seed > "$fixture/tracked.txt"
 git -C "$fixture" add tracked.txt
 git -C "$fixture" commit -qm seed
 base="$(git -C "$fixture" rev-parse HEAD)"
+# This standalone fixture has no upstream; bind its known baseline explicitly.
+git -C "$fixture" update-ref refs/remotes/origin/main "$base"
 printf '%s\n' staged > "$fixture/staged.txt"
 git -C "$fixture" add staged.txt
 

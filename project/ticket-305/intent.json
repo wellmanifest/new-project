@@ -1,0 +1,119 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-305",
+  "summary": "Fail closed when pytest cannot resolve a meaningful Git base",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-305/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "template/files/wellmanifest_governance.py",
+    "tests/pytest-plugin.test.sh",
+    "tests/pytest_base_test.py",
+    "tests/runtime_safety_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-304"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "474a633a7c5892a7fd599d1ab5780e505de623d1",
+    "targetBranch": "main",
+    "outcome": "Stop pytest governance when no explicit, event or verified upstream Git base exists; never silently substitute HEAD and hide committed changes. Preserve valid configured/event/upstream bases and collect-only behavior. Publish standard 0.20.79 after protected merge.",
+    "nonGoals": [
+      "Change event fetching, supported explicit base references, dirty-path parsing or hook activation",
+      "Grant execution, lease, terminal or merge authority from a Git reference",
+      "Add dependencies or mutate foreign/frozen target state"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Remove the unverified HEAD fallback from the adopted pytest lifecycle bridge. Raise its existing governance diagnostic when no configured, event or upstream base resolves. Actual disposable Git and lifecycle fixtures cover committed changes, verified equal-head upstreams and collect-only; existing integration fixture supplies its explicitly known base. Portable runtime runs the actual bridge regression on Windows.",
+      "components": [
+        {
+          "name": "pytest-lifecycle-bridge",
+          "paths": [
+            "template/files/wellmanifest_governance.py"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/pytest-plugin.test.sh",
+            "tests/pytest_base_test.py",
+            "tests/runtime_safety_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "An unresolved Git base raises the existing GovernanceGateError before product tests instead of silently omitting committed changes."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through protected publication; preserve independent controller and merge receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/pytest_base_test.py",
+          "python3 tests/runtime_safety_test.py"
+        ],
+        "evidence": "Actual missing-base and lifecycle regressions fail against the old bridge, then pass while valid base sources and collect-only remain supported."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/pytest-plugin.test.sh",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing integration, full native, installed-package parity and current-head Linux/Windows/OneDev checks pass before independent review."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and Goal-managed v0.20.79 publication verified."
+      }
+    ]
+  }
+}

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.79] - 2026-10-03
+
+- Fail the adopted pytest governance lifecycle when no explicit, event or verified upstream Git base resolves, instead of substituting HEAD and hiding committed changes.
+- Preserve valid base sources, verified equal-head upstreams, collect-only behavior and existing hook activation and event fetching.
+- Exercise actual Git and lifecycle regressions on Linux and Windows; bind the existing standalone integration fixture to its known upstream baseline.
+
 ## [0.20.78] - 2026-10-03
 
 - Reject adjacent letter and digit suffixes when matching ticket numbers in read-only local and origin branch activity observations.

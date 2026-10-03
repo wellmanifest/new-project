@@ -105,10 +105,10 @@ def _resolve_base(root: Path) -> str:
         if merge_base:
             return merge_base
 
-    head = _git(root, "rev-parse", "HEAD")
-    if not head:
-        raise GovernanceGateError("GOV-PACKAGING-003: cannot resolve Git base")
-    return head
+    raise GovernanceGateError(
+        "GOV-PACKAGING-003: cannot resolve Git base; "
+        "set WELLMANIFEST_BASE_SHA or fetch the target branch"
+    )
 
 
 def _changed_paths(root: Path, base: str) -> list[str]:
