@@ -4897,6 +4897,12 @@ def main(argv: list[str] | None = None) -> int:
                     payload["timings"] = timings
                 write_resolved_ticket(root, args.resolved_ticket_output, selected_ticket, report)
                 output_path = optional_repo_path(root, args.output, "GOV-PATH-001", "report output", report)
+                current = report.payload()
+                if current["findings"]:
+                    payload["findings"].extend(current["findings"])
+                    for field in ("errors", "warnings", "findings"):
+                        payload["summary"][field] += current["summary"][field]
+                    payload["status"] = "failed" if payload["summary"]["errors"] else "passed"
                 write_report(output_path, formatted_report(payload, args.format))
                 return 0 if payload["summary"]["errors"] == 0 else 1
 
