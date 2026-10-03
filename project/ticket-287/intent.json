@@ -1,0 +1,112 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-287",
+  "summary": "Serialize continuity event and checkpoint index transactions",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-287/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/work_continuity.py",
+    "tests/continuity_storage_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2b31334d4b98768d40c1c46224e44609131fe9f5",
+    "targetBranch": "main",
+    "outcome": "Serialize continuity journal/index writers, reject stale checkpoint sequences without corrupting storage, recover the index on replay, and publish immutable standard 0.20.61 after protected delivery.",
+    "nonGoals": [
+      "Grant authority from advisory checkpoints",
+      "Change continuity schemas or external controller fencing",
+      "Add dependencies or mutate foreign checkouts",
+      "Wire the new suite into CI; deferred to a separately scoped dependent ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use a stable per-stream operating-system file lock across journal validation, append and atomic index replacement; share the lock with index rebuild. Bound acquisition time, preflight index size and repair the advisory index on idempotent replay.",
+      "components": [
+        {
+          "name": "continuity-storage",
+          "paths": [
+            "scripts/work_continuity.py"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/continuity_storage_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/continuity_storage_test.py",
+          "bash tests/work-continuity.test.sh"
+        ],
+        "evidence": "Two real processes reproduce stale concurrent capture, independent ticket index loss and concurrent rebuild races; replay restores interrupted index writes and bounded-index rejection appends no event. CI wiring is a dependent follow-up with its own public-interface budget."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Native governance and required CI pass without changing protected authority."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent exact-head merge and final immutable standard v0.20.61 release are verified."
+      }
+    ]
+  }
+}

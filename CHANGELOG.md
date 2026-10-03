@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.61] - 2026-10-03
+
+### Fixed
+- Serialize continuity journal validation, append, advisory index replacement and rebuild with a bounded per-stream OS file lock. Reject stale concurrent checkpoints before append and restore interrupted index writes on exact replay.
+- Preflight bounded index serialization and validate event digests before persisting. Add real process regressions for concurrent writers, rebuild races and replay recovery.
+
 ## [0.20.60] - 2026-10-03
 
 ### Fixed
