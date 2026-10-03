@@ -25,6 +25,17 @@ spec.loader.exec_module(allocation_fixture_module)
 def allocation_fixture():
     fixture = allocation_fixture_module.TicketAllocationWorktreeTest(
         "test_file_ticket_is_created_only_in_canonical_linked_worktree")
+    original_git = fixture.git
+    def portable_git(*args, check=True):
+        if args == ("config", "core.excludesFile", os.devnull):
+            # Git for Windows rejects NUL as an exclude file. A real empty
+            # file also isolates the fixture from user-level ignore rules.
+            excludes = Path(fixture.temp.name) / "empty-git-excludes"
+            excludes.write_bytes(b"")
+            original_git("config", "core.autocrlf", "false")
+            args = ("config", "core.excludesFile", str(excludes))
+        return original_git(*args, check=check)
+    fixture.git = portable_git
     try:
         fixture.setUp()
     except subprocess.CalledProcessError as error:
