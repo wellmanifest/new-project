@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.74] - 2026-10-03
+
+- Align branch-name checks in the intent schema, source runtime and installed bundle with Git's ref rules; reserve standalone `@` because its revision meaning is HEAD.
+- Reject invalid dot/lock components, trailing separators/dots, leading dash and ASCII whitespace/control names while retaining valid Unicode and punctuation.
+- Compare source, bundle and schema against the actual Git branch validator in the existing Linux/Windows runtime suite.
+
 ## [0.20.73] - 2026-10-03
 
 - Open continuity streams through anchored no-follow POSIX descriptors and held Windows reparse-point-safe handles.

@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import shlex
@@ -248,6 +249,78 @@ exec "$TASK_SIGNAL_REAL_GIT" "$@"
             with self.subTest(allowed=allowed, forbidden=forbidden):
                 self.assertEqual(bool(errors), expected)
 
+
+
+    def test_intent_branch_names_match_git_in_source_bundle_and_schema(self):
+        checkers = []
+        for index, relative in enumerate(("scripts/governance_check.py",
+                "packages/wellman/src/wellman/_bundled/governance_check.py")):
+            name = f"branch_boundary_runtime_{index}"
+            spec = importlib.util.spec_from_file_location(name, ROOT / relative)
+            checker = importlib.util.module_from_spec(spec)
+            sys.modules[name] = checker
+            spec.loader.exec_module(checker)
+            checkers.append(checker.branch_name)
+        schema = json.loads((ROOT / "governance/intent.schema.json").read_text())["$defs"]["branch"]
+        self.assertEqual(schema["type"], "string")
+        self.assertEqual(schema["minLength"], 1)
+        pattern = re.compile(schema["pattern"])
+        invalid = ("", "/", "HEAD", "-topic", ".topic", "topic/.hidden", "topic.lock",
+                   "topic.lock/child", "topic/child.lock", "topic.", "topic/",
+                   "topic//child", "topic..child", "topic@{child", "topic space",
+                   "topic\tspace", "topic\nspace", "topic\x7fspace", "topic\x01space",
+                   "topic~child", "topic^child", "topic:child", "topic?child",
+                   "topic*child", "topic[child", "topic\\child")
+        valid = ("main", "ticket/300-branch", "topic.Lock", "foo./bar",
+                 "topic@name", "żółw/日本語", "comma,semi;plus+", "tag#one", "refs/heads/main", "unicode\u2028name", "emoji/😀")
+        cases = [(value, False) for value in invalid] + [(value, True) for value in valid]
+        javascript = subprocess.run(["node", "-e",
+            "const x=JSON.parse(require('fs').readFileSync(0,'utf8'));"
+            "process.stdout.write(JSON.stringify(x.names.map(v=>new RegExp(x.pattern).test(v))))"],
+            input=json.dumps({"pattern": schema["pattern"], "names": [value for value, _ in cases] + ["@"]}),
+            text=True, capture_output=True, check=True)
+        self.assertEqual(json.loads(javascript.stdout), [expected for _, expected in cases] + [False])
+        for value, expected in cases:
+            with self.subTest(value=value):
+                actual = subprocess.run(["git", "check-ref-format", "--branch", value],
+                                        capture_output=True, check=False)
+                self.assertEqual(actual.returncode == 0, expected)
+                for checker in checkers:
+                    self.assertEqual(checker(value), expected)
+                self.assertEqual(pattern.fullmatch(value) is not None, expected)
+        # Git permits the literal branch refs/heads/@, but standalone @ is
+        # excluded by this contract because it is also the HEAD shorthand.
+        self.assertEqual(subprocess.run(["git", "check-ref-format", "--branch", "@"],
+                                        capture_output=True).returncode, 0)
+        self.assertTrue(all(checker("@") is False for checker in checkers))
+        self.assertIsNone(pattern.fullmatch("@"))
+        for value in (None, 17, [], {}, True):
+            with self.subTest(value=value):
+                self.assertTrue(all(checker(value) is False for checker in checkers))
+
+
+
+    def test_reserved_at_shorthand_can_resolve_differently_from_literal_branch(self):
+        with tempfile.TemporaryDirectory(prefix="branch-at-ambiguity-") as temporary:
+            root = Path(temporary)
+            hooks = root / "empty-hooks"
+            hooks.mkdir()
+            env = dict(os.environ)
+            env.update(GIT_CONFIG_NOSYSTEM="1", GIT_AUTHOR_NAME="Controlled fixture",
+                       GIT_AUTHOR_EMAIL="fixture@example.invalid", GIT_COMMITTER_NAME="Controlled fixture",
+                       GIT_COMMITTER_EMAIL="fixture@example.invalid")
+            def git(*args):
+                return subprocess.check_output(["git", "-C", str(root), "-c", "commit.gpgsign=false",
+                    "-c", "core.hooksPath=" + str(hooks), *args], env=env, stderr=subprocess.PIPE).strip()
+            git("init", "--quiet", "--initial-branch=main")
+            git("commit", "--quiet", "--allow-empty", "-m", "First fixture")
+            first = git("rev-parse", "HEAD")
+            git("branch", "@", first.decode("ascii"))
+            git("commit", "--quiet", "--allow-empty", "-m", "Second fixture")
+            second = git("rev-parse", "HEAD")
+            self.assertNotEqual(first, second)
+            self.assertEqual(git("rev-parse", "--verify", "refs/heads/@"), first)
+            self.assertEqual(git("rev-parse", "--verify", "@"), second)
 
 
 if __name__ == "__main__":
