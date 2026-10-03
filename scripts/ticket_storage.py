@@ -46,6 +46,7 @@ export async function load(url, context, nextLoad) {
 CAPTURED_BOOTSTRAP = r"""
 import {readSync} from 'node:fs';
 import {register} from 'node:module';
+import {pathToFileURL} from 'node:url';
 function exact(size) {
   const bytes = Buffer.alloc(size);
   for (let offset = 0; offset < size;) {
@@ -58,11 +59,16 @@ function exact(size) {
 const size = exact(4).readUInt32BE(0);
 if (!size || size > 24 * 1024 * 1024) throw Error('Unbounded Registry frame');
 const payload = JSON.parse(exact(size).toString('utf8'));
+// The consumer owns URL canonicalization. Python as_uri and Node differ on
+// characters such as '~', including Windows temporary-directory aliases.
+const sources = Object.fromEntries(Object.entries(payload.sources).map(
+  ([filename, source]) => [pathToFileURL(filename).href, source]
+));
 register('data:text/javascript,' + encodeURIComponent(payload.loader), {
-  data: {sources: payload.sources}
+  data: {sources}
 });
 process.argv = [process.execPath, payload.entryPath, ...payload.args];
-await import(payload.entryURL);
+await import(pathToFileURL(payload.entryPath).href);
 """
 
 
@@ -116,10 +122,10 @@ def invoke(root, pin, *args, content=None):
         raise ValueError("Node runtime required")
     root = Path(root).absolute()
     entry = root / "ticket-store-cli.mjs"
-    payload = json.dumps({"sources": {(root / name).as_uri(): source.decode("utf-8")
+    payload = json.dumps({"sources": {str(root / name): source.decode("utf-8")
                                      for name, source in sources.items()},
                           "loader": CAPTURED_LOADER, "entryPath": str(entry),
-                          "entryURL": entry.as_uri(), "args": list(args)}).encode()
+                          "args": list(args)}).encode()
     if len(payload) > 24 * MAX_MODULE_BYTES:
         raise ValueError("bounded Registry frame required")
     frame = len(payload).to_bytes(4, "big") + payload + (content or "").encode("utf-8")
