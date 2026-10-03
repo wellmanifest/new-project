@@ -88,7 +88,9 @@ class WorkspaceActivityTests(unittest.TestCase):
     def report(self, checker=None):
         result = subprocess.run([sys.executable, str(checker or ROOT / 'scripts/worktree_overlap_check.py'),
                                  '--workspace-root', str(self.primary), '--format', 'json'],
-                                capture_output=True, text=True, timeout=30)
+                                capture_output=True, text=True, timeout=30,
+                                env={**os.environ, 'PYTHONIOENCODING': 'ascii'})
+        self.assertTrue(result.stdout, f'CLI emitted no JSON: {result.stderr}')
         return result.returncode, json.loads(result.stdout)
 
     def assert_incomplete(self, diagnostic='GOV-WORKTREE-OVERLAP-003'):

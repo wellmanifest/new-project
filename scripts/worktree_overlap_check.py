@@ -1111,7 +1111,7 @@ def render_text(payload: dict[str, Any]) -> str:
     for finding in payload["findings"]:
         evidence = json.dumps(
             finding["evidence"],
-            ensure_ascii=False,
+            ensure_ascii=True,
             sort_keys=True,
             separators=(",", ":"),
         )
@@ -1193,7 +1193,7 @@ def main(argv: list[str] | None = None) -> int:
 
     payload = report_payload(findings, checkouts, only_identity, inventory)
     if args.format == "json":
-        print(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
+        print(json.dumps(payload, ensure_ascii=True, sort_keys=True, separators=(",", ":")))
     else:
         print(render_text(payload))
     return 0 if payload["status"] == "passed" else 1
