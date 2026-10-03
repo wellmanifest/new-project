@@ -2,7 +2,9 @@
 """Conservative activity observations in disposable Git repositories."""
 import importlib.util
 import json
+import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -25,6 +27,48 @@ ACTIVITY = load('ticket_activity')
 
 
 class WorkspaceActivityTests(unittest.TestCase):
+    def overlap_observers(self):
+        if hasattr(self, '_installed_overlap'):
+            return OVERLAP, self._installed_overlap
+        installed = Path(self.temporary.name) / 'installed'
+        self.git('init', '--quiet', '--initial-branch=main', str(installed))
+        bash = shutil.which('bash')
+        if os.name == 'nt':
+            git = shutil.which('git')
+            if git:
+                for parent in Path(git).resolve().parents:
+                    candidate = parent / 'bin/bash.exe'
+                    if candidate.is_file():
+                        bash = str(candidate)
+                        break
+        self.assertIsNotNone(bash, 'Bash is required for the declared guard installer')
+        # The actual installer calls python3; isolate that executable without
+        # changing HOME or relying on a production interpreter alias.
+        import shlex
+        tools = Path(self.temporary.name) / 'tools'
+        tools.mkdir()
+        python = shlex.quote(sys.executable.replace('\\', '/'))
+        (tools / 'python3').write_bytes(
+            ('#!/bin/sh\nexec ' + python + ' "$@"\n').encode('utf-8'))
+        (tools / 'python3').chmod(0o755)
+        env = OVERLAP.detached_git_env()
+        env['PATH'] = str(tools) + os.pathsep + str(Path(bash).parent) + os.pathsep + env['PATH']
+        env['PYTHONUTF8'] = '1'
+        subprocess.run([bash, str(ROOT / 'scripts/install-worktree-guard.sh'),
+                        '--source', str(ROOT), '--target', str(installed)],
+                       check=True, capture_output=True, timeout=30, env=env)
+        source = installed / '.governance/worktree_overlap_check.py'
+        self.assertEqual(source.read_bytes(),
+                         (ROOT / 'scripts/worktree_overlap_check.py').read_bytes())
+        spec = importlib.util.spec_from_file_location(
+            'installed_overlap_literal_fixture', source)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        self.addCleanup(sys.modules.pop, spec.name, None)
+        spec.loader.exec_module(module)
+        self._installed_overlap = module
+        return OVERLAP, module
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
@@ -41,8 +85,8 @@ class WorkspaceActivityTests(unittest.TestCase):
         return subprocess.run(['git', *args], check=True, capture_output=True, text=True,
                               env=OVERLAP.detached_git_env())
 
-    def report(self):
-        result = subprocess.run([sys.executable, str(ROOT / 'scripts/worktree_overlap_check.py'),
+    def report(self, checker=None):
+        result = subprocess.run([sys.executable, str(checker or ROOT / 'scripts/worktree_overlap_check.py'),
                                  '--workspace-root', str(self.primary), '--format', 'json'],
                                 capture_output=True, text=True, timeout=30)
         return result.returncode, json.loads(result.stdout)
@@ -201,6 +245,64 @@ class WorkspaceActivityTests(unittest.TestCase):
                     self.assertTrue(observer.resolve(
                         self.primary, directory, {'IN_PROGRESS'}).active)
             self.git('-C', str(self.primary), 'update-ref', '-d', ref)
+
+    def test_unicode_overlap_survives_different_git_quoting(self):
+        self.git('-C', str(self.primary), 'config', 'extensions.worktreeConfig', 'true')
+        (self.primary / 'src').mkdir()
+        relative = 'src/żółw.txt'
+        (self.primary / relative).write_text('baseline\n')
+        self.git('-C', str(self.primary), 'add', '.')
+        self.git('-C', str(self.primary), 'commit', '--quiet', '-m', 'fixture Unicode base')
+        for number, quote in [('001', 'true'), ('002', 'false')]:
+            checkout = self.primary / '.worktrees' / f'ticket-{number}--fixture'
+            self.git('-C', str(self.primary), 'worktree', 'add', '--relative-paths',
+                     '-b', f'ticket/{number}-fixture', str(checkout))
+            self.git('-C', str(checkout), 'config', '--worktree', 'core.quotePath', quote)
+            (checkout / relative).write_text(number + '\n')
+            for observer in self.overlap_observers():
+                with self.subTest(observer=observer.__name__, quote=quote):
+                    self.assertEqual(observer.dirty_paths(checkout, ()), (relative,))
+        for observer in self.overlap_observers():
+            code, report = self.report(observer.__file__)
+            self.assertEqual(code, 1, report)
+            finding = next(f for f in report['findings']
+                           if f['code'] == 'GOV-WORKTREE-OVERLAP-001')
+            self.assertEqual(finding['evidence']['overlappingPaths'], [relative])
+
+    def test_literal_git_paths_and_both_rename_endpoints(self):
+        names = [' leading.txt', 'trailing .txt', 'src/file with spaces.txt',
+                 'src/żółw.txt', 'src/кириллица.txt', 'src/ελληνικά.txt']
+        if os.name != 'nt':
+            names += ['src/line\nbreak.txt', 'src/line\rbreak.txt',
+                      'src/line\r\nbreak.txt', 'src/tab\tpath.txt',
+                      'src/quote"name.txt', 'src/slash\\name.txt',
+                      'src/literal -> arrow.txt', 'src/byte-\udcfe.txt',
+                      'src/byte-\udcff.txt']
+        original = self.git('-C', str(self.primary), 'rev-parse', 'HEAD').stdout.strip()
+        for index, name in enumerate(names):
+            path = self.primary / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(f'owned fixture {index}\n')
+        for observer in self.overlap_observers():
+            with self.subTest(observer=observer.__name__, state='untracked'):
+                self.assertEqual(set(observer.dirty_paths(self.primary, ())), set(names))
+        self.git('-C', str(self.primary), 'add', '.')
+        self.git('-C', str(self.primary), 'commit', '--quiet', '-m', 'fixture literal paths')
+        baseline = self.git('-C', str(self.primary), 'rev-parse', 'HEAD').stdout.strip()
+        for observer in self.overlap_observers():
+            with self.subTest(observer=observer.__name__, state='committed'):
+                self.assertEqual(set(observer.committed_against(
+                    self.primary, original, ())), set(names))
+        old, new = 'src/file with spaces.txt', 'src/renamed file.txt'
+        self.git('-C', str(self.primary), 'mv', old, new)
+        for observer in self.overlap_observers():
+            with self.subTest(observer=observer.__name__, state='staged-rename'):
+                self.assertEqual(set(observer.dirty_paths(self.primary, ())), {old, new})
+        self.git('-C', str(self.primary), 'commit', '--quiet', '-m', 'fixture rename')
+        for observer in self.overlap_observers():
+            with self.subTest(observer=observer.__name__, state='committed-rename'):
+                self.assertEqual(set(observer.committed_against(
+                    self.primary, baseline, ())), {old, new})
 
 
 if __name__ == '__main__':

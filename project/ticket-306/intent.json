@@ -1,0 +1,118 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-306",
+  "summary": "Preserve literal Git path identities in overlap observations",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-306/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/worktree_overlap_check.py",
+    "tests/runtime_safety_test.py",
+    "tests/workspace_activity_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-305"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "1e0f42e7f88db761766210d2b765d45d23985381",
+    "targetBranch": "main",
+    "outcome": "Preserve literal Git path identities in read-only overlap queries using NUL-separated status/diff records; detect identical Unicode files despite different core.quotePath settings, and reserve both rename endpoints. Publish standard 0.20.80 after protected merge.",
+    "nonGoals": [
+      "Change worktree layout, base selection, ignored-path policy, lease/terminal verification or execution authority",
+      "Add dependencies or mutate foreign/frozen target state"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Read Git output as UTF-8 with surrogateescape, use NUL-delimited porcelain and name-only diff records, preserve whitespace and literal Unicode, validate record framing, and include both staged rename endpoints. Disable rename detection for committed path lists so both old and new paths are observed. The declared managed installer copies the observer into .governance; test the source and this actual installed copy. The Wellman bundle excludes this module; actual Git and CLI tests cover differing quotePath settings and portable filenames.",
+      "components": [
+        {
+          "name": "overlap-observer",
+          "paths": [
+            "scripts/worktree_overlap_check.py"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/workspace_activity_test.py",
+            "tests/runtime_safety_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Existing read-only path observations report literal filesystem names and both rename endpoints instead of quoted display strings."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through protected publication; preserve independent controller and merge receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/workspace_activity_test.py",
+          "python3 tests/runtime_safety_test.py"
+        ],
+        "evidence": "Actual quotePath CLI and whitespace/rename Git regressions fail against pre-fix source and actual managed installation, then pass without granting authority."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/worktree-overlap.test.sh",
+          "bash tests/wellman-package.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Native, installed runtime, parity and exact-head Linux/Windows/OneDev checks pass before independent review."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and Goal-managed v0.20.80 publication verified."
+      }
+    ]
+  }
+}

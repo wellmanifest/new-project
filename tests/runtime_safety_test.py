@@ -508,6 +508,20 @@ exec "$TASK_SIGNAL_REAL_GIT" "$@"
         self.assertFalse(result.skipped, result.skipped)
         self.assertTrue(result.wasSuccessful(), result.errors + result.failures)
 
+    def test_literal_git_paths_through_source_and_managed_installation(self):
+        spec = importlib.util.spec_from_file_location(
+            "literal_git_runtime_fixture", ROOT / "tests/workspace_activity_test.py")
+        fixture = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fixture)
+        suite = unittest.TestSuite(fixture.WorkspaceActivityTests(name) for name in [
+            "test_unicode_overlap_survives_different_git_quoting",
+            "test_literal_git_paths_and_both_rename_endpoints"])
+        result = unittest.TestResult()
+        suite.run(result)
+        self.assertEqual(result.testsRun, 2)
+        self.assertFalse(result.skipped, result.skipped)
+        self.assertTrue(result.wasSuccessful(), result.errors + result.failures)
+
 
 if __name__ == "__main__":
     unittest.main()
