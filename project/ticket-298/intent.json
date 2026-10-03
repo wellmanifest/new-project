@@ -1,0 +1,118 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-298",
+  "summary": "Diagnose malformed remediation collections and require timezone-qualified timestamps",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-298/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/remediation_intent.py",
+    "tests/remediation_plan_safety_test.py",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-297"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "5df757fda3e457de7bedf24949e38e16e5d2fe2c",
+    "targetBranch": "main",
+    "outcome": "Return structured rejection for malformed remediation collection fields and non-object source without exceptions. Require a full timezone-qualified source timestamp. Preserve exact raw input, scoped paths, existing valid plans and advisory authority; publish immutable standard 0.20.72.",
+    "nonGoals": [
+      "Change execution or protected publication authority",
+      "Change field identities or introduce dependencies/bundled remediation module",
+      "Normalize invalid raw paths into accepted scope",
+      "Mutate foreign or frozen target state"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "After existing structural validation, use private copied collection records of shape-safe entries for cross-field checks; keep all recorded errors and exact original document/digest untouched. Align source timestamp parsing to the existing date-time schema with explicit zone and full time. Reuse the actual READY fixture and CLI regressions.",
+      "components": [
+        {
+          "name": "remediation-validator",
+          "paths": [
+            "scripts/remediation_intent.py"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/remediation_plan_safety_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Existing malformed-input validation emits structured errors instead of crashing, and requires date-time with explicit timezone."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/remediation_plan_safety_test.py"
+        ],
+        "evidence": "Malformed collections/source regressions reproduce crashes; invalid date-only/naive timestamps reproduce acceptance. Structured errors, CLI behavior, original-input immutability, valid offsets and raw scope are checked."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/runtime_safety_test.py",
+          "bash tests/governance-validator.test.sh",
+          "bash tests/wellman-package.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing integrations, parity, wheel, native and exact-head Linux/Windows/OneDev checks pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and immutable v0.20.72 release are verified."
+      }
+    ]
+  }
+}

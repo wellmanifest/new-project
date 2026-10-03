@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.72] - 2026-10-03
+
+- Reject malformed remediation collection/source shapes with structured errors while preserving original input, exact path bytes and advisory authority.
+- Require full timezone-qualified source timestamps and retain valid explicit offsets.
+- Cover malformed cross-field data, JSON CLI output, blocked projection and input immutability in portable regressions.
+
 ## [0.20.71] - 2026-10-03
 
 ### Fixed
