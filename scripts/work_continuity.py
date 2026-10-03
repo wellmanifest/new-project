@@ -511,11 +511,137 @@ def storage_paths(root: Path) -> tuple[Path, Path, int, int]:
     )
 
 
-def iter_events(path: Path) -> Iterable[dict[str, Any]]:
-    if not path.exists():
-        return
+
+@contextmanager
+def _posix_stream_descriptor(path: Path, append: bool):
+    no_follow = getattr(os, "O_NOFOLLOW", None)
+    directory_flag = getattr(os, "O_DIRECTORY", None)
+    if no_follow is None or directory_flag is None:
+        fail("GOV-CONTINUITY-001", "safe continuity directory opens are unavailable")
+    directory_flags = os.O_RDONLY | directory_flag | no_follow | getattr(os, "O_CLOEXEC", 0)
+    directory = os.open(path.anchor, directory_flags)
+    descriptor = None
     try:
-        with path.open("rb") as stream:
+        for part in path.parts[1:-1]:
+            try:
+                child = os.open(part, directory_flags, dir_fd=directory)
+            except FileNotFoundError:
+                if not append:
+                    raise
+                try:
+                    os.mkdir(part, mode=0o700, dir_fd=directory)
+                except FileExistsError:
+                    pass  # Reopen with no-follow; a concurrent link is never traversed.
+                child = os.open(part, directory_flags, dir_fd=directory)
+            os.close(directory)
+            directory = child
+        flags = (os.O_WRONLY | os.O_CREAT | os.O_APPEND) if append else os.O_RDONLY
+        flags |= no_follow | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NONBLOCK", 0)
+        descriptor = os.open(path.name, flags, 0o600, dir_fd=directory)
+        yield descriptor
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+        os.close(directory)
+
+
+@contextmanager
+def _windows_stream_descriptor(path: Path, append: bool):
+    # Open reparse points themselves. Held directory handles omit DELETE
+    # sharing, so parent names cannot be replaced during the file operation.
+    # https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew
+    import ctypes
+    from ctypes import wintypes
+    import msvcrt
+    if len(path.anchor) != 3 or path.anchor[1:] != ":\\":
+        fail("GOV-CONTINUITY-001", "continuity requires an absolute local drive path")
+    class FileInformation(ctypes.Structure):
+        _fields_ = [("attributes", wintypes.DWORD), ("creation", wintypes.FILETIME),
+                    ("access", wintypes.FILETIME), ("write", wintypes.FILETIME),
+                    ("volume", wintypes.DWORD), ("sizeHigh", wintypes.DWORD),
+                    ("sizeLow", wintypes.DWORD), ("links", wintypes.DWORD),
+                    ("indexHigh", wintypes.DWORD), ("indexLow", wintypes.DWORD)]
+    api = ctypes.WinDLL("kernel32", use_last_error=True)
+    api.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+                               wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    api.CreateFileW.restype = wintypes.HANDLE
+    api.GetFileInformationByHandle.argtypes = [wintypes.HANDLE, ctypes.POINTER(FileInformation)]
+    api.GetFileInformationByHandle.restype = wintypes.BOOL
+    api.CloseHandle.argtypes = [wintypes.HANDLE]
+    api.CloseHandle.restype = wintypes.BOOL
+    invalid = ctypes.c_void_p(-1).value
+    handles = []
+    descriptor = None
+    def open_handle(candidate, directory=False):
+        access = 0x80 if directory else (0x40000080 if append else 0x80000000)
+        flags = 0x00200000 | (0x02000000 if directory else 0)
+        creation = 4 if append and not directory else 3  # OPEN_ALWAYS / OPEN_EXISTING
+        handle = api.CreateFileW(str(candidate), access, 3, None, creation, flags, None)
+        if handle == invalid:
+            error = ctypes.get_last_error()
+            if error in (2, 3):
+                raise FileNotFoundError(errno.ENOENT, "continuity path is absent", str(candidate))
+            raise ctypes.WinError(error)
+        handles.append(handle)
+        metadata = FileInformation()
+        if not api.GetFileInformationByHandle(handle, ctypes.byref(metadata)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        if metadata.attributes & 0x400 or bool(metadata.attributes & 0x10) != directory:
+            fail("GOV-CONTINUITY-001", "continuity paths must not be reparse points or unexpected types")
+        if not directory and metadata.links != 1:
+            fail("GOV-CONTINUITY-001", "continuity stream must be a single-linked regular file")
+        return handle
+    try:
+        open_handle(Path(path.anchor), directory=True)
+        current = Path(path.anchor)
+        for part in path.parts[1:-1]:
+            current /= part
+            try:
+                open_handle(current, directory=True)
+            except FileNotFoundError:
+                if not append:
+                    raise
+                try:
+                    current.mkdir(mode=0o700)
+                except FileExistsError:
+                    pass
+                open_handle(current, directory=True)
+        handle = open_handle(path)
+        descriptor = msvcrt.open_osfhandle(
+            handle, os.O_BINARY | os.O_NOINHERIT | (os.O_APPEND if append else os.O_RDONLY)
+        )
+        handles.pop()  # The CRT descriptor now owns the file handle.
+        yield descriptor
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+        for handle in reversed(handles):
+            api.CloseHandle(handle)
+
+
+@contextmanager
+def _stream_descriptor(path: Path, append: bool):
+    candidate = path.absolute()
+    if not candidate.name or ".." in candidate.parts:
+        fail("GOV-CONTINUITY-001", "continuity stream needs a confined file path")
+    adapter = _windows_stream_descriptor if os.name == "nt" else _posix_stream_descriptor
+    try:
+        with adapter(candidate, append) as descriptor:
+            metadata = os.fstat(descriptor)
+            if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+                fail("GOV-CONTINUITY-001", "continuity stream must be a single-linked regular file")
+            yield descriptor
+    except FileNotFoundError:
+        if not append:
+            raise
+        fail("GOV-CONTINUITY-001", "continuity stream parent disappeared before creation")
+    except OSError as error:
+        fail("GOV-CONTINUITY-001", f"cannot safely access continuity stream: {error}")
+
+
+def iter_events(path: Path) -> Iterable[dict[str, Any]]:
+    try:
+        with _stream_descriptor(path, append=False) as descriptor, os.fdopen(descriptor, "rb", closefd=False) as stream:
             for number, raw in enumerate(stream, start=1):
                 if len(raw) > 1024 * 1024:
                     fail("GOV-CONTINUITY-001", f"event line {number} exceeds the bounded event size")
@@ -526,6 +652,8 @@ def iter_events(path: Path) -> Iterable[dict[str, Any]]:
                 except (UnicodeError, json.JSONDecodeError) as exc:
                     fail("GOV-CONTINUITY-002", f"event stream line {number} is invalid: {exc}")
                 yield validate_event(value)
+    except FileNotFoundError:
+        return
     except ContinuityError:
         raise
     except OSError as exc:
@@ -561,16 +689,12 @@ def event_state(events: Iterable[dict[str, Any]], repository: str) -> tuple[list
 
 
 def append_event(path: Path, event: dict[str, Any]) -> None:
-    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     payload = canonical_bytes(event) + b"\n"
-    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
-    try:
+    with _stream_descriptor(path, append=True) as descriptor:
         offset = 0
         while offset < len(payload):
             offset += os.write(descriptor, payload[offset:])
         os.fsync(descriptor)
-    finally:
-        os.close(descriptor)
 
 
 def index_from_events(repository: str, events: list[dict[str, Any]], maximum: int) -> dict[str, Any]:
