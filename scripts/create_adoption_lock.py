@@ -548,6 +548,41 @@ def report_missing_target_prerequisites(paths: list[str]) -> None:
         print(f"MISSING target prerequisite {path}")
 
 
+def validate_wellman_scaffold(target_root: Path, files: list[dict[str, object]]) -> None:
+    """Accept only an explicit, policy-free legacy baseline initialization."""
+    targets = {str(item["target"]) for item in files}
+    targets.update({".gitignore", ".governance/manifest.lock.json"})
+    for target in targets:
+        path = target_root / target
+        if any(part.is_symlink() for part in (path, *path.parents)):
+            raise SystemExit("Wellman scaffold migration refuses symlinked target paths")
+    for name in ("manifest.lock.json", "manifest.base.json", "package-manifest.json"):
+        if (target_root / ".governance" / name).exists():
+            raise SystemExit("Wellman scaffold migration refuses existing native adoption evidence")
+
+    def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate manifest key")
+            result[key] = value
+        return result
+
+    try:
+        document = json.loads((target_root / MANIFEST_TARGET).read_bytes(), object_pairs_hook=unique_object)
+    except (OSError, ValueError, UnicodeError) as error:
+        raise SystemExit("migration requires the exact minimal Wellman baseline scaffold") from error
+    standard = document.get("standard") if isinstance(document, dict) else None
+    if not (
+        isinstance(document, dict) and set(document) == {"schema", "standard"}
+        and document["schema"] == "wellmanifest.manifest/v1"
+        and isinstance(standard, dict) and set(standard) == {"id", "version"}
+        and standard["id"] == "profile:baseline"
+        and isinstance(standard["version"], str) and VERSION_PATTERN.fullmatch(standard["version"])
+    ):
+        raise SystemExit("migration requires the exact minimal Wellman baseline scaffold")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target-root", required=True)
@@ -562,6 +597,10 @@ def main() -> int:
     )
     parser.add_argument("--upgrade", action="store_true", help="Replace differing standard-managed files")
     parser.add_argument(
+        "--migrate-wellman-scaffold", action="store_true",
+        help="Explicitly initialize native governance over the exact minimal legacy Wellman baseline scaffold",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="Report adoption drift and planned changes without writing files",
@@ -570,11 +609,18 @@ def main() -> int:
 
     if args.check and args.upgrade:
         parser.error("--check and --upgrade are mutually exclusive")
+    if args.migrate_wellman_scaffold and not (args.check or args.upgrade):
+        parser.error("--migrate-wellman-scaffold requires --check or --upgrade after review")
 
     if re.fullmatch(r"[0-9a-f]{40}", args.source_revision) is None:
         parser.error("--source-revision must be a full lowercase 40-character commit SHA")
     standard_root = Path(__file__).resolve().parent.parent
-    target_root = Path(args.target_root).resolve()
+    requested_root = Path(args.target_root).absolute()
+    if args.migrate_wellman_scaffold and any(
+        path.is_symlink() for path in (requested_root, *requested_root.parents)
+    ):
+        raise SystemExit("Wellman scaffold migration refuses symlinked target paths")
+    target_root = requested_root.resolve()
     subprocess.run(
         ["git", "cat-file", "-e", f"{args.source_revision}^{{commit}}"],
         cwd=standard_root,
@@ -589,6 +635,8 @@ def main() -> int:
         publication_status = "published"
 
     files = package_files(standard_root, args.source_revision)
+    if args.migrate_wellman_scaffold:
+        validate_wellman_scaffold(target_root, files)
     managed_targets = {
         str(item["target"]) for item in files if item["strategy"] == "managed"
     }
@@ -610,6 +658,9 @@ def main() -> int:
             payloads[target] = source_content
         elif strategy == "extendable" and target == MANIFEST_TARGET:
             current_base = manifest_projection(source_content)
+            if args.migrate_wellman_scaffold:
+                payloads[target] = json_bytes(load_json_bytes(source_content, "standard manifest"))
+                continue
             target_document = load_json_bytes(target_path.read_bytes(), "target manifest")
             if previous_base is None:
                 base_document = load_json_bytes(current_base, "managed manifest base")

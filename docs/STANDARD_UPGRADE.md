@@ -1,4 +1,4 @@
-# Standard Upgrade — 3-layer auto-propagation
+# Standard Upgrade — immutable adoption and protected publication
 
 ## Overview
 
@@ -54,79 +54,75 @@ the lock or decrement high-water without independently verifying the allocator
 is gone and authorizing a specific recovery. A successful result reports the
 original HEAD, request digest and fence, with `grantsMergeAuthority=false`.
 
-When a new `wellmanifest/new-project` release is published, all adopting
-repositories receive the update through three independent layers:
+## Migrating an exact minimal Wellman scaffold
 
+Some repositories were registered by the separate Wellman catalogue CLI with
+only this manifest:
+
+```json
+{"schema":"wellmanifest.manifest/v1","standard":{"id":"profile:baseline","version":"0.20.37"}}
 ```
-Release v0.20.35
-  ├── Layer 1: Pre-commit hook  →  auto-upgrade on next commit (local)
-  ├── Layer 2: CI reusable gate →  fail-fast on outdated standard (CI)
-  └── Layer 3: Org-wide auto-PR →  upgrade PR in all 100+ repos (batch)
-```
 
-## Layer 1 — Pre-commit hook (local, before development)
-
-The pre-commit hook checks the installed `wellman` package
-version against `pyproject.toml [tool.wellmanifest].standard`. On mismatch,
-it auto-installs the correct version before the developer starts work.
+This is requirement registration, not an installed native governance contract.
+The ordinary immutable adopter refuses it because it does not extend the full
+managed manifest. For an authorized bootstrap, use the published adopter's
+explicit migration option introduced in standard 0.20.81:
 
 ```bash
-# .githooks/pre-commit (installed by goal bootstrap)
-REQUIRED=$(python3 -c "import tomllib; ...")
-INSTALLED=$(python3 -c "from wellman import __version__; ...")
-if [ "$INSTALLED" != "$REQUIRED" ]; then
-  uv pip install "wellman==${REQUIRED}"
-fi
+python3 /path/to/pinned/new-project/scripts/create_adoption_lock.py \
+  --target-root /path/to/repository --source-revision <published-full-commit-sha> \
+  --migrate-wellman-scaffold --check
+
+# Apply the same reviewed scope through the authorized bootstrap owner.
+python3 /path/to/pinned/new-project/scripts/create_adoption_lock.py \
+  --target-root /path/to/repository --source-revision <published-full-commit-sha> \
+  --migrate-wellman-scaffold --upgrade
 ```
 
-**Result:** Developer cannot commit with outdated standard.
+The option accepts exactly the two-key baseline scaffold with a valid version,
+without a native lock, manifest base or package map. Additional fields, native
+schemas, duplicate keys and symlinked target paths are refused before writes.
+Existing target prerequisites remain required; the review is read-only and
+reports drift. The full manifest and managed files come from the same verified
+annotated tag and final canonical GitHub Release. Ordinary native upgrade and
+extension rules remain unchanged. Never use `--allow-unpublished-for-testing`
+on a production repository.
 
-## Layer 2 — CI reusable workflow (GitHub Actions)
+Reconcile the current owner, pending changes, exact bootstrap scope and existing
+session authorization before applying. Preserve the original committed history
+or an authorized external snapshot. This option installs files only: it grants
+no repository admission, lease, trusted approval or merge authority. A usable
+native allocation/canonical worktree, full product validation and the declared
+independent protected publisher are still required for subsequent delivery.
+Do not replace customized or partial native governance with a scaffold. Restore
+it through its own pinned adopter and controller-owned recovery instead.
 
-Adopter repos reference the governance gate as a reusable workflow:
+## Upgrade boundaries
 
-```yaml
-# .github/workflows/governance.yml
-jobs:
-  governance:
-    uses: wellmanifest/new-project/.github/workflows/governance-gate-reusable.yml@v0.20.35
-    with:
-      target-root: .
-```
+| Boundary | Actual responsibility |
+| --- | --- |
+| Local hook | Validate the installed immutable pin and bounded ticket scope; it does not fetch or update governance. |
+| Explicit adopter/updater | Verify the published revision, review drift, preserve target extensions and apply an authorized upgrade. |
+| CI and protected publisher | Validate the exact base/head and required checks, then obtain independent trusted approval before merge. |
 
-**Result:** CI fails if governance check doesn't pass. Zero config in repo.
+`create_adoption_lock.py --check` reports missing files, changed digests,
+executable modes and target prerequisites without writing. `--upgrade` replaces
+reviewed managed files and performs the supported three-way merge of the
+managed manifest base and target-owned extensions. A missing/invalid base or
+conflicting extension is a recovery condition, not permission to overwrite it.
+The resulting lock binds the immutable source revision and managed digests.
 
-## Layer 3 — Org-wide auto-PR (batch propagation)
+The optional `propagate-standard.yml` workflow can propose upgrades when its
+repository configuration enables it. A proposal, green CI or a version string
+alone proves neither fleet adoption nor merge. Observe each repository's actual
+PR, independent approval and terminal receipt. Verify publication and deployed
+runtime separately; no universal 24-hour rollout is guaranteed by the standard.
 
-On new release, `propagate-standard.yml` scans all orgs for adopters and
-creates upgrade PRs:
+## Runtime package and CLI identity
 
-```
-wellmanifest/new-project release v0.20.35
-  → Scans semcod/*, subactor/*, autogrammar/*, ...
-  → Creates PR "chore: upgrade wellmanifest standard to 0.20.35"
-  → PR runs governance gate → auto-merge if green
-```
-
-**Result:** All repos receive upgrade within 24h of release.
-
-## Migration from vendored copy
-
-```bash
-# Before (187KB governance_check.py copied to each repo):
-.governance/governance_check.py   # 4343 lines, vendored
-
-# After (1KB wrapper + package dependency):
-uv add --group governance wellman==0.20.35
-# .governance/governance_check.py is no longer needed
-```
-
-## Package: wellman
-
-```bash
-uv add --group governance wellman
-python -m wellman check --root .
-wellman check --root .
-```
-
-Source: `packages/wellman/` in this repository.
+The governance runtime in `packages/wellman` and the separately installed
+Wellman catalogue CLI have distinct responsibilities. Resolve the actual
+executable, source revision and adoption lock before selecting a command.
+Installing a package or running legacy `wellman adopt baseline` does not install
+or update the complete native governance contract. Native adoption/upgrades use
+the pinned `create_adoption_lock.py` path above and retain protected delivery.
