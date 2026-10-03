@@ -270,6 +270,14 @@ class WorkspaceActivityTests(unittest.TestCase):
             finding = next(f for f in report['findings']
                            if f['code'] == 'GOV-WORKTREE-OVERLAP-001')
             self.assertEqual(finding['evidence']['overlappingPaths'], [relative])
+            text = subprocess.run([sys.executable, observer.__file__,
+                                   '--workspace-root', str(self.primary)],
+                                  capture_output=True, text=True, timeout=30,
+                                  env={**os.environ, 'PYTHONIOENCODING': 'ascii'})
+            self.assertEqual(text.returncode, 1, text.stderr)
+            self.assertIn('GOV-WORKTREE-OVERLAP-001', text.stdout)
+            self.assertIn(json.dumps(relative, ensure_ascii=True), text.stdout)
+            self.assertNotIn('UnicodeEncodeError', text.stderr)
 
     def test_literal_git_paths_and_both_rename_endpoints(self):
         names = [' leading.txt', 'trailing .txt', 'src/file with spaces.txt',
