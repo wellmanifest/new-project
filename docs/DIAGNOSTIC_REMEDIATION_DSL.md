@@ -110,6 +110,16 @@ still reported. The overlay has `authority: ADVISORY` and binds the
 authority-bearing intent, graph, diagnostics, plans and correlated record IDs.
 Any input edit requires re-analysis.
 
+The closed v1 action vocabulary has no file-deletion operation. Every relevant
+producer change with `action: delete` therefore emits blocking
+`T2C_UNAUTHORIZED_DELETION`, including a path named by an `IMPLEMENT` action
+with `DESTRUCTIVE` risk and `EXPLICIT_HUMAN` metadata. Those labels classify
+the action's risk; they do not define a new deletion effect. Preserve the file
+or use read-only triage. A future deletion capability needs a separately
+supported typed operation and bounded authority, rather than relabeling an
+existing action. The current producer change schema has no `actionRef` field.
+The resulting overlay remains advisory and never authorizes execution.
+
 `todo2code.requiredDiagnosticCodes` is a fail-closed capability declaration.
 Version 1 requires todo2code ambiguity, planned-not-implemented and both
 human/agent conflict codes; omitting or inventing a code invalidates the DSL
