@@ -1,0 +1,116 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-289",
+  "summary": "Use Node canonical URLs for captured Registry module identity across platforms",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-289/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/ticket_storage.py",
+    "tests/registry_runtime_test.py",
+    ".github/workflows/ci.yml",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-288"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "208cd343011b941d2ab05b38c7b5abc7cf05cc92",
+    "targetBranch": "main",
+    "outcome": "Canonicalize captured Registry source URLs and the entry URL with Node pathToFileURL, preserve independently pinned byte execution and stdin/argv behavior, and complete Registry Windows CI wiring in immutable standard 0.20.63.",
+    "nonGoals": [
+      "Change Registry public CLI or grant authority",
+      "Reopen runtime paths after captured-source verification",
+      "Add runtime dependencies, waive Windows identity checks or change unrelated checkouts"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Send raw absolute source paths plus captured independently verified bytes in the bounded frame. Derive source-map and entry URLs consistently in Node through pathToFileURL; preserve original argv and the closed loader. Use byte-exact test fixtures and an explicit tilde/Unicode/percent/hash path regression. Run Registry integrity tests on Windows with fail-closed exit propagation.",
+      "components": [
+        {
+          "name": "captured-registry-runtime",
+          "paths": [
+            "scripts/ticket_storage.py"
+          ]
+        },
+        {
+          "name": "regressions-and-ci",
+          "paths": [
+            "tests/registry_runtime_test.py",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Add Registry integrity suite to the existing required Windows workflow step; preserve job identities."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/registry_runtime_test.py"
+        ],
+        "evidence": "Ten real Node tests preserve captured pins under entry/dependency mutation, stdin/argv identity and encoded paths; the original implementation fails the explicit tilde-path regression."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Native governance and required Linux, Windows and OneDev checks pass, including Registry identity on Windows."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent exact-head protected merge and final immutable standard v0.20.63 release are verified."
+      }
+    ]
+  }
+}

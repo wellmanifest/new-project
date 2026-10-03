@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.63] - 2026-10-03
+
+### Fixed
+- Use Node canonical file URLs for both the independently captured Registry module closure and entry identity. Preserve verified-byte execution, stdin and argv for tilde, Unicode, percent and hash paths.
+- Run byte-exact Registry integrity regressions on Windows as well as Linux; retain the existing required job names and fail-closed exit propagation.
+
 ## [0.20.62] - 2026-10-03
 
 ### Fixed

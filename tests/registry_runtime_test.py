@@ -36,7 +36,7 @@ console.log(JSON.stringify({marker, args: process.argv.slice(2), input: fs.readF
 
     def write_sources(self):
         for name, source in self.sources.items():
-            (self.root / name).write_text(source, encoding="utf-8")
+            (self.root / name).write_bytes(source.encode("utf-8"))
         # Independent fixture pin: never derive it through code under test.
         hashes = {name: hashlib.sha256(source.encode()).hexdigest()
                   for name, source in self.sources.items()}
@@ -72,6 +72,15 @@ console.log(JSON.stringify({marker, args: process.argv.slice(2), input: fs.readF
         result = ticket_storage.invoke(self.root, self.pin, "read", content="body")
         self.assertEqual(result["marker"], "original")
         self.assertEqual(result["input"], "body")
+
+    def test_encoded_root_preserves_canonical_entry_and_dependency_identity(self):
+        # Node canonical file URLs encode '~' too, while Python as_uri leaves
+        # it literal. Percent, hash and Unicode must also preserve the file.
+        self.root = self.root / "runtime~é Ελληνικά Україна # %"
+        self.root.mkdir()
+        self.write_sources()
+        result = ticket_storage.invoke(self.root, self.pin, "read", content="fixture body")
+        self.assertEqual(result, {"marker": "original", "args": ["read"], "input": "fixture body"})
 
     def test_async_stdin_reader_sees_only_original_content(self):
         self.sources["ticket-store-cli.mjs"] = '''import {marker} from './ticket-store.mjs';
