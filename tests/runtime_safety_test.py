@@ -354,5 +354,127 @@ exec "$TASK_SIGNAL_REAL_GIT" "$@"
                         self.assertEqual(changes, original)
 
 
+    def test_catalog_execution_models_are_typed_before_strict_conformance(self):
+        from copy import deepcopy
+        spec = importlib.util.spec_from_file_location("catalog_model_boundary", ROOT / "scripts/standard_pack_check.py")
+        checker = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(checker)
+        baseline = {"schema": "wellmanifest.standard-pack-routing/v1", "packs": [],
+                    "profiles": {"empty": {"requirements": []}},
+                    "executionModels": {"reference-only": {"maximumLevel": "S0", "authorizesEffects": False}}}
+        invalid = [
+            ("", {"maximumLevel": "S0", "authorizesEffects": False}),
+            (" ", {"maximumLevel": "S0", "authorizesEffects": False}),
+            *(('reference-only', value) for value in (None, 17, True, [], "model", {})),
+            *(('reference-only', {"maximumLevel": value, "authorizesEffects": False})
+              for value in (None, 0, True, [], {}, "INVALID")),
+            *(('reference-only', {"maximumLevel": "S0", "authorizesEffects": value})
+              for value in (None, 0, 1, "yes", [], {})),
+            ('reference-only', {"maximumLevel": "S0"}),
+            ('reference-only', {"authorizesEffects": False}),
+        ]
+        valid = [("model ścieżka", {"maximumLevel": level, "authorizesEffects": effects,
+                                  "description": "Preserved metadata"})
+                 for level in checker.LEVELS for effects in (False, True)]
+        valid.append((" model ", {"maximumLevel": "S2", "authorizesEffects": False}))
+        with tempfile.TemporaryDirectory(prefix="catalog-model-boundary-") as temporary:
+            root = Path(temporary)
+            (root / "adoption.json").write_text(json.dumps({"schema": "wellmanifest.standard-adoption/v1",
+                "mode": "enforce", "profile": "empty", "adoptions": []}), encoding="utf-8")
+            for expected_valid, cases in ((False, invalid), (True, valid)):
+                for name, model in cases:
+                    catalog = deepcopy(baseline)
+                    catalog["executionModels"] = {name: model}
+                    original = deepcopy(catalog)
+                    with self.subTest(kind="catalog", name=name, model=model):
+                        self.assertEqual(not checker.catalog_findings(catalog), expected_valid)
+                        self.assertEqual(catalog, original)
+                    (root / "catalog.json").write_text(json.dumps(catalog), encoding="utf-8")
+                    run = subprocess.run([sys.executable, str(ROOT / "scripts/standard_pack_check.py"),
+                        "--root", str(root), "--catalog", "catalog.json", "--adoption", "adoption.json",
+                        "--strict", "--format", "json"], capture_output=True, text=True, encoding="utf-8")
+                    with self.subTest(kind="strict-cli", name=name, model=model):
+                        self.assertEqual(run.returncode, 0 if expected_valid else 2, run.stderr)
+                        payload = json.loads(run.stdout)
+                        self.assertEqual(payload["ok"], expected_valid)
+                        if not expected_valid:
+                            self.assertTrue(all(item["code"] == "STD-PACK-CATALOG" for item in payload["findings"]))
+
+
+    def test_adoption_artifacts_stay_in_the_canonical_checkout(self):
+        import hashlib
+        spec = importlib.util.spec_from_file_location("artifact_boundary_runtime", ROOT / "scripts/standard_pack_check.py")
+        checker = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(checker)
+        with tempfile.TemporaryDirectory(prefix="artifact-boundary-") as temporary:
+            outer = Path(temporary)
+            root = outer / "repository"
+            root.mkdir()
+            outside = outer / "outside.bin"
+            data = b"Controlled public fixture; no production secrets."
+            outside.write_bytes(data)
+            (root / "inside.bin").write_bytes(data)
+            digest = hashlib.sha256(data).hexdigest()
+            catalog = {"schema": "wellmanifest.standard-pack-routing/v1",
+                "packs": [{"id": "pack", "owns": ["fixture"]}],
+                "profiles": {"empty": {"requirements": []}},
+                "executionModels": {"fixture": {"maximumLevel": "S2", "authorizesEffects": False}}}
+            (root / "catalog.json").write_text(json.dumps(catalog), encoding="utf-8")
+            reads = []
+            original_sha = checker.sha256
+            def observed_sha(path):
+                reads.append(path.resolve())
+                return original_sha(path)
+            checker.sha256 = observed_sha
+            def check(target, valid):
+                record = {"id": "pack", "level": "S2", "model": "fixture", "revision": "0" * 40,
+                    "evidence": [{"level": level, "uri": "fixture://evidence/" + level, "sha256": "0" * 64}
+                                 for level in ("S0", "S1", "S2")],
+                    "artifacts": [{"target": target, "sha256": digest}]}
+                findings = []
+                reads.clear()
+                with self.subTest(kind="artifact", target=target):
+                    checker.adoption_artifact_findings(root, "pack", record, "S2", findings)
+                    self.assertEqual(not findings, valid)
+                    self.assertTrue(all(path.is_relative_to(root.resolve()) for path in reads))
+                    if not valid:
+                        self.assertEqual(reads, [])
+                        self.assertEqual([item["code"] for item in findings], ["STD-ADOPTION-ARTIFACT"])
+                (root / "adoption.json").write_text(json.dumps({"schema": "wellmanifest.standard-adoption/v1",
+                    "mode": "enforce", "profile": "empty", "adoptions": [record]}), encoding="utf-8")
+                run = subprocess.run([sys.executable, str(ROOT / "scripts/standard_pack_check.py"),
+                    "--root", str(root), "--catalog", "catalog.json", "--adoption", "adoption.json",
+                    "--strict", "--format", "json"], capture_output=True, text=True, encoding="utf-8")
+                with self.subTest(kind="strict-cli", target=target):
+                    self.assertEqual(run.returncode, 0 if valid else 1, run.stderr)
+                    self.assertEqual(json.loads(run.stdout)["ok"], valid)
+            check("inside.bin", True)
+            check("./inside.bin", True)
+            invalid = ("C:/fixture.bin", "C:relative.bin", "\\fixture.bin",
+                       "\\\\fixture.invalid\\share\\fixture.bin", "folder\\..\\outside.bin",
+                       "../outside.bin", str(outside.resolve()), "")
+            if os.name != "nt":
+                # Controlled POSIX filenames demonstrate that drive/root syntax
+                # must be rejected portably rather than relying on missing files.
+                (root / "C:").mkdir()
+                for target in invalid[:5]:
+                    (root / target).write_bytes(data)
+            for target in invalid:
+                check(target, False)
+            with self.subTest(kind="symlink-confinement"):
+                try:
+                    (root / "escape.bin").symlink_to(outside)
+                    (root / "confined.bin").symlink_to(root / "inside.bin")
+                    directory = outer / "outside-directory"
+                    directory.mkdir()
+                    (directory / "file.bin").write_bytes(data)
+                    (root / "linked-directory").symlink_to(directory, target_is_directory=True)
+                except (OSError, NotImplementedError) as error:
+                    self.skipTest(f"Symlink fixture unavailable: {error}")
+                check("escape.bin", False)
+                check("linked-directory/file.bin", False)
+                check("confined.bin", True)
+
+
 if __name__ == "__main__":
     unittest.main()

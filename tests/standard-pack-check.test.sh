@@ -59,4 +59,9 @@ assert any(
 )
 PY
 
+# Typed execution models and confined artifact reads use the actual strict CLI.
+python3 "$root/tests/runtime_safety_test.py" \
+  RuntimeSafetyTests.test_catalog_execution_models_are_typed_before_strict_conformance \
+  RuntimeSafetyTests.test_adoption_artifacts_stay_in_the_canonical_checkout
+
 echo "standard-pack-check.test.sh OK"

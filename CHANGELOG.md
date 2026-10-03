@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.76] - 2026-10-03
+
+- Validate execution-model names, object declarations, maximum levels and boolean effect flags before adoption conformance.
+- Confine managed-artifact file access to the canonical checkout; reject portable drive/root/parent escapes before hashing and report resolution/read failures.
+- Preserve valid catalog metadata, model levels and confined artifacts, including in-root symlinks; verify the actual strict CLI on Linux and Windows without granting runtime effects.
+
 ## [0.20.75] - 2026-10-03
 
 - Reject repeated physical change identities even when their before/after states or acceptance metadata differ.
