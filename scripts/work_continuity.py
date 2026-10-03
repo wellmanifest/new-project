@@ -10,15 +10,19 @@ durability still requires a protected external receipt store.
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
+import errno
 import hashlib
 import importlib.util
 import json
 import os
 from pathlib import Path
 import re
+import stat
 import subprocess
 import sys
 import tempfile
+import time
 from datetime import datetime, timezone
 from typing import Any, Iterable
 from urllib.parse import urlsplit
@@ -596,10 +600,15 @@ def index_from_events(repository: str, events: list[dict[str, Any]], maximum: in
     return validate_index(value)
 
 
-def write_index(path: Path, value: dict[str, Any], maximum_bytes: int) -> None:
+def index_payload(value: dict[str, Any], maximum_bytes: int) -> bytes:
     payload = json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False).encode("utf-8") + b"\n"
     if len(payload) > maximum_bytes:
         fail("GOV-CONTINUITY-001", "checkpoint index exceeds its bounded byte limit")
+    return payload
+
+
+def write_index(path: Path, value: dict[str, Any], maximum_bytes: int) -> None:
+    payload = index_payload(value, maximum_bytes)
     path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(prefix="checkpoint-index.", suffix=".json", dir=path.parent)
     temporary = Path(temporary_name)
@@ -624,20 +633,81 @@ def write_index(path: Path, value: dict[str, Any], maximum_bytes: int) -> None:
             temporary.unlink()
 
 
+@contextmanager
+def storage_transaction(event_path: Path):
+    """Stable OS-owned lock; never unlink it while another writer can use it."""
+    from ticket_input import TicketInputError, no_links
+    lock_path = event_path.with_name(event_path.name + ".lock")
+    try:
+        no_links(lock_path.absolute())
+        lock_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        no_links(lock_path.absolute())
+    except TicketInputError:
+        fail("GOV-CONTINUITY-001", "continuity transaction lock must not be linked")
+    flags = (os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
+             | getattr(os, "O_BINARY", 0) | getattr(os, "O_NONBLOCK", 0))
+    descriptor = os.open(lock_path, flags, 0o600)
+    acquired = False
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+            fail("GOV-CONTINUITY-001", "continuity transaction lock must be a regular private file")
+        if os.name == "nt":
+            import msvcrt
+            def acquire():
+                os.lseek(descriptor, 0, os.SEEK_SET)
+                msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
+            def unlock():
+                os.lseek(descriptor, 0, os.SEEK_SET)
+                msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+            def acquire():
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            def unlock():
+                fcntl.flock(descriptor, fcntl.LOCK_UN)
+        deadline = time.monotonic() + 30
+        while True:
+            try:
+                acquire()
+                acquired = True
+                break
+            except OSError as error:
+                if error.errno not in {errno.EACCES, errno.EAGAIN, errno.EDEADLK}:
+                    raise
+                if time.monotonic() >= deadline:
+                    fail("GOV-CONTINUITY-001", "continuity transaction lock acquisition timed out")
+                time.sleep(0.05)
+        yield
+    finally:
+        try:
+            if acquired:
+                unlock()
+        finally:
+            os.close(descriptor)
+
+
 def commit_event(root: Path, event: dict[str, Any]) -> dict[str, Any]:
     repository = repository_ref(root)
     event_path, index_path, maximum, maximum_bytes = storage_paths(root)
-    events, _ = event_state(iter_events(event_path), repository)
-    matching = next((existing for existing in events if existing["eventRef"] == event["eventRef"]), None)
-    if matching is not None:
-        if matching != event:
-            fail("GOV-CONTINUITY-002", "event reference already binds different content")
-        return {"status": "already-recorded", "event": event}
-    candidate = events + [event]
-    event_state(candidate, repository)
-    append_event(event_path, event)
-    write_index(index_path, index_from_events(repository, candidate, maximum), maximum_bytes)
-    return {"status": "recorded", "event": event}
+    validate_event(event)
+    with storage_transaction(event_path):
+        events, _ = event_state(iter_events(event_path), repository)
+        matching = next((existing for existing in events if existing["eventRef"] == event["eventRef"]), None)
+        if matching is not None:
+            if matching != event:
+                fail("GOV-CONTINUITY-002", "event reference already binds different content")
+            # An append can survive a failed index replace. The journal is
+            # authoritative for this advisory projection; exact replay heals it.
+            write_index(index_path, index_from_events(repository, events, maximum), maximum_bytes)
+            return {"status": "already-recorded", "event": event}
+        candidate = events + [event]
+        event_state(candidate, repository)
+        index = index_from_events(repository, candidate, maximum)
+        index_payload(index, maximum_bytes)  # Reject bounded-size failure before append.
+        append_event(event_path, event)
+        write_index(index_path, index, maximum_bytes)
+        return {"status": "recorded", "event": event}
 
 
 def intent_state(root: Path, ticket: str) -> tuple[dict[str, Any], str, str, str]:
@@ -851,9 +921,10 @@ def rebuild_index(args: argparse.Namespace) -> dict[str, Any]:
     root = args.root.resolve()
     repository = repository_ref(root)
     event_path, index_path, maximum, maximum_bytes = storage_paths(root)
-    events, _ = event_state(iter_events(event_path), repository)
-    index = index_from_events(repository, events, maximum)
-    write_index(index_path, index, maximum_bytes)
+    with storage_transaction(event_path):
+        events, _ = event_state(iter_events(event_path), repository)
+        index = index_from_events(repository, events, maximum)
+        write_index(index_path, index, maximum_bytes)
     return {"status": "rebuilt", "entries": len(index["entries"]), "index": str(index_path.relative_to(root))}
 
 
