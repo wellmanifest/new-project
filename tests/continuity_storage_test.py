@@ -3,6 +3,8 @@
 import argparse
 import json
 import multiprocessing
+import os
+import subprocess
 import queue
 from pathlib import Path
 import sys
@@ -220,6 +222,116 @@ class ContinuityStorageTests(unittest.TestCase):
         with self.assertRaises(continuity.ContinuityError):
             continuity.commit_event(self.root, event)
         self.assertFalse(self.paths[0].exists())
+
+
+    def stream_target(self):
+        target = self.root / "foreign.jsonl"
+        target.write_bytes(continuity.canonical_bytes(fixture_event()) + b"\n")
+        return target, target.read_bytes()
+
+    def symlink(self, link, target, directory=False):
+        try:
+            link.symlink_to(target, target_is_directory=directory)
+        except OSError:
+            if os.name == "nt":
+                self.skipTest("Windows symlink creation privilege is unavailable")
+            raise
+
+    def assert_stream_denied(self, path, target, original):
+        for operation in (lambda: continuity.append_event(path, fixture_event()),
+                          lambda: list(continuity.iter_events(path))):
+            with self.subTest(operation=operation):
+                with self.assertRaises(continuity.ContinuityError) as error:
+                    operation()
+                self.assertEqual(error.exception.code, "GOV-CONTINUITY-001")
+                self.assertEqual(target.read_bytes(), original)
+
+    def test_checkpoint_commit_cannot_append_through_a_linked_stream(self):
+        target, original = self.stream_target()
+        self.symlink(self.paths[0], target)
+        with self.assertRaises(continuity.ContinuityError) as error:
+            continuity.commit_event(self.root, fixture_event("ticket-002", "writer-002"))
+        self.assertEqual(error.exception.code, "GOV-CONTINUITY-001")
+        self.assertEqual(target.read_bytes(), original)
+        self.assertFalse(self.paths[1].exists())
+
+    def test_event_file_symlink_cannot_redirect_read_or_append(self):
+        target, original = self.stream_target()
+        self.symlink(self.paths[0], target)
+        self.assert_stream_denied(self.paths[0], target, original)
+
+    def test_event_hardlink_cannot_redirect_read_or_append(self):
+        target, original = self.stream_target()
+        os.link(target, self.paths[0])
+        self.assert_stream_denied(self.paths[0], target, original)
+
+    def test_parent_symlink_cannot_redirect_read_or_append(self):
+        target = self.root / "foreign" / "events.jsonl"
+        target.parent.mkdir()
+        target.write_bytes(continuity.canonical_bytes(fixture_event()) + b"\n")
+        original = target.read_bytes()
+        link = self.root / "sessions"
+        self.symlink(link, target.parent, directory=True)
+        self.assert_stream_denied(link / target.name, target, original)
+
+    def test_dangling_symlink_is_rejected_without_creating_foreign_file(self):
+        target = self.root / "missing-foreign.jsonl"
+        self.symlink(self.paths[0], target)
+        with self.assertRaises(continuity.ContinuityError):
+            continuity.append_event(self.paths[0], fixture_event())
+        with self.assertRaises(continuity.ContinuityError):
+            list(continuity.iter_events(self.paths[0]))
+        self.assertFalse(target.exists())
+
+    @unittest.skipUnless(os.name == "posix", "POSIX descriptor substitution boundary")
+    def test_last_component_substitution_is_rejected_before_writing(self):
+        target, original = self.stream_target()
+        self.paths[0].write_bytes(b"")
+        real_open = os.open
+        swapped = []
+        def substitute(path, flags, *args, **kwargs):
+            if Path(path).name == self.paths[0].name and not swapped:
+                self.paths[0].unlink()
+                self.paths[0].symlink_to(target)
+                swapped.append(True)
+            return real_open(path, flags, *args, **kwargs)
+        with patch.object(continuity.os, "open", side_effect=substitute):
+            with self.assertRaises(continuity.ContinuityError):
+                continuity.append_event(self.paths[0], fixture_event())
+        self.assertEqual(swapped, [True])
+        self.assertEqual(target.read_bytes(), original)
+
+    @unittest.skipUnless(os.name == "posix", "POSIX safe-open capability boundary")
+    def test_missing_no_follow_capability_fails_before_creating_stream(self):
+        with patch.object(continuity.os, "O_NOFOLLOW", None):
+            with self.assertRaises(continuity.ContinuityError):
+                continuity.append_event(self.paths[0], fixture_event())
+        self.assertFalse(self.paths[0].exists())
+
+    @unittest.skipUnless(os.name == "nt", "Windows native junction boundary")
+    def test_windows_junction_cannot_redirect_read_or_append(self):
+        target = self.root / "foreign" / "events.jsonl"
+        target.parent.mkdir()
+        target.write_bytes(continuity.canonical_bytes(fixture_event()) + b"\n")
+        link = self.root / "sessions"
+        result = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(target.parent)],
+                                capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.addCleanup(lambda: link.rmdir() if link.exists() else None)
+        self.assert_stream_denied(link / target.name, target, target.read_bytes())
+
+    def test_regular_stream_preserves_exact_append_and_absent_read(self):
+        absent = self.root / "absent" / "deeper" / "events.jsonl"
+        self.assertEqual(list(continuity.iter_events(absent)), [])
+        self.assertFalse(absent.parent.exists())
+        events = [fixture_event(), fixture_event("ticket-002", "writer-002")]
+        for event in events:
+            continuity.append_event(self.paths[0], event)
+        self.assertEqual(self.paths[0].read_bytes(), b"".join(
+            continuity.canonical_bytes(event) + b"\n" for event in events))
+        self.assertEqual(list(continuity.iter_events(self.paths[0])), events)
+        with self.assertRaises(continuity.ContinuityError):
+            continuity.append_event(self.root, fixture_event())
 
 
 if __name__ == "__main__":

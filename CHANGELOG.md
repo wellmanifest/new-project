@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.73] - 2026-10-03
+
+- Open continuity streams through anchored no-follow POSIX descriptors and held Windows reparse-point-safe handles.
+- Reject linked or non-regular stream targets before data access; preserve append-only events, absent reads and replay/recovery.
+- Add portable link regressions plus native Windows junction and POSIX substitution/capability checks.
+
 ## [0.20.72] - 2026-10-03
 
 - Reject malformed remediation collection/source shapes with structured errors while preserving original input, exact path bytes and advisory authority.
