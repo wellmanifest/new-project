@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.20.70] - 2026-10-03
+
+### Fixed
+- Replay only the explicitly supported check-gate rules and reject caller-supplied results for unimplemented rules. Require unique nonempty check names and reject contradictory observations. Derive defaults from local hub/adopter metadata without inventing observed PASS; preserve denied evaluations, supported aliases, diagnostic codes and the independent publication boundary. Synchronize installed-package behavior.
+
 ## [0.20.69] - 2026-10-03
 
 ### Fixed

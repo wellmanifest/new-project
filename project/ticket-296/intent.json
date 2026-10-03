@@ -1,0 +1,120 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-296",
+  "summary": "Close deterministic decision replay and derive checks from local metadata",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-296/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/decision_record.py",
+    "packages/wellman/src/wellman/_bundled/decision_record.py",
+    "tests/decision-record.test.sh",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-295"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "8fe732b588f63b55a1a0dd21a7e6228019b98522",
+    "targetBranch": "main",
+    "outcome": "Reject unsupported decision rules and caller-supplied replay verdicts; derive required checks from hub/adopter metadata without invented observed PASS, preserve the advisory/publication boundary and publish immutable standard 0.20.70.",
+    "nonGoals": [
+      "Change protected Validator App approval or controller effects",
+      "Implement arbitrary Policy DSL rule engines",
+      "Rewrite historical decision records",
+      "Mutate foreign/frozen target state",
+      "Create runtime dependencies"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use an exact supported rule set for deterministic replay, validate required check names, deny contradictory observations, and load default required check names from the local hub/adopter metadata. Preserve supported aliases and report codes. Missing observations do not become a synthetic PASS; denied evaluation remains denied.",
+      "components": [
+        {
+          "name": "decision-replay",
+          "paths": [
+            "scripts/decision_record.py",
+            "packages/wellman/src/wellman/_bundled/decision_record.py"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/decision-record.test.sh"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Tighten existing advisory decision replay and default derivation inputs without adding publication authority."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/decision-record.test.sh"
+        ],
+        "evidence": "Isolated unsupported-rule acceptance and adopter metadata path failures reproduce original defects. Supported aliases, explicit observations, missing/contradictory inputs and hub/adopter derivation cases behave deterministically."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing validator integration, parity, native gate and required exact-head Linux/Windows/OneDev checks pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and final immutable standard v0.20.70 publication are verified."
+      }
+    ]
+  }
+}

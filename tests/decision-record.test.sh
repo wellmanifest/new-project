@@ -122,4 +122,105 @@ else:
 print("parser diagnostics OK")
 PY
 
+echo "== unsupported policy cannot masquerade as a check gate =="
+sed 's/APPLIED_RULE P-CORE-015/APPLIED_RULE P-CORE-010/' "$good" > "$TMP/unsupported.dsl"
+if $PY $SCRIPT validate-dsl "$TMP/unsupported.dsl" > "$TMP/unsupported.out" 2>&1; then
+  echo "unsupported policy unexpectedly replayed" >&2
+  exit 1
+fi
+grep -q 'GOV-DECISION-002' "$TMP/unsupported.out"
+
+# Unsupported policy ids and author-supplied verdicts are not deterministic replay.
+python3 - "$ROOT" <<'PY_REPLAY_BOUNDARY'
+import copy
+import importlib.util
+import json
+import os
+import sys
+import tempfile
+from pathlib import Path
+
+root = Path(sys.argv[1])
+violations = []
+for name, source in (
+    ("managed", root / "scripts/decision_record.py"),
+    ("bundled", root / "packages/wellman/src/wellman/_bundled/decision_record.py"),
+):
+    spec = importlib.util.spec_from_file_location("decision_replay_" + name, source)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    record = {
+        "schema": module.SCHEMA, "verdictAuthority": "DETERMINISTIC",
+        "verdict": "APPROVE", "appliedRule": "P-CORE-015",
+        "inputs": {"required_checks": ["gate"], "observed_checks": ["gate=PASS"]},
+    }
+    for rule in ("P-CORE-015", "C-CI-001", "C-DECISION-GATE"):
+        assert module.validate_record({**record, "appliedRule": rule}) == []
+    for number in range(10, 20):
+        if number == 15:
+            continue
+        rule = "P-CORE-0" + str(number)
+        if not module.validate_record({**record, "appliedRule": rule}):
+            violations.append((name, "unsupported-prefix-rule", rule))
+    custom = {**record, "appliedRule": "CUSTOM-UNIMPLEMENTED", "inputs": {"expected_verdict_from_rule": "APPROVE"}}
+    if not module.validate_record(custom):
+        violations.append((name, "caller-supplied-replay-verdict"))
+    for required in ([], [""], ["gate", "gate"], [True]):
+        altered = copy.deepcopy(record)
+        altered["inputs"]["required_checks"] = required
+        if not module.validate_record(altered):
+            violations.append((name, "invalid-required-checks", required))
+    altered = copy.deepcopy(record)
+    altered["inputs"]["observed_checks"] = ["gate=FAIL", "gate=PASS"]
+    if not module.validate_record(altered):
+        violations.append((name, "contradictory-observation"))
+    altered["inputs"]["observed_checks"] = ["gate=PASS", "gate=PASS"]
+    assert not module.validate_record(altered), "consistent repeated observations remain valid"
+    old = Path.cwd()
+    try:
+        with tempfile.TemporaryDirectory(prefix="decision-derivation-") as tmp:
+            os.chdir(tmp)
+            evaluation = {"schemaVersion": "t2c.change-evaluation/v1", "subject": {"headSha": "a" * 40}, "contract": {"ticket": "ticket-001"}, "verdict": "allow", "gates": {"gate": "PASS"}}
+            meta = {"decisionId": "D-001-0001", "correlationId": "isolated-regression"}
+            for candidate in ("governance/required-checks.json", ".governance/required-checks.json"):
+                file = Path(candidate)
+                file.parent.mkdir(exist_ok=True)
+                file.write_text(json.dumps({"requiredCheckNames": ["gate"]}), encoding="utf-8")
+                try:
+                    derived = module.from_change_evaluation(evaluation, **meta)
+                except FileNotFoundError:
+                    violations.append((name, "adopter-metadata-path"))
+                else:
+                    assert not module.validate_record(derived), (name, candidate, derived)
+                    denied = module.from_change_evaluation({**evaluation, "verdict": "deny"}, **meta)
+                    if module.replay_verdict(denied) != "REQUEST_CHANGES":
+                        violations.append((name, "denied-evaluation-replayed-as-approval", candidate))
+                    empty = module.from_change_evaluation({**evaluation, "gates": {}}, **meta)
+                    if empty["inputs"]["observed_checks"] or module.replay_verdict(empty) != "REQUEST_CHANGES":
+                        violations.append((name, "invented-observation", candidate))
+                file.unlink()
+            try:
+                module.from_change_evaluation(evaluation, **meta)
+            except ValueError as error:
+                assert "GOV-DECISION-002" in str(error)
+            else:
+                raise AssertionError("missing required-check metadata must fail")
+            file = Path(".governance/required-checks.json")
+            file.write_text(json.dumps({"requiredCheckNames": []}), encoding="utf-8")
+            try:
+                module.from_change_evaluation(evaluation, **meta)
+            except ValueError as error:
+                assert "GOV-DECISION-002" in str(error)
+            else:
+                raise AssertionError("empty default required checks must fail")
+            file.unlink()
+            derived = module.from_change_evaluation(evaluation, **meta, required_checks=["gate"])
+            assert not module.validate_record(derived), "explicit required-check metadata remains supported"
+    finally:
+        os.chdir(old)
+if violations:
+    raise AssertionError("Incorrect decision replay or derivation: " + repr(violations))
+print("PASS: exact rule replay, check input validation and hub/adopter derivation")
+PY_REPLAY_BOUNDARY
+
 echo "decision-record tests: PASS"
