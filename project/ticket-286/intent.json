@@ -1,0 +1,110 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-286",
+  "summary": "Execute the independently pinned Registry module closure",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-286/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/ticket_storage.py",
+    "tests/registry_runtime_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f48dae854be55e8efb58ff8761d85cd0dc08156c",
+    "targetBranch": "main",
+    "outcome": "Execute precisely the independently pinned Registry ESM closure, preserve CLI input and arguments, and publish immutable standard 0.20.60 through protected delivery.",
+    "nonGoals": [
+      "Grant execution or merge authority",
+      "Change the independently pinned Registry protocol",
+      "Add dependencies, mutate foreign checkouts or sandbox already trusted runtime behavior"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Capture bounded regular module bytes through open descriptors, verify the canonical closure digest, then load only captured ESM sources via Node module.register with a framed stdin payload.",
+      "components": [
+        {
+          "name": "pinned-runtime",
+          "paths": [
+            "scripts/ticket_storage.py"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/registry_runtime_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/registry_runtime_test.py"
+        ],
+        "evidence": "Real Node regressions substitute the entry point and dependency after verification and verify unchanged pinned execution, input and argument semantics."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Native governance and required CI pass without changing protected authority."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent exact-head merge and final immutable standard v0.20.60 release are verified."
+      }
+    ]
+  }
+}

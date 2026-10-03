@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.60] - 2026-10-03
+
+### Fixed
+- Execute the exact captured, independently pinned Registry ESM module closure rather than reopening mutable source paths after verification. Preserve CLI module identity, arguments and stdin; reject unpinned imports and unbounded/non-regular module inputs.
+- Add real Node regressions for entry-point/dependency replacement, Unicode input, large source frames and closed module resolution.
+
 ## [0.20.59] - 2026-10-03
 
 - Fail overlap audits on incomplete Git inspection or malformed active file/SQLite intent. Share ticket branch matching so outstanding supported local and origin branch forms retain activity even when ticket content already exists on the target.
