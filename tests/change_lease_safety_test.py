@@ -97,6 +97,82 @@ class LeaseSafetyTests(unittest.TestCase):
                 self.assertEqual(runtime.validate_lease(changed), [])
 
 
+    def test_malformed_transition_does_not_fabricate_a_receipt_or_crash(self):
+        for value in [True, "1", None]:
+            with self.subTest(value=value):
+                changed = deepcopy(self.lease)
+                changed["leaseRevision"] = value
+                receipt, errors = runtime.evaluate_transition(changed, self.request)
+                self.assertIsNone(receipt)
+                self.assertTrue(errors)
+
+    def rejected(self):
+        rejected = deepcopy(self.receipt)
+        rejected.update(requestId="request-2", previousRevision=2, leaseRevision=2,
+            previousFencingToken=2, fencingToken=2, action="begin-validation", outcome="rejected",
+            code="GOV-CHANGE-LEASE-002", phaseBefore="editing", phaseAfter="editing",
+            receiptRef="receipt:fixture/2")
+        return rejected
+
+    def trace(self, receipts):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "events.jsonl"
+            path.write_text("".join(json.dumps(item) + "\n" for item in receipts), encoding="utf-8")
+            return runtime.validate_trace(path)
+
+    def test_rejected_receipts_cannot_escape_or_advance_the_accepted_state(self):
+        for mutation in [{"leaseId": "another-lease"}, {"previousRevision": 27, "leaseRevision": 27},
+                         {"previousFencingToken": 37, "fencingToken": 37},
+                         {"phaseBefore": "claimed", "phaseAfter": "claimed"}, {"leaseRevision": 3}]:
+            with self.subTest(mutation=mutation):
+                rejected = self.rejected()
+                rejected.update(mutation)
+                self.assertTrue(self.trace([self.receipt, rejected]))
+
+    def test_rejected_receipt_cannot_advance_when_validated_individually(self):
+        for mutation in [{"leaseRevision": 3}, {"fencingToken": 3}, {"phaseAfter": "validating"}]:
+            with self.subTest(mutation=mutation):
+                value = self.rejected()
+                value.update(mutation)
+                self.assertTrue(runtime.validate_receipt(value))
+
+    def test_valid_rejection_preserves_state_for_the_next_accepted_transition(self):
+        current = deepcopy(self.lease)
+        current.update(leaseRevision=2, fencingToken=2, phase="editing")
+        proposal = request(current)
+        proposal.update(requestId="request-3", idempotencyKey="request-3", action="begin-validation")
+        accepted, errors = runtime.evaluate_transition(current, proposal)
+        self.assertEqual(errors, [])
+        self.assertEqual(self.trace([self.receipt, self.rejected(), accepted]), [])
+
+    def test_installed_transition_cli_returns_diagnostics_for_malformed_inputs(self):
+        for layout, module, schema in [
+            (".governance", ROOT / "scripts/change_lease_check.py",
+             ROOT / "subprojects/change-lease/change-lease.schema.json"),
+            ("_bundled", ROOT / "packages/wellman/src/wellman/_bundled/change_lease_check.py",
+             ROOT / "packages/wellman/src/wellman/_bundled/change-lease.schema.json"),
+        ]:
+            with self.subTest(layout=layout), tempfile.TemporaryDirectory() as temporary:
+                managed = Path(temporary) / layout
+                managed.mkdir()
+                shutil.copyfile(module, managed / "change_lease_check.py")
+                shutil.copyfile(schema, managed / "change-lease.schema.json")
+                lease_path, request_path = Path(temporary) / "lease.json", Path(temporary) / "request.json"
+                request_path.write_text(json.dumps(self.request), encoding="utf-8")
+                for revision in [True, "1", None]:
+                    changed = deepcopy(self.lease)
+                    changed["leaseRevision"] = revision
+                    lease_path.write_text(json.dumps(changed), encoding="utf-8")
+                    result = subprocess.run([sys.executable, str(managed / "change_lease_check.py"),
+                        "--format", "json", "transition", "--lease", str(lease_path),
+                        "--request", str(request_path)], text=True, capture_output=True)
+                    self.assertEqual(result.returncode, 1, result.stderr)
+                    response = json.loads(result.stdout)
+                    self.assertEqual(response["status"], "failed")
+                    self.assertNotIn("schema", response)
+                    self.assertTrue(response["findings"])
+                    self.assertEqual(result.stderr, "")
+
     @unittest.skipIf(os.name == "nt", "native allocation integration uses POSIX Bash")
     def test_native_local_allocator_emits_a_canonical_advisory_lease(self):
         fixture_spec = importlib.util.spec_from_file_location(

@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.20.67] - 2026-10-03
+
+### Fixed
+- Return stable diagnostics without a fabricated receipt or arithmetic crash for malformed transition documents. Require rejected trace receipts to preserve counters/phase and match the last accepted lease identity/state; only accepted receipts advance the trace anchor. Preserve scalar validation and local allocation identity; reuse portable and installed-package regressions.
+
 ## [0.20.66] - 2026-10-03
 
 ### Fixed
