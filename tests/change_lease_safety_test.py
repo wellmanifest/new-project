@@ -50,7 +50,7 @@ class LeaseSafetyTests(unittest.TestCase):
         for document, validator, keys in [
             (self.lease, runtime.validate_lease, ["leaseRevision", "fencingToken", "eventSequence", "pullRequest"]),
             (self.request, runtime.validate_request, ["expectedRevision", "expectedFencingToken"]),
-            (self.receipt, runtime.validate_receipt, ["previousRevision", "previousFencingToken", "pullRequest"]),
+            (self.receipt, runtime.validate_receipt, ["previousRevision", "leaseRevision", "previousFencingToken", "fencingToken", "pullRequest"]),
         ]:
             for key in keys:
                 with self.subTest(schema=document["schema"], field=key):
