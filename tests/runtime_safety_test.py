@@ -213,6 +213,42 @@ exec "$TASK_SIGNAL_REAL_GIT" "$@"
             json.dumps(cases)], text=True, capture_output=True, check=True)
         self.assertEqual(json.loads(result.stdout), [c[2] for c in cases])
 
+    def test_scope_globs_follow_canonical_segment_semantics(self):
+        def load(name, path):
+            spec = importlib.util.spec_from_file_location(name, path)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[name] = module
+            spec.loader.exec_module(module)
+            return module
+        canonical = load("scope_canonical_fixture", ROOT / "scripts/governance_check.py")
+        cases = [("src/*", "src/file.py", True), ("src/*", "src/private/file.py", False),
+            ("*.py", "src/file.py", False), ("**/*.py", "file.py", True),
+            ("src/**/*.py", "src/file.py", True), ("src/**/*.py", "src/private/file.py", True),
+            ("src/?.py", "src/x.py", True), ("src/?.py", "src/a/b.py", False),
+            ("src/[ab].py", "src/a.py", True), ("src/[ab].py", "src/c.py", False),
+            ("src/żółw/*.py", "src/żółw/ф.py", True), ("src/żółw/*.py", "src/żółw/deep/ф.py", False),
+            ("src/**", "src", True), ("src/**/file.py", "other/file.py", False)]
+        for source in ("scripts/repository_policy.py", "scripts/remediation_intent.py", "packages/wellman/src/wellman/_bundled/repository_policy.py"):
+            module = load("scope_" + source.replace("/", "_")[:-3], ROOT / source)
+            for pattern, path, expected in cases:
+                with self.subTest(module=source, pattern=pattern, path=path):
+                    self.assertEqual(canonical.matches(path, [pattern]), expected)
+                    self.assertEqual(module._matches(path, [pattern]), expected)
+
+    def test_remediation_action_paths_retain_directory_boundaries(self):
+        spec = importlib.util.spec_from_file_location("scope_remediation_actions", ROOT / "scripts/remediation_intent.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        for allowed, forbidden, expected in (
+            (["src/*"], [], True), (["src/**"], [], False),
+            (["src/**"], ["src/private/*"], False), (["src/**"], ["src/private/**"], True),
+        ):
+            errors = []
+            module._validate_action_paths(["src/private/deep/file.py"], allowed, forbidden, "actions[0]", errors)
+            with self.subTest(allowed=allowed, forbidden=forbidden):
+                self.assertEqual(bool(errors), expected)
+
+
 
 if __name__ == "__main__":
     unittest.main()

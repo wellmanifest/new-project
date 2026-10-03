@@ -64,6 +64,22 @@ with tempfile.TemporaryDirectory() as directory:
     ok, message = module.check_staged(fixture)
     assert ok, message
 
+    # A staged nested path cannot use a single-segment external ticket scope.
+    (fixture / "src/private").mkdir(parents=True)
+    (fixture / "src/private/tool.py").write_text("controlled fixture\n", encoding="utf-8")
+    staged_adapter = json.loads((fixture / ".governance/ticket-adapter.json").read_text())
+    staged_adapter["allowedPaths"] = [".governance/manifest.json", ".planfile/events.jsonl", "src/*"]
+    staged_adapter["forbiddenPaths"] = []
+    (fixture / ".governance/ticket-adapter.json").write_text(json.dumps(staged_adapter), encoding="utf-8")
+    subprocess.run(["git", "add", ".governance/ticket-adapter.json", "src/private/tool.py"], cwd=fixture, check=True)
+    ok, message = module.check_staged(fixture)
+    assert not ok and "outside" in message, message
+    staged_adapter["allowedPaths"][-1] = "src/**"
+    (fixture / ".governance/ticket-adapter.json").write_text(json.dumps(staged_adapter), encoding="utf-8")
+    subprocess.run(["git", "add", ".governance/ticket-adapter.json"], cwd=fixture, check=True)
+    ok, message = module.check_staged(fixture)
+    assert ok, message
+
 with tempfile.TemporaryDirectory() as directory:
     fixture = Path(directory)
     (fixture / ".governance").mkdir()
