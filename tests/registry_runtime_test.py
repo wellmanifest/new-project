@@ -36,7 +36,7 @@ console.log(JSON.stringify({marker, args: process.argv.slice(2), input: fs.readF
 
     def write_sources(self):
         for name, source in self.sources.items():
-            (self.root / name).write_text(source, encoding="utf-8")
+            (self.root / name).write_bytes(source.encode("utf-8"))
         # Independent fixture pin: never derive it through code under test.
         hashes = {name: hashlib.sha256(source.encode()).hexdigest()
                   for name, source in self.sources.items()}

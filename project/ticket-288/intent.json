@@ -1,0 +1,120 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-288",
+  "summary": "Preserve ticket index changes with three-way merging and cross-platform durability checks",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-288/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/ticket_index_merge_driver.py",
+    "tests/registry_runtime_test.py",
+    "tests/ticket_index_merge_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-287"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "de792e878eca6b878c02ac8ea436b22803b11304",
+    "targetBranch": "main",
+    "outcome": "Preserve independent ticket-index additions, edits and deletions through three-way row/header/footer merging, keep conflicts explicit, and complete the deferred cross-platform durability CI wiring in immutable standard 0.20.62.",
+    "nonGoals": [
+      "Grant execution or merge authority",
+      "Add runtime dependencies or mutate foreign checkouts",
+      "Silently choose a conflicting ticket row"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use ancestor-aware three-way selection for each ticket row and surrounding content; fall back to Git merge-file on ambiguous or conflicting sections. Run captured Registry, continuity storage and ticket-index regressions in Linux and Windows CI. Write Registry fixture bytes explicitly to preserve independent pins on Windows.",
+      "components": [
+        {
+          "name": "ticket-index-merging",
+          "paths": [
+            "scripts/ticket_index_merge_driver.py"
+          ]
+        },
+        {
+          "name": "regressions-and-ci",
+          "paths": [
+            "tests/ticket_index_merge_test.py",
+            "tests/registry_runtime_test.py",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Extend the existing Linux and Windows workflow steps with explicit durability regression suites; required job identities remain the same."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket_index_merge_test.py",
+          "python3 tests/registry_runtime_test.py",
+          "python3 tests/continuity_storage_test.py"
+        ],
+        "evidence": "Real merge-file regressions retain deletion and target-owned text, surface conflicting edits, preserve concurrent additions and reject ambiguous tables. Both hosted OS workflows run the three durability suites."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Native governance and required CI pass without changing protected authority."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent exact-head merge and final immutable standard v0.20.62 release are verified."
+      }
+    ]
+  }
+}
