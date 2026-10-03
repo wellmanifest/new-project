@@ -1,7 +1,7 @@
 {
   "schema": "new-project.intent/v3",
   "ticket": "ticket-300",
-  "summary": "Reject invalid Git branch names consistently in intent schema and runtime",
+  "summary": "Require unambiguous Git branch names consistently in intent schema and runtime",
   "workstream": "governance",
   "classification": {
     "kind": "BUG",
@@ -34,7 +34,7 @@
   "delivery": {
     "acceptedBaseSha": "5138f1c706a67360f0717b492685a0f686b32abd",
     "targetBranch": "main",
-    "outcome": "Align branch-name validation in the existing intent schema, runtime and installed bundle with Git branch rules. Reject invalid dot/lock components, trailing separators/dot, leading dash and ASCII whitespace/control names while preserving valid Unicode and punctuation; publish standard 0.20.74.",
+    "outcome": "Align unambiguous branch-name validation in the existing intent schema, runtime and installed bundle with Git branch rules. Reject reserved standalone @ revision shorthand and invalid dot/lock components, trailing separators/dot, leading dash and ASCII whitespace/control names while preserving valid Unicode and punctuation; publish standard 0.20.74.",
     "nonGoals": [
       "Change branch allocation or effects/publication authority",
       "Change physical-change, catalog or workflow-check validation",
@@ -51,7 +51,7 @@
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Use the same closed branch-name regular expression in the existing intent schema and runtime; preserve the existing bundle closure. Exercise source, bundle and schema acceptance against the actual read-only git check-ref-format --branch oracle on explicit valid/invalid names and malformed scalar input. Place regressions in the existing runtime safety suite, which is explicitly executed on both required platforms; no CI workflow expansion is needed.",
+      "decision": "Use the same closed branch-name regular expression in the existing intent schema and runtime; preserve the existing bundle closure. Exercise source, bundle and schema acceptance against the actual read-only git check-ref-format --branch oracle on explicit valid/invalid names and malformed scalar input. Place regressions in the existing runtime safety suite, which is explicitly executed on both required platforms; no CI workflow expansion is needed. Explicitly reserve standalone @: Git permits refs/heads/@, but unqualified @ resolves HEAD and can differ from that literal branch. Preserve a truthful Git-oracle assertion and test this policy restriction separately with an isolated two-commit ref-resolution regression.",
       "components": [
         {
           "name": "intent-validation",
@@ -80,7 +80,7 @@
       ],
       "responsibilityChanges": false,
       "interfaceChanges": [
-        "Existing branch-name schema/runtime validation consistently rejects names Git cannot use."
+        "Existing branch-name validation rejects malformed Git names and ambiguous standalone @ revision shorthand."
       ],
       "dataChanges": [],
       "ui": {
@@ -97,7 +97,7 @@
         "commands": [
           "python3 tests/runtime_safety_test.py"
         ],
-        "evidence": "Source, bundled runtime and schema regressions reproduce incorrect acceptance and match actual Git on explicit negative/positive cases; malformed scalars remain rejected."
+        "evidence": "Source, bundled runtime and schema regressions reproduce incorrect acceptance and match actual Git on explicit negative/positive cases; malformed scalars remain rejected. Standalone @ is an explicit stricter policy restriction, tested separately from its accepted Git branch syntax."
       },
       {
         "criterion": "AC-02",
