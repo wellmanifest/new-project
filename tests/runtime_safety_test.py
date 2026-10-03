@@ -496,6 +496,18 @@ exec "$TASK_SIGNAL_REAL_GIT" "$@"
         self.assertFalse(result.skipped, result.skipped)
         self.assertTrue(result.wasSuccessful(), result.errors + result.failures)
 
+    def test_pytest_base_through_actual_git_and_lifecycle(self):
+        spec = importlib.util.spec_from_file_location(
+            "pytest_base_runtime_fixture", ROOT / "tests/pytest_base_test.py")
+        fixture = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fixture)
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(fixture.PytestBaseTests)
+        result = unittest.TestResult()
+        suite.run(result)
+        self.assertEqual(result.testsRun, 8)
+        self.assertFalse(result.skipped, result.skipped)
+        self.assertTrue(result.wasSuccessful(), result.errors + result.failures)
+
 
 if __name__ == "__main__":
     unittest.main()
