@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.20.65] - 2026-10-03
+
+### Fixed
+- Block relevant todo2code file-delete proposals under the closed remediation DSL, including IMPLEMENT actions with destructive and explicit-human risk metadata. Preserve advisory authority, valid modify plans and isolation from unrelated history. Run complete synthetic producer-plan regressions on Linux and Windows.
+
 ## [0.20.64] - 2026-10-03
 
 ### Fixed

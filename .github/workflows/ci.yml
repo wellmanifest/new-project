@@ -152,6 +152,8 @@ jobs:
           python3 tests/ticket_index_merge_test.py
       - name: Test runtime allocation and host boundaries
         run: python3 tests/runtime_safety_test.py
+      - name: Test remediation plan effect boundaries
+        run: python3 tests/remediation_plan_safety_test.py
       # Every tests/*.test.sh must be listed above. The list is hand-written, so
       # this refuses to pass when a suite exists that no step runs - which is how
       # governance-env.test.sh went unexecuted after ticket 020 added it.
@@ -203,4 +205,6 @@ jobs:
           python tests/ticket_index_merge_test.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/runtime_safety_test.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/remediation_plan_safety_test.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

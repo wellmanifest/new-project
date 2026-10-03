@@ -1564,7 +1564,7 @@ def _projection_record_ids(
     return set().union(*ids_by_path.values())
 
 
-def _analyze_plan_scope(plan_items, allowed, forbidden, action_by_id, findings):
+def _analyze_plan_scope(plan_items, allowed, forbidden, findings):
     for plan in plan_items:
         plan_id = str(plan.get("id", "unknown-plan"))
         for path in _plan_paths(plan):
@@ -1584,22 +1584,17 @@ def _analyze_plan_scope(plan_items, allowed, forbidden, action_by_id, findings):
                 if not isinstance(change, dict) or change.get("action") != "delete":
                     continue
                 path = str(change.get("path", ""))
-                authorized = any(
-                    path in action.get("paths", [])
-                    and action.get("risk", {}).get("level") == "DESTRUCTIVE"
-                    and action.get("risk", {}).get("authorization") == "EXPLICIT_HUMAN"
-                    for action in action_by_id.values()
-                )
-                if not authorized:
-                    findings.append(
-                        _analysis_finding(
-                            "T2C_UNAUTHORIZED_DELETION",
-                            "BLOCKING",
-                            f"todo2code proposes deletion without explicit-human destructive authorization: {path}",
-                            [plan_id, path],
-                            "Replace deletion with preservation/read-only triage or request explicit human authority in a fresh intent.",
-                        )
+                # The closed remediation DSL has no typed file-delete operation.
+                # Risk/authorization labels do not define additional effects.
+                findings.append(
+                    _analysis_finding(
+                        "T2C_UNAUTHORIZED_DELETION",
+                        "BLOCKING",
+                        f"todo2code proposes file deletion unsupported by the remediation DSL: {path}",
+                        [plan_id, path],
+                        "Preserve the file or use read-only triage. File deletion requires a separately supported typed operation and bounded authority; risk metadata alone cannot grant it.",
                     )
+                )
 
 
 
@@ -1735,11 +1730,10 @@ def analyze_todo2code(
     allowed = scope["allowedPaths"]
     forbidden = scope["forbiddenPaths"]
     finding_by_id = {item["id"]: item for item in document["findings"]}
-    action_by_id = {item["id"]: item for item in document["actions"]}
     plan_corpora = {str(plan.get("id", f"plan-{index}")): _plan_corpus(plan) for index, plan in enumerate(plan_items)}
     findings: list[dict[str, Any]] = []
 
-    _analyze_plan_scope(plan_items, allowed, forbidden, action_by_id, findings)
+    _analyze_plan_scope(plan_items, allowed, forbidden, findings)
     _analyze_finding_coverage(finding_by_id, plan_corpora, plan_items, findings)
     _analyze_criterion_coverage(document, plan_corpora, findings)
     _analyze_diagnostics(diagnostics, projection_record_ids, findings)

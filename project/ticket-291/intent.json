@@ -1,0 +1,119 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-291",
+  "summary": "Block advisory plan deletions unsupported by the closed remediation DSL",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-291/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/remediation_intent.py",
+    "docs/DIAGNOSTIC_REMEDIATION_DSL.md",
+    "tests/remediation_plan_safety_test.py",
+    ".github/workflows/ci.yml",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-290"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3cbe2dbf1afe6baac48674116f2a526d270d95b4",
+    "targetBranch": "main",
+    "outcome": "Emit blocking T2C_UNAUTHORIZED_DELETION for every relevant file-delete proposal because closed remediation-intent v1 contains no typed deletion operation. Preserve advisory-only analysis, valid modify plans and isolation from unrelated historical plans; publish immutable standard 0.20.65.",
+    "nonGoals": [
+      "Add a deletion operation or invented producer actionRef field",
+      "Grant execution, deletion or publication authority",
+      "Mutate target incident artifacts or foreign work"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Risk level and EXPLICIT_HUMAN metadata characterize an existing action but do not define a deletion operation. All relevant producer file-delete changes therefore produce a blocking advisory finding under the current closed DSL. Keep existing projection filtering and supported modification behavior. Validate schema-shaped complete synthetic producer plans without a runtime dependency on another repository.",
+      "components": [
+        {
+          "name": "remediation-analysis",
+          "paths": [
+            "scripts/remediation_intent.py",
+            "docs/DIAGNOSTIC_REMEDIATION_DSL.md"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/remediation_plan_safety_test.py",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Run remediation plan safety regressions in existing Linux and Windows CI jobs."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/remediation_plan_safety_test.py"
+        ],
+        "evidence": "Schema-valid read-only synthetic producer plan exposes an accepted deletion despite IMPLEMENT-only intent; tests reject delete with or without destructive metadata, accept modify, filter unrelated history, and retain ADVISORY authority and input digests."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/governance-scripts.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing remediation integration, parity, native gate and exact-head Linux/Windows/OneDev checks pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and immutable standard v0.20.65 release are verified."
+      }
+    ]
+  }
+}
