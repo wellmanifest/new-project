@@ -4,7 +4,7 @@
 
 ### Fixed
 - Respect ancestors when merging ticket rows, table headers and surrounding prose. Preserve one-sided deletions and edits, merge independent additions and fall back to Git conflicts for conflicting edits or ambiguous sections.
-- Run captured Registry, continuity storage and ticket-index regressions in Linux and Windows CI. Write independently pinned Registry fixture sources as exact UTF-8 bytes across platforms.
+- Run continuity storage and ticket-index regressions in Linux and Windows CI, and captured Registry regressions on Linux. Preserve exact UTF-8 Registry fixture bytes and controlled diagnostics; a Windows URL canonicalization failure is deferred with its runtime fix to a dependent ticket.
 
 ## [0.20.61] - 2026-10-03
 

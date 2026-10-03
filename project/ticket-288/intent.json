@@ -34,11 +34,12 @@
   "delivery": {
     "acceptedBaseSha": "de792e878eca6b878c02ac8ea436b22803b11304",
     "targetBranch": "main",
-    "outcome": "Preserve independent ticket-index additions, edits and deletions through three-way row/header/footer merging, keep conflicts explicit, and complete the deferred cross-platform durability CI wiring in immutable standard 0.20.62.",
+    "outcome": "Preserve independent ticket-index additions, edits and deletions through three-way merging, keep conflicts explicit, and run ticket-index and continuity durability suites on Linux and Windows in immutable standard 0.20.62. Diagnose and explicitly defer Registry Windows URL canonicalization to a dependent ticket.",
     "nonGoals": [
       "Grant execution or merge authority",
       "Add runtime dependencies or mutate foreign checkouts",
-      "Silently choose a conflicting ticket row"
+      "Silently choose a conflicting ticket row",
+      "Fix or claim passing Registry Windows canonical URLs; defer to a separate dependent runtime ticket."
     ],
     "complexity": "S",
     "estimatedMinutes": 25,
@@ -50,7 +51,7 @@
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Use ancestor-aware three-way selection for each ticket row and surrounding content; fall back to Git merge-file on ambiguous or conflicting sections. Run captured Registry, continuity storage and ticket-index regressions in Linux and Windows CI. Write Registry fixture bytes explicitly to preserve independent pins on Windows.",
+      "decision": "Use ancestor-aware selection for ticket rows and surrounding content, with Git merge-file fallback for conflicts. Run ticket-index and continuity storage regressions on Linux and Windows. Keep captured Registry regressions on Linux and exact-byte controlled diagnostics; Windows Registry fails on Python/Node URL canonicalization and its runtime fix plus Windows wiring belong to a dependent ticket.",
       "components": [
         {
           "name": "ticket-index-merging",
@@ -98,7 +99,7 @@
           "python3 tests/registry_runtime_test.py",
           "python3 tests/continuity_storage_test.py"
         ],
-        "evidence": "Real merge-file regressions retain deletion and target-owned text, surface conflicting edits, preserve concurrent additions and reject ambiguous tables. Both hosted OS workflows run the three durability suites."
+        "evidence": "Real merge-file regressions preserve deletions, additions and target-owned text, surface conflicts and reject ambiguity. Linux runs all three suites; Windows runs ticket-index and continuity. Registry Windows failure is retained as diagnostic evidence and explicitly deferred with its runtime fix."
       },
       {
         "criterion": "AC-02",
