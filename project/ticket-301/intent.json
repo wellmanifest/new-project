@@ -1,0 +1,124 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-301",
+  "summary": "Reject contradictory physical change claims for the same signal",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-301/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/governance_check.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "governance/intent.schema.json",
+    "tests/physical_contracts_test.py",
+    "tests/runtime_safety_test.py",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-300"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4802d5fa1e1e5c70b080097d807eeed414613d3e",
+    "targetBranch": "main",
+    "outcome": "Reject multiple physical before/after claims for one exact contract/property/signal and contradictory property-none markers mixed with physical changes to the same contract. Preserve independent properties, signals and contracts, exact identifiers and advisory governance; publish standard 0.20.75.",
+    "nonGoals": [
+      "Change hardware bindings, execute hardware tests or authorize effects",
+      "Normalize free-text identifiers, add runtime dependencies or change schema identity",
+      "Change branch, catalog, workflow or cache validation",
+      "Mutate foreign or frozen target state"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Track exact physical claim identities independently of complete object serialization. Reject repeated contract/property/signal tuples and none/change contradictions within one contract. Keep existing type/field/duplicate-object checks and preserve distinct identities. Clarify this semantic constraint in the existing intent schema description; verify through the actual physical gate and source/bundled validation on both platforms.",
+      "components": [
+        {
+          "name": "physical-intent-validation",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "governance/intent.schema.json"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/physical_contracts_test.py",
+            "tests/runtime_safety_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Existing physical change validation rejects contradictory or repeated identities and incompatible no-change markers."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/physical_contracts_test.py",
+          "python3 tests/runtime_safety_test.py"
+        ],
+        "evidence": "Actual physical gate reproduces contradictory claims; source/bundle both reject duplicates or none/change conflicts in either order, preserve distinct properties/signals/contracts and original input."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing integration, wheel/parity, native and exact-head Linux/Windows/OneDev pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and final standard v0.20.75 release verified."
+      }
+    ]
+  }
+}

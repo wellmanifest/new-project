@@ -776,11 +776,15 @@ def physical_changes_error(changes: Any) -> str | None:
     """Every changed physical property is declared on its own, before and after.
 
     A pin move and a polarity flip are two entries, so neither can hide
-    inside the other; "none" records an edit that keeps physical meaning.
+    inside the other. Each exact contract/property/signal has one claim;
+    "none" is exclusive with changed properties of the same contract.
     """
     if not isinstance(changes, list) or not changes:
         return "intent physicalChanges must be a non-empty list"
     seen = set()
+    claims = set()
+    unchanged_contracts = set()
+    changed_contracts = set()
     for change in changes:
         if not isinstance(change, dict) or not isinstance(change.get("property"), str) or change["property"] not in PHYSICAL_PROPERTIES:
             return "physical change property is invalid"
@@ -805,6 +809,18 @@ def physical_changes_error(changes: Any) -> str | None:
         if key in seen:
             return "physical changes must be unique"
         seen.add(key)
+        identity = (change["contract"], change["property"], change.get("signal"))
+        if identity in claims:
+            return "physical change contract, property and signal must be unique"
+        claims.add(identity)
+        if change["property"] == "none":
+            if change["contract"] in changed_contracts:
+                return "physical change property none cannot coexist with changes to the same contract"
+            unchanged_contracts.add(change["contract"])
+        else:
+            if change["contract"] in unchanged_contracts:
+                return "physical change property none cannot coexist with changes to the same contract"
+            changed_contracts.add(change["contract"])
     return None
 
 

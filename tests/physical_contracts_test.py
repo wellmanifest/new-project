@@ -122,6 +122,39 @@ class PhysicalContractTests(unittest.TestCase):
         self.assertIsNotNone(gate.physical_changes_error([dict(keep, rationale=" ")]))
         self.assertIsNotNone(gate.physical_changes_error([dict(keep, before="x")]))
 
+    def test_repeated_physical_claims_fail_even_when_metadata_differs(self):
+        variants = (dict(PIN_MOVE), dict(PIN_MOVE, after="GPIO4/GPIO5"),
+                    dict(PIN_MOVE, before="GPIO6/GPIO7"),
+                    dict(PIN_MOVE, acceptance=["Different observable check"]))
+        for other in variants:
+            for changes in ([PIN_MOVE, other], [other, PIN_MOVE]):
+                with self.subTest(changes=changes):
+                    self.assertIsNotNone(gate.physical_changes_error(changes))
+                    self.assertEqual(self.run_gate(
+                        ["contracts/hardware/tic249-nvm.json"], changes), ["GOV-PHYS-001"])
+
+    def test_no_change_marker_is_exclusive_within_one_contract(self):
+        keep = {"contract": PIN_MOVE["contract"], "property": "none", "rationale": "Format only"}
+        for other in (PIN_MOVE, dict(keep, rationale="Other format-only explanation")):
+            for changes in ([keep, other], [other, keep]):
+                with self.subTest(changes=changes):
+                    self.assertIsNotNone(gate.physical_changes_error(changes))
+                    self.assertEqual(self.run_gate(
+                        ["contracts/hardware/tic249-nvm.json"], changes), ["GOV-PHYS-001"])
+
+    def test_distinct_physical_claims_preserve_exact_input(self):
+        from copy import deepcopy
+        keep = {"contract": "stacknet-profiles", "property": "none", "rationale": "No profile change"}
+        changes = [PIN_MOVE, POLARITY_FLIP, dict(PIN_MOVE, signal="other limit"), keep]
+        original = deepcopy(changes)
+        self.assertIsNone(gate.physical_changes_error(changes))
+        self.assertEqual(self.run_gate(["contracts/hardware/tic249-nvm.json"], changes), [])
+        self.assertEqual(changes, original)
+        for field in ("contract", "signal"):
+            # Free-text identifiers retain their exact values.
+            self.assertIsNone(gate.physical_changes_error(
+                [PIN_MOVE, dict(PIN_MOVE, **{field: PIN_MOVE[field] + " "})]))
+
     def test_intent_field_is_optional_for_v2_and_v3_only(self):
         base = {"schema": "new-project.intent/v3", "ticket": "ticket-001", "summary": "s",
                 "allowedPaths": ["a"], "forbiddenPaths": [], "stacks": [], "workstream": "w",
