@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import shlex
 import signal
 import subprocess
 import sys
@@ -19,6 +20,22 @@ spec = importlib.util.spec_from_file_location(
     "allocation_fixture", ROOT / "tests/ticket-allocation-worktree.test.py")
 allocation_fixture_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(allocation_fixture_module)
+
+
+def fixture_bash():
+    if os.name == "nt":
+        git = shutil.which("git")
+        if git:
+            for directory in Path(git).resolve().parents:
+                for relative in ("bin/bash.exe", "usr/bin/bash.exe"):
+                    candidate = directory / relative
+                    if candidate.is_file():
+                        return str(candidate)
+        raise RuntimeError("Git for Windows Bash is required for allocator fixtures")
+    bash = shutil.which("bash")
+    if not bash:
+        raise RuntimeError("Bash is required for allocator fixtures")
+    return bash
 
 
 @contextmanager
@@ -43,6 +60,20 @@ def allocation_fixture():
         # Surface Git's diagnostic without exposing production ticket data.
         fixture.doCleanups()
         raise AssertionError(error.stderr) from error
+    tools = Path(fixture.temp.name) / "tools"
+    tools.mkdir()
+    python = shlex.quote(sys.executable.replace("\\", "/"))
+    (tools / "python3").write_bytes(("#!/bin/sh\nexec " + python + ' "$@"\n').encode("utf-8"))
+    (tools / "python3").chmod(0o755)
+    bash = fixture_bash()
+    def portable_allocate(*args):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+        env["PATH"] = str(tools) + os.pathsep + str(Path(bash).parent) + os.pathsep + env["PATH"]
+        env["PYTHONUTF8"] = "1"
+        return subprocess.run([bash, "project/new-ticket.sh", "--title", "Canonical ticket", "--agent", "codex",
+            "--workstream", "application", "--worktree-slug", "canonical-ticket", *args],
+            cwd=fixture.root, env=env, text=True, encoding="utf-8", capture_output=True)
+    fixture.allocate = portable_allocate
     try:
         yield fixture
     finally:
