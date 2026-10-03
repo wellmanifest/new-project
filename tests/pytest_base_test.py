@@ -82,6 +82,14 @@ class PytestBaseTests(unittest.TestCase):
         self.assertEqual(resolved, self.head)
         self.assertEqual(BRIDGE._changed_paths(self.root, resolved), [])
 
+    def test_selected_github_base_ref_preserves_committed_changes(self):
+        self.git('-C', str(self.root), 'update-ref', 'refs/remotes/origin/main', self.head)
+        self.git('-C', str(self.root), 'update-ref', 'refs/remotes/origin/release', self.base)
+        os.environ['GITHUB_BASE_REF'] = 'release'
+        resolved = BRIDGE._resolve_base(self.root)
+        self.assertEqual(resolved, self.base)
+        self.assertEqual(BRIDGE._changed_paths(self.root, resolved), ['changed.py'])
+
     def test_missing_base_stops_actual_pytest_lifecycle_before_gate(self):
         project = self.root / 'project'
         project.mkdir()

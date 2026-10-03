@@ -504,7 +504,7 @@ exec "$TASK_SIGNAL_REAL_GIT" "$@"
         suite = unittest.defaultTestLoader.loadTestsFromTestCase(fixture.PytestBaseTests)
         result = unittest.TestResult()
         suite.run(result)
-        self.assertEqual(result.testsRun, 7)
+        self.assertEqual(result.testsRun, 8)
         self.assertFalse(result.skipped, result.skipped)
         self.assertTrue(result.wasSuccessful(), result.errors + result.failures)
 

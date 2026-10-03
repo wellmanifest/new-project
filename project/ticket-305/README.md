@@ -3,7 +3,7 @@
 - **ID**: ticket-305
 - **Owner**: agent:codex
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Created**: 2026-10-03
 
 ## Outcome and scope
