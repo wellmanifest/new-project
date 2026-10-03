@@ -1,0 +1,121 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-294",
+  "summary": "Constrain agent host schema and declared gate paths to the repository",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-294/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/agent-hosts.schema.json",
+    "scripts/agent_host_check.py",
+    "packages/wellman/src/wellman/_bundled/agent_host_check.py",
+    "tests/agent-hosts.test.sh",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-293"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2e579570021d21201df0db8c2652dda96430bd29",
+    "targetBranch": "main",
+    "outcome": "Constrain declared host paths to safe repository-relative paths, and reject absolute, drive-qualified, parent-traversing or symlink-escaping package gate declarations. Preserve legitimate hub/adopter declarations and publish immutable standard 0.20.68.",
+    "nonGoals": [
+      "Change effectful controller or authorization",
+      "Change source-link completeness or bootstrap copying in this slice",
+      "Mutate foreign/frozen target state",
+      "Create runtime dependencies"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Align the declared repository-relative path constraint with portable path checks. Resolve declared package gates beneath the observed checkout and reject link escapes. Preserve existing declaration result shape and package parity.",
+      "components": [
+        {
+          "name": "agent-host-path-contract",
+          "paths": [
+            "governance/agent-hosts.schema.json",
+            "scripts/agent_host_check.py",
+            "packages/wellman/src/wellman/_bundled/agent_host_check.py"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/agent-hosts.test.sh"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Tighten the existing safe repository-relative path constraint in the agent-host schema."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Isolated existing absolute/parent/symlink gate reproductions expose the original acceptance; forbidden paths are denied and valid hub/adopter gates remain supported."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing validator integration, parity, native gate and required exact-head Linux/Windows/OneDev checks pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and final immutable standard v0.20.68 publication are verified."
+      }
+    ]
+  }
+}

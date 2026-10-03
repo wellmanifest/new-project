@@ -340,6 +340,27 @@ def check_packaging(root: Path, contract: dict[str, Any]) -> list[Finding]:
     return findings
 
 
+def safe_declared_gate(root: Path, relative: str) -> bool:
+    """Observe an existing repository-relative regular file without link escapes.
+
+    This is a path/declaration check, not permission to execute the gate.
+    """
+    if re.fullmatch('^(?!.*(?:^|/)\\.\\.(?:/|$))[^/\\\\:\\x00-\\x1f\\x7f]+(?:/[^/\\\\:\\x00-\\x1f\\x7f]+)*$', relative) is None:
+        return False
+    try:
+        base = root.resolve(strict=True)
+        path = base
+        for part in relative.split("/"):
+            path = path / part
+            if path.is_symlink():
+                return False
+        resolved = path.resolve(strict=True)
+        resolved.relative_to(base)
+        return resolved.is_file()
+    except (OSError, ValueError):
+        return False
+
+
 def check_declaration(
     root: Path,
     marker_relative: str,
@@ -355,6 +376,14 @@ def check_declaration(
                 "Declare the adopted standard version, revision and gate in the package metadata.",
                 [marker_relative],
             ))
+    gate = declaration.get("gate")
+    if isinstance(gate, str) and gate.strip() and not safe_declared_gate(root, gate):
+        findings.append(Finding(
+            "GOV-PACKAGING-002",
+            f"{marker_relative} declares gate '{gate}', which is missing or unsafe.",
+            "Point the declaration at an existing repository-relative regular governance gate without parent traversal, drive paths or symbolic links.",
+            [marker_relative, gate],
+        ))
     if not standard:
         return findings
     for key, locked in (("standard", "version"), ("revision", "sourceRevision")):
@@ -366,16 +395,6 @@ def check_declaration(
                 f"{marker_relative} declares {key} '{actual}' but the adoption lock pins '{expected}'.",
                 "Regenerate the package declaration from .governance/manifest.lock.json.",
                 [marker_relative],
-            ))
-    gate = declaration.get("gate")
-    if isinstance(gate, str) and gate.strip():
-        gate_path = root / gate
-        if not gate_path.is_file():
-            findings.append(Finding(
-                "GOV-PACKAGING-002",
-                f"{marker_relative} declares gate '{gate}', which does not exist.",
-                "Point the declaration at the managed governance gate in this repository.",
-                [marker_relative, gate],
             ))
     return findings
 

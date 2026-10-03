@@ -790,6 +790,50 @@ assert_lacks "$observed" "GOV-PACKAGING-001" "python marker unreadable without t
 assert_lacks "$observed" "GOV-PACKAGING-002" "python marker unreadable without tomllib"
 assert_lacks "$observed" "GOV-PACKAGING-003" "python lifecycle unreadable without tomllib"
 
+# Source path constraints and package gates must not escape the checkout.
+python3 - "$root" <<'PYPATHBOUNDARY'
+from pathlib import Path
+import importlib.util, json, re, sys, tempfile
+root = Path(sys.argv[1])
+spec = importlib.util.spec_from_file_location("agent_host_path_fixture", root / "scripts/agent_host_check.py")
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+schema = json.loads((root / "governance/agent-hosts.schema.json").read_text(encoding="utf-8"))
+pattern = schema["properties"]["hook"]["properties"]["path"]["pattern"]
+violations = []
+for value in ["../gate", "nested/../gate", "/gate", "C:/gate", "C:gate",
+              "a\\b", "a//b", "a/", "a\nb", "a\0b"]:
+    if re.fullmatch(pattern, value):
+        violations.append("schema accepts forbidden path " + repr(value))
+for value in [".githooks/pre-commit", "project/governance-check.sh", "docs/żółw.md"]:
+    if not re.fullmatch(pattern, value):
+        violations.append("schema rejects valid relative path " + repr(value))
+with tempfile.TemporaryDirectory(prefix="agent-host-path-fixture-") as temporary:
+    base = Path(temporary)
+    checkout = base / "repository"
+    (checkout / "project").mkdir(parents=True)
+    (checkout / "project/governance-check.sh").write_text("synthetic gate\n", encoding="utf-8")
+    outside = base / "outside-gate.sh"
+    outside.write_text("outside synthetic gate\n", encoding="utf-8")
+    (checkout / "linked-gate.sh").symlink_to(outside)
+    (checkout / "linked-parent").symlink_to(base, target_is_directory=True)
+    standard = {"version": "fixture", "sourceRevision": "1" * 40}
+    declaration = {"standard": "fixture", "revision": "1" * 40}
+    for value in [str(outside), "../outside-gate.sh", "C:/gate.sh", "C:gate.sh",
+                  "linked-gate.sh", "linked-parent/outside-gate.sh"]:
+        for locked in [standard, {}]:
+            findings = module.check_declaration(checkout, "package.json",
+                {**declaration, "gate": value}, locked)
+            if not any(item.code == "GOV-PACKAGING-002" for item in findings):
+                violations.append("gate boundary accepted unsafe declaration")
+    for value in ["project/governance-check.sh", "./project/governance-check.sh"]:
+        if module.check_declaration(checkout, "package.json", {**declaration, "gate": value}, standard):
+            violations.append("valid relative gate rejected")
+assert not violations, "\n".join(violations)
+print("agent-host path boundaries: PASS")
+PYPATHBOUNDARY
+
 # Every code the validator can emit must be registered in the catalog.
 python3 "$root/scripts/audit_diagnostics.py" --root "$root" >/dev/null \
   || fail "diagnostics catalog must cover every emitted code"
