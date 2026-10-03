@@ -1,0 +1,123 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-288",
+  "summary": "Preserve ticket index changes with three-way merging and cross-platform durability checks",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-288/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/ticket_index_merge_driver.py",
+    "tests/continuity_storage_test.py",
+    "tests/ticket_index_merge_test.py",
+    "tests/registry_runtime_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-287"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "de792e878eca6b878c02ac8ea436b22803b11304",
+    "targetBranch": "main",
+    "outcome": "Preserve independent ticket-index additions, edits and deletions through three-way merging, keep conflicts explicit, and run ticket-index and continuity durability suites on Linux and Windows in immutable standard 0.20.62. Diagnose and explicitly defer Registry Windows URL canonicalization to a dependent ticket.",
+    "nonGoals": [
+      "Grant execution or merge authority",
+      "Add runtime dependencies or mutate foreign checkouts",
+      "Silently choose a conflicting ticket row",
+      "Fix or claim passing Registry Windows canonical URLs; defer to a separate dependent runtime ticket."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use ancestor-aware three-way ticket merging and Git conflict fallback; run ticket-index and continuity storage tests on Linux and Windows. Canonicalize continuity fixture paths before mocking production storage paths, which are already derived from the resolved root. Registry Windows URL canonicalization, byte-exact fixtures, diagnostics and Windows wiring remain in a separate dependent runtime ticket. The retained Registry fixture path authorizes only restoring this ticket's own diagnostic changes to the accepted base; it has no net publication diff and does not increase the nine-file implementation budget.",
+      "components": [
+        {
+          "name": "ticket-index-merging",
+          "paths": [
+            "scripts/ticket_index_merge_driver.py"
+          ]
+        },
+        {
+          "name": "regressions-and-ci",
+          "paths": [
+            "tests/ticket_index_merge_test.py",
+            "tests/continuity_storage_test.py",
+            ".github/workflows/ci.yml",
+            "tests/registry_runtime_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Extend the existing Linux and Windows workflow steps with explicit durability regression suites; required job identities remain the same."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket_index_merge_test.py",
+          "python3 tests/registry_runtime_test.py",
+          "python3 tests/continuity_storage_test.py"
+        ],
+        "evidence": "Real merge-file regressions preserve deletions, additions and text and expose conflicts; real process tests retain concurrency/recovery assertions. Both OS workflows run ticket-index and continuity. Linux additionally checks Registry; its Windows failure and runtime correction are deferred."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Native governance and required CI pass without changing protected authority."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent exact-head merge and final immutable standard v0.20.62 release are verified."
+      }
+    ]
+  }
+}

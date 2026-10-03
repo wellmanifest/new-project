@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.62] - 2026-10-03
+
+### Fixed
+- Respect ancestors when merging ticket rows, table headers and surrounding prose. Preserve one-sided deletions and edits, merge independent additions and fall back to Git conflicts for conflicting edits or ambiguous sections.
+- Run continuity storage and ticket-index regressions in Linux and Windows CI, and captured Registry regressions on Linux. Canonicalize mocked continuity fixture roots across Windows temporary-path aliases. The diagnosed Registry URL canonicalization failure and its Windows wiring are deferred with the runtime fix to a dependent ticket.
+
 ## [0.20.61] - 2026-10-03
 
 ### Fixed
