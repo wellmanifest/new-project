@@ -1,0 +1,127 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-292",
+  "summary": "Enforce canonical scalar types and bounds in portable lease documents",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-292/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/change_lease_check.py",
+    "subprojects/change-lease/README.md",
+    "tests/change_lease_safety_test.py",
+    ".github/workflows/ci.yml",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/sync_bundled.py",
+    "packages/wellman/src/wellman/_bundled/change_lease_check.py",
+    "packages/wellman/src/wellman/_bundled/change-lease.schema.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-291"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "30ada2d6f171ee11d029a07ea55d1993c25c7fe0",
+    "targetBranch": "main",
+    "outcome": "Enforce the already declared scalar types, nullable references, string bounds and explicit-offset timestamps in portable lease/request/receipt validation; publish immutable standard 0.20.66. Malformed-transition receipt handling and rejected-trace anchoring remain a dependent continuation.",
+    "nonGoals": [
+      "Change or deploy the effectful Subactor controller",
+      "Grant authority through local replay or alter the canonical lease schema",
+      "Mutate active foreign or frozen target work",
+      "Change transition reply format or rejected-trace semantics in this slice"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use a bounded dependency-free matcher for the already shipped canonical flat scalar schema, then retain existing semantic guards. Boolean counters, invalid references and offset-free timestamps fail. Keep all transition reply and trace behavior unchanged for the dependent slice. The installed Wellman package receives the same canonical schema and byte-identical runtime through the existing bundled synchronizer; this is required distribution closure, not another behavior slice.",
+      "components": [
+        {
+          "name": "lease-validation",
+          "paths": [
+            "scripts/change_lease_check.py",
+            "subprojects/change-lease/README.md"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/change_lease_safety_test.py",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml",
+            "packages/wellman/sync_bundled.py",
+            "packages/wellman/src/wellman/_bundled/change_lease_check.py",
+            "packages/wellman/src/wellman/_bundled/change-lease.schema.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Run portable scalar document safety regressions in the existing Linux and Windows workflow."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/change_lease_safety_test.py"
+        ],
+        "evidence": "Original scalar reproductions fail; boolean counters, missing offsets, string bounds/patterns and nullable types are denied; valid offset timestamps and installed CLI validation remain supported."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing validator integration, parity, native gate and required exact-head Linux/Windows/OneDev checks pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and final immutable standard v0.20.66 publication are verified."
+      }
+    ]
+  }
+}

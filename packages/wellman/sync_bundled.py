@@ -42,6 +42,15 @@ def main(argv: list[str]) -> int:
         drift.append(name)
         if not args.check:
             target.write_bytes(source)
+    # The lease checker loads the pinned scalar contract beside its installed
+    # module. Ship the canonical bytes through the same parity boundary.
+    name = "change-lease.schema.json"
+    source = (SCRIPTS.parent / "subprojects/change-lease" / name).read_bytes()
+    target = BUNDLED / name
+    if not target.is_file() or target.read_bytes() != source:
+        drift.append(name)
+        if not args.check:
+            target.write_bytes(source)
     extra = sorted(
         p.name for p in BUNDLED.glob("*.py") if p.name != "__init__.py" and p.name not in MODULES
     )
@@ -53,7 +62,7 @@ def main(argv: list[str]) -> int:
         print("remediation: python3 packages/wellman/sync_bundled.py", file=sys.stderr)
         return 1
     if not args.check:
-        print(f"synchronized {len(drift)} of {len(MODULES)} bundled modules")
+        print(f"synchronized {len(drift)} of {len(MODULES) + 1} bundled assets")
     return 0
 
 
