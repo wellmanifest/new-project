@@ -219,6 +219,11 @@ def validate_receipt(value: dict[str, Any]) -> list[dict[str, Any]]:
             errors.append(finding("GOV-CHANGE-LEASE-001", f"{key} must be a positive integer."))
     if value.get("outcome") == "accepted" and (value["leaseRevision"] != value["previousRevision"] + 1 or value["fencingToken"] != value["previousFencingToken"] + 1):
         errors.append(finding("GOV-CHANGE-LEASE-002", "Accepted receipt must increment revision and fencing token exactly once."))
+    if value["outcome"] == "rejected" and (
+            value["leaseRevision"] != value["previousRevision"]
+            or value["fencingToken"] != value["previousFencingToken"]
+            or value["phaseAfter"] != value["phaseBefore"]):
+        errors.append(finding("GOV-CHANGE-LEASE-002", "Rejected receipt must not advance state."))
     if not valid_time(value.get("occurredAt")):
         errors.append(finding("GOV-CHANGE-LEASE-001", "Receipt timestamp is invalid."))
     return errors
@@ -269,8 +274,11 @@ def replacement_receipt_error(request, replacement):
     return None, None
 
 
-def evaluate_transition(lease: dict[str, Any], request: dict[str, Any], replacement: dict[str, Any] | None = None) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def evaluate_transition(lease: dict[str, Any], request: dict[str, Any], replacement: dict[str, Any] | None = None) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
     errors = validate_lease(lease) + validate_request(request)
+    if errors:
+        # Invalid inputs cannot identify a trustworthy state to receipt.
+        return None, errors
     phase, action = str(lease.get("phase", "claimed")), request.get("action")
     code, message = transition_identity_error(lease, request, phase, errors)
     next_phase = TRANSITIONS.get(str(action), {}).get(phase)
@@ -299,8 +307,11 @@ def validate_trace(path: Path) -> list[dict[str, Any]]:
             findings.append(finding("GOV-CHANGE-LEASE-001", f"Invalid receipt JSON: {error}", line=number)); continue
         if not isinstance(receipt, dict):
             findings.append(finding("GOV-CHANGE-LEASE-001", "Receipt must be an object.", line=number)); continue
-        findings.extend(validate_receipt(receipt))
-        if previous is not None and receipt.get("outcome") == "accepted" and (receipt.get("leaseId") != previous.get("leaseId") or receipt.get("previousRevision") != previous.get("leaseRevision") or receipt.get("previousFencingToken") != previous.get("fencingToken") or receipt.get("phaseBefore") != previous.get("phaseAfter")):
+        errors = validate_receipt(receipt)
+        findings.extend(errors)
+        if errors:
+            continue
+        if previous is not None and receipt.get("outcome") in {"accepted", "rejected"} and (receipt.get("leaseId") != previous.get("leaseId") or receipt.get("previousRevision") != previous.get("leaseRevision") or receipt.get("previousFencingToken") != previous.get("fencingToken") or receipt.get("phaseBefore") != previous.get("phaseAfter")):
             findings.append(finding("GOV-CHANGE-LEASE-002", "Receipt trace is not monotonic.", line=number))
         if receipt.get("outcome") == "accepted":
             previous = receipt
@@ -354,6 +365,9 @@ def main(argv: list[str] | None = None) -> int:
         if lease is None or request is None or repl:
             print_findings(left + right + repl, args.format); return 1
         receipt, findings = evaluate_transition(lease, request, replacement)
+        if receipt is None:
+            print_findings(findings, args.format)
+            return 1
         print(json.dumps(receipt, indent=2, sort_keys=True)); return 1 if findings else 0
     print_findings(findings, args.format); return 1 if findings else 0
 

@@ -51,11 +51,20 @@ require an explicit RFC 3339 offset. Declared string bounds, patterns and nullab
 reference types are enforced. Unsupported scalar schema constraints fail closed.
 This bounded matcher is not a general JSON Schema engine.
 
-This validation change preserves transition replies and rejected-event trace
-semantics. The checker remains a reference validator; actual controller authority
-and protected publication stay with Subactor.
+The checker remains a reference validator; actual controller authority and
+protected publication stay with Subactor.
 
 The native local allocator creates only an ignored advisory projection. When
 its layout has a basename rather than an organization/repository reference,
 it uses `local/<primary-checkout SHA-256>` as an explicit local identity. This
 does not identify a remote repository or grant controller/publication authority.
+
+## Malformed transitions and rejected events
+
+A malformed lease/request shape produces stable diagnostics without fabricating
+a transition receipt or attempting arithmetic on invalid counter types. The
+CLI emits that diagnostic report with a failing exit status.
+
+A valid rejected receipt retains its revision, fence and phase and must match
+the preceding accepted lease state in a trace. It never advances the accepted
+state. A following accepted receipt must still extend the last accepted state.

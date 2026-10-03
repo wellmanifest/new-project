@@ -1,0 +1,121 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-293",
+  "summary": "Reject malformed transition receipts and anchor rejected trace events",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-293/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/change_lease_check.py",
+    "packages/wellman/src/wellman/_bundled/change_lease_check.py",
+    "tests/change_lease_safety_test.py",
+    "subprojects/change-lease/README.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-292"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f04300a046988e0fc69d19cedf3b98f42199b658",
+    "targetBranch": "main",
+    "outcome": "Return stable diagnostics without fabricating a receipt for malformed transition input; rejected trace events preserve counters/phase and remain anchored to the preceding accepted state. Publish immutable standard 0.20.67.",
+    "nonGoals": [
+      "Change or deploy the effectful Subactor controller",
+      "Grant authority through local replay or alter the canonical lease schema",
+      "Mutate foreign or frozen target work",
+      "Change scalar contract or allocated local identity"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Separate malformed document diagnostics from valid transition receipts. Validate rejected receipts against unchanged own state and the preceding accepted trace anchor; only accepted receipts advance that anchor. Reuse the existing portable safety suite and package synchronizer.",
+      "components": [
+        {
+          "name": "lease-reference-validation",
+          "paths": [
+            "scripts/change_lease_check.py",
+            "packages/wellman/src/wellman/_bundled/change_lease_check.py",
+            "subprojects/change-lease/README.md"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/change_lease_safety_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Malformed CLI transition evaluation returns its structured diagnostic report, without a fabricated transition receipt."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/change_lease_safety_test.py"
+        ],
+        "evidence": "Malformed transition inputs produce stable diagnostics and no receipt; rejected receipts cannot advance or escape accepted identity/state; valid rejection preserves the next accepted transition."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing validator integration, parity, native gate and required exact-head Linux/Windows/OneDev checks pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and final immutable standard v0.20.67 publication are verified."
+      }
+    ]
+  }
+}
