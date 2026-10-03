@@ -259,11 +259,15 @@ paragraph = [
 text = path.read_text(encoding="utf-8") if path.exists() else ""
 lines = text.splitlines()
 heading = f"# {marker}"
+if lines.count(heading) > 1:
+    raise SystemExit("Duplicate managed host contract heading; preserve the file and repair its boundary.")
 if heading in lines:
     start = lines.index(heading)
     body = start + 1
     while body < len(lines) and not lines[body].strip():
         body += 1
+    if body >= len(lines) or not lines[body].startswith("When the current "):
+        raise SystemExit("Malformed managed host contract paragraph; preserve the file and repair its boundary.")
     if body < len(lines) and lines[body].startswith("When the current "):
         end = body
         while end < len(lines) and lines[end].strip() and not lines[end].startswith("#"):
