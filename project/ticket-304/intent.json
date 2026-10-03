@@ -1,0 +1,121 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-304",
+  "summary": "Reject adjacent ticket number suffixes in activity observations",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-304/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+    "scripts/ticket_activity.py",
+    "tests/runtime_safety_test.py",
+    "tests/workspace_activity_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-303"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4c82689a2750b8ee8f0ac6e6a37635847aa17871",
+    "targetBranch": "main",
+    "outcome": "Do not treat unrelated adjacent ASCII letter/digit suffixes as the selected ticket number in read-only activity observations. Preserve supported ticket branch forms, conservative unreadable inventories and explicit terminal/lease authority. Publish standard 0.20.78 after protected merge.",
+    "nonGoals": [
+      "Grant terminal, execution or merge authority from branch-name matching",
+      "Change dependency closure, worktree layout, dirty-path parsing, model routing or workflow trigger semantics",
+      "Add dependencies or mutate foreign/frozen target state"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Require a non-ASCII-letter-or-digit boundary after the existing decimal ticket number, symmetric with the existing prefix boundary. Exercise actual local and origin Git refs and activity resolution in source and bundle; retain supported forms, zero padding, case behavior and genuine outstanding-ticket observations. The activity query remains read-only and never grants write or cleanup authority.",
+      "components": [
+        {
+          "name": "ticket-activity-observer",
+          "paths": [
+            "scripts/ticket_activity.py",
+            "packages/wellman/src/wellman/_bundled/ticket_activity.py"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/workspace_activity_test.py",
+            "tests/runtime_safety_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "The existing read-only activity query no longer reports an unrelated adjacent-suffix branch as an outstanding branch for this ticket."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material fix through protected publication; preserve controller and merge receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/workspace_activity_test.py",
+          "python3 tests/runtime_safety_test.py"
+        ],
+        "evidence": "Actual source and bundled activity queries reject unrelated local/origin adjacent-suffix refs while preserving matching outstanding refs; the regression fails against the pre-fix implementation."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/ticket-activity.test.sh",
+          "bash tests/wellman-package.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Native, integration, installed-wheel, source/bundle parity and exact-head Linux/Windows/OneDev checks pass before independent review."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and final standard v0.20.78 publication verified."
+      }
+    ]
+  }
+}

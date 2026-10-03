@@ -483,6 +483,19 @@ exec "$TASK_SIGNAL_REAL_GIT" "$@"
         case = fixture.CachedOutputTests("test_current_output_errors_are_combined_with_cached_results")
         case.test_current_output_errors_are_combined_with_cached_results()
 
+    def test_ticket_suffix_boundaries_through_actual_git_activity(self):
+        spec = importlib.util.spec_from_file_location(
+            "ticket_suffix_git_fixture", ROOT / "tests/workspace_activity_test.py")
+        fixture = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fixture)
+        case = fixture.WorkspaceActivityTests(
+            "test_adjacent_suffixes_do_not_reserve_another_ticket")
+        result = unittest.TestResult()
+        case.run(result)
+        self.assertEqual(result.testsRun, 1)
+        self.assertFalse(result.skipped, result.skipped)
+        self.assertTrue(result.wasSuccessful(), result.errors + result.failures)
+
 
 if __name__ == "__main__":
     unittest.main()
