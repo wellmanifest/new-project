@@ -21,7 +21,8 @@
     "governance/manifest.default.json",
     "governance/manifest.hub.json",
     "packages/wellman/pyproject.toml",
-    ".github/workflows/ci.yml"
+    ".github/workflows/ci.yml",
+    ".gitattributes"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -45,14 +46,14 @@
     "complexity": "S",
     "estimatedMinutes": 20,
     "budgets": {
-      "maxImplementationFiles": 10,
+      "maxImplementationFiles": 11,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Evaluate each requested output operation once and combine any new Report findings with the cached payload before formatting and determining success. Preserve cache hits and cached findings, existing counts/timing and cache-off CI; synchronize the existing bundled checker. Actual CLI reproductions cover invalid report paths and both resolved-ticket path/writer failures, with later successful cache reuse. Test child processes activate the real managed hook through scoped Git configuration environment, without editing repository configuration, and use an available explicit Git base (verified origin/main), failing when no meaningful base exists. Windows CI fetches the complete target history just as Linux does, so the actual CLI fixture can compare a meaningful explicit base. No same-head base substitution or governance bypass is permitted.",
+      "decision": "Evaluate each requested output operation once and combine any new Report findings with the cached payload before formatting and determining success. Preserve cache hits and cached findings, existing counts/timing and cache-off CI; synchronize the existing bundled checker. Actual CLI reproductions cover invalid report paths and both resolved-ticket path/writer failures, with later successful cache reuse. Test child processes activate the real managed hook through scoped Git configuration environment, without editing repository configuration, and use an available explicit Git base (verified origin/main), failing when no meaningful base exists. Windows CI fetches the complete target history just as Linux does, so the actual CLI fixture can compare a meaningful explicit base. No same-head base substitution or governance bypass is permitted. An exact root Git attributes rule preserves LF bytes for the immutable Policy DSL checker on Windows. The checker digest and all gate checks remain unchanged; other paths and adopter seed attributes are untouched.",
       "components": [
         {
           "name": "cached-preflight-report",
@@ -66,7 +67,8 @@
           "paths": [
             "tests/governance-preflight-cache.test.py",
             "tests/runtime_safety_test.py",
-            ".github/workflows/ci.yml"
+            ".github/workflows/ci.yml",
+            ".gitattributes"
           ]
         },
         {

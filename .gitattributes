@@ -1,3 +1,5 @@
 # Wellmanifest new-project standard git attributes
 project/TICKETS.md merge=wellmanifest-ticket-index
 TODO.md merge=wellmanifest-ticket-index
+# The immutable Policy DSL dependency digest is computed over canonical bytes.
+/scripts/policy_dsl_check.py text eol=lf

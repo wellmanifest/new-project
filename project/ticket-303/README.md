@@ -12,9 +12,11 @@ Combine current invocation output-path and resolved-ticket writer failures with 
 - AC-03: Independent protected merge and standard v0.20.77 publication are verified.
 
 ## Bounds
-S / 20 minutes; ten material files, three components, two existing interfaces (preflight CLI and Windows CI), zero dependencies. No cache key, ticket selection, schema identity, lease or approval policy changes; no foreign/frozen target mutations.
+S / 20 minutes; eleven material files, three components, two existing interfaces (preflight CLI and Windows CI), zero dependencies. No cache key, ticket selection, schema identity, lease or approval policy changes; no foreign/frozen target mutations.
 
 ## CI fixture correction
 The first head failed on clean Linux/Windows checkouts because the local-agent CLI fixture assumed an activated hook and origin/main. The refined fixture activates the real managed hook through child Git configuration environment and chooses an available explicit base (origin/main or a verified parent). It never edits repository configuration or skips either gate. Initial CI logs and the held head are preserved in private evidence.
 
 The next Windows run exposed its shallow checkout: neither origin/main nor a parent commit was present. The Windows job now fetches full history, as the Linux job already does. The fixture now requires the verified origin/main base, without a parent or HEAD fallback. Both failed CI heads remain in the PR history and private evidence. A fresh clone also exposed the second public path introduced by the CI change; the refined bounded intent declares it within the existing policy limit.
+
+The full-history Windows run reached real preflight and exposed CRLF conversion of the immutable Policy DSL checker. Its observed digest matches the LF-to-CRLF conversion exactly. An exact root Git attributes rule retains LF for that pinned file; the source and bundled CLI both resolve it from the selected root. The reviewed digest and runtime gate are unchanged. Initial failures, full Goal test results and the published heads remain preserved.
