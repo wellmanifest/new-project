@@ -738,7 +738,8 @@ if [[ -n "$PRIMARY_CHECKOUT" ]]; then
   repository_ref="$(basename "$PRIMARY_CHECKOUT")"
   if ! layout="$(python3 "$WORKTREE_CONTRACT" plan --repository "$repository_ref" \
       --repository-name "$(basename "$PRIMARY_CHECKOUT")" --ticket "$ticket_id" \
-      --slug "$WORKTREE_SLUG" --from-worktree "$PRIMARY_CHECKOUT")"; then
+      --slug "$WORKTREE_SLUG" --from-worktree "$PRIMARY_CHECKOUT" \
+      --path-style "$(python3 -c 'import os; print("windows" if os.name == "nt" else "posix")')")"; then
     echo "GOV-TICKET-ALLOCATION-003: canonical Worktrees v5 layout could not be planned." >&2
     exit 5
   fi
