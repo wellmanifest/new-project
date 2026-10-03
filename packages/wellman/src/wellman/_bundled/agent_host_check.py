@@ -100,7 +100,60 @@ def check_hosts(root: Path, contract: dict[str, Any]) -> list[Finding]:
     return findings
 
 
-def check_source_links(root: Path, contract: dict[str, Any]) -> list[Finding]:
+LOCAL_SOURCE_SETS = {
+    "governance/agent-hosts.json": {
+        "hub-manifest": "governance/manifest.hub.json",
+        "hub-package": "governance/package-manifest.json",
+    },
+    ".governance/agent-hosts.json": {
+        "adopter-manifest": ".governance/manifest.json",
+        "adopter-lock": ".governance/manifest.lock.json",
+        "adopter-package": ".governance/package-manifest.json",
+    },
+}
+
+
+def _local_source_paths(
+    root: Path, local: Any, contract_path: str | None,
+) -> tuple[list[str], list[Finding]]:
+    """Check the selected layout; missing files must never select a weaker one."""
+    def fail(message: str, paths: list[str]) -> tuple[list[str], list[Finding]]:
+        return [], [Finding(
+            "GOV-AGENT-HOST-004", message,
+            "Restore the complete local source contract through pinned standard adoption.", paths,
+        )]
+
+    selected = first_existing(root, CONTRACT_CANDIDATES) if contract_path is None else Path(contract_path)
+    if selected is not None and contract_path is not None and not selected.is_absolute():
+        selected = root / selected
+    try:
+        layout = selected.relative_to(root).as_posix() if selected is not None else ""
+    except ValueError:
+        layout = ""
+    expected = LOCAL_SOURCE_SETS.get(layout)
+    if expected is None:
+        return fail("Local sources require a canonical hub or adopter host-contract location.", ["sourceLinks"])
+    if not isinstance(local, list) or any(
+        not isinstance(item, dict) or not isinstance(item.get("id"), str)
+        or not item["id"] or not isinstance(item.get("path"), str) or not item["path"]
+        for item in local
+    ):
+        return fail("Agent host local source declaration is malformed.", ["sourceLinks"])
+    by_id = {item["id"]: item["path"] for item in local}
+    if len(by_id) != len(local):
+        return fail("Agent host local source declaration contains duplicate ids.", ["sourceLinks"])
+    missing = [path for identifier, path in expected.items() if by_id.get(identifier) != path]
+    if missing:
+        return fail("Agent host local source declaration omits or changes required layout sources.", missing)
+    inactive = {identifier for candidate, group in LOCAL_SOURCE_SETS.items() if candidate != layout for identifier in group}
+    paths = [item["path"] for item in local if item["id"] not in inactive]
+    unsafe = [path for path in paths if not safe_declared_gate(root, path)]
+    if unsafe:
+        return fail("Declared local sources are missing, unsafe or not regular checkout files.", unsafe)
+    return paths, []
+
+
+def check_source_links(root: Path, contract: dict[str, Any], *, contract_path: str | None = None) -> list[Finding]:
     """Require every managed host projection to expose its bounded sources.
 
     The local files prove which package is adopted. Remote links are deliberately
@@ -168,21 +221,9 @@ def check_source_links(root: Path, contract: dict[str, Any]) -> list[Finding]:
         ))
         return findings
 
-    local_paths = [
-        str(item["path"])
-        for item in local
-        if isinstance(item, dict)
-        and isinstance(item.get("path"), str)
-        and (root / str(item["path"])).is_file()
-    ]
-    if not local_paths:
-        findings.append(Finding(
-            "GOV-AGENT-HOST-004",
-            "No declared local source link resolves in this checkout.",
-            "Restore the local adoption lock/package or the hub manifest/package before using host instructions.",
-            ["sourceLinks"],
-        ))
-        return findings
+    local_paths, local_findings = _local_source_paths(root, local, contract_path)
+    if local_findings:
+        return findings + local_findings
 
     for host in contract["hosts"]:
         relative = str(host["file"])
@@ -644,7 +685,7 @@ def audit(root: Path, actor: str = "agent", contract_path: str | None = None) ->
     else:
         findings = (
             check_hosts(root, contract)
-            + check_source_links(root, contract)
+            + check_source_links(root, contract, contract_path=contract_path)
             + check_hook(root, contract, actor)
             + check_packaging(root, contract)
             + check_guidance_anomalies(root, contract)

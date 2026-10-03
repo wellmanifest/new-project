@@ -608,6 +608,10 @@ cat > "$fixture/.governance/manifest.lock.json" <<'LOCK'
 }
 LOCK
 
+# A valid adopter fixture carries its complete local source set.
+printf '%s\n' '{}' > "$fixture/.governance/manifest.json"
+printf '%s\n' '{}' > "$fixture/.governance/package-manifest.json"
+
 # An unset core.hooksPath means no commit in this clone is actually gated.
 assert_has "$(codes "$fixture")" "GOV-AGENT-HOST-006" "unset hooksPath"
 # CI checkouts never run local hooks, so that finding must not fire there.
@@ -833,6 +837,115 @@ with tempfile.TemporaryDirectory(prefix="agent-host-path-fixture-") as temporary
 assert not violations, "\n".join(violations)
 print("agent-host path boundaries: PASS")
 PYPATHBOUNDARY
+
+# Complete local sources are required for the selected host-contract layout.
+python3 - "$root" <<'PY_SOURCE_COMPLETENESS'
+import copy
+import importlib.util
+import json
+import sys
+import tempfile
+from pathlib import Path
+
+root = Path(sys.argv[1])
+contract = json.loads((root / "governance/agent-hosts.json").read_text(encoding="utf-8"))
+sets = {
+    "hub": ["governance/manifest.hub.json", "governance/package-manifest.json"],
+    "adopter": [".governance/manifest.json", ".governance/manifest.lock.json", ".governance/package-manifest.json"],
+}
+violations = []
+for name, source in (
+    ("managed", root / "scripts/agent_host_check.py"),
+    ("bundled", root / "packages/wellman/src/wellman/_bundled/agent_host_check.py"),
+):
+    spec = importlib.util.spec_from_file_location("source_links_" + name, source)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    with tempfile.TemporaryDirectory(prefix="agent-source-completeness-") as tmp:
+        for layout, paths in sets.items():
+            case = Path(tmp) / layout
+            native = ("governance" if layout == "hub" else ".governance") + "/agent-hosts.json"
+            (case / native).parent.mkdir(parents=True)
+            (case / native).write_text(json.dumps(contract), encoding="utf-8")
+            for relative in paths:
+                (case / relative).write_text("{}", encoding="utf-8")
+            content = module.SOURCE_LINK_MARKER + "\n" + "\n".join(paths + [x["url"] for x in contract["sourceLinks"]["remote"]])
+            for host in contract["hosts"]:
+                file = case / host["file"]
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_text(content, encoding="utf-8")
+            assert not module.check_source_links(case, contract), (name, layout, "complete fixture rejected")
+            for relative in paths:
+                file = case / relative
+                file.unlink()
+                if not module.check_source_links(case, contract):
+                    violations.append((name, layout, "missing-file", relative))
+                file.write_text("{}", encoding="utf-8")
+                altered = copy.deepcopy(contract)
+                altered["sourceLinks"]["local"] = [x for x in altered["sourceLinks"]["local"] if x["path"] != relative]
+                if not module.check_source_links(case, altered):
+                    violations.append((name, layout, "omitted-declaration", relative))
+            file = case / "AGENTS.md"
+            file.write_text(content.replace(paths[0], "omitted"), encoding="utf-8")
+            assert module.check_source_links(case, contract), (name, layout, "missing host projection accepted")
+            file.write_text(content, encoding="utf-8")
+            altered = copy.deepcopy(contract)
+            altered["sourceLinks"]["local"].append({"id": "extra-local", "path": "docs/additional-source.json"})
+            if not module.check_source_links(case, altered):
+                violations.append((name, layout, "missing-additional-source"))
+            outside = Path(tmp) / (layout + "-outside.json")
+            outside.write_text("{}", encoding="utf-8")
+            relative = "../" + outside.name
+            altered["sourceLinks"]["local"][-1]["path"] = relative
+            for host in contract["hosts"]:
+                (case / host["file"]).write_text(content + "\n" + relative, encoding="utf-8")
+            if not module.check_source_links(case, altered):
+                violations.append((name, layout, "outside-additional-source"))
+            victim = case / paths[0]
+            victim.unlink()
+            try:
+                victim.symlink_to(outside)
+            except (OSError, NotImplementedError):
+                print("Symlink fixture unavailable on this platform")
+                victim.write_text("{}", encoding="utf-8")
+            else:
+                if not module.check_source_links(case, contract):
+                    violations.append((name, layout, "symlink-source"))
+                victim.unlink()
+                victim.write_text("{}", encoding="utf-8")
+            for host in contract["hosts"]:
+                (case / host["file"]).write_text(content, encoding="utf-8")
+            assert not module.check_source_links(case, contract), (name, layout, "restored fixture rejected")
+        both = Path(tmp) / "both"
+        all_paths = [path for group in sets.values() for path in group]
+        for relative in all_paths:
+            file = both / relative
+            file.parent.mkdir(parents=True, exist_ok=True)
+            file.write_text("{}", encoding="utf-8")
+        for directory in ("governance", ".governance"):
+            (both / directory / "agent-hosts.json").write_text(json.dumps(contract), encoding="utf-8")
+        content = module.SOURCE_LINK_MARKER + "\n" + "\n".join(all_paths + [x["url"] for x in contract["sourceLinks"]["remote"]])
+        for host in contract["hosts"]:
+            file = both / host["file"]
+            file.parent.mkdir(parents=True, exist_ok=True)
+            file.write_text(content, encoding="utf-8")
+        (both / ".governance/manifest.json").unlink()
+        assert not module.check_source_links(both, contract), "default selected hub must not require adopter files"
+        assert module.check_source_links(both, contract, contract_path=".governance/agent-hosts.json"), "explicit adopter must not fall back to complete hub"
+        (both / ".governance/manifest.json").write_text("{}", encoding="utf-8")
+        (both / "governance/manifest.hub.json").unlink()
+        assert not module.check_source_links(both, contract, contract_path=str(both / ".governance/agent-hosts.json")), "explicit complete adopter must not require hub files"
+        assert module.check_source_links(both, contract, contract_path="unknown-contract.json"), "unknown layout cannot weaken required sources"
+        altered = copy.deepcopy(contract)
+        altered["sourceLinks"]["local"].append(dict(altered["sourceLinks"]["local"][0]))
+        assert module.check_source_links(both, altered, contract_path=".governance/agent-hosts.json"), "duplicate local source ids must fail"
+        altered["sourceLinks"]["local"] = None
+        assert module.check_source_links(both, altered, contract_path=".governance/agent-hosts.json"), "malformed local sources must report findings"
+if violations:
+    raise AssertionError("Incorrect local source acceptances: " + repr(violations))
+print("PASS: complete hub/adopter source-link sets, declaration and containment regressions")
+PY_SOURCE_COMPLETENESS
 
 # Every code the validator can emit must be registered in the catalog.
 python3 "$root/scripts/audit_diagnostics.py" --root "$root" >/dev/null \

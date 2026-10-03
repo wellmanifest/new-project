@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.20.69] - 2026-10-03
+
+### Fixed
+- Require the complete local agent source set for the selected canonical hub or adopter contract, including each applicable manifest, lock and package. Reject omitted declarations, missing or unsafe files, duplicate local identifiers and unknown layouts; retain optional inactive-layout files and the diagnostic result shape. Preserve explicit selected-contract context and synchronize installed-package validation.
+
 ## [0.20.68] - 2026-10-03
 
 ### Fixed
