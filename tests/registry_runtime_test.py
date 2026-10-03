@@ -28,7 +28,8 @@ class RegistryRuntimeTests(unittest.TestCase):
             "ticket-store-cli.mjs": '''import {marker} from './ticket-store.mjs';
 import fs from 'node:fs';
 import {pathToFileURL} from 'node:url';
-if (import.meta.url !== pathToFileURL(process.argv[1]).href) throw Error('identity');
+if (import.meta.url !== pathToFileURL(process.argv[1]).href)
+  throw Error('Fixture identity mismatch: ' + import.meta.url + ' versus ' + pathToFileURL(process.argv[1]).href);
 console.log(JSON.stringify({marker, args: process.argv.slice(2), input: fs.readFileSync(0, 'utf8')}));
 ''',
         }
@@ -63,7 +64,19 @@ console.log(JSON.stringify({marker, args: process.argv.slice(2), input: fs.readF
 
     def test_unicode_stdin_arguments_and_entry_identity(self):
         content = 'Zażółć Ελληνικά Україна\n"quoted"\\path\n'
-        result = ticket_storage.invoke(self.root, self.pin, "update", "--file", "é.json", content=content)
+        # This controlled fixture contains no production ticket or secret data.
+        # Retain its stderr for a portability failure; production invoke still
+        # suppresses child stderr, which can contain actual ticket content.
+        real_run, observed = subprocess.run, []
+        def probe(*args, **kwargs):
+            result = real_run(*args, **kwargs)
+            observed.append(result)
+            return result
+        try:
+            with patch.object(ticket_storage.subprocess, "run", side_effect=probe):
+                result = ticket_storage.invoke(self.root, self.pin, "update", "--file", "é.json", content=content)
+        except ValueError:
+            self.fail(observed[-1].stderr.decode("utf-8", "replace"))
         self.assertEqual(result, {"marker": "original", "args": ["update", "--file", "é.json"], "input": content})
 
     def test_source_closure_larger_than_single_argument_limit(self):
