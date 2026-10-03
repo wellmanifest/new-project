@@ -142,6 +142,66 @@ class WorkspaceActivityTests(unittest.TestCase):
         with self.assertRaises(ACTIVITY.ActivityError):
             ACTIVITY._unmerged_ticket_branch(missing, 'ticket-001', 'main')
 
+    def test_adjacent_suffixes_do_not_reserve_another_ticket(self):
+        directory = self.primary / 'project/ticket-001'
+        directory.mkdir(parents=True)
+        (directory / 'README.md').write_text('- **Status**: IN_PROGRESS\n')
+        governance = self.primary / '.governance'
+        governance.mkdir()
+        policy = json.loads((ROOT / 'governance/ticket-activity.json').read_text())
+        policy['registry']['missingPolicy'] = 'git-ancestry'
+        (governance / 'ticket-activity.json').write_text(json.dumps(policy))
+        self.git('-C', str(self.primary), 'add', '.')
+        self.git('-C', str(self.primary), 'commit', '--quiet', '-m', 'fixture ticket')
+        base = self.git('-C', str(self.primary), 'rev-parse', 'HEAD').stdout.strip()
+        spec = importlib.util.spec_from_file_location(
+            'bundled_ticket_activity_suffix_fixture',
+            ROOT / 'packages/wellman/src/wellman/_bundled/ticket_activity.py')
+        bundled = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = bundled
+        spec.loader.exec_module(bundled)
+        names = ['ticket/001a-other', 'ticket-001feature',
+                 'ticket_001Z-work', 'feat/ticket-0012-work']
+        for index, name in enumerate(names):
+            # A neutral local branch supplies a real outstanding commit for
+            # the origin-only case without retaining a matching local ref.
+            neutral = f'fixture-{index}'
+            self.git('-C', str(self.primary), 'checkout', '--quiet', '-b', neutral, 'main')
+            (self.primary / 'source.py').write_text(f'value = {index + 2}\n')
+            self.git('-C', str(self.primary), 'commit', '--quiet', '-am', 'fixture outstanding')
+            head = self.git('-C', str(self.primary), 'rev-parse', 'HEAD').stdout.strip()
+            self.git('-C', str(self.primary), 'checkout', '--quiet', 'main')
+            for remote_only in [False, True]:
+                ref = ('refs/remotes/origin/' if remote_only else 'refs/heads/') + name
+                self.git('-C', str(self.primary), 'update-ref', ref, head)
+                for observer in [ACTIVITY, bundled]:
+                    with self.subTest(branch=name, origin_only=remote_only,
+                                      observer=observer.__name__):
+                        self.assertFalse(observer._unmerged_ticket_branch(
+                            self.primary, 'ticket-001', 'main'))
+                        self.assertFalse(observer.resolve(
+                            self.primary, directory, {'IN_PROGRESS'}).active)
+                        if not remote_only:
+                            self.git('-C', str(self.primary), 'checkout', '--quiet', name)
+                            try:
+                                self.assertFalse(observer._advanced_ticket_branch(
+                                    self.primary, 'ticket-001', base, base))
+                            finally:
+                                self.git('-C', str(self.primary), 'checkout', '--quiet', 'main')
+                self.git('-C', str(self.primary), 'update-ref', '-d', ref)
+        # The same outstanding commit with a genuine ticket identity must
+        # still reserve the ticket for both the local and origin inventories.
+        for ref in ['refs/heads/ticket/001-work',
+                    'refs/remotes/origin/Ticket/1-work']:
+            self.git('-C', str(self.primary), 'update-ref', ref, head)
+            for observer in [ACTIVITY, bundled]:
+                with self.subTest(matching=ref, observer=observer.__name__):
+                    self.assertTrue(observer._unmerged_ticket_branch(
+                        self.primary, 'ticket-001', 'main'))
+                    self.assertTrue(observer.resolve(
+                        self.primary, directory, {'IN_PROGRESS'}).active)
+            self.git('-C', str(self.primary), 'update-ref', '-d', ref)
+
 
 if __name__ == '__main__':
     unittest.main()

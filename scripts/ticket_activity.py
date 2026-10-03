@@ -457,7 +457,7 @@ def _target_ref(root: Path, branch: str) -> str | None:
 
 def _ticket_branch_matches(branch: str, ticket: str) -> bool:
     number = str(int(ticket.removeprefix("ticket-")))
-    return re.search(rf"(?:^|[^0-9a-z])ticket[-_/]?0*{number}(?:[^0-9]|$)", branch, re.IGNORECASE) is not None
+    return re.search(rf"(?:^|[^0-9a-z])ticket[-_/]?0*{number}(?:[^0-9a-z]|$)", branch, re.IGNORECASE) is not None
 
 
 def _advanced_ticket_branch(root: Path, ticket: str, head_sha: str, terminal_sha: str) -> bool:

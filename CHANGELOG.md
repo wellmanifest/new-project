@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.78] - 2026-10-03
+
+- Reject adjacent letter and digit suffixes when matching ticket numbers in read-only local and origin branch activity observations.
+- Preserve supported branch forms and genuine outstanding reservations; retain independent terminal and lease authority.
+- Exercise the actual source and bundled Git observers in portable regression tests, including Windows runtime validation.
+
 ## [0.20.77] - 2026-10-03
 
 - Combine current output-path and resolved-ticket writer errors with cached preflight findings, summaries and exit status.
