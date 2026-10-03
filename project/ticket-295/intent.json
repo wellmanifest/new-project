@@ -1,0 +1,119 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-295",
+  "summary": "Require complete local agent source links for the selected repository layout",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-295/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/agent_host_check.py",
+    "packages/wellman/src/wellman/_bundled/agent_host_check.py",
+    "tests/agent-hosts.test.sh",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-294"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "77a0be3f132eaa01dac8c7b897ed750585008a3d",
+    "targetBranch": "main",
+    "outcome": "Reject incomplete, unsafe or omitted declared local source links in the selected hub/adopter layout, preserving valid complete layouts and publishing immutable standard 0.20.69.",
+    "nonGoals": [
+      "Change remote link execution or authority",
+      "Change bootstrap copying or effectful controller",
+      "Mutate foreign/frozen target state",
+      "Create runtime dependencies"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Bind the required local source set to the selected canonical host-contract location, not to whichever manifest happens to exist. Require all applicable declared local files to be safe regular checkout files and visible in each host projection. Keep inactive-layout links optional.",
+      "components": [
+        {
+          "name": "agent-source-link-validation",
+          "paths": [
+            "scripts/agent_host_check.py",
+            "packages/wellman/src/wellman/_bundled/agent_host_check.py"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/agent-hosts.test.sh"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Preserve report shape; extend the source-link helper with optional selected-contract context for explicit contract callers."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Temporary hub and adopter fixtures reproduce incomplete-set acceptance; complete layouts pass, missing/omitted/symlinked local files fail, inactive-layout paths remain optional."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing validator integration, parity, native gate and required exact-head Linux/Windows/OneDev checks pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and final immutable standard v0.20.69 publication are verified."
+      }
+    ]
+  }
+}
