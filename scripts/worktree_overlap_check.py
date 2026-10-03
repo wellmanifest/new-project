@@ -153,17 +153,17 @@ def run_git(root: Path, *arguments: str) -> str:
             ["git", "-C", str(root), *arguments],
             capture_output=True,
             check=False,
-            text=True,
             timeout=20,
             env=detached_git_env(),
         )
     except (OSError, subprocess.TimeoutExpired) as error:
         raise AuditError(f"git failed for {root}: {error}") from error
     if result.returncode != 0:
-        detail = (result.stderr or result.stdout).strip()
+        detail = (result.stderr or result.stdout).decode('utf-8', 'surrogateescape').strip()
         raise AuditError(f"git {' '.join(arguments)} failed for {root}: {detail}")
-    # rstrip only: porcelain v1 uses a leading space for an empty index column.
-    return result.stdout.rstrip("\r\n")
+    # Decode explicitly: text mode would translate CR/LF inside literal -z
+    # filenames. A terminating NUL protects path suffixes from metadata trimming.
+    return result.stdout.decode('utf-8', 'surrogateescape').rstrip("\r\n")
 
 
 def local_remote_path(root: Path, remote: str) -> Path | None:
@@ -367,16 +367,34 @@ def default_branch(path: Path) -> str:
     return "main"
 
 
+def nul_records(output: str) -> list[str]:
+    """Require complete Git -z framing without normalizing path content."""
+    if not output:
+        return []
+    if not output.endswith('\0'):
+        raise AuditError('Git path output has an unterminated NUL record')
+    records = output.split('\0')[:-1]
+    if any(not record for record in records):
+        raise AuditError('Git path output contains an empty record')
+    return records
+
+
 def dirty_paths(path: Path, ignore: tuple[str, ...]) -> tuple[str, ...]:
     names: set[str] = set()
-    porcelain = run_git(path, "status", "--porcelain=v1", "--untracked-files=all")
-    for line in porcelain.splitlines():
-        match = re.match(r"^.. (?:.* -> )?(.*)$", line)
-        if match is None:
-            continue
-        raw = match.group(1).strip()
-        if raw:
-            names.add(raw)
+    records = iter(nul_records(run_git(
+        path, "status", "--porcelain=v1", "-z", "--untracked-files=all")))
+    for record in records:
+        if (len(record) < 4 or record[2] != ' '
+                or any(status not in ' MTADRCU?!' for status in record[:2])):
+            raise AuditError('Git status contains a malformed porcelain record')
+        names.add(record[3:])
+        if 'R' in record[:2] or 'C' in record[:2]:
+            # Porcelain -z emits destination, then original path. Both reserve
+            # the change, including names with whitespace or a literal arrow.
+            original = next(records, None)
+            if original is None:
+                raise AuditError('Git status is missing a rename/copy source path')
+            names.add(original)
     return tuple(sorted(name for name in names if name and not path_ignored(name, ignore)))
 
 
@@ -385,14 +403,14 @@ def committed_against(
 ) -> tuple[str, ...]:
     """Paths this checkout has committed since `base_ref`."""
     try:
-        raw = run_git(path, "diff", "--name-only", f"{base_ref}..HEAD")
+        raw = run_git(path, "diff", "--name-only", "-z", "--no-renames", f"{base_ref}..HEAD")
     except AuditError:
         return ()
     return tuple(
         sorted(
             {
                 line
-                for line in raw.splitlines()
+                for line in nul_records(raw)
                 if line and not path_ignored(line, ignore)
             }
         )
@@ -1093,7 +1111,7 @@ def render_text(payload: dict[str, Any]) -> str:
     for finding in payload["findings"]:
         evidence = json.dumps(
             finding["evidence"],
-            ensure_ascii=False,
+            ensure_ascii=True,
             sort_keys=True,
             separators=(",", ":"),
         )
@@ -1175,7 +1193,7 @@ def main(argv: list[str] | None = None) -> int:
 
     payload = report_payload(findings, checkouts, only_identity, inventory)
     if args.format == "json":
-        print(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
+        print(json.dumps(payload, ensure_ascii=True, sort_keys=True, separators=(",", ":")))
     else:
         print(render_text(payload))
     return 0 if payload["status"] == "passed" else 1

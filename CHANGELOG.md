@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.80] - 2026-10-03
+
+- Preserve literal Git path identities with NUL-separated status and diff records, including Unicode, whitespace, line endings and distinct non-UTF-8 filesystem bytes.
+- Include both original and destination paths for staged and committed renames so overlap observations cannot miss either endpoint.
+- Exercise source and actual managed installations with disposable Git worktrees on Linux and Windows; retain existing layout, base and ignore policies.
+
 ## [0.20.79] - 2026-10-03
 
 - Fail the adopted pytest governance lifecycle when no explicit, event or verified upstream Git base resolves, instead of substituting HEAD and hiding committed changes.
