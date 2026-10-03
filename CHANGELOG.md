@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [0.20.64] - 2026-10-03
+
+### Fixed
+- Terminate ticket allocation on SIGINT/SIGTERM after cleanup instead of continuing with a released clone lock. Reject ASCII control-character titles before reservation and encode JSON scalars with the existing Python serializer while preserving Unicode.
+- Reject malformed or duplicate managed host contract headings without replacing user pointer bytes or reporting successful activation.
+- Match zero-directory cases for whole-segment recursive globs, preserving simple-star boundaries and literal regex characters. Run actual allocator, pointer and glob regressions in Linux and Windows CI; signal checks remain POSIX-specific.
+
 ## [0.20.63] - 2026-10-03
 
 ### Fixed

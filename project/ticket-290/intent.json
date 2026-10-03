@@ -1,0 +1,122 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-290",
+  "summary": "Fail closed on interrupted allocation and malformed host inputs, preserve root glob matches",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-290/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "project/new-ticket.sh",
+    "scripts/install-agent-hosts.sh",
+    "scripts/runtime.sh",
+    "tests/runtime_safety_test.py",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    ".github/workflows/ci.yml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-289"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3be681c503d88bad3c6c2bb1512e9276e310b086",
+    "targetBranch": "main",
+    "outcome": "Stop interrupted ticket allocation after cleanup, reject control-character titles before effects and serialize JSON safely, reject malformed or duplicate managed host paragraphs while preserving user text, and match root-level files under whole-segment recursive globs in immutable standard 0.20.64.",
+    "nonGoals": [
+      "Grant execution or publication authority",
+      "Mutate actual user-host files during tests or clean foreign work",
+      "Change closed natural-language intent semantics or add runtime dependencies"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use EXIT cleanup with explicit SIGINT/SIGTERM termination; validate ASCII controls before allocation and use the existing Python JSON serializer for scalars. Reject duplicate or malformed managed headings before pointer replacement. Treat a whole **/ segment as zero or more complete directories while preserving other glob semantics. Verify actual CLI effects, extracted managed pointer logic and actual runtime glob matching. Before first material implementation, the accepted plan includes explicit cross-platform regression CI wiring with ten implementation files and a one-path workflow interface budget.",
+      "components": [
+        {
+          "name": "governance-runtime-boundaries",
+          "paths": [
+            "project/new-ticket.sh",
+            "scripts/install-agent-hosts.sh",
+            "scripts/runtime.sh"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/runtime_safety_test.py",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Run runtime boundary regressions in the existing Linux and Windows workflow jobs; POSIX signal checks are explicitly platform-scoped."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/runtime_safety_test.py"
+        ],
+        "evidence": "Actual allocator subprocess signal and title cases stop before reservation/materialization; Unicode remains valid; malformed/duplicate pointers retain user bytes and fail; whole-segment recursive globs match root and nested files without broadening simple-star matches. Original code reproduces four defects."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/agent-hosts.test.sh",
+          "bash tests/governance-scripts.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing host and governance suites, parity, native gate and exact-head Linux/Windows/OneDev checks pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent exact-head protected merge and final immutable standard v0.20.64 release are verified."
+      }
+    ]
+  }
+}

@@ -186,6 +186,14 @@ if [[ "$TITLE" == *$'\n'* || "$TITLE" == *$'\r'* ]]; then
   echo "Ticket title must fit on one line" >&2
   exit 2
 fi
+if ! python3 - "$TITLE" <<'PY'
+import sys
+raise SystemExit(any(ord(character) < 32 or ord(character) == 127 for character in sys.argv[1]))
+PY
+then
+  echo "Ticket title must not contain ASCII control characters" >&2
+  exit 2
+fi
 
 AGENT="$(printf '%s' "$AGENT" | tr '[:upper:]' '[:lower:]')"
 if [[ ! "$AGENT" =~ ^[a-z0-9][a-z0-9._-]*$ ]]; then
@@ -504,7 +512,9 @@ if git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir 2>/de
     echo "  remediation: wait for it to finish; remove a stale lock only after confirming no allocator is running." >&2
     exit 4
   fi
-  trap release_allocation_lock EXIT INT TERM
+  trap release_allocation_lock EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
 fi
 
 # Remote refresh is explicit. The start check below uses only observed refs.
@@ -728,7 +738,8 @@ if [[ -n "$PRIMARY_CHECKOUT" ]]; then
   repository_ref="$(basename "$PRIMARY_CHECKOUT")"
   if ! layout="$(python3 "$WORKTREE_CONTRACT" plan --repository "$repository_ref" \
       --repository-name "$(basename "$PRIMARY_CHECKOUT")" --ticket "$ticket_id" \
-      --slug "$WORKTREE_SLUG" --from-worktree "$PRIMARY_CHECKOUT")"; then
+      --slug "$WORKTREE_SLUG" --from-worktree "$PRIMARY_CHECKOUT" \
+      --path-style "$(python3 -c 'import os; print("windows" if os.name == "nt" else "posix")')")"; then
     echo "GOV-TICKET-ALLOCATION-003: canonical Worktrees v5 layout could not be planned." >&2
     exit 5
   fi
@@ -740,7 +751,8 @@ if [[ -n "$PRIMARY_CHECKOUT" ]]; then
 import json, sys
 value = json.load(sys.stdin)
 for key in ("branch", "worktreePath", "leasePath"):
-    print(value[key])
+    # Bash mapfile requires LF delimiters even with native Windows Python.
+    sys.stdout.buffer.write((value[key] + "\n").encode("utf-8"))
 ' <<< "$layout")
   WORKTREE_BRANCH="${layout_values[0]:-}"
   WORKTREE_PATH="${layout_values[1]:-}"
@@ -795,11 +807,9 @@ render_template() {
 }
 
 json_escape() {
-  local value="$1"
-  value="${value//\\/\\\\}"
-  value="${value//\"/\\\"}"
-  value="${value//$'\t'/\\t}"
-  printf '%s' "$value"
+  # JSON escaping is syntax, not title interpretation. ASCII output preserves
+  # Unicode scalars without depending on the host's stdout encoding.
+  python3 -c 'import json, sys; print(json.dumps(sys.argv[1])[1:-1], end="")' "$1"
 }
 
 render_json_template() {
