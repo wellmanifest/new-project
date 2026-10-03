@@ -41,3 +41,21 @@ python3 .governance/change_lease_check.py trace .governance/change-lease-events.
 ```
 
 Lease evidence contains references and hashes only, never secrets or raw diffs.
+
+## Canonical scalar validation
+
+The portable checker uses the shipped canonical scalar schema without external
+runtime dependencies, then applies existing semantic publication and
+compare-and-swap checks. Booleans are distinct from integer counters; timestamps
+require an explicit RFC 3339 offset. Declared string bounds, patterns and nullable
+reference types are enforced. Unsupported scalar schema constraints fail closed.
+This bounded matcher is not a general JSON Schema engine.
+
+This validation change preserves transition replies and rejected-event trace
+semantics. The checker remains a reference validator; actual controller authority
+and protected publication stay with Subactor.
+
+The native local allocator creates only an ignored advisory projection. When
+its layout has a basename rather than an organization/repository reference,
+it uses `local/<primary-checkout SHA-256>` as an explicit local identity. This
+does not identify a remote repository or grant controller/publication authority.

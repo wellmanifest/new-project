@@ -8,6 +8,7 @@ import json
 import re
 import sys
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -58,13 +59,96 @@ def closed_object(value: dict[str, Any], expected: set[str], label: str) -> list
 
 
 def valid_time(value: Any) -> bool:
-    if not isinstance(value, str):
+    if not isinstance(value, str) or not re.fullmatch(
+        r"[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}"
+        r"(?:\.[0-9]+)?(?:[Zz]|[+-][0-9]{2}:[0-9]{2})", value
+    ):
         return False
     try:
-        datetime.fromisoformat(value.replace("Z", "+00:00"))
+        timestamp = datetime.fromisoformat(value.replace("Z", "+00:00").replace("z", "+00:00"))
     except ValueError:
         return False
+    return timestamp.utcoffset() is not None
+
+
+@lru_cache(maxsize=1)
+def lease_schema() -> dict[str, Any]:
+    directory = Path(__file__).resolve().parent
+    for path in (directory / "change-lease.schema.json",
+                 directory.parent / "subprojects/change-lease/change-lease.schema.json"):
+        if path.is_symlink():
+            raise ValueError("Canonical lease schema must be a regular managed file.")
+        if path.is_file():
+            if path.stat().st_size > 65536:
+                raise ValueError("Canonical lease schema exceeds its bounded size.")
+            schema = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(schema, dict) or not isinstance(schema.get("$defs"), dict):
+                raise ValueError("Canonical lease schema has no definitions.")
+            return schema
+    raise ValueError("Canonical lease schema is missing; restore the managed package.")
+
+
+def scalar_shape_matches(value: Any, shape: dict[str, Any], definitions: dict[str, Any], depth: int = 0) -> bool:
+    """Match only the bounded scalar vocabulary used by this pinned contract.
+
+    This is not a general JSON Schema engine. Unknown constraints fail closed.
+    Semantic publication/CAS checks still run separately after shape validation.
+    """
+    supported = {"$ref", "type", "enum", "const", "minLength", "maxLength",
+                 "minimum", "pattern", "format", "oneOf"}
+    if depth > 16 or not isinstance(shape, dict) or set(shape) - supported:
+        return False
+    if "$ref" in shape:
+        reference = shape["$ref"]
+        if not isinstance(reference, str) or not reference.startswith("#/$defs/"):
+            return False
+        target = definitions.get(reference[len("#/$defs/"):])
+        if not scalar_shape_matches(value, target, definitions, depth + 1):
+            return False
+    if "oneOf" in shape:
+        choices = shape["oneOf"]
+        if not isinstance(choices, list) or sum(
+            scalar_shape_matches(value, choice, definitions, depth + 1) for choice in choices
+        ) != 1:
+            return False
+    if "type" in shape:
+        types = shape["type"] if isinstance(shape["type"], list) else [shape["type"]]
+        matches = {"string": isinstance(value, str), "integer": type(value) is int,
+                   "boolean": type(value) is bool, "null": value is None}
+        if any(kind not in matches for kind in types) or not any(matches[kind] for kind in types):
+            return False
+    if "const" in shape and value != shape["const"]:
+        return False
+    if "enum" in shape and value not in shape["enum"]:
+        return False
+    if value is None:
+        return True
+    for key, compare in (("minLength", lambda a, b: a >= b), ("maxLength", lambda a, b: a <= b)):
+        if key in shape and (not isinstance(value, str) or not compare(len(value), shape[key])):
+            return False
+    if "minimum" in shape and (type(value) is not int or value < shape["minimum"]):
+        return False
+    if "pattern" in shape and (not isinstance(value, str) or not re.fullmatch(shape["pattern"], value)):
+        return False
+    if "format" in shape and (shape["format"] != "date-time" or not valid_time(value)):
+        return False
     return True
+
+
+def schema_shape_errors(value: dict[str, Any], definition: str) -> list[dict[str, Any]]:
+    try:
+        definitions = lease_schema()["$defs"]
+        shape = definitions[definition]
+        if (shape.get("type") != "object" or shape.get("additionalProperties") is not False
+                or set(shape) - {"type", "additionalProperties", "required", "properties"}):
+            raise ValueError("Unsupported canonical document shape.")
+        required, properties = set(shape["required"]), shape["properties"]
+        if not required.issubset(value) or not set(value).issubset(properties):
+            return [finding("GOV-CHANGE-LEASE-001", "Document fields differ from the canonical schema.")]
+        return [finding("GOV-CHANGE-LEASE-001", f"{key} does not satisfy its canonical scalar contract.")
+                for key, item in value.items() if not scalar_shape_matches(item, properties[key], definitions)]
+    except (OSError, UnicodeError, ValueError, KeyError, TypeError) as error:
+        return [finding("GOV-CHANGE-LEASE-001", f"Cannot validate canonical document shape: {error}")]
 
 
 def validate_publication_lease_fields(value, phase, errors) -> None:
@@ -81,7 +165,7 @@ def validate_publication_lease_fields(value, phase, errors) -> None:
 
 
 def validate_lease(value: dict[str, Any]) -> list[dict[str, Any]]:
-    errors = closed_object(value, LEASE_FIELDS, "lease")
+    errors = closed_object(value, LEASE_FIELDS, "lease") or schema_shape_errors(value, "lease")
     if errors:
         return errors
     strings = ["leaseId", "repositoryRef", "targetBranch", "ticketId", "workstream", "branchRef", "worktreeId", "ownerActor", "ownerSession"]
@@ -103,7 +187,7 @@ def validate_lease(value: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def validate_request(value: dict[str, Any]) -> list[dict[str, Any]]:
-    errors = closed_object(value, REQUEST_FIELDS, "transition request")
+    errors = closed_object(value, REQUEST_FIELDS, "transition request") or schema_shape_errors(value, "transition")
     if errors:
         return errors
     if value.get("schema") != REQUEST_SCHEMA or value.get("action") not in TRANSITIONS:
@@ -123,7 +207,7 @@ def validate_request(value: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def validate_receipt(value: dict[str, Any]) -> list[dict[str, Any]]:
-    errors = closed_object(value, RECEIPT_FIELDS, "transition receipt")
+    errors = closed_object(value, RECEIPT_FIELDS, "transition receipt") or schema_shape_errors(value, "receipt")
     if errors:
         return errors
     if value.get("schema") != RECEIPT_SCHEMA or value.get("action") not in TRANSITIONS or value.get("outcome") not in {"accepted", "rejected", "idempotent"}:
