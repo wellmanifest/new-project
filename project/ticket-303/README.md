@@ -13,3 +13,6 @@ Combine current invocation output-path and resolved-ticket writer failures with 
 
 ## Bounds
 S / 20 minutes; nine material files, three components, one existing CLI contract, zero dependencies. No cache key, ticket selection, schema identity, lease or approval policy changes; no foreign/frozen target mutations.
+
+## CI fixture correction
+The first head failed on clean Linux/Windows checkouts because the local-agent CLI fixture assumed an activated hook and origin/main. The refined fixture activates the real managed hook through child Git configuration environment and chooses an available explicit base (origin/main or a verified parent). It never edits repository configuration or skips either gate. Initial CI logs and the held head are preserved in private evidence.

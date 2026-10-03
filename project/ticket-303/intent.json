@@ -51,7 +51,7 @@
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Evaluate each requested output operation once and combine any new Report findings with the cached payload before formatting and determining success. Preserve cache hits and cached findings, existing counts/timing and cache-off CI; synchronize the existing bundled checker. Actual CLI reproductions cover invalid report paths and both resolved-ticket path/writer failures, with later successful cache reuse.",
+      "decision": "Evaluate each requested output operation once and combine any new Report findings with the cached payload before formatting and determining success. Preserve cache hits and cached findings, existing counts/timing and cache-off CI; synchronize the existing bundled checker. Actual CLI reproductions cover invalid report paths and both resolved-ticket path/writer failures, with later successful cache reuse. Test child processes activate the real managed hook through scoped Git configuration environment, without editing repository configuration, and use an available explicit Git base (origin/main or a verified parent), failing when no meaningful base exists.",
       "components": [
         {
           "name": "cached-preflight-report",
@@ -98,7 +98,7 @@
           "python3 tests/governance-preflight-cache.test.py",
           "python3 tests/runtime_safety_test.py"
         ],
-        "evidence": "Actual CLI on source/bundle preserves cached results while rejecting unsafe report paths and resolved-ticket path/writer errors, exposes combined findings/counts, leaves denied targets unchanged and allows subsequent valid cache reuse."
+        "evidence": "Actual CLI on source/bundle preserves cached results while rejecting unsafe report paths and resolved-ticket path/writer errors, exposes combined findings/counts, leaves denied targets unchanged and allows subsequent valid cache reuse. Fresh CI checkout prerequisites are provided only to child processes; no hook or diff check is bypassed."
       },
       {
         "criterion": "AC-02",

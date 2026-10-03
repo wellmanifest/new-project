@@ -169,6 +169,18 @@ class CachedOutputTests(unittest.TestCase):
         env = dict(os.environ)
         env.pop("CI", None)
         env.pop("GITHUB_ACTIONS", None)
+        # The fixture models a local agent preflight on clean CI checkouts.
+        # Activate the actual managed hook only for these child processes.
+        # Repository configuration is untouched and existing Git settings stay.
+        cached_config_count = int(env.get("GIT_CONFIG_COUNT", "0"))
+        self.assertTrue(0 <= cached_config_count <= 256)
+        env[f"GIT_CONFIG_KEY_{cached_config_count}"] = "core.hooksPath"
+        env[f"GIT_CONFIG_VALUE_{cached_config_count}"] = ".githooks"
+        env["GIT_CONFIG_COUNT"] = str(cached_config_count + 1)
+        base = next((revision for revision in ("origin/main", "HEAD^") if subprocess.run(
+            ["git", "rev-parse", "--verify", revision + "^{commit}"], cwd=SOURCE,
+            env=env, capture_output=True).returncode == 0), None)
+        self.assertIsNotNone(base, "Cache CLI fixture needs an available meaningful Git base")
         for relative in ("scripts/governance_check.py", "packages/wellman/src/wellman/_bundled/governance_check.py"):
             with self.subTest(checker=relative), tempfile.TemporaryDirectory(prefix="cached-output-test-") as temporary:
                 control = Path(temporary)
@@ -176,7 +188,7 @@ class CachedOutputTests(unittest.TestCase):
                 directory = control / "existing-directory"
                 directory.mkdir()
                 cmd = [sys.executable, str(SOURCE / relative), "--root", str(SOURCE),
-                       "--manifest", "governance/manifest.hub.json", "--base", "origin/main", "--head", "HEAD",
+                       "--manifest", "governance/manifest.hub.json", "--base", base, "--head", "HEAD",
                        "--actor", "agent", "--cache-file", str(cache), "--timing", "--format", "json"]
                 def invoke(*extra):
                     run = subprocess.run(cmd + list(extra), cwd=SOURCE, env=env,
