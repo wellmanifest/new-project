@@ -476,5 +476,13 @@ exec "$TASK_SIGNAL_REAL_GIT" "$@"
                 check("confined.bin", True)
 
 
+    def test_cached_output_errors_through_actual_source_and_bundle_cli(self):
+        spec = importlib.util.spec_from_file_location("cached_output_cli_fixture", ROOT / "tests/governance-preflight-cache.test.py")
+        fixture = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(fixture)
+        case = fixture.CachedOutputTests("test_current_output_errors_are_combined_with_cached_results")
+        case.test_current_output_errors_are_combined_with_cached_results()
+
+
 if __name__ == "__main__":
     unittest.main()

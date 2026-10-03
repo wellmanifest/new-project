@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.77] - 2026-10-03
+
+- Combine current output-path and resolved-ticket writer errors with cached preflight findings, summaries and exit status.
+- Preserve cached warnings/timing and later valid reuse; keep cache entries unchanged by invocation errors and retain cache-disabled CI.
+- Synchronize the installed checker and exercise the actual source/bundle CLI on Linux and Windows without granting advisory cache data any authority.
+
 ## [0.20.76] - 2026-10-03
 
 - Validate execution-model names, object declarations, maximum levels and boolean effect flags before adoption conformance.

@@ -1,0 +1,122 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-303",
+  "summary": "Preserve current output failures in cached preflight reports",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-303/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/governance_check.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "tests/governance-preflight-cache.test.py",
+    "tests/runtime_safety_test.py",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-302"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a1f5acc3991a45b834e180e00de92b60314d9414",
+    "targetBranch": "main",
+    "outcome": "Combine current invocation path and resolved-ticket writer findings with cached preflight findings, summaries and exit status. Preserve legitimate cache reuse, existing warnings/timing, cache-disabled CI and approval boundaries; publish standard 0.20.77 after protected merge.",
+    "nonGoals": [
+      "Grant CI, effect or approval authority from advisory cache data",
+      "Change cache keys, provider/model routing, ticket selection or lease policy",
+      "Change catalog/artifact, workflow parsing or schema identity",
+      "Add runtime dependencies or mutate foreign/frozen target state"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Evaluate each requested output operation once and combine any new Report findings with the cached payload before formatting and determining success. Preserve cache hits and cached findings, existing counts/timing and cache-off CI; synchronize the existing bundled checker. Actual CLI reproductions cover invalid report paths and both resolved-ticket path/writer failures, with later successful cache reuse.",
+      "components": [
+        {
+          "name": "cached-preflight-report",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/governance-preflight-cache.test.py",
+            "tests/runtime_safety_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Existing preflight CLI exposes current invocation failures and returns a nonzero status on a cache hit."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/governance-preflight-cache.test.py",
+          "python3 tests/runtime_safety_test.py"
+        ],
+        "evidence": "Actual CLI on source/bundle preserves cached results while rejecting unsafe report paths and resolved-ticket path/writer errors, exposes combined findings/counts, leaves denied targets unchanged and allows subsequent valid cache reuse."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing integration, wheel/parity, native and exact-head Linux/Windows/OneDev checks pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and final standard v0.20.75 release verified."
+      }
+    ]
+  }
+}
