@@ -476,13 +476,11 @@ def approval_evidence_config_valid(value: Any) -> bool:
     )
 
 
+BRANCH_NAME = re.compile('^(?![-/])(?![\\s\\S]*(?:\\.\\.|//|@\\{|[ ~^:?*\\[\\\\\\x00-\\x1f\\x7f]))(?![\\s\\S]*(?:^|/)\\.)(?![\\s\\S]*(?:^|/)[^/]*\\.lock(?:/|$))(?![\\s\\S]*[/.]$)[\\s\\S]+$')
+
+
 def branch_name(value: Any) -> bool:
-    return (
-        isinstance(value, str)
-        and bool(value)
-        and not value.startswith("/")
-        and re.search(r"(?:\.\.|//|@\{|[~^:?*\[\\])", value) is None
-    )
+    return isinstance(value, str) and BRANCH_NAME.fullmatch(value) is not None
 
 
 def integer_fields_valid(value: dict[str, Any], fields: Iterable[str]) -> bool:

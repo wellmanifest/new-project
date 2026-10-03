@@ -1,0 +1,122 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-300",
+  "summary": "Reject invalid Git branch names consistently in intent schema and runtime",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-300/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/governance_check.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "governance/intent.schema.json",
+    "tests/runtime_safety_test.py",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-299"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "5138f1c706a67360f0717b492685a0f686b32abd",
+    "targetBranch": "main",
+    "outcome": "Align branch-name validation in the existing intent schema, runtime and installed bundle with Git branch rules. Reject invalid dot/lock components, trailing separators/dot, leading dash and ASCII whitespace/control names while preserving valid Unicode and punctuation; publish standard 0.20.74.",
+    "nonGoals": [
+      "Change branch allocation or effects/publication authority",
+      "Change physical-change, catalog or workflow-check validation",
+      "Add runtime subprocess validation or dependencies",
+      "Mutate foreign or frozen target state"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the same closed branch-name regular expression in the existing intent schema and runtime; preserve the existing bundle closure. Exercise source, bundle and schema acceptance against the actual read-only git check-ref-format --branch oracle on explicit valid/invalid names and malformed scalar input. Place regressions in the existing runtime safety suite, which is explicitly executed on both required platforms; no CI workflow expansion is needed.",
+      "components": [
+        {
+          "name": "intent-validation",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "governance/intent.schema.json"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/runtime_safety_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Existing branch-name schema/runtime validation consistently rejects names Git cannot use."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/runtime_safety_test.py"
+        ],
+        "evidence": "Source, bundled runtime and schema regressions reproduce incorrect acceptance and match actual Git on explicit negative/positive cases; malformed scalars remain rejected."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/branch-lifecycle.test.sh",
+          "bash tests/wellman-package.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing branch/integration/wheel/parity/native and exact-head Linux/Windows/OneDev pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and final standard v0.20.74 release verified."
+      }
+    ]
+  }
+}
