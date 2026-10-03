@@ -177,10 +177,12 @@ class CachedOutputTests(unittest.TestCase):
         env[f"GIT_CONFIG_KEY_{cached_config_count}"] = "core.hooksPath"
         env[f"GIT_CONFIG_VALUE_{cached_config_count}"] = ".githooks"
         env["GIT_CONFIG_COUNT"] = str(cached_config_count + 1)
-        base = next((revision for revision in ("origin/main", "HEAD^") if subprocess.run(
-            ["git", "rev-parse", "--verify", revision + "^{commit}"], cwd=SOURCE,
-            env=env, capture_output=True).returncode == 0), None)
-        self.assertIsNotNone(base, "Cache CLI fixture needs an available meaningful Git base")
+        target = subprocess.run(
+            ["git", "rev-parse", "--verify", "origin/main^{commit}"], cwd=SOURCE,
+            env=env, capture_output=True, text=True)
+        self.assertEqual(target.returncode, 0,
+                         "Cache CLI fixture needs the fetched origin/main base")
+        base = target.stdout.strip()
         for relative in ("scripts/governance_check.py", "packages/wellman/src/wellman/_bundled/governance_check.py"):
             with self.subTest(checker=relative), tempfile.TemporaryDirectory(prefix="cached-output-test-") as temporary:
                 control = Path(temporary)
