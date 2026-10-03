@@ -292,7 +292,34 @@ def _cycles(graph: dict[str, list[str]]) -> list[list[str]]:
 
 
 def _matches(path: str, patterns: list[str]) -> bool:
-    return any(fnmatchcase(path, pattern) for pattern in patterns)
+    path_parts = path.replace("\\", "/").strip("/").split("/")
+
+    def match_pattern(pattern: str) -> bool:
+        pattern_parts = pattern.replace("\\", "/").strip("/").split("/")
+        memo: dict[tuple[int, int], bool] = {}
+
+        def visit(path_index: int, pattern_index: int) -> bool:
+            key = (path_index, pattern_index)
+            if key in memo:
+                return memo[key]
+            if pattern_index == len(pattern_parts):
+                result = path_index == len(path_parts)
+            elif pattern_parts[pattern_index] == "**":
+                result = visit(path_index, pattern_index + 1) or (
+                    path_index < len(path_parts) and visit(path_index + 1, pattern_index)
+                )
+            else:
+                result = (
+                    path_index < len(path_parts)
+                    and fnmatchcase(path_parts[path_index], pattern_parts[pattern_index])
+                    and visit(path_index + 1, pattern_index + 1)
+                )
+            memo[key] = result
+            return result
+
+        return visit(0, 0)
+
+    return any(match_pattern(pattern) for pattern in patterns)
 
 
 def _ancestors(action_id: str, graph: dict[str, list[str]]) -> set[str]:

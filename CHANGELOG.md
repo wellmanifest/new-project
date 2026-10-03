@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.20.71] - 2026-10-03
+
+### Fixed
+- Align standalone repository-policy and remediation scope globs with the existing canonical governance segment algorithm. Single-star and question-mark globs stay within directory segments; whole-segment recursive stars cover zero or more directories. Preserve character classes, Unicode, staged snapshot selection and advisory authority; synchronize the existing repository-policy bundle without introducing a remediation bundle.
+
 ## [0.20.70] - 2026-10-03
 
 ### Fixed

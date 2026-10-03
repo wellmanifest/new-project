@@ -1,0 +1,124 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-297",
+  "summary": "Keep single-segment scope globs from crossing directory separators",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-297/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/repository_policy.py",
+    "scripts/remediation_intent.py",
+    "packages/wellman/src/wellman/_bundled/repository_policy.py",
+    "tests/repository-policy.test.sh",
+    "tests/runtime_safety_test.py",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-296"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "27626f76b92593300b017b23dbc3c739ba0c4a1b",
+    "targetBranch": "main",
+    "outcome": "Align standalone repository-policy and remediation scope matching with the canonical segment-based governance matcher: single-star and question mark do not cross separators; whole-segment ** supports zero or more directories. Preserve staged snapshots, advisory authority and publish immutable standard 0.20.71.",
+    "nonGoals": [
+      "Change effects or protected publication authority",
+      "Introduce a shared loader or new runtime dependency",
+      "Change the canonical governance matcher, Registry glob or JS host matcher",
+      "Mutate foreign/frozen target state"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Align the two standalone scope matchers with the existing canonical governance segment algorithm without changing module loading. Only repository-policy is bundled by wellman; preserve that actual distribution closure. Add canonical conformance, staged adapter and action-path regressions.",
+      "components": [
+        {
+          "name": "scope-matching-runtime",
+          "paths": [
+            "scripts/repository_policy.py",
+            "scripts/remediation_intent.py",
+            "packages/wellman/src/wellman/_bundled/repository_policy.py"
+          ]
+        },
+        {
+          "name": "regression-tests",
+          "paths": [
+            "tests/repository-policy.test.sh",
+            "tests/runtime_safety_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Tighten existing repository-policy and remediation scope glob semantics to the canonical segment contract."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source fix through protected publication; preserve controller and review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/repository-policy.test.sh",
+          "python3 tests/runtime_safety_test.py"
+        ],
+        "evidence": "Explicit nested single-star and zero-directory recursive cases reproduce old behavior, canonical matcher conformance and actual staged adapter/action-path boundaries pass on the required platforms."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing validator integration, parity, native gate and required exact-head Linux/Windows/OneDev checks pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge and final immutable standard v0.20.71 publication are verified."
+      }
+    ]
+  }
+}
