@@ -240,6 +240,16 @@ class CachedOutputTests(unittest.TestCase):
                 self.assertEqual(payload["summary"], {"errors": 0, "warnings": 1, "findings": 1})
                 self.assertEqual(resolved.read_text(encoding="utf-8"), entry["selected_ticket"] + "\n")
                 self.assertEqual(hashlib.sha256(cache.read_bytes()).hexdigest(), digest)
+                # Cache-disabled output validation must reject the same path
+                # without inheriting the controlled advisory cache warning.
+                run, payload = invoke("--no-cache", "--output",
+                                      "../never-created-cached-output-fixture.json")
+                self.assertEqual(run.returncode, 1, run.stderr)
+                self.assertNotIn("cached", payload)
+                self.assertEqual(payload["status"], "failed")
+                self.assertEqual(payload["summary"], {"errors": 1, "warnings": 0, "findings": 1})
+                self.assertEqual(payload["findings"][0]["code"], "GOV-PATH-001")
+                self.assertEqual(hashlib.sha256(cache.read_bytes()).hexdigest(), digest)
 
 
 
