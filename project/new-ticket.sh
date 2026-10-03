@@ -751,7 +751,8 @@ if [[ -n "$PRIMARY_CHECKOUT" ]]; then
 import json, sys
 value = json.load(sys.stdin)
 for key in ("branch", "worktreePath", "leasePath"):
-    print(value[key])
+    # Bash mapfile requires LF delimiters even with native Windows Python.
+    sys.stdout.buffer.write((value[key] + "\n").encode("utf-8"))
 ' <<< "$layout")
   WORKTREE_BRANCH="${layout_values[0]:-}"
   WORKTREE_PATH="${layout_values[1]:-}"
