@@ -25,7 +25,13 @@ spec.loader.exec_module(allocation_fixture_module)
 def allocation_fixture():
     fixture = allocation_fixture_module.TicketAllocationWorktreeTest(
         "test_file_ticket_is_created_only_in_canonical_linked_worktree")
-    fixture.setUp()
+    try:
+        fixture.setUp()
+    except subprocess.CalledProcessError as error:
+        # This repository contains only controlled public test fixtures.
+        # Surface Git's diagnostic without exposing production ticket data.
+        fixture.doCleanups()
+        raise AssertionError(error.stderr) from error
     try:
         yield fixture
     finally:
@@ -141,8 +147,9 @@ exec "$TASK_SIGNAL_REAL_GIT" "$@"
             first = update_pointer(path)
             self.assertEqual(first.returncode, 0, first.stderr)
             content = path.read_bytes()
-            self.assertIn("# User notes\nPreserve żółć.".encode(), content)
-            self.assertIn(b"# Extra notes\nPreserve extra notes.", content)
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("# User notes\nPreserve żółć.", text)
+            self.assertIn("# Extra notes\nPreserve extra notes.", text)
             self.assertIn(b"git worktree list", content)
             second = update_pointer(path)
             self.assertEqual(second.returncode, 0, second.stderr)
