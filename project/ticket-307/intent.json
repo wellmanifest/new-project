@@ -1,0 +1,113 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-307",
+  "summary": "Migrate minimal Wellman scaffolds through pinned native adoption",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-307/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/create_adoption_lock.py",
+    "tests/adoption_legacy_scaffold_test.py",
+    "tests/adoption-lock.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d48dd29608713411cb0c587e7490a3784a46d246",
+    "targetBranch": "main",
+    "outcome": "Publish immutable new-project 0.20.81 with an explicit safe migration for the exact minimal Wellman baseline scaffold, retaining native adoption integrity and independent protected delivery.",
+    "nonGoals": [
+      "No automatic native policy replacement or repository admission grant",
+      "No product source edits or foreign work takeover",
+      "No controller enrollment, reviewer changes or deployment effects in this standard ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Require an explicit reviewed migration flag and the closed legacy baseline shape without native lock/base/package evidence. Resolve and verify the same immutable standard publication, then seed the full native manifest from that source. Keep default and native upgrade behavior fail-closed; add CLI fixtures to the existing adoption CI gate.",
+      "components": [
+        {
+          "name": "pinned-adoption",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "tests/adoption_legacy_scaffold_test.py",
+            "tests/adoption-lock.test.sh",
+            "docs/STANDARD_UPGRADE.md"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Add an explicit minimal-baseline migration option; it grants no editing, review, merge or production authority."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through protected publication; retain repository history and external migration receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/adoption_legacy_scaffold_test.py",
+          "bash tests/adoption-lock.test.sh"
+        ],
+        "evidence": "Actual CLI review/apply fixtures preserve native/custom/locked cases and default refusal; migration uses real pinned package contents."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Native governance, immutable adoption and installed package checks pass before protected exact-head validation."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --delivery-mode direct-main --force-publish"
+        ],
+        "evidence": "Independent protected merge precedes Goal-managed annotated v0.20.81 tag and final GitHub release."
+      }
+    ]
+  }
+}

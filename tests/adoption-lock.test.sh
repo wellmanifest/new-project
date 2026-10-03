@@ -816,4 +816,6 @@ assert 'STOP & WAIT FOR USER REVIEW' not in hub_agents
 assert 'Stop in `WAIT_FOR_APPROVAL`' not in target_agents
 PY
 
+python3 "$repo_root/tests/adoption_legacy_scaffold_test.py"
+
 echo 'adoption lock: PASS'

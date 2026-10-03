@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.81] - 2026-10-03
+
+- Add explicit pinned native migration for exact minimal Wellman baseline scaffolds; preserve custom/native adoption, source publication proof and target prerequisites.
+- Refuse duplicate keys, native adoption evidence and symlinked migration targets before writes; keep read-only review and unchanged default upgrade behavior.
+- Run actual migration CLI cases in the existing adoption gate and document truthful upgrade, hook and protected publication boundaries.
+
 ## [0.20.80] - 2026-10-03
 
 - Preserve literal Git path identities with NUL-separated status and diff records, including Unicode, whitespace, line endings and distinct non-UTF-8 filesystem bytes.
