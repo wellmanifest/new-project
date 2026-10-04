@@ -10,7 +10,7 @@ durability still requires a protected external receipt store.
 from __future__ import annotations
 
 import argparse
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 import errno
 import hashlib
 import importlib.util
@@ -546,7 +546,7 @@ def _posix_stream_descriptor(path: Path, append: bool):
 
 
 @contextmanager
-def _windows_stream_descriptor(path: Path, append: bool):
+def _windows_stream_descriptor(path: Path, append: bool, *, readwrite: bool = False):
     # Open reparse points themselves. Held directory handles omit DELETE
     # sharing, so parent names cannot be replaced during the file operation.
     # https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew
@@ -573,7 +573,8 @@ def _windows_stream_descriptor(path: Path, append: bool):
     handles = []
     descriptor = None
     def open_handle(candidate, directory=False):
-        access = 0x80 if directory else (0x40000080 if append else 0x80000000)
+        access = 0x80 if directory else (
+            0xC0000080 if readwrite else (0x40000080 if append else 0x80000000))
         flags = 0x00200000 | (0x02000000 if directory else 0)
         creation = 4 if append and not directory else 3  # OPEN_ALWAYS / OPEN_EXISTING
         handle = api.CreateFileW(str(candidate), access, 3, None, creation, flags, None)
@@ -608,7 +609,8 @@ def _windows_stream_descriptor(path: Path, append: bool):
                 open_handle(current, directory=True)
         handle = open_handle(path)
         descriptor = msvcrt.open_osfhandle(
-            handle, os.O_BINARY | os.O_NOINHERIT | (os.O_APPEND if append else os.O_RDONLY)
+            handle, os.O_BINARY | os.O_NOINHERIT | (
+                os.O_RDWR if readwrite else (os.O_APPEND if append else os.O_RDONLY))
         )
         handles.pop()  # The CRT descriptor now owns the file handle.
         yield descriptor
@@ -758,19 +760,88 @@ def write_index(path: Path, value: dict[str, Any], maximum_bytes: int) -> None:
 
 
 @contextmanager
+def _posix_lock_descriptor(path: Path):
+    """Anchor every parent and recheck public names after a potentially long wait."""
+    no_follow = getattr(os, "O_NOFOLLOW", None)
+    directory_flag = getattr(os, "O_DIRECTORY", None)
+    if no_follow is None or directory_flag is None:
+        fail("GOV-CONTINUITY-001", "safe continuity lock directory opens are unavailable")
+    directory_flags = os.O_RDONLY | directory_flag | no_follow | getattr(os, "O_CLOEXEC", 0)
+    directories = [os.open(path.anchor, directory_flags)]
+    descriptor = None
+    try:
+        for part in path.parts[1:-1]:
+            try:
+                child = os.open(part, directory_flags, dir_fd=directories[-1])
+            except FileNotFoundError:
+                try:
+                    os.mkdir(part, mode=0o700, dir_fd=directories[-1])
+                except FileExistsError:
+                    pass
+                child = os.open(part, directory_flags, dir_fd=directories[-1])
+            directories.append(child)
+        descriptor = os.open(path.name, os.O_RDWR | os.O_CREAT | no_follow
+                             | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NONBLOCK", 0),
+                             0o600, dir_fd=directories[-1])
+        def verify_identity():
+            # Held descriptors prevent traversal through a swapped link. They
+            # alone do not prove the public path still names the locked inode.
+            for parent, child, part in zip(directories, directories[1:], path.parts[1:-1]):
+                named = os.stat(part, dir_fd=parent, follow_symlinks=False)
+                held = os.fstat(child)
+                if not stat.S_ISDIR(named.st_mode) or (named.st_dev, named.st_ino) != (held.st_dev, held.st_ino):
+                    fail("GOV-CONTINUITY-001", "continuity lock parent identity changed")
+            named = os.stat(path.name, dir_fd=directories[-1], follow_symlinks=False)
+            held = os.fstat(descriptor)
+            if (not stat.S_ISREG(named.st_mode) or named.st_nlink != 1
+                    or (named.st_dev, named.st_ino) != (held.st_dev, held.st_ino)):
+                fail("GOV-CONTINUITY-001", "continuity lock file identity changed")
+        yield descriptor, verify_identity
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+        for directory in reversed(directories):
+            os.close(directory)
+
+
+@contextmanager
+def _lock_descriptor(path: Path):
+    with ExitStack() as handles:
+        try:
+            if os.name == "nt":
+                # No DELETE sharing on any held handle: Windows cannot rename
+                # the parent or lock while this transaction owns those handles.
+                descriptor = handles.enter_context(_windows_stream_descriptor(path, True, readwrite=True))
+                verify = lambda: None
+            elif os.name == "posix":
+                descriptor, verify = handles.enter_context(_posix_lock_descriptor(path))
+            else:
+                fail("GOV-CONTINUITY-001", "safe continuity transaction locking is unavailable")
+        except (OSError, NotImplementedError) as error:
+            raise ContinuityError("GOV-CONTINUITY-001", "continuity transaction lock path is unsafe or unavailable") from error
+        def verify_identity():
+            try:
+                verify()
+            except (OSError, NotImplementedError) as error:
+                raise ContinuityError("GOV-CONTINUITY-001", "continuity transaction lock identity is unavailable") from error
+        # Exceptions from the transaction body keep their original meaning,
+        # notably interrupted journal/index writes which exact replay repairs.
+        yield descriptor, verify_identity
+
+
+@contextmanager
 def storage_transaction(event_path: Path):
     """Stable OS-owned lock; never unlink it while another writer can use it."""
-    from ticket_input import TicketInputError, no_links
-    lock_path = event_path.with_name(event_path.name + ".lock")
-    try:
-        no_links(lock_path.absolute())
-        lock_path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-        no_links(lock_path.absolute())
-    except TicketInputError:
-        fail("GOV-CONTINUITY-001", "continuity transaction lock must not be linked")
-    flags = (os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
-             | getattr(os, "O_BINARY", 0) | getattr(os, "O_NONBLOCK", 0))
-    descriptor = os.open(lock_path, flags, 0o600)
+    if not event_path.name or ".." in event_path.absolute().parts:
+        fail("GOV-CONTINUITY-001", "continuity transaction needs a confined file path")
+    lock_path = event_path.with_name(event_path.name + ".lock").absolute()
+    with _lock_descriptor(lock_path) as (descriptor, verify_identity):
+        with _locked_transaction(descriptor, verify_identity):
+            yield
+
+
+@contextmanager
+def _locked_transaction(descriptor, verify_identity):
     acquired = False
     try:
         metadata = os.fstat(descriptor)
@@ -792,6 +863,7 @@ def storage_transaction(event_path: Path):
                 fcntl.flock(descriptor, fcntl.LOCK_UN)
         deadline = time.monotonic() + 30
         while True:
+            verify_identity()
             try:
                 acquire()
                 acquired = True
@@ -802,13 +874,11 @@ def storage_transaction(event_path: Path):
                 if time.monotonic() >= deadline:
                     fail("GOV-CONTINUITY-001", "continuity transaction lock acquisition timed out")
                 time.sleep(0.05)
+        verify_identity()
         yield
     finally:
-        try:
-            if acquired:
-                unlock()
-        finally:
-            os.close(descriptor)
+        if acquired:
+            unlock()
 
 
 def commit_event(root: Path, event: dict[str, Any]) -> dict[str, Any]:
