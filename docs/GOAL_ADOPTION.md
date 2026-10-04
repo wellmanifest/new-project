@@ -58,6 +58,12 @@ rootowych seedów. Jeśli taki wpis wystąpi dla starszej rewizji standardu, nie
 używaj `--upgrade` do zastąpienia automatyzacji targetu; wybierz rewizję z
 kontraktem seed albo zatrzymaj adopcję do przeglądu.
 
+Dla dokładnego legacy scaffoldu `wellmanifest.manifest/v1` pierwsza alokacja
+po migracji wymaga jawnego potwierdzenia dokładnego snapshotu własnych plików
+adopcji. Zobacz [first allocation](STANDARD_UPGRADE.md#first-allocation-after-scaffold-migration).
+Potwierdzenie umożliwia wyłącznie alokację metadanych; kod wymaga osobnej
+kontrolowanej dzierżawy, a scalenie niezależnego chronionego zatwierdzenia.
+
 ## Dokończenie bootstrapu lokalnego
 
 Generator nie zgaduje konfiguracji stacka. Przed zmianą implementacji projekt

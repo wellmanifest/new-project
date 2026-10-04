@@ -1,0 +1,124 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-309",
+  "summary": "First native allocation acknowledges only exact owned scaffold adoption bytes; no scope, writer lease or publication bypass",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-309/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/GOAL_ADOPTION.md",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "project/new-ticket.sh",
+    "scripts/create_adoption_lock.py",
+    "scripts/work_start_check.py",
+    "tests/scaffold_bootstrap_test.py",
+    "tests/work_start_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "1ef6df0a7d38a8fa95918fc23db21a5425113bc3",
+    "targetBranch": "main",
+    "outcome": "Repair first native adoption allocation using explicit exact-delta owner acknowledgement, retaining unknown-writer, scope, WIP and protected delivery guards.",
+    "nonGoals": [
+      "No product source changes in willmux",
+      "No takeover of foreign dirty changes",
+      "No trusted approval or publication bypass"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Record a local exact scaffold adoption receipt from the pinned installer; explicit first-allocation digest acknowledges only unchanged installed payloads and new target prerequisites at exact original HEAD. All other work-start conflicts remain blocking. Allocation supplies metadata only; the writer must still acquire a controller lease and protected exact-head publisher.",
+      "components": [
+        {
+          "name": "bootstrap-runtime",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "scripts/work_start_check.py",
+            "project/new-ticket.sh"
+          ]
+        },
+        {
+          "name": "validation",
+          "paths": [
+            "tests/scaffold_bootstrap_test.py",
+            "tests/work_start_test.py"
+          ]
+        },
+        {
+          "name": "standard-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml",
+            "docs/STANDARD_UPGRADE.md",
+            "docs/GOAL_ADOPTION.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Explicit optional first bootstrap acknowledgement"
+      ],
+      "dataChanges": [
+        "Local bootstrap receipt; no published approval evidence"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through protected publication; keep ownership, allocation and delivery receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python tests/scaffold_bootstrap_test.py"
+        ],
+        "evidence": "Real first allocation and negative tamper, foreign changes, stale base and ordinary-adoption fixtures."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Existing adoption boundaries and native governance remain enforced."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "protected exact-head OneDev and Validator publication"
+        ],
+        "evidence": "Independent protected result, approval and merge; no self-approval."
+      }
+    ]
+  }
+}

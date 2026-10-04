@@ -22,6 +22,7 @@ MIGRATION_AUTHORIZATION_SHA256=""
 RECOVER_REQUEST=""
 RECOVERY_LEASE_STORE=""
 WORKTREE_SLUG=""
+BOOTSTRAP_ADOPTION_DIGEST=""
 CALLER_CHECKOUT="$(pwd -P)"
 ALLOCATOR_PACKAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 
@@ -68,6 +69,8 @@ Usage: ./project/new-ticket.sh [options]
                           Explicit exact-state pre-adoption recovery request
       --recovery-lease-store DIR
                           Existing external local controller store (recovery only)
+      --bootstrap-adoption-digest SHA
+                          Confirm ownership of exact first scaffold adoption delta
       --worktree-slug SLUG
                           Canonical linked-worktree slug; defaults to a stable title slug
 
@@ -146,6 +149,8 @@ while [[ $# -gt 0 ]]; do
       require_value "$@"; RECOVER_REQUEST="$2"; shift 2 ;;
     --recovery-lease-store)
       require_value "$@"; RECOVERY_LEASE_STORE="$2"; shift 2 ;;
+    --bootstrap-adoption-digest)
+      require_value "$@"; BOOTSTRAP_ADOPTION_DIGEST="$2"; shift 2 ;;
     --worktree-slug)
       require_value "$@"; WORKTREE_SLUG="$2"; shift 2 ;;
     --ticket-store-root)
@@ -447,6 +452,16 @@ if [[ "$ALLOCATION_MODE" == "local-single-clone" && ( -n "$ALLOCATION_KEY" || -n
   exit 5
 fi
 
+if [[ -n "$BOOTSTRAP_ADOPTION_DIGEST" ]]; then
+  if [[ ! "$BOOTSTRAP_ADOPTION_DIGEST" =~ ^[0-9a-f]{64}$ || "$TICKET_STORAGE" != files || "$ALLOCATION_MODE" != local-single-clone || "$REFRESH_REMOTE" == true || "$FORCE_NEW" == true || ${#SCOPE_ARGUMENTS[@]} -eq 0 || -n "$RECOVER_REQUEST$SNAPSHOT_PROPOSAL$SNAPSHOT_MATERIALIZE$MIGRATION_AUTHORIZATION$MIGRATION_AUTHORIZATION_SHA256" ]]; then
+    echo "GOV-WORK-START-001: bootstrap acknowledgement requires exclusive first bounded file allocation." >&2
+    exit 3
+  fi
+  # Keep the validated bridge for metadata rendering after entering the new
+  # checkout; its base deliberately does not yet contain native governance.
+  TICKET_STORAGE_HELPER="$(cd "$(dirname "$TICKET_STORAGE_HELPER")" && pwd -P)/$(basename "$TICKET_STORAGE_HELPER")"
+fi
+
 # Serialize allocation across every worktree sharing this clone. The high-water
 # mark reserves a number even before its ticket is committed and therefore
 # remains visible when another worktree cannot see the new directory.
@@ -545,7 +560,11 @@ if git rev-parse --verify HEAD >/dev/null 2>&1; then
     echo "GOV-WORK-START-001: managed work-start checker is missing; restore the complete pinned package." >&2
     exit 3
   fi
-  if ! start_report="$(python3 "$start_runtime" --root . --workstream "$WORKSTREAM" --storage "$TICKET_STORAGE" "${SCOPE_ARGUMENTS[@]}" --allocation-check)"; then
+  bootstrap_arguments=()
+  if [[ -n "$BOOTSTRAP_ADOPTION_DIGEST" ]]; then
+    bootstrap_arguments+=(--bootstrap-adoption-digest "$BOOTSTRAP_ADOPTION_DIGEST")
+  fi
+  if ! start_report="$(python3 "$start_runtime" --root . --workstream "$WORKSTREAM" --storage "$TICKET_STORAGE" "${SCOPE_ARGUMENTS[@]}" "${bootstrap_arguments[@]}" --allocation-check)"; then
     printf '%s\n' "$start_report" >&2
     echo "GOV-WORK-START-001: reuse, assist, hand off or serialize existing work before new allocation; preserve all checkouts." >&2
     exit 3
@@ -777,6 +796,10 @@ for key in ("branch", "worktreePath", "leasePath"):
   ticket_dir="project/$ticket_id"
 fi
 
+if [[ -n "$BOOTSTRAP_ADOPTION_DIGEST" ]]; then
+  mkdir -p project
+fi
+
 if ! mkdir "$ticket_dir" 2>/dev/null; then
   echo "GOV-TICKET-LOCK-003: ticket directory already exists or cannot be created: $ticket_dir" >&2
   exit 4
@@ -881,8 +904,24 @@ EOF
 fi
 
 if (( ${#SCOPE_ARGUMENTS[@]} )); then
-  python3 "$TICKET_STORAGE_HELPER" scope --root "$PWD" --workstream "$WORKSTREAM" \
-    --ticket "$ticket_id" "${SCOPE_ARGUMENTS[@]}" >/dev/null
+  if [[ -n "$BOOTSTRAP_ADOPTION_DIGEST" ]]; then
+    # The identical scope was validated against primary before reservation.
+    # Only generated ticket metadata is written here, never adoption/source.
+    python3 - "$ticket_dir/intent.json" "$ticket_id" "$WORKSTREAM" "${SCOPE_ARGUMENTS[@]}" <<'PYBOOT'
+import json, sys
+from pathlib import Path
+path = Path(sys.argv[1])
+intent = json.loads(path.read_text())
+if intent["ticket"] != sys.argv[2] or intent["workstream"] != sys.argv[3]:
+    raise SystemExit("allocated intent identity mismatch")
+intent["allowedPaths"] = [f'project/{sys.argv[2]}/**', 'TODO.md', 'project/TICKETS.md',
+                          *[arg.removeprefix("--path=") for arg in sys.argv[4:]]]
+path.write_text(json.dumps(intent, indent=2) + "\n")
+PYBOOT
+  else
+    python3 "$TICKET_STORAGE_HELPER" scope --root "$PWD" --workstream "$WORKSTREAM" \
+      --ticket "$ticket_id" "${SCOPE_ARGUMENTS[@]}" >/dev/null
+  fi
 fi
 
 if [[ -n "$LEASE_PATH" ]]; then

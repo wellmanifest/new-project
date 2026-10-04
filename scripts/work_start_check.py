@@ -117,6 +117,63 @@ def intersects(left, right):
     return any(globs_may_overlap(a, b) for a in left for b in right)
 
 
+def bootstrap_owned_paths(root, manifest, expected_digest):
+    """A first allocator may acknowledge only exact installer-owned bytes.
+
+    This is the same explicit owner confirmation as continuation's dirty
+    digest. It suppresses no branch, ticket, WIP, lease or publication check.
+    """
+    _, current_digest, dirty = dirty_observation(root)
+    if current_digest != expected_digest:
+        raise ObservationError("Bootstrap dirty observation changed")
+    receipt_path = root / ".subactor/receipts/bootstrap-adoption.json"
+    if any(path.is_symlink() for path in (receipt_path, *receipt_path.parents)):
+        raise ObservationError("Symlinked bootstrap receipt")
+    receipt = read_json(receipt_path)
+    head = git(root, "rev-parse", "HEAD").strip()
+    common = git(root, "rev-parse", "--path-format=absolute", "--git-common-dir").strip()
+    if (receipt.get("schema") != "new-project.bootstrap-adoption/v1"
+            or receipt.get("baseSha") != head or receipt.get("commonGitDir") != common
+            or receipt.get("grantsWriterAuthority") is not False
+            or receipt.get("grantsPublicationAuthority") is not False):
+        raise ObservationError("Bootstrap receipt bindings are invalid")
+    original = json.loads(git(root, "show", f"{head}:.governance/manifest.json"))
+    standard = original.get("standard", {})
+    if (set(original) != {"schema", "standard"}
+            or original.get("schema") != "wellmanifest.manifest/v1"
+            or set(standard) != {"id", "version"}
+            or standard.get("id") != "profile:baseline"
+            or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", str(standard.get("version", "")))):
+        raise ObservationError("Bootstrap requires a committed exact legacy scaffold")
+    if (len(worktrees(root)) != 1 or list((root / "project").glob("ticket-*"))
+            or git(root, "for-each-ref", "--format=%(refname)", "refs/heads/ticket/")):
+        raise ObservationError("Bootstrap acknowledgement is first-allocation only")
+    lock = read_json(root / ".governance/manifest.lock.json")
+    if (lock.get("standard", {}).get("publicationStatus") != "published"
+            or lock.get("standard", {}).get("sourceRevision") != receipt.get("sourceRevision")):
+        raise ObservationError("Bootstrap requires a published adoption lock")
+    package = read_json(root / ".governance/package-manifest.json")
+    admissible = {item["target"] for item in package["files"]}
+    admissible.update({".gitignore", ".governance/manifest.lock.json"})
+    for rel in manifest.get("requiredFiles", []):
+        if git(root, "cat-file", "-e", f"{head}:{rel}", optional=True) is None:
+            admissible.add(rel)
+    files = receipt.get("files")
+    if not isinstance(files, dict) or not files or set(files) - admissible:
+        raise ObservationError("Bootstrap receipt includes paths outside adoption")
+    if not set(lock["managedFiles"]).issubset(files):
+        raise ObservationError("Bootstrap receipt omits managed files")
+    for rel, checksum in files.items():
+        patterns([rel])
+        path = root / rel
+        if (any(p.is_symlink() for p in (path, *path.parents)) or not path.is_file()
+                or not re.fullmatch(r"[0-9a-f]{64}", str(checksum))
+                or hashlib.sha256(path.read_bytes()).hexdigest() != checksum
+                or (rel in lock["managedFiles"] and lock["managedFiles"][rel] != checksum)):
+            raise ObservationError("Bootstrap payload changed or is not installed")
+    return set(dirty).intersection(files)
+
+
 def changes(root, base, head):
     ancestor = git(root, "merge-base", base, head, optional=True)
     if not ancestor:
@@ -305,7 +362,8 @@ def publication_observation(root, entries, target):
 
 
 def inspect(root, workstream, requested_paths=(), ticket=None, storage=None,
-            observe_publication=False, expected_dirty_digest=None, recovery_intent=None):
+            observe_publication=False, expected_dirty_digest=None, recovery_intent=None,
+            bootstrap_adoption_digest=None):
     root = Path(git(root, "rev-parse", "--show-toplevel").strip()).resolve()
     manifest = manifest_at(root)
     coordination = manifest["coordination"]
@@ -336,6 +394,10 @@ def inspect(root, workstream, requested_paths=(), ticket=None, storage=None,
     mode = storage or configured_mode(root)
     if mode not in {"files", "sqlite"}:
         raise ObservationError("Unsupported ticket storage")
+    if bootstrap_adoption_digest and mode != "files":
+        raise ObservationError("Bootstrap acknowledgement requires file allocation")
+    bootstrap_owned = (bootstrap_owned_paths(primary, manifest, bootstrap_adoption_digest)
+                       if bootstrap_adoption_digest else set())
     database = primary_database(root) if mode == "sqlite" else None
     records = {item["ticket"]: item for item in load_input(root, database=database)} if database and database.exists() else {}
     entries = []
@@ -348,6 +410,8 @@ def inspect(root, workstream, requested_paths=(), ticket=None, storage=None,
         if head != registration.get("HEAD") or branch != registration.get("branch", ""):
             raise ObservationError("Checkout changed during observation")
         dirty, dirty_hash, all_dirty = dirty_observation(path)
+        if bootstrap_adoption_digest and path == primary and dirty_hash != bootstrap_adoption_digest:
+            raise ObservationError("Bootstrap changed during admission")
         ahead, behind = map(int, git(root, "rev-list", "--left-right", "--count",
                                     head + "..." + target_sha).split())
         match = TICKET.fullmatch(branch.removeprefix("refs/heads/"))
@@ -462,7 +526,9 @@ def inspect(root, workstream, requested_paths=(), ticket=None, storage=None,
         if entry is selected or not entry["pending"]:
             continue
         contribution = changes(root, comparison_sha, entry["headSha"])
-        contested = intersects(requested, entry["dirtyPaths"] + contribution)
+        pending_paths = [p for p in entry["dirtyPaths"]
+                         if not (Path(entry["path"]) == primary and p in bootstrap_owned)]
+        contested = intersects(requested, pending_paths + contribution)
         reserved = entry["active"] and intersects(requested, entry["allowedPaths"])
         if contested or reserved:
             blockers.append({"path": entry["path"], "branch": entry["branch"],
@@ -525,6 +591,10 @@ def inspect(root, workstream, requested_paths=(), ticket=None, storage=None,
                "activeTicketCount": len(active_tickets), "workstreamLimit": limit,
                "requiredBeforeWrite": required,
                "observationDigest": ""}
+    if bootstrap_adoption_digest:
+        payload["bootstrapOwnerAcknowledgement"] = {"dirtyDigest": bootstrap_adoption_digest,
+                                                    "paths": sorted(bootstrap_owned),
+                                                    "grantsWriterAuthority": False}
     storage_digest = digest({key: {"revision": row["revision"],
                                   "files": {name: hashlib.sha256(value[0]).hexdigest()
                                             for name, value in row["files"].items()}}
@@ -553,6 +623,8 @@ def main(argv=None):
     parser.add_argument("--ticket")
     parser.add_argument("--path", action="append", default=[])
     parser.add_argument("--allocation-check", action="store_true")
+    parser.add_argument("--bootstrap-adoption-digest", metavar="SHA256",
+                        help="Explicitly acknowledge owned first-scaffold installer bytes at this exact dirty digest")
     parser.add_argument("--storage", choices=["files", "sqlite"])
     parser.add_argument("--observe-publication", action="store_true",
                         help="Read origin refs twice without fetching; distinguish remote code from integration/release authority.")
@@ -563,9 +635,14 @@ def main(argv=None):
     if args.expect_dirty_digest is not None and (
             not args.ticket or not re.fullmatch(r"[0-9a-f]{64}", args.expect_dirty_digest)):
         parser.error("--expect-dirty-digest requires --ticket and a lowercase SHA-256 digest")
+    if args.bootstrap_adoption_digest is not None and (
+            not args.allocation_check or args.ticket or args.storage == "sqlite"
+            or not re.fullmatch(r"[0-9a-f]{64}", args.bootstrap_adoption_digest)):
+        parser.error("--bootstrap-adoption-digest requires first file allocation and SHA-256")
     try:
         payload = inspect(args.root, args.workstream, args.path, args.ticket, args.storage,
-                          args.observe_publication, args.expect_dirty_digest)
+                          args.observe_publication, args.expect_dirty_digest,
+                          bootstrap_adoption_digest=args.bootstrap_adoption_digest)
     except (ObservationError, ActivityError, KeyError, TypeError, ValueError, OSError, StopIteration) as error:
         # Stdout stays generic — no exception content: remote URLs or
         # secret-bearing input never leak there. The real cause is written

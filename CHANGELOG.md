@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [0.20.83] - 2026-10-04
+
+- Record exact local scaffold-adoption bytes bound to the original HEAD and clone for explicit first native allocation ownership acknowledgement.
+- Admit only unchanged installer-owned pending paths; preserve foreign overlapping changes, stale snapshots, WIP, canonical allocation, controller writer leases and independent publication requirements.
+- Render only first-ticket metadata at the original committed base, without copying or committing product or governance source.
+- Exercise real first allocation and tamper, foreign path, moved HEAD, clone binding and authority refusal cases in the existing work-admission gate.
+
 ## [0.20.82] - 2026-10-04
 
 - Open continuity transaction locks through anchored no-follow POSIX directory descriptors and recheck ancestor and lock inode identities before and after OS lock acquisition.
