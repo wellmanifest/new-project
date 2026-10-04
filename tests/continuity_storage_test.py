@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Real process contention and recovery of advisory continuity storage."""
 import argparse
+import errno
 import json
 import multiprocessing
 import os
@@ -222,6 +223,130 @@ class ContinuityStorageTests(unittest.TestCase):
         with self.assertRaises(continuity.ContinuityError):
             continuity.commit_event(self.root, event)
         self.assertFalse(self.paths[0].exists())
+
+    def test_transaction_rejects_symlink_and_hardlink_locks(self):
+        foreign = self.root / "foreign.lock"
+        foreign.write_bytes(b"foreign lock must stay unchanged")
+        lock = self.paths[0].with_name("events.jsonl.lock")
+        self.symlink(lock, foreign)
+        for kind in ("symlink", "hardlink"):
+            with self.subTest(kind=kind):
+                with self.assertRaises(continuity.ContinuityError) as error:
+                    with continuity.storage_transaction(self.paths[0]):
+                        self.fail("linked lock admitted")
+                self.assertEqual(error.exception.code, "GOV-CONTINUITY-001")
+                self.assertEqual(foreign.read_bytes(), b"foreign lock must stay unchanged")
+            lock.unlink()
+            if kind == "symlink":
+                os.link(foreign, lock)
+
+    @unittest.skipUnless(os.name == "posix", "POSIX lock substitution boundary")
+    def test_parent_swap_cannot_enter_a_second_transaction(self):
+        parent = self.root / "sessions"
+        parent.mkdir()
+        event = parent / "events.jsonl"
+        alternative = self.root / "alternative"
+        alternative.mkdir()
+        real_open = os.open
+        swapped = []
+        def substitute(path, flags, *args, **kwargs):
+            if Path(path).name == "events.jsonl.lock" and not swapped:
+                parent.rename(self.root / "held-sessions")
+                parent.symlink_to(alternative, target_is_directory=True)
+                swapped.append(True)
+            return real_open(path, flags, *args, **kwargs)
+        with continuity.storage_transaction(event):
+            with patch.object(continuity.os, "open", side_effect=substitute):
+                with self.assertRaises(continuity.ContinuityError) as error:
+                    with continuity.storage_transaction(event):
+                        self.fail("second transaction entered through a substituted parent")
+                self.assertEqual(error.exception.code, "GOV-CONTINUITY-001")
+        self.assertEqual(swapped, [True])
+        self.assertFalse((alternative / "events.jsonl.lock").exists())
+
+    @unittest.skipUnless(os.name == "posix", "POSIX lock identity boundary")
+    def test_lock_and_regular_parent_replacement_during_acquire_are_rejected(self):
+        import fcntl
+        real_flock = fcntl.flock
+        for replacement in ("lock", "parent", "waiting-parent"):
+            with self.subTest(replacement=replacement):
+                parent = self.root / replacement
+                parent.mkdir()
+                event = parent / "events.jsonl"
+                lock = parent / "events.jsonl.lock"
+                swapped = []
+                def substitute(descriptor, operation):
+                    if operation & fcntl.LOCK_EX and not swapped:
+                        swapped.append(True)
+                        if replacement == "lock":
+                            lock.rename(parent / "held.lock")
+                            lock.write_bytes(b"replacement")
+                        else:
+                            parent.rename(self.root / (replacement + "-held"))
+                            parent.mkdir()
+                        if replacement == "waiting-parent":
+                            raise BlockingIOError(errno.EAGAIN, "fixture contention")
+                    return real_flock(descriptor, operation)
+                with patch.object(fcntl, "flock", side_effect=substitute):
+                    with self.assertRaises(continuity.ContinuityError) as error:
+                        with continuity.storage_transaction(event):
+                            self.fail("substituted lock namespace admitted")
+                    self.assertEqual(error.exception.code, "GOV-CONTINUITY-001")
+                self.assertEqual(swapped, [True])
+                self.assertFalse(event.exists())
+
+    @unittest.skipUnless(os.name == "posix", "POSIX safe-lock capability boundary")
+    def test_missing_no_follow_fails_before_creating_lock(self):
+        for capability in ("O_NOFOLLOW", "O_DIRECTORY"):
+            with self.subTest(capability=capability):
+                with patch.object(continuity.os, capability, None):
+                    with self.assertRaises(continuity.ContinuityError):
+                        with continuity.storage_transaction(self.paths[0]):
+                            self.fail("unsafe lock capability admitted")
+        self.assertFalse(self.paths[0].with_name("events.jsonl.lock").exists())
+
+    def test_regular_lock_is_reused_after_transaction_body_failure(self):
+        lock = self.paths[0].with_name("events.jsonl.lock")
+        with self.assertRaisesRegex(OSError, "fixture interrupted transaction"):
+            with continuity.storage_transaction(self.paths[0]):
+                identity = (lock.stat().st_dev, lock.stat().st_ino)
+                raise OSError("fixture interrupted transaction")
+        with continuity.storage_transaction(self.paths[0]):
+            self.assertEqual((lock.stat().st_dev, lock.stat().st_ino), identity)
+        self.assertTrue(lock.is_file())
+
+    def test_invalid_transaction_path_creates_nothing(self):
+        for event in (Path("."), Path(self.root.anchor), self.root / ".." / "events.jsonl"):
+            with self.subTest(event=event):
+                with self.assertRaises(continuity.ContinuityError) as error:
+                    with continuity.storage_transaction(event):
+                        self.fail("unconfined transaction path admitted")
+                self.assertEqual(error.exception.code, "GOV-CONTINUITY-001")
+        self.assertEqual(list(self.root.iterdir()), [])
+
+    @unittest.skipUnless(os.name == "nt", "Windows native held lock handles")
+    def test_windows_transaction_holds_parent_and_lock_against_replacement(self):
+        parent = self.root / "sessions"
+        event = parent / "events.jsonl"
+        with continuity.storage_transaction(event):
+            for target in (parent, parent / "events.jsonl.lock"):
+                with self.subTest(target=target):
+                    with self.assertRaises(OSError):
+                        target.rename(self.root / "replacement")
+
+    @unittest.skipUnless(os.name == "nt", "Windows native transaction junction boundary")
+    def test_windows_junction_cannot_redirect_transaction_lock(self):
+        foreign = self.root / "foreign"
+        foreign.mkdir()
+        link = self.root / "sessions"
+        result = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(foreign)],
+                                capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.addCleanup(lambda: link.rmdir() if link.exists() else None)
+        with self.assertRaises(continuity.ContinuityError):
+            with continuity.storage_transaction(link / "events.jsonl"):
+                self.fail("junction lock admitted")
+        self.assertFalse((foreign / "events.jsonl.lock").exists())
 
 
     def stream_target(self):

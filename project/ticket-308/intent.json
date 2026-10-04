@@ -1,0 +1,58 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-308",
+  "summary": "Bind continuity transaction locks to verified directory handles",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-308/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/work_continuity.py",
+    "tests/continuity_storage_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "525a0d285c9054f079f0aa22f5c41931ce90afb8",
+    "targetBranch": "main",
+    "outcome": "Publish immutable standard 0.20.82 repairing the continuity lock ancestry race found by independent DisplayNet review, then enable protected consumer adoption.",
+    "nonGoals": ["No consumer managed-file patches", "No weakened review, CI or merge authority", "No deployment or hardware effects"],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {"maxImplementationFiles": 7, "maxAffectedComponents": 2, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Open the lock through no-follow directory descriptors on POSIX and bind their identities and the lock inode back to the public name after acquisition. Reuse Windows reparse-safe held directory handles without delete sharing for a read/write lock handle. Preserve bounded OS locking and fail closed on unsupported primitives.",
+      "components": [
+        {"name": "continuity-storage", "paths": ["scripts/work_continuity.py", "tests/continuity_storage_test.py"]},
+        {"name": "immutable-release", "paths": ["VERSION", "CHANGELOG.md", "governance/manifest.default.json", "governance/manifest.hub.json", "packages/wellman/pyproject.toml"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert via protected publication; preserve journal, stable lock and independent review receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["python3 tests/continuity_storage_test.py", "bash tests/work-continuity.test.sh"], "evidence": "Deterministic ancestor/lock substitution fixtures fail before entering or modifying foreign data; real multiprocess serialization and interrupted-write recovery still pass."},
+      {"criterion": "AC-02", "commands": ["bash tests/wellman-package.test.sh", "./project/governance-check.sh --actor agent"], "evidence": "Native governance and package contract pass; independently executed platform matrix remains required."},
+      {"criterion": "AC-03", "commands": ["goal --delivery-mode pull-request --no-publish -a push --ticket ticket-308"], "evidence": "Protected exact-head OneDev/Validator approval and merge precede immutable release and consumer adoption; local tests grant no publication authority."}
+    ]
+  }
+}

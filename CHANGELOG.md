@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.82] - 2026-10-04
+
+- Open continuity transaction locks through anchored no-follow POSIX directory descriptors and recheck ancestor and lock inode identities before and after OS lock acquisition.
+- Reuse reparse-safe Windows directory and read/write lock handles without delete sharing; retain bounded contention, private regular locks and interrupted-write replay.
+- Add deterministic parent/lock substitution, missing-capability, linked-lock and native Windows replacement/junction regressions to the existing storage matrix.
+
 ## [0.20.81] - 2026-10-03
 
 - Add explicit pinned native migration for exact minimal Wellman baseline scaffolds; preserve custom/native adoption, source publication proof and target prerequisites.
