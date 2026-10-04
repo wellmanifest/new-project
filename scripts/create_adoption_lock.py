@@ -734,6 +734,17 @@ def main() -> int:
     if conflicts and not args.upgrade:
         raise SystemExit(f"adoption files differ; rerun with --upgrade after review: {', '.join(sorted(conflicts))}")
 
+    bootstrap_head = None
+    if args.migrate_wellman_scaffold:
+        receipt = target_root / ".subactor/receipts/bootstrap-adoption.json"
+        if any(path.is_symlink() for path in (receipt, *receipt.parents)):
+            raise SystemExit("bootstrap receipt path is symlinked")
+        if any(path.exists() and not path.is_dir() for path in receipt.parents):
+            raise SystemExit("bootstrap receipt parent is not a directory")
+        observed = subprocess.run(["git", "-C", str(target_root), "rev-parse", "HEAD"],
+                                  capture_output=True, text=True)
+        if observed.returncode == 0:
+            bootstrap_head = observed.stdout.strip()
     for target, content in sorted(payloads.items()):
         path = target_root / target
         if not path.exists() or path.read_bytes() != content:
@@ -744,6 +755,35 @@ def main() -> int:
         target_root / ".governance/manifest.lock.json",
         expected_lock,
     )
+    if args.migrate_wellman_scaffold:
+        # Local ownership acknowledgement is not writer or publication authority.
+        result = subprocess.run(["git", "-C", str(target_root), "rev-parse", "HEAD"],
+                                capture_output=True, text=True)
+        if result.returncode == 0 and bootstrap_head:
+            if result.stdout.strip() != bootstrap_head:
+                raise SystemExit("repository HEAD changed during bootstrap; reconcile installed files")
+            owned = dict(payloads)
+            owned[".governance/manifest.lock.json"] = expected_lock
+            for rel in manifest.get("requiredFiles", []):
+                before = subprocess.run(["git", "-C", str(target_root), "cat-file", "-e",
+                                         f"HEAD:{rel}"], capture_output=True)
+                path = target_root / rel
+                if before.returncode and path.is_file() and not path.is_symlink():
+                    owned.setdefault(rel, path.read_bytes())
+            receipt = target_root / ".subactor/receipts/bootstrap-adoption.json"
+            if any(path.is_symlink() for path in (receipt, *receipt.parents)):
+                raise SystemExit("bootstrap receipt path is symlinked")
+            common = subprocess.check_output(
+                ["git", "-C", str(target_root), "rev-parse", "--path-format=absolute",
+                 "--git-common-dir"], text=True).strip()
+            atomic_write(receipt, (json.dumps({
+                "schema": "new-project.bootstrap-adoption/v1",
+                "baseSha": result.stdout.strip(), "commonGitDir": common,
+                "sourceRevision": args.source_revision,
+                "files": {rel: hashlib.sha256(data).hexdigest()
+                          for rel, data in sorted(owned.items())},
+                "grantsWriterAuthority": False, "grantsPublicationAuthority": False,
+            }, indent=2, sort_keys=True) + "\n").encode())
     agent_hosts_script = target_root / "scripts/install-agent-hosts.sh"
     if agent_hosts_script.is_file() and (target_root / ".git").exists():
         try:

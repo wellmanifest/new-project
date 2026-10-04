@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Real Git regression fixtures; no network, effect authority or real worktrees."""
 import json
+import importlib.util
 import base64
 import hashlib
 import os
@@ -672,6 +673,15 @@ class WorkStartTest(unittest.TestCase):
         with patch.object(start, "dirty_observation", side_effect=observe):
             with self.assertRaises(start.ObservationError):
                 self.report()
+
+
+# The existing protected work-admission job also owns the first-adoption
+# end-to-end regression; no parallel check with weaker coverage is introduced.
+bootstrap_spec = importlib.util.spec_from_file_location(
+    "scaffold_bootstrap_regression", ROOT / "tests/scaffold_bootstrap_test.py")
+bootstrap_module = importlib.util.module_from_spec(bootstrap_spec)
+bootstrap_spec.loader.exec_module(bootstrap_module)
+BootstrapAdoptionTest = bootstrap_module.BootstrapTest
 
 
 if __name__ == "__main__":

@@ -97,6 +97,40 @@ independent protected publisher are still required for subsequent delivery.
 Do not replace customized or partial native governance with a scaffold. Restore
 it through its own pinned adopter and controller-owned recovery instead.
 
+### First allocation after scaffold migration
+
+An exact scaffold migration on an existing Git repository leaves owned installed
+files pending in the primary checkout. The installer records their exact bytes
+in ignored `.subactor/receipts/bootstrap-adoption.json`, bound to the original
+HEAD and clone. This receipt grants neither writer nor publication authority.
+
+Read the work-start report and reconcile the owner of the recorded adoption
+files before passing its primary `dirtyDigest` explicitly:
+
+```bash
+python3 .governance/work_start_check.py --root . --workstream governance \
+  --path '.governance/**' --allocation-check
+./project/new-ticket.sh --title "Adopt native governance" --agent codex \
+  --workstream governance --path '.governance/**' \
+  --bootstrap-adoption-digest <exact-primary-dirtyDigest>
+```
+
+The declared `--path` arguments must cover the intended subsequent adoption
+work and be owned by the selected workstream. Allocation writes only ticket
+metadata in the canonical relative worktree at the original committed base.
+It does not copy governance or product source into that checkout. Complete the
+bounded intent, acquire the real controller writer lease, then apply the same
+pinned adopter there. Preserve the primary bootstrap and unrelated changes
+until their owner reconciles them; allocation never cleans or commits primary.
+
+Acknowledgement is restricted to the first file-backed allocation from a
+committed exact legacy scaffold. Changed installed bytes, a stale dirty digest,
+a moved HEAD, another clone, symlinked receipt/payload paths, unpublished locks,
+foreign receipt paths, existing tickets/worktrees and incompatible allocator
+modes are refused. Unrecorded changes overlapping the requested scope still
+block admission; unrelated changes remain preserved. All WIP, branch, lease,
+full product validation and independent protected publication gates remain.
+
 ## Upgrade boundaries
 
 | Boundary | Actual responsibility |
