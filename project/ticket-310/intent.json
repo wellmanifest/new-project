@@ -1,0 +1,111 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-310",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: repair autonomous publication standards and Planfile dependencies. Return native allocation identities as machine-readable results and reconcile stale host publication instructions without bypassing protected validation.",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-310/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "docs/information/local-ci-publication.md",
+    "project/new-ticket.sh",
+    "scripts/host_publication_policy.py",
+    "tests/host_publication_policy_test.py",
+    "tests/local-ci-publication.test.sh",
+    "tests/ticket-allocation-worktree.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d8a1d56950f9d76b7fee9ca689efbb97e399d084",
+    "targetBranch": "main",
+    "outcome": "Allocator emits explicit ticket/branch/worktree/lease result; host publication policy updater preserves unrelated instructions and replaces obsolete review-bypass guidance under an expected content digest. Independently published material, tests and scoped host readback.",
+    "nonGoals": [
+      "No product policy or CI check retirement",
+      "No foreign change takeover or lease grant from allocator",
+      "No direct merge or credential use in updater"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add an additive JSON result to the successful native allocator; supply a deterministic read-only-by-default host instructions renderer with digest-bound apply, lossless backup and concurrent-writer refusal. Preserve installed governance and unrelated host sections.",
+      "components": [
+        {
+          "name": "native-allocation",
+          "paths": [
+            "project/new-ticket.sh",
+            "tests/ticket-allocation-worktree.test.py"
+          ]
+        },
+        {
+          "name": "host-policy-reconciliation",
+          "paths": [
+            "scripts/host_publication_policy.py",
+            "tests/host_publication_policy_test.py"
+          ]
+        },
+        {
+          "name": "publication-docs",
+          "paths": [
+            "tests/local-ci-publication.test.sh",
+            "docs/information/local-ci-publication.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Successful allocation JSON result",
+        "Host projection query and digest-bound apply CLI"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Restore exact prior host bytes from saved content-addressed backup; revert source only through protected delivery."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket-allocation-worktree.test.py"
+        ],
+        "evidence": "Canonical and refusal result regression including preserved dirty primary."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/host_publication_policy_test.py",
+          "bash tests/local-ci-publication.test.sh"
+        ],
+        "evidence": "Idempotence, preservation, stale-digest, symlink and concurrent-lock tests; exact host projection readback after publication."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Full native suite, OneDev and protected exact-head independent merge."
+      }
+    ]
+  }
+}

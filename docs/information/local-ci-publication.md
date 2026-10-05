@@ -3,14 +3,14 @@
   "schema": "wellmanifest.docs/document/v1",
   "id": "local-ci-publication",
   "kind": "information",
-  "version": 4,
+  "version": 5,
   "title": "Local OneDev verification and independent Validator publication",
   "status": "proposed",
   "owner": "wellmanifest/new-project",
   "created": "2026-09-07",
-  "updated": "2026-09-24",
+  "updated": "2026-10-05",
   "review_after": "2026-10-07",
-  "source_revision": "d4dab328fbea876eadd3f4ad4e2349d520a2b15a",
+  "source_revision": "d8a1d56950f9d76b7fee9ca689efbb97e399d084",
   "affected_repositories": [
     "wellmanifest/new-project"
   ],
@@ -151,6 +151,25 @@ additional test and authority requirements.
 
 <!-- docs:section next_actions -->
 ## Runtime references and adoption
+
+For an existing host ancestor `AGENTS.md` with the owned
+`wellmanifest:autonomous-merge` and `wellmanifest:nolimits` blocks, the published
+`scripts/host_publication_policy.py` previews a deterministic reconciliation.
+Pass the exact observed file digest with `--expected-sha256`. An authorized
+`--apply --backup-directory PRIVATE_DIRECTORY` preserves unrelated sections,
+checks the input again under an exclusive local lock, saves the original bytes
+in a content-addressed backup and verifies the replacement. Unknown markers,
+custom merge remedies, symlinks, stale content and a competing lock are refused.
+Use an independently published script revision; preview is read-only and the
+result grants neither a lease nor publication authority.
+
+Successful filesystem ticket allocation also emits
+`new-project.ticket-allocation-result/v1` JSON containing `ticket`, `branch`,
+`worktreePath` and `leasePath`. Consume that exact result after exit zero;
+never select a ticket through newest-directory ordering. A non-Git scaffold
+has `kind: scaffold-only` and null delivery coordinates. The result's
+`executionAuthorized: false` reflects the separate controller admission,
+not permission to edit or publish.
 
 The canonical runtime runbook is [Local Validator App with OneDev](https://github.com/subactor/validator-agent/blob/e0cc9d3707752d7cc3a8d55fa39f05b64254bb76/docs/LOCAL_VALIDATOR_APP_SETUP.md).
 The [profile coverage audit](https://github.com/subactor/validator-agent/blob/e0cc9d3707752d7cc3a8d55fa39f05b64254bb76/docs/information/profile-coverage-audit.md)

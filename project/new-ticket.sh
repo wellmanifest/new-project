@@ -1006,3 +1006,22 @@ if [[ -n "$WORKTREE_PATH" ]]; then
 else
   echo "Successfully scaffolded $ticket_dir for '$TITLE'."
 fi
+# Additive result: consumers select the returned identity, never a directory
+# glob or the last ticket number. Emit only after every allocation step passes.
+# The allocator's ignored lease projection does not grant controller authority.
+python3 - "$ticket_id" "${WORKTREE_BRANCH:-}" "$WORKTREE_PATH" "$LEASE_PATH" <<'PY'
+import json
+import sys
+
+ticket, branch, worktree, lease = sys.argv[1:]
+print(json.dumps({
+    "schema": "new-project.ticket-allocation-result/v1",
+    "ticket": ticket,
+    "branch": branch or None,
+    "worktreePath": worktree or None,
+    "leasePath": lease or None,
+    "storage": "files",
+    "kind": "delivery" if worktree else "scaffold-only",
+    "executionAuthorized": False,
+}, ensure_ascii=True, sort_keys=True))
+PY
