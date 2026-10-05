@@ -60,6 +60,18 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
     def test_file_ticket_is_created_only_in_canonical_linked_worktree(self) -> None:
         result = self.allocate()
         self.assertEqual(result.returncode, 0, result.stderr)
+        receipts = [json.loads(line) for line in result.stdout.splitlines()
+                    if line.startswith('{')]
+        self.assertEqual(len(receipts), 1, result.stdout)
+        receipt = receipts[0]
+        self.assertEqual(receipt['schema'], 'new-project.ticket-allocation-result/v1')
+        self.assertEqual(receipt['ticket'], 'ticket-001')
+        self.assertEqual(receipt['branch'], 'ticket/001-canonical-ticket')
+        self.assertEqual(receipt['worktreePath'], str(self.root / '.worktrees/ticket-001--canonical-ticket'))
+        self.assertEqual(receipt['leasePath'], str(self.root / '.subactor/leases/ticket-001--canonical-ticket.json'))
+        self.assertEqual(receipt['storage'], 'files')
+        self.assertEqual(receipt['kind'], 'delivery')
+        self.assertFalse(receipt['executionAuthorized'])
         worktree = self.root / ".worktrees/ticket-001--canonical-ticket"
         self.assertTrue(worktree.is_dir())
         self.assertFalse((self.root / "project/ticket-001").exists())
@@ -88,6 +100,7 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
         (self.root / ".worktrees").symlink_to(outside, target_is_directory=True)
         result = self.allocate()
         self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn('new-project.ticket-allocation-result/v1', result.stdout)
         self.assertFalse((self.root / "project/ticket-001").exists())
         self.assertFalse((self.root / ".git/new-project-ticket-high-water").exists())
         self.assertFalse((outside / "ticket-001--canonical-ticket").exists())

@@ -2,6 +2,7 @@
 # Local OneDev + Validator publication applies to every repository by default.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+python3 tests/host_publication_policy_test.py
 
 python3 - <<'PY'
 import json
