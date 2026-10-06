@@ -182,3 +182,40 @@ executable, source revision and adoption lock before selecting a command.
 Installing a package or running legacy `wellman adopt baseline` does not install
 or update the complete native governance contract. Native adoption/upgrades use
 the pinned `create_adoption_lock.py` path above and retain protected delivery.
+
+## Offline reusable CI contracts
+
+A reusable CI caller publishes `<caller display name> / <callee display name>`,
+not the caller job key alone. Native adoption and the required-checks gate
+resolve literal leaf jobs using an optional target-owned
+`.github/reusable-workflows.lock.json`:
+
+```json
+{
+  "schema": "new-project.reusable-workflows/v1",
+  "workflows": [{
+    "uses": "owner/repo/.github/workflows/ci.yml@<full 40-character commit SHA>",
+    "sourceFile": ".github/reusable-workflows/ci.yml",
+    "sourceSha256": "<SHA256 of the exact workflow bytes>"
+  }]
+}
+```
+
+Acquire the file from that published immutable revision before recording its
+hash. Keep the exact bytes in the named file and pin the caller's `uses` to
+that same revision. Review the source provenance and execution semantics as
+part of the target's ordinary native ticket and protected PR; these
+repository-owned bindings describe checks and do not grant execution or
+merge authority. Updating the ref requires a matching reviewed source and
+hash update. The resolver neither fetches nor executes external code.
+
+The managed schema is `.governance/reusable-workflows.schema.json`. The first
+bootstrap reads the lock and source from the target without changing them;
+the ordinary adopted generator and checker use the same offline resolver.
+Target-owned required-check declarations remain extensions. Missing bindings,
+mutable refs and changed source hashes cannot resolve a caller. Symlinks,
+traversal, duplicate bindings, unknown fields, nested calls, matrices,
+conditional jobs and expression-based names fail closed. This initial profile
+supports literal block mappings only; unsupported workflows need a separately
+reviewed contract extension, never a guessed green context. Keep all required
+checks and independent publication while arranging that extension.

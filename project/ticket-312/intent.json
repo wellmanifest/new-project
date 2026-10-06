@@ -1,0 +1,118 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-312",
+  "summary": "Resolve pinned reusable CI checks for native adoption; SESSION_EXECUTION_AUTHORIZATION: continue scanner native adoption and independently publish fixes.",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-312/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/package-manifest.json",
+    "governance/reusable-workflows.schema.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/check_required_checks.py",
+    "scripts/create_adoption_lock.py",
+    "scripts/generate_required_checks.py",
+    "tests/reusable_checks_test.py",
+    "tests/required-checks.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "eced9e86969796fd3d4415abb1529b8445f16b40",
+    "targetBranch": "main",
+    "outcome": "Resolve literal reusable CI job contexts from explicitly reviewed SHA-pinned local source contracts during native adoption and deterministic verification.",
+    "nonGoals": [
+      "No network fetch during verification, mutable-ref resolution, dynamic or nested workflow inference",
+      "No product edits, foreign source cleanup or weakening independent publication"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 11,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Share an offline immutable source resolver between check generation and checking; verify exact caller reference, closed contract shape, contained non-symlink source and SHA256 before deriving literal leaf job names. Fail closed for unsupported workflow shapes.",
+      "components": [
+        {
+          "name": "required-check-contract",
+          "paths": [
+            "scripts/generate_required_checks.py",
+            "scripts/check_required_checks.py",
+            "scripts/create_adoption_lock.py",
+            "governance/reusable-workflows.schema.json"
+          ]
+        },
+        {
+          "name": "regressions-and-package",
+          "paths": [
+            "VERSION",
+            "docs/STANDARD_UPGRADE.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "governance/package-manifest.json",
+            "packages/wellman/pyproject.toml",
+            "tests/reusable_checks_test.py",
+            "tests/required-checks.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Optional .github/reusable-workflows.lock.json with reviewed immutable source bindings"
+      ],
+      "dataChanges": [
+        "Offline reusable workflow source lock"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Publish a reviewed corrective standard; never manufacture check success or replace target-owned policy."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/reusable_checks_test.py",
+          "bash tests/required-checks.test.sh"
+        ],
+        "evidence": "Literal caller/leaf names, pin drift, tampered bytes, unsafe paths, unknown and unsupported contracts."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Native scope, package and adoption gates."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "Independent exact-head publication"
+        ],
+        "evidence": "Merged material standard change with coherent immutable release before target adoption."
+      }
+    ]
+  }
+}
