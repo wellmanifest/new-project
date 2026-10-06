@@ -22,6 +22,7 @@ MODULES = (
     "check_required_checks.py",
     "decision_record.py",
     "governance_check.py",
+    "generate_required_checks.py",
     "repository_policy.py",
     "snapshot_migration.py",
     "ticket_activity.py",

@@ -684,6 +684,12 @@
       "target": ".governance/error/GOV-ARCHITECTURE-001.md",
       "strategy": "managed",
       "executable": false
+    },
+    {
+      "source": "governance/reusable-workflows.schema.json",
+      "target": ".governance/reusable-workflows.schema.json",
+      "strategy": "managed",
+      "executable": false
     }
   ]
 }

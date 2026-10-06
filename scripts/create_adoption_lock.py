@@ -530,11 +530,9 @@ def project_inherited_required_checks(
         # the source declaration rather than inventing one; a later adoption
         # in the real repository will project the local workflow truth.
         return
-    callers = [
-        caller for caller in derived.get("reusableWorkflowCallers", [])
-        if caller not in {"governance", "new-project-governance"}
-        and not str(caller).endswith(("/governance.yml", "/new-project-governance.yml"))
-    ]
+    # A display name is not source identity. Even a caller named governance
+    # must bind its actual callee before we can project its published checks.
+    callers = derived.get("reusableWorkflowCallers", [])
     if callers:
         raise SystemExit(
             "cannot project inherited required-checks through reusable workflow callers: "

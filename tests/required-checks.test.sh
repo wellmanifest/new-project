@@ -7,6 +7,7 @@ cd "$ROOT"
 
 echo "== positive: source matches ci.yml =="
 python3 scripts/check_required_checks.py
+python3 tests/reusable_checks_test.py
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
