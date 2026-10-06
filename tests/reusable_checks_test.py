@@ -90,6 +90,19 @@ class ReusableChecksTest(unittest.TestCase):
         self.caller.write_text(self.caller.read_text().replace(PIN, 'b' * 40))
         self.assertEqual(generator.declaration_for(self.root)['reusableWorkflowCallers'], ['CI'])
 
+    def test_flow_callers_are_not_misreported_as_direct_checks(self):
+        self.caller.write_text(f'on: [pull_request]\njobs:\n  ci: {{uses: {USES}}}\n')
+        with self.assertRaises(SystemExit):
+            generator.declaration_for(self.root)
+        with self.assertRaises(SystemExit):
+            checker.workflow_job_names(self.caller)
+
+    def test_local_reusable_call_is_unresolved_until_supported(self):
+        self.caller.write_text('on: [pull_request]\njobs:\n  ci:\n    uses: ./.github/workflows/test.yml\n')
+        self.assertEqual(generator.declaration_for(self.root)['reusableWorkflowCallers'], ['ci'])
+        with self.assertRaises(SystemExit):
+            checker.workflow_job_names(self.caller)
+
     def test_unsafe_source_paths_refuse(self):
         for path in ['../outside.yml', '/tmp/outside.yml', '.github/workflows/ci.yml']:
             with self.subTest(path=path):

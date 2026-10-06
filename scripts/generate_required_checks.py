@@ -28,7 +28,7 @@ SCHEMA = "new-project.required-checks/v1"
 JOB_LINE = re.compile(r"^  ([A-Za-z0-9][A-Za-z0-9_-]*):\s*(?:#.*)?$")
 JOB_NAME_LINE = re.compile(r"^    name:\s*(.+?)\s*$")
 TOP_LEVEL_KEY = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*:")
-REUSABLE_CALL = re.compile(r"^    uses:\s*\S+/\S+/\.github/workflows/")
+REUSABLE_CALL = re.compile(r"^    uses:\s*(?:['\"]?\S+/\S+/\.github/workflows/|['\"]?\./\.github/workflows/)")
 IMMUTABLE_CALL = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/\.github/workflows/[A-Za-z0-9_.-]+\.ya?ml@[0-9a-f]{40}")
 CONTRACT_PATH = Path('.github/reusable-workflows.lock.json')
 CONTRACT_SCHEMA = 'new-project.reusable-workflows/v1'
@@ -191,6 +191,10 @@ def callee_names(text: str) -> list[str]:
 def resolved_checks_text(text: str, sources: dict[str, str], callers: list[str]) -> list[str]:
     unresolved = []
     names = published_checks_text(text, unresolved)
+    active = '\n'.join(line for line in text.splitlines() if not line.lstrip().startswith('#'))
+    if ('pull_request' in active and not unresolved
+            and re.search(r'uses:\s*[\'\"]?(?:\S+/\S+/|\./)\.github/workflows/', active)):
+        raise SystemExit('unsupported reusable workflow caller mapping')
     if not unresolved:
         return names
     for key, body in literal_jobs(text):
