@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 import hashlib
 import importlib.util
 import json
@@ -485,9 +487,121 @@ def ignored_payload_targets(target_root: Path, targets: set[str]) -> list[str]:
     )
 
 
+def bootstrap_reusable_declaration(
+    target_root: Path, payloads: dict[str, bytes], plan_path: Path,
+    implementation_paths: list[str] | None = None,
+) -> dict[str, object]:
+    """Project future check names without writing or verifying target CI."""
+    fields = {"schema", "baseSha", "callerFile", "callerSha256", "originalUses",
+              "uses", "sourceFile", "sourceSha256", "sourceBase64"}
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise SystemExit("duplicate bootstrap reusable plan key")
+            result[key] = value
+        return result
+
+    if (plan_path.is_symlink() or not plan_path.is_file()
+            or plan_path.stat().st_size > 2 * 1024 * 1024
+            or target_root.resolve() in plan_path.resolve().parents):
+        raise SystemExit("bootstrap reusable plan must be a bounded external regular file")
+    try:
+        plan = json.loads(plan_path.read_bytes(), object_pairs_hook=unique)
+    except (ValueError, UnicodeDecodeError) as error:
+        raise SystemExit("invalid bootstrap reusable plan JSON") from error
+    if (not isinstance(plan, dict) or set(plan) != fields
+            or any(not isinstance(value, str) for value in plan.values())
+            or plan["schema"] != "new-project.bootstrap-reusable-plan/v1"):
+        raise SystemExit("unsupported bootstrap reusable plan shape")
+    if (re.fullmatch(r"[0-9a-f]{40}", plan["baseSha"]) is None
+            or any(re.fullmatch(r"[0-9a-f]{64}", plan[key]) is None
+                   for key in ("callerSha256", "sourceSha256"))
+            or re.fullmatch(r"\.github/workflows/[A-Za-z0-9_.-]+\.ya?ml", plan["callerFile"]) is None
+            or re.fullmatch(r"\.github/reusable-workflows/[A-Za-z0-9_.-]+\.ya?ml", plan["sourceFile"]) is None):
+        raise SystemExit("unsafe bootstrap reusable plan identity or path")
+    uses = re.fullmatch(r"([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/\.github/workflows/[A-Za-z0-9_.-]+\.ya?ml)@([0-9a-f]{40})", plan["uses"])
+    if uses is None or re.fullmatch(re.escape(uses[1]) + r"@[A-Za-z0-9_./-]+", plan["originalUses"]) is None:
+        raise SystemExit("bootstrap callee must pin the same original workflow to a full SHA")
+    if plan["callerFile"] in payloads:
+        raise SystemExit("bootstrap plan cannot modify a managed workflow")
+    for relative in (plan["callerFile"], plan["sourceFile"], ".github/reusable-workflows.lock.json"):
+        candidate = target_root
+        for part in Path(relative).parts:
+            candidate /= part
+            if candidate.is_symlink():
+                raise SystemExit("symlinked bootstrap workflow path")
+    if any((target_root / relative).exists() for relative in
+           (plan["sourceFile"], ".github/reusable-workflows.lock.json")):
+        raise SystemExit("existing reusable source contracts require ordinary adoption")
+    head = subprocess.check_output(["git", "-C", str(target_root), "rev-parse", "HEAD"], text=True).strip()
+    if head != plan["baseSha"]:
+        raise SystemExit("bootstrap plan is not bound to the current committed HEAD")
+    caller = target_root / plan["callerFile"]
+    if not caller.is_file() or caller.stat().st_size > 1024 * 1024:
+        raise SystemExit("missing or oversized bootstrap caller")
+    committed = subprocess.run(["git", "-C", str(target_root), "show",
+                                f'{head}:{plan["callerFile"]}'], capture_output=True)
+    current = caller.read_bytes()
+    if (committed.returncode or current != committed.stdout
+            or hashlib.sha256(current).hexdigest() != plan["callerSha256"]):
+        raise SystemExit("bootstrap caller must match the exact committed source bytes")
+    try:
+        source = base64.b64decode(plan["sourceBase64"], validate=True)
+        source.decode("utf-8")
+        text = current.decode("utf-8")
+    except (ValueError, binascii.Error, UnicodeDecodeError) as error:
+        raise SystemExit("invalid bootstrap workflow encoding") from error
+    if len(source) > 1024 * 1024 or hashlib.sha256(source).hexdigest() != plan["sourceSha256"]:
+        raise SystemExit("bootstrap callee source hash mismatch")
+    line = re.compile(r"^    uses: " + re.escape(plan["originalUses"]) + r"[ \t]*$", re.M)
+    if len(line.findall(text)) != 1:
+        raise SystemExit("bootstrap plan requires one literal unquoted caller uses line")
+    planned = line.sub("    uses: " + plan["uses"], text).encode("utf-8")
+    spec = importlib.util.spec_from_file_location("bootstrap_checks", Path(__file__).with_name("generate_required_checks.py"))
+    generator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(generator)
+    repository = generator.repository_name(target_root)
+    if not repository or re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository) is None:
+        raise SystemExit("bootstrap reusable plan requires an authoritative origin identity")
+    with tempfile.TemporaryDirectory(prefix="new-project-bootstrap-ci-") as directory:
+        mirror = Path(directory)
+        workflows = mirror / ".github/workflows"
+        workflows.mkdir(parents=True)
+        for path in sorted((target_root / ".github/workflows").glob("*.y*ml")):
+            if path.is_symlink() or not path.is_file():
+                raise SystemExit("unsafe target workflow in bootstrap plan")
+            (workflows / path.name).write_bytes(path.read_bytes())
+        for relative, content in payloads.items():
+            if relative.startswith(".github/workflows/"):
+                (mirror / relative).write_bytes(content)
+        (mirror / plan["callerFile"]).write_bytes(planned)
+        callee = mirror / plan["sourceFile"]
+        callee.parent.mkdir()
+        callee.write_bytes(source)
+        entry = {key: plan[key] for key in ("uses", "sourceFile", "sourceSha256")}
+        (mirror / ".github/reusable-workflows.lock.json").write_bytes(json_bytes({
+            "schema": "new-project.reusable-workflows/v1", "workflows": [entry]}))
+        git_env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+        for args in (["init", "-q"], ["remote", "add", "origin", f"https://github.com/{repository}.git"]):
+            subprocess.run(["git", "-C", str(mirror), *args], env=git_env, check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        derived = generator.declaration_for(mirror, ignored=())
+        if (derived is None or derived["repository"] != repository
+                or derived.get("reusableWorkflowCallers")):
+            raise SystemExit("bootstrap plan leaves unresolved workflow callers")
+    print(f'PLANNED {plan["callerFile"]} uses {plan["uses"]}; target CI unchanged and unverified')
+    if implementation_paths is not None:
+        implementation_paths.extend([plan["callerFile"], plan["sourceFile"],
+                                     ".github/reusable-workflows.lock.json"])
+    return derived
+
+
 def project_inherited_required_checks(
     target_root: Path,
     payloads: dict[str, bytes],
+    bootstrap_plan: Path | None = None,
+    implementation_paths: list[str] | None = None,
 ) -> None:
     """Replace only the hub's inherited check declaration with target truth.
 
@@ -508,6 +622,8 @@ def project_inherited_required_checks(
     if not isinstance(document, dict) or document.get("repository") not in {
         UNRESOLVED_ADOPTER, "wellmanifest/new-project",
     }:
+        if bootstrap_plan is not None:
+            raise SystemExit("bootstrap plan cannot replace a target-owned check declaration")
         return
     workflow_payloads = {
         target: content
@@ -520,11 +636,10 @@ def project_inherited_required_checks(
         raise SystemExit("cannot load the managed required-checks generator")
     generator = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(generator)
-    derived = generator.declaration_for(
-        target_root,
-        ignored=(),
-        workflow_payloads=workflow_payloads,
-    )
+    derived = (bootstrap_reusable_declaration(target_root, workflow_payloads, bootstrap_plan,
+                                              implementation_paths)
+               if bootstrap_plan is not None else generator.declaration_for(
+                   target_root, ignored=(), workflow_payloads=workflow_payloads))
     if derived is None:
         # A non-Git bootstrap has no authoritative repository identity. Keep
         # the source declaration rather than inventing one; a later adoption
@@ -602,6 +717,8 @@ def main() -> int:
         "--bootstrap-native-adoption", action="store_true",
         help="Record first-allocation bootstrap for a committed repository without governance",
     )
+    parser.add_argument("--bootstrap-reusable-plan", type=Path,
+                        help="External exact-state future reusable CI plan; never edits target workflows")
     parser.add_argument(
         "--check",
         action="store_true",
@@ -615,6 +732,8 @@ def main() -> int:
         parser.error("--migrate-wellman-scaffold requires --check or --upgrade after review")
     if args.bootstrap_native_adoption and args.migrate_wellman_scaffold:
         parser.error("fresh bootstrap and scaffold migration are mutually exclusive")
+    if args.bootstrap_reusable_plan and not args.bootstrap_native_adoption:
+        parser.error("a reusable CI bootstrap plan requires explicit fresh native bootstrap")
 
     if re.fullmatch(r"[0-9a-f]{40}", args.source_revision) is None:
         parser.error("--source-revision must be a full lowercase 40-character commit SHA")
@@ -713,7 +832,15 @@ def main() -> int:
     if manifest.get("standard", {}).get("version") != version:
         raise SystemExit(f"target manifest version must equal adopted standard version {version}")
 
-    project_inherited_required_checks(target_root, payloads)
+    bootstrap_paths: list[str] = []
+    project_inherited_required_checks(target_root, payloads, args.bootstrap_reusable_plan,
+                                     bootstrap_paths)
+    if bootstrap_paths:
+        # These three exact target paths need an owner before real allocation.
+        # This is a target manifest declaration, never a writer/merge grant.
+        owned_paths = manifest["coordination"]["workstreams"]["governance"]["ownedPaths"]
+        owned_paths.extend(path for path in bootstrap_paths if path not in owned_paths)
+        payloads[MANIFEST_TARGET] = json_bytes(manifest)
     payloads[".gitignore"] = worktree_ignore_payload(target_root)
 
     expected_lock = lock_content(
