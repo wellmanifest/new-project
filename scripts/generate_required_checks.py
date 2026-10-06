@@ -42,10 +42,21 @@ HUB_REPOSITORY = "wellmanifest/new-project"
 
 def scalar(raw: str) -> str:
     value = raw.strip()
+    if value.startswith('"'):
+        try:
+            decoded, end = json.JSONDecoder().raw_decode(value)
+        except json.JSONDecodeError as exc:
+            raise SystemExit('unsupported double-quoted workflow scalar') from exc
+        if value[end:].strip() and not value[end:].lstrip().startswith('#'):
+            raise SystemExit('invalid trailing workflow scalar content')
+        return decoded
+    if value.startswith("'"):
+        match = re.fullmatch(r"'((?:[^']|'')*)'\s*(?:#.*)?", value)
+        if match is None:
+            raise SystemExit('unsupported single-quoted workflow scalar')
+        return match.group(1).replace("''", "'")
     if " #" in value:
         value = value.split(" #", 1)[0].rstrip()
-    if len(value) >= 2 and value[0] in {"'", '"'} and value[-1] == value[0]:
-        return value[1:-1]
     return value
 
 

@@ -62,6 +62,27 @@ class ReusableChecksTest(unittest.TestCase):
         spec.loader.exec_module(module)
         self.assertEqual(module.workflow_job_names(self.caller), ['CI / Linux tests'])
 
+    def test_quoted_hash_unicode_and_escaped_apostrophes(self):
+        self.caller.write_text(self.caller.read_text().replace('name: CI', 'name: "CI # gate" # caller comment'))
+        self.install_source(CALLEE.replace('name: Linux tests', "name: 'Linux # it''s tests' # callee comment"))
+        expected = ["CI # gate / Linux # it's tests"]
+        self.assertEqual([item['name'] for item in generator.declaration_for(self.root)['requiredChecks']], expected)
+        self.assertEqual(checker.workflow_job_names(self.caller), expected)
+        self.install_source(CALLEE.replace('name: Linux tests', 'name: "Test \\u03b1"'))
+        self.assertEqual(checker.workflow_job_names(self.caller), ['CI # gate / Test α'])
+
+    def test_direct_job_scalar_interpretation_matches_generator(self):
+        self.caller.write_text('on: [pull_request]\njobs:\n  test:\n    name: "Test # \\u03b1" # comment\n    runs-on: ubuntu-latest\n')
+        self.assertEqual(checker.workflow_job_names(self.caller), ['Test # α'])
+        self.assertEqual(generator.declaration_for(self.root)['requiredChecks'][0]['name'], 'Test # α')
+
+    def test_invalid_quoted_names_refuse(self):
+        for name in ['"unterminated', "'unterminated", '"valid" invalid suffix', '"unsupported \\x01"']:
+            with self.subTest(name=name):
+                self.install_source(CALLEE.replace('name: Linux tests', f'name: {name}'))
+                with self.assertRaises(SystemExit):
+                    generator.declaration_for(self.root)
+
     def test_adoption_projects_contract_with_workflow_overlay(self):
         spec = importlib.util.spec_from_file_location('reusable_adopter', ROOT / 'scripts/create_adoption_lock.py')
         adopter = importlib.util.module_from_spec(spec)
