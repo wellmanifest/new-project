@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.89] - 2026-10-07
+
+- Preserve only the exact unchanged committed legacy ticket tree at a fresh first native bootstrap. Native allocation advances above historical IDs; changed, missing, untracked and symlinked carriers, prior reservations and live ticket branches/worktrees remain refused. No retrospective approval or ticket closure is inferred.
+
 ## [0.20.88] - 2026-10-06
 
 - Inspect Python abstract syntax trees to distinguish unquoted dynamic expressions from secret literals.

@@ -1,0 +1,113 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-317",
+  "summary": "Permit unchanged committed legacy carriers at first native bootstrap; SESSION_EXECUTION_AUTHORIZATION: continue handed MCP scope, fix adoption blockers, test and publish through independent review.",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-317/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "docs/STANDARD_UPGRADE.md",
+    "scripts/work_start_check.py",
+    "tests/scaffold_bootstrap_test.py",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "58c5dae3c45473df16b96f21bace11b61266e8af",
+    "targetBranch": "main",
+    "outcome": "A fresh first native bootstrap preserves unchanged committed legacy ticket carriers, allocates above their high-water identities, and rejects changed/untracked/symlinked carriers or another live ticket/worktree; publish the material standard fix.",
+    "nonGoals": [
+      "No ticket retirement, retrospective approval, unknown-owner cleanup, check waiver or product changes",
+      "No changed baseline-scaffold bootstrap behavior"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "For fresh bootstrap only, verify the complete exact committed legacy carrier tree at the receipt-bound base; retain canonical allocation, live peer checks and all later lease/review controls.",
+      "components": [
+        {
+          "name": "admission",
+          "paths": [
+            "scripts/work_start_check.py",
+            "tests/scaffold_bootstrap_test.py"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        },
+        {
+          "name": "guide",
+          "paths": [
+            "docs/STANDARD_UPGRADE.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Fresh bootstrap accepts verified unchanged historical file carriers"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Reviewed successor reverting fresh legacy acceptance."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/scaffold_bootstrap_test.py"
+        ],
+        "evidence": "Real allocator preserves committed legacy carriers and allocates a new identity above them; negative carrier changes and live branch/worktree cases refused."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Immutable adoption, complete standard tests and native gates pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "Protected independent exact-head publication"
+        ],
+        "evidence": "Reviewed source merge and final immutable release precede MCP adoption."
+      }
+    ]
+  }
+}
