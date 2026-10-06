@@ -137,14 +137,22 @@ def bootstrap_owned_paths(root, manifest, expected_digest):
             or receipt.get("grantsWriterAuthority") is not False
             or receipt.get("grantsPublicationAuthority") is not False):
         raise ObservationError("Bootstrap receipt bindings are invalid")
-    original = json.loads(git(root, "show", f"{head}:.governance/manifest.json"))
-    standard = original.get("standard", {})
-    if (set(original) != {"schema", "standard"}
-            or original.get("schema") != "wellmanifest.manifest/v1"
-            or set(standard) != {"id", "version"}
-            or standard.get("id") != "profile:baseline"
-            or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", str(standard.get("version", "")))):
-        raise ObservationError("Bootstrap requires a committed exact legacy scaffold")
+    kind = receipt.get("bootstrapKind", "legacy-scaffold")
+    if kind == "fresh":
+        for name in ("manifest.json", "manifest.lock.json", "manifest.base.json", "package-manifest.json"):
+            if git(root, "cat-file", "-e", f"{head}:.governance/{name}", optional=True) is not None:
+                raise ObservationError("Fresh bootstrap cannot replace committed governance")
+    elif kind == "legacy-scaffold":
+        original = json.loads(git(root, "show", f"{head}:.governance/manifest.json"))
+        standard = original.get("standard", {})
+        if (set(original) != {"schema", "standard"}
+                or original.get("schema") != "wellmanifest.manifest/v1"
+                or set(standard) != {"id", "version"}
+                or standard.get("id") != "profile:baseline"
+                or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", str(standard.get("version", "")))):
+            raise ObservationError("Bootstrap requires a committed exact legacy scaffold")
+    else:
+        raise ObservationError("Unknown bootstrap kind")
     if (len(worktrees(root)) != 1 or list((root / "project").glob("ticket-*"))
             or git(root, "for-each-ref", "--format=%(refname)", "refs/heads/ticket/")):
         raise ObservationError("Bootstrap acknowledgement is first-allocation only")

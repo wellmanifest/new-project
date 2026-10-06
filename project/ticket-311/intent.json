@@ -1,0 +1,112 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-311",
+  "summary": "Bootstrap first native adoption without a legacy scaffold; SESSION_EXECUTION_AUTHORIZATION: continue scanner changes under native tickets, worktrees and independent publication.",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-311/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "scripts/create_adoption_lock.py",
+    "scripts/work_start_check.py",
+    "tests/adoption_legacy_scaffold_test.py",
+    "tests/scaffold_bootstrap_test.py",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a7404ff689533a1de75be4bbb150f0964c1aaba1",
+    "targetBranch": "main",
+    "outcome": "Provide explicit first-adoption bootstrap for committed repositories without native or legacy governance, recording exact installer bytes and preserving all allocation, ownership, publication and pin checks.",
+    "nonGoals": [
+      "No product source changes, fabricated writer authority, synthetic tickets or review bypass",
+      "No replacement of existing customized or native governance"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend the pinned adopter and first-allocation observer with an explicit fresh bootstrap mode; bind absence at the original HEAD and exact installed bytes.",
+      "components": [
+        {
+          "name": "native-adoption",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "scripts/work_start_check.py"
+          ]
+        },
+        {
+          "name": "regressions-and-contract",
+          "paths": [
+            "tests/scaffold_bootstrap_test.py",
+            "tests/adoption_legacy_scaffold_test.py",
+            "docs/STANDARD_UPGRADE.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Explicit bootstrap-native-adoption flag"
+      ],
+      "dataChanges": [
+        "Fresh bootstrap kind in local advisory installer receipt"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded standard change through independently reviewed publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/adoption_legacy_scaffold_test.py",
+          "python3 tests/scaffold_bootstrap_test.py"
+        ],
+        "evidence": "Real allocation retains original HEAD and foreign bytes; wrong state, stale digest, changed payload and existing governance refuse."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Native scope and package gates."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "Independent exact-head review and merge"
+        ],
+        "evidence": "Published version required before target adoption."
+      }
+    ]
+  }
+}

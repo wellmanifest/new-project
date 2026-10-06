@@ -133,6 +133,28 @@ full product validation and independent protected publication gates remain.
 
 ## Upgrade boundaries
 
+### First adoption without a Wellman scaffold (0.20.84)
+
+For a committed repository with no governance manifest, lock, base or package
+map, explicitly review and apply the pinned adopter's
+`--bootstrap-native-adoption` mode. This records the same exact installer-byte
+receipt as scaffold migration, with `bootstrapKind: fresh`. It refuses existing
+governance, including governance deleted from the working tree but present at
+the original HEAD. An unborn or non-Git directory cannot use this mode.
+
+Use the observed `dirtyDigest` with the existing managed allocator's
+`--bootstrap-adoption-digest` after reconciling ownership. Native allocation
+still writes only ticket metadata at the committed base; complete its intent,
+acquire the actual fenced writer lease, and apply the ordinary pinned adopter
+in that canonical worktree. Preserve primary and foreign bytes. The receipt
+does not grant writer, review or publication authority. All first-allocation,
+WIP, clone, payload, published-pin and independent delivery checks still apply.
+
+Do not create a synthetic legacy scaffold or a carrier-only baseline commit to
+access this route. Customized, partial and existing native governance must use
+their own recovery or upgrade process. Source publication and the published
+release precede production adoption of this new mode.
+
 | Boundary | Actual responsibility |
 | --- | --- |
 | Local hook | Validate the installed immutable pin and bounded ticket scope; it does not fetch or update governance. |
