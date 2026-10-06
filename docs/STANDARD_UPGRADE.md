@@ -2,6 +2,17 @@
 
 ## Overview
 
+### Reusable workflow host audit (0.20.87)
+
+The agent-host audit uses the adjacent managed required-checks validator for
+direct jobs and pinned reusable callers. A caller check such as `ci / test`
+must resolve through the same immutable callee bytes and SHA-256 lock as the
+required-checks gate. Missing sources, mutable refs, digest mismatches and
+unsupported local reusable calls produce a bounded `GOV-AGENT-HOST-004`
+finding. Neither audit downloads or executes workflow input. Adopt the complete
+published package so managed and bundled readers stay together.
+
+
 ### Recovering an existing pre-adoption ticket (0.20.36)
 
 An existing ticket branch may contain material work but no local intent because
