@@ -112,7 +112,7 @@ def load_source(path: Path) -> dict:
 def workflow_job_names(workflow_path: Path, root: Path | None = None) -> list[str]:
     text = workflow_path.read_text(encoding="utf-8")
     active = '\n'.join(line for line in text.splitlines() if not line.lstrip().startswith('#'))
-    if re.search(r'uses:\s*[\'\"]?(?:\S+/\S+/|\./)\.github/workflows/', active):
+    if re.search(r'^    (?:uses:|[\'\"]uses[\'\"]:)|^  [A-Za-z0-9][A-Za-z0-9_-]*:\s*\{.*\buses\b', active, re.M):
         # Both scripts are managed package members. Direct-job-only fixtures
         # keep their standalone checker behavior without requiring this import.
         import importlib.util

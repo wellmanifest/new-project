@@ -125,6 +125,23 @@ class ReusableChecksTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
             checker.workflow_job_names(self.caller)
 
+    def test_closed_only_reusable_caller_never_gates_pre_merge(self):
+        self.caller.write_text(f'on:\n  pull_request:\n    types: [closed]\njobs:\n  release:\n    uses: {USES}\n')
+        self.assertIsNone(generator.declaration_for(self.root))
+        self.assertEqual(checker.workflow_job_names(self.caller), [])
+
+    def test_script_text_is_not_a_reusable_workflow_caller(self):
+        self.caller.write_text(f'on: [pull_request]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo "uses: {USES}"\n')
+        self.assertEqual(checker.workflow_job_names(self.caller), ['test'])
+        self.assertEqual(generator.declaration_for(self.root)['requiredChecks'][0]['name'], 'test')
+
+    def test_unsupported_quoted_uses_field_refuses(self):
+        self.caller.write_text(self.caller.read_text().replace('uses:', '"uses":'))
+        with self.assertRaises(SystemExit):
+            generator.declaration_for(self.root)
+        with self.assertRaises(SystemExit):
+            checker.workflow_job_names(self.caller)
+
     def test_local_reusable_call_is_unresolved_until_supported(self):
         self.caller.write_text('on: [pull_request]\njobs:\n  ci:\n    uses: ./.github/workflows/test.yml\n')
         self.assertEqual(generator.declaration_for(self.root)['reusableWorkflowCallers'], ['ci'])

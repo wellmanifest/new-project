@@ -28,7 +28,7 @@ SCHEMA = "new-project.required-checks/v1"
 JOB_LINE = re.compile(r"^  ([A-Za-z0-9][A-Za-z0-9_-]*):\s*(?:#.*)?$")
 JOB_NAME_LINE = re.compile(r"^    name:\s*(.+?)\s*$")
 TOP_LEVEL_KEY = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*:")
-REUSABLE_CALL = re.compile(r"^    uses:\s*(?:['\"]?\S+/\S+/\.github/workflows/|['\"]?\./\.github/workflows/)")
+REUSABLE_CALL = re.compile(r"^    (?:uses:|['\"]uses['\"]:)")
 IMMUTABLE_CALL = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/\.github/workflows/[A-Za-z0-9_.-]+\.ya?ml@[0-9a-f]{40}")
 CONTRACT_PATH = Path('.github/reusable-workflows.lock.json')
 CONTRACT_SCHEMA = 'new-project.reusable-workflows/v1'
@@ -200,11 +200,13 @@ def callee_names(text: str) -> list[str]:
 
 
 def resolved_checks_text(text: str, sources: dict[str, str], callers: list[str]) -> list[str]:
+    if not pull_request_gating(text):
+        return []
     unresolved = []
     names = published_checks_text(text, unresolved)
     active = '\n'.join(line for line in text.splitlines() if not line.lstrip().startswith('#'))
-    if ('pull_request' in active and not unresolved
-            and re.search(r'uses:\s*[\'\"]?(?:\S+/\S+/|\./)\.github/workflows/', active)):
+    if (not unresolved and re.search(
+            r'^  [A-Za-z0-9][A-Za-z0-9_-]*:\s*\{.*\buses\b', active, re.M)):
         raise SystemExit('unsupported reusable workflow caller mapping')
     if not unresolved:
         return names
@@ -228,15 +230,10 @@ def resolved_checks_text(text: str, sources: dict[str, str], callers: list[str])
     return names
 
 
-def published_checks_text(text: str, callers: list[str]) -> list[str]:
-    """Job display names, mirroring how GitHub names a check context.
-
-    A job that calls a reusable workflow is collected into ``callers`` instead of
-    the returned names: it publishes one context per job of the called workflow,
-    named "<caller> / <callee job>", and the callee lives in another repository.
-    """
+def pull_request_gating(text: str) -> bool:
+    """Keep after-merge-only callers out of pre-merge declarations."""
     if "pull_request" not in text:
-        return []  # A workflow that never runs on a PR cannot gate one.
+        return False  # A workflow that never runs on a PR cannot gate one.
     # A pull_request trigger with exclusively the 'closed' type publishes
     # checks that run after the merge decision, never before.  They cannot
     # gate a pull request and must not inflate the required-checks declaration.
@@ -248,7 +245,12 @@ def published_checks_text(text: str, callers: list[str]) -> list[str]:
     ) or bool(
         re.search(r"\btypes:\s*\n(?:\s*-[^\n]*\n)*\s*-\s*(?:opened|synchronize|reopened|ready_for_review)\b", text)
     )
-    if has_closed_type and not has_gating_types:
+    return not (has_closed_type and not has_gating_types)
+
+
+def published_checks_text(text: str, callers: list[str]) -> list[str]:
+    """Direct display names and unresolved reusable caller display names."""
+    if not pull_request_gating(text):
         return []
     names: list[str] = []
     current: str | None = None
