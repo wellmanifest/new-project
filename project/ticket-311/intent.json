@@ -21,7 +21,8 @@
     "governance/manifest.default.json",
     "governance/manifest.hub.json",
     "packages/wellman/pyproject.toml",
-    "tests/adoption-lock.test.sh"
+    "tests/adoption-lock.test.sh",
+    "tests/required-checks.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -41,7 +42,7 @@
     "complexity": "S",
     "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 10,
+      "maxImplementationFiles": 11,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
@@ -67,7 +68,8 @@
             "governance/manifest.default.json",
             "governance/manifest.hub.json",
             "packages/wellman/pyproject.toml",
-            "tests/adoption-lock.test.sh"
+            "tests/adoption-lock.test.sh",
+            "tests/required-checks.test.sh"
           ]
         }
       ],
