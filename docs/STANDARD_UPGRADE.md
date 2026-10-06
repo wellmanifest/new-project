@@ -155,6 +155,53 @@ access this route. Customized, partial and existing native governance must use
 their own recovery or upgrade process. Source publication and the published
 release precede production adoption of this new mode.
 
+### Planning immutable reusable CI before first allocation (0.20.86)
+
+An existing committed caller using a mutable ref cannot pass the offline
+required-checks gate. When it also lacks native governance, changing that
+caller must wait for its first native ticket. Fresh bootstrap accepts an
+optional external `--bootstrap-reusable-plan /absolute/path/plan.json` to
+describe the future check contract without changing target CI:
+
+```json
+{
+  "schema": "new-project.bootstrap-reusable-plan/v1",
+  "baseSha": "<current committed target HEAD: 40 lowercase hex characters>",
+  "callerFile": ".github/workflows/ci.yml",
+  "callerSha256": "<SHA256 of exact committed caller bytes>",
+  "originalUses": "owner/repo/.github/workflows/test.yml@main",
+  "uses": "owner/repo/.github/workflows/test.yml@<full immutable commit SHA>",
+  "sourceFile": ".github/reusable-workflows/test.yml",
+  "sourceSha256": "<SHA256 of exact published callee bytes>",
+  "sourceBase64": "<base64 of those exact UTF-8 callee bytes>"
+}
+```
+
+Acquire and independently review the callee from the named published revision.
+Hashes bind supplied bytes; they do not authenticate provenance or approve its
+execution. The plan has exactly these nine string fields and must be a regular
+file outside the target repository. The caller must still match committed
+HEAD and its digest, with one literal unquoted `uses` line. The plan pins the
+same workflow to a full SHA. Existing reusable source contracts, symlinks,
+unsupported jobs, stale input and unresolved additional callers are refused.
+No callee is fetched or executed.
+
+Use this option only together with `--bootstrap-native-adoption`. The adopter
+computes future names in a temporary offline mirror, installs only managed
+bootstrap files, and declares the three exact planned CI paths as owned by
+the target's governance workstream. It never grants ownership of `.github/**`.
+Request those exact caller, source and lock paths, plus the required managed
+adoption scope, when allocating with `--bootstrap-adoption-digest`. Record the
+bounded native intent and acquire the actual writer lease before implementing
+the pin, source and `.github/reusable-workflows.lock.json` in that worktree.
+
+The primary caller remains unchanged. Its required-checks gate intentionally
+fails until real CI implements the future contract. Run ordinary pinned
+adoption without a plan in the allocated worktree, validate the resulting
+actual checks and obtain independent protected publication. A bootstrap plan,
+installed receipt or planned check name grants no writer, review or merge
+authority. Publish this standard and its release before production adoption.
+
 | Boundary | Actual responsibility |
 | --- | --- |
 | Local hook | Validate the installed immutable pin and bounded ticket scope; it does not fetch or update governance. |

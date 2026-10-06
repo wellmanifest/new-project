@@ -1,0 +1,111 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-313",
+  "summary": "Allow a reviewed reusable CI plan during fresh native bootstrap without changing target CI before real allocation. SESSION_EXECUTION_AUTHORIZATION: continue pending scanner issues and independently publish.",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-313/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/create_adoption_lock.py",
+    "tests/adoption-lock.test.sh",
+    "tests/bootstrap_reusable_plan_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "cde31b7f237f01d02686cc2ad252f08160838120",
+    "targetBranch": "main",
+    "outcome": "Fresh bootstrap derives the future immutable reusable check contract from an externally reviewed bounded plan while preserving committed target caller bytes; native allocation still precedes target CI implementation and protected publication.",
+    "nonGoals": [
+      "No writes to target-owned workflows before native allocation",
+      "No mutable-source resolution, network fetching or publication authority from a bootstrap plan",
+      "No foreign checkout cleanup or policy waiver"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Resolve one exact committed caller and full-SHA callee in a temporary offline workflow mirror. Install only standard-managed bootstrap files; preserve target workflows and prove real allocation and refusal of invalid plans.",
+      "components": [
+        {
+          "name": "native-bootstrap-plan",
+          "paths": [
+            "scripts/create_adoption_lock.py"
+          ]
+        },
+        {
+          "name": "regressions-and-version",
+          "paths": [
+            "VERSION",
+            "docs/STANDARD_UPGRADE.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml",
+            "tests/adoption-lock.test.sh",
+            "tests/bootstrap_reusable_plan_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Optional external --bootstrap-reusable-plan JSON for fresh first allocation"
+      ],
+      "dataChanges": [
+        "Closed digest-bound planned workflow input, without execution authority"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Publish a reviewed correction; preserve target files and required checks."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/bootstrap_reusable_plan_test.py"
+        ],
+        "evidence": "Exact source pin/digest, invalid input refusals and unchanged primary caller with genuine first allocation."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Existing fresh/legacy adoption and native package gates remain passing."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "Independent exact-head publication and managed standard release"
+        ],
+        "evidence": "Protected merge and immutable release precede production consumer adoption."
+      }
+    ]
+  }
+}

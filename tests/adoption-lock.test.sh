@@ -817,5 +817,6 @@ assert 'Stop in `WAIT_FOR_APPROVAL`' not in target_agents
 PY
 
 python3 "$repo_root/tests/adoption_legacy_scaffold_test.py"
+python3 "$repo_root/tests/bootstrap_reusable_plan_test.py"
 
 echo 'adoption lock: PASS'
