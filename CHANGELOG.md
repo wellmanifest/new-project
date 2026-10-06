@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.88] - 2026-10-06
+
+- Inspect Python abstract syntax trees to distinguish unquoted dynamic expressions from secret literals.
+- Pass variable forwarding (such as passing a token variable), dynamic calls and tuple unpacking without false GOV-SECRET-001 alarms.
+- Retain strict secret detection for genuine string literals, string concatenations, malformed Python fallback and shell/config files.
+
 ## [0.20.83] - 2026-10-04
 
 - Record exact local scaffold-adoption bytes bound to the original HEAD and clone for explicit first native allocation ownership acknowledgement.
