@@ -62,6 +62,59 @@ class ReusableChecksTest(unittest.TestCase):
         spec.loader.exec_module(module)
         self.assertEqual(module.workflow_job_names(self.caller), ['CI / Linux tests'])
 
+    def host_reader(self, bundled=False):
+        location = ('packages/wellman/src/wellman/_bundled/agent_host_check.py'
+                    if bundled else 'scripts/agent_host_check.py')
+        name = 'reusable_host_bundled' if bundled else 'reusable_host_managed'
+        spec = importlib.util.spec_from_file_location(name, ROOT / location)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[name] = module
+        spec.loader.exec_module(module)
+        return module
+
+    def host_ci_findings(self, module):
+        declaration = self.root / 'required-checks.json'
+        declaration.write_text(json.dumps({'requiredChecks': [
+            {'name': 'CI / Linux tests', 'workflowFile': '.github/workflows/ci.yml'}]}))
+        contract = {'hosts': [], 'anomalyChecks': {
+            'maxInstructionBytes': 65536, 'requiredTerms': [], 'contradictions': [],
+            'ci': {'requiredChecksCandidates': ['required-checks.json']}}}
+        return module.check_guidance_anomalies(self.root, contract)
+
+    def test_host_audit_resolves_valid_reusable_checks_in_both_packages(self):
+        for bundled in (False, True):
+            with self.subTest(bundled=bundled):
+                module = self.host_reader(bundled)
+                self.assertEqual(module.workflow_job_names(self.caller), ['CI / Linux tests'])
+                self.assertEqual(self.host_ci_findings(module), [])
+
+    def test_host_audit_refuses_invalid_reusable_contracts_without_exiting(self):
+        original = self.caller.read_text()
+        for bundled in (False, True):
+            for kind in ('missing-lock', 'mutable', 'wrong-digest', 'missing-source', 'local-call'):
+                with self.subTest(bundled=bundled, kind=kind):
+                    self.caller.write_text(original)
+                    self.install_source(CALLEE)
+                    if kind == 'missing-lock':
+                        self.lock.unlink()
+                    elif kind == 'mutable':
+                        self.caller.write_text(original.replace(PIN, 'main'))
+                    elif kind == 'wrong-digest':
+                        self.source.write_text(CALLEE + '# modified\n')
+                    elif kind == 'missing-source':
+                        self.source.unlink()
+                    else:
+                        self.caller.write_text(original.replace(USES, './.github/workflows/local.yml'))
+                    findings = self.host_ci_findings(self.host_reader(bundled))
+                    self.assertEqual(len(findings), 1)
+                    self.assertEqual(findings[0].code, 'GOV-AGENT-HOST-004')
+                    self.assertIn('cannot be resolved', findings[0].message)
+
+    def test_host_reader_shares_unicode_and_quoted_direct_job_names(self):
+        self.caller.write_text('on: [pull_request]\njobs:\n  test:\n    name: "Test # \\u03b1" # comment\n    runs-on: ubuntu-latest\n')
+        for bundled in (False, True):
+            self.assertEqual(self.host_reader(bundled).workflow_job_names(self.caller), ['Test # α'])
+
     def test_quoted_hash_unicode_and_escaped_apostrophes(self):
         self.caller.write_text(self.caller.read_text().replace('name: CI', 'name: "CI # gate" # caller comment'))
         self.install_source(CALLEE.replace('name: Linux tests', "name: 'Linux # it''s tests' # callee comment"))

@@ -1,0 +1,109 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-314",
+  "summary": "Reuse the pinned required-checks resolver in the host audit; refuse unresolved reusable calls as bounded findings. SESSION_EXECUTION_AUTHORIZATION: fix pending issues, test and independently publish/merge.",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-314/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/agent_host_check.py",
+    "scripts/agent_host_check.py",
+    "tests/reusable_checks_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "00d7b476ec53d71962a516e19eb89b3462768b7d",
+    "targetBranch": "main",
+    "outcome": "Valid pinned reusable workflow checks pass both host audit and required-check validator; missing, mutable, mismatched or unsupported source fails closed with a bounded diagnostic.",
+    "nonGoals": [
+      "No network resolving or execution of workflow input",
+      "No required check retirement or merge-authority changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Load the adjacent managed checker by exact filesystem path instead of maintaining a second YAML parser. Preserve direct-job and guidance audits. Publish managed and bundled copies together.",
+      "components": [
+        {
+          "name": "host-audit",
+          "paths": [
+            "scripts/agent_host_check.py",
+            "packages/wellman/src/wellman/_bundled/agent_host_check.py"
+          ]
+        },
+        {
+          "name": "regressions-and-release",
+          "paths": [
+            "tests/reusable_checks_test.py",
+            "docs/STANDARD_UPGRADE.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Bounded GOV-AGENT-HOST-004 for unresolved reusable contracts"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Reviewed successor immutable release"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/reusable_checks_test.py"
+        ],
+        "evidence": "Real offline reusable fixtures validate managed and bundled host readers and negative cases."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/agent-hosts.test.sh",
+          "project/governance-check.sh"
+        ],
+        "evidence": "Host guidance, direct jobs and native gates remain passing."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "Managed Goal publication",
+          "Protected independent review and merge"
+        ],
+        "evidence": "Exact-head trusted merge and immutable published release."
+      }
+    ]
+  }
+}

@@ -441,49 +441,21 @@ def check_declaration(
 
 
 def workflow_job_names(path: Path) -> list[str]:
-    """Parse the small, stable subset of GitHub workflow YAML we need.
+    """Use the adjacent managed validator for the offline workflow contract.
 
-    The required-checks validator owns the complete workflow contract. This
-    deliberately remains a narrow, dependency-free preflight so an agent-host
-    audit can flag an impossible CI declaration before a long session starts.
+    Load by the package path, never by a target-controlled import search path.
+    This shares direct-job names and digest-bound reusable callee resolution.
+    Missing or unsupported contracts remain refusals, not guessed check names.
     """
-    lines = path.read_text(encoding="utf-8").splitlines()
-    in_jobs = False
-    jobs: list[str] = []
-    current_key: str | None = None
-    current_name: str | None = None
+    import importlib.util
 
-    def flush() -> None:
-        nonlocal current_key, current_name
-        if current_key is not None:
-            jobs.append(current_name or current_key)
-        current_key = None
-        current_name = None
-
-    for line in lines:
-        if re.match(r"^jobs:\s*(?:#.*)?$", line):
-            in_jobs = True
-            continue
-        if not in_jobs:
-            continue
-        if (line and not line.startswith((" ", "\t"))
-                and line.strip() and not line.lstrip().startswith("#")):
-            break
-        match = re.match(r"^  ([A-Za-z0-9][A-Za-z0-9_-]*):\s*(?:#.*)?$", line)
-        if match:
-            flush()
-            current_key = match.group(1)
-            continue
-        name = re.match(r"^    name:\s*(.+?)\s*$", line)
-        if name and current_key is not None and current_name is None:
-            value = name.group(1).strip()
-            if " #" in value:
-                value = value.split(" #", 1)[0].rstrip()
-            if len(value) >= 2 and value[0] in {"'", '"'} and value[-1] == value[0]:
-                value = value[1:-1]
-            current_name = value
-    flush()
-    return jobs
+    checker_path = Path(__file__).resolve().with_name("check_required_checks.py")
+    spec = importlib.util.spec_from_file_location("agent_host_required_checks", checker_path)
+    if spec is None or spec.loader is None:
+        raise ImportError("managed required-checks validator is missing")
+    checker = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(checker)
+    return checker.workflow_job_names(path)
 
 
 def check_guidance_anomalies(root: Path, contract: dict[str, Any]) -> list[Finding]:
@@ -625,8 +597,14 @@ def check_guidance_anomalies(root: Path, contract: dict[str, Any]) -> list[Findi
             continue
         try:
             published = workflow_job_names(workflow_path)
-        except (OSError, UnicodeDecodeError):
-            published = []
+        except (OSError, UnicodeDecodeError, ImportError, ValueError, SystemExit):
+            findings.append(Finding(
+                "GOV-AGENT-HOST-004",
+                f"CI workflow contract cannot be resolved: {workflow}.",
+                "Restore the managed validator and an immutable digest-bound reusable source; run check_required_checks.py for the precise refusal.",
+                [workflow, str(checks_path.relative_to(root))],
+            ))
+            continue
         for name, declared_workflow in pairs:
             if declared_workflow != workflow:
                 continue
