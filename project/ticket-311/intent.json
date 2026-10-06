@@ -20,7 +20,8 @@
     "tests/scaffold_bootstrap_test.py",
     "governance/manifest.default.json",
     "governance/manifest.hub.json",
-    "packages/wellman/pyproject.toml"
+    "packages/wellman/pyproject.toml",
+    "tests/adoption-lock.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -40,7 +41,7 @@
     "complexity": "S",
     "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 9,
+      "maxImplementationFiles": 10,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
@@ -65,7 +66,8 @@
             "VERSION",
             "governance/manifest.default.json",
             "governance/manifest.hub.json",
-            "packages/wellman/pyproject.toml"
+            "packages/wellman/pyproject.toml",
+            "tests/adoption-lock.test.sh"
           ]
         }
       ],
