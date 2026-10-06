@@ -23,6 +23,12 @@ unsupported local reusable calls produce a bounded `GOV-AGENT-HOST-004`
 finding. Neither audit downloads or executes workflow input. Adopt the complete
 published package so managed and bundled readers stay together.
 
+After adoption, run `python3 .governance/agent_host_check.py --root . --format json`
+and `python3 .governance/check_required_checks.py --root .` on the same checkout.
+Both checks must resolve the pinned caller and callee; an unresolved-contract
+finding requires correcting the source/lock or publishing the missing package,
+while preserving the required job names.
+
 
 ### Recovering an existing pre-adoption ticket (0.20.36)
 
