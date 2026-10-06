@@ -1,0 +1,96 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-315",
+  "summary": "Resolve compact routine intent target branch in work continuity",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-315/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/work_continuity.py",
+    "tests/continuity_storage_test.py",
+    "tests/work-continuity.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7b83f16e0b6f51551464899f88fbe9268cd72039",
+    "targetBranch": "main",
+    "outcome": "Permitted compact routine intents resolve unique manifest target branch and fail closed on ambiguous or missing manifests.",
+    "nonGoals": [
+      "No guessing unobserved target branch",
+      "No weakened security or review boundaries"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Resolve target branch from manifest delivery targetBranches when delivery object is omitted; fail closed on ambiguous or missing bindings.",
+      "components": [
+        {
+          "name": "work-continuity",
+          "paths": [
+            "scripts/work_continuity.py"
+          ]
+        },
+        {
+          "name": "regressions",
+          "paths": [
+            "tests/continuity_storage_test.py",
+            "tests/work-continuity.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert via standard publication"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/continuity_storage_test.py",
+          "bash tests/work-continuity.test.sh"
+        ],
+        "evidence": "Compact routine intent, full delivery, ambiguous and missing manifest fixtures pass."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Native governance gate passes with 0 errors and 0 warnings."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "gh pr create --repo wellmanifest/new-project"
+        ],
+        "evidence": "Pull request independently verified by CI and merged."
+      }
+    ]
+  }
+}
