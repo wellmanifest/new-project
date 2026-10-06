@@ -459,5 +459,98 @@ class ContinuityStorageTests(unittest.TestCase):
             continuity.append_event(self.root, fixture_event())
 
 
+class CompactRoutineIntentContinuityTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.addCleanup(self.tmp.cleanup)
+        subprocess.run(["git", "-C", str(self.root), "init", "--quiet"], check=True)
+        (self.root / ".governance").mkdir()
+        (self.root / "project" / "ticket-001").mkdir(parents=True)
+
+    def write_manifest(self, target_branches):
+        manifest = {
+            "schema": "new-project.governance/v2",
+            "delivery": {"targetBranches": target_branches},
+        }
+        (self.root / ".governance" / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+    def test_compact_routine_intent_resolves_unique_manifest_target_branch(self):
+        self.write_manifest(["main"])
+        intent = {
+            "schema": "new-project.intent/v3",
+            "ticket": "ticket-001",
+            "summary": "compact routine intent",
+            "workstream": "governance",
+            "classification": {"kind": "FEATURE", "priority": "P2", "origin": "requested"},
+            "allowedPaths": ["src/**"],
+            "forbiddenPaths": [],
+            "stacks": [],
+            "dependsOn": [],
+            "conflictsWith": [],
+            "integrationTicket": None,
+        }
+        intent_raw = json.dumps(intent, indent=2).encode("utf-8")
+        (self.root / "project" / "ticket-001" / "intent.json").write_bytes(intent_raw)
+        import hashlib
+        val, raw_digest, scope_digest, target_branch = continuity.intent_state(self.root, "ticket-001")
+        self.assertEqual(target_branch, "main")
+        self.assertEqual(raw_digest, hashlib.sha256(intent_raw).hexdigest())
+
+    def test_full_delivery_intent_preserves_explicit_target_branch(self):
+        self.write_manifest(["main"])
+        intent = {
+            "schema": "new-project.intent/v3",
+            "ticket": "ticket-001",
+            "summary": "full delivery intent",
+            "workstream": "governance",
+            "classification": {"kind": "FEATURE", "priority": "P2", "origin": "requested"},
+            "allowedPaths": ["src/**"],
+            "forbiddenPaths": [],
+            "stacks": [],
+            "dependsOn": [],
+            "conflictsWith": [],
+            "integrationTicket": None,
+            "delivery": {
+                "acceptedBaseSha": "0" * 40,
+                "targetBranch": "release-1.0",
+                "outcome": "deliver feature",
+                "nonGoals": [],
+            },
+        }
+        (self.root / "project" / "ticket-001" / "intent.json").write_text(json.dumps(intent), encoding="utf-8")
+        val, raw_digest, scope_digest, target_branch = continuity.intent_state(self.root, "ticket-001")
+        self.assertEqual(target_branch, "release-1.0")
+
+    def test_compact_routine_intent_fails_closed_on_ambiguous_manifest_targets(self):
+        self.write_manifest(["main", "develop"])
+        intent = {
+            "schema": "new-project.intent/v3",
+            "ticket": "ticket-001",
+            "summary": "compact routine intent",
+            "workstream": "governance",
+            "classification": {"kind": "FEATURE", "priority": "P2", "origin": "requested"},
+            "allowedPaths": ["src/**"],
+        }
+        (self.root / "project" / "ticket-001" / "intent.json").write_text(json.dumps(intent), encoding="utf-8")
+        with self.assertRaises(continuity.ContinuityError) as ctx:
+            continuity.intent_state(self.root, "ticket-001")
+        self.assertEqual(ctx.exception.code, "GOV-CONTINUITY-001")
+
+    def test_compact_routine_intent_fails_closed_on_missing_manifest(self):
+        intent = {
+            "schema": "new-project.intent/v3",
+            "ticket": "ticket-001",
+            "summary": "compact routine intent",
+            "workstream": "governance",
+            "classification": {"kind": "FEATURE", "priority": "P2", "origin": "requested"},
+            "allowedPaths": ["src/**"],
+        }
+        (self.root / "project" / "ticket-001" / "intent.json").write_text(json.dumps(intent), encoding="utf-8")
+        with self.assertRaises(continuity.ContinuityError) as ctx:
+            continuity.intent_state(self.root, "ticket-001")
+        self.assertEqual(ctx.exception.code, "GOV-CONTINUITY-001")
+
+
 if __name__ == "__main__":
     unittest.main()
