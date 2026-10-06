@@ -236,4 +236,63 @@ unsafe["workspace"]["resumeSource"] = "snapshot"
 assert not validator.is_valid(unsafe)
 PY
 
+# Compact routine intent without delivery object captures targetBranch from manifest
+mkdir -p "$fixture/repo/project/ticket-002"
+python3 - "$fixture/repo/project/ticket-002/intent.json" <<'PY'
+import json
+import sys
+value = {
+    "schema": "new-project.intent/v3",
+    "ticket": "ticket-002",
+    "summary": "compact routine intent",
+    "workstream": "application",
+    "classification": {"kind": "FEATURE", "priority": "P2", "origin": "requested"},
+    "allowedPaths": ["project/ticket-002/**", "src/**"],
+    "forbiddenPaths": [],
+    "stacks": [],
+    "dependsOn": [],
+    "conflictsWith": [],
+    "integrationTicket": None,
+}
+open(sys.argv[1], "w", encoding="utf-8").write(json.dumps(value, indent=2) + "\n")
+PY
+mkdir -p "$fixture/repo/.governance"
+cat > "$fixture/repo/.governance/manifest.json" <<'EOF'
+{
+  "schema": "new-project.governance/v2",
+  "delivery": {
+    "targetBranches": ["main"]
+  }
+}
+EOF
+git -C "$fixture/repo" add .
+git -C "$fixture/repo" commit --quiet -m add-ticket-002
+compact_capture=(
+  python3 "$runtime" capture
+  --root "$fixture/repo"
+  --ticket ticket-002
+  --session-id session-002
+  --worktree-id ticket-002--continuity
+  --authorization-ref authorization:session/ticket-002
+  --plan-ref "artifact:fixture/plan/002"
+  --plan-sha256 "$plan_sha"
+  --slice-ref "artifact:fixture/slice/002"
+  --slice-sha256 "$slice_sha"
+  --slice-ordinal 1
+  --slice-total 1
+  --remote-account-ref account:github/example
+  --remote-observation-receipt receipt:remote-observation/ticket-002/1
+  --phase edit
+  --remaining AC-01
+  --next-action edit
+  --next-criterion AC-01
+)
+"${compact_capture[@]}" > "$fixture/compact-event.json"
+python3 - "$fixture/compact-event.json" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1], encoding="utf-8"))
+assert data["checkpoint"]["targetBranch"] == "main"
+assert data["checkpoint"]["ticket"] == "ticket-002"
+PY
+
 printf '%s\n' 'work continuity tests passed'

@@ -904,6 +904,40 @@ def commit_event(root: Path, event: dict[str, Any]) -> dict[str, Any]:
         return {"status": "recorded", "event": event}
 
 
+def resolve_compact_target_branch(root: Path) -> str:
+    candidates = (
+        root / ".governance" / "manifest.json",
+        root / ".governance" / "manifest.base.json",
+        root / "governance" / "manifest.hub.json",
+    )
+    targets: list[str] = []
+    for cand in candidates:
+        if cand.is_file():
+            try:
+                manifest_data = json.loads(cand.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            delivery_cfg = manifest_data.get("delivery")
+            if isinstance(delivery_cfg, dict):
+                tb = delivery_cfg.get("targetBranches")
+                if isinstance(tb, list):
+                    for b in tb:
+                        if isinstance(b, str) and b and b not in targets:
+                            targets.append(b)
+            rep_cfg = manifest_data.get("repositoryPolicy", {}).get("delivery", {})
+            if isinstance(rep_cfg, dict):
+                tb = rep_cfg.get("targetBranches")
+                if isinstance(tb, list):
+                    for b in tb:
+                        if isinstance(b, str) and b and b not in targets:
+                            targets.append(b)
+            if targets:
+                break
+    if len(targets) == 1:
+        return targets[0]
+    fail("GOV-CONTINUITY-001", "intent target branch must be a bounded non-empty string")
+
+
 def intent_state(root: Path, ticket: str) -> tuple[dict[str, Any], str, str, str]:
     path = root / "project" / ticket / "intent.json"
     try:
@@ -932,6 +966,8 @@ def intent_state(root: Path, ticket: str) -> tuple[dict[str, Any], str, str, str
         fail("GOV-CONTINUITY-003", "ticket intent workstream is invalid")
     delivery = value.get("delivery")
     target_branch = delivery.get("targetBranch") if isinstance(delivery, dict) else None
+    if target_branch is None:
+        target_branch = resolve_compact_target_branch(root)
     git_ref(target_branch, "intent target branch")
     scope = {
         "ticket": value.get("ticket"),

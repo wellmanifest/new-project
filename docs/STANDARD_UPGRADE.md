@@ -2,6 +2,17 @@
 
 ## Overview
 
+### Python expression secret detection (0.20.88)
+
+The policy-as-code validator inspects Python abstract syntax trees rather than
+treating unquoted dynamic expressions as raw secret literals. Python code
+forwarding variables (such as token parameters), making dynamic calls
+(such as node endpoint resolvers or keyring getters), and unpacking
+tuples passes cleanly without false `GOV-SECRET-001` alarms. Genuine string
+literals, string concatenations, malformed Python fallback, and non-Python
+shell/config files continue to be strictly validated.
+
+
 ### Reusable workflow host audit (0.20.87)
 
 The agent-host audit uses the adjacent managed required-checks validator for

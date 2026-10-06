@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import fnmatch
 import hashlib
 import importlib.util
@@ -89,6 +90,9 @@ EXECUTABLE_SUFFIXES = {
 SECRET_RE = re.compile(
     r"(?i)(api[_-]?key|access[_-]?key|client[_-]?secret|password|private[_-]?key|token)"
     r"[ \t]*[:=][ \t]*['\"]?([A-Za-z0-9_./+=-]{12,})"
+)
+SECRET_FIELD_NAME_RE = re.compile(
+    r"(?i)(api[_-]?key|access[_-]?key|client[_-]?secret|password|private[_-]?key|token)"
 )
 SAFE_SECRET_VALUES = re.compile(r"(?i)^(example|placeholder|changeme|your[_-]|\$\{|<|xxx|test)")
 GENERATED_SECRET_PLACEHOLDER_RE = re.compile(r"^__GENERATE_[A-Z0-9_]+__$")
@@ -2906,7 +2910,82 @@ def check_ticket_content(
             check_file_ticket_content(root, directory, active_names, config, report)
 
 
-def probable_secret_fields(text: str) -> list[str]:
+def extract_constant_string(node: ast.AST) -> str | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        left = extract_constant_string(node.left)
+        right = extract_constant_string(node.right)
+        if left is not None and right is not None:
+            return left + right
+    return None
+
+
+def is_secret_literal(node: ast.AST) -> bool:
+    val = extract_constant_string(node)
+    if val is not None:
+        if len(val) >= 12 and not SAFE_SECRET_VALUES.match(val) and not GENERATED_SECRET_PLACEHOLDER_RE.fullmatch(val):
+            return True
+    return False
+
+
+def find_python_secrets(tree: ast.AST) -> list[str]:
+    fields: list[str] = []
+
+    def add_field(name: str) -> None:
+        m = SECRET_FIELD_NAME_RE.search(name)
+        if m:
+            fields.append(m.group(1))
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and SECRET_FIELD_NAME_RE.search(target.id):
+                    if is_secret_literal(node.value):
+                        add_field(target.id)
+                elif isinstance(target, (ast.Tuple, ast.List)):
+                    if isinstance(node.value, (ast.Tuple, ast.List)) and len(target.elts) == len(node.value.elts):
+                        for t, v in zip(target.elts, node.value.elts):
+                            if isinstance(t, ast.Name) and SECRET_FIELD_NAME_RE.search(t.id) and is_secret_literal(v):
+                                add_field(t.id)
+        elif isinstance(node, ast.AnnAssign):
+            if isinstance(node.target, ast.Name) and SECRET_FIELD_NAME_RE.search(node.target.id):
+                if node.value is not None and is_secret_literal(node.value):
+                    add_field(node.target.id)
+        elif isinstance(node, ast.Call):
+            for kw in node.keywords:
+                if kw.arg and SECRET_FIELD_NAME_RE.search(kw.arg):
+                    if is_secret_literal(kw.value):
+                        add_field(kw.arg)
+        elif isinstance(node, ast.Dict):
+            for k, v in zip(node.keys, node.values):
+                if isinstance(k, ast.Constant) and isinstance(k.value, str) and SECRET_FIELD_NAME_RE.search(k.value):
+                    if is_secret_literal(v):
+                        add_field(k.value)
+        elif isinstance(node, ast.Compare):
+            if isinstance(node.left, ast.Name) and SECRET_FIELD_NAME_RE.search(node.left.id):
+                for comp in node.comparators:
+                    if is_secret_literal(comp):
+                        add_field(node.left.id)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            pos_args = node.args.args
+            defaults = node.args.defaults
+            for arg, default in zip(pos_args[-len(defaults):], defaults):
+                if SECRET_FIELD_NAME_RE.search(arg.arg) and is_secret_literal(default):
+                    add_field(arg.arg)
+            for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults):
+                if default is not None and SECRET_FIELD_NAME_RE.search(arg.arg) and is_secret_literal(default):
+                    add_field(arg.arg)
+    return sorted(set(fields))
+
+
+def probable_secret_fields(text: str, filename: str = "") -> list[str]:
+    if filename.endswith((".py", ".pyi", ".pyw")):
+        try:
+            tree = ast.parse(text)
+            return find_python_secrets(tree)
+        except SyntaxError:
+            pass
     fields = []
     for match in SECRET_RE.finditer(text):
         value = match.group(2)
@@ -2934,7 +3013,7 @@ def check_changed_file(root: Path, raw: str, report: Report) -> None:
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
         return
-    secrets = probable_secret_fields(text)
+    secrets = probable_secret_fields(text, raw)
     if secrets:
         report.add(
             "GOV-SECRET-001", f"Probable secret assignment detected in {raw}.",

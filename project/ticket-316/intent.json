@@ -1,0 +1,109 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-316",
+  "summary": "Avoid false secret alarms for Python token expressions",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-316/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "tests/secret_detection_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7fc7dafc0969e4a1414423955290b58f79804262",
+    "targetBranch": "main",
+    "outcome": "Python expressions forwarding variables, dynamic calls and tuple unpacking pass cleanly without false GOV-SECRET-001 alarms; literal secrets and shell/config remain strictly refused.",
+    "nonGoals": [
+      "No secret-check waiver or target-checker patches",
+      "No weakened detection of literal secrets"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use AST-aware secret inspection for Python files; fall back to regex on syntax errors and non-Python files.",
+      "components": [
+        {
+          "name": "governance-check",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py"
+          ]
+        },
+        {
+          "name": "regressions-and-release",
+          "paths": [
+            "tests/secret_detection_test.py",
+            "tests/governance-validator.test.sh",
+            "VERSION",
+            "CHANGELOG.md",
+            "docs/STANDARD_UPGRADE.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert via protected publication"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/secret_detection_test.py"
+        ],
+        "evidence": "Python expressions pass, literal secrets refuse in both managed and bundled packages."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Native governance check passes with 0 errors and 0 warnings."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "gh pr create --repo wellmanifest/new-project"
+        ],
+        "evidence": "Pull request independently verified by CI and merged."
+      }
+    ]
+  }
+}
