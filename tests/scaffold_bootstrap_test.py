@@ -20,6 +20,8 @@ CHANGED = ('project/new-ticket.sh', 'scripts/create_adoption_lock.py', 'scripts/
 
 class BootstrapTest(unittest.TestCase):
     fresh = False
+    legacy_carriers = False
+    expected_ticket = 'ticket-001'
 
     def command(self, cwd, *args, check=True):
         result = subprocess.run(args, cwd=cwd, capture_output=True, text=True,
@@ -54,6 +56,11 @@ class BootstrapTest(unittest.TestCase):
         (self.target / 'README.md').write_text('# Product\n')
         (self.target / '.gitignore').write_text('/.worktrees/\n/.subactor/receipts/\n')
         (self.target / 'foreign.txt').write_text('original\n')
+        if self.legacy_carriers:
+            carrier = self.target / 'project/ticket-007'
+            carrier.mkdir(parents=True)
+            (carrier / 'README.md').write_text('# Historical ticket\nStatus: IN_PROGRESS\n')
+            (carrier / 'intent.json').write_text('{"ticket":"ticket-007","allowedPaths":["old.py"]}\n')
         self.command(self.target, 'git', 'add', '.')
         self.command(self.target, 'git', 'commit', '--quiet', '-m', 'Legacy scaffold')
         self.head = self.command(self.target, 'git', 'rev-parse', 'HEAD').stdout.strip()
@@ -81,8 +88,12 @@ class BootstrapTest(unittest.TestCase):
         return result, json.loads(result.stdout)
 
     def checksum(self):
-        _, report = self.observation()
-        return report['worktrees'][0]['dirtyDigest']
+        # Malformed legacy inputs may refuse before a complete admission report;
+        # obtain the exact dirty binding independently through the managed reader.
+        result = self.command(self.target, sys.executable, '-c',
+            "import sys; from pathlib import Path; sys.path.insert(0, '.governance'); "
+            "import work_start_check; print(work_start_check.dirty_observation(Path('.'))[1])")
+        return result.stdout.strip()
 
     def test_first_real_allocator_preserves_foreign_bytes_and_does_not_write_source(self):
         (self.target / 'foreign.txt').write_text('another writer\n')
@@ -98,9 +109,9 @@ class BootstrapTest(unittest.TestCase):
                 '--workstream', 'governance', '--path', '.governance/**',
                 '--worktree-slug', 'adoption', '--bootstrap-adoption-digest', checksum]
         result = self.command(self.target, *args)
-        self.assertIn('Successfully allocated ticket-001', result.stdout)
-        wt = self.target / '.worktrees/ticket-001--adoption'
-        intent = json.loads((wt / 'project/ticket-001/intent.json').read_text())
+        self.assertIn('Successfully allocated ' + self.expected_ticket, result.stdout)
+        wt = self.target / ('.worktrees/' + self.expected_ticket + '--adoption')
+        intent = json.loads((wt / 'project' / self.expected_ticket / 'intent.json').read_text())
         self.assertIn('.governance/**', intent['allowedPaths'])
         self.assertEqual(self.command(wt, 'git', 'rev-parse', 'HEAD').stdout.strip(), self.head)
         # The allocator writes metadata only: product and adoption source stay on their old base.
@@ -201,6 +212,50 @@ class FreshBootstrapTest(BootstrapTest):
         receipt = json.loads(self.receipt.read_text())
         receipt['bootstrapKind'] = 'unrestricted'
         self.receipt.write_text(json.dumps(receipt))
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+
+
+class FreshLegacyBootstrapTest(FreshBootstrapTest):
+    legacy_carriers = True
+    expected_ticket = 'ticket-008'
+
+    def test_historical_carriers_are_preserved_without_activity_claim(self):
+        before = {p.name: p.read_bytes() for p in (self.target / 'project/ticket-007').iterdir()}
+        self.test_first_real_allocator_preserves_foreign_bytes_and_does_not_write_source()
+        after = {p.name: p.read_bytes() for p in (self.target / 'project/ticket-007').iterdir()}
+        self.assertEqual(before, after)
+        self.assertIn(b'IN_PROGRESS', after['README.md'])
+
+    def test_modified_historical_carrier_is_refused(self):
+        (self.target / 'project/ticket-007/README.md').write_text('unfinished changes\n')
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_missing_historical_carrier_is_refused(self):
+        (self.target / 'project/ticket-007/intent.json').unlink()
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_untracked_carrier_is_refused(self):
+        (self.target / 'project/ticket-007/extra.md').write_text('unknown owner\n')
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_symlinked_carrier_is_refused(self):
+        p = self.target / 'project/ticket-007/README.md'
+        p.unlink()
+        p.symlink_to(self.target / 'foreign.txt')
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_live_ticket_branch_is_refused(self):
+        self.command(self.target, 'git', 'branch', 'ticket/008-other-writer')
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_prior_allocation_reservation_is_refused(self):
+        (self.target / '.git/new-project-ticket-high-water').write_text('8\n')
         result, _ = self.observation(self.checksum())
         self.assertNotEqual(result.returncode, 0)
 

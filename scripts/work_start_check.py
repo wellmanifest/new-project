@@ -117,6 +117,47 @@ def intersects(left, right):
     return any(globs_may_overlap(a, b) for a in left for b in right)
 
 
+def unchanged_committed_legacy_carriers(root, head):
+    """Observe old file carriers without assigning activity or ownership."""
+    if (root / "project").is_symlink():
+        raise ObservationError("Symlinked legacy project directory")
+    entries = git(root, "ls-tree", "-r", "-z", head, "--", "project").split("\0")
+    committed = {}
+    directories = set()
+    for entry in filter(None, entries):
+        metadata, rel = entry.split("\t", 1)
+        if not rel.startswith("project/ticket-"):
+            continue
+        mode, kind, oid = metadata.split()
+        if (not re.fullmatch(r"project/ticket-[0-9]{3,}/.+", rel)
+                or mode not in {"100644", "100755"} or kind != "blob"):
+            raise ObservationError("Unsupported committed legacy carrier")
+        committed[rel] = oid
+        parent = Path(rel).parent
+        while parent != Path("project"):
+            directories.add(parent.as_posix())
+            parent = parent.parent
+    observed = set()
+    observed_directories = set()
+    for ticket in (root / "project").glob("ticket-*"):
+        for path in (ticket, *ticket.rglob("*")):
+            if path.is_symlink():
+                raise ObservationError("Symlinked legacy carrier")
+            rel = path.relative_to(root).as_posix()
+            if path.is_dir():
+                observed_directories.add(rel)
+            elif path.is_file():
+                observed.add(rel)
+            else:
+                raise ObservationError("Unsupported legacy carrier")
+    if observed != set(committed) or observed_directories != directories:
+        raise ObservationError("Legacy carriers differ from the committed bootstrap base")
+    for rel, oid in committed.items():
+        original = git(root, "cat-file", "blob", oid).encode("utf-8", "surrogateescape")
+        if (root / rel).read_bytes() != original:
+            raise ObservationError("Changed legacy carrier requires owner reconciliation")
+
+
 def bootstrap_owned_paths(root, manifest, expected_digest):
     """A first allocator may acknowledge only exact installer-owned bytes.
 
@@ -153,9 +194,14 @@ def bootstrap_owned_paths(root, manifest, expected_digest):
             raise ObservationError("Bootstrap requires a committed exact legacy scaffold")
     else:
         raise ObservationError("Unknown bootstrap kind")
-    if (len(worktrees(root)) != 1 or list((root / "project").glob("ticket-*"))
-            or git(root, "for-each-ref", "--format=%(refname)", "refs/heads/ticket/")):
+    if (len(worktrees(root)) != 1
+            or git(root, "for-each-ref", "--format=%(refname)", "refs/heads/ticket/")
+            or (Path(common) / "new-project-ticket-high-water").exists()):
         raise ObservationError("Bootstrap acknowledgement is first-allocation only")
+    if kind == "fresh":
+        unchanged_committed_legacy_carriers(root, head)
+    elif list((root / "project").glob("ticket-*")):
+        raise ObservationError("Scaffold bootstrap acknowledgement is first-allocation only")
     lock = read_json(root / ".governance/manifest.lock.json")
     if (lock.get("standard", {}).get("publicationStatus") != "published"
             or lock.get("standard", {}).get("sourceRevision") != receipt.get("sourceRevision")):

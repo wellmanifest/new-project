@@ -2,6 +2,31 @@
 
 ## Overview
 
+### Fresh bootstrap with historical file tickets (0.20.89)
+
+A repository without committed native governance can contain old file tickets.
+The fresh bootstrap route accepts those carriers only when every directory
+and regular file matches the exact committed tree at the receipt-bound original
+HEAD. Historical status text stays unchanged; this observation grants no owner,
+closure, retrospective compliance or review approval. Changed, missing,
+untracked, symlinked or non-regular carriers require owner reconciliation.
+
+Review and apply the same published immutable adopter with
+`--bootstrap-native-adoption` only after preserving and reconciling any partial
+installation. Reuse the existing trusted controller; do not fabricate a minimal
+manifest to pass scaffold migration. Then confirm the actual primary dirty digest
+through the first allocator's `--bootstrap-adoption-digest`. Allocation retains
+the original legacy carriers, reserves a new identity above their high-water
+IDs and writes only the new ticket metadata in its canonical worktree. Apply
+the reviewed adoption in that worktree under a real fenced writer lease.
+
+A prior allocation reservation, another registered worktree or a local ticket
+branch still refuses this acknowledgement. The baseline scaffold route still
+requires no historical tickets. Peer admission, intended scope, WIP, exact
+installed bytes, current HEAD, clone binding, product checks and protected
+independent publication remain required. Installer receipts grant no writer or
+merge authority.
+
 ### Python expression secret detection (0.20.88)
 
 The policy-as-code validator inspects Python abstract syntax trees rather than
