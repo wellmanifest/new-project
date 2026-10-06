@@ -113,6 +113,46 @@ class LegacyScaffoldMigrationTest(unittest.TestCase):
         self.assertIn("--check or --upgrade", result.stderr)
         self.assertEqual(self.contents(), before)
 
+    def test_fresh_bootstrap_refuses_existing_governance_without_writes(self):
+        before = self.contents()
+        result = self.run_adopter('--bootstrap-native-adoption', '--upgrade')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('requires absent governance', result.stderr)
+        self.assertEqual(self.contents(), before)
+
+    def test_fresh_bootstrap_refuses_deleted_committed_governance(self):
+        subprocess.run(['git', 'add', '.'], cwd=self.target, check=True)
+        subprocess.run(['git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+                        'commit', '-qm', 'Existing governance'], cwd=self.target, check=True)
+        self.manifest.unlink()
+        before = self.contents()
+        result = self.run_adopter('--bootstrap-native-adoption', '--upgrade')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('cannot replace committed governance', result.stderr)
+        self.assertEqual(self.contents(), before)
+
+    def test_fresh_bootstrap_requires_committed_repository(self):
+        self.manifest.unlink()
+        before = self.contents()
+        result = self.run_adopter('--bootstrap-native-adoption')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('requires a committed Git repository', result.stderr)
+        self.assertEqual(self.contents(), before)
+
+    def test_fresh_first_allocation_preserves_authority_boundaries(self):
+        # This suite is already part of the protected adoption-lock job. Run
+        # fresh first-allocation and refusal cases through the actual CLI.
+        result = subprocess.run([sys.executable, str(ROOT / 'tests/scaffold_bootstrap_test.py'),
+                                 'FreshBootstrapTest'], capture_output=True, text=True, timeout=120)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_fresh_bootstrap_rejects_both_modes_before_writes(self):
+        before = self.contents()
+        result = self.run_adopter('--bootstrap-native-adoption', '--migrate-wellman-scaffold', '--check')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('mutually exclusive', result.stderr)
+        self.assertEqual(self.contents(), before)
+
     def test_migration_keeps_publication_verification(self):
         spec = importlib.util.spec_from_file_location("legacy_adoption", SCRIPT)
         module = importlib.util.module_from_spec(spec)

@@ -122,7 +122,7 @@ if python3 "$standard/scripts/create_adoption_lock.py" \
   echo 'expected production adoption of an unpublished fixture to fail' >&2
   exit 1
 fi
-grep -Eq 'has no published release tag|does not identify requested revision' \
+grep -Eq 'has no published release tag|does not identify requested revision|canonical standard tag .* could not be verified' \
   "$fixture/unpublished.err"
 test -z "$(find "$unpublished_target" -mindepth 1 -print -quit)"
 

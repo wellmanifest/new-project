@@ -12,11 +12,15 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+sys.dont_write_bytecode = True
+
 ROOT = Path(__file__).resolve().parents[1]
 CHANGED = ('project/new-ticket.sh', 'scripts/create_adoption_lock.py', 'scripts/work_start_check.py')
 
 
 class BootstrapTest(unittest.TestCase):
+    fresh = False
+
     def command(self, cwd, *args, check=True):
         result = subprocess.run(args, cwd=cwd, capture_output=True, text=True,
                                 env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1'})
@@ -43,9 +47,10 @@ class BootstrapTest(unittest.TestCase):
         self.command(self.target, 'git', 'config', 'user.name', 'Fixture')
         self.command(self.target, 'git', 'config', 'user.email', 'fixture@example.invalid')
         (self.target / '.governance').mkdir()
-        (self.target / '.governance/manifest.json').write_text(json.dumps({
-            'schema': 'wellmanifest.manifest/v1',
-            'standard': {'id': 'profile:baseline', 'version': '0.20.37'}}))
+        if not self.fresh:
+            (self.target / '.governance/manifest.json').write_text(json.dumps({
+                'schema': 'wellmanifest.manifest/v1',
+                'standard': {'id': 'profile:baseline', 'version': '0.20.37'}}))
         (self.target / 'README.md').write_text('# Product\n')
         (self.target / '.gitignore').write_text('/.worktrees/\n/.subactor/receipts/\n')
         (self.target / 'foreign.txt').write_text('original\n')
@@ -60,7 +65,8 @@ class BootstrapTest(unittest.TestCase):
         self.adopter = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(self.adopter)
         args = ['adopter', '--target-root', str(self.target), '--source-revision', revision,
-                '--migrate-wellman-scaffold', '--upgrade']
+                '--bootstrap-native-adoption' if self.fresh else '--migrate-wellman-scaffold',
+                '--upgrade']
         with patch.object(sys, 'argv', args), patch.object(self.adopter, 'verify_publication_evidence'):
             self.assertEqual(self.adopter.main(), 0)
         self.receipt = self.target / '.subactor/receipts/bootstrap-adoption.json'
@@ -100,8 +106,11 @@ class BootstrapTest(unittest.TestCase):
         # The allocator writes metadata only: product and adoption source stay on their old base.
         self.assertEqual((wt / 'foreign.txt').read_text(), 'original\n')
         self.assertEqual((self.target / 'foreign.txt').read_text(), 'another writer\n')
-        self.assertEqual(json.loads((wt / '.governance/manifest.json').read_text())['schema'],
-                         'wellmanifest.manifest/v1')
+        if self.fresh:
+            self.assertFalse((wt / '.governance/manifest.json').exists())
+        else:
+            self.assertEqual(json.loads((wt / '.governance/manifest.json').read_text())['schema'],
+                             'wellmanifest.manifest/v1')
         result, _ = self.observation(checksum)
         self.assertNotEqual(result.returncode, 0, 'second allocation must not reuse bootstrap acknowledgement')
 
@@ -151,7 +160,8 @@ class BootstrapTest(unittest.TestCase):
         spec = importlib.util.spec_from_file_location(
             'bootstrap_race_probe', self.target / '.governance/work_start_check.py')
         module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        with patch.object(sys, 'path', [str(self.target / '.governance'), *sys.path]):
+            spec.loader.exec_module(module)
         original = module.dirty_observation
         calls = 0
 
@@ -171,6 +181,25 @@ class BootstrapTest(unittest.TestCase):
     def test_receipt_from_other_clone_is_rejected(self):
         receipt = json.loads(self.receipt.read_text())
         receipt['commonGitDir'] = str(self.source / '.git')
+        self.receipt.write_text(json.dumps(receipt))
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+
+
+class FreshBootstrapTest(BootstrapTest):
+    fresh = True
+
+    def test_fresh_receipt_records_absent_original_governance(self):
+        receipt = json.loads(self.receipt.read_text())
+        self.assertEqual(receipt['bootstrapKind'], 'fresh')
+        self.assertFalse(receipt['grantsWriterAuthority'])
+        self.assertFalse(receipt['grantsPublicationAuthority'])
+        result, _ = self.observation(self.checksum())
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_unknown_bootstrap_kind_is_rejected(self):
+        receipt = json.loads(self.receipt.read_text())
+        receipt['bootstrapKind'] = 'unrestricted'
         self.receipt.write_text(json.dumps(receipt))
         result, _ = self.observation(self.checksum())
         self.assertNotEqual(result.returncode, 0)

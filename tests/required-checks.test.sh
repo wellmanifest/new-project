@@ -346,13 +346,18 @@ json.dump({
     "requiredCheckNames": ["test", "windows-governance"],
 }, open(sys.argv[1], "w"), indent=2)
 PY
-if python3 scripts/check_required_checks.py --source "$FOREIGN"; then
+# Supply the known hub identity explicitly: isolated verification clones may
+# have a file:// origin rather than a GitHub remote. Do not weaken the checker
+# or inherit this identity into unrelated fixture checkouts.
+if GITHUB_REPOSITORY=wellmanifest/new-project GITHUB_WORKSPACE="$ROOT" \
+  python3 scripts/check_required_checks.py --source "$FOREIGN"; then
   echo "FAIL: an instance describing another repository must fail closed" >&2
   exit 1
 fi
 # The refusal exits non-zero, so capture it before matching: a pipeline under
 # `set -o pipefail` would fail on the expected exit code rather than the text.
-foreign_out="$(python3 scripts/check_required_checks.py --source "$FOREIGN" 2>&1 || true)"
+foreign_out="$(GITHUB_REPOSITORY=wellmanifest/new-project GITHUB_WORKSPACE="$ROOT" \
+  python3 scripts/check_required_checks.py --source "$FOREIGN" 2>&1 || true)"
 grep -Fq "but this checkout is" <<<"$foreign_out" \
   || { echo "FAIL: the refusal must name both identities" >&2; exit 1; }
 

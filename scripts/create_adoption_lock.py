@@ -601,6 +601,10 @@ def main() -> int:
         help="Explicitly initialize native governance over the exact minimal legacy Wellman baseline scaffold",
     )
     parser.add_argument(
+        "--bootstrap-native-adoption", action="store_true",
+        help="Record first-allocation bootstrap for a committed repository without governance",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="Report adoption drift and planned changes without writing files",
@@ -611,16 +615,38 @@ def main() -> int:
         parser.error("--check and --upgrade are mutually exclusive")
     if args.migrate_wellman_scaffold and not (args.check or args.upgrade):
         parser.error("--migrate-wellman-scaffold requires --check or --upgrade after review")
+    if args.bootstrap_native_adoption and args.migrate_wellman_scaffold:
+        parser.error("fresh bootstrap and scaffold migration are mutually exclusive")
 
     if re.fullmatch(r"[0-9a-f]{40}", args.source_revision) is None:
         parser.error("--source-revision must be a full lowercase 40-character commit SHA")
     standard_root = Path(__file__).resolve().parent.parent
     requested_root = Path(args.target_root).absolute()
-    if args.migrate_wellman_scaffold and any(
+    if (args.migrate_wellman_scaffold or args.bootstrap_native_adoption) and any(
         path.is_symlink() for path in (requested_root, *requested_root.parents)
     ):
         raise SystemExit("Wellman scaffold migration refuses symlinked target paths")
     target_root = requested_root.resolve()
+    fresh_base_sha = None
+    if args.bootstrap_native_adoption:
+        for name in ("manifest.json", "manifest.lock.json", "manifest.base.json", "package-manifest.json"):
+            path = target_root / ".governance" / name
+            if path.exists() or path.is_symlink():
+                raise SystemExit("fresh bootstrap requires absent governance; use its existing adoption route")
+        observed = subprocess.run(["git", "-C", str(target_root), "rev-parse", "HEAD"],
+                                  capture_output=True, text=True)
+        if observed.returncode:
+            raise SystemExit("fresh bootstrap requires a committed Git repository")
+        fresh_base_sha = observed.stdout.strip()
+        checkout = subprocess.check_output(
+            ["git", "-C", str(target_root), "rev-parse", "--show-toplevel"], text=True).strip()
+        if Path(checkout).resolve() != target_root:
+            raise SystemExit("fresh bootstrap requires the repository checkout root")
+        for name in ("manifest.json", "manifest.lock.json", "manifest.base.json", "package-manifest.json"):
+            present = subprocess.run(["git", "-C", str(target_root), "cat-file", "-e",
+                                      f"HEAD:.governance/{name}"], capture_output=True)
+            if present.returncode == 0:
+                raise SystemExit("fresh bootstrap cannot replace committed governance")
     subprocess.run(
         ["git", "cat-file", "-e", f"{args.source_revision}^{{commit}}"],
         cwd=standard_root,
@@ -735,7 +761,7 @@ def main() -> int:
         raise SystemExit(f"adoption files differ; rerun with --upgrade after review: {', '.join(sorted(conflicts))}")
 
     bootstrap_head = None
-    if args.migrate_wellman_scaffold:
+    if args.migrate_wellman_scaffold or args.bootstrap_native_adoption:
         receipt = target_root / ".subactor/receipts/bootstrap-adoption.json"
         if any(path.is_symlink() for path in (receipt, *receipt.parents)):
             raise SystemExit("bootstrap receipt path is symlinked")
@@ -745,6 +771,8 @@ def main() -> int:
                                   capture_output=True, text=True)
         if observed.returncode == 0:
             bootstrap_head = observed.stdout.strip()
+        if fresh_base_sha is not None and bootstrap_head != fresh_base_sha:
+            raise SystemExit("repository HEAD changed before bootstrap; reconcile ownership")
     for target, content in sorted(payloads.items()):
         path = target_root / target
         if not path.exists() or path.read_bytes() != content:
@@ -755,7 +783,7 @@ def main() -> int:
         target_root / ".governance/manifest.lock.json",
         expected_lock,
     )
-    if args.migrate_wellman_scaffold:
+    if args.migrate_wellman_scaffold or args.bootstrap_native_adoption:
         # Local ownership acknowledgement is not writer or publication authority.
         result = subprocess.run(["git", "-C", str(target_root), "rev-parse", "HEAD"],
                                 capture_output=True, text=True)
@@ -780,6 +808,7 @@ def main() -> int:
                 "schema": "new-project.bootstrap-adoption/v1",
                 "baseSha": result.stdout.strip(), "commonGitDir": common,
                 "sourceRevision": args.source_revision,
+                "bootstrapKind": "fresh" if args.bootstrap_native_adoption else "legacy-scaffold",
                 "files": {rel: hashlib.sha256(data).hexdigest()
                           for rel, data in sorted(owned.items())},
                 "grantsWriterAuthority": False, "grantsPublicationAuthority": False,
