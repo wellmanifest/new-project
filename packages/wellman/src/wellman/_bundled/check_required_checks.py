@@ -98,8 +98,25 @@ def load_source(path: Path) -> dict:
     return data
 
 
-def workflow_job_names(workflow_path: Path) -> list[str]:
+def workflow_job_names(workflow_path: Path, root: Path | None = None) -> list[str]:
     text = workflow_path.read_text(encoding="utf-8")
+    active = '\n'.join(line for line in text.splitlines() if not line.lstrip().startswith('#'))
+    if re.search(r'uses:\s*[\'\"]?(?:\S+/\S+/|\./)\.github/workflows/', active):
+        # Both scripts are managed package members. Direct-job-only fixtures
+        # keep their standalone checker behavior without requiring this import.
+        import importlib.util
+        generator_path = Path(__file__).resolve().with_name('generate_required_checks.py')
+        spec = importlib.util.spec_from_file_location('required_checks_resolver', generator_path)
+        if spec is None or spec.loader is None:
+            raise SystemExit('managed reusable workflow resolver is missing')
+        generator = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(generator)
+        callers: list[str] = []
+        names = generator.resolved_checks_text(
+            text, generator.reusable_sources(root or workflow_path.parents[2]), callers)
+        if callers:
+            raise SystemExit('unresolved reusable workflow callers: ' + ', '.join(callers))
+        return names
     lines = text.splitlines()
     in_jobs = False
     jobs: list[str] = []
@@ -301,7 +318,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"workflow file not found: {workflow_path}", file=sys.stderr)
             return 2
         required = [name for name, _workflow in pairs]
-        published = workflow_job_names(workflow_path)
+        published = workflow_job_names(workflow_path, root)
         errors = compare(required, published)
         published_names = published
     else:
@@ -315,7 +332,7 @@ def main(argv: list[str] | None = None) -> int:
             if not workflow_path.is_file():
                 print(f"workflow file not found: {workflow_path}", file=sys.stderr)
                 return 2
-            published = workflow_job_names(workflow_path)
+            published = workflow_job_names(workflow_path, root)
             published_names.extend(published)
             errors.extend(compare(required, published))
     if errors:

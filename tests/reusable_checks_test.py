@@ -55,6 +55,13 @@ class ReusableChecksTest(unittest.TestCase):
         declaration.write_text(json.dumps(doc))
         self.assertEqual(checker.main(['--root', str(self.root), '--source', str(declaration)]), 0)
 
+    def test_bundled_checker_resolves_reusable_sources(self):
+        path = ROOT / 'packages/wellman/src/wellman/_bundled/check_required_checks.py'
+        spec = importlib.util.spec_from_file_location('bundled_reusable_checker', path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        self.assertEqual(module.workflow_job_names(self.caller), ['CI / Linux tests'])
+
     def test_adoption_projects_contract_with_workflow_overlay(self):
         spec = importlib.util.spec_from_file_location('reusable_adopter', ROOT / 'scripts/create_adoption_lock.py')
         adopter = importlib.util.module_from_spec(spec)
@@ -164,7 +171,7 @@ class ReusableChecksTest(unittest.TestCase):
             subprocess.run(['git', '-C', str(repo), 'config', 'user.name', 'Fixture'], check=True)
             subprocess.run(['git', '-C', str(repo), 'config', 'user.email', 'fixture@example.invalid'], check=True)
         subprocess.run(['git', '-C', str(source_root), 'add', *changed], check=True)
-        subprocess.run(['git', '-C', str(source_root), 'commit', '-q', '-m', 'Fixture contract source'], check=True)
+        subprocess.run(['git', '-C', str(source_root), 'commit', '-q', '--allow-empty', '-m', 'Fixture contract source'], check=True)
         revision = subprocess.check_output(['git', '-C', str(source_root), 'rev-parse', 'HEAD'], text=True).strip()
         for relative in ['README.md', 'VERSION', 'CHANGELOG.md', 'TODO.md', 'project/TICKETS.md']:
             path = self.root / relative
@@ -186,6 +193,16 @@ class ReusableChecksTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual((self.lock.read_bytes(), self.source.read_bytes(), self.caller.read_bytes()), original)
         self.assertTrue((self.root / '.governance/reusable-workflows.schema.json').is_file())
+
+    def test_governance_display_name_cannot_hide_an_unknown_source(self):
+        self.lock.unlink()
+        self.caller.write_text(self.caller.read_text().replace('name: CI', 'name: governance'))
+        spec = importlib.util.spec_from_file_location('unknown_source_adopter', ROOT / 'scripts/create_adoption_lock.py')
+        adopter = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(adopter)
+        payloads = {adopter.CHECKS_TARGET: json.dumps({'repository': 'unresolved/adopter'}).encode()}
+        with self.assertRaises(SystemExit):
+            adopter.project_inherited_required_checks(self.root, payloads)
 
 
 if __name__ == '__main__':
