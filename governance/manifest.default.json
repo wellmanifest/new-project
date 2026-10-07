@@ -3,7 +3,7 @@
   "schema": "new-project.governance/v2",
   "standard": {
     "id": "wellmanifest/new-project",
-    "version": "0.20.89"
+    "version": "0.20.90"
   },
   "repository": {
     "mode": "standalone",
@@ -136,12 +136,15 @@
       "governance": {
         "ownedPaths": [
           ".aider.conf.yml",
+          ".benchmarks/**",
           ".cursor/rules/**",
           ".githooks/**",
           ".github/copilot-instructions.md",
           ".github/workflows/new-project-governance.yml",
           ".gitignore",
           ".governance/**",
+          ".redup/**",
+          ".reuse/**",
           ".subactor/**",
           "AGENTS.md",
           "CLAUDE.md",
@@ -177,6 +180,7 @@
           "Cargo.lock",
           "pom.xml",
           "docs/**",
+          "OVERVIEW.md",
           "operations/**",
           "events/**",
           "error/**",

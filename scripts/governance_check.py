@@ -3126,7 +3126,7 @@ def check_declared_delivery_budget(
     report: Report,
 ) -> None:
     limits = effective_delivery_policy(policy, delivery["complexity"])
-    complexity_limit = 10 if delivery["complexity"] == "XS" else policy["maxActiveMinutes"]
+    complexity_limit = limits.get("maxActiveMinutes", 10 if delivery["complexity"] == "XS" else policy["maxActiveMinutes"])
     declared_limits = delivery["budgets"]
     policy_limits = {
         "maxImplementationFiles": limits["maxImplementationFiles"],

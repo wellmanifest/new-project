@@ -1,0 +1,103 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-318",
+  "summary": "Standardize reuse, redup, benchmarks and overview in default workstreams, and support configurable delivery profile maxActiveMinutes for XS.",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-318/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/governance_check.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2ddba8833d342b4b4201eada2d05c8b70ed4985e",
+    "targetBranch": "main",
+    "outcome": "Standardize manifest.default.json workstreams with .reuse/**, .redup/**, .benchmarks/** in governance and OVERVIEW.md in integration; make delivery profile maxActiveMinutes configurable for XS class without hardcoded 10 minute ceiling.",
+    "nonGoals": [
+      "No removal of default 10-minute fallback when maxActiveMinutes is omitted for XS",
+      "No changes to external gate policies"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add standard tool and documentation paths to default manifest workstreams and read profile maxActiveMinutes before falling back to default 10 for XS.",
+      "components": [
+        {
+          "name": "governance",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert ticket-318 commit."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -c \"import json; m=json.load(open('governance/manifest.default.json')); assert '.reuse/**' in m['coordination']['workstreams']['governance']['ownedPaths'] and 'OVERVIEW.md' in m['coordination']['workstreams']['integration']['ownedPaths']\""
+        ],
+        "evidence": "Manifest default registers standard tool and doc paths."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -c \"from scripts.governance_check import effective_delivery_policy; p={'maxActiveMinutes': 120, 'profiles': {'XS': {'maxActiveMinutes': 25}}}; lim=effective_delivery_policy(p, 'XS'); assert lim.get('maxActiveMinutes') == 25\""
+        ],
+        "evidence": "Delivery budget check supports configured profile maxActiveMinutes."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Governance check passes with zero errors."
+      }
+    ]
+  }
+}
