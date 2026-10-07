@@ -46,6 +46,18 @@ class CommitMessageHookTests(unittest.TestCase):
         self.git("commit", "-qm", "fix(component,ticket-123): repair")
         self.assertEqual(self.git("rev-list", "--count", "HEAD").stdout.strip(), "1")
 
+    def test_refused_second_commit_preserves_history_and_staged_work(self):
+        self.git("commit", "-qm", "fix: initial material (ticket-123)")
+        before = self.git("rev-parse", "HEAD").stdout
+        (self.repo / "material.txt").write_text("second material\n")
+        self.git("add", "material.txt")
+        staged = self.git("diff", "--cached").stdout
+        result = self.git("commit", "-m", "fix: missing ticket", check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("GOV-AGENT-HOST-001", result.stderr)
+        self.assertEqual(before, self.git("rev-parse", "HEAD").stdout)
+        self.assertEqual(staged, self.git("diff", "--cached").stdout)
+
     def test_detached_head_is_rejected(self):
         self.git("commit", "-qm", "fix: repair (ticket-123)")
         self.git("checkout", "--detach", "-q")
