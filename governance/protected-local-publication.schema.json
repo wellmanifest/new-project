@@ -1,0 +1,400 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wellmanifest.com/schemas/protected-local-publication/v1",
+  "title": "Protected local publication evidence composition",
+  "description": "Structural composition only. Signature, issuer, actor isolation, live subject/CAS and receipt bindings require an independent protected verifier. Valid JSON grants no authority or hosted S4 equivalence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "subject",
+    "boundary",
+    "actors",
+    "ci",
+    "approval",
+    "publication",
+    "proof",
+    "freshness",
+    "negativeCanaries"
+  ],
+  "properties": {
+    "schema": {
+      "const": "wellmanifest.protected-local-publication/v1"
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "pullRequest",
+        "ticket",
+        "baseRef",
+        "headRef",
+        "baseSha",
+        "headSha",
+        "testedCommit",
+        "testedTree"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$"
+        },
+        "pullRequest": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ticket": {
+          "type": "string",
+          "pattern": "^ticket-[0-9]{3,}$"
+        },
+        "baseRef": {
+          "$ref": "#/$defs/branchRef"
+        },
+        "headRef": {
+          "$ref": "#/$defs/branchRef"
+        },
+        "baseSha": {
+          "$ref": "#/$defs/gitSha"
+        },
+        "headSha": {
+          "$ref": "#/$defs/gitSha"
+        },
+        "testedCommit": {
+          "$ref": "#/$defs/gitSha"
+        },
+        "testedTree": {
+          "$ref": "#/$defs/gitSha"
+        }
+      }
+    },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "storageIdentity",
+        "instanceIdentity",
+        "profileSha256",
+        "runtimeSha256",
+        "policySha256",
+        "isolationReceipt"
+      ],
+      "properties": {
+        "kind": {
+          "const": "protected-local-ref"
+        },
+        "storageIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "instanceIdentity": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "profileSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "runtimeSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "policySha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "isolationReceipt": {
+          "$ref": "#/$defs/receipt"
+        }
+      }
+    },
+    "actors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "writer",
+        "onedev",
+        "validator"
+      ],
+      "properties": {
+        "writer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "onedev": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "validator": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      }
+    },
+    "ci": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actorRole",
+        "runId",
+        "requiredChecks",
+        "checks",
+        "receipt"
+      ],
+      "properties": {
+        "actorRole": {
+          "const": "onedev"
+        },
+        "runId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "requiredChecks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "checks": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 64,
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "additionalProperties": {
+            "const": "PASS"
+          }
+        },
+        "receipt": {
+          "$ref": "#/$defs/receipt"
+        }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actorRole",
+        "actor",
+        "approvalEvidence",
+        "trustedVerifierReceipt"
+      ],
+      "properties": {
+        "actorRole": {
+          "const": "validator"
+        },
+        "actor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "approvalEvidence": {
+          "$ref": "#/$defs/receipt"
+        },
+        "trustedVerifierReceipt": {
+          "$ref": "#/$defs/receipt"
+        }
+      }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actorRole",
+        "transactionId",
+        "beforeBaseSha",
+        "beforeHeadSha",
+        "afterBaseSha",
+        "afterHeadSha",
+        "receipt",
+        "liveReadbackReceipt",
+        "hostedPublicationPerformed"
+      ],
+      "properties": {
+        "actorRole": {
+          "const": "validator"
+        },
+        "transactionId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "beforeBaseSha": {
+          "$ref": "#/$defs/gitSha"
+        },
+        "beforeHeadSha": {
+          "$ref": "#/$defs/gitSha"
+        },
+        "afterBaseSha": {
+          "$ref": "#/$defs/gitSha"
+        },
+        "afterHeadSha": {
+          "$ref": "#/$defs/gitSha"
+        },
+        "receipt": {
+          "$ref": "#/$defs/receipt"
+        },
+        "liveReadbackReceipt": {
+          "$ref": "#/$defs/receipt"
+        },
+        "hostedPublicationPerformed": {
+          "const": false
+        }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "issuer",
+        "predicateType",
+        "signedAttestation",
+        "protectedVerificationReceipt"
+      ],
+      "properties": {
+        "issuer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "predicateType": {
+          "const": "https://wellmanifest.com/attestations/validator/v1"
+        },
+        "signedAttestation": {
+          "$ref": "#/$defs/receipt"
+        },
+        "protectedVerificationReceipt": {
+          "$ref": "#/$defs/receipt"
+        }
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "issuedAt",
+        "expiresAt",
+        "maxAgeSeconds"
+      ],
+      "properties": {
+        "issuedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "maxAgeSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
+        }
+      }
+    },
+    "negativeCanaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wrongRole",
+        "missingCheck",
+        "failedCheck",
+        "headMoved",
+        "baseMoved",
+        "reviewWithdrawn",
+        "untrustedIssuer",
+        "staleEvidence",
+        "casConflict",
+        "directRefWrite",
+        "replayDifferentSubject",
+        "postMergeRefMoved"
+      ],
+      "properties": {
+        "wrongRole": {
+          "$ref": "#/$defs/receipt"
+        },
+        "missingCheck": {
+          "$ref": "#/$defs/receipt"
+        },
+        "failedCheck": {
+          "$ref": "#/$defs/receipt"
+        },
+        "headMoved": {
+          "$ref": "#/$defs/receipt"
+        },
+        "baseMoved": {
+          "$ref": "#/$defs/receipt"
+        },
+        "reviewWithdrawn": {
+          "$ref": "#/$defs/receipt"
+        },
+        "untrustedIssuer": {
+          "$ref": "#/$defs/receipt"
+        },
+        "staleEvidence": {
+          "$ref": "#/$defs/receipt"
+        },
+        "casConflict": {
+          "$ref": "#/$defs/receipt"
+        },
+        "directRefWrite": {
+          "$ref": "#/$defs/receipt"
+        },
+        "replayDifferentSubject": {
+          "$ref": "#/$defs/receipt"
+        },
+        "postMergeRefMoved": {
+          "$ref": "#/$defs/receipt"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "gitSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "uri",
+        "sha256"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "branchRef": {
+      "type": "string",
+      "pattern": "^refs/heads/[^\\s]+$",
+      "maxLength": 255
+    }
+  }
+}
