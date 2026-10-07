@@ -166,6 +166,7 @@ contract=json.loads((source/'governance/agent-hosts.json').read_text())
 package=json.loads((source/'governance/package-manifest.json').read_text())
 paths={row['target']:row['source'] for row in package['files']}
 files=[h['file'] for h in contract['hosts']]+[contract['hook']['path']]
+files += contract['hook'].get('additionalHooks', [])
 files += [paths.get(p,p) for p in contract['hook']['runtimeFiles']]
 files += ['governance/agent-hosts.json','governance/manifest.hub.json','governance/package-manifest.json','scripts/install-agent-hosts.sh']
 for name in files:
@@ -594,6 +595,7 @@ cp "$root/template/files/aider.template.yml" "$fixture/.aider.conf.yml"
 cp "$root/template/files/copilot-instructions.template.md" "$fixture/.github/copilot-instructions.md"
 printf '%s\n' '#!/usr/bin/env bash' > "$fixture/.githooks/pre-commit"
 chmod +x "$fixture/.githooks/pre-commit"
+cp "$root/template/files/commit-msg.template.sh" "$fixture/.githooks/commit-msg"
 cat > "$fixture/.governance/manifest.lock.json" <<'LOCK'
 {
   "schema": "new-project.lock/v1",
@@ -711,6 +713,7 @@ mv "$fixture/GEMINI.md.bak" "$fixture/GEMINI.md"
 chmod -x "$fixture/.githooks/pre-commit"
 assert_has "$(codes "$fixture")" "GOV-AGENT-HOST-005" "non-executable hook"
 chmod +x "$fixture/.githooks/pre-commit"
+cp "$root/template/files/commit-msg.template.sh" "$fixture/.githooks/commit-msg"
 
 # A stack marker with no governance declaration and no lifecycle binding.
 cat > "$fixture/pyproject.toml" <<'TOML'
@@ -952,3 +955,6 @@ python3 "$root/scripts/audit_diagnostics.py" --root "$root" >/dev/null \
   || fail "diagnostics catalog must cover every emitted code"
 
 echo "agent-hosts.test.sh OK"
+
+# Exercise the Git commit-message boundary in the existing CI host-contract suite.
+python3 "$root/tests/commit_message_hook_test.py"
