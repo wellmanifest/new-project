@@ -1,0 +1,90 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-320",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: user requested a local alternative using Github-com, OneDev and Validator. Define a closed evidence composition and normative verification obligations; publish through independent exact-head review.",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-320/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "docs/information/protected-local-publication.md",
+    "governance/protected-local-publication.schema.json",
+    "tests/protected-local-publication-schema.test.py",
+    ".github/workflows/ci.yml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "8605c4bd8f301c9d5e4fa1268625d82816f96a0c",
+    "targetBranch": "main",
+    "outcome": "Publish closed protected-local-publication evidence composition, meaningful schema negative fixtures, and normative independent verification/adoption obligations with required CI wiring. Preserve existing hosted S4 definition until a separate protected verifier and deployed adoption canaries actually satisfy local-ref enforcement.",
+    "nonGoals": [
+      "No running daemon or credential policy in standard owner",
+      "No redefinition of attestation signature or native Git lifecycle",
+      "No hosted S4 equivalence, Clonerd adoption or runtime activation in this source ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Compose digest-bound receipts from existing CI, validation-attestation and Git lifecycle owners. Schema validity grants no authority; protected product verifier selects trusted issuer/profile/runtime and validates live semantic bindings. Existing hosted S4 catalog/adoption schema remain unchanged.",
+      "components": [
+        {
+          "name": "local-publication-evidence-composition",
+          "paths": [
+            "governance/protected-local-publication.schema.json",
+            "docs/information/protected-local-publication.md",
+            "tests/protected-local-publication-schema.test.py",
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Additive normative protected-local-publication evidence schema"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Retain the prior immutable normative contract through governed adoption; source contract has no runtime effect."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/protected-local-publication-schema.test.py",
+          "python3 tests/canonical-schema-hosts.test.py"
+        ],
+        "evidence": "Closed schema rejects incomplete/fabricated-shape authority and negative subject/ref/CI/receipt fixtures; structural validity is explicitly not cryptographic authorization."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/standard-pack-check.test.sh",
+          "bash project/governance-check.sh --actor agent --format json"
+        ],
+        "evidence": "Existing hosted catalog/adoption regressions and native governance; protected independent exact-head publication."
+      }
+    ]
+  }
+}
