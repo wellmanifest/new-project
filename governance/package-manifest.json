@@ -548,6 +548,12 @@
       "executable": true
     },
     {
+      "source": "template/files/commit-msg.template.sh",
+      "target": ".githooks/commit-msg",
+      "strategy": "managed",
+      "executable": true
+    },
+    {
       "source": "scripts/precommit_standard_update.py",
       "target": ".governance/precommit_standard_update.py",
       "strategy": "managed",

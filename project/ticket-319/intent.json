@@ -1,0 +1,118 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-319",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: continue the supplied maintenance backlog. Reject a commit subject without the exact branch ticket before Git writes a commit; package and activate the managed hook for hub and adopters, preserving explicit repository delivery profiles.",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-319/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".githooks/commit-msg",
+    "governance/agent-hosts.json",
+    "governance/agent-hosts.schema.json",
+    "governance/package-manifest.json",
+    "scripts/agent_host_check.py",
+    "scripts/install-agent-hosts.sh",
+    "template/files/commit-msg.template.sh",
+    "tests/agent-hosts.test.sh",
+    "tests/commit_message_hook_test.py",
+    "VERSION",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4143ce632e110d47d6e5ad68c8499577ae9878a1",
+    "targetBranch": "main",
+    "outcome": "A managed commit-msg hook refuses missing, wrong, body-only and prefix ticket identifiers before commit creation. Installer and host contract verify both hooks. Protected publication supplies the standard change for subsequent governed adoption. Release version projections advance atomically to 0.20.91 with this material hook change.",
+    "nonGoals": [
+      "No rewriting existing commits",
+      "No direct merge or review bypass",
+      "No takeover or bulk edits of foreign adopters",
+      "No retention source edits in blocked observability checkout"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 13,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use a separate commit-msg hook, with backward compatible additionalHooks in the host contract and installer. The existing pre-commit remains responsible for staged scope and active ticket status. Respect repository local-audit and main-only policy profiles.",
+      "components": [
+        {
+          "name": "commit-message-hook",
+          "paths": [
+            ".githooks/commit-msg",
+            "template/files/commit-msg.template.sh",
+            "tests/commit_message_hook_test.py"
+          ]
+        },
+        {
+          "name": "host-contract",
+          "paths": [
+            "governance/agent-hosts.json",
+            "governance/agent-hosts.schema.json",
+            "scripts/agent_host_check.py",
+            "VERSION",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        },
+        {
+          "name": "adoption-installation",
+          "paths": [
+            "governance/package-manifest.json",
+            "scripts/install-agent-hosts.sh",
+            "tests/agent-hosts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Optional additionalHooks host-contract paths"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Restore the prior protected standard pin through an adoption ticket; no history rewriting."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/commit_message_hook_test.py"
+        ],
+        "evidence": "Real Git commit acceptance/refusal with unchanged HEAD on rejection and repository profile regression."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/agent-hosts.test.sh",
+          "bash project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Installation and missing/non-executable additional hook refusal plus full governance."
+      }
+    ]
+  }
+}
