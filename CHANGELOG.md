@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.20.90] - 2026-10-07
+
+- Add `.reuse/**`, `.redup/**`, and `.benchmarks/**` to `governance.ownedPaths` and `OVERVIEW.md` to `integration.ownedPaths` in `manifest.default.json` to prevent `GOV-WORKSTREAM-003` during reuse compliance scans and root v2 overview authoring [ticket-318].
+- Support configurable delivery profile `maxActiveMinutes` for `XS` complexity classes in `governance_check.py` while preserving the default 10-minute fallback when omitted [ticket-318].
+
 ## [0.20.89] - 2026-10-07
 
 - Preserve only the exact unchanged committed legacy ticket tree at a fresh first native bootstrap. Native allocation advances above historical IDs; changed, missing, untracked and symlinked carriers, prior reservations and live ticket branches/worktrees remain refused. No retrospective approval or ticket closure is inferred.
