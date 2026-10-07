@@ -19,3 +19,5 @@ No bulk adoption, existing history rewrite, direct merge or source edits in bloc
 ## Validation
 
 Six real Git commit-message tests pass. Host installation and enforcement suite passes, including the message hook tests; canonical schema suite: four passes; managed governance: PASS. Version projections advance to 0.20.91 with the material implementation. Adoption-lock regression also passes. Protected publication and fleet adoption remain to be observed.
+
+Full source-hub gate found wellman bundled validator drift; synchronized the exact changed module in this ticket. No other bundle changes.

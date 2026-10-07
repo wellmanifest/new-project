@@ -24,7 +24,8 @@
     "VERSION",
     "governance/manifest.hub.json",
     "governance/manifest.default.json",
-    "packages/wellman/pyproject.toml"
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/agent_host_check.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -46,7 +47,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 13,
+      "maxImplementationFiles": 14,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
@@ -72,7 +73,8 @@
             "VERSION",
             "governance/manifest.hub.json",
             "governance/manifest.default.json",
-            "packages/wellman/pyproject.toml"
+            "packages/wellman/pyproject.toml",
+            "packages/wellman/src/wellman/_bundled/agent_host_check.py"
           ]
         },
         {

@@ -287,6 +287,27 @@ def check_hook(root: Path, contract: dict[str, Any], actor: str) -> list[Finding
             [hook_relative],
         ))
 
+    additional = contract["hook"].get("additionalHooks", [])
+    if (not isinstance(additional, list)
+            or any(not isinstance(path, str) or path not in {
+                ".githooks/commit-msg", ".githooks/prepare-commit-msg",
+            } for path in additional)
+            or len(additional) != len(set(additional))):
+        findings.append(Finding(
+            "GOV-AGENT-HOST-004", "Invalid additional hook declaration.",
+            "Restore the pinned host contract.", ["hook.additionalHooks"],
+        ))
+        return findings
+    for relative in additional:
+        path = root / relative
+        if not path.is_file() or (os.name != "nt" and not path.stat().st_mode & 0o111):
+            findings.append(Finding(
+                "GOV-AGENT-HOST-005",
+                f"Managed additional hook is missing or not executable: {relative}",
+                "Adopt the complete pinned package and run scripts/install-agent-hosts.sh.",
+                [relative],
+            ))
+
     # A CI checkout never runs local hooks; only a developer or agent clone can.
     if actor == "ci" or not is_work_tree(root):
         return findings
