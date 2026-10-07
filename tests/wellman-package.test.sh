@@ -6,6 +6,23 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+echo "== installed build prerequisites (no downloads from candidate tests) =="
+python3 - <<'PYBUILD'
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    setuptools_version = version("setuptools")
+    wheel_version = version("wheel")
+    if int(setuptools_version.split(".", 1)[0]) < 68:
+        raise ValueError("setuptools>=68.0 required")
+except (PackageNotFoundError, ValueError) as error:
+    raise SystemExit(
+        "WELLMAN-BUILD-TOOLS-MISSING: preinstall setuptools>=68.0 and wheel "
+        "in the CI runtime before running this offline regression"
+    ) from error
+print(f"Using installed setuptools {setuptools_version}, wheel {wheel_version}")
+PYBUILD
+
 echo "== bundled modules match scripts/ =="
 python3 packages/wellman/sync_bundled.py --check
 
@@ -15,14 +32,18 @@ trap 'rm -rf "$TMP"' EXIT
 echo "== build and install the wheel into a clean venv =="
 # Build from a copy so setuptools leaves no build/ or egg-info changes behind.
 cp -R packages/wellman "$TMP/src"
-python3 -m pip wheel --quiet --no-deps --wheel-dir "$TMP/wheel" "$TMP/src"
+# The independently provisioned runtime already owns these build tools. Build
+# isolation would create a fresh environment and try PyPI inside network-none
+# candidate execution, even when the approved tools are installed here.
+python3 -m pip wheel --quiet --no-index --no-deps --no-build-isolation \
+  --wheel-dir "$TMP/wheel" "$TMP/src"
 python3 -m venv "$TMP/venv"
 if [[ -x "$TMP/venv/bin/python" ]]; then
   PY="$TMP/venv/bin/python"
 else
   PY="$TMP/venv/Scripts/python.exe"
 fi
-"$PY" -m pip install --quiet --disable-pip-version-check "$TMP"/wheel/*.whl
+"$PY" -m pip install --quiet --no-index --no-deps --disable-pip-version-check "$TMP"/wheel/*.whl
 
 echo "== wellman --version reports the standard version =="
 expected="wellman $(tr -d '[:space:]' < VERSION)"

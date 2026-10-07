@@ -1,0 +1,89 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-321",
+  "summary": "SESSION_EXECUTION_AUTHORIZATION: user requested continuation, testing and protected merging of a local alternative. Fix actual OneDev offline Wellman packaging failure while preserving real wheel/runtime tests and candidate network isolation.",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-321/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    "packages/wellman/README.md",
+    "tests/wellman-offline-build.test.py",
+    "tests/wellman-package.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "769667f9f60459bb82c4e57e214518e7076e5c26",
+    "targetBranch": "main",
+    "outcome": "Canonical packaging test builds and installs a real wheel offline from installed approved build tools. Missing prerequisites fail promptly and clearly; CI provisions exact build-tool pins and runs a real clean-venv negative regression. Independent exact-head publication and actual OneDev canary confirm the correction.",
+    "nonGoals": [
+      "No opening candidate network or dropping tests",
+      "No runtime daemon/credential/config deployment",
+      "No claiming exact synthetic local merge CI or S4 adoption"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use current trusted installed setuptools/wheel with pip no-build-isolation/no-index/no-deps, keeping wheel build and isolated installed-runtime tests. CI bootstraps test-only tools before candidate tests; package runtime remains dependency-free. Test absent build tools using a genuine clean venv without network.",
+      "components": [
+        {
+          "name": "offline-packaging-regression",
+          "paths": [
+            "tests/wellman-package.test.sh",
+            "tests/wellman-offline-build.test.py",
+            ".github/workflows/ci.yml",
+            "packages/wellman/README.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Packaging regression now requires preinstalled build tools with a stable fail-fast diagnostic"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Restore the prior test source through governed publication; no daemon or protected policy changes."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "PIP_NO_INDEX=1 bash tests/wellman-package.test.sh",
+          "python3 tests/wellman-offline-build.test.py"
+        ],
+        "evidence": "Actual wheel/install/runtime checks offline and real missing-tools refusal without downloading build dependencies."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh --actor agent --format json"
+        ],
+        "evidence": "Native exact-base/head governance, actual OneDev and required hosted Linux/Windows checks; trusted independent review/merge."
+      }
+    ]
+  }
+}

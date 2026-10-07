@@ -55,3 +55,23 @@ jobs:
 ## Source
 
 Part of [wellmanifest/new-project](https://github.com/wellmanifest/new-project).
+
+## Offline packaging regression
+
+The source packaging regression builds a real wheel, installs it in a clean
+virtual environment and exercises the installed runtime outside the source tree.
+It uses preinstalled build tools and refuses index access during build/install.
+Prepare `setuptools>=68.0` and `wheel` in the independently provisioned CI
+runtime first; the hosted test job pins `setuptools==80.9.0` and `wheel==0.45.1`.
+The deployed OneDev executor already includes these versions.
+
+```bash
+python3 tests/wellman-offline-build.test.py
+PIP_NO_INDEX=1 bash tests/wellman-package.test.sh
+```
+
+The first command checks fail-fast behavior in a real environment without build
+tools. Missing prerequisites produce `WELLMAN-BUILD-TOOLS-MISSING` before wheel
+building. The packaging test keeps the real build and runtime checks and can run
+with the candidate executor's network disabled. Installing the runtime package
+does not require these source-test build tools.

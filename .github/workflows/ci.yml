@@ -81,8 +81,8 @@ jobs:
             arguments+=(--focus-branch "$HEAD_REF")
           fi
           python3 scripts/branch_lifecycle_check.py "${arguments[@]}"
-      - name: Install schema validator
-        run: python3 -m pip install --disable-pip-version-check 'jsonschema==4.25.1'
+      - name: Install schema and wheel-test prerequisites
+        run: python3 -m pip install --disable-pip-version-check 'jsonschema==4.25.1' 'setuptools==80.9.0' 'wheel==0.45.1'
       - name: Validate JSON contracts
         run: |
           python3 -m json.tool governance/manifest.schema.json >/dev/null
@@ -117,7 +117,9 @@ jobs:
       - name: Test required-checks gate
         run: bash tests/required-checks.test.sh
       - name: Test installed wellman runtime package
-        run: bash tests/wellman-package.test.sh
+        run: |
+          python3 tests/wellman-offline-build.test.py
+          bash tests/wellman-package.test.sh
       - name: Test decision-record replay and append-only
         run: bash tests/decision-record.test.sh
       - name: Test local OneDev and Validator publication scope
