@@ -1,0 +1,85 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-324",
+  "summary": "Name unowned scope paths and their owning workstream in GOV-WORK-START-001",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-324/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    "scripts/ticket_storage.py",
+    "tests/scope_ownership_message_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "50ae053a29d5457ce9deaec0a4755d61ad6a65aa",
+    "targetBranch": "main",
+    "outcome": "GOV-WORK-START-001 scope rejections name each unowned --path pattern and the workstream that owns it, an unknown workstream with the declared ones, or a tracking-only scope, instead of one generic message.",
+    "nonGoals": [
+      "No change to which scopes are admitted",
+      "No change to the allocation (create) failure path or exit codes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Raise ScopeOwnershipError from scoped_paths with a message built only from validated caller patterns (redacted unless [A-Za-z0-9._*/-]) and manifest workstream names; main prints it for the scope command and keeps the generic message for every other failure.",
+      "components": [
+        {
+          "name": "ticket-storage-scope",
+          "paths": [
+            "scripts/ticket_storage.py",
+            "tests/scope_ownership_message_test.py",
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert ticket_storage.py; admission is unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/scope_ownership_message_test.py"
+        ],
+        "evidence": "Unowned, ownerless, unknown-workstream and unsafe-character cases produce precise, redacted messages; owned scope still passes."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/work_start_test.py",
+          "bash tests/governance-scripts.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Existing allocation and work-start suites and governance pass."
+      }
+    ]
+  }
+}

@@ -136,6 +136,33 @@ def invoke(root, pin, *args, content=None):
     return json.loads(result.stdout)
 
 
+SAFE_SCOPE_TEXT = re.compile(r"[A-Za-z0-9._*/-]{1,160}")
+
+
+class ScopeOwnershipError(ValueError):
+    """Rejected scope whose message is safe to print: caller patterns and workstream names only."""
+
+
+def _safe(value):
+    return value if SAFE_SCOPE_TEXT.fullmatch(value) else "<redacted>"
+
+
+def ownership_hint(manifest, workstream, unowned):
+    """Name each unowned pattern and the workstreams that do own it."""
+    workstreams = manifest['coordination']['workstreams']
+    from governance_check import pattern_covered_by
+    from work_start_check import patterns
+    parts = []
+    for path in unowned[:5]:
+        owners = sorted(name for name, entry in workstreams.items()
+                        if any(pattern_covered_by(path, owner) for owner in patterns(entry.get('ownedPaths', []))))
+        where = f"owned by {', '.join(_safe(o) for o in owners)}" if owners else "owned by no workstream"
+        parts.append(f"{_safe(path)} ({where})")
+    more = f" and {len(unowned) - 5} more" if len(unowned) > 5 else ""
+    return (f"path(s) not owned by workstream '{_safe(workstream)}': {'; '.join(parts)}{more}. "
+            "Drop them from --path, or allocate the work in the owning workstream.")
+
+
 def scoped_paths(root, workstream, paths):
     """Share the gate's ownership predicate; narrowing is never write authority."""
     if not paths:
@@ -146,9 +173,17 @@ def scoped_paths(root, workstream, paths):
     if any(any(part in {"", "."} for part in path.split("/")) for path in scope):
         raise ValueError("canonical repository-relative scope required")
     manifest = manifest_at(Path(root))
-    owned = patterns(manifest['coordination']['workstreams'][workstream]['ownedPaths'])
-    if not material(scope) or any(not any(pattern_covered_by(path, owner) for owner in owned) for path in scope):
-        raise ValueError("nonempty implementation scope owned by the workstream required")
+    workstreams = manifest['coordination']['workstreams']
+    if workstream not in workstreams:
+        raise ScopeOwnershipError(
+            f"unknown workstream '{_safe(workstream)}'; declared: {', '.join(_safe(w) for w in sorted(workstreams))}")
+    owned = patterns(workstreams[workstream]['ownedPaths'])
+    if not material(scope):
+        raise ScopeOwnershipError(
+            "scope has no implementation path; ticket tracking files alone are not material work")
+    unowned = [path for path in scope if not any(pattern_covered_by(path, owner) for owner in owned)]
+    if unowned:
+        raise ScopeOwnershipError(ownership_hint(manifest, workstream, unowned))
     return scope
 
 
@@ -223,8 +258,12 @@ def main():
             verify_runtime(args.runtime_root, args.runtime_sha256)
         else:
             print(json.dumps(create(args)))
-    except Exception:
-        # Do not echo command input, ticket contents or child stderr.
+    except Exception as error:
+        # Do not echo command input, ticket contents or child stderr. A scope
+        # ownership rejection holds only validated caller patterns and manifest
+        # workstream names, so it is named instead of the generic diagnostic.
+        if args.command == "scope" and isinstance(error, ScopeOwnershipError):
+            parser.exit(3, f"GOV-WORK-START-001: {error}\n")
         if args.command == "scope":
             parser.exit(3, "GOV-WORK-START-001: invalid scope, unowned paths or missing managed scope runtime.\n")
         parser.exit(2 if args.command == "active" else 1, "GOV-TICKET-ALLOCATION-003: SQLite storage or pinned runtime validation failed.\n")
