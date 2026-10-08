@@ -588,6 +588,18 @@ def effective_delivery_policy(policy: dict[str, Any], complexity: str) -> dict[s
     return policy if profile is None else {**policy, **profile}
 
 
+def field_set_hint(value: Any, required: set[str], optional: set[str] = frozenset()) -> str:
+    """Name the missing and unexpected keys so an agent can repair an intent in one edit."""
+    if not isinstance(value, dict):
+        return f" (expected an object with {', '.join(sorted(required))}; got {type(value).__name__})"
+    missing = sorted(required - set(value))
+    unexpected = sorted(set(value) - required - set(optional))
+    parts = [f"missing: {', '.join(missing)}"] if missing else []
+    if unexpected:
+        parts.append(f"unexpected: {', '.join(unexpected)}")
+    return f" ({'; '.join(parts)})" if parts else ""
+
+
 def delivery_header_error(value: dict[str, Any]) -> str | None:
     if not isinstance(value.get("acceptedBaseSha"), str) or re.fullmatch(r"[0-9a-f]{40}", value["acceptedBaseSha"]) is None:
         return "delivery acceptedBaseSha must be a full lowercase commit SHA"
@@ -598,7 +610,7 @@ def delivery_header_error(value: dict[str, Any]) -> str | None:
     if not string_list(value.get("nonGoals"), nonempty=True):
         return "delivery nonGoals must be an explicit non-empty list"
     if value.get("complexity") not in {"XS", "S", "M", "L"}:
-        return "delivery complexity must be XS, S, M or L"
+        return f"delivery complexity must be XS, S, M or L (got {value.get('complexity')!r})"
     minutes = value.get("estimatedMinutes")
     if not isinstance(minutes, int) or isinstance(minutes, bool) or not 1 <= minutes <= 240:
         return "delivery estimatedMinutes must be between 1 and 240"
@@ -611,7 +623,7 @@ def delivery_budgets_error(budgets: Any) -> str | None:
         "maxPublicInterfaceChanges", "maxRuntimeDependencies",
     }
     if not isinstance(budgets, dict) or set(budgets) != fields:
-        return "delivery budgets are incomplete"
+        return "delivery budgets are incomplete" + field_set_hint(budgets, fields)
     if not integer_fields_valid(budgets, fields):
         return "delivery budgets must be integers"
     if budgets["maxImplementationFiles"] < 1 or budgets["maxAffectedComponents"] < 1:
@@ -627,7 +639,7 @@ def delivery_components_error(components: Any) -> str | None:
     names: list[str] = []
     for component in components:
         if not isinstance(component, dict) or set(component) != {"name", "paths"}:
-            return "delivery component must contain name and paths"
+            return "delivery component must contain name and paths" + field_set_hint(component, {"name", "paths"})
         if not isinstance(component.get("name"), str) or not component["name"].strip():
             return "delivery component name is blank"
         if not relative_pattern_list(component.get("paths"), nonempty=True):
@@ -638,11 +650,13 @@ def delivery_components_error(components: Any) -> str | None:
 
 def delivery_ui_error(ui: Any) -> str | None:
     if not isinstance(ui, dict) or set(ui) != {"impact", "states", "evidence"}:
-        return "delivery UI decision is incomplete"
+        return ("delivery UI decision is incomplete" + field_set_hint(ui, {"impact", "states", "evidence"})
+                + '; for non-UI work use {"impact": "none", "states": [], "evidence": []}')
     if ui.get("impact") not in {"none", "single-state", "multi-state"}:
-        return "delivery UI impact is invalid"
+        return f"delivery UI impact is invalid (got {ui.get('impact')!r}; allowed: none, single-state, multi-state)"
     if not string_list(ui.get("states")) or not set(ui["states"]) <= {"loading", "empty", "error", "success"}:
-        return "delivery UI states are invalid"
+        return (f"delivery UI states are invalid (got {ui.get('states')!r}; "
+                "expected a unique list drawn from loading, empty, error, success)")
     if not string_list(ui.get("evidence")):
         return "delivery UI evidence must be a unique string list"
     return delivery_ui_impact_error(ui["impact"], ui["states"], ui["evidence"])
@@ -650,11 +664,14 @@ def delivery_ui_error(ui: Any) -> str | None:
 
 def delivery_ui_impact_error(impact: str, states: list[str], evidence: list[str]) -> str | None:
     if impact == "none" and (states or evidence):
-        return "delivery UI states/evidence must be empty when impact is none"
+        return ("delivery UI states/evidence must be empty when impact is none "
+                f"(got states={states!r}, evidence={evidence!r}; set both to [] or choose a UI impact)")
     if impact == "single-state" and (len(states) != 1 or not evidence):
-        return "single-state UI work requires one state and planned evidence"
+        return (f"single-state UI work requires one state and planned evidence "
+                f"(got {len(states)} state(s), {len(evidence)} evidence item(s))")
     if impact == "multi-state" and (len(states) < 2 or not evidence):
-        return "multi-state UI work requires at least two states and planned evidence"
+        return (f"multi-state UI work requires at least two states and planned evidence "
+                f"(got {len(states)} state(s), {len(evidence)} evidence item(s))")
     return None
 
 
@@ -705,9 +722,9 @@ def delivery_architecture_error(architecture: Any) -> str | None:
         "interfaceChanges", "dataChanges", "ui", "rollback",
     }
     if not isinstance(architecture, dict) or set(architecture) != fields:
-        return "delivery architecture decision is incomplete"
+        return "delivery architecture decision is incomplete" + field_set_hint(architecture, fields)
     if architecture.get("status") != "accepted":
-        return "delivery architecture status must be accepted before implementation"
+        return f"delivery architecture status must be accepted before implementation (got {architecture.get('status')!r})"
     for name in ("decision", "rollback"):
         if not isinstance(architecture.get(name), str) or not architecture[name].strip():
             return f"delivery architecture {name} is blank"
@@ -726,7 +743,7 @@ def delivery_validation_error(validation: Any) -> str | None:
     criteria: list[str] = []
     for item in validation:
         if not isinstance(item, dict) or set(item) != {"criterion", "commands", "evidence"}:
-            return "delivery validation entry is incomplete"
+            return "delivery validation entry is incomplete" + field_set_hint(item, {"criterion", "commands", "evidence"})
         if not isinstance(item.get("criterion"), str) or re.fullmatch(r"AC-[0-9]+", item["criterion"]) is None:
             return "delivery validation criterion is invalid"
         if not string_list(item.get("commands"), nonempty=True):
@@ -1100,7 +1117,7 @@ def delivery_intent_error(value: Any) -> str | None:
     }
     optional_fields = {"standardAdoption", "snapshotMigration"}
     if not isinstance(value, dict) or not required_fields <= set(value) <= required_fields | optional_fields:
-        return "delivery must contain exactly the bounded-delivery fields"
+        return "delivery must contain exactly the bounded-delivery fields" + field_set_hint(value, required_fields, optional_fields)
     if "snapshotMigration" in value:
         try:
             migration_error = snapshot_migration_runtime().contract_error(value["snapshotMigration"])
