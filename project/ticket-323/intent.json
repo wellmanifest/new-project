@@ -1,0 +1,79 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-323",
+  "summary": "Run every Python test suite in CI and refuse unwired ones",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-323/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ef79837af3516056d84828e614b8ab3f077dd43c",
+    "targetBranch": "main",
+    "outcome": "CI runs the 16 Python test suites that no step executed, and refuses a future tests/*_test.py or *.test.py that is wired neither in ci.yml nor in a shell suite.",
+    "nonGoals": [
+      "No change to test contents or governance scripts",
+      "No change to the windows-governance job"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add one ci.yml step: suites with __main__ run via python3, bare-function suites via pinned pytest 9.1.1; extend the existing wiring guard from *.test.sh to Python suites (referenced in ci.yml or a shell suite).",
+      "components": [
+        {
+          "name": "ci-workflow",
+          "paths": [
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ci.yml step and guard extension."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash <(python3 -c \"import yaml;print([s for s in yaml.safe_load(open('.github/workflows/ci.yml'))['jobs']['test']['steps'] if s.get('name')=='Test previously unwired Python suites'][0]['run'])\")"
+        ],
+        "evidence": "All 16 previously unwired suites pass locally (13 via __main__, 3 via pytest)."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Native governance validation passes; wiring guard reports no unwired suite and flags a synthetic new one."
+      }
+    ]
+  }
+}
