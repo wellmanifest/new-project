@@ -88,6 +88,30 @@ def read_json(path):
         raise ObservationError("Missing or invalid governance input") from error
 
 
+def _historical_inactive_logs(root, ticket_dir, key, status, dirty_paths, target_sha):
+    """Recognize unchanged inactive legacy prose, never a writer or allocation.
+
+    New/modified contracts, existing invalid intents and branch-owned material
+    work retain the normal conservative checks. Only an identical README on
+    the observed target and direct diagnostic log files qualify.
+    """
+    if status not in {"BACKLOG", "PLAN", "BLOCKED"} or ticket_dir.is_symlink():
+        return False
+    intent = ticket_dir / "intent.json"
+    readme = ticket_dir / "README.md"
+    if intent.exists() or intent.is_symlink() or readme.is_symlink() or not readme.is_file():
+        return False
+    prefix = "project/" + key + "/"
+    changed = [name for name in dirty_paths if name.startswith(prefix)]
+    if not changed or any(Path(name).parent.as_posix() != prefix.rstrip("/")
+                          or not Path(name).name.endswith(".log.md")
+                          or (root / name).is_symlink() or not (root / name).is_file()
+                          for name in changed):
+        return False
+    committed = git(root, "show", target_sha + ":" + prefix + "README.md", optional=True)
+    return committed is not None and readme.read_bytes() == committed.encode("utf-8", "surrogateescape")
+
+
 def manifest_at(root):
     for rel in (".governance/manifest.json", ".governance/manifest.base.json",
                 "governance/manifest.hub.json"):
@@ -556,10 +580,15 @@ def inspect(root, workstream, requested_paths=(), ticket=None, storage=None,
                 intent = json.loads(record["files"]["intent.json"][0])
                 resolution = resolve_activity(path, path / "project" / key, statuses, status_override=match[1])
             else:
-                intent = read_json(path / "project" / key / "intent.json")
-                resolution = resolve_activity(path, path / "project" / key, statuses)
+                ticket_dir = path / "project" / key
+                resolution = resolve_activity(path, ticket_dir, statuses)
                 if resolution.projectionStatus is None:
                     raise ObservationError("Unassigned ticket status unavailable")
+                if not resolution.active and _historical_inactive_logs(
+                        path, ticket_dir, key, resolution.projectionStatus,
+                        entry["allDirtyPaths"], target_sha):
+                    continue
+                intent = read_json(ticket_dir / "intent.json")
             scope = material(patterns(intent.get("allowedPaths")))
             unassigned[key] = True
             if resolution.active and intent.get("workstream") == workstream:

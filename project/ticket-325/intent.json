@@ -1,0 +1,86 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-325",
+  "summary": "PLF-2993, dependencyforPLF-2988. SESSION_EXECUTION_AUTHORIZATION: user continue,test,repairautonomy,merge. Preserveinactivelegacytickets and foreignlogs; read-onlyadmission mustnotinvent pendingallocation fromunchangedhistoricalinactive log-onlycarrier.",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-325/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/work_start_check.py",
+    "tests/work_start_test.py",
+    "tests/governance-scripts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "0b5a3740126e80ec2f4d8754712f9642af4206ea",
+    "targetBranch": "main",
+    "outcome": "Missing legacy intent does not block unrelated admission solely because log prose was added to an unchanged committed BACKLOG/PLAN/BLOCKED carrier. Unknown, active, new/changed carrier, symlink, invalid intent and material delta remain conservative. Publish source independently; target adoption is separately pinned.",
+    "nonGoals": [
+      "No authority from statuses or observer results, lease reclamation, fabricated legacyintent, receiptdeletion ortargetmanagedfile overwrite",
+      "No ignoringactive/new/changedcarriers, invalidexistingintent, materialsource edits, unknownschema orSQLiteauthority"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Before requiring intent for unassigned filecarriers, recognize only target-committed identical inactive README plus log-onlydirtypaths and absentlegacyintent. This releases noownedwriter; read-onlyroute nevergrantsauthority. Branch/native allocation and SQLitepaths remainstrict. Wire the existing shell-suite CI runner to the complete observer suite so actualOneDev executes the regressions.",
+      "components": [
+        {
+          "name": "work-admission",
+          "paths": [
+            "scripts/work_start_check.py",
+            "tests/work_start_test.py",
+            "tests/governance-scripts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Governed revert; preserve carrierlogs and re-observeadmission."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/work_start_test.py",
+          "bash tests/governance-scripts.test.sh"
+        ],
+        "evidence": "RealGitpositiveunchangedinactivelegacylog, negativeactive/new/changed/symlink/invalidintent/materialconflicts; regressionfailsbeforepatch."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh",
+          "requiredOneDevverification",
+          "IndependentexactheadValidatorpublication"
+        ],
+        "evidence": "No authorapprovedmerge; source/targetadoptionreportedseparately."
+      }
+    ]
+  }
+}
