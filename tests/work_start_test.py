@@ -334,6 +334,91 @@ class WorkStartTest(unittest.TestCase):
             "schema": "new-project.intent/v3", "ticket": f"ticket-{number:03d}",
             "workstream": "api", "allowedPaths": paths, "marker": marker}))
 
+    def legacy_inactive_carrier(self, number=1, status="BACKLOG"):
+        directory = self.root / "project" / f"ticket-{number:03d}"
+        directory.mkdir(parents=True, exist_ok=True)
+        readme = directory / "README.md"
+        readme.write_text(f"- **Status**: {status}\nHistorical work; no intent.\n")
+        self.git(self.root, "add", str(readme.relative_to(self.root)))
+        self.git(self.root, "commit", "-m", "historical carrier")
+        log = directory / "koru.log.md"
+        log.write_text("Foreign diagnostic evidence; preserve.\n")
+        return directory
+
+    def test_inactive_historical_log_does_not_invent_scope_reservation(self):
+        for number, status in enumerate(("BACKLOG", "PLAN", "BLOCKED"), start=1):
+            with self.subTest(status=status):
+                directory = self.legacy_inactive_carrier(number, status)
+                before = self.git(self.root, "status", "--porcelain")
+                report = self.report()
+                self.assertEqual(report["route"], "NEW_TICKET_CANDIDATE")
+                self.assertEqual(report["activeTicketCount"], 0)
+                self.assertEqual(report["blockers"], [])
+                self.assertIn(str((directory / "koru.log.md").relative_to(self.root)),
+                              report["worktrees"][0]["allDirtyPaths"])
+                self.assertFalse((directory / "intent.json").exists())
+                self.assertEqual(self.git(self.root, "status", "--porcelain"), before)
+                self.assertEqual((directory / "koru.log.md").read_text(),
+                                 "Foreign diagnostic evidence; preserve.\n")
+
+    def test_active_legacy_log_still_requires_intent(self):
+        self.legacy_inactive_carrier(status="IN_PROGRESS")
+        with self.assertRaises(start.ObservationError):
+            self.report()
+
+    def test_new_inactive_carrier_still_requires_intent(self):
+        directory = self.root / "project/ticket-001"
+        directory.mkdir()
+        (directory / "README.md").write_text("- **Status**: BACKLOG\n")
+        (directory / "koru.log.md").write_text("new allocation\n")
+        with self.assertRaises(start.ObservationError):
+            self.report()
+
+    def test_modified_inactive_status_cannot_hide_missing_intent(self):
+        directory = self.legacy_inactive_carrier(status="IN_PROGRESS")
+        (directory / "README.md").write_text("- **Status**: BACKLOG\n")
+        with self.assertRaises(start.ObservationError):
+            self.report()
+
+    def test_inactive_log_does_not_hide_invalid_existing_intent(self):
+        directory = self.legacy_inactive_carrier()
+        (directory / "intent.json").write_text("invalid JSON")
+        with self.assertRaises(start.ObservationError):
+            self.report()
+
+    def test_symlinked_inactive_legacy_readme_remains_conservative(self):
+        directory = self.legacy_inactive_carrier()
+        readme = directory / "README.md"
+        target = Path(self.temp.name) / "foreign-readme.md"
+        target.write_bytes(readme.read_bytes())
+        readme.unlink()
+        readme.symlink_to(target)
+        with self.assertRaises(start.ObservationError):
+            self.report()
+
+    def test_symlinked_inactive_legacy_log_remains_conservative(self):
+        directory = self.legacy_inactive_carrier()
+        log = directory / "koru.log.md"
+        target = Path(self.temp.name) / "foreign.log.md"
+        target.write_bytes(log.read_bytes())
+        log.unlink()
+        log.symlink_to(target)
+        with self.assertRaises(start.ObservationError):
+            self.report()
+
+    def test_non_log_legacy_carrier_delta_still_requires_intent(self):
+        directory = self.legacy_inactive_carrier()
+        (directory / "proposal.md").write_text("Unassigned proposed implementation.\n")
+        with self.assertRaises(start.ObservationError):
+            self.report()
+
+    def test_inactive_legacy_log_does_not_hide_overlapping_material_delta(self):
+        self.legacy_inactive_carrier()
+        (self.root / "api/a.txt").write_text("foreign uncommitted implementation\n")
+        report = self.report()
+        self.assertNotEqual(report["route"], "NEW_TICKET_CANDIDATE")
+        self.assertIn("pending-delta", [b["reason"] for b in report["blockers"]])
+
     def merged_ticket_behind_primary(self, number=5):
         """Deliver a ticket to origin/main while the primary checkout stays behind it."""
         self.remote()
