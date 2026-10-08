@@ -1,0 +1,85 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-322",
+  "summary": "Say what intent delivery fields expect when GOV-INTENT-002 rejects them",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-322/**",
+    ".github/workflows/ci.yml",
+    "TODO.md",
+    "project/TICKETS.md",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/governance_check.py",
+    "tests/intent_delivery_messages_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "fa1eef49fa514188f36a832802ddb90c7571275b",
+    "targetBranch": "main",
+    "outcome": "GOV-INTENT-002 delivery rejections name the missing/unexpected fields, the received value and the allowed values, so an agent can repair an intent in one edit.",
+    "nonGoals": [
+      "No change to what the validator accepts or rejects",
+      "No intent skeleton generation in new-ticket.sh"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add field_set_hint() and append received/allowed values to existing delivery_* messages, keeping each message prefix unchanged for existing matchers; mirror the bundled copy.",
+      "components": [
+        {
+          "name": "governance-check",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "tests/intent_delivery_messages_test.py",
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the message changes; validation semantics are unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/intent_delivery_messages_test.py"
+        ],
+        "evidence": "Messages name missing/unexpected fields and allowed values; valid intents still pass; bundled copy identical."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Native governance validation passes."
+      }
+    ]
+  }
+}
