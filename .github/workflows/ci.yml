@@ -128,6 +128,8 @@ jobs:
         run: python3 tests/work_start_test.py
       - name: Test actionable intent delivery messages
         run: python3 tests/intent_delivery_messages_test.py
+      - name: Test actionable scope ownership messages
+        run: python3 tests/scope_ownership_message_test.py
       - name: Test ticket governance scripts
         run: bash tests/governance-scripts.test.sh
       - name: Test terminal receipt activity resolver
