@@ -82,7 +82,7 @@ jobs:
           fi
           python3 scripts/branch_lifecycle_check.py "${arguments[@]}"
       - name: Install schema and wheel-test prerequisites
-        run: python3 -m pip install --disable-pip-version-check 'jsonschema==4.25.1' 'setuptools==80.9.0' 'wheel==0.45.1'
+        run: python3 -m pip install --disable-pip-version-check 'jsonschema==4.25.1' 'setuptools==80.9.0' 'wheel==0.45.1' 'pytest==9.1.1'
       - name: Validate JSON contracts
         run: |
           python3 -m json.tool governance/manifest.schema.json >/dev/null
@@ -162,6 +162,34 @@ jobs:
         run: python3 tests/remediation_plan_safety_test.py
       - name: Test portable lease scalar document validation
         run: python3 tests/change_lease_safety_test.py
+      # These suites existed but no step ran them. Suites with a __main__ entry run
+      # directly (hyphenated names cannot be imported by pytest); the three that only
+      # define bare test functions would run nothing that way, so pytest collects them.
+      - name: Test previously unwired Python suites
+        run: |
+          set -euo pipefail
+          for suite in \
+              tests/adoption_upgrade_harmonization_test.py \
+              tests/branch_hygiene_template_test.py \
+              tests/canonical-schema-hosts.test.py \
+              tests/input_validation_test.py \
+              tests/lifecycle-adoption.test.py \
+              tests/pytest_base_test.py \
+              tests/scaffold_bootstrap_test.py \
+              tests/secret_detection_test.py \
+              tests/ticket-recovery.test.py \
+              tests/work-registration.test.py \
+              tests/workspace_activity_test.py \
+              tests/workspace_observation_test.py \
+              tests/worktrees-adoption.test.py; do
+            echo "::group::$suite"
+            python3 "$suite"
+            echo "::endgroup::"
+          done
+          python3 -m pytest -q -p no:cacheprovider -p no:wellmanifest_governance \
+            tests/adoption_release_auth_test.py \
+            tests/prune_merged_worktrees_test.py \
+            tests/ticket_index_merge_driver_test.py
       # Every tests/*.test.sh must be listed above. The list is hand-written, so
       # this refuses to pass when a suite exists that no step runs - which is how
       # governance-env.test.sh went unexecuted after ticket 020 added it.
@@ -185,6 +213,14 @@ jobs:
           missing=0
           for suite in tests/*.test.sh; do
             if ! grep -Fq "bash $suite" .github/workflows/ci.yml; then
+              echo "CI does not run $suite" >&2
+              missing=1
+            fi
+          done
+          # Python suites may run here directly or from a shell suite above.
+          for suite in tests/*_test.py tests/*.test.py; do
+            if ! grep -Fq "$suite" .github/workflows/ci.yml \
+                && ! grep -Fq "${suite#tests/}" tests/*.test.sh; then
               echo "CI does not run $suite" >&2
               missing=1
             fi
