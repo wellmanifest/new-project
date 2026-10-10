@@ -17,7 +17,8 @@
     "subprojects/session-recovery/**",
     "tests/session-recovery-adoption.test.py",
     "template/files/AGENTS.template.md",
-    "AGENTS.md"
+    "AGENTS.md",
+    "tests/standard-pack-check.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -54,7 +55,8 @@
             "subprojects/session-recovery/**",
             "tests/session-recovery-adoption.test.py",
             "template/files/AGENTS.template.md",
-            "AGENTS.md"
+            "AGENTS.md",
+            "tests/standard-pack-check.test.sh"
           ]
         }
       ],
