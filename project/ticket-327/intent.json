@@ -1,0 +1,97 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-327",
+  "summary": "enforce version parity across VERSION, manifests and code",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-327/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/governance_check.py",
+    "governance/diagnostics.json",
+    "governance/rule-enforcement.json",
+    "governance/manifest.default.json",
+    "error/GOV-VERSION.md",
+    "template/projects/python-package.template.md",
+    "tests/governance-scripts.test.sh",
+    "tests/version-parity.test.sh",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "governance/package-manifest.json",
+    ".github/workflows/ci.yml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "64492333fd090e92a68a7c91c01af9f32eb08bc1",
+    "targetBranch": "main",
+    "outcome": "Deterministic version parity validation in governance gate, manifest updates and template modernization.",
+    "nonGoals": [
+      "Do not weaken exact-head verification in CI.",
+      "Do not break existing repositories that adhere to plain version declarations."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add check_version_parity to governance_check.py to enforce strict version consistency across VERSION, pyproject.toml, setup.py, package.json, Cargo.toml and __init__.py with diagnostic GOV-VERSION-001 mapped to rule P-CORE-027.",
+      "components": [
+        {
+          "name": "governance-core",
+          "paths": [
+            "scripts/governance_check.py",
+            "governance/diagnostics.json",
+            "governance/rule-enforcement.json",
+            "governance/manifest.default.json",
+            "error/GOV-VERSION.md",
+            "template/projects/python-package.template.md",
+            "tests/governance-scripts.test.sh",
+            "tests/version-parity.test.sh",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "governance/package-manifest.json",
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "scripts/governance_check.py: add check_version_parity validation",
+        ".github/workflows/ci.yml: wire version-parity.test.sh"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./tests/version-parity.test.sh",
+          "python3 scripts/audit_rule_enforcement.py",
+          "python3 scripts/audit_diagnostics.py"
+        ],
+        "evidence": "All parity and audit tests pass deterministically."
+      }
+    ]
+  }
+}
