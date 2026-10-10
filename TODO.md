@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [x] [`ticket-326`](project/ticket-326/README.md) — powiązano standard `wellmanifest/session-recovery`
+  jako vendored copy pod lockiem SHA-256 (`governance/session-recovery.lock.json`),
+  ze statusem HOME w repozytorium `wellmanifest/session-recovery`, testami adopcji
+  `tests/session-recovery-adoption.test.py` oraz wpisem w `governance/standard-packs.json`.
+  Stan: `IN_PROGRESS / EDIT`; klasyfikacja: `SERVICE / P2 / health`; workstream: `governance`.
+
 - [x] [`ticket-246`](project/ticket-246/README.md) — ustanowiono kanoniczny host
   schematów `https://wellmanifest.com/schemas/`, reguły routingu przestrzeni nazw
   i aliasów, zasadę niezmienności semantycznej schematów (schema immutability invariant)
