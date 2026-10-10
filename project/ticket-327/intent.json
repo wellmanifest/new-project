@@ -21,6 +21,7 @@
     "tests/governance-scripts.test.sh",
     "tests/version-parity.test.sh",
     "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "governance/package-manifest.json",
     ".github/workflows/ci.yml"
   ],
   "forbiddenPaths": [
@@ -62,6 +63,7 @@
             "tests/governance-scripts.test.sh",
             "tests/version-parity.test.sh",
             "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "governance/package-manifest.json",
             ".github/workflows/ci.yml"
           ]
         }
