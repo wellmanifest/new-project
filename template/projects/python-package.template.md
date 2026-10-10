@@ -43,10 +43,27 @@ files:
       [tool.pytest.ini_options]
       testpaths = ["tests"]
 
+  - path: "{{ project_name }}/VERSION"
+    type: config
+    contents: |
+      0.1.0
+
   - path: "{{ project_name }}/src/{{ package_name }}/__init__.py"
     type: source
     contents: |
-      __version__ = "0.1.0"
+      from importlib import metadata
+      from pathlib import Path
+
+      def _get_version() -> str:
+          try:
+              return metadata.version("{{ project_name }}")
+          except Exception:
+              version_file = Path(__file__).resolve().parents[2] / "VERSION"
+              if version_file.is_file():
+                  return version_file.read_text(encoding="utf-8").strip()
+              return "0.1.0"
+
+      __version__ = _get_version()
 
   - path: "{{ project_name }}/src/{{ package_name }}/main.py"
     type: source

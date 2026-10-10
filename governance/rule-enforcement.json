@@ -1109,7 +1109,8 @@
     },
     "P-CORE-027": {
       "codes": [
-        "GOV-MATERIAL-001"
+        "GOV-MATERIAL-001",
+        "GOV-VERSION-001"
       ],
       "enforcement": "deterministic"
     },
