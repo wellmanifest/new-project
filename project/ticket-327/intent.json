@@ -20,6 +20,7 @@
     "template/projects/python-package.template.md",
     "tests/governance-scripts.test.sh",
     "tests/version-parity.test.sh",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
     ".github/workflows/ci.yml"
   ],
   "forbiddenPaths": [
@@ -60,6 +61,7 @@
             "template/projects/python-package.template.md",
             "tests/governance-scripts.test.sh",
             "tests/version-parity.test.sh",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
             ".github/workflows/ci.yml"
           ]
         }
