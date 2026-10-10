@@ -1,0 +1,39 @@
+{
+  "schema": "new-project.session-recovery-lock/v1",
+  "dependency": {
+    "id": "wellmanifest/session-recovery",
+    "version": "0.1.0",
+    "sourceRepository": "wellmanifest/session-recovery",
+    "sourceRevision": "e04f789ea78cd6f04de870cd23eec85c53b04a49"
+  },
+  "artifacts": [
+    {
+      "sourcePath": "standard/session-recovery.schema.json",
+      "packageSourcePath": "subprojects/session-recovery/session-recovery.schema.json",
+      "managedTargetPath": null,
+      "sourceSha256": "e69995ca487d1cb1e8d3c64d1b05fc3e305fc62d0ea2321a335012089fe0f709"
+    },
+    {
+      "sourcePath": "standard/POLICY.md",
+      "packageSourcePath": "subprojects/session-recovery/POLICY.md",
+      "managedTargetPath": null,
+      "sourceSha256": "c4fe74d6a350996fd1e8fd3a89bda60f75ee2f64d30414fd6d52b957f793913f"
+    },
+    {
+      "sourcePath": "standard/conformance.py",
+      "packageSourcePath": "subprojects/session-recovery/conformance.py",
+      "managedTargetPath": null,
+      "sourceSha256": "69240750c941d612a8ab48dd63714385b8d994a674e19dcf16c4e8330ef15a95"
+    },
+    {
+      "sourcePath": "README.md",
+      "packageSourcePath": "subprojects/session-recovery/README.md",
+      "managedTargetPath": null,
+      "sourceSha256": "7942802d2189b054ed412db7f0e0806e83a1cc1a694307da8ecf80ff42c1202b"
+    }
+  ],
+  "installation": {
+    "lockTargetPath": ".governance/session-recovery.lock.json",
+    "networkRequired": false
+  }
+}

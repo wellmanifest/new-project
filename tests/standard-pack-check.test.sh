@@ -64,4 +64,6 @@ python3 "$root/tests/runtime_safety_test.py" \
   RuntimeSafetyTests.test_catalog_execution_models_are_typed_before_strict_conformance \
   RuntimeSafetyTests.test_adoption_artifacts_stay_in_the_canonical_checkout
 
+python3 "$root/tests/session-recovery-adoption.test.py"
+
 echo "standard-pack-check.test.sh OK"

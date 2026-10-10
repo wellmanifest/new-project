@@ -1,0 +1,84 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-326",
+  "summary": "adopt wellmanifest/session-recovery standard pack",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-326/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/standard-packs.json",
+    "governance/session-recovery.lock.json",
+    "subprojects/session-recovery/**",
+    "tests/session-recovery-adoption.test.py",
+    "template/files/AGENTS.template.md",
+    "AGENTS.md",
+    "tests/standard-pack-check.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a8c1f9a6ff46d957195b8b5814c5c4df9e0a28d2",
+    "targetBranch": "main",
+    "outcome": "Adopt wellmanifest/session-recovery standard pack as vendored copy bound by lock and parity tests.",
+    "nonGoals": [
+      "Do not modify standalone repository histories or break independent schema digests.",
+      "Do not weaken exact-head verification in CI."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Adopt wellmanifest/session-recovery standard pack: standalone repository wellmanifest/session-recovery is canonical HOME. In new-project, subprojects/session-recovery is a vendored copy bound by governance/session-recovery.lock.json. Drift is gated by tests/session-recovery-adoption.test.py and pack is registered in governance/standard-packs.json.",
+      "components": [
+        {
+          "name": "session-recovery-subproject",
+          "paths": [
+            "governance/standard-packs.json",
+            "governance/session-recovery.lock.json",
+            "subprojects/session-recovery/**",
+            "tests/session-recovery-adoption.test.py",
+            "template/files/AGENTS.template.md",
+            "AGENTS.md",
+            "tests/standard-pack-check.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/session-recovery-adoption.test.py"
+        ],
+        "evidence": "tests/session-recovery-adoption.test.py passes with 3/3 tests OK."
+      }
+    ]
+  }
+}

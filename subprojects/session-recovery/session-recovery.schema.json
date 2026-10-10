@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wellmanifest.com/schemas/session-recovery/v1",
+  "title": "LLM Session Recovery Contract",
+  "description": "Normative schema for LLM host session resilience, storage integrity, automated salvage, and workspace state rehydration.",
+  "type": "object",
+  "definitions": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "sessionId": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]{1,128}$"
+    },
+    "healthStatus": {
+      "type": "string",
+      "enum": ["HEALTHY", "DEGRADED", "CORRUPTED", "QUARANTINED", "SALVAGED"]
+    },
+    "storageBackend": {
+      "type": "string",
+      "enum": ["sqlite", "jsonl", "flatfile", "proto", "memory"]
+    },
+    "sessionDescriptor": {
+      "type": "object",
+      "required": ["sessionId", "backend", "status", "storePath", "stepCount", "lastModified"],
+      "properties": {
+        "sessionId": { "$ref": "#/definitions/sessionId" },
+        "backend": { "$ref": "#/definitions/storageBackend" },
+        "status": { "$ref": "#/definitions/healthStatus" },
+        "storePath": { "type": "string" },
+        "stepCount": { "type": "integer", "minimum": 0 },
+        "lastModified": { "type": "string", "format": "date-time" },
+        "integrityCheckResult": { "type": ["string", "null"] },
+        "checksumSha256": {
+          "oneOf": [{ "$ref": "#/definitions/sha256" }, { "type": "null" }]
+        }
+      },
+      "additionalProperties": false
+    },
+    "salvageReceipt": {
+      "type": "object",
+      "required": [
+        "schema",
+        "sessionId",
+        "originalStorePath",
+        "quarantinedPath",
+        "recoveredStorePath",
+        "originalSha256",
+        "recoveredSha256",
+        "salvagedStepCount",
+        "salvagedAt",
+        "status"
+      ],
+      "properties": {
+        "schema": { "const": "wellmanifest.session-recovery-salvage/v1" },
+        "sessionId": { "$ref": "#/definitions/sessionId" },
+        "originalStorePath": { "type": "string" },
+        "quarantinedPath": { "type": "string" },
+        "recoveredStorePath": { "type": "string" },
+        "originalSha256": { "$ref": "#/definitions/sha256" },
+        "recoveredSha256": { "$ref": "#/definitions/sha256" },
+        "salvagedStepCount": { "type": "integer", "minimum": 0 },
+        "diagnosticFinding": { "type": "string" },
+        "salvagedAt": { "type": "string", "format": "date-time" },
+        "status": { "enum": ["COMPLETED", "PARTIAL", "FAILED"] }
+      },
+      "additionalProperties": false
+    },
+    "rehydrationEnvelope": {
+      "type": "object",
+      "required": [
+        "schema",
+        "sessionId",
+        "repositoryPath",
+        "targetBranch",
+        "headSha",
+        "ticketId",
+        "intentSha256",
+        "activePhase",
+        "rehydrationPrompt",
+        "createdAt"
+      ],
+      "properties": {
+        "schema": { "const": "wellmanifest.session-recovery-rehydration/v1" },
+        "sessionId": { "$ref": "#/definitions/sessionId" },
+        "repositoryPath": { "type": "string" },
+        "targetBranch": { "type": "string" },
+        "headSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "ticketId": { "type": "string", "pattern": "^ticket-[0-9]{3,}$" },
+        "intentSha256": { "$ref": "#/definitions/sha256" },
+        "activePhase": {
+          "type": "string",
+          "enum": ["analysis", "plan", "tools", "edit", "validation", "publication", "blocked"]
+        },
+        "lastCheckpointRef": { "type": ["string", "null"] },
+        "rehydrationPrompt": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/definitions/sessionDescriptor" },
+    { "$ref": "#/definitions/salvageReceipt" },
+    { "$ref": "#/definitions/rehydrationEnvelope" }
+  ]
+}
