@@ -1,0 +1,78 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-330",
+  "summary": "bump release version projection to 0.20.92",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-330/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "delivery": {
+    "acceptedBaseSha": "70d370ced39cc4952bfdb77ffb847092a293d255",
+    "targetBranch": "main",
+    "outcome": "Advance release version projections atomically to 0.20.92 across VERSION, pyproject.toml, manifest.hub.json and manifest.default.json for downstream immutable tag adoption.",
+    "nonGoals": [
+      "Do not modify governance rules or validation logic in this release bump."
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Synchronize VERSION, pyproject.toml, manifest.hub.json and manifest.default.json to 0.20.92 to publish packaging ignores and session recovery features.",
+      "components": [
+        {
+          "name": "governance-release",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./tests/version-parity.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Version parity tests and full governance gate pass."
+      }
+    ]
+  },
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
