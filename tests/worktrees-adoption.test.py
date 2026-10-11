@@ -96,6 +96,22 @@ class WorktreesAdoptionTest(unittest.TestCase):
                     generator.worktree_ignore_payload(target)
                 self.assertEqual(outside.read_bytes(), original)
 
+    def test_adoption_adds_packaging_rules_for_python_and_node(self):
+        spec = importlib.util.spec_from_file_location(
+            "adoption_generator", ROOT / "scripts/create_adoption_lock.py")
+        generator = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(generator)
+        with tempfile.TemporaryDirectory() as directory:
+            target = pathlib.Path(directory)
+            run("git", "init", "--quiet", str(target))
+            (target / "pyproject.toml").write_text("[project]\nname='test'\n", encoding="utf-8")
+            (target / "package.json").write_text('{"name": "test"}', encoding="utf-8")
+            rendered = generator.worktree_ignore_payload(target)
+            (target / ".gitignore").write_bytes(rendered)
+            for path in ("sample.egg-info/SOURCES.txt", "dist/bundle.tar.gz", "build/lib", "node_modules/pkg"):
+                self.assertEqual(subprocess.run(
+                    ["git", "check-ignore", "--quiet", path], cwd=target).returncode, 0, f"Expected {path} to be ignored")
+
     def test_published_probe_accepts_explicit_repository_from_another_cwd(self):
         with tempfile.TemporaryDirectory() as directory:
             output = run(sys.executable, str(ROOT / "subprojects/worktrees/conformance.py"),
