@@ -100,6 +100,9 @@ for workflow, expected_ref in runtime_refs.items():
         raise SystemExit(f"{workflow}: install Wellman from the canonical standard release tag")
 PY3
 
+echo "== isolated CI runtime installation regression =="
+"$PY" "$ROOT/tests/ci-runtime-isolation.test.py"
+
 echo "== detached PR workflow regression with the installed runtime =="
 "$PY" "$ROOT/tests/ci-pr-range.test.py"
 

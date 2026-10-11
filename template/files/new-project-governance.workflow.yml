@@ -107,8 +107,11 @@ jobs:
           set -euo pipefail
           standard_version="$(python3 -c 'import json; print(json.load(open(".governance/manifest.json", encoding="utf-8"))["standard"]["version"])')"
           runtime_ref="v${standard_version}"
-          python3 -m pip install --disable-pip-version-check "git+https://github.com/wellmanifest/new-project.git@${runtime_ref}#subdirectory=packages/wellman"
-          wellman --version
+          runtime_venv="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/wellman-governance.XXXXXX")"
+          python3 -m venv "$runtime_venv"
+          "$runtime_venv/bin/python" -m pip install --disable-pip-version-check "git+https://github.com/wellmanifest/new-project.git@${runtime_ref}#subdirectory=packages/wellman"
+          printf '%s\n' "$runtime_venv/bin" >> "$GITHUB_PATH"
+          "$runtime_venv/bin/wellman" --version
       - name: Run the managed governance gate
         shell: bash
         env:

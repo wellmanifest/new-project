@@ -1,0 +1,108 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-332",
+  "summary": "Isolate adopted governance runtime installation from system Python",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-332/**",
+    "template/files/new-project-governance.workflow.yml",
+    ".github/workflows/governance-gate-reusable.yml",
+    "tests/ci-runtime-isolation.test.py",
+    "tests/wellman-package.test.sh",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "fcbb13e0ae04c688d825d5a87e2d2721dfab483d",
+    "targetBranch": "main",
+    "outcome": "Install governance runtime in an isolated job-local virtual environment on hosted and self-hosted runners; publish immutable 0.20.93 with regression evidence so adopters retain all required gates.",
+    "nonGoals": [
+      "No system Python modification or PEP 668 bypass",
+      "No weakening required checks or merge approval",
+      "No changes to unrelated local main commit ticket-331 or workspace cleanup"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Workflow installation creates a job-local virtual environment, installs the selected standard runtime there, and exports its executable directory to later steps. Execute delivered shell blocks in deterministic fixtures, including installation failure and paths containing spaces.",
+      "components": [
+        {
+          "name": "ci-runtime",
+          "paths": [
+            "template/files/new-project-governance.workflow.yml",
+            ".github/workflows/governance-gate-reusable.yml",
+            "tests/ci-runtime-isolation.test.py",
+            "tests/wellman-package.test.sh"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Adopters retain previous immutable pin; revert source repair through protected delivery without moving published tags."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ci-runtime-isolation.test.py",
+          "bash tests/wellman-package.test.sh"
+        ],
+        "evidence": "Delivered installers avoid system pip, propagate installed runtime and reject failed installs; installed package and detached PR regressions pass."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/required-checks.test.sh",
+          "bash tests/version-parity.test.sh",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Required checks remain present, release projections match, governance passes."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal --delivery-mode pull-request --no-publish -a push --ticket ticket-332",
+          "Independent OneDev/Validator and declared Goal immutable publication"
+        ],
+        "evidence": "Trusted exact-head approval, merge and immutable release precede adoption."
+      }
+    ]
+  }
+}
