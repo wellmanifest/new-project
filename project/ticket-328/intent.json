@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-328",
+  "summary": "Include standard packaging and build ignores in adoption lock gitignore payload",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-328/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/create_adoption_lock.py",
+    "tests/worktrees-adoption.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a86eb3fc364a7784ad101984ddf7409dff6287c8",
+    "targetBranch": "main",
+    "outcome": "Include standard packaging and build ignores (Python egg-info/dist/build, Node node_modules, Cargo /target/) in adoption lock gitignore payload.",
+    "nonGoals": [
+      "Do not replace target-owned .gitignore rules.",
+      "Do not weaken exact-head verification."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend worktree_ignore_payload in scripts/create_adoption_lock.py to inspect target_root markers (pyproject.toml, package.json, Cargo.toml) and append standard packaging/build ignores without overriding target-owned rules.",
+      "components": [
+        {
+          "name": "adoption-generator",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "tests/worktrees-adoption.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/worktrees-adoption.test.py"
+        ],
+        "evidence": "tests/worktrees-adoption.test.py passes with 12/12 tests OK."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Governance check passes with 0 errors and 0 warnings."
+      }
+    ]
+  }
+}

@@ -392,6 +392,18 @@ def worktree_ignore_payload(target_root: Path) -> bytes:
         f"/.subactor/{name}/".encode()
         for name in ("leases", "sessions", "recovery", "receipts", "cache", "snapshots")
     ]
+    has_python = (
+        (target_root / "pyproject.toml").exists()
+        or (target_root / "setup.py").exists()
+        or (target_root / "setup.cfg").exists()
+        or ((target_root / "packages").is_dir() and any((target_root / "packages").iterdir()))
+    )
+    if has_python:
+        rules.extend([b"*.egg-info/", b"*.egg", b"build/", b"dist/"])
+    if (target_root / "package.json").exists():
+        rules.append(b"node_modules/")
+    if (target_root / "Cargo.toml").exists():
+        rules.append(b"/target/")
     present = set(content.splitlines())
     missing = [rule for rule in rules if rule not in present]
     if not missing:
