@@ -7,10 +7,12 @@ import json
 import os
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -169,6 +171,134 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
         self.assertFalse((linked / "project/ticket-002").exists())
         self.assertFalse((self.root / "project/ticket-002").exists())
         self.assertEqual((self.root / ".git/new-project-ticket-high-water").read_text().strip(), "2")
+
+
+ALLOCATOR = ROOT / "project/new-ticket.sh"
+SOURCE = ALLOCATOR.read_text()
+LEASE_WRITER = SOURCE.split('from datetime import datetime, timedelta, timezone\n', 1)[1].split('\nPY\n', 1)[0]
+LEASE_WRITER = 'from datetime import datetime, timedelta, timezone\n' + LEASE_WRITER
+
+
+@unittest.skipUnless(hasattr(os, "O_NOFOLLOW") and hasattr(os, "O_DIRECTORY"),
+                     "POSIX directory-descriptor fixture")
+class LeaseRaceTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix='allocator-lease-race-')
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name) / 'repository'
+        self.root.mkdir()
+        self.intent = self.root / 'intent.json'
+        self.intent.write_text(json.dumps({'allowedPaths': ['src/fix.py']}))
+        self.lease = self.root / '.subactor/leases/ticket-001--fixture.json'
+        self.outside = Path(temporary.name) / 'outside'
+        self.outside.mkdir()
+        self.arguments = ['allocator-lease-writer', str(self.intent), str(self.lease),
+                          'ticket-001', 'application', 'ticket/001-fixture', 'fixture',
+                          'fixture/repository', 'main', 'a' * 40, 'fixture',
+                          '2026-10-11T21:00:00Z']
+
+    def execute(self):
+        with patch.object(sys, 'argv', self.arguments):
+            exec(compile(LEASE_WRITER, str(ALLOCATOR), 'exec'), {})
+
+    def captured_execution(self):
+        try:
+            self.execute()
+        except (OSError, SystemExit) as error:
+            return error
+        return None
+
+    def test_normal_write_creates_private_valid_lease(self):
+        self.execute()
+        data = json.loads(self.lease.read_text())
+        self.assertEqual(data['ticketId'], 'ticket-001')
+        self.assertEqual(data['fencingToken'], 1)
+        self.assertEqual(stat.S_IMODE(self.lease.stat().st_mode), 0o600)
+
+    def test_existing_lease_is_never_overwritten(self):
+        self.lease.parent.mkdir(parents=True)
+        self.lease.write_bytes(b'original lease')
+        self.assertIsNotNone(self.captured_execution())
+        self.assertEqual(self.lease.read_bytes(), b'original lease')
+
+    def test_existing_parent_symlink_creates_nothing_outside(self):
+        (self.root / '.subactor').symlink_to(self.outside, target_is_directory=True)
+        self.assertIsNotNone(self.captured_execution())
+        self.assertEqual(list(self.outside.iterdir()), [])
+
+    def test_parent_replacement_before_final_open_cannot_redirect_write(self):
+        self.lease.parent.mkdir(parents=True)
+        saved = self.lease.parent.with_name('leases-original')
+        original_open = os.open
+        attacked = []
+
+        def racing_open(path, flags, *args, **kwargs):
+            if flags & os.O_CREAT:
+                self.lease.parent.rename(saved)
+                self.lease.parent.symlink_to(self.outside, target_is_directory=True)
+                attacked.append(True)
+            return original_open(path, flags, *args, **kwargs)
+
+        supported = (os.supports_dir_fd - {original_open}) | {racing_open}
+        with patch.object(os, 'open', racing_open), patch.object(os, 'supports_dir_fd', supported):
+            self.execute()
+        self.assertEqual(attacked, [True])
+        self.assertFalse((self.outside / self.lease.name).exists())
+        self.assertTrue((saved / self.lease.name).is_file())
+
+    def test_new_directory_replaced_before_traversal_is_rejected(self):
+        (self.root / '.subactor').mkdir()
+        saved = self.lease.parent.with_name('leases-original')
+        original_mkdir = os.mkdir
+        attacked = []
+
+        def racing_mkdir(path, *args, **kwargs):
+            result = original_mkdir(path, *args, **kwargs)
+            if os.fspath(path) in {'leases', str(self.lease.parent)}:
+                self.lease.parent.rename(saved)
+                self.lease.parent.symlink_to(self.outside, target_is_directory=True)
+                attacked.append(True)
+            return result
+
+        supported = (os.supports_dir_fd - {original_mkdir}) | {racing_mkdir}
+        with patch.object(os, 'mkdir', racing_mkdir), patch.object(os, 'supports_dir_fd', supported):
+            self.assertIsNotNone(self.captured_execution())
+        self.assertEqual(attacked, [True])
+        self.assertEqual(list(self.outside.iterdir()), [])
+
+    def test_unsupported_host_fails_before_ticket_reservation(self):
+        fixture = TicketAllocationWorktreeTest()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        shim = self.root / "shim"
+        shim.mkdir()
+        interpreter = shim / "python3"
+        interpreter.write_text("#!" + sys.executable + "\n" + "\n".join([
+            "import os, sys",
+            "if sys.argv[1:] == ['-']:",
+            "    code = sys.stdin.read()",
+            "    if 'race-resistant lease creation is unsupported on this host' in code:",
+            "        os.supports_dir_fd = set()",
+            "    exec(compile(code, '<injected-host-capabilities>', 'exec'), {'__name__': '__main__'})",
+            "else:",
+            "    os.execv(sys.executable, [sys.executable, *sys.argv[1:]])",
+        ]) + "\n")
+        interpreter.chmod(0o755)
+        before = fixture.git("status", "--porcelain").stdout
+        with patch.dict(os.environ, {"PATH": str(shim) + os.pathsep + os.environ["PATH"]}):
+            result = fixture.allocate()
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("race-resistant lease creation is unsupported", result.stderr)
+        self.assertFalse((fixture.root / ".git/new-project-ticket-high-water").exists())
+        self.assertEqual(fixture.git("branch", "--list", "ticket/*").stdout, "")
+        self.assertFalse((fixture.root / ".subactor").exists())
+        self.assertEqual(fixture.git("status", "--porcelain").stdout, before)
+
+    def test_unsupported_directory_api_fails_before_lease_side_effects(self):
+        with patch.object(os, 'supports_dir_fd', set()):
+            self.assertIsNotNone(self.captured_execution())
+        self.assertFalse((self.root / '.subactor').exists())
+
 
 
 if __name__ == "__main__":

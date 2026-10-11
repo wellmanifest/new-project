@@ -333,6 +333,22 @@
 
 ## [Unreleased]
 
+## [0.20.94] - 2026-10-12
+
+### Docs
+- Update project/ticket-333/README.md
+
+### Test
+- Update tests/ticket-allocation-worktree.test.py
+
+### Other
+- Update VERSION
+- Update governance/manifest.default.json
+- Update governance/manifest.hub.json
+- Update packages/wellman/pyproject.toml
+- Update project/new-ticket.sh
+- Update project/ticket-333/intent.json
+
 ## [0.20.29] - 2026-09-14
 
 ### Fixed
