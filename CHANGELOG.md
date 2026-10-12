@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [0.20.97] - 2026-10-12
+
+### Fixed
+
+- Install CI governance runtime from an immutable SHA in the trusted base adoption
+  lock, never a candidate version or mutable tag. Initial adoption without a base
+  lock requires the protected repository variable `NEW_PROJECT_RUNTIME_SHA`.
+- Keep job-local Python environments and refuse malformed or missing trusted pins
+  before installation in both managed and reusable workflows.
+
 ## [0.20.96] - 2026-10-12
 
 ### Fixed

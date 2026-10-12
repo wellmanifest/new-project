@@ -1,0 +1,111 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-336",
+  "summary": "Pin CI governance runtime to trusted immutable source",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-336/**",
+    ".github/workflows/governance-gate-reusable.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "template/files/new-project-governance.workflow.yml",
+    "tests/ci-pr-range.test.py",
+    "tests/ci-runtime-isolation.test.py",
+    "tests/wellman-package.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "98b4c7fb73998c7f7a3cd4ecada4e891ee472d48",
+    "targetBranch": "main",
+    "outcome": "Publish immutable 0.20.97 with CI runtime selected from a trusted exact base adoption lock or protected SHA, never candidate version/tag.",
+    "nonGoals": [
+      "No deployed protected variable changes, candidate-owned bootstrap execution, adopter writes or approval bypass"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Inline stdlib-only bootstrap reads the exact trusted Git blob or protected config before isolated pip installation. Candidate lock/version cannot choose the runtime.",
+      "components": [
+        {
+          "name": "ci-runtime",
+          "paths": [
+            ".github/workflows/governance-gate-reusable.yml",
+            "template/files/new-project-governance.workflow.yml",
+            "tests/ci-pr-range.test.py",
+            "tests/ci-runtime-isolation.test.py",
+            "tests/wellman-package.test.sh"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Keep prior immutable adopter pins; revert source and regression tests through protected delivery without moving tags."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ci-runtime-isolation.test.py",
+          "python3 tests/ci-pr-range.test.py",
+          "bash tests/wellman-package.test.sh"
+        ],
+        "evidence": "Real Git base/head divergence, offline venv installation, fail-closed invalid/missing pins and initial-adoption protected override."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh",
+          "Goal full health and pytest"
+        ],
+        "evidence": "Governance and complete suites pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "Goal pull-request publication",
+          "Independent exact-head Validator and merge",
+          "Goal immutable release"
+        ],
+        "evidence": "Protected receipts and immutable published tag."
+      }
+    ]
+  }
+}

@@ -39,36 +39,77 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
 
-      - name: Resolve standard version
-        id: version
+      - name: Install governance runtime
         shell: bash
         env:
+          PROTECTED_RUNTIME_SHA: ${{ vars.NEW_PROJECT_RUNTIME_SHA }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_SHA: ${{ github.sha }}
+          EVENT_REF: ${{ github.ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           GOVERNANCE_ROOT: ${{ inputs.target-root }}
         run: |
           set -euo pipefail
-          standard_version="$(python3 - <<'PY_VERSION'
+          # Repository variable is protected configuration; candidate manifests are not.
+          runtime_ref="$(python3 -I - <<'PY_RUNTIME'
           import json
           import os
-          from pathlib import Path
+          import re
+          import subprocess
+          from pathlib import PurePosixPath
 
-          manifest_path = Path(os.environ['GOVERNANCE_ROOT']) / '.governance/manifest.json'
-          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
-          if manifest['standard']['id'] != 'wellmanifest/new-project':
-              raise SystemExit('Unsupported standard identity')
-          print(manifest['standard']['version'])
-          PY_VERSION
+          def reject(message):
+              raise SystemExit("Trusted governance runtime pin: " + message)
+
+          def sha(value):
+              if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{40}", value):
+                  reject("a full lowercase commit SHA is required")
+              return value
+
+          def unique(pairs):
+              result = {}
+              for key, value in pairs:
+                  if key in result:
+                      reject("duplicate lock key")
+                  result[key] = value
+              return result
+
+          protected = os.environ.get("PROTECTED_RUNTIME_SHA", "")
+          if protected:
+              print(sha(protected))
+          else:
+              if os.environ.get("EVENT_NAME") == "pull_request":
+                  base = sha(os.environ.get("BASE_SHA", ""))
+              else:
+                  branch = os.environ.get("DEFAULT_BRANCH", "")
+                  if not branch or os.environ.get("EVENT_REF") != "refs/heads/" + branch:
+                      reject("non-PR runs require the default branch or a protected SHA")
+                  base = sha(os.environ.get("EVENT_SHA", ""))
+              target = os.path.relpath(os.path.abspath(os.environ.get("GOVERNANCE_ROOT", ".")), os.getcwd())
+              if ".." in PurePosixPath(target).parts or "\\" in target:
+                  reject("target-root must stay inside the repository")
+              lock_path = str(PurePosixPath(target) / ".governance/manifest.lock.json")
+              observed = subprocess.run(["git", "show", base + ":" + lock_path],
+                                        capture_output=True, text=True)
+              if observed.returncode:
+                  reject("trusted base lock unavailable; configure protected NEW_PROJECT_RUNTIME_SHA for initial adoption")
+              try:
+                  lock = json.loads(observed.stdout, object_pairs_hook=unique)
+                  standard = lock["standard"]
+                  if (lock["schema"] != "new-project.lock/v1"
+                          or standard["id"] != "wellmanifest/new-project"
+                          or standard["sourceRepository"] != "wellmanifest/new-project"
+                          or standard["publicationStatus"] != "published"):
+                      reject("unsupported or unpublished trusted adoption")
+                  print(sha(standard["sourceRevision"]))
+              except (ValueError, KeyError, TypeError):
+                  reject("malformed trusted base lock")
+          PY_RUNTIME
           )"
-          [[ "$standard_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
-          echo "standard=$standard_version" >> "$GITHUB_OUTPUT"
-          echo "Resolved standard version: $standard_version"
-
-      - name: Install governance runtime
-        run: |
-          set -euo pipefail
-          runtime_ref="v${{ steps.version.outputs.standard }}"
           runtime_venv="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/wellman-governance.XXXXXX")"
-          python3 -m venv "$runtime_venv"
-          "$runtime_venv/bin/python" -m pip install "git+https://github.com/wellmanifest/new-project.git@${runtime_ref}#subdirectory=packages/wellman"
+          python3 -I -m venv "$runtime_venv"
+          "$runtime_venv/bin/python" -I -m pip install "git+https://github.com/wellmanifest/new-project.git@${runtime_ref}#subdirectory=packages/wellman"
           printf '%s\n' "$runtime_venv/bin" >> "$GITHUB_PATH"
 
       - name: Run governance gate
