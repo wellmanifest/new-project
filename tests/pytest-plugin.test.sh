@@ -172,6 +172,28 @@ with patch.object(sys, "platform", "win32"), \
 
 assert invoked_command is not None, "subprocess.run was not invoked"
 assert "governance-check.bat" in str(invoked_command[2]), f"expected bat in command, got {invoked_command}"
+
+# A Windows-only gate cannot satisfy the POSIX lifecycle contract. Refuse
+# before attempting Git resolution or launching a nonexistent shell script.
+with patch.object(sys, "platform", "linux"), patch("subprocess.run") as run:
+    try:
+        wellmanifest_governance.pytest_sessionstart(session)
+    except wellmanifest_governance.GovernanceGateError as error:
+        assert "GOV-PACKAGING-003" in str(error), str(error)
+    else:
+        raise AssertionError("POSIX accepted a bat-only governance gate")
+    run.assert_not_called()
+
+# Windows retains the supported bash fallback when only the shell gate exists.
+Path("project/governance-check.bat").unlink()
+Path("project/governance-check.sh").touch()
+with patch.object(sys, "platform", "win32"), \
+     patch("subprocess.run", side_effect=fake_run), \
+     patch.object(wellmanifest_governance, "_activate_managed_hook"), \
+     patch.object(wellmanifest_governance, "_resolve_base", return_value="HEAD"), \
+     patch.object(wellmanifest_governance, "_changed_paths", return_value=[]):
+    wellmanifest_governance.pytest_sessionstart(session)
+assert invoked_command[:2] == ["bash", str(Path("project/governance-check.sh").resolve())]
 PY
 )
 
