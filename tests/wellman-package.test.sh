@@ -88,8 +88,8 @@ import re
 from pathlib import Path
 
 runtime_refs = {
-    "template/files/new-project-governance.workflow.yml": 'runtime_ref="v${standard_version}"',
-    ".github/workflows/governance-gate-reusable.yml": 'runtime_ref="v${{ steps.version.outputs.standard }}"',
+    "template/files/new-project-governance.workflow.yml": 'PROTECTED_RUNTIME_SHA: ${{ vars.NEW_PROJECT_RUNTIME_SHA }}',
+    ".github/workflows/governance-gate-reusable.yml": 'PROTECTED_RUNTIME_SHA: ${{ vars.NEW_PROJECT_RUNTIME_SHA }}',
 }
 for workflow, expected_ref in runtime_refs.items():
     text = Path(workflow).read_text(encoding="utf-8")
@@ -97,7 +97,7 @@ for workflow, expected_ref in runtime_refs.items():
     if not calls or any("--actor ci" not in call for call in calls):
         raise SystemExit(f"{workflow}: every 'wellman check' must pass --actor ci")
     if expected_ref not in text:
-        raise SystemExit(f"{workflow}: install Wellman from the canonical standard release tag")
+        raise SystemExit(f"{workflow}: install Wellman from a trusted immutable source revision")
 PY3
 
 echo "== isolated CI runtime installation regression =="
