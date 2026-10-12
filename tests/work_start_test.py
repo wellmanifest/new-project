@@ -46,7 +46,7 @@ class WorkStartTest(unittest.TestCase):
         self.git(self.root, "init", "-b", "main")
         self.git(self.root, "config", "user.name", "Fixture")
         self.git(self.root, "config", "user.email", "fixture@example.invalid")
-        (self.root / ".gitignore").write_text("/.worktrees/\n/.subactor/leases/\n")
+        (self.root / ".gitignore").write_text("/.worktrees/\n/.subactor/leases/\n/.subactor/receipts/\n")
         self.manifest = {
             "schema": "new-project.governance/v2",
             "ticket": {"activeStatuses": ["IN_PROGRESS"]},
@@ -96,7 +96,7 @@ class WorkStartTest(unittest.TestCase):
         return result
 
     def cli(self, *args):
-        return subprocess.run([sys.executable, str(ROOT / "scripts/work_start_check.py"),
+        return subprocess.run([sys.executable, str(self.root / ".governance/work_start_check.py"),
                                "--root", str(self.root), "--workstream", "api", *args],
                               capture_output=True, text=True)
 
@@ -663,7 +663,7 @@ class WorkStartTest(unittest.TestCase):
     def test_invalid_intent_fails_closed_without_content_disclosure(self):
         peer = self.sibling()
         (peer / "project/ticket-001/intent.json").write_text("PRIVATE-FIXTURE-MARKER")
-        log_path = self.root / ".governance" / ".observation-failures.log"
+        log_path = self.root / ".subactor/receipts/work-start/observation-failures.log"
         self.assertFalse(log_path.exists())
         result = self.cli()
         self.assertEqual(result.returncode, 3)
@@ -679,6 +679,116 @@ class WorkStartTest(unittest.TestCase):
         # file's own content — the JSON parser error doesn't quote the
         # rejected text, only that it was invalid.
         self.assertNotIn("PRIVATE-FIXTURE-MARKER", log_text)
+        self.assertEqual(self.git(self.root, "status", "--porcelain"), "")
+        self.assertEqual(log_path.stat().st_mode & 0o777, 0o600)
+        self.assertFalse((self.root / ".governance/.observation-failures.log").exists())
+
+    def test_diagnostic_absent_without_git_ignore(self):
+        (self.root / ".gitignore").write_text("/.worktrees/\n/.subactor/leases/\n")
+        self.git(self.root, "add", ".gitignore")
+        self.git(self.root, "commit", "-m", "fixture: receipt not ignored")
+        peer = self.sibling()
+        (peer / "project/ticket-001/intent.json").write_text("PRIVATE-FIXTURE-MARKER")
+        result = self.cli()
+        self.assertEqual(result.returncode, 3)
+        self.assertIn("Local diagnostic was not written", result.stdout)
+        self.assertNotIn("PRIVATE-FIXTURE-MARKER", result.stdout + result.stderr)
+        self.assertFalse((self.root / start._OBSERVATION_LOG).exists())
+        self.assertEqual(self.git(self.root, "status", "--porcelain"), "")
+
+    def test_unknown_workstream_diagnostic_keeps_git_clean(self):
+        result = self.cli("--workstream", "unknown-fixture")
+        self.assertEqual(result.returncode, 3)
+        self.assertEqual(json.loads(result.stdout)["route"], "RECONCILE")
+        self.assertNotIn("Traceback", result.stdout + result.stderr)
+        self.assertTrue((self.root / start._OBSERVATION_LOG).exists())
+        self.assertEqual(self.git(self.root, "status", "--porcelain"), "")
+
+    def _diagnostic_log(self):
+        log = self.root / start._OBSERVATION_LOG
+        log.parent.mkdir(parents=True, mode=0o700)
+        return log
+
+    def test_diagnostic_rejects_symlinked_directory(self):
+        outside = Path(self.temp.name) / "preserved"
+        outside.mkdir()
+        (self.root / ".subactor").symlink_to(outside, target_is_directory=True)
+        self.assertFalse(start._record_observation_failure(self.root, ValueError("private")))
+        self.assertEqual(list(outside.iterdir()), [])
+
+    def test_diagnostic_rejects_symlinked_log(self):
+        log = self._diagnostic_log()
+        outside = Path(self.temp.name) / "preserved"
+        outside.write_text("UNCHANGED")
+        log.symlink_to(outside)
+        self.assertFalse(start._record_observation_failure(self.root, ValueError("private")))
+        self.assertEqual(outside.read_text(), "UNCHANGED")
+
+    def test_diagnostic_rejects_hardlinked_log(self):
+        log = self._diagnostic_log()
+        outside = Path(self.temp.name) / "preserved"
+        outside.write_text("UNCHANGED")
+        outside.chmod(0o600)
+        os.link(outside, log)
+        self.assertFalse(start._record_observation_failure(self.root, ValueError("private")))
+        self.assertEqual(outside.read_text(), "UNCHANGED")
+
+    def test_diagnostic_preserves_nonprivate_log(self):
+        log = self._diagnostic_log()
+        log.write_text("UNCHANGED")
+        log.chmod(0o644)
+        self.assertFalse(start._record_observation_failure(self.root, ValueError("private")))
+        self.assertEqual(log.read_text(), "UNCHANGED")
+
+    def test_diagnostic_append_is_bounded(self):
+        log = self._diagnostic_log()
+        log.write_text("old line\n" * 1999)
+        log.chmod(0o600)
+        self.assertTrue(start._record_observation_failure(self.root, ValueError("new line")))
+        self.assertLessEqual(len(log.read_text().splitlines()), 2000)
+        self.assertLessEqual(log.stat().st_size, start._OBSERVATION_LOG_MAX_BYTES)
+
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "FIFO host fixture")
+    def test_diagnostic_fifo_keeps_cli_bounded_and_git_clean(self):
+        log = self._diagnostic_log()
+        os.mkfifo(log, 0o600)
+        before = log.stat()
+        result = subprocess.run(
+            [sys.executable, str(ROOT / "scripts/work_start_check.py"),
+             "--root", str(self.root), "--workstream", "unknown-fixture"],
+            capture_output=True, text=True, timeout=10,
+        )
+        self.assertEqual(result.returncode, 3)
+        report = json.loads(result.stdout)
+        self.assertEqual(report["route"], "RECONCILE")
+        self.assertFalse(report["grantsAuthority"])
+        self.assertIn("Local diagnostic was not written", report["reason"])
+        self.assertEqual(log.stat().st_ino, before.st_ino)
+        self.assertEqual(log.stat().st_mode, before.st_mode)
+        self.assertEqual(self.git(self.root, "status", "--porcelain"), "")
+
+    def test_unsupported_directory_api_preserves_structured_diagnostic(self):
+        import io
+        from contextlib import redirect_stdout
+        original_open = os.open
+
+        def unsupported_directory_open(path, flags, *args, **kwargs):
+            if "dir_fd" in kwargs:
+                raise NotImplementedError("directory-relative open unsupported")
+            return original_open(path, flags, *args, **kwargs)
+
+        with patch.object(start.os, "open", unsupported_directory_open):
+            self.assertFalse(start._record_observation_failure(self.root, ValueError("fixture")))
+            output = io.StringIO()
+            with patch.object(start, "inspect", side_effect=start.ObservationError("fixture")), redirect_stdout(output):
+                code = start.main(["--root", str(self.root), "--workstream", "application"])
+        self.assertEqual(code, 3)
+        report = json.loads(output.getvalue())
+        self.assertEqual(report["route"], "RECONCILE")
+        self.assertFalse(report["grantsAuthority"])
+        self.assertIn("Local diagnostic was not written", report["reason"])
+        self.assertFalse((self.root / start._OBSERVATION_LOG).exists())
+        self.assertEqual(self.git(self.root, "status", "--porcelain"), "")
 
     def test_unknown_worktree_cannot_disappear_from_inventory(self):
         peer = self.sibling()

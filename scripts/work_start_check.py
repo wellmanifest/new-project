@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import ExitStack
 from datetime import datetime, timezone
 import hashlib
 import json
 import os
 from pathlib import Path
 import re
+import stat
 import subprocess
 import sys
 import traceback
@@ -28,32 +30,69 @@ class ObservationError(ValueError):
     pass
 
 
-def _record_observation_failure(root, error):
-    """Write the real exception locally so RECONCILE is self-diagnosable.
+_OBSERVATION_LOG = ".subactor/receipts/work-start/observation-failures.log"
+_OBSERVATION_LOG_MAX_BYTES = 128 * 1024
 
-    The GOV-WORK-START-001 payload printed to stdout stays deliberately
-    generic (remote URLs or secret-bearing input never leak into shared
-    CI/agent transcripts). But collapsing every failure — including plain
-    bugs like a missing tracked file — into that one sentence made a
-    one-line root cause take a full investigation to find. This writes the
-    real traceback to a local, gitignored file only; stdout is unchanged.
-    """
+
+def _record_observation_failure(root, error):
+    """Best-effort private, bounded diagnostics; never dirty or follow links."""
     try:
-        log_path = Path(root) / ".governance" / ".observation-failures.log"
-        log_path.parent.mkdir(parents=True, exist_ok=True)
-        entry = (
-            f"{datetime.now(timezone.utc).isoformat()} "
-            f"{type(error).__name__}: {error}\n"
-            f"{traceback.format_exc()}\n"
-        )
-        with open(log_path, "a", encoding="utf-8") as f:
-            f.write(entry)
-        # Keep the file bounded; this is a debugging aid, not an audit log.
-        lines = log_path.read_text(encoding="utf-8").splitlines(keepends=True)
-        if len(lines) > 2000:
-            log_path.write_text("".join(lines[-2000:]), encoding="utf-8")
-    except OSError:
-        pass
+        import fcntl
+
+        root = Path(root).absolute()
+        # Do not infer ignore policy, or mutate a tracked diagnostic.
+        if git(root, "check-ignore", "--quiet", "--", _OBSERVATION_LOG,
+               optional=True) is None:
+            return False
+        if git(root, "ls-files", "--error-unmatch", "--", _OBSERVATION_LOG,
+               optional=True) is not None:
+            return False
+        flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+        with ExitStack() as stack:
+            directory = os.open(root.anchor, flags)
+            stack.callback(os.close, directory)
+            for part in root.parts[1:]:
+                directory = os.open(part, flags, dir_fd=directory)
+                stack.callback(os.close, directory)
+            for part in Path(_OBSERVATION_LOG).parent.parts:
+                try:
+                    os.mkdir(part, 0o700, dir_fd=directory)
+                except FileExistsError:
+                    pass
+                directory = os.open(part, flags, dir_fd=directory)
+                stack.callback(os.close, directory)
+            info = os.fstat(directory)
+            if info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) & 0o077:
+                return False
+            fd = os.open(Path(_OBSERVATION_LOG).name,
+                         os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK,
+                         0o600, dir_fd=directory)
+            stack.callback(os.close, fd)
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            info = os.fstat(fd)
+            if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
+                    or info.st_uid != os.geteuid()
+                    or stat.S_IMODE(info.st_mode) & 0o077
+                    or info.st_size > _OBSERVATION_LOG_MAX_BYTES):
+                return False
+            previous = os.read(fd, _OBSERVATION_LOG_MAX_BYTES).decode("utf-8", "replace")
+            entry = (f"{datetime.now(timezone.utc).isoformat()} "
+                     f"{type(error).__name__}: {str(error)[:8192]}\n"
+                     f"{traceback.format_exc()[-65536:]}\n")
+            bounded = "".join((previous + entry).splitlines(keepends=True)[-2000:])
+            data = bounded.encode("utf-8", "replace")[-_OBSERVATION_LOG_MAX_BYTES:]
+            data = data.decode("utf-8", "ignore").encode("utf-8")
+            os.lseek(fd, 0, os.SEEK_SET)
+            view = memoryview(data)
+            while view:
+                count = os.write(fd, view)
+                if count <= 0:
+                    raise OSError("Incomplete diagnostic write")
+                view = view[count:]
+            os.ftruncate(fd, len(data))
+        return True
+    except (OSError, ObservationError, ImportError, AttributeError, UnicodeError, NotImplementedError):
+        return False
 
 
 def digest(value):
@@ -731,13 +770,15 @@ def main(argv=None):
         # secret-bearing input never leak there. The real cause is written
         # to a local-only log instead of being discarded (see
         # _record_observation_failure).
-        _record_observation_failure(args.root, error)
+        logged = _record_observation_failure(args.root, error)
 
         print(json.dumps({"schema": SCHEMA, "readOnly": True, "grantsAuthority": False,
                           "createsWorktree": False, "route": "RECONCILE", "diagnostic": CODE,
                           "reason": "Observation incomplete or inconsistent; preserve work and reconcile. "
-                                    "Real cause logged locally in .governance/.observation-failures.log "
-                                    "(gitignored) — read it before opening a new ticket."}))
+                                    + ("Real cause logged locally in " + _OBSERVATION_LOG
+                                       + " (ignored by Git) — read it before opening a new ticket."
+                                       if logged else "Local diagnostic was not written; preserve work "
+                                       "and inspect the existing checkout and ignore policy.")}))
         return 3
     if args.allocation_check and payload["route"] != "NEW_TICKET_CANDIDATE":
         payload["diagnostic"] = CODE
