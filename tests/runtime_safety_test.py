@@ -156,7 +156,26 @@ exec "$TASK_SIGNAL_REAL_GIT" "$@"
     def test_unicode_quotes_and_backslash_title_round_trip(self):
         with allocation_fixture() as fixture:
             title = 'Żółć Ελληνικά Україна "quoted" \\path'
+            head = fixture.git("rev-parse", "HEAD").stdout
+            worktrees = fixture.git("worktree", "list", "--porcelain").stdout
             result = fixture.allocate("--title", title)
+            lease_supported = (
+                hasattr(os, "O_NOFOLLOW") and hasattr(os, "O_DIRECTORY")
+                and os.open in os.supports_dir_fd and os.mkdir in os.supports_dir_fd
+            )
+            if not lease_supported:
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("GOV-TICKET-ALLOCATION-003", result.stderr)
+                self.assertNotIn("new-project.ticket-allocation-result/v1", result.stdout)
+                self.assertEqual(fixture.git("rev-parse", "HEAD").stdout, head)
+                self.assertEqual(fixture.git("worktree", "list", "--porcelain").stdout, worktrees)
+                self.assertEqual(fixture.git("branch", "--list", "ticket/*").stdout, "")
+                for relative in (".git/new-project-ticket-high-water",
+                                 ".git/new-project-ticket-allocation.lock",
+                                 "project/ticket-001", ".subactor/leases",
+                                 ".worktrees/ticket-001--canonical-ticket"):
+                    self.assertFalse((fixture.root / relative).exists(), relative)
+                return
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             root = fixture.root / ".worktrees/ticket-001--canonical-ticket/project/ticket-001"
             intent = json.loads((root / "intent.json").read_text(encoding="utf-8"))

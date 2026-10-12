@@ -15,7 +15,9 @@
     "governance/manifest.hub.json",
     "packages/wellman/pyproject.toml",
     "project/new-ticket.sh",
-    "tests/ticket-allocation-worktree.test.py"
+    "tests/ticket-allocation-worktree.test.py",
+    "CHANGELOG.md",
+    "tests/runtime_safety_test.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -37,39 +39,71 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 6,
+      "maxImplementationFiles": 8,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Traverse and create lease parents using open directory descriptors and no-follow opens; create the lease exclusively relative to the final descriptor. Probe required host capabilities before ticket reservations. Exercise the delivered embedded writer and whole allocator with deterministic race injection.",
+      "decision": "Traverse and create lease parents using open directory descriptors and no-follow opens; create the lease exclusively relative to the final descriptor. Probe required host capabilities before ticket reservations. Exercise the delivered embedded writer and whole allocator with deterministic race injection. On hosts without descriptor-relative lease creation, verify the existing fail-closed refusal before any allocation effects; supported hosts retain the Unicode title round-trip assertion. Include the existing release changelog in the bounded publication scope.",
       "components": [
-        {"name": "ticket-allocation", "paths": ["project/new-ticket.sh", "tests/ticket-allocation-worktree.test.py"]},
-        {"name": "immutable-release", "paths": ["VERSION", "governance/manifest.default.json", "governance/manifest.hub.json", "packages/wellman/pyproject.toml"]}
+        {
+          "name": "ticket-allocation",
+          "paths": [
+            "project/new-ticket.sh",
+            "tests/ticket-allocation-worktree.test.py",
+            "tests/runtime_safety_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml",
+            "CHANGELOG.md"
+          ]
+        }
       ],
       "responsibilityChanges": false,
       "interfaceChanges": [],
       "dataChanges": [],
-      "ui": {"impact": "none", "states": [], "evidence": []},
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
       "rollback": "Retain the previous immutable adopter pin; revert through protected delivery without moving published tags."
     },
     "runtimeDependencies": [],
     "validation": [
       {
         "criterion": "AC-01",
-        "commands": ["python3 tests/ticket-allocation-worktree.test.py -v", "bash -n project/new-ticket.sh"],
+        "commands": [
+          "python3 tests/ticket-allocation-worktree.test.py -v",
+          "bash -n project/new-ticket.sh",
+          "python3 tests/runtime_safety_test.py -v"
+        ],
         "evidence": "Existing allocator integration plus deterministic parent-symlink, overwrite, private-mode and unsupported-capability checks."
       },
       {
         "criterion": "AC-02",
-        "commands": ["bash tests/version-parity.test.sh", "bash tests/wellman-package.test.sh", "bash project/governance-check.sh", "goal governance check"],
+        "commands": [
+          "bash tests/version-parity.test.sh",
+          "bash tests/wellman-package.test.sh",
+          "bash project/governance-check.sh",
+          "goal governance check"
+        ],
         "evidence": "Release parity, package verification, source governance and required Linux/Windows gates."
       },
       {
         "criterion": "AC-03",
-        "commands": ["goal --delivery-mode pull-request --no-publish -a push --ticket ticket-333", "Independent OneDev/Validator and declared Goal immutable publication"],
+        "commands": [
+          "goal --delivery-mode pull-request --no-publish -a push --ticket ticket-333",
+          "Independent OneDev/Validator and declared Goal immutable publication"
+        ],
         "evidence": "Exact-head independent approval, protected merge and immutable publication before adoption."
       }
     ]

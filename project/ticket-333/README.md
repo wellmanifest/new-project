@@ -52,3 +52,11 @@ Ten katalog przechowuje minimalny kontrakt i opcjonalne decyzje. Surowe logi
 pozostają poza śledzonym repozytorium; Git zapisuje tylko skrót wyniku i
 referencję do receiptu. Kod wykonywalny, skrypty badawcze i testy należą do
 zwykłych katalogów źródłowych, nie do `project/ticket-333/`.
+
+## Authorized continuation
+
+SESSION_EXECUTION_AUTHORIZATION: on 2026-10-12 the user explicitly continued after the exact ticket-333 / PR #475 takeover question. This session owns the bounded continuation, preserving the existing implementation and publication goal. The local advisory lease handoff and original-head bundle are recorded externally; neither grants protected merge approval.
+
+The continuation includes the existing release changelog and runtime-safety test in the intent. Native hosts without no-follow descriptor-relative lease creation must refuse before ticket reservation, branch/worktree creation or lock leakage. Supported hosts retain the exact Unicode title round trip. No unsafe platform fallback or skipped required CI gate is introduced.
+
+Continuation validation: 13 allocation tests PASS; 19 runtime-safety tests PASS; managed governance PASS with zero errors/warnings; declared Goal pull-request dry-run PASS. Native Windows and fresh protected exact-head approval remain required before merge.
