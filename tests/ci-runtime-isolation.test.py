@@ -110,10 +110,12 @@ class RuntimeIsolationTests(unittest.TestCase):
                        GITHUB_PATH=str(exported), TMPDIR=str(scratch),
                        INSTALL_RECEIPT=str(receipt), INSTALL_FAIL="1" if fail else "0")
             env.update(GOVERNANCE_ROOT=str(target), BASE_SHA=base, EVENT_NAME="pull_request",
-                       EVENT_SHA=base, EVENT_REF="refs/heads/main", DEFAULT_BRANCH="main",
+                       BASE_REF="main", EVENT_SHA=base, EVENT_REF="refs/heads/main", DEFAULT_BRANCH="main",
                        PROTECTED_RUNTIME_SHA="")
             if case == "protected": env["PROTECTED_RUNTIME_SHA"] = "c" * 40
             if case == "bad-protected": env["PROTECTED_RUNTIME_SHA"] = "v0.20.96"
+            if case == "untrusted-base": env["BASE_REF"] = "feature"
+            if case == "missing-base-ref": env["BASE_REF"] = ""
             if case == "no-base": env["BASE_SHA"] = ""
             if case == "bad-base": env["BASE_SHA"] = "main"
             if case == "unknown-base": env["BASE_SHA"] = "d" * 40
@@ -127,7 +129,7 @@ class RuntimeIsolationTests(unittest.TestCase):
                                     cwd=root, env=env, text=True, capture_output=True, timeout=30)
             if case in {"tag", "identity", "unpublished", "missing", "bad-protected",
                         "no-base", "bad-base", "unknown-base", "nondefault",
-                        "boolean", "short", "duplicate", "malformed"}:
+                        "boolean", "short", "duplicate", "malformed", "untrusted-base", "missing-base-ref"}:
                 self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertFalse(receipt.exists(), "rejected pin must not reach pip")
                 self.assertEqual(exported.read_text(), "")
@@ -155,7 +157,7 @@ class RuntimeIsolationTests(unittest.TestCase):
         for workflow in WORKFLOWS:
             for case in ("tag", "identity", "unpublished", "missing", "bad-protected",
                          "no-base", "bad-base", "unknown-base", "nondefault",
-                         "boolean", "short", "duplicate", "malformed"):
+                         "boolean", "short", "duplicate", "malformed", "untrusted-base", "missing-base-ref"):
                 with self.subTest(workflow=workflow, case=case):
                     self.run_installer(workflow, case=case)
 

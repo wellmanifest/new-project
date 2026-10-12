@@ -44,6 +44,7 @@ jobs:
         env:
           PROTECTED_RUNTIME_SHA: ${{ vars.NEW_PROJECT_RUNTIME_SHA }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
           EVENT_NAME: ${{ github.event_name }}
           EVENT_SHA: ${{ github.sha }}
           EVENT_REF: ${{ github.ref }}
@@ -80,6 +81,9 @@ jobs:
               print(sha(protected))
           else:
               if os.environ.get("EVENT_NAME") == "pull_request":
+                  branch = os.environ.get("DEFAULT_BRANCH", "")
+                  if not branch or os.environ.get("BASE_REF") != branch:
+                      reject("PR base must be the default branch or use a protected SHA")
                   base = sha(os.environ.get("BASE_SHA", ""))
               else:
                   branch = os.environ.get("DEFAULT_BRANCH", "")

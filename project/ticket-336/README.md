@@ -38,3 +38,7 @@ exact-head publication remain required.
 
 An additional real installed-gate regression proved that candidate wellman.py
 shadowed the reusable gate. Its Python invocation now uses isolated mode too.
+
+Trusted PR lock selection additionally requires the event base ref to equal the
+repository default branch; other bases need the protected runtime pin. Tests
+cover both missing base refs and PRs targeting a feature branch.

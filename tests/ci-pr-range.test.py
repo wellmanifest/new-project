@@ -188,7 +188,8 @@ jobs:
         script = gate_body(WORKFLOWS["reusable"][0], "Install governance runtime")
         script = script.split('runtime_venv="', 1)[0] + 'printf "%s\\n" "$runtime_ref"'
         env = dict(os.environ, GOVERNANCE_ROOT=str(self.root / "nested product"),
-                   BASE_SHA=base, EVENT_NAME="pull_request", PROTECTED_RUNTIME_SHA="")
+                   BASE_SHA=base, BASE_REF="main", DEFAULT_BRANCH="main",
+                   EVENT_NAME="pull_request", PROTECTED_RUNTIME_SHA="")
         result = subprocess.run(["bash", "-c", script], cwd=self.root,
                                 env=env, capture_output=True, text=True)
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
