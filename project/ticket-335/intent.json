@@ -1,0 +1,122 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-335",
+  "summary": "Close reviewed governance runtime boundary gaps",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-335/**",
+    "scripts/governance_check.py",
+    "scripts/repository_policy.py",
+    "template/files/wellmanifest_governance.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "packages/wellman/src/wellman/_bundled/repository_policy.py",
+    "tests/secret_detection_test.py",
+    "tests/repository-policy.test.sh",
+    "tests/pytest-plugin.test.sh",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "CHANGELOG.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4c0f2dd43121629060cea4416a91f6d88621c66d",
+    "targetBranch": "main",
+    "outcome": "Publish 0.20.96 with reviewed runtime boundary repairs: literal assignment secrets, adapter self-scope glob matching, and platform-appropriate pytest governance gate.",
+    "nonGoals": [
+      "No immutable CI installer pin change in this bounded slice; remains a separate authorized follow-up",
+      "No unsupported Windows allocator or secret-value logging",
+      "No adopter edits, shared service activation, foreign worktree cleanup or approval bypass"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 13,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse AST literal analysis and the existing path-pattern matcher; select the available gate for the host platform before subprocess invocation. Generate package mirrors from canonical scripts and exercise independently imported modules.",
+      "components": [
+        {
+          "name": "governance-runtime",
+          "paths": [
+            "scripts/governance_check.py",
+            "scripts/repository_policy.py",
+            "template/files/wellmanifest_governance.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/repository_policy.py",
+            "tests/secret_detection_test.py",
+            "tests/repository-policy.test.sh",
+            "tests/pytest-plugin.test.sh"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml",
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Keep prior immutable adopter pins; revert source and regression tests through protected delivery without moving tags."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/secret_detection_test.py",
+          "bash tests/repository-policy.test.sh",
+          "bash tests/pytest-plugin.test.sh"
+        ],
+        "evidence": "Regression failures before repair; positive/dynamic and disjoint-scope cases remain accepted."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "bash tests/version-parity.test.sh",
+          "bash project/governance-check.sh",
+          "goal governance check",
+          "python3 -m pytest -q"
+        ],
+        "evidence": "Canonical/bundled parity, scope, release and complete suite pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal --delivery-mode pull-request --no-publish -a push --ticket ticket-335",
+          "Independent exact-head Validator review and protected merge",
+          "Goal immutable publication from reviewed main"
+        ],
+        "evidence": "Fresh Linux/Windows and OneDev checks; protected receipt binds actual head before release."
+      }
+    ]
+  }
+}

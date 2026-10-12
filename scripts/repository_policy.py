@@ -296,7 +296,7 @@ def adapter_error(
             return f"external ticket source does not contain {ticket}: {source}"
         if observed.lower() in {"done", "cancelled", "canceled", "closed"}:
             return f"external ticket {ticket} is terminal in {source}"
-    if raw_path in adapter["allowedPaths"] or raw_path in adapter["forbiddenPaths"]:
+    if _matches(raw_path, adapter["allowedPaths"]) or _matches(raw_path, adapter["forbiddenPaths"]):
         return "external ticket adapter cannot own itself"
     return None
 

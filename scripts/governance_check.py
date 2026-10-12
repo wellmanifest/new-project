@@ -3122,21 +3122,30 @@ def find_python_secrets(tree: ast.AST) -> list[str]:
         if m:
             fields.append(m.group(1))
 
+    def assigned_literal(target: ast.AST, value: ast.AST) -> None:
+        if isinstance(target, (ast.Tuple, ast.List)):
+            if isinstance(value, (ast.Tuple, ast.List)) and len(target.elts) == len(value.elts):
+                for item, literal in zip(target.elts, value.elts):
+                    assigned_literal(item, literal)
+            return
+        if not is_secret_literal(value):
+            return
+        if isinstance(target, ast.Name):
+            add_field(target.id)
+        elif isinstance(target, ast.Attribute):
+            add_field(target.attr)
+        elif isinstance(target, ast.Subscript):
+            key = extract_constant_string(target.slice)
+            if key is not None:
+                add_field(key)
+
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
             for target in node.targets:
-                if isinstance(target, ast.Name) and SECRET_FIELD_NAME_RE.search(target.id):
-                    if is_secret_literal(node.value):
-                        add_field(target.id)
-                elif isinstance(target, (ast.Tuple, ast.List)):
-                    if isinstance(node.value, (ast.Tuple, ast.List)) and len(target.elts) == len(node.value.elts):
-                        for t, v in zip(target.elts, node.value.elts):
-                            if isinstance(t, ast.Name) and SECRET_FIELD_NAME_RE.search(t.id) and is_secret_literal(v):
-                                add_field(t.id)
+                assigned_literal(target, node.value)
         elif isinstance(node, ast.AnnAssign):
-            if isinstance(node.target, ast.Name) and SECRET_FIELD_NAME_RE.search(node.target.id):
-                if node.value is not None and is_secret_literal(node.value):
-                    add_field(node.target.id)
+            if node.value is not None:
+                assigned_literal(node.target, node.value)
         elif isinstance(node, ast.Call):
             for kw in node.keywords:
                 if kw.arg and SECRET_FIELD_NAME_RE.search(kw.arg):

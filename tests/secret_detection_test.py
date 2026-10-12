@@ -1,19 +1,56 @@
 #!/usr/bin/env python3
 """Regressions for Python expression vs literal secret detection (NP-009, Issue #453)."""
 import unittest
+import importlib.util
 from pathlib import Path
 import sys
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
-import governance_check as gov_managed
+def load_checker(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
 
-sys.path.insert(0, str(ROOT / "packages/wellman/src/wellman/_bundled"))
-import governance_check as gov_bundled
+
+gov_managed = load_checker("secret_test_managed", ROOT / "scripts/governance_check.py")
+gov_bundled = load_checker("secret_test_bundled", ROOT / "packages/wellman/src/wellman/_bundled/governance_check.py")
 
 
 class SecretDetectionTest(unittest.TestCase):
+    def test_managed_and_bundled_are_independent_modules(self):
+        self.assertIsNot(gov_managed, gov_bundled)
+        self.assertNotEqual(gov_managed.__file__, gov_bundled.__file__)
+
+    def test_attribute_subscript_and_nested_literal_assignments_refuse(self):
+        cases = [
+            ('self.api_token = "credential_literal_12345"', ['token']),
+            ('settings.password: str = "credential_literal_12345"', ['password']),
+            ('config["client_secret"] = "credential_literal_12345"', ['client_secret']),
+            ('config["api_key"]: str = "credential_literal_12345"', ['api_key']),
+            ('user, (settings.password, config["token"]) = "name", ("credential_literal_12345", "credential_literal_67890")', ['password', 'token']),
+            ('self.token = config["password"] = "credential_literal_12345"', ['password', 'token']),
+        ]
+        for mod in (gov_managed, gov_bundled):
+            for code, expected in cases:
+                with self.subTest(module=mod.__name__, code=code):
+                    self.assertEqual(mod.probable_secret_fields(code, "settings.py"), expected)
+
+    def test_nonliteral_assignment_targets_keep_dynamic_values_safe(self):
+        code = '''
+self.token = config.token
+settings.password: str = keyring.get_password("service", "user")
+config["api_key"] = resolve_key()
+settings.password, config["token"] = resolve_credentials()
+self.token = "placeholder_value"
+config["password"] = "__GENERATE_PASSWORD__"
+ordinary_field = "credential_literal_12345"
+'''
+        for mod in (gov_managed, gov_bundled):
+            self.assertEqual(mod.probable_secret_fields(code, "settings.py"), [])
+
     def test_dynamic_calls_pass_in_both_packages(self):
         code = """
 token = resolve_node_endpoint(node, node_url)

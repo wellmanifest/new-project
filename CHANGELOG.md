@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [0.20.96] - 2026-10-12
+
+### Fixed
+
+- Detect literal secrets in Python attribute, subscript and nested assignments,
+  preserving dynamic expressions and independently testing the bundled checker.
+- Reject external ticket adapters whose path globs cover their own authority file.
+- Refuse a Windows-only governance gate on POSIX with a controlled diagnostic.
+
 ## [0.20.95] - 2026-10-12
 
 ### Fixed

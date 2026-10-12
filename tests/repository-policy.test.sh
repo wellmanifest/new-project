@@ -57,6 +57,22 @@ with tempfile.TemporaryDirectory() as directory:
     manifest = {"repositoryPolicy": planfile}
     adapter, error = module.load_adapter(fixture, manifest)
     assert error is None and adapter["ticket"] == "PLF-7"
+    adapter_path = fixture / ".governance/ticket-adapter.json"
+    for field in ("allowedPaths", "forbiddenPaths"):
+        for pattern in (".governance/ticket-adapter.json", ".governance/*", ".governance/**", "**/ticket-*.json", "*/*.json", "**"):
+            candidate = json.loads(json.dumps(adapter))
+            candidate[field].append(pattern)
+            adapter_path.write_text(json.dumps(candidate), encoding="utf-8")
+            _, error = module.load_adapter(fixture, manifest)
+            assert error and "cannot own itself" in error, (field, pattern, error)
+    for pattern in ("src/**", ".governance/other/*.json", "*/other.json"):
+        candidate = json.loads(json.dumps(adapter))
+        if pattern not in candidate["allowedPaths"]:
+            candidate["allowedPaths"].append(pattern)
+        adapter_path.write_text(json.dumps(candidate), encoding="utf-8")
+        _, error = module.load_adapter(fixture, manifest)
+        assert error is None, (pattern, error)
+    adapter_path.write_text(json.dumps(adapter), encoding="utf-8")
     subprocess.run(["git", "init", "-q", "-b", "main"], cwd=fixture, check=True)
     (fixture / ".governance/manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     subprocess.run(["git", "add", "."], cwd=fixture, check=True)
