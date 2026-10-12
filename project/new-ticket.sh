@@ -512,6 +512,17 @@ if [[ -n "$RECOVER_REQUEST" || -n "$RECOVERY_LEASE_STORE" ]]; then
   exit 5
 fi
 
+# Fail before clone locking, identity reservation or worktree creation when
+# the host cannot provide race-resistant directory-relative lease writes.
+if [[ "$TICKET_STORAGE" != sqlite ]]; then
+  python3 - <<'PY_LEASE_CAPABILITIES'
+import os
+if (not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_DIRECTORY")
+        or os.open not in os.supports_dir_fd or os.mkdir not in os.supports_dir_fd):
+    raise SystemExit("GOV-TICKET-ALLOCATION-003: race-resistant lease creation is unsupported on this host")
+PY_LEASE_CAPABILITIES
+fi
+
 allocation_lock=""
 allocation_state=""
 release_allocation_lock() {
@@ -980,16 +991,32 @@ lease = {
     "previousReceiptRef": None,
     "eventSequence": 1,
 }
-lease_file.parent.mkdir(parents=True, exist_ok=True)
-for parent in (lease_file.parent, *lease_file.parent.parents):
-    if parent == Path(parent.anchor):
-        break
-    if parent.is_symlink():
-        raise SystemExit("lease parent is symlinked")
-payload = json.dumps(lease, indent=2, sort_keys=True).encode("utf-8") + b"\n"
-descriptor = os.open(lease_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-with os.fdopen(descriptor, "wb") as stream:
-    stream.write(payload)
+# Bind every directory lookup to an already-open directory descriptor. A
+# pathname check followed by pathname creation can follow a replaced ancestor.
+if (not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_DIRECTORY")
+        or os.open not in os.supports_dir_fd or os.mkdir not in os.supports_dir_fd):
+    raise SystemExit("race-resistant lease creation is unsupported on this host")
+if not lease_file.is_absolute() or ".." in lease_file.parts:
+    raise SystemExit("lease path must be an absolute canonical path")
+directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+parent_descriptor = os.open(lease_file.anchor, directory_flags)
+try:
+    for component in lease_file.parts[1:-1]:
+        try:
+            os.mkdir(component, mode=0o700, dir_fd=parent_descriptor)
+        except FileExistsError:
+            pass
+        child_descriptor = os.open(component, directory_flags, dir_fd=parent_descriptor)
+        os.close(parent_descriptor)
+        parent_descriptor = child_descriptor
+    payload = json.dumps(lease, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    descriptor = os.open(lease_file.name,
+                         os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                         0o600, dir_fd=parent_descriptor)
+    with os.fdopen(descriptor, "wb") as stream:
+        stream.write(payload)
+finally:
+    os.close(parent_descriptor)
 PY
 fi
 

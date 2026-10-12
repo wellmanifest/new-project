@@ -1,0 +1,111 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-333",
+  "summary": "Reject lease parent symlink races",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-333/**",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "project/new-ticket.sh",
+    "tests/ticket-allocation-worktree.test.py",
+    "CHANGELOG.md",
+    "tests/runtime_safety_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3b5686a4cd4ac6537eb7845c9a7a71a7fb1706eb",
+    "targetBranch": "main",
+    "outcome": "Prevent lease parent symlink races and publish immutable 0.20.94 so independently held adopters can use a corrected canonical allocator.",
+    "nonGoals": [
+      "No application implementation or application ticket records in this hub",
+      "No changes to unrelated primary commit ticket-331 or foreign checkouts",
+      "No weakening required platform checks or independent publication approval",
+      "No new runtime dependencies or unsupported-host fallback"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Traverse and create lease parents using open directory descriptors and no-follow opens; create the lease exclusively relative to the final descriptor. Probe required host capabilities before ticket reservations. Exercise the delivered embedded writer and whole allocator with deterministic race injection. On hosts without descriptor-relative lease creation, verify the existing fail-closed refusal before any allocation effects; supported hosts retain the Unicode title round-trip assertion. Include the existing release changelog in the bounded publication scope.",
+      "components": [
+        {
+          "name": "ticket-allocation",
+          "paths": [
+            "project/new-ticket.sh",
+            "tests/ticket-allocation-worktree.test.py",
+            "tests/runtime_safety_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml",
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Retain the previous immutable adopter pin; revert through protected delivery without moving published tags."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket-allocation-worktree.test.py -v",
+          "bash -n project/new-ticket.sh",
+          "python3 tests/runtime_safety_test.py -v"
+        ],
+        "evidence": "Existing allocator integration plus deterministic parent-symlink, overwrite, private-mode and unsupported-capability checks."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/version-parity.test.sh",
+          "bash tests/wellman-package.test.sh",
+          "bash project/governance-check.sh",
+          "goal governance check"
+        ],
+        "evidence": "Release parity, package verification, source governance and required Linux/Windows gates."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal --delivery-mode pull-request --no-publish -a push --ticket ticket-333",
+          "Independent OneDev/Validator and declared Goal immutable publication"
+        ],
+        "evidence": "Exact-head independent approval, protected merge and immutable publication before adoption."
+      }
+    ]
+  }
+}
