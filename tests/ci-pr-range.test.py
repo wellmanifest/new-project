@@ -138,6 +138,12 @@ jobs:
     def assert_pass(self, result):
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
+    def test_candidate_module_cannot_shadow_installed_gate(self):
+        self.write("wellman.py", "raise RuntimeError('candidate wellman executed')\n")
+        for name in WORKFLOWS:
+            with self.subTest(workflow=name):
+                self.assert_pass(self.run_gate(name, self.base, self.head))
+
     def test_detached_product_after_historical_adoption(self):
         old = self.run_gate("adopter", body="wellman check --root . --actor ci --json")
         self.assertNotEqual(0, old.returncode)

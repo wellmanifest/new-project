@@ -32,6 +32,9 @@ base lock needs a separately protected SHA; no candidate fallback is allowed.
 
 The prior installers failed 30 regression subcases. Runtime pin selection now
 passes the six-method matrix, including malformed/duplicate locks and candidate
-Python module shadowing. Seven installed PR gate tests, package build/install,
+Python module shadowing. Eight installed PR gate tests, package build/install,
 version parity and managed governance pass. Full Goal validation and independent
 exact-head publication remain required.
+
+An additional real installed-gate regression proved that candidate wellman.py
+shadowed the reusable gate. Its Python invocation now uses isolated mode too.

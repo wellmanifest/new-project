@@ -128,6 +128,6 @@ jobs:
             fi
             range_arguments=(--base "$BASE_SHA" --head "$HEAD_SHA")
           fi
-          python -m wellman check \
+          python -I -m wellman check \
             --root "$GOVERNANCE_ROOT" \
             --actor ci "${range_arguments[@]}"
