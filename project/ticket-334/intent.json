@@ -1,0 +1,109 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-334",
+  "summary": "Keep work-start diagnostics private and preserve clean Git state",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-334/**",
+    "project/TICKETS.md",
+    "scripts/work_start_check.py",
+    "tests/work_start_test.py",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "CHANGELOG.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "0c9bb7a11dbb868e0d22b2020ca3e00cd9deab36",
+    "targetBranch": "main",
+    "outcome": "Publish the permanent NP-012 fix: best-effort diagnostic storage must preserve a clean governed Git tree, reject unsafe sinks and maintain structured fail-closed output.",
+    "nonGoals": [
+      "No foreign333 ownership/lease/cleanup change",
+      "No protected runtime, registry, CI requirement or approval bypass",
+      "No standalone new logging service or automatic adopter edits",
+      "No discarded pre-existing incident logs"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the canonical HOME helper in new-project. Use only actual Git-ignored untracked operational receipts with descriptor-bound no-follow traversal, private permissions, nonblocking locking and bounded diagnostics. Missing or unsupported secure APIs return the same structured refusal without writing a log. Reuse the qualified V2; publish release projections atomically with the material fix.",
+      "components": [
+        {
+          "name": "work-admission",
+          "paths": [
+            "scripts/work_start_check.py",
+            "tests/work_start_test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml",
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Keep prior immutable adopter pins; revert through independent protected delivery. Preserve original diagnostic logs and never move existing tags."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -B tests/work_start_test.py"
+        ],
+        "evidence": "Actual CLI failures, unknown workstream, ignored/tracked sink checks, symlink/hardlink/private modes, bounded append and unsupported API negative control."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/version-parity.test.sh",
+          "bash tests/wellman-package.test.sh",
+          "bash project/governance-check.sh",
+          "goal governance check"
+        ],
+        "evidence": "Native scope/architecture/budget plus immutable release parity and installed package contracts."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal --delivery-mode pull-request --no-publish -a push --ticket ticket-334",
+          "Independent current-head Validator review/merge",
+          "Declared Goal immutable publication from reviewed main"
+        ],
+        "evidence": "Fresh required Linux/Windows/OneDev and authentic protected exact-head approval/merge before adoption."
+      }
+    ]
+  }
+}

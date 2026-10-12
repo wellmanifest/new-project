@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [0.20.95] - 2026-10-12
+
+### Fixed
+
+- Store work-start failure diagnostics only in verified ignored, private and
+  bounded operational receipts; preserve clean Git state and reject unsafe sinks.
+- Preserve structured fail-closed output when directory-relative APIs are
+  unavailable and when a workstream is unknown.
+
 ## [0.20.90] - 2026-10-07
 
 - Add `.reuse/**`, `.redup/**`, and `.benchmarks/**` to `governance.ownedPaths` and `OVERVIEW.md` to `integration.ownedPaths` in `manifest.default.json` to prevent `GOV-WORKSTREAM-003` during reuse compliance scans and root v2 overview authoring [ticket-318].
