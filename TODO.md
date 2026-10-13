@@ -9,6 +9,12 @@
 
 ## Aktywne utrzymanie standardu
 
+- [x] [`ticket-338`](project/ticket-338/README.md) — powiązano standard `wellmanifest/semver`
+  jako vendored copy pod lockiem SHA-256 (`governance/semver.lock.json`),
+  ze statusem HOME w repozytorium `wellmanifest/semver`, testami adopcji
+  `tests/semver-adoption.test.py` oraz profilem `embedded-fleet` w `governance/standard-packs.json`.
+  Stan: `IN_PROGRESS / EDIT`; klasyfikacja: `SERVICE / P2 / health`; workstream: `governance`.
+
 - [x] [`ticket-326`](project/ticket-326/README.md) — powiązano standard `wellmanifest/session-recovery`
   jako vendored copy pod lockiem SHA-256 (`governance/session-recovery.lock.json`),
   ze statusem HOME w repozytorium `wellmanifest/session-recovery`, testami adopcji

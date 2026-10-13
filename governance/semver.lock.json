@@ -1,0 +1,63 @@
+{
+  "schema": "new-project.semver-lock/v1",
+  "dependency": {
+    "id": "wellmanifest/semver",
+    "version": "0.1.0",
+    "sourceRepository": "wellmanifest/semver",
+    "sourceRevision": "bde9d5f827cdb502fc5e8dde45e71a35dd55ea84"
+  },
+  "artifacts": [
+    {
+      "sourcePath": "schemas/embedded-release.schema.json",
+      "packageSourcePath": "subprojects/semver/embedded-release.schema.json",
+      "managedTargetPath": null,
+      "sourceSha256": "234e0ba0440c4d2c9dcdd81927bff9394ca7b4e5a7564f0acf26d864c627f806"
+    },
+    {
+      "sourcePath": "schemas/hardware-matrix.schema.json",
+      "packageSourcePath": "subprojects/semver/hardware-matrix.schema.json",
+      "managedTargetPath": null,
+      "sourceSha256": "ce7af361efbd1e7193aa4b6acdf2ea43850d003beab3526c7c51a7545abd9311"
+    },
+    {
+      "sourcePath": "schemas/pipeline-run.schema.json",
+      "packageSourcePath": "subprojects/semver/pipeline-run.schema.json",
+      "managedTargetPath": null,
+      "sourceSha256": "f8b07cf512788141711ae4b9cebb11ec323162e4483351c1c23b1e233162f7e8"
+    },
+    {
+      "sourcePath": "POLICY.md",
+      "packageSourcePath": "subprojects/semver/POLICY.md",
+      "managedTargetPath": null,
+      "sourceSha256": "8f13deb9d78752c768cc360eb0c29b1ab69ccd6f67b756f72182968461e8612c"
+    },
+    {
+      "sourcePath": "operations/conformance.py",
+      "packageSourcePath": "subprojects/semver/conformance.py",
+      "managedTargetPath": null,
+      "sourceSha256": "b3aff3893ba9b0199278ef3222e5011d922384bff4c3add56db6a01364305212"
+    },
+    {
+      "sourcePath": "policy.json",
+      "packageSourcePath": "subprojects/semver/policy.json",
+      "managedTargetPath": null,
+      "sourceSha256": "d072a8792b7a01d6660aec29ceff1604f22169c581af84bdc58a1adb294bc617"
+    },
+    {
+      "sourcePath": "dsl-manifest.json",
+      "packageSourcePath": "subprojects/semver/dsl-manifest.json",
+      "managedTargetPath": null,
+      "sourceSha256": "c6cd35f023014560ce7108db1324ec9c6712fee1dfa18e354732287e6c2e3ef0"
+    },
+    {
+      "sourcePath": "README.md",
+      "packageSourcePath": "subprojects/semver/README.md",
+      "managedTargetPath": null,
+      "sourceSha256": "b1c2d670651ff8b827c4c2ec0b9d4ada66c1404e887130229aff187e46636058"
+    }
+  ],
+  "installation": {
+    "lockTargetPath": ".governance/semver.lock.json",
+    "networkRequired": false
+  }
+}

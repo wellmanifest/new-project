@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wellmanifest.dev/schemas/semver/pipeline-run/v1",
+  "title": "EmbeddedPipelineRunAttestation",
+  "description": "Evidence schema recording execution of CI/CD stages prior to firmware release.",
+  "type": "object",
+  "required": [
+    "schema",
+    "run_id",
+    "commit_sha",
+    "stages",
+    "verdict"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "wellmanifest.semver/pipeline-run/v1"
+    },
+    "run_id": { "type": "string" },
+    "commit_sha": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "stages": {
+      "type": "object",
+      "required": [
+        "static_analysis",
+        "dual_build",
+        "hil_simulation",
+        "safe_state_validation"
+      ],
+      "properties": {
+        "static_analysis": {
+          "type": "object",
+          "required": ["passed", "memory_leak_free", "iram_overflow_free"],
+          "properties": {
+            "passed": { "type": "boolean" },
+            "memory_leak_free": { "type": "boolean" },
+            "iram_overflow_free": { "type": "boolean" }
+          }
+        },
+        "dual_build": {
+          "type": "object",
+          "required": ["passed", "host_container_sha256", "firmware_elf_sha256"],
+          "properties": {
+            "passed": { "type": "boolean" },
+            "host_container_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "firmware_elf_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          }
+        },
+        "hil_simulation": {
+          "type": "object",
+          "required": ["passed", "test_count", "failures"],
+          "properties": {
+            "passed": { "type": "boolean" },
+            "test_count": { "type": "integer" },
+            "failures": { "type": "integer", "const": 0 }
+          }
+        },
+        "safe_state_validation": {
+          "type": "object",
+          "required": ["passed", "motors_deenergized", "pumps_stopped", "valves_closed"],
+          "properties": {
+            "passed": { "type": "boolean" },
+            "motors_deenergized": { "type": "boolean", "const": true },
+            "pumps_stopped": { "type": "boolean", "const": true },
+            "valves_closed": { "type": "boolean", "const": true }
+          }
+        }
+      }
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["PASSED", "FAILED", "REJECTED"]
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://wellmanifest.dev/schemas/dsl-manifest/v1",
+  "schema": "wellmanifest.dsl/manifest/v1",
+  "id": "wellmanifest.semver",
+  "name": "Wellmanifest Embedded Semantic Versioning and CI/CD Pipeline Lifecycle",
+  "version": "0.1.0",
+  "status": "normative",
+  "purpose": "Standardize semantic versioning, immutable binary identities, dual-build CI/CD, A/B OTA deployment, and hardware safety contracts for heterogeneous fleets spanning Linux edge hosts (e.g. Raspberry Pi 5) and microcontroller firmware (e.g. M5Stack CoreS3 / ESP32-S3).",
+  "domain": "embedded-semver-cicd",
+  "owners": [
+    {
+      "kind": "organization",
+      "id": "wellmanifest",
+      "responsibilities": [
+        "semantics",
+        "validation",
+        "embedded-matrix-compatibility"
+      ]
+    }
+  ],
+  "source": {
+    "repository": "https://github.com/wellmanifest/semver",
+    "path": "policy.json",
+    "canonical": "json-ast",
+    "mediaType": "application/json",
+    "selectors": [
+      "version",
+      "rules"
+    ]
+  },
+  "ownedPaths": [
+    "policy.json",
+    "schemas/**",
+    "operations/**",
+    "tests/**",
+    "examples/**",
+    "docs/**",
+    "README.md",
+    "AGENTS.md",
+    "GEMINI.md",
+    "CLAUDE.md",
+    "VERSION",
+    "dsl-manifest.json"
+  ],
+  "artifacts": [
+    {
+      "path": "policy.json",
+      "role": "normative-source",
+      "digest": "sha256:policy"
+    },
+    {
+      "path": "schemas/embedded-release.schema.json",
+      "role": "schema",
+      "digest": "sha256:release-schema"
+    },
+    {
+      "path": "schemas/hardware-matrix.schema.json",
+      "role": "schema",
+      "digest": "sha256:matrix-schema"
+    },
+    {
+      "path": "schemas/pipeline-run.schema.json",
+      "role": "schema",
+      "digest": "sha256:pipeline-schema"
+    },
+    {
+      "path": "operations/conformance.py",
+      "role": "parser-contract",
+      "digest": "sha256:conformance"
+    },
+    {
+      "path": "docs/information/embedded-semver-standard.md",
+      "role": "specification",
+      "digest": "sha256:spec"
+    }
+  ],
+  "rules": {
+    "count": 24,
+    "prefix": "SEMVER-",
+    "catalog": "policy.json"
+  }
+}
