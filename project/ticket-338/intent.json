@@ -1,0 +1,85 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-338",
+  "summary": "Adopt wellmanifest/semver standard pack and embedded-fleet profile",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-338/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/standard-packs.json",
+    "governance/semver.lock.json",
+    "subprojects/semver/**",
+    "tests/semver-adoption.test.py",
+    "template/files/AGENTS.template.md",
+    "AGENTS.md",
+    "tests/standard-pack-check.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c6587635bafb054241fd71fd22793af47acae83b",
+    "targetBranch": "main",
+    "outcome": "Adopt wellmanifest/semver standard pack as vendored copy bound by lock and parity tests.",
+    "nonGoals": [
+      "Do not modify standalone repository histories or break independent schema digests.",
+      "Do not weaken exact-head verification in CI."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 16,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Adopt wellmanifest/semver standard pack: standalone repository wellmanifest/semver is canonical HOME. In new-project, subprojects/semver is a vendored copy bound by governance/semver.lock.json. Drift is gated by tests/semver-adoption.test.py and pack is registered in governance/standard-packs.json.",
+      "components": [
+        {
+          "name": "semver-subproject",
+          "paths": [
+            "governance/standard-packs.json",
+            "governance/semver.lock.json",
+            "subprojects/semver/**",
+            "tests/semver-adoption.test.py",
+            "template/files/AGENTS.template.md",
+            "AGENTS.md",
+            "tests/standard-pack-check.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/semver-adoption.test.py",
+          "bash tests/standard-pack-check.test.sh"
+        ],
+        "evidence": "tests/semver-adoption.test.py passes with 3/3 tests OK, standard-pack-check.test.sh passes."
+      }
+    ]
+  }
+}

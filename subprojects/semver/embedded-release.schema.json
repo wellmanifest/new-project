@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wellmanifest.dev/schemas/semver/embedded-release/v1",
+  "title": "EmbeddedHeterogeneousReleaseManifest",
+  "description": "Formal release manifest declaring SemVer versions, binary identities, and deployment contracts across edge hosts and microcontroller nodes.",
+  "type": "object",
+  "required": [
+    "schema",
+    "release_id",
+    "system_version",
+    "target_platform",
+    "components",
+    "compatibility",
+    "pipeline_attestation"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "wellmanifest.semver/embedded-release/v1"
+    },
+    "release_id": {
+      "type": "string",
+      "pattern": "^rel-[a-f0-9]{8,16}$"
+    },
+    "system_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$"
+    },
+    "target_platform": {
+      "type": "string",
+      "enum": ["c2004-heterogeneous-fleet", "industrial-edge-mcu", "standalone-embedded"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "component_id",
+          "tier",
+          "version",
+          "git_commit"
+        ],
+        "properties": {
+          "component_id": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string",
+            "enum": ["edge_host", "microcontroller_firmware", "protocol_contract", "ui_frontend"]
+          },
+          "target_hardware": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$"
+          },
+          "git_commit": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{40}$"
+          },
+          "binary_identity": {
+            "type": "object",
+            "required": ["sha256"],
+            "properties": {
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "elf_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "image_size_bytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "target_partition": {
+                "type": "string",
+                "enum": ["ota_0", "ota_1", "app_dual"]
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "tier": { "const": "microcontroller_firmware" } }
+            },
+            "then": {
+              "required": ["binary_identity", "target_hardware"],
+              "properties": {
+                "binary_identity": {
+                  "required": ["sha256", "elf_sha256", "image_size_bytes", "target_partition"]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "required": ["min_host_version", "min_mcu_firmware_version", "oql_contract_version"],
+      "properties": {
+        "min_host_version": { "type": "string" },
+        "min_mcu_firmware_version": { "type": "string" },
+        "oql_contract_version": { "type": "string" },
+        "nvs_migration_required": { "type": "boolean" }
+      }
+    },
+    "pipeline_attestation": {
+      "type": "object",
+      "required": [
+        "pipeline_id",
+        "hil_simulation_passed",
+        "safe_state_preconditions_verified",
+        "dual_build_verified",
+        "static_safety_analyzed"
+      ],
+      "properties": {
+        "pipeline_id": { "type": "string" },
+        "hil_simulation_passed": { "type": "boolean" },
+        "safe_state_preconditions_verified": { "type": "boolean" },
+        "dual_build_verified": { "type": "boolean" },
+        "static_safety_analyzed": { "type": "boolean" }
+      }
+    }
+  },
+  "additionalProperties": false
+}

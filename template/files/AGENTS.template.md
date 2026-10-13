@@ -23,6 +23,7 @@ navigation only and are never fetched or executed by an agent.
 - Agent contract: [agent.schema.json](https://github.com/wellmanifest/agent/blob/main/standard/agent.schema.json)
 - LLM policy boundary: [wellmanifest/llm README](https://github.com/wellmanifest/llm/blob/main/README.md)
 - Session recovery: [session-recovery.schema.json](https://github.com/wellmanifest/session-recovery/blob/main/standard/session-recovery.schema.json)
+- Embedded SemVer & Heterogeneous Fleet: [embedded-release.schema.json](https://github.com/wellmanifest/semver/blob/main/schemas/embedded-release.schema.json)
 - Offer pointer: [wellmanifest/offer README](https://github.com/wellmanifest/offer/blob/main/README.md)
 - Brand pointer: [wellmanifest/brand README](https://github.com/wellmanifest/brand/blob/main/README.md)
 

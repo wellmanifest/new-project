@@ -1,0 +1,158 @@
+{
+  "$schema": "https://wellmanifest.dev/schemas/policy-dsl/v1",
+  "schema": "wellmanifest.semver/policy/v1",
+  "id": "wellmanifest.semver",
+  "version": "0.1.0",
+  "status": "normative",
+  "home": "wellmanifest",
+  "shape": "domain_pack",
+  "runtime_owner": "adopting-project",
+  "effect_model": "read-only-conformance",
+  "authority": "none",
+  "rules": [
+    {
+      "id": "SEMVER-001",
+      "topic": "system-vs-node-separation",
+      "requirement": "Strictly separate system platform SemVer, host edge Linux runtime SemVer (e.g. Raspberry Pi 5 / DisplayNet), and microcontroller firmware SemVer (e.g. ESP32-S3 CoreS3 / StackNet). Node versions must never implicitly track host versions.",
+      "verification": "semantic"
+    },
+    {
+      "id": "SEMVER-002",
+      "topic": "immutable-binary-identity",
+      "requirement": "Every microcontroller firmware SemVer release must bind to an immutable binary identity: ELF SHA256 digest, app binary SHA256 digest, build identity string, and git commit SHA. A SemVer tag without an ELF digest is non-conforming.",
+      "verification": "semantic"
+    },
+    {
+      "id": "SEMVER-003",
+      "topic": "contract-interface-semver",
+      "requirement": "Host-to-firmware and node-to-node communication interfaces (OQL schemas, REST APIs, UART/SPI frame protocols) must declare an independent schema version or SemVer contract with backwards-compatibility guarantees.",
+      "verification": "semantic"
+    },
+    {
+      "id": "SEMVER-004",
+      "topic": "hardware-compatibility-lock",
+      "requirement": "Firmware releases must declare target hardware constraints: board model, SoC variant, PCB revision, required pinouts, and minimum peripheral hardware profile. Firmware compiled for a different board variant must fail closed.",
+      "verification": "review"
+    },
+    {
+      "id": "SEMVER-005",
+      "topic": "embedded-major-increment",
+      "requirement": "Increment MAJOR version on incompatible pinout changes, peripheral deletions, Flash partition layout shifts, breaking wire/OQL protocol changes, or breaking NVS schema restructuring.",
+      "verification": "semantic"
+    },
+    {
+      "id": "SEMVER-006",
+      "topic": "embedded-minor-increment",
+      "requirement": "Increment MINOR version when adding peripheral drivers, non-breaking telemetry/API endpoints, backwards-compatible configuration keys, or backward-compatible OQL operational primitives.",
+      "verification": "semantic"
+    },
+    {
+      "id": "SEMVER-007",
+      "topic": "embedded-patch-increment",
+      "requirement": "Increment PATCH version for bug fixes, control loop tuning, bus timing optimizations, filter adjustments, or safe-state handling corrections that maintain full ABI, API, and NVS compatibility.",
+      "verification": "semantic"
+    },
+    {
+      "id": "SEMVER-008",
+      "topic": "nvs-migration-guarantee",
+      "requirement": "Within the same MAJOR version, non-volatile storage (NVS) calibration data, device identity, and operating parameters must be preserved across updates without manual intervention.",
+      "verification": "review"
+    },
+    {
+      "id": "SEMVER-009",
+      "topic": "dual-build-stage",
+      "requirement": "CI/CD pipelines must isolate host container/binary builds from microcontroller cross-compilation builds, producing separately verified, reproducible artifacts with deterministic digests.",
+      "verification": "review"
+    },
+    {
+      "id": "SEMVER-010",
+      "topic": "static-safety-analysis",
+      "requirement": "Microcontroller firmware builds must enforce static checks for stack size limits, FreeRTOS priority inversion hazards, IRAM budget consumption, and memory leak vulnerabilities prior to release packaging.",
+      "verification": "review"
+    },
+    {
+      "id": "SEMVER-011",
+      "topic": "digital-twin-hil-stage",
+      "requirement": "Before live flashing on physical hardware, candidate firmware must pass automated digital twin or Hardware-In-The-Loop (HIL) simulation tests verifying bus transactions and state machines.",
+      "verification": "review"
+    },
+    {
+      "id": "SEMVER-012",
+      "topic": "precondition-safe-state-audit",
+      "requirement": "The deployment pipeline and firmware target must fail closed (e.g. HTTP 409 Conflict) if safe idle outputs are not satisfied (all motors de-energized, pumps stopped, valves closed) prior to write.",
+      "verification": "semantic"
+    },
+    {
+      "id": "SEMVER-013",
+      "topic": "dual-bank-ota-delivery",
+      "requirement": "Embedded firmware updates must use A/B dual-bank partitioning (e.g. ota_0/ota_1). Flashing writes only to the inactive partition and verifies running image identity using conditional HTTP headers (If-Match).",
+      "verification": "semantic"
+    },
+    {
+      "id": "SEMVER-014",
+      "topic": "spi-bus-pacing",
+      "requirement": "LAN OTA streaming over SPI-attached Ethernet controllers (e.g. W5500) must implement frame/chunk pacing to prevent buffer overflow and starvation of real-time control tasks.",
+      "verification": "review"
+    },
+    {
+      "id": "SEMVER-015",
+      "topic": "boot-verification-state",
+      "requirement": "Following an OTA update and reboot, the newly booted firmware must operate in a self-verification window (pending_verify) and explicitly validate internal diagnostics before cancelling rollback.",
+      "verification": "semantic"
+    },
+    {
+      "id": "SEMVER-016",
+      "topic": "automatic-hardware-rollback",
+      "requirement": "If the booted firmware triggers a panic, watchdog reset, peripheral initialization failure, or fails to mark itself valid within the timeout window, the bootloader must automatically revert to the previously working partition.",
+      "verification": "review"
+    },
+    {
+      "id": "SEMVER-017",
+      "topic": "fleet-reconciliation-receipt",
+      "requirement": "Upon verified deployment, the fleet management agent must produce an immutable audit receipt containing deployed ELF SHA256, target MAC address, partition, and zero critical compliance issues.",
+      "verification": "semantic"
+    },
+    {
+      "id": "SEMVER-018",
+      "topic": "git-merge-decoupling",
+      "requirement": "Per wellmanifest/merge, merging or pushing to the main Git branch must never automatically trigger hardware flashing. Flashing requires an explicit, authenticated deployment session.",
+      "verification": "review"
+    },
+    {
+      "id": "SEMVER-019",
+      "topic": "release-manifest-schema",
+      "requirement": "Every heterogeneous release must publish an embedded-release-manifest validating against schemas/embedded-release.schema.json, declaring component SemVers, digests, and compatibility matrices.",
+      "verification": "semantic"
+    },
+    {
+      "id": "SEMVER-020",
+      "topic": "capability-token-authorization",
+      "requirement": "Firmware deployment APIs must require asymmetric cryptographic capability tokens (e.g. MaskAuth ES256) scoped to hardware.node.firmware.update with short-lived expiration.",
+      "verification": "review"
+    },
+    {
+      "id": "SEMVER-021",
+      "topic": "telemetry-retention",
+      "requirement": "Flashing operations, reboot timestamps, and self-test diagnostic results must be indexed under unique correlation IDs and preserved across journal rotation.",
+      "verification": "review"
+    },
+    {
+      "id": "SEMVER-022",
+      "topic": "canary-wave-strategy",
+      "requirement": "Fleet updates must execute in staged waves (e.g. canary node first, then dependent operational nodes), stopping automatically upon any node rollback or error.",
+      "verification": "review"
+    },
+    {
+      "id": "SEMVER-023",
+      "topic": "offline-conformance-check",
+      "requirement": "Standard conformance tooling must execute completely offline, without network access, hardware connections, or side effects, validating only declared schemas and structural contracts.",
+      "verification": "semantic"
+    },
+    {
+      "id": "SEMVER-024",
+      "topic": "atomic-version-bumping",
+      "requirement": "Version increments in source code must be atomic across VERSION files, package descriptors, firmware C headers, and CHANGELOG.md entries in a dedicated change ticket.",
+      "verification": "semantic"
+    }
+  ]
+}

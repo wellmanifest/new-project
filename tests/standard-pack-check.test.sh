@@ -65,5 +65,6 @@ python3 "$root/tests/runtime_safety_test.py" \
   RuntimeSafetyTests.test_adoption_artifacts_stay_in_the_canonical_checkout
 
 python3 "$root/tests/session-recovery-adoption.test.py"
+python3 "$root/tests/semver-adoption.test.py"
 
 echo "standard-pack-check.test.sh OK"

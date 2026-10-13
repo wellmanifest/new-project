@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wellmanifest.dev/schemas/semver/hardware-matrix/v1",
+  "title": "HardwareCompatibilityMatrix",
+  "description": "Schema mapping firmware versions to hardware profiles, pinouts, and SoC variants.",
+  "type": "object",
+  "required": [
+    "schema",
+    "matrix_version",
+    "profiles"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "wellmanifest.semver/hardware-matrix/v1"
+    },
+    "matrix_version": {
+      "type": "string"
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "profile_id",
+          "board_model",
+          "soc",
+          "supported_firmware_semver_range",
+          "interfaces"
+        ],
+        "properties": {
+          "profile_id": { "type": "string" },
+          "board_model": { "type": "string" },
+          "soc": { "type": "string" },
+          "supported_firmware_semver_range": { "type": "string" },
+          "interfaces": {
+            "type": "object",
+            "required": ["i2c_bus_count"],
+            "properties": {
+              "i2c_bus_count": { "type": "integer" },
+              "spi_ethernet": { "type": "string" },
+              "uart_peripherals": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
