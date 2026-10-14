@@ -28,6 +28,7 @@ def load(path):
 
 
 class BootstrapReusablePlanTest(unittest.TestCase):
+    bootstrap_mode = '--bootstrap-native-adoption'
     def command(self, root, *args, check=True):
         result = subprocess.run(args, cwd=root, capture_output=True, text=True,
                                 env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1'})
@@ -166,7 +167,7 @@ class BootstrapReusablePlanTest(unittest.TestCase):
         revision = self.command(source, 'git', 'rev-parse', 'HEAD').stdout.strip()
         module = load(source / 'scripts/create_adoption_lock.py')
         args = ['adopter', '--target-root', str(self.target), '--source-revision', revision,
-                '--bootstrap-native-adoption', '--bootstrap-reusable-plan', str(self.plan), '--upgrade']
+                self.bootstrap_mode, '--bootstrap-reusable-plan', str(self.plan), '--upgrade']
         with patch.object(sys, 'argv', args), patch.object(module, 'verify_publication_evidence'):
             self.assertEqual(module.main(), 0)
         self.assertEqual(self.caller.read_bytes(), self.original)
@@ -208,6 +209,34 @@ class BootstrapReusablePlanTest(unittest.TestCase):
             self.assertEqual(module.main(), 0)
         self.command(wt, 'python3', '.governance/check_required_checks.py', '--root', '.')
         self.assertEqual(self.caller.read_bytes(), self.original)
+
+
+class LegacyReusablePlanTest(BootstrapReusablePlanTest):
+    bootstrap_mode = '--migrate-wellman-scaffold'
+
+    def setUp(self):
+        super().setUp()
+        manifest = self.target / '.governance/manifest.json'
+        manifest.parent.mkdir()
+        manifest.write_text(json.dumps({'schema': 'wellmanifest.manifest/v1',
+                                       'standard': {'id': 'profile:baseline', 'version': '0.20.37'}}))
+        names = ['AGENTS.md', 'GEMINI.md', '.governance/manifest.json',
+                 '.governance/standard-requirements.json', '.governance/standard-packs.json',
+                 '.governance/docs.json', '.governance/local-ci-publication.json']
+        for relative in names:
+            path = self.target / relative
+            if not path.exists():
+                path.write_text('{}\n' if path.suffix == '.json' else '# Legacy entry\n')
+        lock = {'schema': 'new-project.lock/v1', 'standard': {
+            'id': 'wellmanifest/new-project', 'sourceRepository': 'wellmanifest/new-project',
+            'sourceRevision': 'a' * 40, 'version': '0.20.38', 'publicationStatus': 'published'},
+            'managedFiles': {name: hashlib.sha256((self.target / name).read_bytes()).hexdigest() for name in names}}
+        (manifest.parent / 'manifest.lock.json').write_text(json.dumps(lock))
+        self.command(self.target, 'git', 'add', '.')
+        self.command(self.target, 'git', 'commit', '-q', '-m', 'Fixture legacy registration')
+        self.head = self.command(self.target, 'git', 'rev-parse', 'HEAD').stdout.strip()
+        self.document['baseSha'] = self.head
+        self.plan.write_text(json.dumps(self.document))
 
 
 if __name__ == '__main__':

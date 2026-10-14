@@ -1,5 +1,6 @@
 """Actual CLI regressions for explicit migration of minimal Wellman scaffolds."""
 import importlib.util
+import hashlib
 import json
 import subprocess
 import sys
@@ -44,6 +45,129 @@ class LegacyScaffoldMigrationTest(unittest.TestCase):
         return subprocess.run([sys.executable, str(SCRIPT), "--target-root", str(self.target),
                                "--source-revision", self.revision, "--allow-unpublished-for-testing",
                                *arguments], capture_output=True, text=True, timeout=60)
+
+    def committed_legacy_lock(self):
+        names = ["AGENTS.md", "GEMINI.md", ".governance/manifest.json",
+                 ".governance/standard-requirements.json", ".governance/standard-packs.json",
+                 ".governance/docs.json", ".governance/local-ci-publication.json"]
+        for relative in names:
+            path = self.target / relative
+            if not path.exists():
+                path.write_text("{}\n" if path.suffix == ".json" else "# Legacy entry\n")
+        document = {"schema": "new-project.lock/v1", "standard": {
+            "id": "wellmanifest/new-project", "sourceRepository": "wellmanifest/new-project",
+            "sourceRevision": "a" * 40, "version": "0.20.38", "publicationStatus": "published"},
+            "managedFiles": {name: hashlib.sha256((self.target / name).read_bytes()).hexdigest() for name in names}}
+        lock = self.target / ".governance/manifest.lock.json"
+        lock.write_text(json.dumps(document))
+        self.commit_target()
+        return lock, document
+
+    def commit_target(self):
+        subprocess.run(["git", "add", "."], cwd=self.target, check=True)
+        subprocess.run(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                        "commit", "-qm", "Fixture registration"], cwd=self.target, check=True)
+
+    def test_committed_legacy_registration_migrates_and_preserves_target_contracts(self):
+        self.committed_legacy_lock()
+        before = self.contents()
+        review = self.run_adopter("--check", "--migrate-wellman-scaffold")
+        self.assertEqual(review.returncode, 1, review.stderr)
+        self.assertIn("UPDATE .governance/manifest.json", review.stdout)
+        self.assertEqual(before, self.contents())
+        result = self.run_adopter("--upgrade", "--migrate-wellman-scaffold")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for relative in [".governance/standard-requirements.json", ".governance/docs.json",
+                         ".governance/local-ci-publication.json"]:
+            self.assertEqual((self.target / relative).read_bytes(), before[relative])
+        self.assertTrue((self.target / "project/new-ticket.sh").is_file())
+
+    def test_legacy_registration_tampering_and_extensions_refuse_without_writes(self):
+        lock, original = self.committed_legacy_lock()
+        for change in ["dirty-file", "dirty-lock", "recomputed-digest", "extra-managed",
+                       "missing-managed", "invalid-digest", "native-standard", "extra-standard",
+                       "duplicate-key", "missing-file", "symlinked-file", "unpublished-registration"]:
+            with self.subTest(change=change):
+                subprocess.run(["git", "reset", "--hard", "-q", "HEAD"], cwd=self.target, check=True)
+                doc = json.loads(json.dumps(original))
+                path = self.target / "GEMINI.md"
+                if change == "dirty-file":
+                    path.write_text("changed\n")
+                elif change == "dirty-lock":
+                    doc["standard"]["version"] = "0.20.39"
+                elif change == "recomputed-digest":
+                    path.write_text("changed\n")
+                    doc["managedFiles"]["GEMINI.md"] = hashlib.sha256(path.read_bytes()).hexdigest()
+                elif change == "extra-managed":
+                    doc["managedFiles"][".governance/native.py"] = "b" * 64
+                elif change == "missing-managed":
+                    del doc["managedFiles"]["GEMINI.md"]
+                elif change == "invalid-digest":
+                    doc["managedFiles"]["GEMINI.md"] = 12
+                elif change == "native-standard":
+                    doc["standard"]["id"] = "native-policy"
+                elif change == "extra-standard":
+                    doc["standard"]["writerAuthority"] = True
+                elif change == "unpublished-registration":
+                    doc["standard"]["publicationStatus"] = "unpublished-test"
+                elif change == "missing-file":
+                    path.unlink()
+                elif change == "symlinked-file":
+                    outside = self.root / "outside.md"
+                    outside.write_bytes(path.read_bytes())
+                    path.unlink()
+                    path.symlink_to(outside)
+                lock.write_text(json.dumps(doc))
+                if change == "duplicate-key":
+                    lock.write_text(lock.read_text().replace('"schema":', '"schema": "native", "schema":', 1))
+                # Extended and malformed committed locks must also be refused.
+                if change in {"extra-managed", "missing-managed", "invalid-digest", "native-standard", "extra-standard", "duplicate-key", "unpublished-registration"}:
+                    self.commit_target()
+                before = self.contents()
+                result = self.run_adopter("--upgrade", "--migrate-wellman-scaffold")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("refuses symlinked target paths" if change == "symlinked-file" else "refuses existing native adoption evidence", result.stderr)
+                self.assertEqual(self.contents(), before)
+                # Restore the known fixture revision without touching production Git.
+                if change in {"extra-managed", "missing-managed", "invalid-digest", "native-standard", "extra-standard", "duplicate-key", "unpublished-registration"}:
+                    subprocess.run(["git", "reset", "--hard", "-q", "HEAD~1"], cwd=self.target, check=True)
+
+    def test_uncommitted_legacy_registration_is_not_a_migration_identity(self):
+        lock, _ = self.committed_legacy_lock()
+        subprocess.run(["git", "rm", "--cached", "-q", str(lock.relative_to(self.target))], cwd=self.target, check=True)
+        self.commit_target_without_staging_lock()
+        before = self.contents()
+        result = self.run_adopter("--upgrade", "--migrate-wellman-scaffold")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(before, self.contents())
+
+    def commit_target_without_staging_lock(self):
+        subprocess.run(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                        "commit", "-qm", "Remove committed lock"], cwd=self.target, check=True)
+
+    def test_registration_is_rechecked_immediately_before_installer_writes(self):
+        self.committed_legacy_lock()
+        spec = importlib.util.spec_from_file_location("legacy_recheck", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        validate = module.validate_wellman_scaffold
+        calls = []
+
+        def changed_before_write(*args):
+            calls.append(args)
+            if len(calls) == 2:
+                raise SystemExit("registration changed before writes")
+            return validate(*args)
+
+        before = self.contents()
+        args = [str(SCRIPT), "--target-root", str(self.target), "--source-revision", self.revision,
+                "--upgrade", "--migrate-wellman-scaffold"]
+        with patch.object(sys, "argv", args), patch.object(module, "verify_publication_evidence"), \
+                patch.object(module, "validate_wellman_scaffold", side_effect=changed_before_write):
+            with self.assertRaisesRegex(SystemExit, "registration changed before writes"):
+                module.main()
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(before, self.contents())
 
     def test_default_upgrade_still_refuses_incomplete_manifest(self):
         before = self.contents()

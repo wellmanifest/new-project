@@ -681,7 +681,7 @@ def validate_wellman_scaffold(target_root: Path, files: list[dict[str, object]])
         path = target_root / target
         if any(part.is_symlink() for part in (path, *path.parents)):
             raise SystemExit("Wellman scaffold migration refuses symlinked target paths")
-    for name in ("manifest.lock.json", "manifest.base.json", "package-manifest.json"):
+    for name in ("manifest.base.json", "package-manifest.json"):
         if (target_root / ".governance" / name).exists():
             raise SystemExit("Wellman scaffold migration refuses existing native adoption evidence")
 
@@ -706,6 +706,52 @@ def validate_wellman_scaffold(target_root: Path, files: list[dict[str, object]])
         and isinstance(standard["version"], str) and VERSION_PATTERN.fullmatch(standard["version"])
     ):
         raise SystemExit("migration requires the exact minimal Wellman baseline scaffold")
+
+    lock_path = target_root / ".governance/manifest.lock.json"
+    if not lock_path.exists():
+        return
+    # A baseline registration is not a complete native adoption. Accept only
+    # its closed seven-file inventory, already committed at the target HEAD.
+    legacy_paths = {
+        "AGENTS.md", "GEMINI.md", ".governance/manifest.json",
+        ".governance/standard-requirements.json", ".governance/standard-packs.json",
+        ".governance/docs.json", ".governance/local-ci-publication.json",
+    }
+    try:
+        lock = json.loads(lock_path.read_bytes(), object_pairs_hook=unique_object)
+        standard = lock.get("standard") if isinstance(lock, dict) else None
+        managed = lock.get("managedFiles") if isinstance(lock, dict) else None
+        if not (
+            isinstance(lock, dict) and set(lock) == {"schema", "standard", "managedFiles"}
+            and lock["schema"] == "new-project.lock/v1"
+            and isinstance(standard, dict)
+            and set(standard) == {"id", "sourceRepository", "sourceRevision", "version", "publicationStatus"}
+            and standard["id"] == standard["sourceRepository"] == "wellmanifest/new-project"
+            and standard["publicationStatus"] == "published"
+            and isinstance(standard["version"], str) and VERSION_PATTERN.fullmatch(standard["version"])
+            and isinstance(standard["sourceRevision"], str) and re.fullmatch(r"[0-9a-f]{40}", standard["sourceRevision"])
+            and isinstance(managed, dict) and set(managed) == legacy_paths
+        ):
+            raise ValueError("not the closed legacy inventory")
+        for relative in sorted(legacy_paths | {".governance/manifest.lock.json"}):
+            path = target_root / relative
+            if any(part.is_symlink() for part in (path, *path.parents)):
+                raise ValueError("symlinked registration")
+            content = path.read_bytes()
+            if relative in managed and (
+                not isinstance(managed[relative], str)
+                or re.fullmatch(r"[0-9a-f]{64}", managed[relative]) is None
+                or hashlib.sha256(content).hexdigest() != managed[relative]
+            ):
+                raise ValueError("registration digest mismatch")
+            committed = subprocess.run(
+                ["git", "-C", str(target_root), "show", f"HEAD:{relative}"],
+                capture_output=True, check=False,
+            )
+            if committed.returncode or committed.stdout != content:
+                raise ValueError("registration differs from committed target bytes")
+    except (OSError, ValueError, TypeError, KeyError) as error:
+        raise SystemExit("Wellman scaffold migration refuses existing native adoption evidence or invalid legacy registration") from error
 
 
 def main() -> int:
@@ -744,8 +790,8 @@ def main() -> int:
         parser.error("--migrate-wellman-scaffold requires --check or --upgrade after review")
     if args.bootstrap_native_adoption and args.migrate_wellman_scaffold:
         parser.error("fresh bootstrap and scaffold migration are mutually exclusive")
-    if args.bootstrap_reusable_plan and not args.bootstrap_native_adoption:
-        parser.error("a reusable CI bootstrap plan requires explicit fresh native bootstrap")
+    if args.bootstrap_reusable_plan and not (args.bootstrap_native_adoption or args.migrate_wellman_scaffold):
+        parser.error("a reusable CI bootstrap plan requires explicit fresh native bootstrap or scaffold migration")
 
     if re.fullmatch(r"[0-9a-f]{40}", args.source_revision) is None:
         parser.error("--source-revision must be a full lowercase 40-character commit SHA")
@@ -910,6 +956,8 @@ def main() -> int:
             bootstrap_head = observed.stdout.strip()
         if fresh_base_sha is not None and bootstrap_head != fresh_base_sha:
             raise SystemExit("repository HEAD changed before bootstrap; reconcile ownership")
+        if args.migrate_wellman_scaffold:
+            validate_wellman_scaffold(target_root, files)
     for target, content in sorted(payloads.items()):
         path = target_root / target
         if not path.exists() or path.read_bytes() != content:
