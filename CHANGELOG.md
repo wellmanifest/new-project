@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [0.20.98] - 2026-10-14
+
+### Fixed
+
+- Permit explicit native migration of the closed, committed seven-file Wellman
+  registration while refusing native locks, changed bytes and unsafe paths.
+- Reuse digest-bound future reusable workflow plans during scaffold migration;
+  preserve actual target workflows and first-allocation authority boundaries.
+
 ## [0.20.97] - 2026-10-12
 
 ### Fixed

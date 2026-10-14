@@ -1,0 +1,96 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-339",
+  "summary": "Migrate authenticated legacy Wellman locks with pinned reusable workflow plans",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-339/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/create_adoption_lock.py",
+    "tests/adoption_legacy_scaffold_test.py",
+    "tests/bootstrap_reusable_plan_test.py",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c66ef6797bc05dea1b46bbabfe235ceee87397a5",
+    "targetBranch": "main",
+    "outcome": "Publish immutable 0.20.98 after protected review: explicit scaffold migration accepts only the exact committed legacy seven-file lock and supports digest-bound pinned reusable plans; ordinary native locks, tampering and unverified CI remain rejected.",
+    "nonGoals": [
+      "No target repository changes in the Governance Hub",
+      "No managed hash edits, policy waiver, CI bypass or invented release evidence",
+      "No automatic replacement of target workflows"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend the explicit migration path with closed legacy lock validation against actual committed target bytes. Reuse the existing external future-CI plan without granting verification or publication. Keep first allocation and publication boundaries intact.",
+      "components": [
+        {
+          "name": "immutable-adoption",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "tests/adoption_legacy_scaffold_test.py",
+            "tests/bootstrap_reusable_plan_test.py",
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert ticket-339"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "Legacy migration CLI regression suite"
+        ],
+        "evidence": "Exact committed lock accepts; dirty, missing, symlinked, duplicate, extended, native and invalid-lock inputs reject before writes."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "Reusable plan CLI and real first-allocation regressions",
+          "Native governance",
+          "Protected OneDev and independent Validator"
+        ],
+        "evidence": "Migration plan projects future checks while target caller remains unchanged and unverified until material implementation."
+      }
+    ]
+  }
+}
