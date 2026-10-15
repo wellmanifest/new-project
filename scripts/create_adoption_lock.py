@@ -6,13 +6,16 @@ from __future__ import annotations
 import argparse
 import base64
 import binascii
+import contextlib
 import fnmatch
 import hashlib
 import importlib.util
+import io
 import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -59,7 +62,245 @@ VERSION_PATTERN = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
 
 
 def git_bytes(root: Path, revision: str, source: str) -> bytes:
-    return subprocess.check_output(["git", "show", f"{revision}:{source}"], cwd=root)
+    return subprocess.check_output(["git", "show", f"{revision}:{source}"], cwd=root,
+                                   env=plan_git_environment())
+
+
+def plan_git_environment() -> dict[str, str]:
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    environment.update(GIT_NO_REPLACE_OBJECTS="1", GIT_OPTIONAL_LOCKS="0")
+    return environment
+
+
+ALLOCATION_PLAN_SCHEMA = "new-project.standard-adoption-plan/v1"
+
+
+def plan_path(root: Path, name: str) -> Path:
+    if (not name or Path(name).is_absolute() or Path(name).as_posix() != name
+            or any(part in {"", ".", "..", ".git"} for part in name.split("/"))
+            or any(character in name for character in "*?[]\\\x00\r\n")):
+        raise SystemExit("adoption plan requires canonical literal repository paths")
+    path = root / name
+    if any(part.is_symlink() for part in (path, *path.parents)):
+        raise SystemExit("adoption plan refuses symlinked paths")
+    return path
+
+
+def plan_file(path: Path) -> dict[str, object] | None:
+    if not path.exists():
+        return None
+    if not path.is_file():
+        raise SystemExit("adoption plan requires regular files")
+    checksum = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(65536), b""):
+            checksum.update(chunk)
+    return {"sha256": checksum.hexdigest(), "mode": stat.S_IMODE(path.stat().st_mode)}
+
+
+def plan_git(root: Path, *arguments: str) -> bytes:
+    return subprocess.check_output(["git", "--no-optional-locks", *arguments], cwd=root,
+                                   env=plan_git_environment(), stderr=subprocess.DEVNULL)
+
+
+def allocation_target_state(root: Path, names: set[str]) -> dict[str, object]:
+    if any(part.is_symlink() for part in (root, *root.parents)):
+        raise SystemExit("adoption plan refuses symlinked repository roots")
+    top = Path(os.fsdecode(plan_git(root, "rev-parse", "--show-toplevel")).strip())
+    primary = os.fsdecode(plan_git(root, "worktree", "list", "--porcelain")).splitlines()[0]
+    if (top != root or primary != "worktree " + str(root)
+            or not (root / ".git").is_dir() or (root / ".git").is_symlink()):
+        raise SystemExit("adoption plan requires the registered primary Git checkout")
+    branch = os.fsdecode(plan_git(root, "symbolic-ref", "--short", "HEAD")).strip()
+    if branch != "main":
+        raise SystemExit("adoption plan requires the primary target branch")
+    status = plan_git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
+    fields = iter(os.fsdecode(status).split("\0"))
+    dirty = set()
+    for field in fields:
+        if field:
+            dirty.add(field[3:])
+            if "R" in field[:2] or "C" in field[:2]:
+                dirty.add(next(fields))
+    index = root / ".git/index"
+    if index.is_symlink():
+        raise SystemExit("adoption plan refuses a symlinked Git index")
+    return {
+        "root": str(root), "head": os.fsdecode(plan_git(root, "rev-parse", "HEAD")).strip(),
+        "branch": branch, "statusSha256": hashlib.sha256(status).hexdigest(),
+        "index": plan_file(index),
+        "dirtyFiles": {name: plan_file(plan_path(root, name)) for name in sorted(dirty)},
+        "files": {name: plan_file(plan_path(root, name)) for name in sorted(names)},
+    }
+
+
+def allocation_seed_ownership(root: Path, files: list[dict[str, object]],
+                              source_manifest: dict, manifest: dict) -> list[str]:
+    """Add exact absent/unowned incoming seeds, preserving every existing owner."""
+    coordination = manifest["coordination"]
+    streams = coordination["workstreams"]
+    incoming = source_manifest["coordination"]["workstreams"]["governance"]["ownedPaths"]
+    integration = coordination["integration"]
+    additions = []
+    for item in files:
+        name = str(item["target"])
+        if item["strategy"] != "seed" or (root / name).exists():
+            continue
+        if any(fnmatch.fnmatchcase(name, pattern) for stream in streams.values()
+               for pattern in stream["ownedPaths"]):
+            continue
+        if (not any(fnmatch.fnmatchcase(name, pattern) for pattern in incoming)
+                or any(fnmatch.fnmatchcase(name, pattern) for pattern in integration["requiredForPaths"])):
+            raise SystemExit("incoming seed has no independently derived governance ownership")
+        streams["governance"]["ownedPaths"].append(name)
+        additions.append(name)
+    return sorted(additions)
+
+
+def allocation_delivery(manifest: dict, state: dict, scope: list[str],
+                        previous: str, revision: str) -> dict:
+    policy = manifest["delivery"]
+    if policy.get("targetBranches") != ["main"] or "L" not in policy.get("allowedComplexityClasses", []):
+        raise SystemExit("adoption allocation requires a supported declared delivery profile")
+    profile = policy.get("profiles", {}).get("L", policy)
+    return {
+        "acceptedBaseSha": state["head"], "targetBranch": "main",
+        "outcome": "Adopt the complete verified immutable wellmanifest/new-project package.",
+        "nonGoals": ["Allocation grants no editing or publication authority",
+                     "Preserve local overrides and unrelated implementation"],
+        "complexity": "L", "estimatedMinutes": min(120, policy["maxActiveMinutes"]),
+        "budgets": {"maxImplementationFiles": min(policy["maxImplementationFiles"], profile["maxImplementationFiles"]),
+                    "maxAffectedComponents": 1, "maxPublicInterfaceChanges": 0, "maxRuntimeDependencies": 0},
+        "architecture": {
+            "status": "accepted", "decision": "Native allocation independently recomputes the exact published package and target state. Only its closed adoption paths are admitted; protected authority remains separate.",
+            "components": [{"name": "immutable-standard-adoption", "paths": scope}],
+            "responsibilityChanges": False, "interfaceChanges": [],
+            "dataChanges": ["Immutable standard package and adoption lock"],
+            "ui": {"impact": "none", "states": [], "evidence": []},
+            "rollback": "Revert through protected review; preserve the previous immutable adoption pin.",
+        },
+        "runtimeDependencies": [],
+        "validation": [{"criterion": "AC-01", "commands": ["./project/governance-check.sh"],
+                        "evidence": "Complete immutable package, exact-base scope and independent protected publication"}],
+        "standardAdoption": {"sourceRepository": "wellmanifest/new-project",
+                             "fromRevision": previous, "toRevision": revision},
+    }
+
+
+def adoption_allocation_plan(standard_root: Path, revision: str, version: str,
+                             target_root: Path, files: list[dict[str, object]],
+                             payloads: dict[str, bytes], expected_lock: bytes,
+                             executable: set[str], manifest: dict, before: dict,
+                             additions: list[str]) -> dict:
+    after = allocation_target_state(target_root, set(before["files"]))
+    if before != after:
+        raise SystemExit("target changed while preparing the adoption plan")
+    old_lock = json.loads((target_root / ".governance/manifest.lock.json").read_bytes())
+    standard = old_lock.get("standard", {})
+    previous = standard.get("sourceRevision")
+    if (standard.get("publicationStatus") != "published"
+            or standard.get("sourceRepository") != "wellmanifest/new-project"
+            or not isinstance(previous, str) or re.fullmatch(r"[0-9a-f]{40}", previous) is None
+            or previous == revision):
+        raise SystemExit("allocation plan requires a distinct published installed adoption")
+    for name in (MANIFEST_TARGET, MANIFEST_BASE_TARGET, ".governance/manifest.lock.json",
+                 ".governance/package-manifest.json"):
+        if plan_git(target_root, "show", f"HEAD:{name}") != (target_root / name).read_bytes():
+            raise SystemExit("current adoption metadata differs from the committed target base")
+    strategies = {str(item["target"]): str(item["strategy"]) for item in files}
+    owned = manifest["coordination"]["workstreams"]["governance"]["ownedPaths"]
+    integration = manifest["coordination"]["integration"]["requiredForPaths"]
+    changes = planned_changes(target_root, payloads, expected_lock, executable)
+    scope = sorted({name for _action, name in changes})
+    if not scope:
+        raise SystemExit("adoption allocation plan has no material changes")
+    old_managed = old_lock.get("managedFiles", {})
+    if not isinstance(old_managed, dict) or not old_managed:
+        raise SystemExit("installed adoption has no managed hash closure")
+    for name, checksum in old_managed.items():
+        current = plan_file(plan_path(target_root, name))
+        if (not isinstance(checksum, str) or re.fullmatch(r"[0-9a-f]{64}", checksum) is None
+                or current is None or current["sha256"] != checksum):
+            raise SystemExit("installed managed closure differs from its adoption pin")
+    old_package = json.loads((target_root / ".governance/package-manifest.json").read_bytes())
+    old_strategies = {item["target"]: item["strategy"] for item in old_package["files"]}
+    for name in scope:
+        if strategies.get(name) == "managed":
+            current = before["files"][name]
+            if current is not None and (old_strategies.get(name) != "managed"
+                    or old_managed.get(name) != current["sha256"]):
+                raise SystemExit("managed adoption path requires explicit takeover or repair")
+        elif (not any(fnmatch.fnmatchcase(name, pattern) for pattern in owned)
+                or any(fnmatch.fnmatchcase(name, pattern) for pattern in integration)):
+            raise SystemExit("adoption plan cannot transfer target-owned path: " + name)
+    desired = {**payloads, ".governance/manifest.lock.json": expected_lock}
+    def desired_mode(name, content):
+        current = before["files"].get(name)
+        if name != ".governance/manifest.lock.json" and current is not None and current["sha256"] == hashlib.sha256(content).hexdigest():
+            mode = current["mode"]
+            if name not in executable or mode & 0o111:
+                return "100755" if mode & 0o100 else "100644"
+        return "100755" if name in executable else "100644"
+    plan = {
+        "schema": ALLOCATION_PLAN_SCHEMA, "readOnly": True, "grantsAuthority": False,
+        "source": {"repository": "wellmanifest/new-project", "revision": revision,
+                   "version": version, "packageSha256": hashlib.sha256(git_bytes(standard_root, revision, PACKAGE_MANIFEST)).hexdigest(),
+                   "exporterSha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                   "allocatorSha256": hashlib.sha256(git_bytes(standard_root, revision, "project/new-ticket.sh")).hexdigest()},
+        "target": before, "prospectiveManifest": manifest, "ownershipAdditions": additions,
+        "files": [{"path": name, "sha256": hashlib.sha256(content).hexdigest(),
+                   "gitMode": desired_mode(name, content),
+                   "strategy": strategies.get(name, "generated")}
+                  for name, content in sorted(desired.items())],
+        "allowedPaths": scope,
+        "delivery": allocation_delivery(manifest, before, scope, previous, revision),
+    }
+    plan["digest"] = hashlib.sha256(json_bytes(plan)).hexdigest()
+    return plan
+
+
+def verify_allocation_plan(path: Path, target_root: Path, workstream: str,
+                           requested_paths: list[str] | None = None) -> dict:
+    """Recompute using this trusted package; never load executable paths from a plan."""
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise SystemExit("duplicate adoption allocation plan field")
+            result[key] = value
+        return result
+
+    if (any(part.is_symlink() for part in (path, *path.parents))
+            or not path.is_file() or path.stat().st_size > MAX_RELEASE_METADATA_BYTES):
+        raise SystemExit("adoption allocation plan requires a bounded regular file")
+    with path.open("rb") as stream:
+        raw = stream.read(MAX_RELEASE_METADATA_BYTES + 1)
+    if len(raw) > MAX_RELEASE_METADATA_BYTES:
+        raise SystemExit("adoption allocation plan exceeds size limit")
+    try:
+        plan = json.loads(raw, object_pairs_hook=pairs)
+        revision = plan["source"]["revision"]
+    except (ValueError, UnicodeError, KeyError, TypeError) as error:
+        raise SystemExit("invalid adoption allocation plan") from error
+    if (not isinstance(revision, str) or re.fullmatch(r"[0-9a-f]{40}", revision) is None
+            or workstream != "governance"):
+        raise SystemExit("invalid adoption allocation source or workstream")
+    standard_root = Path(__file__).resolve().parent.parent
+    if (standard_root / "project/new-ticket.sh").read_bytes() != git_bytes(standard_root, revision, "project/new-ticket.sh"):
+        raise SystemExit("allocator differs from the immutable source package")
+    output = io.StringIO()
+    with contextlib.redirect_stdout(output):
+        result = main(["--target-root", str(target_root), "--source-revision", revision,
+                       "--check", "--allocation-plan"])
+    if result != 0 or json_bytes(plan) != json_bytes(json.loads(output.getvalue())):
+        raise SystemExit("adoption allocation plan changed or target state is stale")
+    with path.open("rb") as stream:
+        unchanged = stream.read(MAX_RELEASE_METADATA_BYTES + 1) == raw
+    if not unchanged:
+        raise SystemExit("adoption allocation plan changed during verification")
+    if requested_paths and requested_paths != plan["allowedPaths"]:
+        raise SystemExit("caller scope differs from the exact derived adoption scope")
+    return plan
 
 
 def canonical_tag_revision(version: str) -> str:
@@ -74,6 +315,7 @@ def canonical_tag_revision(version: str) -> str:
             f"refs/tags/{tag}",
             f"refs/tags/{tag}^{{}}",
         ],
+        env=plan_git_environment(),
         capture_output=True,
         text=True,
         check=False,
@@ -476,6 +718,7 @@ def ignored_payload_targets(target_root: Path, targets: set[str]) -> list[str]:
         return []
     work_tree = subprocess.run(
         ["git", "rev-parse", "--is-inside-work-tree"],
+        env=plan_git_environment(),
         cwd=target_root,
         capture_output=True,
         text=True,
@@ -483,9 +726,18 @@ def ignored_payload_targets(target_root: Path, targets: set[str]) -> list[str]:
     )
     if work_tree.returncode != 0 or work_tree.stdout.strip() != "true":
         return []
+    checkout = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"], cwd=target_root,
+        env=plan_git_environment(), capture_output=True, text=True, check=False,
+    )
+    if checkout.returncode != 0 or Path(checkout.stdout.strip()).resolve() != target_root.resolve():
+        # An unborn scaffold inside another checkout has no Git ignore rules
+        # of its own. Never borrow its ancestor's identity or ignored cache.
+        return []
     encoded = b"".join(target.encode("utf-8") + b"\0" for target in sorted(targets))
     result = subprocess.run(
         ["git", "check-ignore", "--stdin", "-z"],
+        env=plan_git_environment(),
         cwd=target_root,
         input=encoded,
         capture_output=True,
@@ -827,7 +1079,7 @@ def validate_wellman_scaffold(target_root: Path, files: list[dict[str, object]])
         raise SystemExit("Wellman scaffold migration refuses existing native adoption evidence or invalid legacy registration") from error
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target-root", required=True)
     parser.add_argument("--source-revision", required=True)
@@ -857,7 +1109,14 @@ def main() -> int:
         action="store_true",
         help="Report adoption drift and planned changes without writing files",
     )
-    args = parser.parse_args()
+    parser.add_argument("--allocation-plan", action="store_true",
+                        help="With --check, export a read-only exact-state native upgrade allocation plan")
+    args = parser.parse_args(argv)
+
+    if args.allocation_plan and (not args.check or args.allow_unpublished_for_testing
+            or args.bootstrap_native_adoption or args.migrate_wellman_scaffold
+            or args.bootstrap_reusable_plan or args.bootstrap_ownership_plan):
+        parser.error("--allocation-plan requires --check and a published native upgrade")
 
     if args.check and args.upgrade:
         parser.error("--check and --upgrade are mutually exclusive")
@@ -874,11 +1133,13 @@ def main() -> int:
         parser.error("--source-revision must be a full lowercase 40-character commit SHA")
     standard_root = Path(__file__).resolve().parent.parent
     requested_root = Path(args.target_root).absolute()
-    if (args.migrate_wellman_scaffold or args.bootstrap_native_adoption) and any(
+    if (args.migrate_wellman_scaffold or args.bootstrap_native_adoption or args.allocation_plan) and any(
         path.is_symlink() for path in (requested_root, *requested_root.parents)
     ):
         raise SystemExit("Wellman scaffold migration refuses symlinked target paths")
     target_root = requested_root.resolve()
+    if args.allocation_plan and ".." in Path(args.target_root).parts:
+        raise SystemExit("adoption plan refuses traversal in target roots")
     fresh_base_sha = None
     if args.bootstrap_native_adoption:
         for name in ("manifest.json", "manifest.lock.json", "manifest.base.json", "package-manifest.json"):
@@ -901,6 +1162,7 @@ def main() -> int:
                 raise SystemExit("fresh bootstrap cannot replace committed governance")
     subprocess.run(
         ["git", "cat-file", "-e", f"{args.source_revision}^{{commit}}"],
+        env=plan_git_environment(),
         cwd=standard_root,
         check=True,
         stdout=subprocess.DEVNULL,
@@ -913,6 +1175,17 @@ def main() -> int:
         publication_status = "published"
 
     files = package_files(standard_root, args.source_revision)
+    plan_before = None
+    if args.allocation_plan:
+        if Path(__file__).read_bytes() != git_bytes(standard_root, args.source_revision, "scripts/create_adoption_lock.py"):
+            raise SystemExit("plan exporter differs from the immutable source package")
+        old_lock = json.loads(plan_path(target_root, ".governance/manifest.lock.json").read_bytes())
+        old_managed = old_lock.get("managedFiles")
+        if not isinstance(old_managed, dict):
+            raise SystemExit("adoption plan requires an installed managed hash closure")
+        plan_before = allocation_target_state(target_root,
+            {str(item["target"]) for item in files} | set(old_managed)
+            | {".governance/manifest.lock.json", ".gitignore"})
     if args.migrate_wellman_scaffold:
         validate_wellman_scaffold(target_root, files)
     managed_targets = {
@@ -967,6 +1240,13 @@ def main() -> int:
     if manifest.get("standard", {}).get("version") != version:
         raise SystemExit(f"target manifest version must equal adopted standard version {version}")
 
+    seed_additions: list[str] = []
+    if previous_base is not None and "governance" in manifest["coordination"]["workstreams"]:
+        seed_additions = allocation_seed_ownership(target_root, files,
+            json.loads(git_bytes(standard_root, args.source_revision, MANIFEST_SOURCE)), manifest)
+        if seed_additions:
+            payloads[MANIFEST_TARGET] = json_bytes(manifest)
+
     bootstrap_paths: list[str] = []
     project_inherited_required_checks(target_root, payloads, args.bootstrap_reusable_plan,
                                      bootstrap_paths)
@@ -1004,6 +1284,15 @@ def main() -> int:
         )
     changes = planned_changes(target_root, payloads, expected_lock, executable_targets)
     missing_prerequisites = missing_target_prerequisites(target_root, manifest, payloads)
+
+    if args.allocation_plan:
+        if missing_prerequisites:
+            raise SystemExit("adoption allocation requires all target prerequisites")
+        assert plan_before is not None
+        print(json.dumps(adoption_allocation_plan(standard_root, args.source_revision, version,
+            target_root, files, payloads, expected_lock, executable_targets, manifest,
+            plan_before, seed_additions), sort_keys=True))
+        return 0
 
     if args.check:
         if not changes:

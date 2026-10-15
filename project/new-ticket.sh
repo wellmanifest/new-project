@@ -23,6 +23,8 @@ RECOVER_REQUEST=""
 RECOVERY_LEASE_STORE=""
 WORKTREE_SLUG=""
 BOOTSTRAP_ADOPTION_DIGEST=""
+STANDARD_ADOPTION_PLAN=""
+ADOPTION_PROJECTION=""
 CALLER_CHECKOUT="$(pwd -P)"
 ALLOCATOR_PACKAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 
@@ -71,6 +73,8 @@ Usage: ./project/new-ticket.sh [options]
                           Existing external local controller store (recovery only)
       --bootstrap-adoption-digest SHA
                           Confirm ownership of exact first scaffold adoption delta
+      --standard-adoption-plan FILE
+                          Recompute an exact published upgrade plan before local allocation
       --worktree-slug SLUG
                           Canonical linked-worktree slug; defaults to a stable title slug
 
@@ -151,6 +155,8 @@ while [[ $# -gt 0 ]]; do
       require_value "$@"; RECOVERY_LEASE_STORE="$2"; shift 2 ;;
     --bootstrap-adoption-digest)
       require_value "$@"; BOOTSTRAP_ADOPTION_DIGEST="$2"; shift 2 ;;
+    --standard-adoption-plan)
+      require_value "$@"; STANDARD_ADOPTION_PLAN="$2"; shift 2 ;;
     --worktree-slug)
       require_value "$@"; WORKTREE_SLUG="$2"; shift 2 ;;
     --ticket-store-root)
@@ -206,6 +212,10 @@ if [[ ! "$AGENT" =~ ^[a-z0-9][a-z0-9._-]*$ ]]; then
   exit 2
 fi
 
+if [[ -n "$STANDARD_ADOPTION_PLAN" ]]; then
+  STANDARD_ADOPTION_PLAN="$(python3 -B -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$STANDARD_ADOPTION_PLAN")"
+fi
+
 # Allocation may be requested from a linked checkout, but the clone's primary
 # checkout is the only valid authority for admission and canonical layout. Do
 # not infer it from $PWD: Git's registered-worktree order is the durable
@@ -223,6 +233,10 @@ fi
 
 TICKET_STORAGE="${TICKET_STORAGE:-$(git config --local --get new-project.ticketStorage 2>/dev/null || true)}"
 TICKET_STORAGE="${TICKET_STORAGE:-files}"
+if [[ -n "$STANDARD_ADOPTION_PLAN" && ( "$TICKET_STORAGE" != files || "$REFRESH_REMOTE" == true || "$FORCE_NEW" == true || -n "$BOOTSTRAP_ADOPTION_DIGEST" || -n "$SNAPSHOT_PROPOSAL" || -n "$SNAPSHOT_MATERIALIZE" || -n "$MIGRATION_AUTHORIZATION" || -n "$MIGRATION_AUTHORIZATION_SHA256" || -n "$RECOVER_REQUEST" || -n "$RECOVERY_LEASE_STORE" ) ]]; then
+  echo "GOV-TICKET-ALLOCATION-003: adoption plans require exclusive local file allocation without bootstrap or recovery overrides." >&2
+  exit 5
+fi
 if [[ "$TICKET_STORAGE" != files && "$TICKET_STORAGE" != sqlite ]]; then
   echo "GOV-TICKET-ALLOCATION-003: unknown ticket storage mode." >&2
   exit 1
@@ -394,9 +408,39 @@ require_classification_value kind "$KIND"
 require_classification_value priority "$PRIORITY"
 require_classification_value origin "$ORIGIN"
 
+# The incoming immutable package owns its verifier; the plan never names code.
+# Old adopters invoke this published source package's native allocator from
+# their primary checkout. A partial installed package is not a fallback.
+verify_standard_adoption() {
+  local runtime="$ALLOCATOR_PACKAGE_ROOT/scripts/create_adoption_lock.py"
+  if [[ ! -f "$runtime" || -L "$runtime" ]]; then
+    echo "GOV-TICKET-ALLOCATION-003: adoption allocation requires the complete immutable source package." >&2
+    return 5
+  fi
+  python3 -B - "$runtime" "$STANDARD_ADOPTION_PLAN" "$PWD" "$WORKSTREAM" "${SCOPE_ARGUMENTS[@]}" <<'PYADOPTION'
+import importlib.util, json, sys
+from pathlib import Path
+runtime, plan_path, root, workstream, *scope = sys.argv[1:]
+spec = importlib.util.spec_from_file_location("native_adoption_plan", runtime)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+plan = module.verify_allocation_plan(Path(plan_path), Path(root), workstream,
+    [argument.removeprefix("--path=") for argument in scope])
+print(json.dumps({key: plan[key] for key in ("allowedPaths", "delivery", "digest")}))
+PYADOPTION
+}
+
 # Validate the explicit scope before any identity reservation or registered
 # allocation request. The same argv is used for admission and both stores.
-if (( ${#SCOPE_ARGUMENTS[@]} )); then
+if [[ -n "$STANDARD_ADOPTION_PLAN" ]]; then
+  if ! ADOPTION_PROJECTION="$(verify_standard_adoption)"; then
+    echo "GOV-TICKET-ALLOCATION-003: adoption allocation proof is invalid; preserve the target and recompute the exact published plan." >&2
+    exit 5
+  fi
+  mapfile -t adoption_paths < <(python3 -B -c 'import json,sys; print("\n".join(json.load(sys.stdin)["allowedPaths"]))' <<< "$ADOPTION_PROJECTION")
+  SCOPE_ARGUMENTS=()
+  for adoption_path in "${adoption_paths[@]}"; do SCOPE_ARGUMENTS+=("--path=$adoption_path"); done
+elif (( ${#SCOPE_ARGUMENTS[@]} )); then
   if [[ -z "$TICKET_STORAGE_HELPER" ]]; then
     echo "GOV-WORK-START-001: explicit scope requires the managed ticket storage bridge." >&2
     exit 3
@@ -449,6 +493,10 @@ fi
 if [[ "$ALLOCATION_MODE" == "local-single-clone" && ( -n "$ALLOCATION_KEY" || -n "$ALLOCATION_RECEIPT" ) ]]; then
   echo "GOV-TICKET-ALLOCATION-003: registered allocation inputs are forbidden in local-single-clone mode." >&2
   echo "  remediation: remove the inputs or adopt a registered allocator policy." >&2
+  exit 5
+fi
+if [[ -n "$STANDARD_ADOPTION_PLAN" && "$ALLOCATION_MODE" != local-single-clone ]]; then
+  echo "GOV-TICKET-ALLOCATION-003: adoption plans do not support registered allocation." >&2
   exit 5
 fi
 
@@ -559,6 +607,16 @@ fi
 # The clone allocation lock covers this observation and the identity effect;
 # it is NOT a writer lease. Recheck admission and fencing before development.
 # Unborn/non-Git bootstrap has no branch history yet and retains seed behavior.
+if [[ -n "$STANDARD_ADOPTION_PLAN" ]]; then
+  if ! rechecked_projection="$(verify_standard_adoption)"; then
+    echo "GOV-TICKET-ALLOCATION-003: adoption allocation proof changed under the clone lock." >&2
+    exit 5
+  fi
+  if [[ "$rechecked_projection" != "$ADOPTION_PROJECTION" ]]; then
+    echo "GOV-TICKET-ALLOCATION-003: adoption plan changed before reservation." >&2
+    exit 5
+  fi
+fi
 if git rev-parse --verify HEAD >/dev/null 2>&1; then
   start_runtime=""
   for candidate in .governance/work_start_check.py scripts/work_start_check.py; do
@@ -798,6 +856,10 @@ for key in ("branch", "worktreePath", "leasePath"):
     exit 5
   fi
 
+  if [[ -n "$STANDARD_ADOPTION_PLAN" && "$(verify_standard_adoption)" != "$ADOPTION_PROJECTION" ]]; then
+    echo "GOV-TICKET-ALLOCATION-003: adoption plan changed at the identity boundary." >&2
+    exit 5
+  fi
   reserve_ticket_number
   if ! git -C "$PRIMARY_CHECKOUT" worktree add --relative-paths -b "$WORKTREE_BRANCH" "$WORKTREE_PATH" "$base_sha"; then
     echo "GOV-TICKET-ALLOCATION-004: ticket number remains reserved; preserve and reconcile the failed worktree allocation." >&2
@@ -915,7 +977,21 @@ EOF
 fi
 
 if (( ${#SCOPE_ARGUMENTS[@]} )); then
-  if [[ -n "$BOOTSTRAP_ADOPTION_DIGEST" ]]; then
+  if [[ -n "$STANDARD_ADOPTION_PLAN" ]]; then
+    # Full accepted delivery is written BEFORE native reservation hashes.
+    python3 -B - "$ticket_dir/intent.json" "$ticket_id" "$WORKSTREAM" "$ADOPTION_PROJECTION" <<'PYADOPTIONINTENT'
+import json, sys
+from pathlib import Path
+path, ticket, workstream, raw = sys.argv[1:]
+projection = json.loads(raw)
+intent = json.loads(Path(path).read_text())
+if intent["ticket"] != ticket or intent["workstream"] != workstream:
+    raise SystemExit("allocated adoption identity mismatch")
+intent["allowedPaths"] = [f"project/{ticket}/**", "TODO.md", "project/TICKETS.md", *projection["allowedPaths"]]
+intent["delivery"] = projection["delivery"]
+Path(path).write_text(json.dumps(intent, indent=2) + "\n")
+PYADOPTIONINTENT
+  elif [[ -n "$BOOTSTRAP_ADOPTION_DIGEST" ]]; then
     # The identical scope was validated against primary before reservation.
     # Only generated ticket metadata is written here, never adoption/source.
     python3 - "$ticket_dir/intent.json" "$ticket_id" "$WORKSTREAM" "${SCOPE_ARGUMENTS[@]}" <<'PYBOOT'
@@ -1024,7 +1100,10 @@ if [[ -n "$USERS" ]]; then
   echo "warning: --users=$USERS did not create user-* files; human-owned input must come from a human or trusted intake boundary" >&2
 fi
 
-if [[ -f project/readme.sh ]]; then
+# The older adopter's index generator may require a different carrier format.
+# A plan allocates untracked metadata only; leave existing index bytes intact
+# until the separately authorized material upgrade installs its pinned tool.
+if [[ -z "$STANDARD_ADOPTION_PLAN" && -f project/readme.sh ]]; then
   bash ./project/readme.sh
 fi
 
