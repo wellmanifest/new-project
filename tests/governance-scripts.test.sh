@@ -3,9 +3,19 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+fixture_cache="$repo_root/.subactor/cache"
+if [[ -L "$repo_root/.subactor" || -L "$fixture_cache" ]]; then
+  echo 'FAIL: fixture cache must not be symlinked' >&2
+  exit 1
+fi
+mkdir -p "$fixture_cache"
+export TMPDIR="$fixture_cache"
+# Non-Git cases must not discover the source hub above their private fixtures.
+# Repositories initialized below this parent still find their own .git first.
+export GIT_CEILING_DIRECTORIES="$fixture_cache${GIT_CEILING_DIRECTORIES:+:$GIT_CEILING_DIRECTORIES}"
 python3 "$repo_root/tests/ticket-allocation-worktree.test.py"
 python3 "$repo_root/tests/work_start_test.py"
-fixture="$(mktemp -d "${TMPDIR:-/tmp}/new-project-governance-test.XXXXXX")"
+fixture="$(mktemp -d "$fixture_cache/new-project-governance-test.XXXXXX")"
 cleanup() {
   rm -rf "$fixture"
 }

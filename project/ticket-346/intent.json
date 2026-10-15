@@ -1,0 +1,80 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-346",
+  "summary": "Isolate non-Git fixtures from ancestor repository discovery",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-346/**",
+    "project/TICKETS.md",
+    "tests/governance-scripts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3c68ea49d05a9129d20e265689ad2b8c5180c832",
+    "targetBranch": "main",
+    "outcome": "Keep governance fixtures and their Python temporary files in this repository cache, with Git discovery bounded so non-Git cases cannot inherit source hub context.",
+    "nonGoals": [
+      "No production allocator behavior or package projection changes",
+      "No runtime deployment, releasegrant, tag/Release or adopter effect",
+      "No legacy metadata movement or foreign worktree mutation"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "The suite owns a non-symlink repository cache and sets TMPDIR plus Git discovery ceiling at that parent. This preserves intentional non-Git bootstrap cases and real nested Git identity. Every native CI invocation now exercises the nested-cache regression.",
+      "components": [
+        {
+          "name": "governance-fixture-isolation",
+          "paths": [
+            "tests/governance-scripts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert reviewed fixture change through protected publication; keep actual publisher inactive until complete native release checks pass."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 TMPDIR=\"$PWD/.subactor/cache\" bash tests/governance-scripts.test.sh"
+        ],
+        "evidence": "Real non-Git and registered/nested Git cases with repository-owned scratch. Assert the native suite completes without resolving parent hub workstreams."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh --base 3c68ea49d05a9129d20e265689ad2b8c5180c832",
+          "Independent exact-head protected required CI and Validator"
+        ],
+        "evidence": "Complete scoped staged and committed gate; independent App approval and merge. No direct merge or publication authority inferred from local tests."
+      }
+    ]
+  }
+}
