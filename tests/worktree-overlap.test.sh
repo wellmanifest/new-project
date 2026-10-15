@@ -3,11 +3,25 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-fixture="$(mktemp -d "${TMPDIR:-/tmp}/new-project-worktree-overlap.XXXXXX")"
+cache="$repo_root/.subactor/cache"
+if [[ -L "$repo_root/.subactor" || -L "$cache" ]]; then
+  echo 'FAIL: overlap fixture cache must not be symlinked' >&2
+  exit 1
+fi
+mkdir -p "$cache"
+export TMPDIR="$cache"
+fixture="$(mktemp -d "$cache/new-project-worktree-overlap.XXXXXX")"
 cleanup() {
   rm -rf "$fixture"
 }
 trap cleanup EXIT INT TERM
+
+# Installer regressions own their user configuration and never use the real home.
+export HOME="$fixture/home"
+export XDG_DATA_HOME="$fixture/xdg/data"
+export XDG_STATE_HOME="$fixture/xdg/state"
+export XDG_CONFIG_HOME="$fixture/xdg/config"
+mkdir -p "$HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CONFIG_HOME"
 
 checker="$repo_root/scripts/worktree_overlap_check.py"
 python3 "$repo_root/tests/worktree-pending-merge.test.py"

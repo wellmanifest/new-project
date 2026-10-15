@@ -3,12 +3,37 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-fixture="$(mktemp -d "${TMPDIR:-/tmp}/new-project-workspace-lifecycle.XXXXXX")"
-unknown_root="$(mktemp -d /var/tmp/new-project-workspace-unknown.XXXXXX)"
+cache="$repo_root/.subactor/cache"
+if [[ -L "$repo_root/.subactor" || -L "$cache" ]]; then
+  echo 'FAIL: workspace fixture cache must not be symlinked' >&2
+  exit 1
+fi
+mkdir -p "$cache"
+fixture="$(mktemp -d "$cache/new-project-workspace-lifecycle.XXXXXX")"
+unknown_root="$fixture/unknown-layout"
 cleanup() {
-  rm -rf "$fixture" "$unknown_root"
+  rm -rf "$fixture"
 }
 trap cleanup EXIT INT TERM
+
+# Probe prohibited paths lexically; never create their filesystem locations.
+python3 - "$repo_root" <<'PYTEST'
+import importlib.util
+from pathlib import Path
+import sys
+
+source = Path(sys.argv[1]) / "scripts/workspace_lifecycle_check.py"
+spec = importlib.util.spec_from_file_location("lifecycle_fixture_contract", source)
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+contract = module.load_worktrees_contract()
+for path, expected in (("/tmp/ticket-005--system-temp", "system-temp"),
+                       ("/var/tmp/ticket-006--unknown", "unknown")):
+    result = contract.classify_path(path=path, primary_checkout="/workspace/sample",
+        repository_name="sample", branch="ticket/005-system-temp")
+    assert result["classification"] == expected, result
+PYTEST
 
 validator="$repo_root/scripts/workspace_lifecycle_check.py"
 workspace="$fixture/workspace"
@@ -17,7 +42,7 @@ legacy_v1="$workspace/.worktrees/sample--ticket-001--legacy-v1"
 legacy_v2="$workspace/.worktrees/sample/ticket-002--legacy-v2"
 legacy_v3="$workspace/.worktrees/.branches/sample/ticket-003--legacy-v3"
 canonical_v5="$primary/.worktrees/ticket-004--canonical-v5"
-system_temp="$fixture/external/ticket-005--system-temp"
+owned_unknown="$fixture/external/ticket-005--owned-unknown"
 unknown="$unknown_root/ticket-006--unknown"
 duplicate="$workspace/sample-pilot"
 nested_duplicate="$workspace/archive/sample"
@@ -38,7 +63,7 @@ git -C "$primary" worktree add --quiet -b ticket/001-legacy-v1 "$legacy_v1"
 git -C "$primary" worktree add --quiet -b ticket/002-legacy-v2 "$legacy_v2"
 git -C "$primary" worktree add --quiet -b ticket/003-legacy-v3 "$legacy_v3"
 git -C "$primary" worktree add --quiet -b ticket/004-canonical-v5 "$canonical_v5"
-git -C "$primary" worktree add --quiet -b ticket/005-system-temp "$system_temp"
+git -C "$primary" worktree add --quiet -b ticket/005-owned-unknown "$owned_unknown"
 git -C "$primary" worktree add --quiet -b ticket/006-unknown "$unknown"
 git clone --quiet "$primary" "$duplicate"
 mkdir -p "$workspace/archive"
@@ -57,7 +82,7 @@ else
 fi
 test "$status" -eq 1
 python3 - "$fixture/violations.json" "$legacy_v1" "$legacy_v2" "$legacy_v3" \
-  "$canonical_v5" "$system_temp" "$unknown" "$duplicate" \
+  "$canonical_v5" "$owned_unknown" "$unknown" "$duplicate" \
   "$nested_duplicate" "$empty_duplicate" <<'PY'
 import json
 import sys
@@ -90,7 +115,7 @@ assert len(duplicates) == 3
 assert len(branches) == 6
 assert {item["evidence"]["branch"] for item in branches} == {
     "ticket/001-legacy-v1", "ticket/002-legacy-v2", "ticket/003-legacy-v3",
-    "ticket/004-canonical-v5", "ticket/005-system-temp", "ticket/006-unknown",
+    "ticket/004-canonical-v5", "ticket/005-owned-unknown", "ticket/006-unknown",
 }
 assert all(item["evidence"]["defaultBranch"] == "main" for item in branches)
 assert all(item["evidence"]["checkout"] is not None for item in branches)
@@ -106,7 +131,7 @@ assert classifications == {
     sys.argv[3]: "legacy-v2",
     sys.argv[4]: "legacy-v3",
     sys.argv[5]: "canonical-v5",
-    sys.argv[6]: "system-temp",
+    sys.argv[6]: "unknown",
     sys.argv[7]: "unknown",
 }, classifications
 assert {item["evidence"]["path"] for item in duplicates} == {
@@ -129,14 +154,14 @@ PY
 
 test "$registry_before" = "$(git -C "$primary" worktree list --porcelain)"
 for preserved in "$legacy_v1" "$legacy_v2" "$legacy_v3" "$canonical_v5" \
-  "$system_temp" "$unknown"; do
+  "$owned_unknown" "$unknown"; do
   test -d "$preserved"
 done
 test -f "$legacy_v1/untracked.txt"
 
 python3 "$validator" --workspace-root "$workspace" \
   --allow "$legacy_v1" --allow "$legacy_v2" --allow "$legacy_v3" \
-  --allow "$canonical_v5" --allow "$system_temp" --allow "$unknown" \
+  --allow "$canonical_v5" --allow "$owned_unknown" --allow "$unknown" \
   --allow "$duplicate" \
   --allow "$nested_duplicate" --allow "$empty_duplicate" \
   > "$fixture/allowed.out"
@@ -146,7 +171,7 @@ git -C "$primary" worktree remove --force "$legacy_v1"
 git -C "$primary" worktree remove --force "$legacy_v2"
 git -C "$primary" worktree remove --force "$legacy_v3"
 git -C "$primary" worktree remove --force "$canonical_v5"
-git -C "$primary" worktree remove --force "$system_temp"
+git -C "$primary" worktree remove --force "$owned_unknown"
 git -C "$primary" worktree remove --force "$unknown"
 rm -rf "$duplicate"
 rm -rf "$nested_duplicate"
@@ -172,14 +197,14 @@ assert {finding["code"] for finding in report["findings"]} == {
 }
 assert {finding["evidence"]["branch"] for finding in report["findings"]} == {
     "ticket/001-legacy-v1", "ticket/002-legacy-v2", "ticket/003-legacy-v3",
-    "ticket/004-canonical-v5", "ticket/005-system-temp", "ticket/006-unknown",
+    "ticket/004-canonical-v5", "ticket/005-owned-unknown", "ticket/006-unknown",
 }
 assert all(finding["evidence"]["checkout"] is None for finding in report["findings"])
 assert all(finding["evidence"]["defaultBranch"] == "main" for finding in report["findings"])
 PY
 test "$(git -C "$primary" for-each-ref --format='%(refname:short)' refs/heads/ticket | wc -l)" -eq 6
 git -C "$primary" branch -d ticket/001-legacy-v1 ticket/002-legacy-v2 \
-  ticket/003-legacy-v3 ticket/004-canonical-v5 ticket/005-system-temp \
+  ticket/003-legacy-v3 ticket/004-canonical-v5 ticket/005-owned-unknown \
   ticket/006-unknown
 python3 "$validator" --workspace-root "$workspace" > "$fixture/clean.out"
 grep -Fxq 'GOV-WORKSPACE-PASS: passed (0 errors, 0 warnings)' "$fixture/clean.out"
