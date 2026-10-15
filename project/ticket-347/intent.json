@@ -1,0 +1,83 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-347",
+  "summary": "Own workspace boundary test fixtures",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-347/**",
+    "project/TICKETS.md",
+    "tests/workspace-lifecycle.test.sh",
+    "tests/worktree-overlap.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "746a2b8e05de5f641dfe0a452d727e30cbf2422d",
+    "targetBranch": "main",
+    "outcome": "Keep workspace lifecycle and overlap test fixtures, HOME and XDG in canonical owner cache while preserving negative layout and protected snapshot checks.",
+    "nonGoals": [
+      "No production allocator behavior or package projection changes",
+      "No runtime deployment, releasegrant, tag/Release or adopter effect",
+      "No legacy metadata movement or foreign worktree mutation"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "The integration suite owns a non-symlink canonical repository cache and one private fixture tree. Prohibited system-temp paths are classified through the existing pure lexical Worktrees API without creating those paths; actual registered fixture worktrees stay in the owner cache and retain negative lifecycle checks. The overlap suite also owns its private HOME/XDG and Python scratch so installation regressions cannot depend on or mutate the actual user home.",
+      "components": [
+        {
+          "name": "workspace-test-fixture-boundaries",
+          "paths": [
+            "tests/workspace-lifecycle.test.sh",
+            "tests/worktree-overlap.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert reviewed test-only change through protected source publication; preserve runtime and release gates."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 bash tests/workspace-lifecycle.test.sh",
+          "PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 bash tests/worktree-overlap.test.sh"
+        ],
+        "evidence": "Native lifecycle suite with own cache; unchanged negative finding counts, actual registered lifecycle recovery, and explicit pure lexical /tmp classification. Native overlap and snapshot contribution/local-only identity tests under fixture-only HOME/XDG; original11+18 Python suites also verified with owner-primary cache."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh --base 746a2b8e05de5f641dfe0a452d727e30cbf2422d",
+          "Independent exact-head required hosted CI and Validator"
+        ],
+        "evidence": "Two implementation test files in one component; no production API/contract changes; actual independent required hosted CI/App review and merge."
+      }
+    ]
+  }
+}
