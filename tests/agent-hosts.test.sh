@@ -2,7 +2,13 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-tmp="$(mktemp -d)"
+cache="$root/.subactor/cache"
+if [[ -L "$root/.subactor" || -L "$cache" ]]; then
+  echo 'FAIL: fixture cache must not be symlinked' >&2
+  exit 1
+fi
+mkdir -p "$cache"
+tmp="$(mktemp -d "$cache/agent-hosts.XXXXXX")"
 trap 'rm -rf "$tmp"' EXIT
 
 fail() {
@@ -211,7 +217,18 @@ assert subprocess.run(['git', '-C', str(target), 'config', '--get', 'core.hooksP
 contract.write_text(original)
 # Bootstrap preflights all sources before overwriting any target file.
 broken = target.parent/'broken-source'
-shutil.copytree(source, broken, ignore=shutil.ignore_patterns('.git', '.worktrees', 'worktrees'))
+def ignore_fixture_state(directory, names):
+    location = pathlib.Path(directory)
+    if location == source:
+        return set(names) & {'.git', '.worktrees', 'worktrees', '.koru'}
+    if location == source/'.subactor':
+        return set(names) - {'manifest.json', '.gitignore'}
+    return set()
+shutil.copytree(source, broken, ignore=ignore_fixture_state)
+assert not (broken/'.koru').exists(), 'private Koru state copied into source fixture'
+assert {p.name for p in (broken/'.subactor').iterdir()} == {'manifest.json', '.gitignore'}
+for name in ('manifest.json', '.gitignore'):
+    assert (broken/'.subactor'/name).read_bytes() == (source/'.subactor'/name).read_bytes()
 package = json.loads((broken/'governance/package-manifest.json').read_text())
 files = {row['target']:row['source'] for row in package['files']}
 missing = json.loads(original)['hook']['runtimeFiles'][-1]
