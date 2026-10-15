@@ -1,0 +1,128 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-344",
+  "summary": "Admit advisory immutable standard propagation requests",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-344/**",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    ".github/workflows/propagate-standard.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/README.md",
+    "docs/information/standard-propagation-requests.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/package-manifest.json",
+    "governance/standard-propagation-request.schema.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/standard_propagation_request.py",
+    "tests/standard_propagation_request_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6606a17f63fbcaf222771efef7af02cbab4d2851",
+    "targetBranch": "main",
+    "outcome": "Replace direct unadmitted fleet upgrade writes with closed advisory requests bound to a verified immutable standard release.",
+    "nonGoals": [
+      "No canonical tag or Release creation in this source slice",
+      "No target clone, ticket allocation, adoption, branch, PR or merge from this workflow",
+      "No organization-wide credential provisioning or controller/runtime deployment",
+      "No claim that emitting a request proves execution readiness or fleet rollout"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "The standard hub owns the immutable request contract and read-only workflow adapter. Existing protected product controllers remain the only execution authority; Goal transaction libraries are not treated as deployed authorization providers.",
+      "components": [
+        {
+          "name": "propagation-request-contract",
+          "paths": [
+            "scripts/standard_propagation_request.py",
+            "governance/standard-propagation-request.schema.json",
+            "docs/information/standard-propagation-requests.md",
+            "docs/README.md"
+          ]
+        },
+        {
+          "name": "workflow-admission",
+          "paths": [
+            ".github/workflows/propagate-standard.yml",
+            ".github/workflows/ci.yml",
+            "tests/standard_propagation_request_test.py"
+          ]
+        },
+        {
+          "name": "atomic-standard-release-projection",
+          "paths": [
+            "governance/package-manifest.json",
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Advisory request schema with executionAuthorized=false and no implicit targets",
+        "Legacy propagation workflow emits verified requests; unadmitted live dispatch refuses",
+        "CI includes focused propagation request and workflow boundary regressions"
+      ],
+      "dataChanges": [
+        "Closed request records bind canonical version, annotated tag revision, final Release and immutable package tool hashes"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the reviewed source change through protected review; do not restore unadmitted target writes or replay uncertain effects."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "PYTHONDONTWRITEBYTECODE=1 python3 -B tests/standard_propagation_request_test.py"
+        ],
+        "evidence": "Real Git fixtures and mocked external publication transport: exact tag/release/version hashes, malformed input, stale or absent tags, modified pins, safe shell argument handling and no authority claims."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "PYTHONDONTWRITEBYTECODE=1 python3 -B tests/standard_propagation_request_test.py"
+        ],
+        "evidence": "Workflow boundary: no broad token, org scan, target checkout, unpinned pip install, direct upgrade/PR creation or HEAD fallback; live request refusal and artifact-only success are explicit."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh --base 6606a17f63fbcaf222771efef7af02cbab4d2851",
+          "Independent protected required CI and Validator for exact candidate HEAD"
+        ],
+        "evidence": "Complete staged-path and committed-head gates, atomic0.20.103 projections, bounded docs and independent protected source publication."
+      }
+    ]
+  }
+}

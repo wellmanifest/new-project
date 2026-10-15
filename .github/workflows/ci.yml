@@ -95,6 +95,8 @@ jobs:
           python3 -m json.tool governance/package-manifest.json >/dev/null
           python3 -m json.tool governance/required-checks.json >/dev/null
           python3 -m json.tool governance/decision-record.schema.json >/dev/null
+      - name: Test immutable advisory propagation requests
+        run: python3 -B tests/standard_propagation_request_test.py
       - name: Test protected local publication evidence composition
         run: python3 tests/protected-local-publication-schema.test.py
       - name: Validate Governance Hub pull-request scope
