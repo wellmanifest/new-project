@@ -708,6 +708,12 @@
       "target": ".governance/standard-adoption-plan.schema.json",
       "strategy": "managed",
       "executable": false
+    },
+    {
+      "source": "governance/standard-propagation-request.schema.json",
+      "target": ".governance/standard-propagation-request.schema.json",
+      "strategy": "managed",
+      "executable": false
     }
   ]
 }

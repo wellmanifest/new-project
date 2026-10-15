@@ -19,3 +19,5 @@
 - [SQLite ticket inputs](information/sqlite-ticket-input.md) — local database validation and independently pinned CI input, without Git carrier materialization.
 
 - [Durable project-owned work registration](information/work-registration.md) — Planfile dependency, waiting intake, Issue/worktree/PR bindings and recovery contract.
+
+- [Advisory immutable standard propagation requests](information/standard-propagation-requests.md) — verified source facts, artifact-only workflow and protected execution prerequisites.

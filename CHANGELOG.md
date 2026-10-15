@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.103
+
+- Replace direct fleet upgrade writes with read-only requests bound to verified canonical annotated tags, final Releases and exact source package/tool hashes. Refuse unadmitted live dispatch; emitting an artifact grants no target execution authority.
+
 ## 0.20.102
 
 - Export exact-state, read-only adoption allocation plans from verified immutable packages. Native allocation independently recomputes the full upgrade scope and writes bounded delivery intent before reservation hashes; stale or modified plans, unsafe paths and missing editing authority remain refusals. Preserve target overrides and existing owners.
