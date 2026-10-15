@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import base64
 import binascii
+import fnmatch
 import hashlib
 import importlib.util
 import json
@@ -499,6 +500,78 @@ def ignored_payload_targets(target_root: Path, targets: set[str]) -> list[str]:
     )
 
 
+def bootstrap_ownership_paths(
+    target_root: Path,
+    manifest: dict[str, object],
+    package_targets: set[str],
+    plan_path: Path,
+) -> tuple[str, list[str]]:
+    """Declare exact unowned prerequisites; never transfer an existing owner."""
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise SystemExit("duplicate bootstrap ownership plan key")
+            result[key] = value
+        return result
+
+    if (any(path.is_symlink() for path in (plan_path, *plan_path.parents))
+            or not plan_path.is_file() or plan_path.stat().st_size > MAX_RELEASE_METADATA_BYTES
+            or target_root.resolve() in plan_path.resolve().parents):
+        raise SystemExit("bootstrap ownership plan must be a bounded external regular file")
+    try:
+        plan = json.loads(plan_path.read_bytes(), object_pairs_hook=unique)
+    except (ValueError, UnicodeDecodeError) as error:
+        raise SystemExit("invalid bootstrap ownership plan JSON") from error
+    if (not isinstance(plan, dict)
+            or set(plan) != {"schema", "baseSha", "workstream", "paths"}
+            or plan.get("schema") != "new-project.bootstrap-ownership-plan/v1"
+            or not isinstance(plan.get("baseSha"), str)
+            or re.fullmatch(r"[0-9a-f]{40}", plan["baseSha"]) is None):
+        raise SystemExit("unsupported bootstrap ownership plan shape")
+    workstreams = manifest["coordination"]["workstreams"]
+    workstream = plan.get("workstream")
+    if not isinstance(workstream, str) or workstream not in workstreams:
+        raise SystemExit("bootstrap ownership plan requires a declared workstream")
+    entries = plan.get("paths")
+    if (not isinstance(entries, list) or not entries
+            or len(entries) > manifest["delivery"]["maxImplementationFiles"]):
+        raise SystemExit("bootstrap ownership plan paths exceed the declared implementation budget")
+    head = subprocess.check_output(["git", "-C", str(target_root), "rev-parse", "HEAD"], text=True).strip()
+    if head != plan["baseSha"]:
+        raise SystemExit("bootstrap ownership plan is not bound to the current committed HEAD")
+    paths = []
+    for entry in entries:
+        if not isinstance(entry, dict) or set(entry) != {"path", "baseDigest"}:
+            raise SystemExit("invalid bootstrap prerequisite binding")
+        name, checksum = entry["path"], entry["baseDigest"]
+        if (not isinstance(name, str) or not name or Path(name).is_absolute()
+                or Path(name).as_posix() != name or any(part in {".", "..", ".git"} for part in name.split("/"))
+                or any(character in name for character in "*?[\\")
+                or not isinstance(checksum, str) or re.fullmatch(r"[0-9a-f]{64}", checksum) is None):
+            raise SystemExit("unsafe bootstrap prerequisite path or digest")
+        if name in paths or name in package_targets or name == ".gitignore":
+            raise SystemExit("bootstrap prerequisite overlaps a package target or duplicate binding")
+        if any(fnmatch.fnmatchcase(name, pattern) for stream in workstreams.values()
+               for pattern in stream["ownedPaths"]):
+            raise SystemExit("bootstrap prerequisite already has a declared owner")
+        integration = manifest["coordination"]["integration"]
+        if (workstream != integration["workstream"] and any(
+                fnmatch.fnmatchcase(name, pattern) for pattern in integration["requiredForPaths"])):
+            raise SystemExit("bootstrap prerequisite requires the integration workstream")
+        path = target_root / name
+        if any(part.is_symlink() for part in (path, *path.parents)) or not path.is_file():
+            raise SystemExit("bootstrap prerequisite must match its exact regular-file digest")
+        content = path.read_bytes()
+        if hashlib.sha256(content).hexdigest() != checksum:
+            raise SystemExit("bootstrap prerequisite must match its exact regular-file digest")
+        committed = subprocess.run(["git", "-C", str(target_root), "show", f"{head}:{name}"], capture_output=True)
+        if committed.returncode or committed.stdout != content:
+            raise SystemExit("bootstrap prerequisite must match the committed base bytes")
+        paths.append(name)
+    return workstream, paths
+
+
 def bootstrap_reusable_declaration(
     target_root: Path, payloads: dict[str, bytes], plan_path: Path,
     implementation_paths: list[str] | None = None,
@@ -777,6 +850,8 @@ def main() -> int:
     )
     parser.add_argument("--bootstrap-reusable-plan", type=Path,
                         help="External exact-state future reusable CI plan; never edits target workflows")
+    parser.add_argument("--bootstrap-ownership-plan", type=Path,
+                        help="External exact-base/digest plan declaring only existing unowned prerequisites")
     parser.add_argument(
         "--check",
         action="store_true",
@@ -792,6 +867,8 @@ def main() -> int:
         parser.error("fresh bootstrap and scaffold migration are mutually exclusive")
     if args.bootstrap_reusable_plan and not (args.bootstrap_native_adoption or args.migrate_wellman_scaffold):
         parser.error("a reusable CI bootstrap plan requires explicit fresh native bootstrap or scaffold migration")
+    if args.bootstrap_ownership_plan and not (args.bootstrap_native_adoption or args.migrate_wellman_scaffold):
+        parser.error("a prerequisite ownership plan requires explicit fresh native bootstrap or scaffold migration")
 
     if re.fullmatch(r"[0-9a-f]{40}", args.source_revision) is None:
         parser.error("--source-revision must be a full lowercase 40-character commit SHA")
@@ -899,6 +976,16 @@ def main() -> int:
         owned_paths = manifest["coordination"]["workstreams"]["governance"]["ownedPaths"]
         owned_paths.extend(path for path in bootstrap_paths if path not in owned_paths)
         payloads[MANIFEST_TARGET] = json_bytes(manifest)
+    ownership_base = json.loads(json.dumps(manifest))
+    ownership = None
+    if args.bootstrap_ownership_plan:
+        ownership = bootstrap_ownership_paths(target_root, ownership_base,
+            {str(item["target"]) for item in files}, args.bootstrap_ownership_plan)
+        stream, paths = ownership
+        manifest["coordination"]["workstreams"][stream]["ownedPaths"].extend(paths)
+        payloads[MANIFEST_TARGET] = json_bytes(manifest)
+        for path in paths:
+            print(f"PLANNED prerequisite ownership {stream}: {path}; no writer or publication authority")
     payloads[".gitignore"] = worktree_ignore_payload(target_root)
 
     expected_lock = lock_content(
@@ -958,6 +1045,10 @@ def main() -> int:
             raise SystemExit("repository HEAD changed before bootstrap; reconcile ownership")
         if args.migrate_wellman_scaffold:
             validate_wellman_scaffold(target_root, files)
+    if ownership is not None:
+        if bootstrap_ownership_paths(target_root, ownership_base,
+                {str(item["target"]) for item in files}, args.bootstrap_ownership_plan) != ownership:
+            raise SystemExit("bootstrap ownership plan changed before writes")
     for target, content in sorted(payloads.items()):
         path = target_root / target
         if not path.exists() or path.read_bytes() != content:

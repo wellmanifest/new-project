@@ -1,0 +1,100 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-340",
+  "summary": "Bind bootstrap prerequisite ownership before native allocation",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-340/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/create_adoption_lock.py",
+    "tests/bootstrap_reusable_plan_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "857917373bbfa2075af11db919bfeab42cb4ac84",
+    "targetBranch": "main",
+    "outcome": "Publish 0.20.99 with declared ownership for all installed governance artifacts and a closed exact-base/digest-bound prerequisite ownership plan, so real first native allocation can include the complete package and an explicitly requested unowned prerequisite without receipt edits or allocator bypass.",
+    "nonGoals": [
+      "No arbitrary or already-owned path takeover",
+      "No target repository changes in the standard source",
+      "No merge, runtime or writer authority from a plan",
+      "No broad budget increase or checker bypass"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Declare the two missing package paths in the default governance workstream. Accept an external ownership plan only for explicit first bootstrap or scaffold migration; validate exact committed prerequisite files, existing ownership and base twice before mutation. Project exact paths into the target-owned manifest and authentic installer receipt.",
+      "components": [
+        {
+          "name": "native-bootstrap",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "tests/bootstrap_reusable_plan_test.py",
+            "governance/manifest.default.json"
+          ]
+        },
+        {
+          "name": "publication-projections",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Explicit --bootstrap-ownership-plan for first allocation prerequisites"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Use the previous published package; do not rewrite installer receipts or relax native allocation."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/bootstrap_reusable_plan_test.py tests/adoption_legacy_scaffold_test.py"
+        ],
+        "evidence": "project/ticket-340/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-340/README.md"
+      }
+    ]
+  }
+}

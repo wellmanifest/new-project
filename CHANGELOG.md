@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.20.99
+
+- Declare ownership for the installed attributes file and branch hygiene workflow before real first ticket allocation.
+- Add explicit bootstrap prerequisite ownership plans bound to committed HEAD and file digests. Existing owners, package targets, dirty files and unsafe paths remain rejected; plans grant no writer or publication authority.
+
+
 ## [0.20.98] - 2026-10-14
 
 ### Fixed
