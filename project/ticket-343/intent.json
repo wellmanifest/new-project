@@ -20,7 +20,8 @@
     "scripts/governance_check.py",
     "scripts/ticket_storage.py",
     "scripts/work_start_check.py",
-    "tests/scaffold_bootstrap_test.py"
+    "tests/scaffold_bootstrap_test.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -46,7 +47,7 @@
     "complexity": "S",
     "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 9,
+      "maxImplementationFiles": 10,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
@@ -71,7 +72,8 @@
             "CHANGELOG.md",
             "governance/manifest.default.json",
             "governance/manifest.hub.json",
-            "packages/wellman/pyproject.toml"
+            "packages/wellman/pyproject.toml",
+            "packages/wellman/src/wellman/_bundled/governance_check.py"
           ]
         }
       ],
