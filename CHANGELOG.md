@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.100
+
+- Preserve strictly integrated historical ticket refs during first native bootstrap allocation, with checked ancestry and fresh clone-local ownership observations. Ambiguous refs, live leases, native reservations and changed installer bytes still block; no branch cleanup or writer authority is inferred.
+
 ## 0.20.99
 
 - Declare ownership for the installed attributes file and branch hygiene workflow before real first ticket allocation.

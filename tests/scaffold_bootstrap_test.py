@@ -48,6 +48,8 @@ class BootstrapTest(unittest.TestCase):
         self.command(self.base, 'git', 'init', '--quiet', '-b', 'main', str(self.target))
         self.command(self.target, 'git', 'config', 'user.name', 'Fixture')
         self.command(self.target, 'git', 'config', 'user.email', 'fixture@example.invalid')
+        self.command(self.target, 'git', 'commit', '--quiet', '--allow-empty', '-m', 'Historical base')
+        self.historical = self.command(self.target, 'git', 'rev-parse', 'HEAD').stdout.strip()
         (self.target / '.governance').mkdir()
         if not self.fresh:
             (self.target / '.governance/manifest.json').write_text(json.dumps({
@@ -124,6 +126,56 @@ class BootstrapTest(unittest.TestCase):
                              'wellmanifest.manifest/v1')
         result, _ = self.observation(checksum)
         self.assertNotEqual(result.returncode, 0, 'second allocation must not reuse bootstrap acknowledgement')
+
+    def test_integrated_ref_survives_real_first_allocation(self):
+        ref = 'ticket/003-historical'
+        self.command(self.target, 'git', 'branch', ref, self.historical)
+        self.test_first_real_allocator_preserves_foreign_bytes_and_does_not_write_source()
+        self.assertEqual(self.command(self.target, 'git', 'rev-parse', ref).stdout.strip(),
+                         self.historical)
+
+    def test_ref_at_base_remains_ambiguous(self):
+        self.command(self.target, 'git', 'branch', 'ticket/003-pending')
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_unintegrated_ref_is_refused_without_deletion(self):
+        tree = self.command(self.target, 'git', 'rev-parse', 'HEAD^{tree}').stdout.strip()
+        sha = self.command(self.target, 'git', 'commit-tree', tree, '-m', 'Unrelated writer').stdout.strip()
+        ref = 'refs/heads/ticket/003-unintegrated'
+        self.command(self.target, 'git', 'update-ref', ref, sha)
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.command(self.target, 'git', 'rev-parse', ref).stdout.strip(), sha)
+
+    def test_unreadable_ref_is_refused(self):
+        checksum = self.checksum()
+        path = self.target / '.git/refs/heads/ticket/003-broken'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('f' * 40 + '\n')
+        result, _ = self.observation(checksum)
+        self.assertNotEqual(result.returncode, 0)
+
+    def test_integrated_ref_retains_live_ownership(self):
+        ref = 'refs/heads/ticket/003-historical'
+        self.command(self.target, 'git', 'update-ref', ref, self.historical)
+        path = self.target / '.subactor/leases/ticket-003--historical.json'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        for expiry, accepted in [('2099-01-01T00:00:00Z', False),
+                                 ('invalid', False), ('2000-01-01T00:00:00Z', True)]:
+            with self.subTest(expiry=expiry):
+                path.write_text(json.dumps({'branchRef': ref, 'expiresAt': expiry}))
+                result, _ = self.observation(self.checksum())
+                self.assertEqual(result.returncode == 0, accepted, result.stdout)
+                self.assertTrue(path.is_file())
+                self.assertEqual(self.command(self.target, 'git', 'rev-parse', ref).stdout.strip(),
+                                 self.historical)
+
+    def test_integrated_refs_do_not_hide_native_reservation(self):
+        self.command(self.target, 'git', 'branch', 'ticket/003-historical', self.historical)
+        (self.target / '.git/new-project-ticket-high-water').write_text('4\n')
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
 
     def test_changed_installed_bytes_are_not_acknowledged(self):
         p = self.target / '.governance/manifest.json'
@@ -258,6 +310,67 @@ class FreshLegacyBootstrapTest(FreshBootstrapTest):
         (self.target / '.git/new-project-ticket-high-water').write_text('8\n')
         result, _ = self.observation(self.checksum())
         self.assertNotEqual(result.returncode, 0)
+
+
+class HistoricalRefObservationTest(unittest.TestCase):
+    """Exercise the actual source against real Git, including error outcomes."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.git('init', '--quiet', '-b', 'main')
+        self.git('config', 'user.name', 'Fixture')
+        self.git('config', 'user.email', 'fixture@example.invalid')
+        self.git('commit', '--quiet', '--allow-empty', '-m', 'Historical')
+        self.old = self.git('rev-parse', 'HEAD')
+        self.git('commit', '--quiet', '--allow-empty', '-m', 'Accepted base')
+        self.head = self.git('rev-parse', 'HEAD')
+        self.ref = 'refs/heads/ticket/003-historical'
+        self.git('update-ref', self.ref, self.old)
+        spec = importlib.util.spec_from_file_location('actual_bootstrap_guard',
+                                                     ROOT / 'scripts/work_start_check.py')
+        self.guard = importlib.util.module_from_spec(spec)
+        with patch.object(sys, 'path', [str(ROOT / 'scripts'), *sys.path]):
+            spec.loader.exec_module(self.guard)
+
+    def git(self, *args):
+        return subprocess.check_output(['git', '-C', str(self.root), *args],
+                                       text=True, stderr=subprocess.PIPE).strip()
+
+    def test_preserves_strict_ancestors_and_rejects_ambiguous_or_unreadable_refs(self):
+        self.assertIn(self.ref, self.guard.bootstrap_historical_refs(self.root, self.head))
+        self.assertEqual(self.git('rev-parse', self.ref), self.old)
+        for sha in (self.head, 'f' * 40):
+            with self.subTest(sha=sha):
+                path = self.root / '.git' / self.ref
+                path.write_text(sha + '\n')
+                with self.assertRaises(self.guard.ObservationError):
+                    self.guard.bootstrap_historical_refs(self.root, self.head)
+
+    def test_shallow_history_and_symlinked_lease_directory_are_refused(self):
+        shallow = self.root / '.git/shallow'
+        shallow.write_text(self.head + '\n')
+        with self.assertRaisesRegex(self.guard.ObservationError, 'incomplete'):
+            self.guard.bootstrap_historical_refs(self.root, self.head)
+        shallow.unlink()
+        (self.root / '.subactor').mkdir()
+        (self.root / '.subactor/leases').symlink_to(self.root / '.git', target_is_directory=True)
+        with self.assertRaisesRegex(self.guard.ObservationError, 'lease observation'):
+            self.guard.bootstrap_historical_refs(self.root, self.head)
+
+    def test_lease_ambiguity_blocks_and_expired_evidence_is_preserved(self):
+        path = self.root / '.subactor/leases/ticket-003--historical.json'
+        path.parent.mkdir(parents=True)
+        for expiry in (None, 'invalid', '2099-01-01T00:00:00Z', '2000-01-01T00:00:00'):
+            with self.subTest(expiry=expiry):
+                path.write_text(json.dumps({'branchRef': self.ref, 'expiresAt': expiry}))
+                with self.assertRaises(self.guard.ObservationError):
+                    self.guard.bootstrap_historical_refs(self.root, self.head)
+        path.write_text(json.dumps({'branchRef': self.ref, 'expiresAt': '2000-01-01T00:00:00Z'}))
+        before = path.read_bytes()
+        self.assertIn(self.ref, self.guard.bootstrap_historical_refs(self.root, self.head))
+        self.assertEqual(path.read_bytes(), before)
 
 
 if __name__ == '__main__':
