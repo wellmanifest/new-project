@@ -152,6 +152,16 @@ it through its own pinned adopter and controller-owned recovery instead.
 
 ### First allocation after scaffold migration
 
+From 0.20.100, local historical `ticket/*` refs may remain during the first
+allocation when their exact commits are strict ancestors of the acknowledged
+bootstrap HEAD. Checked Git ancestry must be readable and non-shallow. Refs at
+HEAD, unintegrated history, live matching leases, unreadable lease expiry,
+additional worktrees and prior native reservations still block. The guard
+rechecks refs and allocation state before returning; it never deletes or moves
+a ref, takes over ownership or grants editing/publication authority. These are
+clone-local observations; independent clones and remote ownership still need
+reconciliation through the existing external controller.
+
 An exact scaffold migration on an existing Git repository leaves owned installed
 files pending in the primary checkout. The installer records their exact bytes
 in ignored `.subactor/receipts/bootstrap-adoption.json`, bound to the original

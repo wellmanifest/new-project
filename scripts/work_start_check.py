@@ -221,6 +221,39 @@ def unchanged_committed_legacy_carriers(root, head):
             raise ObservationError("Changed legacy carrier requires owner reconciliation")
 
 
+def bootstrap_historical_refs(root, head):
+    """Observe integrated history only; preserve refs and independent ownership."""
+    refs = git(root, "for-each-ref", "--format=%(refname) %(objectname)", "refs/heads/ticket/")
+    if not refs:
+        return refs
+    if git(root, "rev-parse", "--is-shallow-repository").strip() != "false":
+        raise ObservationError("Bootstrap history is incomplete")
+    names = set()
+    for line in refs.splitlines():
+        ref, sha = line.split(" ", 1)
+        # Equality is ambiguous: a newly reserved writer may still be at base.
+        # A checked merge-base also refuses missing/unreadable ancestry.
+        if sha == head or git(root, "merge-base", head, sha).strip() != sha:
+            raise ObservationError("Bootstrap ticket ref is not strictly integrated")
+        names.add(ref)
+    leases = root / ".subactor/leases"
+    if leases.is_symlink() or (leases.exists() and not leases.is_dir()):
+        raise ObservationError("Bootstrap lease observation unavailable")
+    for path in leases.glob("*.json"):
+        lease = read_json(path)
+        if lease.get("branchRef") not in names:
+            continue
+        try:
+            expiry = datetime.fromisoformat(lease["expiresAt"].replace("Z", "+00:00"))
+            if expiry.tzinfo is None:
+                raise ValueError("unbound expiry")
+        except (KeyError, TypeError, ValueError, AttributeError) as error:
+            raise ObservationError("Bootstrap lease expiry unavailable") from error
+        if expiry > datetime.now(timezone.utc):
+            raise ObservationError("Bootstrap historical ref retains a live lease")
+    return refs
+
+
 def bootstrap_owned_paths(root, manifest, expected_digest):
     """A first allocator may acknowledge only exact installer-owned bytes.
 
@@ -258,9 +291,9 @@ def bootstrap_owned_paths(root, manifest, expected_digest):
     else:
         raise ObservationError("Unknown bootstrap kind")
     if (len(worktrees(root)) != 1
-            or git(root, "for-each-ref", "--format=%(refname)", "refs/heads/ticket/")
             or (Path(common) / "new-project-ticket-high-water").exists()):
         raise ObservationError("Bootstrap acknowledgement is first-allocation only")
+    historical_refs = bootstrap_historical_refs(root, head)
     if kind == "fresh":
         unchanged_committed_legacy_carriers(root, head)
     elif list((root / "project").glob("ticket-*")):
@@ -288,6 +321,11 @@ def bootstrap_owned_paths(root, manifest, expected_digest):
                 or hashlib.sha256(path.read_bytes()).hexdigest() != checksum
                 or (rel in lock["managedFiles"] and lock["managedFiles"][rel] != checksum)):
             raise ObservationError("Bootstrap payload changed or is not installed")
+    if (git(root, "rev-parse", "HEAD").strip() != head
+            or bootstrap_historical_refs(root, head) != historical_refs
+            or len(worktrees(root)) != 1
+            or (Path(common) / "new-project-ticket-high-water").exists()):
+        raise ObservationError("Bootstrap allocation state changed during observation")
     return set(dirty).intersection(files)
 
 

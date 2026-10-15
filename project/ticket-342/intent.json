@@ -1,0 +1,103 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-342",
+  "summary": "Preserve integrated legacy refs during first native allocation",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-342/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/work_start_check.py",
+    "tests/scaffold_bootstrap_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [
+    "ticket-341"
+  ],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a40f15a029a98295fd6186cd4d3f15d45dee3c9c",
+    "targetBranch": "main",
+    "outcome": "Permit first native bootstrap allocation in the presence of preserved, demonstrably integrated historical ticket refs, without deleting branches, taking over active ownership or relaxing exact installer-byte acknowledgement and external fenced edit admission. Publish the material fix and atomic package/version projections.",
+    "nonGoals": [
+      "No changes in the separate blocked ticket-341 adoption-allocation-plan worktree",
+      "No deletion, reset or movement of historical branches or worktrees",
+      "No bypass of external repository-admission policy, required CI or independent Validator approval"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Replace the unconditional historical ticket-ref refusal with a bounded, independently recomputed Git containment observation. Preserve all refs and report them as historical context only when exact base containment is demonstrated; retain refusal for non-contained or unreadable refs, existing native reservations/tickets, additional worktrees, changed installer bytes, stale state and conflicting live ownership. The controller separately grants the exact write scope; observation never grants editing, deletion, review or merge. Add real-Git regression fixtures and publish an atomic standard patch release.",
+      "components": [
+        {
+          "name": "first-native-allocation",
+          "paths": [
+            "scripts/work_start_check.py",
+            "tests/scaffold_bootstrap_test.py",
+            "docs/STANDARD_UPGRADE.md"
+          ]
+        },
+        {
+          "name": "standard-release-projection",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Proof-aware historical ref observation during first bootstrap acknowledgement"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Keep the previous published package; candidate activation and source revert use the existing independent publisher. Preserve bootstrap snapshots and all target branches."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python tests/scaffold_bootstrap_test.py"
+        ],
+        "evidence": "Real Git fixtures preserve exact historical refs and reject active, non-contained, stale or unreadable state"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Scoped checks, required protected CI, independent exact-head source publication and final package release proof"
+      }
+    ]
+  }
+}
