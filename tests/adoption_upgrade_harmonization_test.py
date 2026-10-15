@@ -208,6 +208,15 @@ class AdoptionAllocationPlanTest(AdoptionPlanFixture, unittest.TestCase):
         from jsonschema import Draft202012Validator
         Draft202012Validator(json.loads((ROOT / "governance/standard-adoption-plan.schema.json").read_text())).validate(plan)
 
+    def test_caller_scope_distinguishes_absent_empty_and_exact(self):
+        plan = self.export()
+        self.assertEqual(self.verify(requested_paths=None), plan)
+        self.assertEqual(self.verify(requested_paths=plan["allowedPaths"]), plan)
+        for requested in ([], ["src/foreign.py"]):
+            with self.subTest(requested=requested):
+                with self.assertRaisesRegex(SystemExit, "caller scope differs"):
+                    self.verify(requested_paths=requested)
+
     def test_modified_plan_fields_and_numeric_boolean_are_rejected(self):
         original = self.export()
         for name, value in (("grantsAuthority", True), ("readOnly", 1), ("unknown", False),

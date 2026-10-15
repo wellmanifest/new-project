@@ -425,7 +425,7 @@ spec = importlib.util.spec_from_file_location("native_adoption_plan", runtime)
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 plan = module.verify_allocation_plan(Path(plan_path), Path(root), workstream,
-    [argument.removeprefix("--path=") for argument in scope])
+    [argument.removeprefix("--path=") for argument in scope] or None)
 print(json.dumps({key: plan[key] for key in ("allowedPaths", "delivery", "digest")}))
 PYADOPTION
 }

@@ -9,7 +9,8 @@
 SESSION_EXECUTION_AUTHORIZATION: user requested execution and continuation of
 repository-boundary repairs. Parent: maskservice PLF-15923. The operator accepted
 the native allocation, exact source scope, amendment1 activation and amendment3
-intent correction and registration.
+intent correction and registration. The user then instructed continuation of
+the exact amendment4 semantic repair and one bounded admission window.
 
 ## Outcome and design
 
@@ -24,7 +25,9 @@ source package's `project/new-ticket.sh --standard-adoption-plan FILE` with
 workstream `governance`. Plans never supply executable paths. Native allocation
 recomputes the complete proof before reservation, under the clone lock and at
 the identity boundary. It admits exactly the derived scope and writes full
-bounded delivery intent before calculating reservation hashes. SQLite,
+bounded delivery intent before calculating reservation hashes. An omitted caller
+scope derives the plan scope; explicitly empty or different scopes are refused.
+SQLite,
 registered, bootstrap, force and recovery combinations are refused.
 
 Preserve local owners and explicit integration requirements. Only absent,
@@ -48,7 +51,8 @@ generator. Nongit scaffolds never borrow an ancestor checkout's identity.
 
 ## Validation and authority
 
-All17 plan tests,19 native allocator tests and77 bootstrap regressions pass,
+All18 plan tests and19 native allocator tests pass after the scope repair.
+The earlier77 bootstrap regressions passed,
 including real historical0.20.32 upgrade allocation and retained integration
 constraints. The adoption-lock shell suite, schema validation, syntax/name/import
 lint pass. The original committed-head gate rejected two delivery declarations;
@@ -62,7 +66,12 @@ after protected observation. A shared-policy update stopped the pinned client;
 only its own pin was reconciled after verifying the accepted source record,
 principals and fixed expiry were unchanged. No foreign grant was modified.
 Operational receipts remain in this worktree's ignored `.subactor` storage.
-The admission ends2026-10-15T17:30Z and grants no independent merge authority.
+The current admission ends2026-10-15T18:13:33.348619Z and grants no independent
+merge authority. Protected review held the previous head for treating an explicit
+empty scope like an omitted scope. The verifier now distinguishes None from an
+empty list; the CLI maps omitted path arguments to None. The regression covers
+absent, exact, empty and foreign scopes. Fresh current-head CI and independent
+review remain required.
 
 This source slice does not activate global LLM runtime enforcement or claim
 full Willman autonomy. Independent exact-head approval and controller-owned

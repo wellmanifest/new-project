@@ -298,7 +298,7 @@ def verify_allocation_plan(path: Path, target_root: Path, workstream: str,
         unchanged = stream.read(MAX_RELEASE_METADATA_BYTES + 1) == raw
     if not unchanged:
         raise SystemExit("adoption allocation plan changed during verification")
-    if requested_paths and requested_paths != plan["allowedPaths"]:
+    if requested_paths is not None and requested_paths != plan["allowedPaths"]:
         raise SystemExit("caller scope differs from the exact derived adoption scope")
     return plan
 
