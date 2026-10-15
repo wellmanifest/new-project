@@ -1,0 +1,80 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-348",
+  "summary": "Isolate governance preflight cache test checkout",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-348/**",
+    "project/TICKETS.md",
+    "tests/governance-preflight-cache.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7fb6cbf8b34ed63388dfdbfeacc8f9e2a72deb48",
+    "targetBranch": "main",
+    "outcome": "Run unchanged cache/output regressions in a private nested checkout with controls inside owner cache and outside the tested checkout. Preserve source Git configuration and execute current working CLI implementations.",
+    "nonGoals": [
+      "No production path, approval or snapshot trust changes",
+      "No runtime deployment, release grant, tag/Release or adopter effect",
+      "No legacy metadata movement or foreign worktree mutation"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Single test module owns a clean no-hardlinks Git fixture pinned to actual source HEAD and fetched origin/main. Parent-scoped temporary controls remain inside canonical owner cache and outside fixture; hooks and teardown mutate only fixture config. Current working checker and bundled script are executed against that fixture. Symlink cache refusal and module cleanup preserve owner boundary.",
+      "components": [
+        {
+          "name": "preflight-cache-test-fixture",
+          "paths": [
+            "tests/governance-preflight-cache.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert reviewed test-only change through protected source publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -B tests/governance-preflight-cache.test.py"
+        ],
+        "evidence": "All five existing tests under protected publisher environment, read-only actual source/config with own cache writable; output negative cases unchanged."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh --base 7fb6cbf8b34ed63388dfdbfeacc8f9e2a72deb48",
+          "Independent exact-head hosted checks and Validator review/merge"
+        ],
+        "evidence": "One implementation test file; no production or managed package changes; genuine external fencing before source writer."
+      }
+    ]
+  }
+}

@@ -342,6 +342,10 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-341** | [`README.md`](./ticket-341/README.md) | - | - | - | - | - |
 | **ticket-342** | [`README.md`](./ticket-342/README.md) | - | - | - | - | - |
 | **ticket-343** | [`README.md`](./ticket-343/README.md) | - | - | - | - | - |
+| **ticket-344** | [`README.md`](./ticket-344/README.md) | - | - | - | - | - |
+| **ticket-345** | [`README.md`](./ticket-345/README.md) | - | - | - | - | - |
+| **ticket-346** | [`README.md`](./ticket-346/README.md) | - | - | - | - | - |
+| **ticket-347** | [`README.md`](./ticket-347/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 

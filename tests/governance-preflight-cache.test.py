@@ -12,9 +12,47 @@ import tempfile
 import unittest
 
 sys.dont_write_bytecode = True
-SOURCE = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(SOURCE / "scripts"))
+IMPLEMENTATION_SOURCE = Path(__file__).resolve().parents[1]
+SOURCE = IMPLEMENTATION_SOURCE
+sys.path.insert(0, str(IMPLEMENTATION_SOURCE / "scripts"))
 import governance_check
+
+
+def setUpModule():
+    """Own an isolated checkout; protected output stays outside that fixture."""
+    global SOURCE
+    cache = IMPLEMENTATION_SOURCE
+    for component in (".subactor", "cache"):
+        cache = cache / component
+        if cache.is_symlink():
+            raise RuntimeError("Preflight fixture cache must not be symlinked")
+        cache.mkdir(exist_ok=True)
+    temporary = tempfile.TemporaryDirectory(prefix="preflight-cache-", dir=cache)
+    unittest.addModuleCleanup(temporary.cleanup)
+    parent = Path(temporary.name)
+    SOURCE = parent / "checkout"
+    # Python control/output fixtures are siblings of the tested checkout,
+    # inside the owning repository cache even when the host TMPDIR is external.
+    previous_tempdir = tempfile.tempdir
+    tempfile.tempdir = str(parent)
+    unittest.addModuleCleanup(setattr, tempfile, "tempdir", previous_tempdir)
+
+    def source_git(*arguments):
+        return subprocess.check_output(
+            ["git", "-C", str(IMPLEMENTATION_SOURCE), *arguments], text=True,
+        ).strip()
+
+    head = source_git("rev-parse", "HEAD")
+    base = source_git("rev-parse", "--verify", "origin/main^{commit}")
+    remote = source_git("remote", "get-url", "origin")
+    subprocess.run(
+        ["git", "clone", "--no-hardlinks", "--no-checkout", "--quiet",
+         "--", str(IMPLEMENTATION_SOURCE), str(SOURCE)], check=True,
+    )
+    subprocess.run(["git", "-C", str(SOURCE), "checkout", "--quiet", "--detach", head], check=True)
+    subprocess.run(["git", "-C", str(SOURCE), "update-ref", "refs/remotes/origin/main", base], check=True)
+    subprocess.run(["git", "-C", str(SOURCE), "remote", "set-url", "origin", remote], check=True)
+    subprocess.run(["git", "-C", str(SOURCE), "config", "core.hooksPath", ".githooks"], check=True)
 
 
 class PreflightCacheTests(unittest.TestCase):
@@ -117,7 +155,7 @@ class PreflightCacheTests(unittest.TestCase):
         """Integration test: CLI invocation, hit, and invalidation."""
         cmd_base = [
             sys.executable,
-            str(SOURCE / "scripts" / "governance_check.py"),
+            str(IMPLEMENTATION_SOURCE / "scripts" / "governance_check.py"),
             "--root", str(SOURCE),
             "--manifest", "governance/manifest.hub.json",
             "--stack-profiles", "governance/stack-profiles.json",
@@ -189,7 +227,7 @@ class CachedOutputTests(unittest.TestCase):
                 cache = control / "cache.json"
                 directory = control / "existing-directory"
                 directory.mkdir()
-                cmd = [sys.executable, str(SOURCE / relative), "--root", str(SOURCE),
+                cmd = [sys.executable, str(IMPLEMENTATION_SOURCE / relative), "--root", str(SOURCE),
                        "--manifest", "governance/manifest.hub.json", "--base", base, "--head", "HEAD",
                        "--actor", "agent", "--cache-file", str(cache), "--timing", "--format", "json"]
                 def invoke(*extra):
