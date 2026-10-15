@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.101
+
+- Admit only absent, required first-adoption seed files proven by the published manifest, exact installer acknowledgement and Git base. Keep declared ownership, shared-path controls and native writer/publication authority unchanged; protected governance independently recomputes the bounded first-adoption seed scope.
+
 ## 0.20.100
 
 - Preserve strictly integrated historical ticket refs during first native bootstrap allocation, with checked ancestry and fresh clone-local ownership observations. Ambiguous refs, live leases, native reservations and changed installer bytes still block; no branch cleanup or writer authority is inferred.

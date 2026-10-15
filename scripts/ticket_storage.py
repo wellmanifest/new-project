@@ -182,6 +182,14 @@ def scoped_paths(root, workstream, paths):
         raise ScopeOwnershipError(
             "scope has no implementation path; ticket tracking files alone are not material work")
     unowned = [path for path in scope if not any(pattern_covered_by(path, owner) for owner in owned)]
+    if (unowned and workstream == 'governance'
+            and (Path(root) / '.subactor/receipts/bootstrap-adoption.json').exists()):
+        from work_start_check import ObservationError, bootstrap_seed_paths
+        try:
+            seeds = bootstrap_seed_paths(Path(root), manifest)
+        except (ObservationError, OSError, ValueError) as error:
+            raise ScopeOwnershipError('bootstrap required seed evidence unavailable') from error
+        unowned = [path for path in unowned if path not in seeds]
     if unowned:
         raise ScopeOwnershipError(ownership_hint(manifest, workstream, unowned))
     return scope

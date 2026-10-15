@@ -15,7 +15,8 @@ from unittest.mock import patch
 sys.dont_write_bytecode = True
 
 ROOT = Path(__file__).resolve().parents[1]
-CHANGED = ('project/new-ticket.sh', 'scripts/create_adoption_lock.py', 'scripts/work_start_check.py')
+CHANGED = ('project/new-ticket.sh', 'scripts/create_adoption_lock.py', 'scripts/work_start_check.py',
+           'scripts/ticket_storage.py', 'scripts/governance_check.py')
 
 
 class BootstrapTest(unittest.TestCase):
@@ -176,6 +177,136 @@ class BootstrapTest(unittest.TestCase):
         (self.target / '.git/new-project-ticket-high-water').write_text('4\n')
         result, _ = self.observation(self.checksum())
         self.assertNotEqual(result.returncode, 0)
+
+    def seed_scope(self, *paths):
+        args = [sys.executable, '.governance/ticket_storage.py', 'scope', '--root', '.',
+                '--workstream', 'governance']
+        for path in paths:
+            args += ['--path', path]
+        return self.command(self.target, *args, check=False)
+
+    def test_complete_seed_scope_allocates_without_ownership_takeover(self):
+        receipt = json.loads(self.receipt.read_text())
+        scope = sorted(receipt['files'])
+        self.assertIn('VERSION', scope)
+        manifest_path = self.target / '.governance/manifest.json'
+        original_manifest = manifest_path.read_bytes()
+        query = self.seed_scope(*scope)
+        self.assertEqual(query.returncode, 0, query.stderr)
+        args = ['bash', './project/new-ticket.sh', '--title', 'Complete first adoption',
+                '--agent', 'fixture', '--workstream', 'governance',
+                '--worktree-slug', 'complete-adoption',
+                '--bootstrap-adoption-digest', self.checksum()]
+        for path in scope:
+            args += ['--path', path]
+        result = self.command(self.target, *args)
+        self.assertIn('Successfully allocated ' + self.expected_ticket, result.stdout)
+        records = [json.loads(line) for line in result.stdout.splitlines() if line.startswith('{')]
+        self.assertFalse(records[-1]['executionAuthorized'])
+        wt = self.target / ('.worktrees/' + self.expected_ticket + '--complete-adoption')
+        intent = json.loads((wt / 'project' / self.expected_ticket / 'intent.json').read_text())
+        self.assertIn('VERSION', intent['allowedPaths'])
+        self.assertFalse((wt / 'VERSION').exists(), 'allocation remains metadata only')
+        self.assertEqual(manifest_path.read_bytes(), original_manifest)
+        self.assertNotEqual(self.seed_scope('VERSION').returncode, 0,
+                            'native reservation must end the bootstrap-only allowance')
+
+    def test_seed_scope_rejects_foreign_wildcard_and_changed_required_file(self):
+        for path in ['foreign.txt', '*', 'VERS*']:
+            with self.subTest(path=path):
+                self.assertNotEqual(self.seed_scope(path).returncode, 0)
+        (self.target / 'VERSION').write_text('9.9.9\n')
+        self.assertNotEqual(self.seed_scope('VERSION').returncode, 0)
+
+    def test_seed_scope_rejects_unpublished_proof_and_explicit_shared_path(self):
+        path = self.target / '.governance/manifest.lock.json'
+        raw = path.read_bytes()
+        lock = json.loads(raw)
+        lock['standard']['publicationStatus'] = 'unpublished-test'
+        path.write_text(json.dumps(lock))
+        self.assertNotEqual(self.seed_scope('VERSION').returncode, 0)
+        path.write_bytes(raw)
+        path = self.target / '.governance/manifest.json'
+        document = json.loads(path.read_text())
+        document['coordination']['integration']['requiredForPaths'].append('VERSION')
+        path.write_text(json.dumps(document))
+        receipt = json.loads(self.receipt.read_text())
+        receipt['files']['.governance/manifest.json'] = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.receipt.write_text(json.dumps(receipt))
+        self.assertNotEqual(self.seed_scope('VERSION').returncode, 0)
+
+    def test_protected_seed_scope_recomputes_base_and_immutable_package(self):
+        # Load the actual checker; source authority is mocked only by fixture publication above.
+        sys.path.insert(0, str(ROOT / 'scripts'))
+        self.addCleanup(sys.path.remove, str(ROOT / 'scripts'))
+        import governance_check as gate
+        manifest = json.loads((self.target / '.governance/manifest.json').read_text())
+        receipt = json.loads(self.receipt.read_text())
+        intent = {'ticket': self.expected_ticket, 'workstream': 'governance',
+                  'allowedPaths': sorted(receipt['files']), 'forbiddenPaths': [],
+                  'delivery': {'acceptedBaseSha': self.head, 'standardAdoption': {
+                      'sourceRepository': 'wellmanifest/new-project', 'fromRevision': None,
+                      'toRevision': receipt['sourceRevision']}}}
+        before = json.dumps(manifest, sort_keys=True)
+        bindings = gate.atomic_adoption_binding_paths(self.target, manifest, intent)
+        self.assertIn('VERSION', bindings)
+        report = gate.Report(self.target)
+        record = gate.TicketRecord(Path('project') / self.expected_ticket,
+                                   'IN_PROGRESS', 'EDIT', intent, None)
+        verified = gate.atomic_standard_adoption_paths(
+            self.target, self.head, sorted(receipt['files']), [record], report)
+        self.assertTrue(verified)
+        gate.check_workstream_change_scope(self.target, manifest, [record],
+            manifest['coordination'], record, sorted(receipt['files']), report)
+        self.assertFalse(report.findings, report.findings)
+        managed = self.target / '.governance/work_start_check.py'
+        original = managed.read_bytes()
+        managed.write_bytes(original + b'\n# changed candidate\n')
+        denied = gate.Report(self.target)
+        self.assertFalse(gate.atomic_standard_adoption_paths(
+            self.target, self.head, sorted(receipt['files']), [record], denied))
+        self.assertTrue(any(finding.code == 'GOV-SYNC-001' for finding in denied.findings))
+        managed.write_bytes(original)
+        self.assertEqual(json.dumps(manifest, sort_keys=True), before)
+        intent['delivery']['acceptedBaseSha'] = 'f' * 40
+        self.assertNotIn('VERSION', gate.atomic_adoption_binding_paths(self.target, manifest, intent))
+        intent['delivery']['acceptedBaseSha'] = self.head
+        intent['delivery']['standardAdoption']['fromRevision'] = 'a' * 40
+        self.assertNotIn('VERSION', gate.atomic_adoption_binding_paths(self.target, manifest, intent))
+        intent['delivery']['standardAdoption']['fromRevision'] = None
+        path = self.target / '.governance/manifest.base.json'
+        path.write_bytes(path.read_bytes() + b'\n')
+        self.assertNotIn('VERSION', gate.atomic_adoption_binding_paths(self.target, manifest, intent))
+
+    def test_protected_seed_scope_refuses_existing_seed_and_partial_native_base(self):
+        sys.path.insert(0, str(ROOT / 'scripts'))
+        self.addCleanup(sys.path.remove, str(ROOT / 'scripts'))
+        import governance_check as gate
+        manifest = json.loads((self.target / '.governance/manifest.json').read_text())
+        revision = json.loads(self.receipt.read_text())['sourceRevision']
+        hooks = self.base / 'fixture-no-hooks'
+        hooks.mkdir()
+        self.command(self.target, 'git', 'add', 'VERSION')
+        self.command(self.target, 'git', '-c', f'core.hooksPath={hooks}', 'commit',
+                     '--quiet', '--only', '-m', 'Existing version', '--', 'VERSION')
+        existing = self.command(self.target, 'git', 'rev-parse', 'HEAD').stdout.strip()
+        self.assertNotIn('VERSION', gate.initial_adoption_seed_paths(
+            self.target, existing, revision, manifest))
+        self.command(self.target, 'git', 'add', '.governance/manifest.lock.json')
+        self.command(self.target, 'git', '-c', f'core.hooksPath={hooks}', 'commit',
+                     '--quiet', '--only', '-m', 'Partial native metadata', '--',
+                     '.governance/manifest.lock.json')
+        existing = self.command(self.target, 'git', 'rev-parse', 'HEAD').stdout.strip()
+        self.assertFalse(gate.initial_adoption_seed_paths(
+            self.target, existing, revision, manifest))
+
+    def test_seed_scope_rejects_symlink_and_executable_seed(self):
+        path = self.target / 'VERSION'
+        path.chmod(0o755)
+        self.assertNotEqual(self.seed_scope('VERSION').returncode, 0)
+        path.unlink()
+        path.symlink_to(self.target / 'foreign.txt')
+        self.assertNotEqual(self.seed_scope('VERSION').returncode, 0)
 
     def test_changed_installed_bytes_are_not_acknowledged(self):
         p = self.target / '.governance/manifest.json'

@@ -2194,6 +2194,59 @@ def add_adoption_docker_bindings(root: Path, manifest: dict[str, Any], bindings:
                 )
 
 
+def initial_adoption_seed_paths(root: Path, base: str, revision: str,
+                                manifest: dict[str, Any]) -> set[str]:
+    """Closed required seeds; neither existing ownership nor writer authority."""
+    if not isinstance(base, str) or re.fullmatch(r"[a-f0-9]{40}", base) is None:
+        return set()
+    root = root.resolve()
+    # ls-tree distinguishes proven absence from missing objects/Git failures.
+    native = [".governance/manifest.lock.json", ".governance/package-manifest.json",
+              ".governance/manifest.base.json"]
+    if git_output(root, ["ls-tree", "-z", base, "--", *native]):
+        return set()
+    legacy = git_output(root, ["ls-tree", "-z", base, "--", ".governance/manifest.json"])
+    if legacy:
+        if legacy.split(b" ", 1)[0] not in {b"100644", b"100755"}:
+            return set()
+        original = json.loads(git_output(root, ["show", base + ":.governance/manifest.json"]))
+        standard = original.get("standard", {}) if isinstance(original, dict) else {}
+        if (not isinstance(original, dict) or set(original) != {"schema", "standard"}
+                or original.get("schema") != "wellmanifest.manifest/v1"
+                or not isinstance(standard, dict) or set(standard) != {"id", "version"}
+                or standard.get("id") != "profile:baseline"
+                or re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", str(standard.get("version", ""))) is None):
+            return set()
+    for name in native:
+        path = root / name
+        if any(p.is_symlink() for p in (path, *path.parents)) or not path.is_file():
+            return set()
+    lock = load_json(safe_repo_path(root, ".governance/manifest.lock.json"))
+    if (lock.get("standard", {}).get("sourceRevision") != revision
+            or lock.get("standard", {}).get("publicationStatus") != "published"):
+        return set()
+    base_path = safe_repo_path(root, ".governance/manifest.base.json")
+    if content_digest(base_path.read_bytes()) != lock.get("managedFiles", {}).get(
+            ".governance/manifest.base.json"):
+        return set()
+    published = load_json(base_path)
+    package = load_json(safe_repo_path(root, ".governance/package-manifest.json"))
+    targets = {item["target"] for item in package["files"]}
+    shared = manifest["coordination"]["integration"]["requiredForPaths"]
+    seeds = set()
+    for name in published["requiredFiles"]:
+        if (not isinstance(name, str) or not relative_pattern(name)
+                or any(c in name for c in "*?[\\") or name in targets or matches(name, shared)):
+            continue
+        path = root / name
+        if (any(p.is_symlink() for p in (path, *path.parents)) or not path.is_file()
+                or path.suffix.lower() in EXECUTABLE_SUFFIXES or path.stat().st_mode & 0o111
+                or git_output(root, ["ls-tree", "-z", base, "--", name])):
+            continue
+        seeds.add(name)
+    return seeds
+
+
 def atomic_adoption_binding_paths(
     root: Path,
     manifest: dict[str, Any],
@@ -2212,6 +2265,13 @@ def atomic_adoption_binding_paths(
     add_adoption_workflow_bindings(root, revision, registry, bindings)
     add_adoption_packaging_bindings(root, bindings)
     add_adoption_docker_bindings(root, manifest, bindings)
+    if (intent.get("workstream") == "governance" and adoption.get("fromRevision") is None
+            and standard_adoption_error(adoption) is None):
+        try:
+            bindings.update(initial_adoption_seed_paths(
+                root, delivery.get("acceptedBaseSha"), revision, manifest))
+        except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+            pass  # Incomplete seed evidence grants no cross-workstream scope.
     return bindings
 
 

@@ -1,0 +1,110 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-343",
+  "summary": "Verify initial adoption seed ownership",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-343/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/governance_check.py",
+    "scripts/ticket_storage.py",
+    "scripts/work_start_check.py",
+    "tests/scaffold_bootstrap_test.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-342"
+  ],
+  "conflictsWith": [
+    "ticket-341"
+  ],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "00d38351ed80788a02d9d122266af997d1b12e03",
+    "targetBranch": "main",
+    "outcome": "Admit the complete first immutable native adoption when a required target-owned seed such as VERSION is absent in the committed base but present in the exact published installer acknowledgement. Keep existing path ownership unchanged and independently recompute both allocation and protected governance evidence. Publish the material fix with atomic standard version projections.",
+    "nonGoals": [
+      "No takeover or edits of blocked ticket-341",
+      "No generic cross-workstream exemption or ownership reassignment",
+      "No target repository source in this hub",
+      "No admission, review or merge authority from bootstrap observations"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Derive a closed missing seed set from the verified published base requiredFiles and exact installer byte acknowledgement during first native allocation. Refuse existing committed seeds, changed bytes, unrelated paths, unsafe file types, native reservations and invalid provenance. Preserve declared workstream ownership; protected governance must independently recompute first-adoption scope from the accepted Git base, candidate head and verified full immutable package. Reuse existing delivery and standardAdoption contracts without a new schema or permissive override. Initial observations remain metadata only; real fenced writer admission and independent exact-head publication remain required. If this cannot be implemented within these files and timebox, preserve evidence and do not widen the scope.",
+      "components": [
+        {
+          "name": "bootstrap-seed-admission",
+          "paths": [
+            "scripts/work_start_check.py",
+            "scripts/ticket_storage.py",
+            "scripts/governance_check.py",
+            "tests/scaffold_bootstrap_test.py"
+          ]
+        },
+        {
+          "name": "atomic-standard-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml",
+            "packages/wellman/src/wellman/_bundled/governance_check.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Proof-bound initial seed scope in native allocation and protected governance"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Retain published0.20.100 and target bootstrap archives; revert only through independent protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python tests/scaffold_bootstrap_test.py"
+        ],
+        "evidence": "Real Git full-scope allocation and protected gate; foreign paths, stale bytes/base, unsafe inputs and native state remain rejected."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Managed governance, scoped Testless, required Linux/Windows/OneDev and exact-head independent App approval/merge before tag/release."
+      }
+    ]
+  }
+}
