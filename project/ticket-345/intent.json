@@ -1,0 +1,80 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-345",
+  "summary": "Keep host-test source fixtures outside recursive runtime state",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-345/**",
+    "project/TICKETS.md",
+    "tests/agent-hosts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "52537e6d41284cc53c3bf1e54dbb46006416b05e",
+    "targetBranch": "main",
+    "outcome": "Keep host-test fixtures within the canonical repository cache and copy only canonical Subactor control files, preventing recursive copies of runtime state during governed source release checks.",
+    "nonGoals": [
+      "No runtime/controller/publisher deployment or protected-policy changes in this source slice",
+      "No tag/Release, registry publish, target adoption or legacy metadata movement",
+      "No changes to production installer semantics, package projections or foreign worktrees"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "The existing native host-test suite owns its private fixture cache. The broken-source fixture preserves canonical .subactor/manifest.json and .gitignore while excluding runtime state and its own nested cache; the actual integration exercise supplies the recursion regression.",
+      "components": [
+        {
+          "name": "host-test-fixture",
+          "paths": [
+            "tests/agent-hosts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the reviewed material source change through protected publication; preserve runtime data and do not restore external scratch helpers."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "PYTHONDONTWRITEBYTECODE=1 bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Native suite itself creates nested fixtures under owning repository cache. Assert canonical Subactor control files survive while runtime/cache paths are absent; no recursion and no copy of original legacy metadata."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh --base 52537e6d41284cc53c3bf1e54dbb46006416b05e",
+          "Independent exact-head protected CI and Validator"
+        ],
+        "evidence": "Complete staged/committed scope gate, required hosted checks and protected independent review/merge. No self-approval or deployment."
+      }
+    ]
+  }
+}
