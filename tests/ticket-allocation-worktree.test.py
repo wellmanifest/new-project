@@ -5,15 +5,16 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 import shutil
 import stat
 import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
+from adoption_upgrade_harmonization_test import AdoptionPlanFixture
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -299,6 +300,109 @@ class LeaseRaceTests(unittest.TestCase):
             self.assertIsNotNone(self.captured_execution())
         self.assertFalse((self.root / '.subactor').exists())
 
+
+
+class NativeStandardAdoptionPlanTest(AdoptionPlanFixture, unittest.TestCase):
+    def allocate_plan(self, *arguments):
+        return self.command(self.target, "bash", str(self.source / "project/new-ticket.sh"),
+            "--title", "Upgrade immutable standard", "--agent", "fixture",
+            "--workstream", "governance", "--worktree-slug", "immutable-upgrade",
+            "--standard-adoption-plan", str(self.plan_path), *arguments,
+            env=self.publication_environment(), check=False)
+
+    def test_exact_plan_allocates_complete_intent_before_reservation_hashes(self):
+        import hashlib
+
+        from jsonschema import Draft202012Validator
+
+        plan = self.export()
+        before = self.command(self.target, "git", "status", "--porcelain").stdout
+        result = self.allocate_plan()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        receipt = next(json.loads(line) for line in result.stdout.splitlines()
+                       if line.startswith('{') and 'ticket-allocation-result' in line)
+        self.assertFalse(receipt['executionAuthorized'])
+        worktree = Path(receipt['worktreePath'])
+        intent = json.loads((worktree / 'project/ticket-001/intent.json').read_text())
+        self.assertEqual(intent['allowedPaths'][3:], plan['allowedPaths'])
+        self.assertEqual(intent['delivery'], plan['delivery'])
+        Draft202012Validator(json.loads((ROOT / 'governance/intent.schema.json').read_text())).validate(intent)
+        lease = json.loads(Path(receipt['leasePath']).read_text())
+        canonical = lambda value: json.dumps(value, sort_keys=True, separators=(',', ':')).encode()
+        self.assertEqual(lease['planHash'], hashlib.sha256(canonical(intent)).hexdigest())
+        self.assertEqual(lease['scopeHash'], hashlib.sha256(canonical(intent['allowedPaths'])).hexdigest())
+        self.assertEqual(lease['phase'], 'claimed')
+        self.assertEqual(self.command(self.target, 'git', 'status', '--porcelain').stdout, before)
+        self.assertFalse((self.target / '.gitattributes').exists())
+        self.assertFalse((worktree / '.gitattributes').exists())
+        self.assertIn('.github/workflows/new-project-branch-hygiene.yml', intent['allowedPaths'])
+
+    def historical_package_fixture(self, *, local_ownership=False):
+        import contextlib
+        import io
+
+        # Actual historical adopter regression, distinct from synthetic gaps.
+        revision = 'b6ba9c21a65a6a5648ecf904b64c3b75295e136f'
+        self.target = self.case / 'historical-adopter'
+        self.command(self.case, 'git', 'init', '--quiet', '-b', 'main', str(self.target))
+        for key, value in (('user.name', 'Fixture'), ('user.email', 'fixture@example.invalid'),
+                           ('core.excludesFile', os.devnull)):
+            self.command(self.target, 'git', 'config', key, value)
+        for name in ('README.md', 'VERSION', 'CHANGELOG.md', 'TODO.md', 'project/TICKETS.md'):
+            path = self.target / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('0.1.0\n' if name == 'VERSION' else '# Fixture\n')
+        with patch.object(self.adopter, 'verify_publication_evidence'), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.adopter.main(['--target-root', str(self.target),
+                '--source-revision', revision, '--upgrade']), 0)
+        if local_ownership:
+            # The real old adopter retains its independently configured,
+            # orthogonal ownership. The package pin does not own these fields.
+            template = json.loads((self.template / '.governance/manifest.json').read_text())
+            path = self.target / '.governance/manifest.json'
+            manifest = json.loads(path.read_text())
+            manifest['coordination']['workstreams'] = template['coordination']['workstreams']
+            manifest['coordination']['integration'] = template['coordination']['integration']
+            path.write_text(json.dumps(manifest, indent=2) + '\n')
+        self.command(self.target, 'git', 'config', 'core.hooksPath', os.devnull)
+        self.command(self.target, 'git', 'add', '.')
+        self.command(self.target, 'git', 'commit', '--quiet', '-m', 'Real historical package fixture')
+        self.plan_path = self.target / '.subactor/receipts/allocation-plan.json'
+        self.plan_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def test_real_published_02032_package_with_local_owners_allocates_full_upgrade(self):
+        self.historical_package_fixture(local_ownership=True)
+        self.test_exact_plan_allocates_complete_intent_before_reservation_hashes()
+
+    def test_historical_explicit_integration_requirements_are_not_bypassed(self):
+        self.historical_package_fixture()
+        with self.assertRaisesRegex(SystemExit, 'cannot transfer target-owned path'):
+            self.export()
+        self.assertFalse((self.target / '.git/new-project-ticket-high-water').exists())
+
+    def test_caller_cannot_expand_or_narrow_derived_scope(self):
+        self.export()
+        result = self.allocate_plan('--path', 'src/foreign.py')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('exact derived adoption scope', result.stderr)
+        self.assertFalse((self.target / '.git/new-project-ticket-high-water').exists())
+        self.assertEqual(self.command(self.target, 'git', 'branch', '--list', 'ticket/*').stdout, '')
+
+    def test_native_rejects_stale_target_before_identity_effect(self):
+        self.export()
+        (self.target / 'foreign.txt').write_text('another writer\n')
+        result = self.allocate_plan()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('target state is stale', result.stderr)
+        self.assertFalse((self.target / '.git/new-project-ticket-high-water').exists())
+        self.assertFalse((self.target / '.worktrees').exists())
+
+    def test_sqlite_route_does_not_fall_back_to_file_allocation(self):
+        self.export()
+        result = self.allocate_plan('--storage', 'sqlite')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('exclusive local file allocation', result.stderr)
+        self.assertFalse((self.target / '.git/new-project-ticket-high-water').exists())
 
 
 if __name__ == "__main__":

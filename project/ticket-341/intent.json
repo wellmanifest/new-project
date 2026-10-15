@@ -1,0 +1,125 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-341",
+  "summary": "Verified adoption allocation plans",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-341/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/package-manifest.json",
+    "governance/standard-adoption-plan.schema.json",
+    "packages/wellman/pyproject.toml",
+    "project/new-ticket.sh",
+    "scripts/create_adoption_lock.py",
+    "scripts/work_start_check.py",
+    "tests/adoption_upgrade_harmonization_test.py",
+    "tests/ticket-allocation-worktree.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f784faecc05879fcec004eb76073305eb6507a3d",
+    "targetBranch": "main",
+    "outcome": "Export a read-only exact-state adoption allocation plan from a verified immutable package and admit its independently recomputed prospective standard ownership through the native allocator before any adopter upgrade. Preserve external change authority and local overrides.",
+    "nonGoals": [
+      "No self-issued policy enrollment, source-write lease, approval or publication authority",
+      "No source changes before independent exact admission",
+      "No target project tickets or source stored in the hub",
+      "No activation or runtime-wide all-tool enforcement in this slice"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "A closed advisory plan binds immutable source identity, exact target HEAD and dirty state, current adoption pins, every current/desired path digest and prospective three-way manifest. Native allocation must independently validate/recompute it against the pinned published package; derive only standard-managed upgrade paths, preserve local overrides and construct complete delivery intent before allocation reservation digests. Missing or stale authority remains a refusal.",
+      "components": [
+        {
+          "name": "adoption-plan",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "governance/standard-adoption-plan.schema.json",
+            "governance/package-manifest.json"
+          ]
+        },
+        {
+          "name": "allocation-admission",
+          "paths": [
+            "project/new-ticket.sh",
+            "scripts/work_start_check.py"
+          ]
+        },
+        {
+          "name": "verification-and-release",
+          "paths": [
+            "tests/adoption_upgrade_harmonization_test.py",
+            "tests/ticket-allocation-worktree.test.py",
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml",
+            "governance/manifest.default.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Read-only adoption allocation plan export",
+        "Native allocator consumption of independently verified exact plan"
+      ],
+      "dataChanges": [
+        "Advisory standard adoption plan schema; grantsAuthority=false"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert material delivery through protected review; do not widen an adopter scope manually or mint local editing authority."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/adoption_upgrade_harmonization_test.py"
+        ],
+        "evidence": "Owning worktree receipts; read-only plan, pin/state/digest/path negative cases"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/ticket-allocation-worktree.test.py"
+        ],
+        "evidence": "Native exact ownership and complete intent creation; changed state and missing authority refuse"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Required hub checks and atomic material version/package projections; independent exact-head delivery"
+      }
+    ]
+  }
+}

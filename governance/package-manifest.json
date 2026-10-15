@@ -702,6 +702,12 @@
       "target": ".governance/error/GOV-VERSION.md",
       "strategy": "managed",
       "executable": false
+    },
+    {
+      "source": "governance/standard-adoption-plan.schema.json",
+      "target": ".governance/standard-adoption-plan.schema.json",
+      "strategy": "managed",
+      "executable": false
     }
   ]
 }

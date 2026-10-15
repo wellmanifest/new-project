@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.102
+
+- Export exact-state, read-only adoption allocation plans from verified immutable packages. Native allocation independently recomputes the full upgrade scope and writes bounded delivery intent before reservation hashes; stale or modified plans, unsafe paths and missing editing authority remain refusals. Preserve target overrides and existing owners.
+
 ## 0.20.101
 
 - Admit only absent, required first-adoption seed files proven by the published manifest, exact installer acknowledgement and Git base. Keep declared ownership, shared-path controls and native writer/publication authority unchanged; protected governance independently recomputes the bounded first-adoption seed scope.
