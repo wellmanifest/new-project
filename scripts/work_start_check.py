@@ -329,6 +329,27 @@ def bootstrap_owned_paths(root, manifest, expected_digest):
     return set(dirty).intersection(files)
 
 
+def bootstrap_seed_paths(root, manifest):
+    """A scope query may observe only exact first-installer required seeds.
+
+    The allocator still requires its explicit dirty acknowledgement afterwards;
+    this query changes no intent, ownership, reservation or authority.
+    """
+    root = Path(root).resolve()
+    if root != Path(worktrees(root)[0]["worktree"]).resolve():
+        return set()
+    _, checksum, _ = dirty_observation(root)
+    owned = bootstrap_owned_paths(root, manifest, checksum)
+    from governance_check import initial_adoption_seed_paths
+    lock = read_json(root / ".governance/manifest.lock.json")
+    try:
+        return owned & initial_adoption_seed_paths(
+            root, git(root, "rev-parse", "HEAD").strip(),
+            lock["standard"]["sourceRevision"], manifest)
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as error:
+        raise ObservationError("Bootstrap required seed evidence unavailable") from error
+
+
 def changes(root, base, head):
     ancestor = git(root, "merge-base", base, head, optional=True)
     if not ancestor:
