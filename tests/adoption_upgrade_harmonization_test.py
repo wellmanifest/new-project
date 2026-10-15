@@ -274,8 +274,9 @@ class AdoptionAllocationPlanTest(AdoptionPlanFixture, unittest.TestCase):
     def test_symlinked_target_and_plan_are_rejected(self):
         self.export()
         path = self.target / ".governance/standard-adoption-plan.schema.json"
+        path.unlink(missing_ok=True)
         path.symlink_to(self.target / "README.md")
-        with self.assertRaises(SystemExit):
+        with self.assertRaisesRegex(SystemExit, "symlink"):
             self.verify()
         path.unlink()
         link = self.case / "plan-link.json"
