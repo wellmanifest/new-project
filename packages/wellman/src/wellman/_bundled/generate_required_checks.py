@@ -315,15 +315,18 @@ def declaration_for(
         return None
     directory = root / ".github/workflows"
     overlays = workflow_payloads or {}
+    ignored_set = set(ignored)
     workflows: dict[str, tuple[Path, bytes | None]] = {}
     if directory.is_dir():
         for workflow in sorted(directory.glob("*.y*ml")):
             relative = workflow.relative_to(root).as_posix()
-            workflows[relative] = (workflow, None)
+            if relative not in ignored_set and workflow.name not in ignored_set:
+                workflows[relative] = (workflow, None)
     for relative, content in overlays.items():
         if not relative.startswith(".github/workflows/") or not relative.endswith((".yml", ".yaml")):
             continue
-        workflows[relative] = (root / relative, content)
+        if relative not in ignored_set and Path(relative).name not in ignored_set:
+            workflows[relative] = (root / relative, content)
     if not workflows:
         return None
     checks: list[dict[str, str]] = []

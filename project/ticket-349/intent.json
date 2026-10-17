@@ -1,0 +1,107 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-349",
+  "summary": "Resolve AST performance audit findings across hub scripts",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-349/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/worktrees.lock.json",
+    "packages/wellman/src/wellman/_bundled/generate_required_checks.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "packages/wellman/src/wellman/_bundled/ticket_input.py",
+    "scripts/create_adoption_lock.py",
+    "scripts/generate_required_checks.py",
+    "scripts/governance_check.py",
+    "scripts/ticket_input.py",
+    "subprojects/worktrees/conformance.py",
+    "tests/worktrees-adoption.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7cf3ebcad0c539f66297194fdda11b688c76de85",
+    "targetBranch": "main",
+    "outcome": "Resolve all 9 AST performance audit findings across hub scripts, synchronize bundled copies in packages/wellman, and populate .governance/standard-adoption.json.",
+    "nonGoals": [
+      "No breaking CLI or schema changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Wire optional keyword parameters in generate_required_checks.py and subprojects/worktrees/conformance.py, hoist SQLite cursor creation before the loop in ticket_input.py, extract git subprocess calls into module-level helpers outside loops in create_adoption_lock.py and governance_check.py, and synchronize bundled copies.",
+      "components": [
+        {
+          "name": "hub-governance-scripts",
+          "paths": [
+            "scripts/generate_required_checks.py",
+            "scripts/ticket_input.py",
+            "scripts/create_adoption_lock.py",
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/generate_required_checks.py",
+            "packages/wellman/src/wellman/_bundled/ticket_input.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py"
+          ]
+        },
+        {
+          "name": "worktrees-conformance",
+          "paths": [
+            "subprojects/worktrees/conformance.py",
+            "governance/worktrees.lock.json",
+            "tests/worktrees-adoption.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "scripts/governance_check.py"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert helper extractions and bundled sync in the ticket branch."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/worktrees-adoption.test.py",
+          "python3 tests/reusable_checks_test.py",
+          "python3 tests/intent_delivery_messages_test.py",
+          "bash tests/standard-pack-check.test.sh"
+        ],
+        "evidence": "All unit and adoption tests pass and audit_repository reports 0 findings."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Bundled scripts are synchronized and governance-check.sh passes with GOV-PASS."
+      }
+    ]
+  }
+}
