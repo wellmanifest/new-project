@@ -144,7 +144,7 @@ class WorktreesAdoptionTest(unittest.TestCase):
             "subprojects/worktrees/worktrees.schema.json":
                 "bb5989c19ee33d9beafa34576ef568ef70384a664ccf763ac2e29dde3a464756",
             "subprojects/worktrees/conformance.py":
-                "fad10912f3b14913cc348880996b636ba0d31ea66a853dd264b53e4e66f17feb",
+                "286fb1801fa437c9a5643a04a81dd421234a3f5412815c2cbba79bf5adf38562",
         }
         self.assertEqual(
             {artifact["packageSourcePath"] for artifact in lock["artifacts"]},

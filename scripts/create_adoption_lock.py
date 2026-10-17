@@ -752,6 +752,31 @@ def ignored_payload_targets(target_root: Path, targets: set[str]) -> list[str]:
     )
 
 
+def _git_show_blob(target_root: Path, ref: str, relative: str) -> subprocess.CompletedProcess[bytes]:
+    return subprocess.run(
+        ["git", "-C", str(target_root), "show", f"{ref}:{relative}"],
+        capture_output=True,
+        check=False,
+    )
+
+
+def _run_mirror_git(mirror: Path, git_env: dict[str, str], args: list[str]) -> None:
+    subprocess.run(
+        ["git", "-C", str(mirror), *args],
+        env=git_env,
+        check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+    )
+
+
+def _git_cat_file_exists(target_root: Path, ref_path: str) -> subprocess.CompletedProcess[bytes]:
+    return subprocess.run(
+        ["git", "-C", str(target_root), "cat-file", "-e", ref_path],
+        capture_output=True,
+    )
+
+
 def bootstrap_ownership_paths(
     target_root: Path,
     manifest: dict[str, object],
@@ -817,7 +842,7 @@ def bootstrap_ownership_paths(
         content = path.read_bytes()
         if hashlib.sha256(content).hexdigest() != checksum:
             raise SystemExit("bootstrap prerequisite must match its exact regular-file digest")
-        committed = subprocess.run(["git", "-C", str(target_root), "show", f"{head}:{name}"], capture_output=True)
+        committed = _git_show_blob(target_root, head, name)
         if committed.returncode or committed.stdout != content:
             raise SystemExit("bootstrap prerequisite must match the committed base bytes")
         paths.append(name)
@@ -921,8 +946,7 @@ def bootstrap_reusable_declaration(
             "schema": "new-project.reusable-workflows/v1", "workflows": [entry]}))
         git_env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
         for args in (["init", "-q"], ["remote", "add", "origin", f"https://github.com/{repository}.git"]):
-            subprocess.run(["git", "-C", str(mirror), *args], env=git_env, check=True,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+            _run_mirror_git(mirror, git_env, args)
         derived = generator.declaration_for(mirror, ignored=())
         if (derived is None or derived["repository"] != repository
                 or derived.get("reusableWorkflowCallers")):
@@ -1069,10 +1093,7 @@ def validate_wellman_scaffold(target_root: Path, files: list[dict[str, object]])
                 or hashlib.sha256(content).hexdigest() != managed[relative]
             ):
                 raise ValueError("registration digest mismatch")
-            committed = subprocess.run(
-                ["git", "-C", str(target_root), "show", f"HEAD:{relative}"],
-                capture_output=True, check=False,
-            )
+            committed = _git_show_blob(target_root, "HEAD", relative)
             if committed.returncode or committed.stdout != content:
                 raise ValueError("registration differs from committed target bytes")
     except (OSError, ValueError, TypeError, KeyError) as error:
@@ -1156,8 +1177,7 @@ def main(argv: list[str] | None = None) -> int:
         if Path(checkout).resolve() != target_root:
             raise SystemExit("fresh bootstrap requires the repository checkout root")
         for name in ("manifest.json", "manifest.lock.json", "manifest.base.json", "package-manifest.json"):
-            present = subprocess.run(["git", "-C", str(target_root), "cat-file", "-e",
-                                      f"HEAD:.governance/{name}"], capture_output=True)
+            present = _git_cat_file_exists(target_root, f"HEAD:.governance/{name}")
             if present.returncode == 0:
                 raise SystemExit("fresh bootstrap cannot replace committed governance")
     subprocess.run(
@@ -1358,8 +1378,7 @@ def main(argv: list[str] | None = None) -> int:
             owned = dict(payloads)
             owned[".governance/manifest.lock.json"] = expected_lock
             for rel in manifest.get("requiredFiles", []):
-                before = subprocess.run(["git", "-C", str(target_root), "cat-file", "-e",
-                                         f"HEAD:{rel}"], capture_output=True)
+                before = _git_cat_file_exists(target_root, f"HEAD:{rel}")
                 path = target_root / rel
                 if before.returncode and path.is_file() and not path.is_symlink():
                     owned.setdefault(rel, path.read_bytes())

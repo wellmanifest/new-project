@@ -3496,20 +3496,24 @@ def observe_delivery_bases(root, delivery, accepted_sha, intent_path, base, repo
     return observed
 
 
+def _is_git_ancestor(root: Path, ancestor_sha: str, descendant_sha: str) -> bool:
+    result = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", ancestor_sha, descendant_sha],
+        cwd=root,
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return result.returncode == 0
+
+
 def check_observed_delivery_bases(root, accepted_commit, observed, component_patterns, record, intent_path, report) -> None:
     checked: set[str] = set()
     for source, observed_sha in observed:
         if observed_sha in checked or observed_sha == accepted_commit:
             continue
         checked.add(observed_sha)
-        ancestor = subprocess.run(
-            ["git", "merge-base", "--is-ancestor", accepted_commit, observed_sha],
-            cwd=root,
-            check=False,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        if ancestor.returncode != 0:
+        if not _is_git_ancestor(root, accepted_commit, observed_sha):
             report.add(
                 "GOV-BASE-001",
                 f"Ticket {record.directory.name} accepted base is not an ancestor of the observed target.",
