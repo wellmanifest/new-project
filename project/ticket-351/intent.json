@@ -1,0 +1,94 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-351",
+  "summary": "standard_pack_check: evidence must exist, match its digest and prove S3-S5 with distinct CI/hosted/runtime proof",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-351/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/standard_pack_check.py",
+    "tests/standard-pack-check.test.sh",
+    "tests/standard_pack_evidence_test.py",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "86727e1ecc8f4fc01bbda2d5091650aad6558635",
+    "targetBranch": "main",
+    "outcome": "standard_pack_check rejects adoption evidence that does not prove its level: repository evidence must exist and match its digest, S3 must be a CI definition or external proof, S4/S5 external proof, and S3-S5 must each be distinct from lower-level proof",
+    "nonGoals": [
+      "No migration of existing adoption records in consumer repositories",
+      "No change to the wellman bundled copy (separate repository)"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Validate each evidence item in adoption_record_findings; external proof is any RFC 3986 scheme URI, repository proof is a confined existing file with a matching SHA-256; a managed-script change ships as standard 0.20.104",
+      "components": [
+        {
+          "name": "standard-packs",
+          "paths": [
+            "scripts/standard_pack_check.py",
+            "tests/standard_pack_evidence_test.py",
+            "tests/standard-pack-check.test.sh",
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert scripts/standard_pack_check.py and the new test."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/standard_pack_evidence_test.py"
+        ],
+        "evidence": "hollow, missing, mismatched and repository-S4 evidence rejected; honest evidence passes"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/standard-pack-check.test.sh",
+          "./project/governance-check.sh --base origin/main"
+        ],
+        "evidence": "existing pack and runtime safety tests and the gate pass"
+      }
+    ]
+  }
+}

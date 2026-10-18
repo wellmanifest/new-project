@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.104
+
+- Adoption evidence must prove its level: repository evidence must exist and match its SHA-256, S3 must be a CI definition or external proof, S4/S5 external proof (hosted ruleset, runtime receipt), and S3-S5 must not reuse lower-level proof. Records that reuse `.governance/manifest.json` for every level are now reported as `STD-ADOPTION-EVIDENCE`.
+
 ## 0.20.103
 
 - Replace direct fleet upgrade writes with read-only requests bound to verified canonical annotated tags, final Releases and exact source package/tool hashes. Refuse unadmitted live dispatch; emitting an artifact grants no target execution authority.
