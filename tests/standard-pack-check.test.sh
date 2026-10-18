@@ -66,5 +66,6 @@ python3 "$root/tests/runtime_safety_test.py" \
 
 python3 "$root/tests/session-recovery-adoption.test.py"
 python3 "$root/tests/semver-adoption.test.py"
+python3 "$root/tests/standard_pack_evidence_test.py"
 
 echo "standard-pack-check.test.sh OK"
