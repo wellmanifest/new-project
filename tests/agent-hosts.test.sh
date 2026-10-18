@@ -530,6 +530,10 @@ grep -Fq 'Existing private instruction' "$user_home/.claude/CLAUDE.md" || fail "
 HOME="$user_home" "$root/scripts/install-agent-hosts.sh" --source "$root" --user
 [[ "$(grep -Fc 'wellmanifest/new-project host contract' "$user_home/.gemini/GEMINI.md")" == 1 ]] || fail "user pointer must be idempotent"
 grep -Fq 'git worktree list' "$user_home/.claude/CLAUDE.md" || fail "user pointer must discover governance from registered checkouts"
+grep -Fq 'owning repository' "$user_home/.claude/CLAUDE.md" || fail "user pointer must route final results to the owning repository"
+grep -Fq 'wellmanifest/docs' "$user_home/.claude/CLAUDE.md" || fail "user pointer must name the docs standard for reports"
+grep -Fq 'only in /tmp' "$user_home/.gemini/GEMINI.md" || fail "user pointer must forbid results left only in /tmp or chat"
+grep -Fq 'wellman check' "$user_home/.claude/CLAUDE.md" || fail "user pointer must require wellman check before done"
 
 # --- ticket-233: legacy pointer paragraphs converge without losing private text
 legacy_home="$tmp/legacy-home"

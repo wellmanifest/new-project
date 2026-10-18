@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-350",
+  "summary": "Host pointer: final results go to the owning repo (docs/logs), never only /tmp or chat",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-350/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/install-agent-hosts.sh",
+    "tests/agent-hosts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "bc8fe4e8c49780194e35a77cdfe1ad86eef31985",
+    "targetBranch": "main",
+    "outcome": "The user-level host pointer installed by install-agent-hosts.sh --user requires final results in the owning repository (docs/ per wellmanifest/docs, errors/ per wellmanifest/logs), forbids leaving them only in /tmp, a scratchpad or the chat, and requires the governance gate and the Wellman standards check before done",
+    "nonGoals": [
+      "No change to repository host projections (AGENTS/CLAUDE/GEMINI templates)",
+      "No new hook or enforcement runtime"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend the managed paragraph list of the user pointer; the existing boundary-preserving replacement keeps private text and stays idempotent",
+      "components": [
+        {
+          "name": "agent-hosts",
+          "paths": [
+            "scripts/install-agent-hosts.sh",
+            "tests/agent-hosts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert scripts/install-agent-hosts.sh and the test lines."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "--user pointer contains the owning-repository, wellmanifest/docs, /tmp and wellman check rules; private text preserved; idempotent"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh --base origin/main",
+          "python3 -m pytest -q tests/runtime_safety_test.py"
+        ],
+        "evidence": "Gate and runtime safety tests pass"
+      }
+    ]
+  }
+}
