@@ -290,7 +290,7 @@ def check_hook(root: Path, contract: dict[str, Any], actor: str) -> list[Finding
     additional = contract["hook"].get("additionalHooks", [])
     if (not isinstance(additional, list)
             or any(not isinstance(path, str) or path not in {
-                ".githooks/commit-msg", ".githooks/prepare-commit-msg",
+                ".githooks/commit-msg", ".githooks/prepare-commit-msg", ".githooks/pre-push",
             } for path in additional)
             or len(additional) != len(set(additional))):
         findings.append(Finding(

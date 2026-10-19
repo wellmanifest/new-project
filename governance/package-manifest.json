@@ -554,6 +554,12 @@
       "executable": true
     },
     {
+      "source": "template/files/pre-push.template.sh",
+      "target": ".githooks/pre-push",
+      "strategy": "managed",
+      "executable": true
+    },
+    {
       "source": "scripts/precommit_standard_update.py",
       "target": ".governance/precommit_standard_update.py",
       "strategy": "managed",
