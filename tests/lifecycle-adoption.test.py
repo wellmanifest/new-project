@@ -14,8 +14,8 @@ GIT_LOCK_PATH = ROOT / "governance" / "git-lifecycle.lock.json"
 TICKET_LOCK_PATH = ROOT / "governance" / "ticket-lifecycle.lock.json"
 SSOT_PATH = ROOT / "governance" / "lifecycle-vendored-copy.ssot.json"
 
-GIT_SOURCE_REVISION = "24cfe7cbbbc0d95f6b66f89124b471bee7287d0d"
-TICKET_SOURCE_REVISION = "ad363efa7705919ff613305172bf8115ccf50b15"
+GIT_SOURCE_REVISION = "2f0018b879439015a456caf4c6280c8020ac1f70"
+TICKET_SOURCE_REVISION = "59b2ef08f164c14ec68ee3e95056e20c6ed916ad"
 
 
 def sha256(path: pathlib.Path) -> str:

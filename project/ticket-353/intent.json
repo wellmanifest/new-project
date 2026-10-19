@@ -1,0 +1,91 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-353",
+  "summary": "Sync vendored git-lifecycle, ticket-lifecycle, and policy-dsl locks",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-353/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/git-lifecycle.lock.json",
+    "governance/policy-dsl.lock.json",
+    "governance/ticket-lifecycle.lock.json",
+    "scripts/policy_dsl_check.py",
+    "subprojects/git-lifecycle/**",
+    "subprojects/ticket-lifecycle/**",
+    "tests/lifecycle-adoption.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3f2e8d935cf216f3138b2f5e4f68baf5b63ea0ab",
+    "targetBranch": "main",
+    "outcome": "Synchronize vendored git-lifecycle, ticket-lifecycle, and policy-dsl copies and locks with their canonical compacted main revisions.",
+    "nonGoals": [
+      "Do not weaken exact-head verification in CI or when enforce-approval is requested.",
+      "Do not modify standalone repository histories."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Update vendored copies in subprojects/git-lifecycle, subprojects/ticket-lifecycle, and scripts/policy_dsl_check.py and their SHA-256 lock manifests in governance/*.lock.json to match canonical upstream main.",
+      "components": [
+        {
+          "name": "lifecycle-and-policy-dsl-locks",
+          "paths": [
+            "governance/git-lifecycle.lock.json",
+            "governance/policy-dsl.lock.json",
+            "governance/ticket-lifecycle.lock.json",
+            "scripts/policy_dsl_check.py",
+            "subprojects/git-lifecycle/**",
+            "subprojects/ticket-lifecycle/**",
+            "tests/lifecycle-adoption.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert commit via git."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/lifecycle-adoption.test.py"
+        ],
+        "evidence": "tests/lifecycle-adoption.test.py passes with 6/6 tests OK."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/worktrees-adoption.test.py"
+        ],
+        "evidence": "tests/worktrees-adoption.test.py passes with 11/11 tests OK."
+      }
+    ]
+  }
+}
