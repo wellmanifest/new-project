@@ -386,6 +386,36 @@ class WorkStartTest(unittest.TestCase):
         with self.assertRaises(start.ObservationError):
             self.report()
 
+    def test_unreadable_quarantined_intent_does_not_block_disjoint_work(self):
+        quarantine = self.root / ".worktrees" / ".quarantine" / "PLF-1-fixture"
+        quarantine.parent.mkdir(parents=True, exist_ok=True)
+        self.git(self.root, "worktree", "add", "-b", "ticket/009-quarantined", str(quarantine))
+        directory = quarantine / "project" / "ticket-009"
+        directory.mkdir(parents=True)
+        (directory / "README.md").write_text("- **Status**: IN_PROGRESS\n")
+        (directory / "intent.json").write_text("{\n<<<<<<< HEAD\n")
+        result = self.report(stream="ui")
+        self.assertEqual(result["route"], "NEW_TICKET_CANDIDATE")
+        entry = next(e for e in result["worktrees"] if e["ticket"] == "ticket-009")
+        self.assertEqual(entry["status"], "QUARANTINED_UNREADABLE")
+        self.assertFalse(entry["active"])
+
+    def test_unreadable_intent_outside_quarantine_still_fails_closed(self):
+        path = self.sibling()
+        (path / "project" / "ticket-001" / "intent.json").write_text("{\n<<<<<<< HEAD\n")
+        with self.assertRaises(start.ObservationError):
+            self.report(stream="ui")
+        foreign = Path(self.temp.name) / ".quarantine" / "ticket-002--foreign"
+        foreign.parent.mkdir(parents=True, exist_ok=True)
+        self.git(self.root, "worktree", "add", "-b", "ticket/002-foreign", str(foreign))
+        directory = foreign / "project" / "ticket-002"
+        directory.mkdir(parents=True)
+        (directory / "README.md").write_text("- **Status**: IN_PROGRESS\n")
+        (directory / "intent.json").write_text("{\n<<<<<<< HEAD\n")
+        self.assertFalse(start.quarantined(foreign, self.root))
+        with self.assertRaises(start.ObservationError):
+            self.report(stream="ui")
+
     def test_symlinked_inactive_legacy_readme_remains_conservative(self):
         directory = self.legacy_inactive_carrier()
         readme = directory / "README.md"
