@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.105
+
+- Work-start observation records a checkout under `.worktrees/.quarantine/` whose ticket intent cannot be read (for example an interrupted merge) as `QUARANTINED_UNREADABLE` instead of aborting every allocation; its Git delta is still compared as pending work. Unreadable intents outside quarantine still fail closed.
+
 ## 0.20.104
 
 - Adoption evidence must prove its level: repository evidence must exist and match its SHA-256, S3 must be a CI definition or external proof, S4/S5 external proof (hosted ruleset, runtime receipt), and S3-S5 must not reuse lower-level proof. Records that reuse `.governance/manifest.json` for every level are now reported as `STD-ADOPTION-EVIDENCE`.

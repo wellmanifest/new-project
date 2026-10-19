@@ -127,6 +127,13 @@ def read_json(path):
         raise ObservationError("Missing or invalid governance input") from error
 
 
+def quarantined(path, primary):
+    """Checkouts parked under the repository's .worktrees/.quarantine/ directory are preserved evidence, not claims."""
+    resolved = Path(path).resolve()
+    quarantine_root = (Path(primary) / ".worktrees" / ".quarantine").resolve()
+    return resolved != quarantine_root and resolved.is_relative_to(quarantine_root)
+
+
 def _historical_inactive_logs(root, ticket_dir, key, status, dirty_paths, target_sha):
     """Recognize unchanged inactive legacy prose, never a writer or allocation.
 
@@ -616,17 +623,28 @@ def inspect(root, workstream, requested_paths=(), ticket=None, storage=None,
                 intent = recovery_intent
                 status_override = "IN_PROGRESS"
             else:
-                intent = read_json(ticket_dir / "intent.json")
+                try:
+                    intent = read_json(ticket_dir / "intent.json")
+                except ObservationError:
+                    # A quarantined checkout may hold an interrupted merge. Record it
+                    # instead of aborting every allocation; its Git delta is still
+                    # compared below as pending work.
+                    if not quarantined(path, primary):
+                        raise
+                    intent = None
                 status_override = None
-            if intent.get("ticket") != ticket_id or intent.get("schema") not in (
-                    "new-project.intent/v2", "new-project.intent/v3"):
-                raise ObservationError("Branch/intent identity mismatch")
-            patterns(intent.get("allowedPaths"))
-            resolution = resolve_activity(path, ticket_dir, statuses, status_override=status_override)
-            active, status = resolution.active, resolution.projectionStatus
-            activity_authority = resolution.authority
-            if status is None:
-                raise ObservationError("Ticket status unknown")
+            if intent is None:
+                active, status, activity_authority = False, "QUARANTINED_UNREADABLE", "quarantine"
+            else:
+                if intent.get("ticket") != ticket_id or intent.get("schema") not in (
+                        "new-project.intent/v2", "new-project.intent/v3"):
+                    raise ObservationError("Branch/intent identity mismatch")
+                patterns(intent.get("allowedPaths"))
+                resolution = resolve_activity(path, ticket_dir, statuses, status_override=status_override)
+                active, status = resolution.active, resolution.projectionStatus
+                activity_authority = resolution.authority
+                if status is None:
+                    raise ObservationError("Ticket status unknown")
         canonical = bool(ticket_id and path.resolve().parent == primary / ".worktrees"
                          and path.name.startswith(ticket_id + "--"))
         entries.append({"path": str(path.resolve()), "branch": branch or None,

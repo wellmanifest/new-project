@@ -1,0 +1,92 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-352",
+  "summary": "work_start_check: unreadable quarantined intents do not block allocation (#496)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-352/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/work_start_check.py",
+    "tests/work_start_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e06ab67ad4dae1ff9ecddf81572bd8b6d4d9f685",
+    "targetBranch": "main",
+    "outcome": "work_start_check records unreadable intents in quarantined checkouts as QUARANTINED_UNREADABLE instead of blocking every allocation; outside quarantine it still fails closed",
+    "nonGoals": [
+      "No change to quarantine creation or cleanup",
+      "No change to the wellman bundled copy (separate repository)"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Classify unreadable quarantined intents per checkout; keep Git pending-delta comparison as the bound.",
+      "components": [
+        {
+          "name": "work-start",
+          "paths": [
+            "scripts/work_start_check.py",
+            "tests/work_start_test.py",
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest -q tests/work_start_test.py -k 'unreadable or invalid_existing_intent'"
+        ],
+        "evidence": "quarantined unreadable intent no longer blocks; outside quarantine still fails closed"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/work_start_test.py",
+          "./project/governance-check.sh --base origin/main"
+        ],
+        "evidence": "existing work-start suite and the gate pass"
+      }
+    ]
+  }
+}
