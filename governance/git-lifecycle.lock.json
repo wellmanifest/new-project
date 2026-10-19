@@ -4,14 +4,14 @@
     "id": "wellmanifest/git-lifecycle",
     "version": "0.2.0-dev",
     "sourceRepository": "wellmanifest/git-lifecycle",
-    "sourceRevision": "24cfe7cbbbc0d95f6b66f89124b471bee7287d0d"
+    "sourceRevision": "2f0018b879439015a456caf4c6280c8020ac1f70"
   },
   "artifacts": [
     {
       "sourcePath": "standard/git-lifecycle.lifecycle",
       "packageSourcePath": "subprojects/git-lifecycle/git-lifecycle.lifecycle",
       "managedTargetPath": null,
-      "sourceSha256": "97bf41d9b6b1e8772e14c4caafb5b134588adad4e834d3311c948a5af91d2b20"
+      "sourceSha256": "411f5d0cfb7c38404b8af7b94df4d3c889630e11f3584001b51394b8e6cac29b"
     },
     {
       "sourcePath": "standard/git-lifecycle.schema.json",
@@ -29,7 +29,7 @@
       "sourcePath": "standard/lifecycle.py",
       "packageSourcePath": "subprojects/git-lifecycle/lifecycle.py",
       "managedTargetPath": null,
-      "sourceSha256": "9c3f3076b5b45408d3eefc34cd567b58821aa565d3fe3bf6339641111079ede0"
+      "sourceSha256": "7f7f1c45b7611e186cc640ada69cf2849d16841564c4028b9fc06dd0a05c2b3a"
     }
   ],
   "installation": {
