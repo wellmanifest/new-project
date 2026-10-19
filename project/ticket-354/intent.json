@@ -25,7 +25,10 @@
     "scripts/agent_host_check.py",
     "template/files/pre-push.template.sh",
     "tests/pre_push_hook_test.py",
-    "scripts/install-agent-hosts.sh"
+    "tests/agent-hosts.test.sh",
+    "scripts/install-agent-hosts.sh",
+    "governance/diagnostics.json",
+    "error/GOV-PUSH.md"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -45,7 +48,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 14,
+      "maxImplementationFiles": 17,
       "maxAffectedComponents": 1,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
@@ -65,12 +68,15 @@
             "scripts/agent_host_check.py",
             "packages/wellman/src/wellman/_bundled/agent_host_check.py",
             "tests/pre_push_hook_test.py",
+            "tests/agent-hosts.test.sh",
             "VERSION",
             "CHANGELOG.md",
             "governance/manifest.default.json",
             "governance/manifest.hub.json",
             "packages/wellman/pyproject.toml",
-            "scripts/install-agent-hosts.sh"
+            "scripts/install-agent-hosts.sh",
+            "governance/diagnostics.json",
+            "error/GOV-PUSH.md"
           ]
         }
       ],
