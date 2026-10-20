@@ -77,6 +77,13 @@ if [[ "$actual" != "$expected" ]]; then
   echo "expected '$expected', got '$actual'" >&2
   exit 1
 fi
+if [[ -x "$TMP/venv/bin/wellman-governance" ]]; then
+  console="$TMP/venv/bin/wellman-governance"
+else
+  console="$TMP/venv/Scripts/wellman-governance.exe"
+fi
+[[ "$(cd "$TMP" && "$console" --version)" == "$expected" ]] \
+  || { echo "installed governance console failed" >&2; exit 1; }
 
 echo "== governance check --json runs the bundle outside the source tree =="
 status=0

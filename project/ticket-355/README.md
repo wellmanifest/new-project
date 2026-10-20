@@ -1,7 +1,7 @@
 # ticket-355: Distinguish governance runtime from Wellman execution
 
 - **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATE
+- **Workflow state**: VALIDATION
 - **Agent**: codex
 
 SESSION_EXECUTION_AUTHORIZATION: the user requests continued repairs, tests and protected merges. This maintenance slice implements the package/CI/instruction boundary of new-project#501. Read-only admission reports free scope and WIP capacity; retained legacy/recovery branches were inventoried and are preserved. The historical standard-as-runtime branch introduced code already present in current main and is not being overwritten or adopted as a writer.
@@ -24,3 +24,7 @@ check remains enabled. Logs are retained in ignored ticket receipts.
 Independent publication is pending: these local observations grant neither
 merge approval nor fleet/runtime enrollment. Protected checks must qualify the
 exact committed head before the declared Validator publication process runs.
+The first hosted exact-range gate rejected the misspelled carrier state
+`VALIDATE`; it is corrected to the declared `VALIDATION` enum. The cancelled
+publication attempt and fresh session-only claim retain their evidence and
+monotonic fencing. The installed console command is now exercised directly.
