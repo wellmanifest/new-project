@@ -178,6 +178,7 @@ jobs:
               tests/canonical-schema-hosts.test.py \
               tests/input_validation_test.py \
               tests/lifecycle-adoption.test.py \
+              tests/policy_dsl_adoption_test.py \
               tests/pytest_base_test.py \
               tests/scaffold_bootstrap_test.py \
               tests/secret_detection_test.py \

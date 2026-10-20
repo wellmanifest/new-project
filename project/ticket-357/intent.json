@@ -21,7 +21,8 @@
     "packages/wellman/pyproject.toml",
     "tests/policy_dsl_adoption_test.py",
     "scripts/governance_check.py",
-    "packages/wellman/src/wellman/_bundled/governance_check.py"
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    ".github/workflows/ci.yml"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -68,7 +69,8 @@
           "paths": [
             "scripts/governance_check.py",
             "packages/wellman/src/wellman/_bundled/governance_check.py",
-            "tests/policy_dsl_adoption_test.py"
+            "tests/policy_dsl_adoption_test.py",
+            ".github/workflows/ci.yml"
           ]
         }
       ],
