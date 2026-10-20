@@ -1,9 +1,9 @@
 # Ticket 354: Zarządzany hook pre-push blokuje bezpośredni push do gałęzi docelowej (GOV-PUSH-001)
 
 - **ID**: ticket-354
-- **Owner**: agent:claude
+- **Owner**: agent:codex (user-authorized continuation of agent:claude)
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-10-19
 
 ## Cel i Zakres
@@ -39,3 +39,17 @@ Ten katalog przechowuje minimalny kontrakt i opcjonalne decyzje. Surowe logi
 pozostają poza śledzonym repozytorium; Git zapisuje tylko skrót wyniku i
 referencję do receiptu. Kod wykonywalny, skrypty badawcze i testy należą do
 zwykłych katalogów źródłowych, nie do `project/ticket-354/`.
+
+## Continuation after explicit handoff
+
+The user explicitly transferred ticket-354 to this session on 2026-10-20.
+Local exact-lease CAS advanced revision/fence 1 to 2; prior bytes and the
+handoff request remain in ignored project receipts. No remote approval is
+derived from that local transition. Required CI exposed that the new pre-push
+regression suite was not invoked. Add it to the existing owned agent-hosts
+suite so both required CI and local verification execute the real tests.
+
+Continuation verification: the real pre-push suite passes all 5 tests; the
+existing agent-hosts suite passes and now actually executes those 5 tests
+(alongside 7 commit-message hook tests). The exact required CI suite-inventory
+step and governance pass with target-local environment and scratch.

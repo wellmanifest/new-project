@@ -981,3 +981,5 @@ echo "agent-hosts.test.sh OK"
 
 # Exercise the Git commit-message boundary in the existing CI host-contract suite.
 python3 "$root/tests/commit_message_hook_test.py"
+# Keep the pre-push regression suite in the required host-contract test path.
+python3 "$root/tests/pre_push_hook_test.py"
