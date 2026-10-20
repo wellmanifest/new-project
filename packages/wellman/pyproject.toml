@@ -3,8 +3,8 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "wellman"
-version = "0.20.106"
+name = "wellmanifest-governance"
+version = "0.20.107"
 description = "Wellmanifest governance gate runtime — deterministic policy-as-code checker"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -22,13 +22,11 @@ classifiers = [
 ]
 
 [project.scripts]
-wellman = "wellman.check:main"
+wellman-governance = "wellmanifest_governance_runtime.check:main"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
-
-[tool.setuptools.packages.find]
-where = ["src"]
+packages = ["wellmanifest_governance_runtime", "wellmanifest_governance_runtime._bundled"]
+package-dir = {"wellmanifest_governance_runtime" = "src/wellman"}
 
 [tool.setuptools.package-data]
-wellman = ["_bundled/*.py", "_bundled/*.json"]
+wellmanifest_governance_runtime = ["_bundled/*.py", "_bundled/*.json"]

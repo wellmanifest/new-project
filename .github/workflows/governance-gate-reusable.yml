@@ -132,6 +132,34 @@ jobs:
             fi
             range_arguments=(--base "$BASE_SHA" --head "$HEAD_SHA")
           fi
-          python -I -m wellman check \
+          # Resolve only the runtime installed from the independently selected pin.
+          runtime_module="$(python -I - <<'PY_GATE_RUNTIME'
+          import sys
+          from importlib.metadata import PackageNotFoundError, distribution
+          from pathlib import Path
+
+          if sys.prefix == sys.base_prefix:
+              raise SystemExit("Governance runtime requires its isolated environment")
+          for name, command, module in (
+              ("wellmanifest-governance", "wellman-governance", "wellmanifest_governance_runtime"),
+              ("wellman", "wellman", "wellman"),
+          ):
+              try:
+                  installed = distribution(name)
+              except PackageNotFoundError:
+                  continue
+              expected = module + ".check:main"
+              entries = [entry.value for entry in installed.entry_points
+                         if entry.group == "console_scripts" and entry.name == command]
+              if (entries != [expected]
+                      or not Path(installed.locate_file("")).resolve().is_relative_to(Path(sys.prefix).resolve())):
+                  raise SystemExit("Unsupported governance runtime identity: " + name)
+              print(module)
+              break
+          else:
+              raise SystemExit("Governance runtime is not installed")
+          PY_GATE_RUNTIME
+          )"
+          python -I -m "$runtime_module" check \
             --root "$GOVERNANCE_ROOT" \
             --actor ci "${range_arguments[@]}"

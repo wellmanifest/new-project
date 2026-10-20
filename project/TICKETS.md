@@ -352,6 +352,7 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-351** | [`README.md`](./ticket-351/README.md) | - | - | - | - | - |
 | **ticket-352** | [`README.md`](./ticket-352/README.md) | - | - | - | - | - |
 | **ticket-353** | [`README.md`](./ticket-353/README.md) | - | - | - | - | - |
+| **ticket-354** | [`README.md`](./ticket-354/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 

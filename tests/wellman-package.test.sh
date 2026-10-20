@@ -45,17 +45,42 @@ else
 fi
 "$PY" -m pip install --quiet --no-index --no-deps --disable-pip-version-check "$TMP"/wheel/*.whl
 
-echo "== wellman --version reports the standard version =="
-expected="wellman $(tr -d '[:space:]' < VERSION)"
-actual="$(cd "$TMP" && "$PY" -m wellman --version)"
+echo "== package owns only its governance namespace and command =="
+"$PY" -I - <<'PYIDENTITY'
+from importlib.metadata import distribution
+from pathlib import Path
+import sysconfig
+
+installed = distribution("wellmanifest-governance")
+entries = {(entry.name, entry.value) for entry in installed.entry_points
+           if entry.group == "console_scripts"}
+assert entries == {("wellman-governance", "wellmanifest_governance_runtime.check:main")}
+assert not any(str(path).startswith("wellman/") for path in installed.files)
+assert not any(str(path).startswith("wellmanifest_governance/") for path in installed.files)
+site = Path(sysconfig.get_path("purelib"))
+# An unrelated full CLI namespace must coexist without being shadowed by this
+# distribution. This marker is a fixture, not a production CLI qualification.
+foreign = site / "wellman"
+foreign.mkdir()
+(foreign / "__init__.py").write_text("MARKER = 'unrelated-full-cli'\n")
+(site / "wellmanifest_governance.py").write_text("MARKER = 'existing-pytest-plugin'\n")
+import wellman
+assert wellman.MARKER == "unrelated-full-cli"
+import wellmanifest_governance
+assert wellmanifest_governance.MARKER == "existing-pytest-plugin"
+PYIDENTITY
+
+echo "== governance CLI reports its own standard version =="
+expected="wellman-governance $(tr -d '[:space:]' < VERSION)"
+actual="$(cd "$TMP" && "$PY" -I -m wellmanifest_governance_runtime --version)"
 if [[ "$actual" != "$expected" ]]; then
   echo "expected '$expected', got '$actual'" >&2
   exit 1
 fi
 
-echo "== wellman check --json runs the bundled checker outside the source tree =="
+echo "== governance check --json runs the bundle outside the source tree =="
 status=0
-(cd "$TMP" && "$PY" -m wellman check --root "$ROOT" \
+(cd "$TMP" && "$PY" -I -m wellmanifest_governance_runtime check --root "$ROOT" \
   --manifest governance/manifest.hub.json --json) >"$TMP/report.json" 2>"$TMP/stderr.txt" || status=$?
 if [[ "$status" -gt 1 ]] || grep -qE 'Traceback|ModuleNotFoundError' "$TMP/stderr.txt"; then
   cat "$TMP/stderr.txt" >&2
@@ -67,6 +92,9 @@ import json
 import sys
 
 report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["validation_scope"] == "static-governance"
+assert report["runtime_enforcement"] == "not_checked"
+assert report["grants_execution_authority"] is False
 missing = {"GOV-SYNC-001", "GOV-DECISION-002"} & {f["code"] for f in report["findings"]}
 if missing:
     raise SystemExit(f"bundled checker is missing sibling modules: {sorted(missing)}")
@@ -93,9 +121,9 @@ runtime_refs = {
 }
 for workflow, expected_ref in runtime_refs.items():
     text = Path(workflow).read_text(encoding="utf-8")
-    calls = re.findall(r"wellman check\b(?:[^\n]*\\\n)*[^\n]*", text)
+    calls = re.findall(r'\-m "\$runtime_module" check\b(?:[^\n]*\\\n)*[^\n]*', text)
     if not calls or any("--actor ci" not in call for call in calls):
-        raise SystemExit(f"{workflow}: every 'wellman check' must pass --actor ci")
+        raise SystemExit(f"{workflow}: every installed governance invocation must pass --actor ci")
     if expected_ref not in text:
         raise SystemExit(f"{workflow}: install Wellman from a trusted immutable source revision")
 PY3

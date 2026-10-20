@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.107
+
+- Distribute the static checker as `wellmanifest-governance` / `wellman-governance` without owning the full Wellman CLI namespace. Isolated CI recognizes the new runtime and independently pinned legacy checker entry points, refusing the unrelated catalogue CLI. Static reports explicitly state that runtime enforcement was not checked; managed agent instructions require enrolled project-bound execution and declared tooling roles. Existing protected pins remain unchanged.
+
 ## 0.20.106
 
 - New managed hook `.githooks/pre-push` refuses pushes that update a declared target branch (`delivery.targetBranches`, default `main`), including `HEAD:main` refspecs and deletions, with `GOV-PUSH-001`. Delivery reaches the target branch through a reviewed pull request merged by the validator; a direct push skips review, required checks and CI. Repositories with the `main-only-planfile`, `main-only-files` or `local-audit` delivery profile are exempt, as for the commit hooks. It is declared in `agent-hosts.json` `additionalHooks` and the package manifest, so `agent_host_check` requires it after upgrade.

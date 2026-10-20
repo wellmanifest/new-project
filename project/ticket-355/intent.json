@@ -1,0 +1,125 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-355",
+  "summary": "Separate governance runtime namespace from Wellman execution CLI",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-355/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/governance-gate-reusable.yml",
+    ".github/workflows/wellman-publish.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/agent-hosts.json",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/package-manifest.json",
+    "packages/wellman/**",
+    "scripts/governance_check.py",
+    "template/files/AGENTS.template.md",
+    "template/files/new-project-governance.workflow.yml",
+    "tests/agent-hosts.test.sh",
+    "tests/ci-pr-range.test.py",
+    "tests/wellman-package.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "18fecf55889f463d597fba0532e00c70d4ae15d7",
+    "targetBranch": "main",
+    "outcome": "Ship a governance-only distribution and module namespace that can coexist with the full Wellman execution CLI, preserve trusted old CI runtime pins, and distinguish static conformance from runtime mediation.",
+    "nonGoals": [
+      "No replacement of protected runtime pins or fleet rollout",
+      "No direct PyPI publication, approval bypass or global executable replacement before reviewed publication",
+      "No copied execution implementation or filesystem-sandbox claim"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 26,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Publish wellmanifest-governance with module wellmanifest_governance_runtime and command wellman-governance. Keep the existing source directory to preserve bundle-generation ownership. Isolated CI resolves only declared installed entry-point identities: new governance runtime or the pinned legacy wellman.check runtime, never the unrelated catalogue CLI. The canonical full Wellman retains wellman and owns project execution; managed instructions require its explicitly enrolled project-bound launcher.",
+      "components": [
+        {
+          "name": "governance-runtime",
+          "paths": [
+            "packages/wellman/**",
+            "scripts/governance_check.py",
+            "tests/wellman-package.test.sh"
+          ]
+        },
+        {
+          "name": "protected-ci-runtime",
+          "paths": [
+            ".github/workflows/governance-gate-reusable.yml",
+            ".github/workflows/wellman-publish.yml",
+            "template/files/new-project-governance.workflow.yml",
+            "tests/ci-pr-range.test.py"
+          ]
+        },
+        {
+          "name": "managed-execution-contract",
+          "paths": [
+            "template/files/AGENTS.template.md",
+            "tests/agent-hosts.test.sh",
+            "docs/STANDARD_UPGRADE.md",
+            "governance/package-manifest.json",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json",
+            "governance/agent-hosts.json",
+            "VERSION",
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        "Governance distribution/module/console identities become distinct",
+        "Protected CI admits only explicit governance runtime entry points",
+        "Static governance JSON explicitly reports runtime enforcement not checked"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Keep protected immutable legacy pins and published legacy wheels unchanged; restore prior reviewed selector/standard adoption if an independently qualified rollout fails."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/wellman-package.test.sh"
+        ],
+        "evidence": "project/ticket-355/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/agent-hosts.test.sh",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-355/README.md"
+      }
+    ]
+  }
+}

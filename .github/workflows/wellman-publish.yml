@@ -1,11 +1,11 @@
-# Publish wellman package to PyPI via trusted publishing (OIDC)
+# Publish the governance-only package through its matching trusted publisher.
 # Triggered on tag push or manual dispatch
 name: wellman-publish
 
 on:
   push:
     tags:
-      - "wellman-v*"
+      - "wellmanifest-governance-v*"
   workflow_dispatch:
     inputs:
       version:
@@ -14,7 +14,7 @@ on:
 
 jobs:
   publish:
-    name: Build and publish wellman to PyPI
+    name: Build and publish wellmanifest-governance to PyPI
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
@@ -30,7 +30,7 @@ jobs:
       - name: Install build tools
         run: pip install build
 
-      - name: Build wellman package
+      - name: Build governance runtime package
         id: build
         working-directory: packages/wellman
         run: python -m build
