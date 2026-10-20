@@ -64,6 +64,44 @@ adopcji. Zobacz [first allocation](STANDARD_UPGRADE.md#first-allocation-after-sc
 Potwierdzenie umożliwia wyłącznie alokację metadanych; kod wymaga osobnej
 kontrolowanej dzierżawy, a scalenie niezależnego chronionego zatwierdzenia.
 
+### Nowe repozytorium bez governance
+
+Repozytorium z zatwierdzonym `HEAD`, ale bez `.governance/manifest.json`, nie
+może zatwierdzić plików adopcji bez ticketu, a zwykła alokacja odmawia, dopóki
+te pliki są niezatwierdzone (`GOV-WORK-START-001`, `pending-delta`). Pierwszą
+adopcję wykonaj więc jawnie w trybie bootstrapu, który zapisuje ignorowany
+receipt `.subactor/receipts/bootstrap-adoption.json` (`bootstrapKind: fresh`,
+powiązany z `HEAD` i klonem):
+
+```bash
+goal governance adopt \
+  --source-revision "$STANDARD_REVISION" \
+  --target-root . \
+  --bootstrap-native-adoption
+```
+
+Goal bez tej opcji wypisuje po adopcji takiego repozytorium wskazówkę zamiast
+zapisać receipt. W starszym Goal uruchom ten sam przypięty generator
+bezpośrednio: `scripts/create_adoption_lock.py --target-root . --source-revision
+"$STANDARD_REVISION" --bootstrap-native-adoption` z checkoutu standardu
+dokładnie w `$STANDARD_REVISION`. Następnie odczytaj `dirtyDigest` i przydziel
+pierwszy ticket z tym potwierdzeniem:
+
+```bash
+python3 .governance/work_start_check.py --root . --workstream governance \
+  --path '.governance/**' --allocation-check
+./project/new-ticket.sh \
+  --title "Adopt new-project governance" \
+  --agent codex \
+  --workstream governance \
+  --path '.governance/**' \
+  --bootstrap-adoption-digest <dirtyDigest>
+```
+
+Receipt nie daje uprawnień do zapisu, recenzji ani publikacji, a tryb odmawia
+repozytorium z istniejącym lub usuniętym governance. Szczegóły:
+[first adoption without a Wellman scaffold](STANDARD_UPGRADE.md#first-adoption-without-a-wellman-scaffold-0-20-84).
+
 ## Dokończenie bootstrapu lokalnego
 
 Generator nie zgaduje konfiguracji stacka. Przed zmianą implementacji projekt
