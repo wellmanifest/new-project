@@ -312,6 +312,16 @@ Installing a package or running legacy `wellman adopt baseline` does not install
 or update the complete native governance contract. Native adoption/upgrades use
 the pinned `create_adoption_lock.py` path above and retain protected delivery.
 
+## Policy DSL runtime in adopters
+
+Since 0.20.108 the package manifest installs the reviewed Policy DSL checker
+and its lock at `.governance/policy_dsl_check.py` and
+`.governance/policy-dsl.lock.json`, the targets the lock already declared. The
+gate validates `CONTRIBUTING.md` only when it contains a ` ```dsl ` fence; an
+existing contributor guide without one is not policy and is not parsed. A
+`dsl` fence with a missing or modified runtime still fails `GOV-POLICY-DSL-001`.
+Upgrading to 0.20.108 adds both managed files to the adoption lock.
+
 ## Offline reusable CI contracts
 
 A reusable CI caller publishes `<caller display name> / <callee display name>`,

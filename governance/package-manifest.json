@@ -452,6 +452,18 @@
       "executable": true
     },
     {
+      "source": "scripts/policy_dsl_check.py",
+      "target": ".governance/policy_dsl_check.py",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
+      "source": "governance/policy-dsl.lock.json",
+      "target": ".governance/policy-dsl.lock.json",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "scripts/repository_policy.py",
       "target": ".governance/repository_policy.py",
       "strategy": "managed",
