@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.108
+
+- Adoption now installs the pinned Policy DSL runtime (`.governance/policy_dsl_check.py`, `.governance/policy-dsl.lock.json`) declared by its lock, and `GOV-POLICY-DSL-001` validates `CONTRIBUTING.md` only when it contains a `dsl` fence. An adopter's existing contributor guide no longer fails the gate; a `dsl` fence with a missing or modified runtime still fails closed (issue #479).
+
 ## 0.20.107
 
 - Distribute the static checker as `wellmanifest-governance` / `wellman-governance` without owning the full Wellman CLI namespace. Isolated CI recognizes the new runtime and independently pinned legacy checker entry points, refusing the unrelated catalogue CLI. Static reports explicitly state that runtime enforcement was not checked; managed agent instructions require enrolled project-bound execution and declared tooling roles. Existing protected pins remain unchanged.

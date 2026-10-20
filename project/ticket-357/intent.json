@@ -1,0 +1,109 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-357",
+  "summary": "Package the pinned Policy DSL runtime for adopters (issue 479)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-357/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/package-manifest.json",
+    "packages/wellman/pyproject.toml",
+    "tests/policy_dsl_adoption_test.py",
+    "scripts/governance_check.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "92a1669078cd6985768662812719957bc058678f",
+    "targetBranch": "main",
+    "outcome": "Adopters receive the pinned Policy DSL runtime declared by its lock, and the gate validates CONTRIBUTING.md only when it opts into the Policy DSL with a dsl fence.",
+    "nonGoals": [
+      "No change to the Policy DSL language, its pinned source or lock digest",
+      "No fleet upgrade or rewrite of adopter CONTRIBUTING.md files",
+      "No relaxation of GOV-POLICY-DSL-001 for documents that contain a dsl fence"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Package scripts/policy_dsl_check.py and governance/policy-dsl.lock.json as managed files at the lock's managedTargetPath and lockTargetPath, so the existing managed resolution path is used. check_policy_dsl detects a dsl fence with the same line rule as extract_markdown and skips documents without one; fenced documents still require the byte-verified runtime.",
+      "components": [
+        {
+          "name": "adoption-package",
+          "paths": [
+            "governance/package-manifest.json",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json",
+            "packages/wellman/pyproject.toml",
+            "VERSION",
+            "CHANGELOG.md",
+            "docs/STANDARD_UPGRADE.md"
+          ]
+        },
+        {
+          "name": "policy-dsl-gate",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "tests/policy_dsl_adoption_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Adoption installs two additional managed files under .governance/",
+        "GOV-POLICY-DSL-001 applies only to CONTRIBUTING.md containing a dsl fence"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the package entries and the fence guard; adopters keep their previous adoption lock until an explicit upgrade."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/policy_dsl_adoption_test.py",
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/wellman-package.test.sh"
+        ],
+        "evidence": "project/ticket-357/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/policy_dsl_adoption_test.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-357/README.md"
+      }
+    ]
+  }
+}

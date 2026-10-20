@@ -443,8 +443,12 @@ def check_policy_dsl(root: Path, report: Report) -> None:
     if not contributing.is_file():
         return
     try:
+        source = contributing.read_text(encoding="utf-8")
+        # Only a document that opts into the Policy DSL with a dsl fence is validated.
+        if not any(line.strip() == "```dsl" for line in source.splitlines()):
+            return
         policy_dsl = load_policy_dsl_module(root)
-        policy_dsl.parse_markdown(contributing.read_text(encoding="utf-8"))
+        policy_dsl.parse_markdown(source)
     except Exception as error:
         report.add(
             "GOV-POLICY-DSL-001",
