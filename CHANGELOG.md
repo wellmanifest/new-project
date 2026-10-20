@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.106
+
+- New managed hook `.githooks/pre-push` refuses pushes that update a declared target branch (`delivery.targetBranches`, default `main`), including `HEAD:main` refspecs and deletions, with `GOV-PUSH-001`. Delivery reaches the target branch through a reviewed pull request merged by the validator; a direct push skips review, required checks and CI. Repositories with the `main-only-planfile`, `main-only-files` or `local-audit` delivery profile are exempt, as for the commit hooks. It is declared in `agent-hosts.json` `additionalHooks` and the package manifest, so `agent_host_check` requires it after upgrade.
+
 ## 0.20.105
 
 - Work-start observation records a checkout under `.worktrees/.quarantine/` whose ticket intent cannot be read (for example an interrupted merge) as `QUARANTINED_UNREADABLE` instead of aborting every allocation; its Git delta is still compared as pending work. Unreadable intents outside quarantine still fail closed.

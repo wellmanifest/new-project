@@ -1,0 +1,113 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-354",
+  "summary": "Managed pre-push hook refuses direct pushes to the target branch (GOV-PUSH-001)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-354/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".githooks/pre-push",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/agent-hosts.json",
+    "governance/agent-hosts.schema.json",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/package-manifest.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/agent_host_check.py",
+    "scripts/agent_host_check.py",
+    "template/files/pre-push.template.sh",
+    "tests/pre_push_hook_test.py",
+    "tests/agent-hosts.test.sh",
+    "scripts/install-agent-hosts.sh",
+    "governance/diagnostics.json",
+    "error/GOV-PUSH.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "24df13188988a40498b273a51f6aa37b00148aae",
+    "targetBranch": "main",
+    "outcome": "Managed pre-push hook refuses direct pushes to declared target branches (GOV-PUSH-001); main-only profiles exempt.",
+    "nonGoals": [
+      "No change to validator merge flow or to existing commit hooks",
+      "No rollout to adopting repositories in this ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 17,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add a managed fail-closed pre-push hook declared in the agent host contract and package manifest.",
+      "components": [
+        {
+          "name": "agent-hooks",
+          "paths": [
+            "template/files/pre-push.template.sh",
+            ".githooks/pre-push",
+            "governance/package-manifest.json",
+            "governance/agent-hosts.json",
+            "governance/agent-hosts.schema.json",
+            "scripts/agent_host_check.py",
+            "packages/wellman/src/wellman/_bundled/agent_host_check.py",
+            "tests/pre_push_hook_test.py",
+            "tests/agent-hosts.test.sh",
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml",
+            "scripts/install-agent-hosts.sh",
+            "governance/diagnostics.json",
+            "error/GOV-PUSH.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        ".githooks/pre-push (GOV-PUSH-001)"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; adopting repositories keep the previous managed set."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest -q tests/pre_push_hook_test.py"
+        ],
+        "evidence": "direct and refspec pushes to the target branch refused; ticket branch and main-only profiles allowed"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -m pytest -q tests"
+        ],
+        "evidence": "agent host contract accepts the new hook; bundled copy identical"
+      }
+    ]
+  }
+}

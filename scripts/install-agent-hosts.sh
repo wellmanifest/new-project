@@ -68,7 +68,7 @@ contract_path() {
 import json, sys
 contract = json.load(open(sys.argv[1], encoding="utf-8"))
 hooks = contract.get("hook", {}).get("additionalHooks", [])
-allowed = {".githooks/commit-msg", ".githooks/prepare-commit-msg"}
+allowed = {".githooks/commit-msg", ".githooks/prepare-commit-msg", ".githooks/pre-push"}
 if (not isinstance(hooks, list)
         or any(not isinstance(hook, str) or hook not in allowed for hook in hooks)
         or len(hooks) != len(set(hooks))):

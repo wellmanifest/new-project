@@ -617,6 +617,7 @@ cp "$root/template/files/copilot-instructions.template.md" "$fixture/.github/cop
 printf '%s\n' '#!/usr/bin/env bash' > "$fixture/.githooks/pre-commit"
 chmod +x "$fixture/.githooks/pre-commit"
 cp "$root/template/files/commit-msg.template.sh" "$fixture/.githooks/commit-msg"
+cp "$root/template/files/pre-push.template.sh" "$fixture/.githooks/pre-push"
 cat > "$fixture/.governance/manifest.lock.json" <<'LOCK'
 {
   "schema": "new-project.lock/v1",
@@ -735,6 +736,7 @@ chmod -x "$fixture/.githooks/pre-commit"
 assert_has "$(codes "$fixture")" "GOV-AGENT-HOST-005" "non-executable hook"
 chmod +x "$fixture/.githooks/pre-commit"
 cp "$root/template/files/commit-msg.template.sh" "$fixture/.githooks/commit-msg"
+cp "$root/template/files/pre-push.template.sh" "$fixture/.githooks/pre-push"
 
 # A stack marker with no governance declaration and no lifecycle binding.
 cat > "$fixture/pyproject.toml" <<'TOML'
@@ -979,3 +981,5 @@ echo "agent-hosts.test.sh OK"
 
 # Exercise the Git commit-message boundary in the existing CI host-contract suite.
 python3 "$root/tests/commit_message_hook_test.py"
+# Keep the pre-push regression suite in the required host-contract test path.
+python3 "$root/tests/pre_push_hook_test.py"

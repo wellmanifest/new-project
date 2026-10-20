@@ -301,6 +301,11 @@
       "remediation": "Re-acquire the pull request through the GitHub API and retry the workflow; do not skip open-PR ticket, scope or approval enforcement.",
       "documentation": null
     },
+    "GOV-PUSH-001": {
+      "message": "A push would update a declared target branch directly.",
+      "remediation": "Push the ticket branch and open a pull request; the validator merges it into the target branch.",
+      "documentation": "error/GOV-PUSH.md"
+    },
     "GOV-REMEDIATION-001": {
       "message": "A diagnostic remediation intent is malformed, unresolved or semantically unsafe.",
       "remediation": "Correct the target-owned remediation-intent DSL and pass deterministic schema and semantic validation before LLM planning.",
