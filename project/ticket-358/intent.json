@@ -1,0 +1,72 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-358",
+  "summary": "Document first adoption route for a fresh repository (issue 499)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-358/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "docs/GOAL_ADOPTION.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "59f942cac3026c6d369e5c58b54f13096718321b",
+    "targetBranch": "main",
+    "outcome": "docs/GOAL_ADOPTION.md names the supported first-adoption and first-ticket route for a committed repository without governance.",
+    "nonGoals": [
+      "No change to the generator, allocator or work-start admission",
+      "No release or version bump"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Document the existing --bootstrap-native-adoption mode (goal forwarding in semcod/goal#193, direct generator fallback) followed by --bootstrap-adoption-digest allocation, linking STANDARD_UPGRADE.md.",
+      "components": [
+        {
+          "name": "adoption-docs",
+          "paths": [
+            "docs/GOAL_ADOPTION.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the documentation commit."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-358/README.md"
+      }
+    ]
+  }
+}
