@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import venv
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = {
@@ -140,12 +141,48 @@ jobs:
 
     def test_candidate_module_cannot_shadow_installed_gate(self):
         self.write("wellman.py", "raise RuntimeError('candidate wellman executed')\n")
+        self.write("wellmanifest_governance_runtime.py", "raise RuntimeError('candidate governance executed')\n")
         for name in WORKFLOWS:
             with self.subTest(workflow=name):
                 self.assert_pass(self.run_gate(name, self.base, self.head))
 
+    def test_runtime_identity_preserves_legacy_and_rejects_unrelated_cli(self):
+        for case in ("legacy", "catalogue", "missing"):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as directory:
+                runtime = Path(directory) / "runtime"
+                venv.EnvBuilder(with_pip=False).create(runtime)
+                python = runtime / "bin/python"
+                site = Path(subprocess.check_output(
+                    [str(python), "-I", "-c",
+                     "import sysconfig; print(sysconfig.get_path('purelib'))"], text=True).strip())
+                package = site / "wellman"
+                package.mkdir()
+                (package / "__init__.py").write_text("")
+                (package / "__main__.py").write_text("print('legacy checker selected')\n")
+                if case != "missing":
+                    metadata = site / "wellman-0.20.106.dist-info"
+                    metadata.mkdir()
+                    (metadata / "METADATA").write_text("Name: wellman\nVersion: 0.20.106\n")
+                    entry = "wellman.check:main" if case == "legacy" else "wellman.cli:main"
+                    (metadata / "entry_points.txt").write_text(
+                        "[console_scripts]\nwellman = " + entry + "\n")
+                environment = dict(os.environ,
+                    PATH=str(runtime / "bin") + os.pathsep + os.environ["PATH"],
+                    GOVERNANCE_ROOT=str(self.root), BASE_SHA=self.base, HEAD_SHA=self.head)
+                for name in WORKFLOWS:
+                    result = subprocess.run(
+                        ["bash", "-c", gate_body(*WORKFLOWS[name])],
+                        cwd=self.root, env=environment, capture_output=True, text=True)
+                    if case == "legacy":
+                        self.assert_pass(result)
+                        self.assertEqual("legacy checker selected", result.stdout.splitlines()[0])
+                    else:
+                        self.assertNotEqual(0, result.returncode)
+                        self.assertNotIn("legacy checker selected", result.stdout)
+                        self.assertIn("governance runtime", result.stderr.lower())
+
     def test_detached_product_after_historical_adoption(self):
-        old = self.run_gate("adopter", body="wellman check --root . --actor ci --json")
+        old = self.run_gate("adopter", body="python -I -m wellmanifest_governance_runtime check --root . --actor ci --json")
         self.assertNotEqual(0, old.returncode)
         self.assertIn("Atomic standard adoption preconditions are invalid", old.stdout)
         for name in WORKFLOWS:

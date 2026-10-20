@@ -21,12 +21,12 @@ def _find_checker() -> Path:
     if dev_path.is_file():
         return dev_path
     raise FileNotFoundError(
-        "governance_check.py not found. Reinstall wellman."
+        "governance_check.py not found. Reinstall wellmanifest-governance."
     )
 
 
 def _checker_args(args: list[str]) -> list[str]:
-    """Translate the documented ``wellman check [--json]`` form to checker flags."""
+    """Translate ``wellman-governance check [--json]`` to checker flags."""
     if args[:1] == ["check"]:
         args = args[1:]
     translated: list[str] = []
@@ -57,9 +57,9 @@ def run_check(root: str | Path | None = None, args: list[str] | None = None) -> 
 def main() -> None:
     """CLI entry point."""
     if sys.argv[1:] == ["--version"]:
-        from wellman import __version__
+        from . import __version__
 
-        print(f"wellman {__version__}")
+        print(f"wellman-governance {__version__}")
         return
     checker = _find_checker()
     sys.argv = [str(checker), *_checker_args(sys.argv[1:])]

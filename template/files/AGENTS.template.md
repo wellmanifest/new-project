@@ -273,6 +273,30 @@ Markdown approval is an audit note, not trusted merge approval. Required
 merge approval comes from the repository's protected review, attestation and
 ruleset boundary.
 
+## Project-bound development execution
+
+Before running Python or pytest, select the independently approved full Wellman
+runtime and verify its source pin and `run --help` capability. Use
+`<approved-tool-venv>/bin/wellman run --root <ticket-checkout> -- python -m pytest ...`
+or the executor's enrolled SDK adapter. Reuse the canonical `wellman.execution`
+implementation; do not copy admission logic into project scripts. The static
+checker is the separate `wellman-governance` command and cannot mediate a child
+process. Never select a runtime merely because a command named `wellman` is on PATH.
+
+The child cwd, candidate source, interpreter association and development
+temp/cache must bind to that Git checkout. Prepare its local `.venv` first.
+Reuse of the same repository's registered primary `.venv` must be explicit;
+another project's mutable environment is not a fallback. Development scratch
+belongs in the checkout's ignored private `.subactor/cache/`. Immutable tools,
+protected CI scratch and external receipt stores require distinct declared roles,
+pins and ownership; their location alone neither grants nor denies authority.
+
+Missing enrollment or a missing/mismatched execution receipt is a prerequisite
+to repair, never evidence of successful execution. Preserve the real command,
+stdout/stderr and exit status. A static governance PASS, a local execution
+observation or these instructions do not establish universal shell/IDE mediation,
+a filesystem sandbox, a writer lease or independent publication approval.
+
 ## Bounded session controls
 
 Every implementation session is bounded by the ticket's `maxActiveMinutes` and

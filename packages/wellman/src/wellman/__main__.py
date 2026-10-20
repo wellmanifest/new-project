@@ -1,4 +1,4 @@
-"""Allow ``python -m wellman``."""
-from wellman.check import main
+"""Allow ``python -m wellmanifest_governance_runtime``."""
+from .check import main
 
 main()

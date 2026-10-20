@@ -179,6 +179,9 @@ class Report:
         data = {
             "schema": "new-project.governance-report/v1",
             "runtimeVersion": RUNTIME_VERSION,
+            "validation_scope": "static-governance",
+            "runtime_enforcement": "not_checked",
+            "grants_execution_authority": False,
             "root": ".",
             "status": "passed" if self.errors == 0 else "failed",
             "summary": {

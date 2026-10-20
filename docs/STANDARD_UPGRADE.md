@@ -286,9 +286,28 @@ runtime separately; no universal 24-hour rollout is guaranteed by the standard.
 
 ## Runtime package and CLI identity
 
-The governance runtime in `packages/wellman` and the separately installed
-Wellman catalogue CLI have distinct responsibilities. Resolve the actual
-executable, source revision and adoption lock before selecting a command.
+Since 0.20.107, `packages/wellman` builds distribution `wellmanifest-governance`,
+module `wellmanifest_governance_runtime` and command `wellman-governance`. Its installed
+wheel owns neither the `wellman` namespace nor that command. The full runtime in
+`wellmanifest/wellman` retains `wellman` and owns `wellman run`. Both can coexist;
+resolve their actual immutable sources and installed entry points independently.
+
+Protected CI continues to install only its approved source revision in an
+isolated environment. The delivered gate recognizes the new governance entry
+point or the legacy `wellman.check:main` entry point from an older trusted pin.
+It refuses the unrelated catalogue entry point and missing runtimes; it never
+falls back to candidate Python modules or another executable on PATH. Existing
+pins and published legacy wheels are unchanged. Publishing the newly named
+package needs its own matching trusted publisher; this source change performs
+no PyPI publication or fleet upgrade.
+
+For development execution, use the approved full runtime's `wellman run` or an
+enrolled executor SDK. Verify cwd, candidate source, associated interpreter,
+checkout-owned scratch and the real result separately. Static checker JSON
+reports `runtime_enforcement=not_checked`; even PASS grants no execution or
+publication authority. Immutable tooling and protected CI remain explicit roles,
+not arbitrary path-prefix exceptions. Missing executor enrollment must be repaired
+before claiming mediated execution.
 Installing a package or running legacy `wellman adopt baseline` does not install
 or update the complete native governance contract. Native adoption/upgrades use
 the pinned `create_adoption_lock.py` path above and retain protected delivery.
