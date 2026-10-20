@@ -27,7 +27,8 @@
     "template/files/new-project-governance.workflow.yml",
     "tests/agent-hosts.test.sh",
     "tests/ci-pr-range.test.py",
-    "tests/wellman-package.test.sh"
+    "tests/wellman-package.test.sh",
+    "tests/required-checks.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -71,7 +72,8 @@
             ".github/workflows/governance-gate-reusable.yml",
             ".github/workflows/wellman-publish.yml",
             "template/files/new-project-governance.workflow.yml",
-            "tests/ci-pr-range.test.py"
+            "tests/ci-pr-range.test.py",
+            "tests/required-checks.test.sh"
           ]
         },
         {
