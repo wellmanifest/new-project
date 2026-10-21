@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.111
+
+- New warning `GOV-HOST-MERGE-001` (runbook `error/GOV-HOST-MERGE.md`): the gate flags `AGENTS.md`, `CLAUDE.md` or `GEMINI.md` whose `wellmanifest:autonomous-merge` block still carries the superseded merge-on-green authority (`wellmanifest/merge@ticket-008`). It is a warning, so it does not fail adopters; it makes the remaining host-file rollout of issue #507 visible per repository. Reconcile with `scripts/host_publication_policy.py` in an owned ticket.
+
 ## 0.20.110
 
 - `scripts/host_publication_policy.py` reconciles host instruction files that carry the stale `wellmanifest:autonomous-merge` block without a `wellmanifest:nolimits` block, which is how the fleet's host files look (issue #507). Previously every such file was refused with `HOST_NOLIMITS_MARKERS_AMBIGUOUS`, so the stale merge-on-green authority could not be replaced. A partial or duplicated `nolimits` marker still fails closed, and a stray `LIM-MERGE-003` remedy outside a `nolimits` block is refused with `HOST_MERGE_REMEDY_OUTSIDE_NOLIMITS`.

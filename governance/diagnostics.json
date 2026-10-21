@@ -231,6 +231,11 @@
       "remediation": "Route the shared path through the manifest-declared integration workstream without transferring path ownership.",
       "documentation": null
     },
+    "GOV-HOST-MERGE-001": {
+      "message": "Host instructions carry the superseded autonomous-merge block that allows agents to merge on green or bypass review.",
+      "remediation": "Preview and apply scripts/host_publication_policy.py from the standard in an owned ticket; only the independent Validator may approve and merge.",
+      "documentation": "error/GOV-HOST-MERGE.md"
+    },
     "GOV-INTENT-001": {
       "message": "Implementation changed before the ticket entered an implementation state.",
       "remediation": "Record authorization and move the active ticket to EDIT, VALIDATION or PUBLICATION before changing implementation.",

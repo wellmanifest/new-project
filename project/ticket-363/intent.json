@@ -1,0 +1,114 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-363",
+  "summary": "Warn about the stale autonomous-merge host block (issue 507 part 3)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-363/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "error/GOV-HOST-MERGE.md",
+    "error/README.md",
+    "governance/diagnostics.json",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/governance_check.py",
+    "tests/host_merge_policy_check_test.py",
+    "governance/package-manifest.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b733433b5187cda15fcd0ec7ba96942da90e27d8",
+    "targetBranch": "main",
+    "outcome": "The governance gate warns when root host instructions still carry the superseded autonomous-merge block, with a registered diagnostic and runbook.",
+    "nonGoals": [
+      "No error-level enforcement or fleet edit of host files",
+      "No change to host_publication_policy.py"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "check_host_merge_policy reads AGENTS.md, CLAUDE.md and GEMINI.md (no symlinks) and warns when the autonomous-merge block contains the wellmanifest/merge@ticket-008 signature present in every observed stale copy; registered as GOV-HOST-MERGE-001 with an error/ runbook; bundled checker synced.",
+      "components": [
+        {
+          "name": "governance-gate",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "tests/host_merge_policy_check_test.py",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "diagnostics",
+          "paths": [
+            "governance/diagnostics.json",
+            "error/GOV-HOST-MERGE.md",
+            "governance/package-manifest.json"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "New warning GOV-HOST-MERGE-001"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; the warning disappears."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/host_merge_policy_check_test.py"
+        ],
+        "evidence": "project/ticket-363/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-363/README.md"
+      }
+    ]
+  }
+}
