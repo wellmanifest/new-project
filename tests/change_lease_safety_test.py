@@ -218,5 +218,100 @@ class LeaseSafetyTests(unittest.TestCase):
                     self.assertEqual(json.loads(result.stdout)["status"], expected_status)
 
 
+class WriterSafetyTests(unittest.TestCase):
+    def setUp(self):
+        import hashlib
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name).resolve() / "repo"
+        self.root.mkdir()
+        def git(*args):
+            import os
+            env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+            subprocess.run(["git", "-C", str(self.root), *args], env=env, check=True,
+                           capture_output=True)
+        git("init", "-b", "main")
+        git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+            "commit", "--allow-empty", "-m", "seed")
+        self.worktree = self.root / ".worktrees/ticket-001--fixture"
+        git("worktree", "add", "-b", "ticket/001-fixture", str(self.worktree))
+        self.value = lease()
+        self.value["repositoryRef"] = "local/" + hashlib.sha256(str(self.root).encode()).hexdigest()
+        self.path = self.root / ".subactor/leases/ticket-001--fixture.json"
+        self.path.parent.mkdir(parents=True)
+        self.save()
+
+    def save(self):
+        self.path.write_text(json.dumps(self.value))
+
+    def check(self, actor="agent:fixture", session="session-fixture", revision="1", fencing="1"):
+        return runtime.check_writer(self.worktree, self.value["branchRef"], "commit",
+                                    actor, session, revision, fencing)
+
+    def test_owner_and_all_identity_and_cas_failures(self):
+        self.assertEqual(self.check(), [])
+        for values in ({"actor": ""}, {"session": ""}, {"session": "other-session"},
+                       {"actor": "agent:other"}, {"fencing": "2"}, {"revision": "2"},
+                       {"revision": "true"}, {"session": "bad\nsession"}):
+            with self.subTest(values=values):
+                self.assertTrue(self.check(**values))
+
+    def test_invalid_expired_released_frozen_and_wrong_bindings(self):
+        original = deepcopy(self.value)
+        for update in ({"expiresAt": "2020-01-01T00:00:00Z"},
+                       {"issuedAt": "2099-01-01T00:00:00Z"},
+                       {"phase": "released", "headSha": "a" * 40},
+                       {"phase": "publication_frozen", "publicationFrozen": True, "headSha": "a" * 40},
+                       {"phase": "expired"}, {"repositoryRef": "other/repository"},
+                       {"ticketId": "ticket-002"}, {"worktreeId": "ticket-002--fixture"},
+                       {"leaseRevision": True}):
+            with self.subTest(update=update):
+                self.value = {**original, **update}
+                self.save()
+                self.assertTrue(self.check())
+        for raw in ("[]", "{", "x" * 65537):
+            self.path.write_text(raw)
+            self.assertTrue(self.check())
+        self.path.unlink()
+        self.assertTrue(self.check())
+
+    def test_symlinks_including_parent_are_rejected(self):
+        saved = self.path.with_name("saved.json")
+        self.path.rename(saved)
+        try:
+            self.path.symlink_to(saved)
+        except (OSError, NotImplementedError):
+            saved.rename(self.path)
+            if os.name == "nt":
+                return
+            raise
+        self.assertTrue(self.check())
+        self.path.unlink()
+        saved.rename(self.path)
+        parent = self.path.parent
+        moved = parent.with_name("saved")
+        parent.rename(moved)
+        try:
+            parent.symlink_to(moved, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            moved.rename(parent)
+            if os.name == "nt":
+                return
+            raise
+        self.assertTrue(self.check())
+
+    def test_local_handoff_does_not_grant_authority(self):
+        (self.worktree / "handoff.json").write_text(json.dumps({"accepted": True, "ownerSession": "successor"}))
+        self.assertTrue(self.check(session="successor"))
+        # Simulate the independent controller updating its canonical projection.
+        # The checker never applies this transition or accepts the local file.
+        self.value.update(ownerSession="successor", leaseRevision=2, fencingToken=2,
+                          eventSequence=2, previousReceiptRef="receipt://controller/handoff")
+        self.save()
+        self.assertTrue(self.check())
+        self.assertTrue(self.check(session="successor"))
+        self.assertEqual(self.check(session="successor", revision="2", fencing="2"), [])
+
+
 if __name__ == "__main__":
     unittest.main()

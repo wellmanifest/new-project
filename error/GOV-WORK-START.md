@@ -181,3 +181,30 @@ retains its separate contract, not a development-gate exemption.
 
 P-WORKSPACE-005, P-WORKSPACE-006, C-START-004, C-CONCURRENCY-005,
 P-CORE-014, P-TICKET-ACTIVITY-001 and P-LEASE-001.
+
+## Ticket writer fencing
+
+Allocation requires `--writer-actor` and `--writer-session`, or the explicit
+`NEW_PROJECT_WRITER_ACTOR` and `NEW_PROJECT_WRITER_SESSION` environment values.
+The agent provider (`--agent`) is display metadata, not a session identity.
+The allocator keeps scaffolds in its canonical linked worktree and records the
+caller in the existing lease fields. Invalid identity fails before reservation.
+
+The launcher supplies these same identity values plus `NEW_PROJECT_LEASE_REVISION`
+and `NEW_PROJECT_FENCING_TOKEN` from current controller evidence to Git hooks.
+`change_lease_check.py writer-check --root . --operation commit --ref
+refs/heads/ticket/NNN-slug` performs a read-only check. Push checks resolve each
+source and destination ticket ref through Git's registered primary and worktrees,
+including when the push originates from another checkout. Missing or unsafe
+leases/runtime produce GOV-CHANGE-LEASE-001; identity, expired lease or stale CAS
+produce GOV-CHANGE-LEASE-002; released/frozen phases produce GOV-CHANGE-LEASE-003.
+The clone-local repository hash matches the allocator's existing lease binding.
+
+A successor must obtain an independently accepted handoff through the controller:
+observe the old owner gone or explicitly handed off, re-observe dirty work and
+HEAD, and have the controller publish the successor lease with fresh monotonic
+CAS values. Pass that evidence to the successor session. Hooks never consume a
+local handoff file, update ownership, renew a timeout, or infer caller identity
+from lease contents. Do not copy another session's identity or fencing values.
+These local checks do not defend against an OS user who can alter hooks or
+impersonate launcher environment, and do not replace protected publication.

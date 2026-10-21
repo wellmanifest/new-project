@@ -6,12 +6,13 @@
 set -euo pipefail
 
 root="$(git rev-parse --show-toplevel)"
+allow_target=false
 policy_runner="$root/.governance/repository_policy.py"
 [[ -f "$policy_runner" ]] || policy_runner="$root/scripts/repository_policy.py"
 if [[ -f "$policy_runner" ]]; then
   profile="$(PYTHONDONTWRITEBYTECODE=1 python3 "$policy_runner" --root "$root" --profile 2>/dev/null || true)"
   case "$profile" in
-    local-audit|main-only-planfile|main-only-files) exit 0 ;;
+    local-audit|main-only-planfile|main-only-files) allow_target=true ;;
   esac
 fi
 
@@ -33,6 +34,18 @@ PY
 refused=0
 while read -r local_ref local_sha remote_ref remote_sha; do
   [[ -n "${remote_ref:-}" ]] || continue
+  for ref in "$local_ref" "$remote_ref"; do
+    if [[ "$ref" =~ ^refs/heads/ticket[-/][0-9]{3,} ]]; then
+      writer_runner="$root/.governance/change_lease_check.py"
+      [[ -f "$writer_runner" ]] || writer_runner="$root/scripts/change_lease_check.py"
+      if [[ -f "$writer_runner" ]]; then
+        if ! python3 -B "$writer_runner" writer-check --root "$root" --operation push --ref "$ref"; then
+          refused=1
+        fi
+      fi
+    fi
+  done
+  [[ "$allow_target" == true ]] && continue
   while IFS= read -r target; do
     if [[ "$remote_ref" == "refs/heads/$target" ]]; then
       echo "GOV-PUSH-001: direct push to '$target' refused ($local_ref -> $remote_ref)." >&2

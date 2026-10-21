@@ -8,6 +8,8 @@
     "runtimeFiles": [
       ".governance/worktree_guard.py",
       ".governance/worktree_overlap_check.py",
+      ".governance/change_lease_check.py",
+      ".governance/change-lease.schema.json",
       "worktree-guard.yaml"
     ]
   },
