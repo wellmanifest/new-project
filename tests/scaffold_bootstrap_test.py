@@ -383,6 +383,36 @@ class BootstrapTest(unittest.TestCase):
 class FreshBootstrapTest(BootstrapTest):
     fresh = True
 
+    def test_duplicate_bootstrap_paths_keep_one_intent_and_matching_lease(self):
+        if self.legacy_carriers:
+            self.skipTest('legacy carrier recovery has a separate reservation path')
+        receipt = json.loads(self.receipt.read_text())
+        scope = sorted(receipt['files'])
+        self.assertIn('TODO.md', scope)
+        self.assertIn('project/TICKETS.md', scope)
+        args = ['bash', './project/new-ticket.sh', '--title', 'Complete first adoption',
+                '--agent', 'fixture', '--workstream', 'governance',
+                '--worktree-slug', 'dedup-adoption',
+                '--bootstrap-adoption-digest', self.checksum()]
+        for path in scope:
+            args += ['--path', path]
+        args += ['--path', 'TODO.md', '--path', 'project/TICKETS.md']
+        result = self.command(self.target, *args)
+        self.assertIn('Successfully allocated ' + self.expected_ticket, result.stdout)
+        wt = self.target / ('.worktrees/' + self.expected_ticket + '--dedup-adoption')
+        intent = json.loads((wt / 'project' / self.expected_ticket / 'intent.json').read_text())
+        expected = list(dict.fromkeys([f'project/{self.expected_ticket}/**',
+                                       'TODO.md', 'project/TICKETS.md', *scope]))
+        self.assertEqual(intent['allowedPaths'], expected)
+        lease = json.loads((self.target / '.subactor/leases' /
+                            (self.expected_ticket + '--dedup-adoption.json')).read_text())
+        canonical = json.dumps(expected, sort_keys=True, separators=(',', ':')).encode()
+        self.assertEqual(lease['scopeHash'], hashlib.sha256(canonical).hexdigest())
+        manifest = json.loads((self.target / '.governance/manifest.json').read_text())
+        owned = manifest['coordination']['workstreams']['governance']['ownedPaths']
+        self.assertIn('.gitattributes', owned)
+        self.assertIn('.github/workflows/new-project-branch-hygiene.yml', owned)
+
     def test_fresh_receipt_records_absent_original_governance(self):
         receipt = json.loads(self.receipt.read_text())
         self.assertEqual(receipt['bootstrapKind'], 'fresh')

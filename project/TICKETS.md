@@ -354,7 +354,9 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-353** | [`README.md`](./ticket-353/README.md) | - | - | - | - | - |
 | **ticket-354** | [`README.md`](./ticket-354/README.md) | - | - | - | - | - |
 | **ticket-355** | [`README.md`](./ticket-355/README.md) | - | - | - | - | - |
+| **ticket-356** | [`README.md`](./ticket-356/README.md) | - | - | - | - | - |
 | **ticket-357** | [`README.md`](./ticket-357/README.md) | - | - | - | - | - |
+| **ticket-358** | [`README.md`](./ticket-358/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 
