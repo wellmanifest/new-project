@@ -49,9 +49,16 @@ def render(text):
     if finish <= begin:
         raise ValueError('HOST_PUBLICATION_MARKERS_ORDER_INVALID')
     result = text[:begin] + START + newline + BLOCK.replace('\n', newline) + END + text[finish + len(END):]
-    for marker in ('<!-- wellmanifest:nolimits:start -->', '<!-- wellmanifest:nolimits:end -->'):
-        if result.count(marker) != 1:
-            raise ValueError('HOST_NOLIMITS_MARKERS_AMBIGUOUS')
+    counts = [result.count(marker) for marker in
+              ('<!-- wellmanifest:nolimits:start -->', '<!-- wellmanifest:nolimits:end -->')]
+    if counts == [0, 0]:
+        # Many host files carry only the autonomous-merge block; replacing it
+        # removes the stale merge authority, and there is no remedy to update.
+        if 'LIM-MERGE-003' in result:
+            raise ValueError('HOST_MERGE_REMEDY_OUTSIDE_NOLIMITS')
+        return result
+    if counts != [1, 1]:
+        raise ValueError('HOST_NOLIMITS_MARKERS_AMBIGUOUS')
     left = result.index('<!-- wellmanifest:nolimits:start -->')
     right = result.index('<!-- wellmanifest:nolimits:end -->')
     if right <= left:
