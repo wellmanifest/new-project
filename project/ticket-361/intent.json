@@ -1,0 +1,130 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-361",
+  "summary": "Support a governed first seed commit and explicit Paxlet product placement",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-361/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "AGENTS.md",
+    "VERSION",
+    "governance/intent.schema.json",
+    "governance/package-manifest.json",
+    "project/new-ticket.sh",
+    "scripts/governance_check.py",
+    "scripts/seed_baseline.py",
+    "template/files/AGENTS.template.md",
+    "template/files/pre-commit.template.sh",
+    "tests/seed_baseline_test.py",
+    "template/files/commit-msg.template.sh",
+    "tests/adoption_upgrade_harmonization_test.py",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "tests/agent-hosts.test.sh",
+    "packages/wellman/src/wellman/_bundled/governance_check.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "5b0e30ca09ff1a76849748332264699c743467c2",
+    "targetBranch": "main",
+    "outcome": "Provide an explicit managed first-governance-seed transaction for an unborn native adopter, preserving source/remote boundaries, and represent the explicitly requested paxlet-com product placement. Independently publish the standard fix so Shellmux can continue through ordinary allocation.",
+    "nonGoals": [
+      "No product source or remote effect in the seed commit",
+      "No hook bypass or generic commit-tree fallback",
+      "No changes to protected merge authority or foreign work",
+      "No Shellmux source or target evidence stored in this maintenance ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 17,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "The managed allocator reserves the first ID under its existing clone lock. An explicit external exact-state seed request validates published adoption pins, a concrete seed-only allowlist, owner/session, no existing HEAD/ref/remote/implementation, secret scan and staged/worktree equality. The managed hook recognizes only that prepared transaction before the normal ticket/worktree guard. It creates one ordinary checked Git commit, then the allocator creates the canonical linked delivery checkout and ordinary lease from the real baseline. Normal source and publication checks are unchanged. Add paxlet-com to the closed placement vocabulary while retaining wellmanifest runtime rejection.",
+      "components": [
+        {
+          "name": "first-seed-transaction",
+          "paths": [
+            "project/new-ticket.sh",
+            "scripts/seed_baseline.py",
+            "template/files/pre-commit.template.sh",
+            "governance/package-manifest.json",
+            "tests/seed_baseline_test.py",
+            "template/files/commit-msg.template.sh",
+            "tests/adoption_upgrade_harmonization_test.py",
+            "tests/agent-hosts.test.sh"
+          ]
+        },
+        {
+          "name": "placement-contract",
+          "paths": [
+            "governance/intent.schema.json",
+            "scripts/governance_check.py",
+            "AGENTS.md",
+            "template/files/AGENTS.template.md"
+          ]
+        },
+        {
+          "name": "material-release-version",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml",
+            "packages/wellman/src/wellman/_bundled/governance_check.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Explicit allocator seed request and seed hook validation",
+        "paxlet-com product placement in the closed HOME/runtimeOwner vocabulary"
+      ],
+      "dataChanges": [
+        "Ignored bounded seed transaction request/receipt; actual baseline SHA only"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the independently reviewed material standard change; preserve any already created valid seed baseline and its external receipt."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/seed_baseline_test.py"
+        ],
+        "evidence": "Local PASS: 8 seed/placement regressions, 20 canonical allocation regressions, 18 immutable adoption regressions; active normal pre-commit/commit-message hooks exercised. Secret, product, ignored product, stale request/pin, owner, symlink, remote and repeated-seed refusals passed."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/seed_baseline_test.py",
+          "bash project/governance-check.sh",
+          "Independent exact-head OneDev and Validator"
+        ],
+        "evidence": "Local GOV-PASS, no errors/warnings; explicit paxlet-com accepted and wellmanifest runtime guard preserved. Host boundaries passed (7 commit-message + 9 pre-push regressions). Protected local preflight resolved configuration; exact-head independent CI/review/merge and immutable release remain pending."
+      }
+    ]
+  }
+}

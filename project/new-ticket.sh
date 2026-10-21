@@ -9,6 +9,8 @@ AGENT="antigravity"
 WRITER_ACTOR=""
 WRITER_SESSION=""
 WRITER_IDENTITY_EXPLICIT=false
+SEED_BASELINE_REQUEST=""
+SEED_MODE=false
 
 if [[ "${NEW_PROJECT_WRITER_ACTOR+set}" == "set" || "${NEW_PROJECT_WRITER_SESSION+set}" == "set" ]]; then
   WRITER_ACTOR="${NEW_PROJECT_WRITER_ACTOR:-}"
@@ -53,6 +55,8 @@ Usage: ./project/new-ticket.sh [options]
   -a, --agent ID         Agent provider/id used for ai-{ID}.md
       --writer-actor ID Explicit allocating actor (or NEW_PROJECT_WRITER_ACTOR)
       --writer-session ID Explicit session (or NEW_PROJECT_WRITER_SESSION)
+      --seed-baseline-request FILE
+                          Exact external authority/state for one governance-only unborn seed
   -w, --workstream ID    Required workstream from the governance registry
       --path PATTERN     Repeatable owned implementation scope; persisted in intent
   -u, --users IDS        Compatibility input only; human files are not created
@@ -129,6 +133,8 @@ while [[ $# -gt 0 ]]; do
       require_value "$@"; WRITER_ACTOR="$2"; WRITER_IDENTITY_EXPLICIT=true; shift 2 ;;
     --writer-session)
       require_value "$@"; WRITER_SESSION="$2"; WRITER_IDENTITY_EXPLICIT=true; shift 2 ;;
+    --seed-baseline-request)
+      require_value "$@"; SEED_BASELINE_REQUEST="$2"; shift 2 ;;
     -w|--workstream)
       require_value "$@"
       WORKSTREAM="$2"
@@ -525,6 +531,20 @@ if [[ "$ALLOCATION_MODE" == "local-single-clone" && ( -n "$ALLOCATION_KEY" || -n
   echo "  remediation: remove the inputs or adopt a registered allocator policy." >&2
   exit 5
 fi
+
+if [[ -n "$SEED_BASELINE_REQUEST" ]]; then
+  if [[ "$ALLOCATION_MODE" != local-single-clone || "$TICKET_STORAGE" != files \
+      || -z "$PRIMARY_CHECKOUT" || "$WRITER_IDENTITY_EXPLICIT" != true \
+      || -n "$RECOVER_REQUEST" || -n "$STANDARD_ADOPTION_PLAN" \
+      || "$REFRESH_REMOTE" == true || "$FORCE_NEW" == true ]]; then
+    echo "GOV-TICKET-ALLOCATION-003: seed requires explicit local file allocation and writer identity only." >&2
+    exit 5
+  fi
+  SEED_RUNNER="$PRIMARY_CHECKOUT/.governance/seed_baseline.py"
+  python3 -B "$SEED_RUNNER" preflight --root "$PRIMARY_CHECKOUT" \
+    --request "$SEED_BASELINE_REQUEST" --actor "$WRITER_ACTOR" --session "$WRITER_SESSION"
+  SEED_MODE=true
+fi
 if [[ -n "$STANDARD_ADOPTION_PLAN" && "$ALLOCATION_MODE" != local-single-clone ]]; then
   echo "GOV-TICKET-ALLOCATION-003: adoption plans do not support registered allocation." >&2
   exit 5
@@ -803,7 +823,7 @@ fi
 
 WORKTREE_PATH=""
 LEASE_PATH=""
-if [[ -n "$PRIMARY_CHECKOUT" ]]; then
+if [[ -n "$PRIMARY_CHECKOUT" && "$SEED_MODE" != true ]]; then
   # Filesystem-backed ticket content must never be materialized in the primary
   # checkout. Plan and verify the exact v5 path before reserving identity;
   # after reservation every later failure remains observable for recovery.
@@ -1041,6 +1061,31 @@ PYBOOT
     python3 "$TICKET_STORAGE_HELPER" scope --root "$PWD" --workstream "$WORKSTREAM" \
       --ticket "$ticket_id" "${SCOPE_ARGUMENTS[@]}" >/dev/null
   fi
+fi
+
+if [[ "$SEED_MODE" == true ]]; then
+  # Only the seed's own ticket carriers may precede a real baseline. Ordinary
+  # implementation still receives a canonical linked checkout and lease.
+  python3 -B "$SEED_RUNNER" prepare --root "$PRIMARY_CHECKOUT" \
+    --request "$SEED_BASELINE_REQUEST" --actor "$WRITER_ACTOR" \
+    --session "$WRITER_SESSION" --ticket "$ticket_id"
+  python3 -B "$SEED_RUNNER" commit --root "$PRIMARY_CHECKOUT" \
+    --request "$SEED_BASELINE_REQUEST" --actor "$WRITER_ACTOR" --session "$WRITER_SESSION"
+  base_sha="$(git rev-parse HEAD)"
+  if [[ -z "$WORKTREE_SLUG" ]]; then
+    WORKTREE_SLUG="$(printf '%s' "$TITLE" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')"
+  fi
+  repository_ref="$(basename "$PRIMARY_CHECKOUT")"
+  layout="$(python3 .governance/worktree_path_check.py plan --repository "$repository_ref" \
+    --repository-name "$repository_ref" --ticket "$ticket_id" --slug "$WORKTREE_SLUG" \
+    --from-worktree "$PRIMARY_CHECKOUT" --path-style posix)"
+  python3 .governance/worktree_path_check.py validate - --check-filesystem <<< "$layout" >/dev/null
+  mapfile -t layout_values < <(python3 -c 'import json,sys; v=json.load(sys.stdin); print(v["branch"]); print(v["worktreePath"]); print(v["leasePath"])' <<< "$layout")
+  WORKTREE_BRANCH="${layout_values[0]}"
+  WORKTREE_PATH="${layout_values[1]}"
+  LEASE_PATH="${layout_values[2]}"
+  git worktree add --relative-paths -b "$WORKTREE_BRANCH" "$WORKTREE_PATH" "$base_sha"
+  cd "$WORKTREE_PATH"
 fi
 
 if [[ -n "$LEASE_PATH" ]]; then

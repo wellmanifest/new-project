@@ -987,3 +987,6 @@ echo "agent-hosts.test.sh OK"
 python3 "$root/tests/commit_message_hook_test.py"
 # Keep the pre-push regression suite in the required host-contract test path.
 python3 -B "$root/tests/pre_push_hook_test.py"
+
+# The adopter seed path must pass the same active host-hook boundary.
+python3 -B "$root/tests/seed_baseline_test.py"

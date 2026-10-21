@@ -8,6 +8,14 @@ set -euo pipefail
 root="$(git rev-parse --show-toplevel)"
 branch="$(git symbolic-ref --short HEAD 2>/dev/null || true)"
 
+# A seed request can authorize only the allocator's exact prepared root commit.
+# Existing history, product files and an unprepared request fail closed here.
+if [[ -n "${NEW_PROJECT_SEED_REQUEST:-}" ]]; then
+  python3 -B "$root/.governance/seed_baseline.py" hook-check --root "$root" \
+    --request "$NEW_PROJECT_SEED_REQUEST"
+  exit $?
+fi
+
 # Run before every profile/status success path. Identity is supplied by the
 # session launcher; the hook must never infer it from the lease holder.
 if [[ "$branch" =~ ^ticket[-/][0-9]{3,} ]]; then

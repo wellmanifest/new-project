@@ -920,7 +920,7 @@ def check_physical_contract_changes(
         )
 
 
-PLACEMENT_HOMES = {"wellmanifest", "subactor", "semcod"}
+PLACEMENT_HOMES = {"wellmanifest", "subactor", "semcod", "paxlet-com"}
 PLACEMENT_SHAPES = {"domain_pack", "runtime_service", "both"}
 PLACEMENT_ADOPT = re.compile(r"^wellmanifest/[a-z0-9][a-z0-9-]*$")
 
