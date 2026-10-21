@@ -6,6 +6,15 @@ set -euo pipefail
 TITLE="New Task Ticket"
 USERS=""
 AGENT="antigravity"
+WRITER_ACTOR=""
+WRITER_SESSION=""
+WRITER_IDENTITY_EXPLICIT=false
+
+if [[ "${NEW_PROJECT_WRITER_ACTOR+set}" == "set" || "${NEW_PROJECT_WRITER_SESSION+set}" == "set" ]]; then
+  WRITER_ACTOR="${NEW_PROJECT_WRITER_ACTOR:-}"
+  WRITER_SESSION="${NEW_PROJECT_WRITER_SESSION:-}"
+  WRITER_IDENTITY_EXPLICIT=true
+fi
 WORKSTREAM=""
 SCOPE_ARGUMENTS=()
 FORCE_NEW=false
@@ -42,6 +51,8 @@ Usage: ./project/new-ticket.sh [options]
 
   -t, --title TITLE       Ticket title
   -a, --agent ID         Agent provider/id used for ai-{ID}.md
+      --writer-actor ID Explicit allocating actor (or NEW_PROJECT_WRITER_ACTOR)
+      --writer-session ID Explicit session (or NEW_PROJECT_WRITER_SESSION)
   -w, --workstream ID    Required workstream from the governance registry
       --path PATTERN     Repeatable owned implementation scope; persisted in intent
   -u, --users IDS        Compatibility input only; human files are not created
@@ -114,6 +125,10 @@ while [[ $# -gt 0 ]]; do
       AGENT="$2"
       shift 2
       ;;
+    --writer-actor)
+      require_value "$@"; WRITER_ACTOR="$2"; WRITER_IDENTITY_EXPLICIT=true; shift 2 ;;
+    --writer-session)
+      require_value "$@"; WRITER_SESSION="$2"; WRITER_IDENTITY_EXPLICIT=true; shift 2 ;;
     -w|--workstream)
       require_value "$@"
       WORKSTREAM="$2"
@@ -337,6 +352,21 @@ if ! grep -Fxq -- "$WORKSTREAM" <<< "$WORKSTREAM_REGISTRY"; then
   echo "GOV-WORKSTREAM-001: workstream '$WORKSTREAM' is not declared in $GOVERNANCE_MANIFEST." >&2
   echo "  accepted: $(printf '%s' "$WORKSTREAM_REGISTRY" | tr '\n' ' ')" >&2
   exit 1
+fi
+
+# Validate caller identity before any reservation, refresh or scaffold effect.
+# Provider names and timestamps are not session identity.
+if [[ -z "$SNAPSHOT_PROPOSAL$SNAPSHOT_MATERIALIZE$RECOVER_REQUEST" ]]; then
+  if [[ "$WRITER_IDENTITY_EXPLICIT" == true ]]; then
+    if [[ ! "$WRITER_ACTOR" =~ ^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,159}$ ||
+          ! "$WRITER_SESSION" =~ ^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,254}$ ]]; then
+      echo "GOV-CHANGE-LEASE-001: allocation requires explicit valid writer actor and session." >&2
+      exit 2
+    fi
+  else
+    WRITER_ACTOR="agent:${AGENT}"
+    WRITER_SESSION="allocation-$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+  fi
 fi
 
 is_active_ticket() {
@@ -1019,7 +1049,7 @@ if [[ -n "$LEASE_PATH" ]]; then
   # begins; O_EXCL means a stale or competing lease is never overwritten.
   python3 - "$ticket_dir/intent.json" "$LEASE_PATH" "$ticket_id" "$WORKSTREAM" \
     "$WORKTREE_BRANCH" "$WORKTREE_SLUG" "$repository_ref" "$TARGET_BRANCH" \
-    "$base_sha" "$AGENT" "$timestamp" <<'PY'
+    "$base_sha" "$WRITER_ACTOR" "$WRITER_SESSION" "$timestamp" <<'PY'
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
@@ -1028,7 +1058,7 @@ from pathlib import Path
 import sys
 
 (intent_path, lease_path, ticket, workstream, branch, slug, repository,
- target_branch, head, agent, issued_at) = sys.argv[1:]
+ target_branch, head, actor, session, issued_at) = sys.argv[1:]
 intent_file = Path(intent_path)
 lease_file = Path(lease_path)
 if intent_file.is_symlink() or lease_file.exists() or lease_file.is_symlink():
@@ -1053,8 +1083,8 @@ lease = {
     "scopeHash": hashlib.sha256(canonical(allowed)).hexdigest(),
     "branchRef": "refs/heads/" + branch,
     "worktreeId": f"{ticket}--{slug}",
-    "ownerActor": "agent:" + agent,
-    "ownerSession": f"allocation-{ticket}-{issued_at}",
+    "ownerActor": actor,
+    "ownerSession": session,
     "phase": "claimed",
     "leaseRevision": 1,
     "fencingToken": 1,

@@ -55,6 +55,7 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
     def allocate(self, *args: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             ["bash", "project/new-ticket.sh", "--title", "Canonical ticket", "--agent", "codex",
+             "--writer-actor", "agent:codex", "--writer-session", "session-fixture",
              "--workstream", "application", "--worktree-slug", "canonical-ticket", *args],
             cwd=self.root, text=True, capture_output=True,
             env={key: value for key, value in os.environ.items() if not key.startswith("GIT_")},
@@ -89,6 +90,8 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
         lease = self.root / ".subactor/leases/ticket-001--canonical-ticket.json"
         self.assertTrue(lease.is_file())
         payload = json.loads(lease.read_text(encoding="utf-8"))
+        self.assertEqual(payload["ownerActor"], "agent:codex")
+        self.assertEqual(payload["ownerSession"], "session-fixture")
         self.assertEqual(payload["ticketId"], "ticket-001")
         self.assertEqual(payload["branchRef"], "refs/heads/ticket/001-canonical-ticket")
         self.assertEqual(payload["worktreeId"], "ticket-001--canonical-ticket")
@@ -96,6 +99,19 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
                                    "validate", str(lease)], text=True, capture_output=True)
         self.assertEqual(verified.returncode, 0, verified.stderr)
         self.assertEqual(self.git("status", "--porcelain").stdout, "")
+
+    def test_invalid_or_missing_identity_has_no_effect(self):
+        before = self.git("status", "--porcelain").stdout
+        for actor, session in (("", ""), ("agent:codex", "bad session"), ("bad\nactor", "session")):
+            result = subprocess.run(["bash", "project/new-ticket.sh", "--workstream", "application"],
+                cwd=self.root, text=True, capture_output=True,
+                env={**{k: v for k, v in os.environ.items() if not k.startswith("GIT_")},
+                     "NEW_PROJECT_WRITER_ACTOR": actor, "NEW_PROJECT_WRITER_SESSION": session})
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("GOV-CHANGE-LEASE-001", result.stderr)
+            self.assertFalse((self.root / ".git/new-project-ticket-high-water").exists())
+            self.assertFalse((self.root / ".worktrees").exists())
+            self.assertEqual(self.git("status", "--porcelain").stdout, before)
 
     def test_symlinked_canonical_component_fails_before_ticket_reservation(self) -> None:
         outside = Path(self.temp.name) / "outside"
@@ -163,6 +179,7 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
         linked = self.root / ".worktrees/ticket-001--canonical-ticket"
         second = subprocess.run(
             ["bash", "project/new-ticket.sh", "--title", "Second ticket", "--agent", "codex",
+             "--writer-actor", "agent:codex", "--writer-session", "session-fixture",
              "--workstream", "application", "--worktree-slug", "second-ticket"],
             cwd=linked, text=True, capture_output=True,
             env={key: value for key, value in os.environ.items() if not key.startswith("GIT_")},
@@ -195,7 +212,7 @@ class LeaseRaceTests(unittest.TestCase):
         self.outside.mkdir()
         self.arguments = ['allocator-lease-writer', str(self.intent), str(self.lease),
                           'ticket-001', 'application', 'ticket/001-fixture', 'fixture',
-                          'fixture/repository', 'main', 'a' * 40, 'fixture',
+                          'fixture/repository', 'main', 'a' * 40, 'agent:fixture', 'session-fixture',
                           '2026-10-11T21:00:00Z']
 
     def execute(self):
@@ -306,6 +323,7 @@ class NativeStandardAdoptionPlanTest(AdoptionPlanFixture, unittest.TestCase):
     def allocate_plan(self, *arguments):
         return self.command(self.target, "bash", str(self.source / "project/new-ticket.sh"),
             "--title", "Upgrade immutable standard", "--agent", "fixture",
+            "--writer-actor", "agent:fixture", "--writer-session", "session-fixture",
             "--workstream", "governance", "--worktree-slug", "immutable-upgrade",
             "--standard-adoption-plan", str(self.plan_path), *arguments,
             env=self.publication_environment(), check=False)

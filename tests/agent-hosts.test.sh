@@ -333,6 +333,10 @@ git -C "$tmp/adopter" commit -qm "seed"
 [[ -f "$tmp/adopter/.governance/worktree_guard.py" ]] || fail "installer must copy worktree guard"
 [[ "$(git -C "$tmp/adopter" config --get core.hooksPath)" == ".githooks" ]] || fail "installer must set core.hooksPath"
 
+# This legacy fixture isolates status/overlap composition. Actual writer
+# enforcement with both hooks is exercised by pre_push_hook_test.py below.
+printf '%s\n' 'raise SystemExit(0)' > "$tmp/adopter/.governance/change_lease_check.py"
+
 # Replace the real runner with a deterministic spy. The overlap algorithm has
 # its own suite; this fixture proves the managed lifecycle hook composes it into
 # every successful path and propagates a negative verdict.
@@ -982,4 +986,4 @@ echo "agent-hosts.test.sh OK"
 # Exercise the Git commit-message boundary in the existing CI host-contract suite.
 python3 "$root/tests/commit_message_hook_test.py"
 # Keep the pre-push regression suite in the required host-contract test path.
-python3 "$root/tests/pre_push_hook_test.py"
+python3 -B "$root/tests/pre_push_hook_test.py"

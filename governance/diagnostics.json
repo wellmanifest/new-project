@@ -113,7 +113,7 @@
     },
     "GOV-CHANGE-LEASE-002": {
       "message": "Change authority is stale or its receipt trace is not monotonic.",
-      "remediation": "Read the authoritative lease and retry with its exact revision, fencing token and phase.",
+      "remediation": "Have the controller verify the calling writer/session and supply current revision, fencing token and phase. A different writer requires the accepted handoff described in error/GOV-WORK-START.md; never copy the holder identity.",
       "documentation": "error/GOV-CHANGE-LEASE.md"
     },
     "GOV-CHANGE-LEASE-003": {

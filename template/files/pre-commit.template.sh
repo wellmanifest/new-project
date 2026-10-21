@@ -8,6 +8,16 @@ set -euo pipefail
 root="$(git rev-parse --show-toplevel)"
 branch="$(git symbolic-ref --short HEAD 2>/dev/null || true)"
 
+# Run before every profile/status success path. Identity is supplied by the
+# session launcher; the hook must never infer it from the lease holder.
+if [[ "$branch" =~ ^ticket[-/][0-9]{3,} ]]; then
+  writer_runner="$root/.governance/change_lease_check.py"
+  [[ -f "$writer_runner" ]] || writer_runner="$root/scripts/change_lease_check.py"
+  if [[ -f "$writer_runner" ]]; then
+    python3 -B "$writer_runner" writer-check --root "$root" --operation commit --ref "refs/heads/$branch"
+  fi
+fi
+
 run_worktree_guard() {
   local runner="$root/.governance/worktree_guard.py"
   if [[ -f "$runner" ]]; then
