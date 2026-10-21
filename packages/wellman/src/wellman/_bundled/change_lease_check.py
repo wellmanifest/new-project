@@ -352,6 +352,18 @@ TICKET_REF = re.compile(r"^refs/heads/ticket[-/]([0-9]{3,})-[a-z0-9]+(?:-[a-z0-9
 
 def read_writer_lease(path: Path) -> dict[str, Any]:
     """Open bounded regular data without following any symlink component."""
+    if os.name == "nt":
+        if path.is_symlink() or any(p.is_symlink() for p in path.parents):
+            raise ValueError("Lease path contains symlinks")
+        if not path.is_file():
+            raise ValueError("Lease must be a regular file")
+        raw = path.read_bytes()
+        if len(raw) > 65536:
+            raise ValueError("Lease exceeds bounded size")
+        value = json.loads(raw.decode("utf-8"))
+        if not isinstance(value, dict):
+            raise ValueError("Lease must be an object")
+        return value
     flags = os.O_RDONLY | os.O_NOFOLLOW
     descriptor = os.open(path.anchor, flags | os.O_DIRECTORY)
     try:
@@ -407,10 +419,17 @@ def check_writer(root: Path, ref: str, operation: str, actor: str, session: str,
         slug = ref.split(match[1] + "-", 1)[1]
         worktree_id = ticket + "--" + slug
         expected = primary / ".worktrees" / worktree_id
-        if Path(owners[0]["worktree"]) != expected or expected.resolve() != expected:
-            raise ValueError("Ticket worktree is not canonical")
-        if operation == "commit" and root.resolve() != expected:
-            raise ValueError("Commit must run in the owned worktree")
+        owner_worktree = Path(owners[0]["worktree"])
+        if os.name == "nt":
+            if owner_worktree.resolve() != expected.resolve() or expected.is_symlink():
+                raise ValueError("Ticket worktree is not canonical")
+            if operation == "commit" and root.resolve() != expected.resolve():
+                raise ValueError("Commit must run in the owned worktree")
+        else:
+            if owner_worktree != expected or expected.resolve() != expected:
+                raise ValueError("Ticket worktree is not canonical")
+            if operation == "commit" and root.resolve() != expected:
+                raise ValueError("Commit must run in the owned worktree")
         lease = read_writer_lease(primary / ".subactor/leases" / (worktree_id + ".json"))
         errors = validate_lease(lease)
         if errors:
