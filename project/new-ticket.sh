@@ -1001,8 +1001,10 @@ path = Path(sys.argv[1])
 intent = json.loads(path.read_text())
 if intent["ticket"] != sys.argv[2] or intent["workstream"] != sys.argv[3]:
     raise SystemExit("allocated intent identity mismatch")
-intent["allowedPaths"] = [f'project/{sys.argv[2]}/**', 'TODO.md', 'project/TICKETS.md',
-                          *[arg.removeprefix("--path=") for arg in sys.argv[4:]]]
+intent["allowedPaths"] = list(dict.fromkeys([
+    f'project/{sys.argv[2]}/**', 'TODO.md', 'project/TICKETS.md',
+    *[arg.removeprefix("--path=") for arg in sys.argv[4:]]
+]))
 path.write_text(json.dumps(intent, indent=2) + "\n")
 PYBOOT
   else

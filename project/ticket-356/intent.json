@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-356",
+  "summary": "Deduplicate bootstrap allocation scope for issue 480",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-356/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "project/new-ticket.sh",
+    "tests/scaffold_bootstrap_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "18b823c352ee9f9c82965bb7f9e8a7bd3e86728c",
+    "targetBranch": "main",
+    "outcome": "Deduplicate allowedPaths during bootstrap allocation in new-ticket.sh, ensuring unique paths, valid lease scopeHash, and clean governance check without GOV-INTENT-002.",
+    "nonGoals": [
+      "No change to legacy carrier recovery",
+      "No changes outside bootstrap path allocation in new-ticket.sh"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use list(dict.fromkeys(...)) when constructing allowedPaths in new-ticket.sh bootstrap allocation to preserve order and deduplicate duplicate entries like TODO.md and project/TICKETS.md.",
+      "components": [
+        {
+          "name": "bootstrap-allocator",
+          "paths": [
+            "project/new-ticket.sh",
+            "tests/scaffold_bootstrap_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit in git if regressions occur."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest -p no:aiohttp tests/scaffold_bootstrap_test.py -k test_duplicate_bootstrap_paths_keep_one_intent_and_matching_lease"
+        ],
+        "evidence": "project/ticket-356/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-356/README.md"
+      }
+    ]
+  }
+}
