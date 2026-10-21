@@ -738,6 +738,12 @@
       "target": ".governance/standard-propagation-request.schema.json",
       "strategy": "managed",
       "executable": false
+    },
+    {
+      "source": "scripts/seed_baseline.py",
+      "target": ".governance/seed_baseline.py",
+      "strategy": "managed",
+      "executable": true
     }
   ]
 }

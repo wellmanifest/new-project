@@ -134,10 +134,14 @@ class AdoptionPlanFixture:
         cls.command(cls.template, "git", "config", "core.hooksPath", os.devnull)
         cls.command(cls.template, "git", "add", ".")
         cls.command(cls.template, "git", "commit", "--quiet", "-m", "Fixture installed native base")
-        for name in ("project/new-ticket.sh", "scripts/create_adoption_lock.py",
+        incoming_package = json.loads((ROOT / "governance/package-manifest.json").read_text())
+        incoming_sources = {item["source"] for item in incoming_package["files"]}
+        incoming_sources.update(("project/new-ticket.sh", "scripts/create_adoption_lock.py",
                      "governance/package-manifest.json", "governance/standard-adoption-plan.schema.json",
                      "governance/manifest.default.json", "governance/manifest.hub.json",
-                     "packages/wellman/pyproject.toml", "VERSION"):
+                     "packages/wellman/pyproject.toml", "VERSION"))
+        for name in sorted(incoming_sources):
+            (cls.source / name).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / name, cls.source / name)
         cls.command(cls.source, "git", "add", ".")
         cls.command(cls.source, "git", "commit", "--quiet", "-m", "Fixture incoming immutable package")
