@@ -24,7 +24,8 @@
     "packages/wellman/src/wellman/_bundled/governance_check.py",
     "scripts/governance_check.py",
     "tests/host_merge_policy_check_test.py",
-    "governance/package-manifest.json"
+    "governance/package-manifest.json",
+    "governance/rule-enforcement.json"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -44,7 +45,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 12,
+      "maxImplementationFiles": 13,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
@@ -67,7 +68,8 @@
           "paths": [
             "governance/diagnostics.json",
             "error/GOV-HOST-MERGE.md",
-            "governance/package-manifest.json"
+            "governance/package-manifest.json",
+            "governance/rule-enforcement.json"
           ]
         },
         {

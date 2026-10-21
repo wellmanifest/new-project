@@ -423,7 +423,8 @@
     "C-HOST-001": {
       "codes": [
         "GOV-AGENT-HOST-004",
-        "GOV-AGENT-HOST-005"
+        "GOV-AGENT-HOST-005",
+        "GOV-HOST-MERGE-001"
       ],
       "enforcement": "deterministic"
     },
