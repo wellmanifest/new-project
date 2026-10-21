@@ -1,0 +1,99 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-362",
+  "summary": "Reconcile the stale autonomous-merge host block when no nolimits block exists (issue 507)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-362/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/host_publication_policy.py",
+    "tests/host_publication_policy_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "769ca3810bf6dd1d8a1989590e9e820e6bf622fc",
+    "targetBranch": "main",
+    "outcome": "The host publication reconciler replaces the stale autonomous-merge block in host files that have no nolimits block, while ambiguous markers and stray stale remedies still fail closed.",
+    "nonGoals": [
+      "No fleet rollout or edit of any host AGENTS.md",
+      "No new governance check for the stale block text"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "In render(), treat zero nolimits markers as a supported layout: return after replacing the autonomous-merge block, refusing if an LIM-MERGE-003 remedy remains elsewhere; exactly one start/end pair keeps the existing remedy update; any other count stays HOST_NOLIMITS_MARKERS_AMBIGUOUS.",
+      "components": [
+        {
+          "name": "host-publication-policy",
+          "paths": [
+            "scripts/host_publication_policy.py",
+            "tests/host_publication_policy_test.py"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "render() accepts host files without a nolimits block"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; such files are refused again."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/host_publication_policy_test.py",
+          "bash tests/local-ci-publication.test.sh"
+        ],
+        "evidence": "project/ticket-362/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-362/README.md"
+      }
+    ]
+  }
+}

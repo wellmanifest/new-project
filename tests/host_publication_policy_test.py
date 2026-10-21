@@ -11,6 +11,12 @@ POLICY = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(POLICY)
 HOST = '''# Custom host policy\nFirmware: preserve this instruction.\n<!-- wellmanifest:autonomous-merge:start -->\nold admin bypass and reviewer rotation\n<!-- wellmanifest:autonomous-merge:end -->\n\n<!-- wellmanifest:nolimits:start -->\n3. **Merge Pipeline Lock (`LIM-MERGE-003`)**: PR checks green but blocked on review/WIP limits.\n   - **Remediation**: Use [`wellmanifest/merge`](https://github.com/wellmanifest/merge):\n     Execute autonomous merge under `wellmanifest/merge@ticket-008` (Prymat Zielonych Testów).\n4. preserve other remedies\n<!-- wellmanifest:nolimits:end -->\n# User appendix\nNever change this appendix.\n'''
 
+# Most fleet host files (issue #507) carry only the stale autonomous-merge block.
+WITHOUT_NOLIMITS = ("# Repository agents\nKeep this preamble.\n"
+                    "<!-- wellmanifest:autonomous-merge:start -->\n"
+                    "## Prymat Zielonych Testów\nMerge on green with gh pr merge --admin.\n"
+                    "<!-- wellmanifest:autonomous-merge:end -->\n# Appendix\nKeep this too.\n")
+
 
 class HostPublicationPolicyTest(unittest.TestCase):
     def test_preserves_unowned_sections_and_is_idempotent(self):
@@ -84,6 +90,36 @@ class HostPublicationPolicyTest(unittest.TestCase):
                 POLICY.reconcile(path, digest, apply=True, backup_directory=Path(folder) / 'backup')
             self.assertEqual(lock.read_text(), 'other writer')
             self.assertEqual(path.read_bytes(), HOST.encode())
+
+    def test_block_without_nolimits_is_reconciled_and_idempotent(self):
+        result = POLICY.render(WITHOUT_NOLIMITS)
+        self.assertTrue(result.startswith('# Repository agents\nKeep this preamble.\n'))
+        self.assertTrue(result.endswith('# Appendix\nKeep this too.\n'))
+        self.assertNotIn('Prymat Zielonych Testów', result)
+        self.assertNotIn('--admin', result)
+        self.assertIn('Only the independent Validator may approve and merge.', result)
+        self.assertEqual(POLICY.render(result), result)
+        crlf = POLICY.render(WITHOUT_NOLIMITS.replace('\n', '\r\n'))
+        self.assertNotIn('\n', crlf.replace('\r\n', ''))
+
+    def test_partial_nolimits_or_stray_remedy_still_fail_closed(self):
+        cases = {
+            'HOST_NOLIMITS_MARKERS_AMBIGUOUS': WITHOUT_NOLIMITS + '<!-- wellmanifest:nolimits:start -->\n',
+            'HOST_MERGE_REMEDY_OUTSIDE_NOLIMITS': WITHOUT_NOLIMITS + '3. **Merge Pipeline Lock (`LIM-MERGE-003`)**: old\n',
+        }
+        for code, text in cases.items():
+            with self.subTest(code=code), self.assertRaisesRegex(ValueError, code):
+                POLICY.render(text)
+
+    def test_preview_reports_change_for_block_without_nolimits(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'AGENTS.md'
+            path.write_bytes(WITHOUT_NOLIMITS.encode())
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            result = POLICY.reconcile(path, digest, apply=False, backup_directory=None)
+            self.assertTrue(result['changed'])
+            self.assertFalse(result['applied'])
+            self.assertEqual(path.read_bytes(), WITHOUT_NOLIMITS.encode())
 
 
 if __name__ == '__main__':

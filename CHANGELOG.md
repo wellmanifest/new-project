@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.110
+
+- `scripts/host_publication_policy.py` reconciles host instruction files that carry the stale `wellmanifest:autonomous-merge` block without a `wellmanifest:nolimits` block, which is how the fleet's host files look (issue #507). Previously every such file was refused with `HOST_NOLIMITS_MARKERS_AMBIGUOUS`, so the stale merge-on-green authority could not be replaced. A partial or duplicated `nolimits` marker still fails closed, and a stray `LIM-MERGE-003` remedy outside a `nolimits` block is refused with `HOST_MERGE_REMEDY_OUTSIDE_NOLIMITS`.
+
 ## 0.20.108
 
 - Adoption now installs the pinned Policy DSL runtime (`.governance/policy_dsl_check.py`, `.governance/policy-dsl.lock.json`) declared by its lock, and `GOV-POLICY-DSL-001` validates `CONTRIBUTING.md` only when it contains a `dsl` fence. An adopter's existing contributor guide no longer fails the gate; a `dsl` fence with a missing or modified runtime still fails closed (issue #479).
