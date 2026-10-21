@@ -398,6 +398,37 @@ def load_policy_dsl_module(root: Path) -> Any:
     return module
 
 
+HOST_MERGE_START = "<!-- wellmanifest:autonomous-merge:start -->"
+HOST_MERGE_END = "<!-- wellmanifest:autonomous-merge:end -->"
+# The superseded block granted merge on green and administrative bypass; every
+# observed copy cites this revision of wellmanifest/merge.
+STALE_HOST_MERGE_SIGNATURE = "wellmanifest/merge@ticket-008"
+
+
+def check_host_merge_policy(root: Path, report: Report) -> None:
+    """Warn while host instructions still carry the superseded merge authority."""
+    stale = []
+    for name in ("AGENTS.md", "CLAUDE.md", "GEMINI.md"):
+        path = root / name
+        if not path.is_file() or path.is_symlink():
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        begin, end = text.find(HOST_MERGE_START), text.find(HOST_MERGE_END)
+        block = text[begin:end] if 0 <= begin < end else ""
+        if STALE_HOST_MERGE_SIGNATURE in block:
+            stale.append(name)
+    if stale:
+        report.add(
+            "GOV-HOST-MERGE-001",
+            "Host instructions carry the superseded autonomous-merge block that allows "
+            "agents to merge on green or bypass review.",
+            "Preview and apply scripts/host_publication_policy.py from the standard in an owned "
+            "ticket; only the independent Validator may approve and merge.",
+            stale,
+            severity="warning",
+        )
+
+
 def check_required_checks_declaration(root: Path, report: Report) -> None:
     script = next(
         (
@@ -5133,6 +5164,7 @@ def run_governance_checks(
     timed_step(report, "load_work_classification", load_work_classification, root, report, args.work_classification)
     timed_step(report, "check_lock", check_lock, root, lock_path, manifest, report)
     timed_step(report, "check_policy_dsl", check_policy_dsl, root, report)
+    timed_step(report, "check_host_merge_policy", check_host_merge_policy, root, report)
     timed_step(report, "check_required_checks_declaration", check_required_checks_declaration, root, report)
     timed_step(report, "check_agent_hosts", check_agent_hosts, root, args.actor, report)
     timed_step(report, "check_required_files", check_required_files, root, manifest, report)

@@ -182,6 +182,12 @@
       "executable": false
     },
     {
+      "source": "error/GOV-HOST-MERGE.md",
+      "target": ".governance/error/GOV-HOST-MERGE.md",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "error/GOV-PUSH.md",
       "target": ".governance/error/GOV-PUSH.md",
       "strategy": "managed",

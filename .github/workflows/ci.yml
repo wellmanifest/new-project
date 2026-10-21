@@ -176,6 +176,7 @@ jobs:
               tests/adoption_upgrade_harmonization_test.py \
               tests/branch_hygiene_template_test.py \
               tests/canonical-schema-hosts.test.py \
+              tests/host_merge_policy_check_test.py \
               tests/input_validation_test.py \
               tests/lifecycle-adoption.test.py \
               tests/policy_dsl_adoption_test.py \
