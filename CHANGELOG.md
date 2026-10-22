@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.118
+
+- `ticket_activity` records a terminal receipt for a PR squash-merged or rebased onto a newer base whose generated `project/TICKETS.md` hunk vanished because a sibling ticket already added the same rows (issue #524). Patch identity for squash and rebase verification now excludes that index, which `project/readme.sh` regenerates, while every authored path must still match exactly. Such tickets no longer stay `IN_PROGRESS` and hold their scope and WIP slot forever.
+
 ## 0.20.117
 
 - The default manifest assigns project CI workflows (`.github/workflows/**`) to the `infrastructure` workstream (issue #521), so an adopter can allocate a ticket that changes its own `ci.yml`. The governance workflows (`new-project-governance.yml`, `new-project-branch-hygiene.yml`) stay owned by `governance`; the hub manifest is unchanged.
