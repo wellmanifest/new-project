@@ -1,0 +1,113 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-366",
+  "summary": "Read-only controller editing resource observation in work-start (issue 510)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-366/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "error/GOV-WORK-START.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/work-start-report.schema.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/work_start_check.py",
+    "tests/work_start_controller_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "0fb35110b35ed3088a52fd842f732644efc56188",
+    "targetBranch": "main",
+    "outcome": "work_start_check.py --controller-store DIR --controller-repository OWNER/NAME reports a read-only editingResource observation of the controller's exclusive editing resource, so disjoint paths no longer look like an available editing slot, an expired holder still blocks and an unreadable controller is never reported as available.",
+    "nonGoals": [
+      "No admission, acquisition, queueing or takeover: the observation grants nothing and writes nothing",
+      "No change to the route decision or the planning eligibility of disjoint paths",
+      "No runtime controller client; transport, pin and policy reasons are only declared in the schema"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "work_start_check.py reads the file controller's state.json twice with O_NOFOLLOW (regular file, bounded size, no symlinked parents) and compares the bytes; it derives the resource digest from repositoryRef and targetBranch exactly as change_lease.py does and reports AVAILABLE, HELD_BY_TICKET, HELD_BY_OTHER, HELD_EXPIRED or UNAVAILABLE with a reason, a safe holder (lease, ticket, phase, expiry), the state digest and a deterministic nextAction. Both CLI options are required together. The report schema declares editingResource.",
+      "components": [
+        {
+          "name": "work-start",
+          "paths": [
+            "scripts/work_start_check.py",
+            "governance/work-start-report.schema.json",
+            "tests/work_start_controller_test.py",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "diagnostics",
+          "paths": [
+            "error/GOV-WORK-START.md"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "work_start_check.py --controller-store and --controller-repository",
+        "work-start report editingResource property",
+        "new-project.editing-resource-observation/v1"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; the report omits editingResource and the CLI options disappear."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/work_start_controller_test.py",
+          "python3 tests/work_start_test.py"
+        ],
+        "evidence": "project/ticket-366/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-366/README.md"
+      }
+    ]
+  }
+}
