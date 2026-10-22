@@ -30,6 +30,14 @@ class ObservationError(ValueError):
     pass
 
 
+class UnknownWorkstream(ObservationError):
+    """The requested workstream is not declared; a caller input error, not divergent local work."""
+
+    def __init__(self, declared):
+        super().__init__("Workstream is not declared in the governance manifest")
+        self.declared = declared
+
+
 _OBSERVATION_LOG = ".subactor/receipts/work-start/observation-failures.log"
 _OBSERVATION_LOG_MAX_BYTES = 128 * 1024
 
@@ -550,7 +558,11 @@ def inspect(root, workstream, requested_paths=(), ticket=None, storage=None,
     root = Path(git(root, "rev-parse", "--show-toplevel").strip()).resolve()
     manifest = manifest_at(root)
     coordination = manifest["coordination"]
-    stream = coordination["workstreams"][workstream]
+    declared = coordination["workstreams"]
+    if workstream not in declared:
+        raise UnknownWorkstream(sorted(name for name in declared
+                                       if isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9._-]{1,64}", name)))
+    stream = declared[workstream]
     limit = coordination["maxActiveTicketsPerWorkstream"]
     if type(limit) is not int or limit < 1:
         raise ObservationError("Invalid workstream WIP limit")
@@ -847,6 +859,16 @@ def main(argv=None):
         # secret-bearing input never leak there. The real cause is written
         # to a local-only log instead of being discarded (see
         # _record_observation_failure).
+        if isinstance(error, UnknownWorkstream):
+            # The whole cause fits on stdout, so nothing is logged. Declared
+            # names come from the checked-in manifest and disclose nothing;
+            # the caller's raw argument is not echoed.
+            print(json.dumps({"schema": SCHEMA, "readOnly": True, "grantsAuthority": False,
+                              "createsWorktree": False, "route": "RECONCILE", "diagnostic": CODE,
+                              "reason": "GOV-WORKSTREAM-001: --workstream is not declared in the governance "
+                                        "manifest; no checkout needs reconciling. Declared workstreams: "
+                                        + (", ".join(error.declared) or "none") + "."}))
+            return 3
         logged = _record_observation_failure(args.root, error)
 
         print(json.dumps({"schema": SCHEMA, "readOnly": True, "grantsAuthority": False,
