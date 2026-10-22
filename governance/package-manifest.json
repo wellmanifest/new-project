@@ -14,6 +14,12 @@
       "executable": false
     },
     {
+      "source": "scripts/ticket_restoration.py",
+      "target": ".governance/ticket_restoration.py",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "scripts/work_start_check.py",
       "target": ".governance/work_start_check.py",
       "strategy": "managed",

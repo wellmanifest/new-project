@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.112
+
+- `new-ticket.sh --restore-request FILE --recovery-lease-store DIR` restores an already reserved ticket whose canonical checkout, branch or uncommitted metadata was lost (issue #509). It never allocates a number or lowers the high-water mark. The request binds the reservation record in `.subactor/leases/`, the exact branch head, a SHA-256-pinned metadata snapshot (`README.md` and `intent.json` only) and the live controller lease CAS. Restoration rejects collisions, foreign or expired owners, symlinks, tampered snapshots and existing different metadata, resumes an interrupted run, and grants no editing or merge authority. Packaged as `.governance/ticket_restoration.py`; diagnostics stay `GOV-TICKET-ALLOCATION-003`.
+
 ## 0.20.111
 
 - New warning `GOV-HOST-MERGE-001` (runbook `error/GOV-HOST-MERGE.md`): the gate flags `AGENTS.md`, `CLAUDE.md` or `GEMINI.md` whose `wellmanifest:autonomous-merge` block still carries the superseded merge-on-green authority (`wellmanifest/merge@ticket-008`). It is a warning, so it does not fail adopters; it makes the remaining host-file rollout of issue #507 visible per repository. Reconcile with `scripts/host_publication_policy.py` in an owned ticket.
