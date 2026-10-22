@@ -729,9 +729,17 @@ class WorkStartTest(unittest.TestCase):
     def test_unknown_workstream_diagnostic_keeps_git_clean(self):
         result = self.cli("--workstream", "unknown-fixture")
         self.assertEqual(result.returncode, 3)
-        self.assertEqual(json.loads(result.stdout)["route"], "RECONCILE")
+        report = json.loads(result.stdout)
+        self.assertEqual(report["route"], "RECONCILE")
+        jsonschema.validate(report, json.loads((ROOT / "governance/work-start-report.schema.json").read_text()))
+        # The caller learns which workstreams exist instead of being told to reconcile local work.
+        self.assertIn("GOV-WORKSTREAM-001", report["reason"])
+        self.assertNotIn("preserve work and reconcile", report["reason"])
+        for name in self.manifest["coordination"]["workstreams"]:
+            self.assertIn(name, report["reason"])
+        self.assertNotIn("unknown-fixture", report["reason"])
         self.assertNotIn("Traceback", result.stdout + result.stderr)
-        self.assertTrue((self.root / start._OBSERVATION_LOG).exists())
+        self.assertFalse((self.root / start._OBSERVATION_LOG).exists())
         self.assertEqual(self.git(self.root, "status", "--porcelain"), "")
 
     def _diagnostic_log(self):
@@ -783,9 +791,10 @@ class WorkStartTest(unittest.TestCase):
         log = self._diagnostic_log()
         os.mkfifo(log, 0o600)
         before = log.stat()
+        (self.sibling() / "project/ticket-001/intent.json").write_text("not json")
         result = subprocess.run(
             [sys.executable, str(ROOT / "scripts/work_start_check.py"),
-             "--root", str(self.root), "--workstream", "unknown-fixture"],
+             "--root", str(self.root), "--workstream", "api"],
             capture_output=True, text=True, timeout=10,
         )
         self.assertEqual(result.returncode, 3)
