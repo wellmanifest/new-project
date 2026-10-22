@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.117
+
+- The default manifest assigns project CI workflows (`.github/workflows/**`) to the `infrastructure` workstream (issue #521), so an adopter can allocate a ticket that changes its own `ci.yml`. The governance workflows (`new-project-governance.yml`, `new-project-branch-hygiene.yml`) stay owned by `governance`; the hub manifest is unchanged.
+
 ## 0.20.116
 
 - A bare `./project/governance-check.sh` (and `.bat`) on a `ticket/NNN-*` branch now validates the ticket's committed range (issue #520): the wrappers pass `--infer-ticket-base`, which binds `--base` to `git merge-base HEAD origin/<target>` (target from `delivery.targetBranches`, or the ticket's own `delivery.targetBranch` when several are allowed). A missing or unrelated `origin/<target>` is `GOV-BASE-001` instead of an empty `GOV-PASS`. Explicit `--base` or `--changed-file` wins, and other branches and detached CI checkouts are unchanged.

@@ -63,5 +63,34 @@ class ScopeOwnershipMessageTests(unittest.TestCase):
         self.assertNotIn("$(id)", result.stderr)
 
 
+class DefaultWorkflowOwnershipTests(unittest.TestCase):
+    """The published default lets a ticket change project CI (issue #521)."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="scope-default-")
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        (self.root / ".governance").mkdir()
+        (self.root / ".governance" / "manifest.json").write_bytes(
+            (SOURCE / "governance" / "manifest.default.json").read_bytes())
+
+    scope = ScopeOwnershipMessageTests.scope
+
+    def test_project_ci_workflows_are_owned_by_infrastructure(self):
+        result = self.scope("infrastructure", ".github/workflows/ci.yml", ".github/workflows/release.yaml")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_governance_workflows_stay_owned_by_governance(self):
+        for workflow in (".github/workflows/new-project-governance.yml", ".github/workflows/new-project-branch-hygiene.yml"):
+            with self.subTest(workflow=workflow):
+                result = self.scope("governance", workflow)
+                self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_workflows_are_not_application_scope(self):
+        result = self.scope("application", ".github/workflows/ci.yml")
+        self.assertEqual(result.returncode, 3)
+        self.assertIn(".github/workflows/ci.yml (owned by infrastructure)", result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

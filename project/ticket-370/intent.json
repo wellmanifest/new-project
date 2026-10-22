@@ -1,0 +1,100 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-370",
+  "summary": "Project CI workflows are owned by the infrastructure workstream in the default manifest (issue 521)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-370/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "tests/scope_ownership_message_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "34687c03d82be174767e1f804e422137edbacabb",
+    "targetBranch": "main",
+    "outcome": "In an adopter on the default manifest, new-ticket.sh --workstream infrastructure --path .github/workflows/ci.yml is admitted instead of GOV-WORK-START-001 owned by no workstream, while the governance workflows stay owned by governance.",
+    "nonGoals": [
+      "No change to the hub manifest, whose governance workstream already owns the hub CI",
+      "No transfer of the managed governance workflows; their lock digests still guard them",
+      "No change to ownership validation or overlap rules"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add .github/workflows/** to infrastructure.ownedPaths in governance/manifest.default.json. Adopters receive it through the extendable manifest merge on upgrade; the governance workstream keeps its exact governance workflow paths.",
+      "components": [
+        {
+          "name": "default-policy",
+          "paths": [
+            "governance/manifest.default.json",
+            "tests/scope_ownership_message_test.py"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": true,
+      "interfaceChanges": [
+        "default manifest infrastructure ownedPaths include .github/workflows/**"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; project CI is again owned by no workstream in the default manifest."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/scope_ownership_message_test.py",
+          "bash tests/adoption-lock.test.sh",
+          "python3 tests/bootstrap_reusable_plan_test.py",
+          "python3 tests/adoption_upgrade_harmonization_test.py"
+        ],
+        "evidence": "project/ticket-370/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-370/README.md"
+      }
+    ]
+  }
+}
