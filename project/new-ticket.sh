@@ -1074,6 +1074,24 @@ PYBOOT
   fi
 fi
 
+if [[ "$TICKET_STORAGE" != "sqlite" ]]; then
+  # Assess the actual declared scope before writer-reservation hashes are made.
+  # The external product is advisory; its absence is recorded in the README.
+  if [[ -n "$TICKET_STORAGE_HELPER" ]]; then
+    python3 -B "$TICKET_STORAGE_HELPER" radar --root "$PWD" --ticket "$ticket_id"
+  else
+    cat >> "$ticket_dir/README.md" <<'RADAR'
+
+<!-- ticket-radar:start -->
+## Ticket Radar
+
+Assessment unavailable: managed ticket storage bridge is not installed.
+Advisory only; no execution or merge approval.
+<!-- ticket-radar:end -->
+RADAR
+  fi
+fi
+
 if [[ "$SEED_MODE" == true ]]; then
   # Only the seed's own ticket carriers may precede a real baseline. Ordinary
   # implementation still receives a canonical linked checkout and lease.

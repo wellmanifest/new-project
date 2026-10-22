@@ -211,6 +211,80 @@ def persist_scope(args):
     return scope
 
 
+def radar_readme(readme, intent, root):
+    """Assess initial intent through the external product; never grant authority.
+
+    Radar is advisory and separately installed. A missing/failed runtime is
+    visible in the README rather than blocking identity allocation or inventing
+    a score. No network installation, shell command or repository edit occurs.
+    """
+    readme = re.sub(r"\n<!-- ticket-radar:start -->\n.*?<!-- ticket-radar:end -->\n?",
+                    "\n", readme, flags=re.S)
+    heading = "\n<!-- ticket-radar:start -->\n## Ticket Radar\n\n"
+    notice = "Initial planned-scope estimate; advisory only, not execution or merge approval.\n"
+    ticket = {"id": intent["ticket"], "name": intent["summary"],
+              "description": "", "files": intent["allowedPaths"],
+              "acceptance_criteria": [], "delivery": intent.get("delivery", {})}
+    budget = intent.get("delivery", {}).get("estimatedMinutes", 30)
+    reason = "runtime not installed"
+    try:
+        result = subprocess.run(
+            ["ticket-radar", "--repository-root", str(root)],
+            input=json.dumps({"ticket": ticket, "budget_minutes": budget}),
+            capture_output=True, text=True, timeout=10, check=False,
+        )
+        reason = "runtime failed or returned an invalid assessment"
+        if result.returncode or len(result.stdout) > 1024 * 1024:
+            raise ValueError("radar invocation failed")
+        bundle = json.loads(result.stdout)
+        if not isinstance(bundle, dict) or bundle.get("schema") != "subactor.ticket-radar-bundle/v1":
+            raise ValueError("unknown radar bundle")
+        record = json.loads(bundle["jsonl"])
+        if (record["schema"] != "subactor.ticket-radar/v1"
+                or record["ticket_ref"] != intent["ticket"]
+                or record.get("authority", "ADVISORY") != "ADVISORY"
+                or record["assessment_mode"] != "predicted"
+                or record["complexity"] not in {"XS", "S", "M", "L", "XL"}
+                or type(record["score"]) is not int or not 0 <= record["score"] <= 100
+                or type(record["estimate"]["minutes"]) is not int
+                or not 0 <= record["estimate"]["minutes"] <= 100000
+                or type(record["estimate"]["budget_minutes"]) is not int
+                or not 5 <= record["estimate"]["budget_minutes"] <= 240
+                or type(record["split"]["recommended"]) is not bool):
+            raise ValueError("invalid planned assessment")
+        diagnostics = record.get("diagnostics", [])
+        if (not isinstance(diagnostics, list) or len(diagnostics) > 40
+                or any(not isinstance(v, str) or not re.fullmatch(r"[A-Z0-9_-]{1,100}", v)
+                       for v in diagnostics)):
+            raise ValueError("invalid diagnostics")
+        body = ("| Measure | Initial assessment |\n| --- | --- |\n"
+                f"| Impact score | {record['score']}/100 |\n"
+                f"| Complexity | {record['complexity']} |\n"
+                f"| Estimated effort | {record['estimate']['minutes']} min |\n"
+                f"| Planning budget | {record['estimate']['budget_minutes']} min |\n"
+                f"| Split recommended | {'yes' if record['split']['recommended'] else 'no'} |\n")
+        if diagnostics:
+            body += "\nDiagnostics: " + ", ".join(diagnostics) + ".\n"
+    except subprocess.TimeoutExpired:
+        body = "Assessment unavailable: runtime timed out.\n"
+    except (OSError, ValueError, KeyError, TypeError):
+        body = "Assessment unavailable: " + reason + ".\n"
+    return readme.rstrip() + "\n" + heading + notice + "\n" + body + "<!-- ticket-radar:end -->\n"
+
+
+def assess_file_ticket(args):
+    if re.fullmatch(r"ticket-[0-9]{3,}", args.ticket or "") is None:
+        raise ValueError("reserved ticket identity required")
+    directory = args.root / "project" / args.ticket
+    for name in ("README.md", "intent.json"):
+        no_links((directory / name).absolute())
+    intent = json.loads((directory / "intent.json").read_text(encoding="utf-8"))
+    if intent["ticket"] != args.ticket:
+        raise ValueError("allocated intent identity mismatch")
+    path = directory / "README.md"
+    path.write_text(radar_readme(path.read_text(encoding="utf-8"), intent, args.root), encoding="utf-8")
+
+
 def create(args):
     ticket = args.ticket
     if re.fullmatch(r"ticket-[0-9]{3,}", ticket or "") is None:
@@ -227,6 +301,7 @@ def create(args):
         "stacks": [], "dependsOn": [], "conflictsWith": [], "integrationTicket": None}
     readme = (f"# {args.title}\n\n- **Status**: IN_PROGRESS\n- **Workflow state**: EDIT\n\n"
         "## Goal and scope\n\nComplete the bounded intent in SQLite before implementation.\n")
+    readme = radar_readme(readme, intent, args.root)
     content = json.dumps({"README.md": readme, "intent.json": json.dumps(intent, indent=2) + "\n"})
     invoke(args.runtime_root, args.runtime_sha256, "init", "--repository", str(args.root))
     receipt = invoke(args.runtime_root, args.runtime_sha256, "create", "--repository", str(args.root),
@@ -236,7 +311,7 @@ def create(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["digest", "verify", "highest", "create", "active", "scope"])
+    parser.add_argument("command", choices=["digest", "verify", "highest", "create", "active", "scope", "radar"])
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--runtime-root")
     parser.add_argument("--runtime-sha256")
@@ -246,7 +321,9 @@ def main():
         parser.add_argument("--" + name)
     args = parser.parse_args()
     try:
-        if args.command == "scope":
+        if args.command == "radar":
+            assess_file_ticket(args)
+        elif args.command == "scope":
             print(json.dumps(persist_scope(args)))
         elif args.command == "active":
             from ticket_activity import resolve

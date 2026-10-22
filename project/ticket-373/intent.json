@@ -1,0 +1,93 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-373",
+  "summary": "Assess ticket impact during README creation",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-373/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "project/new-ticket.sh",
+    "scripts/ticket_storage.py",
+    "tests/ticket-radar-allocation.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "07d2cf4c34ea308929a6a2c78497f20901a58b3e",
+    "targetBranch": "main",
+    "outcome": "Assess initial file and SQLite tickets through subactor/ticket-radar and include the advisory result in their generated README. Test and publish through independent protected validation.",
+    "nonGoals": [
+      "No execution/merge authority from radar scores.",
+      "No automatic runtime installation or rewriting historical tickets."
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse the existing external product CLI via argv/stdin; managed ticket-storage bridge renders bounded advisory Markdown for both ticket stores after actual scope is known.",
+      "components": [
+        {
+          "name": "ticket-creation",
+          "paths": [
+            "project/new-ticket.sh",
+            "scripts/ticket_storage.py",
+            "tests/ticket-radar-allocation.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Add managed ticket_storage radar command and initial advisory README section."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert creation integration through protected review; existing tickets and intent semantics are unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket-radar-allocation.test.py"
+        ],
+        "evidence": "receipt:ticket-373/allocation-tests"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/sqlite-allocation.test.py"
+        ],
+        "evidence": "receipt:ticket-373/sqlite-tests"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh",
+          "Protected exact-head OneDev and Validator"
+        ],
+        "evidence": "receipt:ticket-373/publication"
+      }
+    ]
+  }
+}
