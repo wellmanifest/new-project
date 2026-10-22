@@ -309,8 +309,9 @@ def declaration_for(
     root: Path,
     ignored: tuple[str, ...] = (),
     workflow_payloads: dict[str, bytes] | None = None,
+    repository: str | None = None,
 ) -> dict[str, Any] | None:
-    repository = repository_name(root)
+    repository = repository or repository_name(root)
     if repository is None:
         return None
     directory = root / ".github/workflows"
