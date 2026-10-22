@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.116
+
+- A bare `./project/governance-check.sh` (and `.bat`) on a `ticket/NNN-*` branch now validates the ticket's committed range (issue #520): the wrappers pass `--infer-ticket-base`, which binds `--base` to `git merge-base HEAD origin/<target>` (target from `delivery.targetBranches`, or the ticket's own `delivery.targetBranch` when several are allowed). A missing or unrelated `origin/<target>` is `GOV-BASE-001` instead of an empty `GOV-PASS`. Explicit `--base` or `--changed-file` wins, and other branches and detached CI checkouts are unchanged.
+
 ## 0.20.115
 
 - Adoption binds `.governance/required-checks.json` to the real repository on the first pass (issue #518): `create_adoption_lock.py --repository OWNER/NAME` names the repository before `git remote add` (refused when it disagrees with an existing origin), and a run without any identity prints `UNBOUND ...` instead of silently keeping `unresolved/adopter`. The required-checks gate (`GOV-SYNC-001`) now names the detected origin, or its absence, and the deterministic remedy: rerun the managed updater at the locked `sourceRevision` with `--upgrade`. The updater stays the only writer.

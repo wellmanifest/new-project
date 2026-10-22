@@ -45,9 +45,16 @@ idealnie zgodny z `allowedPaths`, a mandat i tak nie powstał na czas.
 
 ## Verification
 
-`./project/governance-check.sh` bez argumentów bada **drzewo robocze**, nie
-historię commitów. Chroniona bramka zakresowa potwierdza, że intent istnieje w
-pierwszym materialnym commicie.
+`./project/governance-check.sh` bez `--base` na gałęzi `ticket/NNN-*` sam
+wyznacza bazę jako `git merge-base HEAD origin/<target>` (target z
+`delivery.targetBranches` manifestu, a przy kilku z `delivery.targetBranch`
+ticketu) i bada zacommitowany zakres, więc brak kontraktu `delivery` jest
+wykrywany lokalnie. Brak `origin/<target>` kończy się `GOV-BASE-001` zamiast
+pustego `GOV-PASS`; wykonaj `git fetch origin <target>` albo podaj `--base`.
+Jawne `--base` lub `--changed-file` zawsze wygrywa. Na innych gałęziach i przy
+odłączonym HEAD wywołanie bez argumentów nadal bada tylko drzewo robocze.
+Chroniona bramka zakresowa potwierdza, że intent istnieje w pierwszym
+materialnym commicie.
 
 Dowodem jest wyłącznie tryb zakresowy:
 
@@ -56,7 +63,7 @@ Dowodem jest wyłącznie tryb zakresowy:
 ```
 
 Uruchom go przed każdym pushem gałęzi ticketowej. Wynik `GOV-PASS` z gołego
-wywołania nie jest wystarczającym dowodem.
+wywołania poza gałęzią `ticket/NNN-*` nie jest wystarczającym dowodem.
 
 ## Do not
 
