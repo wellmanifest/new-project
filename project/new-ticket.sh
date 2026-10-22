@@ -31,6 +31,7 @@ SNAPSHOT_MATERIALIZE=""
 MIGRATION_AUTHORIZATION=""
 MIGRATION_AUTHORIZATION_SHA256=""
 RECOVER_REQUEST=""
+RECOVERY_HELPER=ticket_recovery
 RECOVERY_LEASE_STORE=""
 WORKTREE_SLUG=""
 BOOTSTRAP_ADOPTION_DIGEST=""
@@ -84,8 +85,10 @@ Usage: ./project/new-ticket.sh [options]
                           Independently pinned grant digest
       --recover-request FILE
                           Explicit exact-state pre-adoption recovery request
+      --restore-request FILE
+                          Exact request restoring an already reserved ticket checkout
       --recovery-lease-store DIR
-                          Existing external local controller store (recovery only)
+                          Existing external local controller store (recovery/restoration)
       --bootstrap-adoption-digest SHA
                           Confirm ownership of exact first scaffold adoption delta
       --standard-adoption-plan FILE
@@ -170,8 +173,14 @@ while [[ $# -gt 0 ]]; do
       require_value "$@"; MIGRATION_AUTHORIZATION="$2"; shift 2 ;;
     --migration-authorization-sha256)
       require_value "$@"; MIGRATION_AUTHORIZATION_SHA256="$2"; shift 2 ;;
-    --recover-request)
-      require_value "$@"; RECOVER_REQUEST="$2"; shift 2 ;;
+    --recover-request|--restore-request)
+      require_value "$@"
+      if [[ -n "$RECOVER_REQUEST" ]]; then
+        echo "GOV-TICKET-ALLOCATION-003: pass exactly one recovery or restoration request." >&2
+        exit 5
+      fi
+      [[ "$1" == --restore-request ]] && RECOVERY_HELPER=ticket_restoration
+      RECOVER_REQUEST="$2"; shift 2 ;;
     --recovery-lease-store)
       require_value "$@"; RECOVERY_LEASE_STORE="$2"; shift 2 ;;
     --bootstrap-adoption-digest)
@@ -600,8 +609,10 @@ if [[ -n "$RECOVER_REQUEST" || -n "$RECOVERY_LEASE_STORE" ]]; then
   # binds an already-existing canonical linked checkout. Resolve normal
   # allocation from primary, but execute this bounded recovery at the caller
   # checkout so its exact ticket branch and managed helper remain available.
+  # Restoration re-registers an already reserved identity whose checkout is
+  # lost; it shares these inputs and exclusions but never reserves a number.
   cd "$CALLER_CHECKOUT"
-  for candidate in .governance/ticket_recovery.py scripts/ticket_recovery.py; do
+  for candidate in ".governance/$RECOVERY_HELPER.py" "scripts/$RECOVERY_HELPER.py"; do
     if [[ -f "$candidate" ]]; then
       exec python3 "$candidate" --root . --request "$RECOVER_REQUEST" --lease-store "$RECOVERY_LEASE_STORE" --workstream "$WORKSTREAM"
     fi

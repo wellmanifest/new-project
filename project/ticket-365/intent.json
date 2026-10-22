@@ -1,0 +1,115 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-365",
+  "summary": "Governed restoration of an already reserved ticket (issue 509)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-365/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "error/GOV-TICKET-ALLOCATION.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/package-manifest.json",
+    "packages/wellman/pyproject.toml",
+    "project/new-ticket.sh",
+    "scripts/ticket_restoration.py",
+    "tests/ticket-restoration.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7b056cac6561b514bc7c1e901d6d63ac4fd14aaf",
+    "targetBranch": "main",
+    "outcome": "An already reserved ticket whose canonical checkout, branch or uncommitted metadata was lost is restored under the same identity through new-ticket.sh --restore-request, bound to its reservation, exact head, pinned snapshot and live controller lease, without granting editing or merge authority.",
+    "nonGoals": [
+      "No new ticket number, high-water change or reuse",
+      "No owner handoff: the controller performs it before restoration",
+      "No material source restoration and no change to ticket_recovery.py"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 11,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "A separate managed helper scripts/ticket_restoration.py reuses ticket_recovery's safe loading, controller lock and diagnostics. It requires number <= high-water, a unique .subactor/leases reservation naming the same owner, a SHA-256-pinned README.md+intent.json snapshot and an active unexpired controller lease in phase claimed or editing; it creates only the missing branch (create-only update-ref), the relative canonical worktree and the two metadata files (link, never overwrite), and is idempotent on rerun. new-ticket.sh routes --restore-request through the existing recovery block so all exclusions apply.",
+      "components": [
+        {
+          "name": "allocator",
+          "paths": [
+            "scripts/ticket_restoration.py",
+            "project/new-ticket.sh",
+            "tests/ticket-restoration.test.py",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "packaging-diagnostics",
+          "paths": [
+            "governance/package-manifest.json",
+            "error/GOV-TICKET-ALLOCATION.md"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "new-ticket.sh --restore-request",
+        "new-project.ticket-restoration-request/v1 and new-project.ticket-metadata-snapshot/v1 inputs",
+        "packaged .governance/ticket_restoration.py"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; --restore-request disappears and recovery behaves as before."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket-restoration.test.py",
+          "python3 tests/ticket-recovery.test.py"
+        ],
+        "evidence": "project/ticket-365/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-365/README.md"
+      }
+    ]
+  }
+}
