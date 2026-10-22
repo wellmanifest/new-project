@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.114
+
+- GOV-INTENT-002 delivery errors now name the required location of a misplaced but recognized field (issue #517): `delivery.interfaceChanges` reports `move interfaceChanges to delivery.architecture.interfaceChanges`, and architecture, budget and top-level delivery fields placed at the wrong level name their path the same way. The field is still rejected (no synonym); unknown fields get no location hint. Runbook `GOV-INTENT` documents the placement.
+
 ## 0.20.113
 
 - `work_start_check.py --controller-store DIR --controller-repository OWNER/NAME` adds a read-only `editingResource` observation of the controller's exclusive editing resource (issue #510): `AVAILABLE`, `HELD_BY_TICKET`, `HELD_BY_OTHER`, `HELD_EXPIRED` or `UNAVAILABLE` with a reason, a safe holder reference, the state digest and a deterministic `nextAction`. Disjoint paths no longer look like an available editing slot, an expired holder is reported as still blocking, and an unreadable or changing controller is never reported as available. The observation grants nothing and writes nothing; the report schema declares it.

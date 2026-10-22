@@ -34,6 +34,15 @@ idealnie zgodny z `allowedPaths`, a mandat i tak nie powstał na czas.
 3. Gdy kod został zacommitowany przed intentem, przebuduj nieopublikowaną gałąź
    atomowo. Nie przepisuj opublikowanej, zaufanej historii.
 
+4. Gdy błąd `delivery ... incomplete` lub `bounded-delivery fields` zawiera
+   `move X to PATH`, przenieś pole dokładnie do wskazanej ścieżki zamiast
+   przepisywać intent. Pola architektury (`interfaceChanges`, `dataChanges`,
+   `components`, `ui`, `rollback`, `status`, `decision`,
+   `responsibilityChanges`) należą do `delivery.architecture`, limity `max*` do
+   `delivery.budgets`, a pozostałe pola kontraktu bezpośrednio do `delivery`.
+   Przeniesione pole nie jest akceptowane jako synonim; nieznane pola pozostają
+   odrzucone bez podpowiedzi położenia.
+
 ## Verification
 
 `./project/governance-check.sh` bez argumentów bada **drzewo robocze**, nie
