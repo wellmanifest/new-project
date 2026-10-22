@@ -48,6 +48,30 @@ class DeliveryMessageTests(unittest.TestCase):
         self.assertIn("missing: acceptedBaseSha", message)
         self.assertNotIn("standardAdoption", message.split("unexpected:")[-1] if "unexpected:" in message else "")
 
+    def test_misplaced_recognized_field_names_its_required_path(self):
+        architecture = {"status": "accepted", "decision": "d", "components": [], "responsibilityChanges": False,
+                        "dataChanges": [], "ui": {"impact": "none", "states": [], "evidence": []}, "rollback": "r"}
+        delivery = {"acceptedBaseSha": "0" * 40, "targetBranch": "main", "outcome": "o", "nonGoals": ["n"],
+                    "complexity": "XS", "estimatedMinutes": 5, "runtimeDependencies": [], "validation": [],
+                    "budgets": {"maxImplementationFiles": 1, "maxAffectedComponents": 1,
+                                "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+                    "architecture": architecture, "interfaceChanges": ["cli --flag"]}
+        message = gc.delivery_intent_error(delivery)
+        self.assertIn("unexpected: interfaceChanges", message)
+        self.assertIn("move interfaceChanges to delivery.architecture.interfaceChanges", message)
+        message = gc.delivery_architecture_error({**architecture, "interfaceChanges": [], "estimatedMinutes": 5})
+        self.assertIn("move estimatedMinutes to delivery.estimatedMinutes", message)
+        message = gc.delivery_architecture_error({**architecture, "maxRuntimeDependencies": 0})
+        self.assertIn("missing: interfaceChanges", message)
+        self.assertIn("move maxRuntimeDependencies to delivery.budgets.maxRuntimeDependencies", message)
+
+    def test_misplaced_field_is_still_rejected_and_unknown_fields_get_no_location(self):
+        message = gc.delivery_intent_error({"interfaceChanges": [], "surprise": 1})
+        self.assertTrue(message.startswith("delivery must contain exactly the bounded-delivery fields"))
+        self.assertIn("unexpected: interfaceChanges, surprise", message)
+        self.assertNotIn("move surprise", message)
+        self.assertIn("move interfaceChanges to delivery.architecture.interfaceChanges", message)
+
     def test_bundled_copy_is_identical(self):
         bundled = SOURCE / "packages/wellman/src/wellman/_bundled/governance_check.py"
         self.assertEqual(bundled.read_bytes(), (SOURCE / "scripts/governance_check.py").read_bytes())

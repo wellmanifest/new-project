@@ -634,7 +634,20 @@ def effective_delivery_policy(policy: dict[str, Any], complexity: str) -> dict[s
     return policy if profile is None else {**policy, **profile}
 
 
-def field_set_hint(value: Any, required: set[str], optional: set[str] = frozenset()) -> str:
+# Where each recognized delivery field belongs, so a misplaced one names its required path.
+DELIVERY_FIELD_PATHS = {
+    **{name: f"delivery.{name}" for name in (
+        "acceptedBaseSha", "targetBranch", "outcome", "nonGoals", "complexity", "estimatedMinutes",
+        "budgets", "architecture", "runtimeDependencies", "validation")},
+    **{name: f"delivery.budgets.{name}" for name in (
+        "maxImplementationFiles", "maxAffectedComponents", "maxPublicInterfaceChanges", "maxRuntimeDependencies")},
+    **{name: f"delivery.architecture.{name}" for name in (
+        "status", "decision", "components", "responsibilityChanges", "interfaceChanges", "dataChanges", "ui", "rollback")},
+}
+
+
+def field_set_hint(value: Any, required: set[str], optional: set[str] = frozenset(),
+                   located: dict[str, str] | None = None) -> str:
     """Name the missing and unexpected keys so an agent can repair an intent in one edit."""
     if not isinstance(value, dict):
         return f" (expected an object with {', '.join(sorted(required))}; got {type(value).__name__})"
@@ -643,6 +656,7 @@ def field_set_hint(value: Any, required: set[str], optional: set[str] = frozense
     parts = [f"missing: {', '.join(missing)}"] if missing else []
     if unexpected:
         parts.append(f"unexpected: {', '.join(unexpected)}")
+    parts.extend(f"move {name} to {located[name]}" for name in unexpected if name in (located or {}))
     return f" ({'; '.join(parts)})" if parts else ""
 
 
@@ -669,7 +683,7 @@ def delivery_budgets_error(budgets: Any) -> str | None:
         "maxPublicInterfaceChanges", "maxRuntimeDependencies",
     }
     if not isinstance(budgets, dict) or set(budgets) != fields:
-        return "delivery budgets are incomplete" + field_set_hint(budgets, fields)
+        return "delivery budgets are incomplete" + field_set_hint(budgets, fields, located=DELIVERY_FIELD_PATHS)
     if not integer_fields_valid(budgets, fields):
         return "delivery budgets must be integers"
     if budgets["maxImplementationFiles"] < 1 or budgets["maxAffectedComponents"] < 1:
@@ -768,7 +782,8 @@ def delivery_architecture_error(architecture: Any) -> str | None:
         "interfaceChanges", "dataChanges", "ui", "rollback",
     }
     if not isinstance(architecture, dict) or set(architecture) != fields:
-        return "delivery architecture decision is incomplete" + field_set_hint(architecture, fields)
+        return "delivery architecture decision is incomplete" + field_set_hint(
+            architecture, fields, located=DELIVERY_FIELD_PATHS)
     if architecture.get("status") != "accepted":
         return f"delivery architecture status must be accepted before implementation (got {architecture.get('status')!r})"
     for name in ("decision", "rollback"):
@@ -1163,7 +1178,8 @@ def delivery_intent_error(value: Any) -> str | None:
     }
     optional_fields = {"standardAdoption", "snapshotMigration"}
     if not isinstance(value, dict) or not required_fields <= set(value) <= required_fields | optional_fields:
-        return "delivery must contain exactly the bounded-delivery fields" + field_set_hint(value, required_fields, optional_fields)
+        return "delivery must contain exactly the bounded-delivery fields" + field_set_hint(
+            value, required_fields, optional_fields, located=DELIVERY_FIELD_PATHS)
     if "snapshotMigration" in value:
         try:
             migration_error = snapshot_migration_runtime().contract_error(value["snapshotMigration"])

@@ -1,0 +1,109 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-367",
+  "summary": "Name the required location of a misplaced delivery field in GOV-INTENT-002 (issue 517)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-367/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "error/GOV-INTENT.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/governance_check.py",
+    "tests/intent_delivery_messages_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "44fbdce3cecd15cbee7be257bdd8212ff0383875",
+    "targetBranch": "main",
+    "outcome": "A GOV-INTENT-002 delivery error for a recognized field at the wrong level names its required path, e.g. move interfaceChanges to delivery.architecture.interfaceChanges, so the fix is one mechanical move instead of an intent rewrite.",
+    "nonGoals": [
+      "No synonym: a misplaced field stays rejected",
+      "Unknown fields get no location hint and stay rejected",
+      "No change to the AGENTS template or host projections"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "governance_check.py keeps one DELIVERY_FIELD_PATHS map of every recognized delivery, budget and architecture field to its required path; field_set_hint takes it as an optional located map and appends 'move X to PATH' for unexpected keys it knows. The delivery, budgets and architecture validators pass the map. The bundled Wellman copy stays byte-identical.",
+      "components": [
+        {
+          "name": "governance-check",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "tests/intent_delivery_messages_test.py"
+          ]
+        },
+        {
+          "name": "diagnostics",
+          "paths": [
+            "error/GOV-INTENT.md"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "GOV-INTENT-002 delivery message names the required path of a misplaced recognized field"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; the message lists the unexpected field without its location."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/intent_delivery_messages_test.py",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "project/ticket-367/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-367/README.md"
+      }
+    ]
+  }
+}
