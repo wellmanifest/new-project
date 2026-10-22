@@ -1,0 +1,120 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-368",
+  "summary": "Bind required checks to the real repository on first adoption (issue 518)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-368/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/check_required_checks.py",
+    "packages/wellman/src/wellman/_bundled/generate_required_checks.py",
+    "scripts/check_required_checks.py",
+    "scripts/create_adoption_lock.py",
+    "scripts/generate_required_checks.py",
+    "tests/required_checks_binding_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "9929730e7ee15e165b4d732bd014f1b75f3b0a6c",
+    "targetBranch": "main",
+    "outcome": "A fresh adoption binds .governance/required-checks.json to the target's real OWNER/NAME in one pass, from origin or an explicit --repository before the remote exists; a run without identity says so, and GOV-SYNC-001 on the placeholder states the detected name and the exact updater rerun.",
+    "nonGoals": [
+      "No manual editing path for managed .governance files: the updater stays the only writer",
+      "No change to the bootstrap reusable plan, which still requires an authoritative origin",
+      "No identity guessed from directory names or other heuristics"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 13,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "generate_required_checks.declaration_for accepts an explicit repository and otherwise keeps reading origin. create_adoption_lock.py adds --repository OWNER/NAME (validated, never the placeholder), refuses one that disagrees with an existing origin, passes it to the ordinary projection and prints UNBOUND when the template marker is kept for lack of identity. check_required_checks names the detected origin or its absence and the updater rerun in the placeholder error. Bundled Wellman copies stay identical.",
+      "components": [
+        {
+          "name": "adoption",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "scripts/generate_required_checks.py",
+            "packages/wellman/src/wellman/_bundled/generate_required_checks.py",
+            "tests/required_checks_binding_test.py",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "required-checks-gate",
+          "paths": [
+            "scripts/check_required_checks.py",
+            "packages/wellman/src/wellman/_bundled/check_required_checks.py",
+            "docs/STANDARD_UPGRADE.md"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "create_adoption_lock.py --repository OWNER/NAME",
+        "UNBOUND adopter notice for a kept placeholder",
+        "GOV-SYNC-001 placeholder message names the detected identity and remedy"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; adoption binds only from origin and the placeholder error loses its remedy."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/required_checks_binding_test.py",
+          "bash tests/required-checks.test.sh",
+          "bash tests/adoption-lock.test.sh"
+        ],
+        "evidence": "project/ticket-368/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-368/README.md"
+      }
+    ]
+  }
+}

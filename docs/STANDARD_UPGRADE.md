@@ -2,6 +2,18 @@
 
 ## Overview
 
+### Binding required checks on first adoption (0.20.115)
+
+The adopter binds `.governance/required-checks.json` to the target's real
+`OWNER/NAME` in the same pass whenever an `origin` remote exists. To adopt
+before `git remote add`, pass `--repository OWNER/NAME`; a value that disagrees
+with an existing origin is refused. Without either, the template marker
+`unresolved/adopter` is kept and the adopter prints `UNBOUND ...` instead of
+inventing an identity. The required-checks gate (`GOV-SYNC-001`) then names the
+detected origin, or its absence, and the deterministic remedy: rerun the
+managed updater at the locked `sourceRevision` with `--upgrade`. The updater
+remains the only writer; do not edit the placeholder by hand.
+
 ### Fresh bootstrap with historical file tickets (0.20.89)
 
 A repository without committed native governance can contain old file tickets.

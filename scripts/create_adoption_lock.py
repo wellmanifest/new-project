@@ -963,6 +963,7 @@ def project_inherited_required_checks(
     payloads: dict[str, bytes],
     bootstrap_plan: Path | None = None,
     implementation_paths: list[str] | None = None,
+    repository: str | None = None,
 ) -> None:
     """Replace only the hub's inherited check declaration with target truth.
 
@@ -997,14 +998,22 @@ def project_inherited_required_checks(
         raise SystemExit("cannot load the managed required-checks generator")
     generator = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(generator)
+    origin = generator.repository_name(target_root)
+    if repository is not None and origin is not None and origin.casefold() != repository.casefold():
+        raise SystemExit(f"--repository {repository} disagrees with origin {origin}")
     derived = (bootstrap_reusable_declaration(target_root, workflow_payloads, bootstrap_plan,
                                               implementation_paths)
                if bootstrap_plan is not None else generator.declaration_for(
-                   target_root, ignored=(), workflow_payloads=workflow_payloads))
+                   target_root, ignored=(), workflow_payloads=workflow_payloads,
+                   repository=repository))
     if derived is None:
-        # A non-Git bootstrap has no authoritative repository identity. Keep
-        # the source declaration rather than inventing one; a later adoption
-        # in the real repository will project the local workflow truth.
+        # A target without an origin remote or --repository has no
+        # authoritative identity. Keep the source declaration rather than
+        # inventing one, and say so: the first material PR fails GOV-SYNC-001
+        # until a rerun binds the name.
+        if document.get("repository") == UNRESOLVED_ADOPTER:
+            print(f"UNBOUND {CHECKS_TARGET} keeps {UNRESOLVED_ADOPTER}: no origin remote; "
+                  "rerun with --repository OWNER/NAME or after git remote add origin")
         return
     # A display name is not source identity. Even a caller named governance
     # must bind its actual callee before we can project its published checks.
@@ -1132,6 +1141,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--allocation-plan", action="store_true",
                         help="With --check, export a read-only exact-state native upgrade allocation plan")
+    parser.add_argument("--repository", metavar="OWNER/NAME",
+                        help="Bind required checks to this repository before an origin remote exists")
     args = parser.parse_args(argv)
 
     if args.allocation_plan and (not args.check or args.allow_unpublished_for_testing
@@ -1152,6 +1163,10 @@ def main(argv: list[str] | None = None) -> int:
 
     if re.fullmatch(r"[0-9a-f]{40}", args.source_revision) is None:
         parser.error("--source-revision must be a full lowercase 40-character commit SHA")
+    if args.repository is not None and (
+            re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", args.repository) is None
+            or args.repository == UNRESOLVED_ADOPTER):
+        parser.error("--repository must be OWNER/NAME")
     standard_root = Path(__file__).resolve().parent.parent
     requested_root = Path(args.target_root).absolute()
     if (args.migrate_wellman_scaffold or args.bootstrap_native_adoption or args.allocation_plan) and any(
@@ -1269,7 +1284,7 @@ def main(argv: list[str] | None = None) -> int:
 
     bootstrap_paths: list[str] = []
     project_inherited_required_checks(target_root, payloads, args.bootstrap_reusable_plan,
-                                     bootstrap_paths)
+                                     bootstrap_paths, args.repository)
     if bootstrap_paths:
         # These three exact target paths need an owner before real allocation.
         # This is a target manifest declaration, never a writer/merge grant.

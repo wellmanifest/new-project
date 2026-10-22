@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.115
+
+- Adoption binds `.governance/required-checks.json` to the real repository on the first pass (issue #518): `create_adoption_lock.py --repository OWNER/NAME` names the repository before `git remote add` (refused when it disagrees with an existing origin), and a run without any identity prints `UNBOUND ...` instead of silently keeping `unresolved/adopter`. The required-checks gate (`GOV-SYNC-001`) now names the detected origin, or its absence, and the deterministic remedy: rerun the managed updater at the locked `sourceRevision` with `--upgrade`. The updater stays the only writer.
+
 ## 0.20.114
 
 - GOV-INTENT-002 delivery errors now name the required location of a misplaced but recognized field (issue #517): `delivery.interfaceChanges` reports `move interfaceChanges to delivery.architecture.interfaceChanges`, and architecture, budget and top-level delivery fields placed at the wrong level name their path the same way. The field is still rejected (no synonym); unknown fields get no location hint. Runbook `GOV-INTENT` documents the placement.
