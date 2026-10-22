@@ -382,6 +382,34 @@ allocation_worktree="$race/mine/.worktrees/ticket-010--must-not-reuse-a-remote-c
 test -d "$allocation_worktree/project/ticket-010"
 test ! -d "$race/mine/project/ticket-010"
 
+# The allocator indexes the ticket it has just created, so that ticket's own PR
+# carries exactly its own row (issue #516); unknown claims stay out.
+grep -q '^| \*\*ticket-010\*\* |' "$allocation_worktree/project/TICKETS.md"
+if grep -qE 'ticket-00[89]' "$allocation_worktree/project/TICKETS.md"; then
+  echo 'Allocator indexed a remote-only claim' >&2
+  exit 1
+fi
+# Naming one own ticket never indexes another untracked ticket in the checkout.
+mkdir -p "$allocation_worktree/project/ticket-011"
+printf '# Ticket 011\n' > "$allocation_worktree/project/ticket-011/README.md"
+(
+  cd "$allocation_worktree"
+  T2C_TICKET_INDEX_OWN=project/ticket-010 bash project/readme.sh > own.out 2> own.err
+)
+grep -q '^| \*\*ticket-010\*\* |' "$allocation_worktree/project/TICKETS.md"
+grep -q 'skipping untracked project/ticket-011' "$allocation_worktree/own.err"
+if grep -q 'ticket-011' "$allocation_worktree/project/TICKETS.md"; then
+  echo 'Index referenced a foreign untracked ticket' >&2
+  exit 1
+fi
+rm -rf "$allocation_worktree/project/ticket-011" "$allocation_worktree/own.out" "$allocation_worktree/own.err"
+status=0
+(
+  cd "$allocation_worktree"
+  T2C_TICKET_INDEX_OWN='project/ticket-010/../x' bash project/readme.sh > /dev/null 2>&1
+) || status=$?
+test "$status" -eq 2
+
 # ticket-010 is untracked in its linked checkout, so its local index must
 # leave it out without dirtying the primary checkout.
 (
