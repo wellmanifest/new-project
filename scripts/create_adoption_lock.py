@@ -1013,7 +1013,7 @@ def project_inherited_required_checks(
         # until a rerun binds the name.
         if document.get("repository") == UNRESOLVED_ADOPTER:
             print(f"UNBOUND {CHECKS_TARGET} keeps {UNRESOLVED_ADOPTER}: no origin remote; "
-                  "rerun with --repository OWNER/NAME or after git remote add origin")
+                  "rerun with --repository OWNER/NAME or after git remote add origin", file=sys.stderr)
         return
     # A display name is not source identity. Even a caller named governance
     # must bind its actual callee before we can project its published checks.

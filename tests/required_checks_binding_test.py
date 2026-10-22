@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Adoption binds required checks to the real repository on the first pass; disposable fixtures only."""
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 import importlib.util
 import io
 import json
@@ -36,10 +36,12 @@ class RequiredChecksBindingTest(unittest.TestCase):
 
     def project(self, repository=None):
         payloads = {adopter.CHECKS_TARGET: SEED, ".github/workflows/new-project-governance.yml": WORKFLOW}
-        output = io.StringIO()
-        with redirect_stdout(output):
+        output, diagnostics = io.StringIO(), io.StringIO()
+        with redirect_stdout(output), redirect_stderr(diagnostics):
             adopter.project_inherited_required_checks(self.root, payloads, repository=repository)
-        return json.loads(payloads[adopter.CHECKS_TARGET])["repository"], output.getvalue()
+        # Plan exports print JSON on stdout, so the projection must keep it clean.
+        self.assertEqual(output.getvalue(), "")
+        return json.loads(payloads[adopter.CHECKS_TARGET])["repository"], diagnostics.getvalue()
 
     def remote(self, url):
         subprocess.run(["git", "-C", str(self.root), "remote", "add", "origin", url], check=True)
