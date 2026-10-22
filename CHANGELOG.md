@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.113
+
+- `work_start_check.py --controller-store DIR --controller-repository OWNER/NAME` adds a read-only `editingResource` observation of the controller's exclusive editing resource (issue #510): `AVAILABLE`, `HELD_BY_TICKET`, `HELD_BY_OTHER`, `HELD_EXPIRED` or `UNAVAILABLE` with a reason, a safe holder reference, the state digest and a deterministic `nextAction`. Disjoint paths no longer look like an available editing slot, an expired holder is reported as still blocking, and an unreadable or changing controller is never reported as available. The observation grants nothing and writes nothing; the report schema declares it.
+
 ## 0.20.112
 
 - `new-ticket.sh --restore-request FILE --recovery-lease-store DIR` restores an already reserved ticket whose canonical checkout, branch or uncommitted metadata was lost (issue #509). It never allocates a number or lowers the high-water mark. The request binds the reservation record in `.subactor/leases/`, the exact branch head, a SHA-256-pinned metadata snapshot (`README.md` and `intent.json` only) and the live controller lease CAS. Restoration rejects collisions, foreign or expired owners, symlinks, tampered snapshots and existing different metadata, resumes an interrupted run, and grants no editing or merge authority. Packaged as `.governance/ticket_restoration.py`; diagnostics stay `GOV-TICKET-ALLOCATION-003`.

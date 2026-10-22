@@ -139,6 +139,27 @@ The result explicitly lists PR, checks, approval, protected merge, release and
 deployment as unobserved stages. Preserve dirty work regardless of remote
 status. Gather those stages' own exact-head receipts before claiming DONE.
 
+### Optional controller availability
+
+`--controller-store DIR --controller-repository OWNER/NAME` adds a read-only
+`editingResource` observation (`new-project.editing-resource-observation/v1`)
+of the controller's exclusive editing resource for that repository and target
+branch. Run it before preparing an expiring editing credential or admission.
+The route still reports planning eligibility only: disjoint paths can select
+`NEW_TICKET_CANDIDATE` or `REUSE_EXISTING` while the resource is
+`HELD_BY_OTHER`. `HELD_EXPIRED` still blocks: expiry alone never authorizes a
+takeover; the controller must release it or record a protected handoff.
+`UNAVAILABLE` carries a reason (`controller-store-missing`,
+`controller-state-unreadable`, `controller-state-invalid`,
+`controller-state-changed`; runtime clients may report transport, pin or
+policy failures) and never implies availability. The holder is a safe
+reference (lease, ticket, phase, expiry) without owner session or plan.
+`queueSupported` is `false` for the file controller, which has no queue; a
+runtime that queues reports `QUEUED`, and a queued request is not a grant.
+Follow `nextAction`, bind `stateDigest` and `observedAt` as the observation's
+freshness, and re-observe instead of retrying an admission whose window
+elapsed.
+
 ## Verification
 
 Report `new-project.work-start-report/v1` uses closed schema

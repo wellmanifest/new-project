@@ -552,9 +552,85 @@ def publication_observation(root, entries, target):
         return unknown()
 
 
+CONTROLLER_STORE_SCHEMA = "subactor.repository-change-lease-store/v1"
+FREE_LEASE_PHASES = {"closed", "cancelled", "released"}
+REPOSITORY_REF = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+RESOURCE_ACTIONS = {
+    "AVAILABLE": "Acquire the editing lease from the controller, then re-run work-start with --ticket before any write.",
+    "HELD_BY_TICKET": "Continue only under the existing lease after verifying its owner, fencing token and expiry.",
+    "HELD_BY_OTHER": "Wait for the holder's release or a protected handoff; do not prepare an expiring admission now.",
+    "HELD_EXPIRED": "The expired holder still blocks the resource until the controller releases it or records a "
+                    "protected takeover; expiry alone never authorizes takeover.",
+    "UNAVAILABLE": "Restore controller access; do not infer availability from disjoint paths or retry an admission.",
+}
+
+
+def _controller_bytes(store):
+    path = Path(os.path.abspath(store)) / "state.json"
+    if any(p.is_symlink() for p in (path, *path.parents)):
+        raise ObservationError("Symlinked controller state")
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(descriptor, "rb") as stream:
+        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+            raise ObservationError("Controller state must be a regular file")
+        raw = stream.read(4 * 1024 * 1024 + 1)
+    if len(raw) > 4 * 1024 * 1024:
+        raise ObservationError("Controller state too large")
+    return raw
+
+
+def controller_observation(store, repository, target, ticket=None):
+    """Read-only availability of the controller's exclusive editing resource; never a grant or a queue entry."""
+    observation = {
+        "schema": "new-project.editing-resource-observation/v1",
+        "observedAt": datetime.now(timezone.utc).isoformat(),
+        "readOnly": True, "grantsAuthority": False, "queueSupported": False,
+        "repositoryRef": repository, "targetBranch": target, "ticket": ticket,
+        "resource": digest({"repositoryRef": repository, "targetBranch": target}),
+        "state": "UNAVAILABLE", "reason": None, "holder": None, "stateDigest": None,
+    }
+    try:
+        raw = _controller_bytes(store)
+    except FileNotFoundError:
+        observation["reason"] = "controller-store-missing"
+    except (OSError, ObservationError):
+        observation["reason"] = "controller-state-unreadable"
+    else:
+        try:
+            state = json.loads(raw)
+            if not isinstance(state, dict) or state.get("schema") != CONTROLLER_STORE_SCHEMA:
+                raise ValueError("unsupported store")
+            holder_id = state["active"].get(observation["resource"])
+            holder = None if holder_id is None else state["leases"][holder_id]
+            if holder is not None:
+                expires = datetime.fromisoformat(holder["expiresAt"].replace("Z", "+00:00"))
+                if expires.tzinfo is None or not isinstance(holder["phase"], str):
+                    raise ValueError("invalid holder")
+        except (ValueError, KeyError, TypeError, AttributeError):
+            observation["reason"] = "controller-state-invalid"
+        else:
+            if _controller_bytes(store) != raw:
+                observation["reason"] = "controller-state-changed"
+            elif holder is None or holder["phase"] in FREE_LEASE_PHASES:
+                observation["state"] = "AVAILABLE"
+            else:
+                # A safe reference only: no owner session, credential or plan.
+                observation["holder"] = {"leaseId": holder_id, "ticketId": holder.get("ticketId"),
+                                         "phase": holder["phase"], "expiresAt": holder["expiresAt"]}
+                if holder["phase"] == "expired" or expires <= datetime.now(timezone.utc):
+                    observation["state"] = "HELD_EXPIRED"
+                elif ticket is not None and holder.get("ticketId") == ticket:
+                    observation["state"] = "HELD_BY_TICKET"
+                else:
+                    observation["state"] = "HELD_BY_OTHER"
+            observation["stateDigest"] = hashlib.sha256(raw).hexdigest()
+    observation["nextAction"] = RESOURCE_ACTIONS[observation["state"]]
+    return observation
+
+
 def inspect(root, workstream, requested_paths=(), ticket=None, storage=None,
             observe_publication=False, expected_dirty_digest=None, recovery_intent=None,
-            bootstrap_adoption_digest=None):
+            bootstrap_adoption_digest=None, controller=None):
     root = Path(git(root, "rev-parse", "--show-toplevel").strip()).resolve()
     manifest = manifest_at(root)
     coordination = manifest["coordination"]
@@ -812,6 +888,8 @@ def inspect(root, workstream, requested_paths=(), ticket=None, storage=None,
                              for key, row in records.items()})
     if observe_publication:
         payload["publication"] = publication_observation(root, entries, target)
+    if controller:
+        payload["editingResource"] = controller_observation(*controller, target, ticket)
     payload["observationDigest"] = digest({"refs": refs, "manifest": manifest, "report": payload,
                                           "ticketStorage": mode, "ticketInputDigest": storage_digest})
     if refs != git(root, "for-each-ref", "--format=%(refname) %(objectname)", "refs/heads", "refs/remotes"):
@@ -839,6 +917,10 @@ def main(argv=None):
     parser.add_argument("--storage", choices=["files", "sqlite"])
     parser.add_argument("--observe-publication", action="store_true",
                         help="Read origin refs twice without fetching; distinguish remote code from integration/release authority.")
+    parser.add_argument("--controller-store", type=Path, metavar="DIR",
+                        help="Read-only availability of the controller editing resource (state.json); never a grant.")
+    parser.add_argument("--controller-repository", metavar="OWNER/NAME",
+                        help="Exact repository reference the controller resource is bound to (with --controller-store).")
     parser.add_argument("--expect-dirty-digest", metavar="SHA256",
                         help="With --ticket: dirtyDigest of the selected checkout from this session's previous observation; "
                              "a mismatch blocks reuse (clone-local CAS, not a lease).")
@@ -846,6 +928,9 @@ def main(argv=None):
     if args.expect_dirty_digest is not None and (
             not args.ticket or not re.fullmatch(r"[0-9a-f]{64}", args.expect_dirty_digest)):
         parser.error("--expect-dirty-digest requires --ticket and a lowercase SHA-256 digest")
+    if (args.controller_store is None) != (args.controller_repository is None) or (
+            args.controller_repository is not None and not REPOSITORY_REF.fullmatch(args.controller_repository)):
+        parser.error("--controller-store and --controller-repository OWNER/NAME must be passed together")
     if args.bootstrap_adoption_digest is not None and (
             not args.allocation_check or args.ticket or args.storage == "sqlite"
             or not re.fullmatch(r"[0-9a-f]{64}", args.bootstrap_adoption_digest)):
@@ -853,7 +938,9 @@ def main(argv=None):
     try:
         payload = inspect(args.root, args.workstream, args.path, args.ticket, args.storage,
                           args.observe_publication, args.expect_dirty_digest,
-                          bootstrap_adoption_digest=args.bootstrap_adoption_digest)
+                          bootstrap_adoption_digest=args.bootstrap_adoption_digest,
+                          controller=(args.controller_store, args.controller_repository)
+                          if args.controller_store else None)
     except (ObservationError, ActivityError, KeyError, TypeError, ValueError, OSError, StopIteration) as error:
         # Stdout stays generic — no exception content: remote URLs or
         # secret-bearing input never leak there. The real cause is written

@@ -185,6 +185,7 @@ jobs:
               tests/secret_detection_test.py \
               tests/ticket-recovery.test.py \
               tests/ticket-restoration.test.py \
+              tests/work_start_controller_test.py \
               tests/work-registration.test.py \
               tests/workspace_activity_test.py \
               tests/workspace_observation_test.py \
