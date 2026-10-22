@@ -1192,7 +1192,7 @@ fi
 # A plan allocates untracked metadata only; leave existing index bytes intact
 # until the separately authorized material upgrade installs its pinned tool.
 if [[ -z "$STANDARD_ADOPTION_PLAN" && -f project/readme.sh ]]; then
-  bash ./project/readme.sh
+  T2C_TICKET_INDEX_OWN="project/$ticket_id" bash ./project/readme.sh
 fi
 
 if [[ -n "$WORKTREE_PATH" ]]; then

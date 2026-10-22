@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.20.119
+
+- The allocator indexes the ticket it has just created (issue #516): `new-ticket.sh` runs `project/readme.sh` with `T2C_TICKET_INDEX_OWN=project/ticket-NNN`, so a ticket's own PR carries exactly its own `project/TICKETS.md` row instead of the next ticket's PR adding it. Other untracked tickets in the checkout stay out of the index, and a malformed own-ticket value is refused.
+
 ## 0.20.118
 
 - `ticket_activity` records a terminal receipt for a PR squash-merged or rebased onto a newer base whose generated `project/TICKETS.md` hunk vanished because a sibling ticket already added the same rows (issue #524). Patch identity for squash and rebase verification now excludes that index, which `project/readme.sh` regenerates, while every authored path must still match exactly. Such tickets no longer stay `IN_PROGRESS` and hold their scope and WIP slot forever.

@@ -1,0 +1,103 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-372",
+  "summary": "A ticket's own PR carries its own TICKETS.md row (issue 516)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-372/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "project/new-ticket.sh",
+    "project/readme.sh",
+    "tests/governance-scripts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d962d84db1844a344b0d99da68df8c4091b1c990",
+    "targetBranch": "main",
+    "outcome": "new-ticket.sh indexes the ticket it has just created, so each ticket PR adds exactly its own project/TICKETS.md row; the next ticket's PR no longer adds a previous or foreign ticket's row, which is what produced wrong-id rows and cross-ticket index hunks.",
+    "nonGoals": [
+      "No indexing of any other untracked ticket, including foreign in-flight tickets",
+      "No new index guard or repair command; issue #516 asks which gate blocked before that is built",
+      "No change to the index format or the merge driver"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "project/readme.sh accepts T2C_TICKET_INDEX_OWN=project/ticket-NNN (validated, else exit 2) and indexes that one directory even when untracked; new-ticket.sh passes the allocated ticket. A bare readme.sh run keeps skipping every untracked ticket.",
+      "components": [
+        {
+          "name": "allocator-index",
+          "paths": [
+            "project/readme.sh",
+            "project/new-ticket.sh",
+            "tests/governance-scripts.test.sh"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "project/readme.sh T2C_TICKET_INDEX_OWN"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; the allocator skips its own ticket again and the next PR adds its row."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/governance-scripts.test.sh",
+          "python3 tests/ticket-allocation-worktree.test.py",
+          "bash tests/adoption-lock.test.sh"
+        ],
+        "evidence": "project/ticket-372/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-372/README.md"
+      }
+    ]
+  }
+}
