@@ -1,0 +1,118 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-369",
+  "summary": "A bare governance-check on a ticket branch validates its committed range (issue 520)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-369/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "error/GOV-INTENT.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "project/governance-check.bat",
+    "project/governance-check.sh",
+    "scripts/governance_check.py",
+    "tests/ticket_branch_base_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7dfde8054187d1d43af5de08be88b8ad58b78d3c",
+    "targetBranch": "main",
+    "outcome": "./project/governance-check.sh without --base on a ticket/NNN-* branch validates from git merge-base HEAD origin/<target>, so a committed ticket without a delivery contract fails locally with GOV-DELIVERY-001 instead of passing; a branch without origin/<target> fails with GOV-BASE-001.",
+    "nonGoals": [
+      "No change for explicit --base or --changed-file callers, other branches or detached CI checkouts",
+      "No change to the pytest plugin, which already passes --base",
+      "No inference from adoption tickets beyond the existing resolve_validation_base rule"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "governance_check.py gains --infer-ticket-base: before the preflight cache key, when no --base or --changed-file is given and HEAD is on ticket/NNN-*, infer_ticket_branch_base takes the single manifest delivery target (or the ticket intent's targetBranch among several), binds --base to the merge-base with refs/remotes/origin/<target>, prints it on stderr, and reports GOV-BASE-001 when it cannot. Both managed wrappers pass the flag; the bundled Wellman copy stays identical.",
+      "components": [
+        {
+          "name": "governance-check",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "project/governance-check.sh",
+            "project/governance-check.bat",
+            "tests/ticket_branch_base_test.py",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "diagnostics",
+          "paths": [
+            "error/GOV-INTENT.md"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "governance_check.py --infer-ticket-base",
+        "governance-check.sh/.bat bare run on a ticket branch binds its range"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; a bare run checks the working tree only, as before."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket_branch_base_test.py",
+          "python3 tests/governance-preflight-cache.test.py",
+          "python3 tests/runtime_safety_test.py",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "project/ticket-369/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-369/README.md"
+      }
+    ]
+  }
+}

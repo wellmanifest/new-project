@@ -4736,6 +4736,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default=".governance/work-classification.dsl.json",
     )
     parser.add_argument("--base")
+    parser.add_argument("--infer-ticket-base", action="store_true",
+                        help="On a ticket/NNN-* branch without --base, validate from its merge-base with origin/<target>")
     parser.add_argument("--head", default="HEAD")
     parser.add_argument("--changed-file", action="append", default=[])
     parser.add_argument("--actor", choices=["agent", "human", "ci"], default="agent")
@@ -4998,6 +5000,50 @@ def file_sha256_or_none(path: Path | None) -> str | None:
         return hasher.hexdigest()
     except OSError:
         return "read-error"
+
+
+def infer_ticket_branch_base(root: Path, manifest_path: Path | None, head: str, report: Report) -> str | None:
+    """Bind a bare local run on a ticket branch to the range its PR will be validated on.
+
+    Without a base, only adoption tickets infer one, so an ordinary ticket's
+    committed implementation is invisible and a missing delivery contract
+    passes. A branch that cannot be bound fails closed instead.
+    """
+    branch = subprocess.run(["git", "symbolic-ref", "--quiet", "--short", "HEAD"],
+                            cwd=root, capture_output=True, text=True, check=False).stdout.strip()
+    match = re.fullmatch(r"ticket/([0-9]+)-[^/]+", branch)
+    if match is None:
+        return None
+    try:
+        targets = load_json(manifest_path)["delivery"]["targetBranches"] if manifest_path else None
+    except (OSError, ValueError, KeyError, TypeError):
+        targets = None
+    try:
+        declared = load_json(root / f"project/ticket-{match.group(1)}/intent.json")["delivery"]["targetBranch"]
+    except (OSError, ValueError, KeyError, TypeError):
+        declared = None
+    if isinstance(targets, list) and len(targets) == 1:
+        target = targets[0]
+    else:
+        # Several or no policy targets: only the ticket's own declaration may choose.
+        target = declared if not isinstance(targets, list) or declared in targets else None
+    target = target if branch_name(target) else None
+    remote = f"refs/remotes/origin/{target}"
+    base = (subprocess.run(["git", "merge-base", head, remote], cwd=root,
+                           capture_output=True, text=True, check=False).stdout.strip() if target else "")
+    if re.fullmatch(r"[0-9a-f]{40,64}", base) is None:
+        report.add(
+            "GOV-BASE-001",
+            f"Ticket branch {branch} has no validation base: "
+            + (f"{remote} is missing or unrelated to {head}." if target
+               else "the manifest names no single delivery target branch for it."),
+            f"Run git fetch origin {target or '<target>'} or pass --base explicitly; "
+            "a bare run never validates a ticket branch without a range.",
+            [], {"branch": branch, "targetBranch": target},
+        )
+        return None
+    print(f"governance-check: --base {base} (merge-base of {branch} and origin/{target})", file=sys.stderr)
+    return base
 
 
 def git_rev_parse(root: Path, ref: str) -> str:
@@ -5274,6 +5320,9 @@ def main(argv: list[str] | None = None) -> int:
         work_class_path = safe_repo_path(root, args.work_classification) if args.work_classification else None
     except ValueError:
         pass
+
+    if args.infer_ticket_base and args.base is None and not args.changed_file:
+        args.base = infer_ticket_branch_base(root, manifest_path, args.head, report)
 
     if cache_allowed and manifest_path and manifest_path.is_file():
         cache_key = compute_preflight_cache_key(
