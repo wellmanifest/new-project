@@ -3,7 +3,7 @@
   "schema": "new-project.governance/v2",
   "standard": {
     "id": "wellmanifest/new-project",
-    "version": "0.20.116"
+    "version": "0.20.117"
   },
   "repository": {
     "mode": "standalone",
@@ -130,7 +130,8 @@
           "Dockerfile*",
           "compose*.yml",
           "compose*.yaml",
-          "infra/**"
+          "infra/**",
+          ".github/workflows/**"
         ]
       },
       "governance": {
