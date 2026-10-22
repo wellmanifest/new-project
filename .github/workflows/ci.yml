@@ -140,6 +140,8 @@ jobs:
         run: bash tests/governance-scripts.test.sh
       - name: Test terminal receipt activity resolver
         run: bash tests/ticket-activity.test.sh
+      - name: Test receipts across a regenerated ticket index
+        run: python3 tests/ticket_activity_index_test.py
       - name: Test deterministic governance validator
         run: bash tests/governance-validator.test.sh
       - name: Test deterministic branch lifecycle validator

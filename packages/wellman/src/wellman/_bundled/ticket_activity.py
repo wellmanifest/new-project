@@ -342,6 +342,12 @@ def _stable_patch_id(payload: bytes, env: dict[str, str]) -> str | None:
     return fields[0] if len(fields) >= 2 and SHA_RE.fullmatch(fields[0]) else None
 
 
+# project/readme.sh regenerates this index from the ticket directories. A
+# squash or rebase onto a target where a sibling already added the same rows
+# drops its hunk, so patch identity covers every authored path but not it.
+GENERATED_INDEX_PATHSPEC = ("--", ":(top)", ":(top,exclude)project/TICKETS.md")
+
+
 def _patch_id(root: Path, commit: str) -> str | None:
     """Return Git's stable patch identity for one non-empty commit."""
     env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
@@ -356,6 +362,7 @@ def _patch_id(root: Path, commit: str) -> str | None:
             "--binary",
             "--full-index",
             commit,
+            *GENERATED_INDEX_PATHSPEC,
         ],
         capture_output=True,
         check=False,
@@ -381,6 +388,7 @@ def _range_patch_id(root: Path, base: str, head: str) -> str | None:
             "--full-index",
             base,
             head,
+            *GENERATED_INDEX_PATHSPEC,
         ],
         capture_output=True,
         check=False,

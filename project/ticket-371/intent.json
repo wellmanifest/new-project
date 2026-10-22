@@ -1,0 +1,106 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-371",
+  "summary": "Terminal receipts verify across a regenerated ticket index (issue 524)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-371/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+    "scripts/ticket_activity.py",
+    "tests/ticket_activity_index_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "70028fc2f41076f68139756611bd7b600b9c9b08",
+    "targetBranch": "main",
+    "outcome": "ticket_activity record accepts a merged receipt whose squash or rebase landed on a newer base where project/TICKETS.md already had the rows, so the ticket stops reserving its scope and WIP slot, while any authored difference is still refused.",
+    "nonGoals": [
+      "No exclusion of any other path, including TODO.md or other tracking carriers",
+      "No change to receipt schema, ancestry checks or the outcome policy",
+      "No reconciliation of TICKETS.md content itself (issue #516)"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "_patch_id and _range_patch_id pass the pathspec ':(top)' ':(top,exclude)project/TICKETS.md' to git show/diff, so squash and rebase patch identities ignore only the generated index that project/readme.sh rewrites. The bundled Wellman copy stays identical.",
+      "components": [
+        {
+          "name": "ticket-activity",
+          "paths": [
+            "scripts/ticket_activity.py",
+            "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+            "tests/ticket_activity_index_test.py",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "terminal receipt patch identity excludes the generated project/TICKETS.md"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; receipts on a newer base fail again with GOV-TICKET-ACTIVITY-001."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket_activity_index_test.py",
+          "bash tests/ticket-activity.test.sh",
+          "python3 tests/ticket_activity_batch_test.py",
+          "python3 tests/workspace_activity_test.py"
+        ],
+        "evidence": "project/ticket-371/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-371/README.md"
+      }
+    ]
+  }
+}
