@@ -20,7 +20,7 @@ keep it in private receipt storage, not a tracked ticket.
 | --- | --- | --- |
 | REUSE_EXISTING | Continue the matching canonical ticket checkout. | Revalidate intent, owner and current lease first. |
 | ASSIST_READ_ONLY | Help an active delivery with analysis or review. | No second writer or trusted self-approval. |
-| HANDOFF_REQUIRED | Reconcile pending work from an inactive ticket. | Accepted scope, snapshot and controller CAS; no automatic takeover. |
+| HANDOFF_REQUIRED | Reconcile pending work from an inactive ticket. | Accepted scope, snapshot and controller CAS; automatic takeover only through `GOV-IDLE-TAKEOVER` after the configured idle time. |
 | SERIALIZE | Workstream capacity is occupied. | Queue without another delivery worktree. |
 | RECONCILE | Owner, ancestry, pending branch or observations are uncertain. | Preserve work and resolve the specific missing evidence. |
 | NEW_TICKET_CANDIDATE | Scope and WIP capacity permit new allocation. | Planning candidate only; never write authority. |
@@ -148,7 +148,9 @@ branch. Run it before preparing an expiring editing credential or admission.
 The route still reports planning eligibility only: disjoint paths can select
 `NEW_TICKET_CANDIDATE` or `REUSE_EXISTING` while the resource is
 `HELD_BY_OTHER`. `HELD_EXPIRED` still blocks: expiry alone never authorizes a
-takeover; the controller must release it or record a protected handoff.
+takeover; the controller must release it, record a protected handoff, or the
+ticket must qualify for `GOV-IDLE-TAKEOVER` (no observed activity for
+`coordination.idleTakeover.idleMinutes`).
 `UNAVAILABLE` carries a reason (`controller-store-missing`,
 `controller-state-unreadable`, `controller-state-invalid`,
 `controller-state-changed`; runtime clients may report transport, pin or
