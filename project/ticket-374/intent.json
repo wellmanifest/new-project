@@ -32,7 +32,8 @@
     "scripts/idle_takeover.py",
     "scripts/work_start_check.py",
     "template/files/AGENTS.template.md",
-    "tests/idle_takeover_test.py"
+    "tests/idle_takeover_test.py",
+    "tests/governance-validator.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -75,7 +76,8 @@
             "scripts/governance_check.py",
             "packages/wellman/src/wellman/_bundled/governance_check.py",
             "governance/manifest.schema.json",
-            "tests/idle_takeover_test.py"
+            "tests/idle_takeover_test.py",
+            "tests/governance-validator.test.sh"
           ]
         },
         {
@@ -110,7 +112,8 @@
         "commands": [
           "python3 tests/idle_takeover_test.py",
           "python3 tests/change_lease_safety_test.py",
-          "bash tests/wellman-package.test.sh"
+          "bash tests/wellman-package.test.sh",
+          "bash tests/governance-validator.test.sh"
         ],
         "evidence": "project/ticket-374/README.md"
       },
