@@ -24,6 +24,10 @@ GIT_SHA_RE = re.compile(r"^[0-9a-f]{40,64}$")
 PHASES = {"claimed", "editing", "validating", "publication_frozen", "dispatching", "approved", "merged", "closed", "cancelled", "expired", "released"}
 FROZEN_PHASES = {"publication_frozen", "dispatching", "approved"}
 TERMINAL_REPLACEMENT_PHASES = {"merged", "closed", "cancelled", "released"}
+# wellmanifest/worktrees v5 layout: the single source for every lease and worktree reader.
+WORKTREES_ROOT = ".worktrees"
+LEASE_ROOT = ".subactor/leases"
+MAX_LEASE_BYTES = 65536
 TRANSITIONS = {
     "heartbeat": {phase: phase for phase in PHASES - {"released"}},
     "begin-edit": {"claimed": "editing"},
@@ -358,7 +362,7 @@ def read_writer_lease(path: Path) -> dict[str, Any]:
         if not path.is_file():
             raise ValueError("Lease must be a regular file")
         raw = path.read_bytes()
-        if len(raw) > 65536:
+        if len(raw) > MAX_LEASE_BYTES:
             raise ValueError("Lease exceeds bounded size")
         value = json.loads(raw.decode("utf-8"))
         if not isinstance(value, dict):
@@ -375,8 +379,8 @@ def read_writer_lease(path: Path) -> dict[str, Any]:
         with os.fdopen(leaf, "rb") as stream:
             if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
                 raise ValueError("Lease must be a regular file")
-            raw = stream.read(65537)
-            if len(raw) > 65536:
+            raw = stream.read(MAX_LEASE_BYTES + 1)
+            if len(raw) > MAX_LEASE_BYTES:
                 raise ValueError("Lease exceeds bounded size")
             value = json.loads(raw)
             if not isinstance(value, dict):
@@ -418,7 +422,7 @@ def check_writer(root: Path, ref: str, operation: str, actor: str, session: str,
         ticket = "ticket-" + match[1]
         slug = ref.split(match[1] + "-", 1)[1]
         worktree_id = ticket + "--" + slug
-        expected = primary / ".worktrees" / worktree_id
+        expected = primary / WORKTREES_ROOT / worktree_id
         owner_worktree = Path(owners[0]["worktree"])
         if os.name == "nt":
             if owner_worktree.resolve() != expected.resolve() or expected.is_symlink():
@@ -430,7 +434,7 @@ def check_writer(root: Path, ref: str, operation: str, actor: str, session: str,
                 raise ValueError("Ticket worktree is not canonical")
             if operation == "commit" and root.resolve() != expected:
                 raise ValueError("Commit must run in the owned worktree")
-        lease = read_writer_lease(primary / ".subactor/leases" / (worktree_id + ".json"))
+        lease = read_writer_lease(primary / LEASE_ROOT / (worktree_id + ".json"))
         errors = validate_lease(lease)
         if errors:
             return errors
