@@ -115,7 +115,7 @@ publication; the independent Validator remains required.
 
 ### Autonomy board
 
-Every `observe` and `takeover` run rewrites
+Every `observe`, `takeover` and `work_start_check.py` run rewrites
 `.subactor/cache/autonomy-board.json` and `.md` in the primary checkout (the
 root-ignored cache namespace). The header names the worktree and lease roots
 and links the repository, its pull requests and its issue list. Each ticket

@@ -6,6 +6,7 @@ import argparse
 from contextlib import ExitStack
 from datetime import datetime, timezone
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -905,6 +906,24 @@ def inspect(root, workstream, requested_paths=(), ticket=None, storage=None,
     return payload
 
 
+def refresh_autonomy_board(root):
+    """Best effort: every work start rewrites the ignored GOV-IDLE-TAKEOVER board; it never changes the route."""
+    checker = Path(__file__).resolve().parent / "idle_takeover.py"
+    if not checker.is_file():
+        return
+    try:
+        spec = importlib.util.spec_from_file_location("work_start_idle_takeover", checker)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        board = module.observe(Path(root))
+        path = module.write_board(board)
+    except Exception:  # noqa: BLE001 - the board is advisory; observation errors must not alter the route
+        return
+    eligible = [item["ticket"] for item in board["tickets"] if item["state"] == "IDLE_TAKEOVER_ELIGIBLE"]
+    print(f"autonomy board: {path}" + (f"; idle takeover candidates: {', '.join(eligible)}" if eligible else ""),
+          file=sys.stderr)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd())
@@ -968,6 +987,7 @@ def main(argv=None):
         return 3
     if args.allocation_check and payload["route"] != "NEW_TICKET_CANDIDATE":
         payload["diagnostic"] = CODE
+    refresh_autonomy_board(args.root)
     print(json.dumps(payload, sort_keys=True, ensure_ascii=True))
     return 3 if payload["diagnostic"] else 0
 

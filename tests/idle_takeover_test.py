@@ -201,6 +201,18 @@ class IdleTakeoverTest(unittest.TestCase):
         self.assertEqual(json.loads(result.stdout)["schema"], "new-project.autonomy-board/v1")
         self.assertTrue((self.primary / ".subactor/cache/autonomy-board.json").is_file())
 
+    def test_work_start_refreshes_board(self):
+        spec = importlib.util.spec_from_file_location("idle_work_start", ROOT / "scripts/work_start_check.py")
+        sys.path.insert(0, str(ROOT / "scripts"))
+        try:
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            module.refresh_autonomy_board(self.primary)
+        finally:
+            sys.path.remove(str(ROOT / "scripts"))
+        board = json.loads((self.primary / ".subactor/cache/autonomy-board.json").read_text())
+        self.assertEqual([(item["ticket"], item["state"]) for item in board["tickets"]], [("ticket-001", "ACTIVE")])
+
     def test_malformed_policy_values_disable_takeover(self):
         for policy in ({"enabled": "false", "idleMinutes": 15, "leaseMinutes": 120},
                        {"enabled": True, "idleMinutes": -1, "leaseMinutes": 120},
