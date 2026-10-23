@@ -1,7 +1,13 @@
 # ticket-373: Assess ticket impact during README creation
 
 - **Owner**: agent:codex-ticket-radar
-- **Status**: IN_PROGRESS
+- **Status**: BLOCKED
+
+Blocked 2026-10-23 by accepted handoff (human:tom, executed by agent:claude):
+PR #531 CI is red (`test`, `windows-governance`, `onedev/local-verify`) and the
+writer was idle for 11 h while this ticket held the only governance slot. The
+implementation and PR #531 are unchanged; resume by returning the status to
+IN_PROGRESS through a new lease once a governance slot is free.
 - **Workflow state**: VALIDATION
 - **Parent**: maskservice PLF-17343
 
