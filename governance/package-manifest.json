@@ -296,6 +296,18 @@
       "executable": true
     },
     {
+      "source": "scripts/idle_takeover.py",
+      "target": ".governance/idle_takeover.py",
+      "strategy": "managed",
+      "executable": true
+    },
+    {
+      "source": "error/GOV-IDLE-TAKEOVER.md",
+      "target": ".governance/error/GOV-IDLE-TAKEOVER.md",
+      "strategy": "managed",
+      "executable": false
+    },
+    {
       "source": "error/GOV-INTENT.md",
       "target": ".governance/error/GOV-INTENT.md",
       "strategy": "managed",
