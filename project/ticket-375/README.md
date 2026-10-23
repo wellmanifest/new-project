@@ -26,7 +26,7 @@ z diagnostyką `GOV-IDLE-TAKEOVER-001/002` i runbookiem.
 SESSION_EXECUTION_AUTHORIZATION: user request 2026-10-23 („kontynuuj, scalaj, testuj”).
 
 ## Kryteria Odbioru (Acceptance Criteria)
-- [x] AC-01: `tests/idle_takeover_test.py` (20 testów: polityka, klasyfikacja, tablica, snapshot, CAS, odmowy), agent-hosts, rule-enforcement, governance-validator przechodzą.
+- [x] AC-01: `tests/idle_takeover_test.py` (24 testy: polityka, klasyfikacja, tablica, snapshot, CAS pod blokadą, odmowy; regresje uwag validatora: zła polityka, nieaktualny origin, rename w porcelain -z, zajęta blokada), agent-hosts, rule-enforcement, governance-validator przechodzą.
 - [ ] AC-02: governance-check i niezależna walidacja PR.
 
 ## Ryzyka i Uwagi

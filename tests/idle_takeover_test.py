@@ -201,6 +201,34 @@ class IdleTakeoverTest(unittest.TestCase):
         self.assertEqual(json.loads(result.stdout)["schema"], "new-project.autonomy-board/v1")
         self.assertTrue((self.primary / ".subactor/cache/autonomy-board.json").is_file())
 
+    def test_malformed_policy_values_disable_takeover(self):
+        for policy in ({"enabled": "false", "idleMinutes": 15, "leaseMinutes": 120},
+                       {"enabled": True, "idleMinutes": -1, "leaseMinutes": 120},
+                       {"enabled": True, "idleMinutes": 0, "leaseMinutes": 120},
+                       {"enabled": True, "idleMinutes": True, "leaseMinutes": 120},
+                       {"enabled": True, "idleMinutes": 15, "leaseMinutes": False},
+                       {"enabled": True, "idleMinutes": 60, "leaseMinutes": 30}):
+            with self.subTest(policy=policy):
+                self.write_policy(**policy)
+                self.assertEqual(self.entry()["state"], "POLICY_DISABLED")
+
+    def test_local_target_merge_counts_despite_stale_remote_ref(self):
+        git(self.primary, "update-ref", "refs/remotes/origin/main", git(self.primary, "rev-parse", "main"))
+        git(self.primary, "merge", "-q", "--ff-only", BRANCH)
+        self.assertEqual(self.entry()["state"], "IDLE_INTEGRATED")
+
+    def test_staged_rename_reports_both_paths(self):
+        git(self.worktree, "mv", "work.txt", "moved.txt")
+        self.assertEqual(runtime.dirty_paths(self.worktree), ["moved.txt", "work.txt"])
+
+    def test_held_lease_lock_refuses_takeover(self):
+        with runtime.lease_lock(self.lease_path):
+            with self.assertRaises(PermissionError):
+                runtime.takeover(self.primary, "ticket-001", "agent:next", "session-next", self.now)
+        self.assertEqual(json.loads(self.lease_path.read_text())["ownerActor"], "agent:previous")
+        runtime.takeover(self.primary, "ticket-001", "agent:next", "session-next", self.now)
+        self.assertEqual(json.loads(self.lease_path.read_text())["ownerActor"], "agent:next")
+
 
 
 governance = load("idle_policy_governance", ROOT / "scripts/governance_check.py")

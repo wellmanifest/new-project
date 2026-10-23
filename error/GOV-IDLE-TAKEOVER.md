@@ -23,8 +23,10 @@ observed activity, and keeps a board of every ticket's state for the next agent.
 
 The default and hub manifests carry these values; the manifest schema bounds
 them (`idleMinutes` 5–240, `leaseMinutes` 15–480 and greater than
-`idleMinutes`). The script has no built-in threshold: a missing or malformed
-policy reports `POLICY_DISABLED` and nothing is taken over.
+`idleMinutes`). The script has no built-in threshold and no validator of its
+own: it applies the pinned `governance_check.idle_takeover_policy_valid`, so a
+missing or malformed policy (non-boolean `enabled`, a boolean, zero, negative or
+out-of-range duration) reports `POLICY_DISABLED` and nothing is taken over.
 
 ### Activity
 
@@ -81,8 +83,10 @@ python3 .governance/idle_takeover.py takeover --ticket ticket-NNN \
   --actor agent:<id> --session <session>
 ```
 
-`takeover` re-observes and refuses anything that is not
-`IDLE_TAKEOVER_ELIGIBLE` or already held by the same session. It then:
+`takeover` takes an exclusive, non-waiting lock on
+`<lease>.json.lock` (a held lock refuses), re-observes under it and refuses
+anything that is not `IDLE_TAKEOVER_ELIGIBLE` or already held by the same
+session. Still under the lock it:
 
 1. stores dirty work as a content-addressed tar (tracked diff plus every dirty
    or untracked file) in `.subactor/snapshots/idle-takeover/<ticket>/<sha256>.tar`;
@@ -91,7 +95,9 @@ python3 .governance/idle_takeover.py takeover --ticket ticket-NNN \
    expired), `release`, then a new `claimed` lease for the new actor and session
    with revision and fencing token one above the release receipt and
    `leaseMinutes` until expiry;
-3. compares the lease bytes before writing and refuses on any concurrent change;
+3. compares the lease bytes and file identity immediately before the receipt and
+   the replacement and refuses on any concurrent change; a writer that bypassed
+   the lock still fails the fencing token at its next commit;
 4. appends the record to `.subactor/receipts/idle-takeover/<ticket>.jsonl`;
 5. rewrites the board and prints the record as JSON.
 

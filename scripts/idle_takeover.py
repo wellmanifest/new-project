@@ -31,9 +31,16 @@ import re
 import subprocess
 import sys
 import tarfile
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+try:  # Exclusive lease transition lock: fcntl on POSIX, msvcrt on Windows.
+    import fcntl
+except ImportError:  # pragma: no cover - Windows
+    fcntl = None
+    import msvcrt
 
 SCHEMA = "new-project.idle-takeover/v1"
 BOARD_SCHEMA = "new-project.autonomy-board/v1"
@@ -60,14 +67,21 @@ FORGE_PATHS = {"branch": "tree/{branch}", "readme": "blob/{branch}/project/{tick
                "pulls": "pulls", "issues": "issues"}
 
 
-def lease_runtime(primary: Path | None = None):
-    """Validate leases with the repository's own pinned contract; fall back to the sibling checker."""
-    pinned = primary / ".governance/change_lease_check.py" if primary else None
-    checker = pinned if pinned and pinned.is_file() else Path(__file__).resolve().parent / "change_lease_check.py"
-    spec = importlib.util.spec_from_file_location("idle_takeover_change_lease", checker)
+def pinned_module(primary: Path | None, name: str):
+    """Load the repository's own pinned .governance copy; fall back to the sibling script."""
+    pinned = primary / ".governance" / name if primary else None
+    source = pinned if pinned and pinned.is_file() else Path(__file__).resolve().parent / name
+    module_name = f"idle_takeover_{Path(name).stem}"
+    spec = importlib.util.spec_from_file_location(module_name, source)
     module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def lease_runtime(primary: Path | None = None):
+    """Validate leases with the repository's own pinned contract."""
+    return pinned_module(primary, "change_lease_check.py")
 
 
 def contract(runtime) -> dict[str, Any]:
@@ -114,14 +128,18 @@ def primary_checkout(root: Path) -> Path:
 
 
 def manifest_policy(primary: Path) -> dict[str, Any]:
-    """The governance manifest is the only source of the policy; absent or malformed means disabled."""
+    """The governance manifest is the only source of the policy; absent or malformed means disabled.
+
+    Validity is decided by the pinned governance_check.idle_takeover_policy_valid,
+    the same closed check the manifest gate applies (exact bool, bounded positive
+    integers, lease longer than the idle threshold)."""
+    valid = getattr(pinned_module(primary, "governance_check.py"), "idle_takeover_policy_valid", None)
     for relative in POLICY_MANIFESTS:
         manifest = read_json(primary / relative)
         if manifest is None:
             continue
         configured = manifest.get("coordination", {}).get("idleTakeover") if isinstance(manifest, dict) else None
-        if isinstance(configured, dict) and set(configured) == set(POLICY_FIELDS) \
-                and all(isinstance(configured[key], int) for key in POLICY_FIELDS[1:]):
+        if valid is not None and valid(configured) and configured["enabled"] is True:
             return {key: configured[key] for key in POLICY_FIELDS} | {"source": relative}
         return {"enabled": False, "idleMinutes": None, "leaseMinutes": None, "source": relative}
     return {"enabled": False, "idleMinutes": None, "leaseMinutes": None, "source": None}
@@ -226,19 +244,26 @@ def dirty_paths(worktree: Path) -> list[str]:
         entry = entries[index]
         if len(entry) > 3:
             paths.append(entry[3:])
-            if entry[0] in "RC":
+            # Porcelain -z: a rename or copy in either status column is followed
+            # by its source path as a separate record.
+            if set(entry[:2]) & {"R", "C"}:
                 index += 1
+                if index < len(entries) and entries[index]:
+                    paths.append(entries[index])
         index += 1
     return sorted(set(paths))
 
 
 def integrated(primary: Path, head: str, target: str) -> bool:
     """A ticket HEAD already contained in the target branch needs release, not takeover."""
-    for ref in (f"refs/remotes/origin/{target}", f"refs/heads/{target}"):
-        if re.fullmatch(r"[0-9a-f]{40}", head or "") and git(primary, "rev-parse", "-q", "--verify", ref, check=False):
-            env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
-            return subprocess.run(["git", "-C", str(primary), "merge-base", "--is-ancestor", head, ref], env=env).returncode == 0
-    return False
+    if not re.fullmatch(r"[0-9a-f]{40}", head or ""):
+        return False
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    # Any target ref that contains HEAD is enough; a stale remote ref must not hide a local merge.
+    return any(
+        git(primary, "rev-parse", "-q", "--verify", ref, check=False)
+        and subprocess.run(["git", "-C", str(primary), "merge-base", "--is-ancestor", head, ref], env=env).returncode == 0
+        for ref in (f"refs/remotes/origin/{target}", f"refs/heads/{target}"))
 
 
 def web_url(primary: Path) -> str | None:
@@ -376,11 +401,34 @@ def write_atomic(path: Path, data: bytes) -> None:
     os.replace(temporary, path)
 
 
+@contextmanager
+def lease_lock(lease_path: Path):
+    """Serialize every idle-takeover transition of one lease; a held lock refuses, never waits."""
+    lock = lease_path.with_name(lease_path.name + ".lock")
+    descriptor = os.open(lock, os.O_RDWR | os.O_CREAT, 0o600)
+    try:
+        try:
+            if fcntl:
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            else:  # pragma: no cover - Windows
+                msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
+        except OSError as error:
+            raise PermissionError("Another transition holds this lease; re-observe.") from error
+        yield
+    finally:
+        os.close(descriptor)
+
+
 def write_board(board: dict[str, Any]) -> Path:
     directory = Path(board["primaryCheckout"]) / BOARD_DIR
     write_atomic(directory / "autonomy-board.json", (json.dumps(board, indent=2, sort_keys=True) + "\n").encode())
     write_atomic(directory / "autonomy-board.md", board_markdown(board).encode())
     return directory / "autonomy-board.md"
+
+
+def file_identity(path: Path) -> tuple[int, int, int, int]:
+    status = path.stat()
+    return status.st_dev, status.st_ino, status.st_size, status.st_mtime_ns
 
 
 def snapshot(primary: Path, entry: dict[str, Any]) -> dict[str, Any] | None:
@@ -421,13 +469,23 @@ def takeover(root: Path, ticket: str, actor: str, session: str, now: datetime | 
     board = observe(root, now, runtime)
     write_board(board)
     entry = next((item for item in board["tickets"] if item["ticket"] == ticket), None)
+    if entry is None:
+        raise PermissionError(f"{ticket} is NO_LIVE_LEASE; idle takeover needs IDLE_TAKEOVER_ELIGIBLE.")
+    with lease_lock(Path(entry["leasePath"])):
+        # Decide again under the lock: the first observation only located the lease.
+        return locked_takeover(root, ticket, actor, session, now, runtime)
+
+
+def locked_takeover(root: Path, ticket: str, actor: str, session: str, now: datetime, runtime) -> dict[str, Any]:
+    board = observe(root, now, runtime)
+    entry = next((item for item in board["tickets"] if item["ticket"] == ticket), None)
     if entry is None or entry["state"] != "IDLE_TAKEOVER_ELIGIBLE":
         state = entry["state"] if entry else "NO_LIVE_LEASE"
         raise PermissionError(f"{ticket} is {state}; idle takeover needs IDLE_TAKEOVER_ELIGIBLE.")
     if entry["ownerActor"] == actor and entry["ownerSession"] == session:
         raise PermissionError(f"{ticket} is already held by this session; heartbeat instead of taking over.")
     primary, lease_path = Path(board["primaryCheckout"]), Path(entry["leasePath"])
-    original = lease_path.read_bytes()
+    original, identity = lease_path.read_bytes(), file_identity(lease_path)
     lease = json.loads(original)
     snap = snapshot(primary, entry)
     authority = (f"policy:{SCHEMA};idleMinutes={entry['idleMinutes']};limit={board['policy']['idleMinutes']};"
@@ -456,8 +514,6 @@ def takeover(root: Path, ticket: str, actor: str, session: str, now: datetime | 
     errors = runtime.validate_lease(claimed)
     if errors:
         raise ValueError(f"Claimed lease is invalid: {errors[0]['message']}")
-    if lease_path.read_bytes() != original:
-        raise PermissionError("Lease changed during takeover (compare-and-swap lost); re-observe.")
     # wellmanifest/worktrees rules 9-10: a machine-readable result names the exact
     # ticket, branch, worktree and lease; the agent takes its paths only from here.
     record = {"schema": SCHEMA, "ticket": ticket, "takenOverAt": stamp(now),
@@ -473,6 +529,10 @@ def takeover(root: Path, ticket: str, actor: str, session: str, now: datetime | 
               "idle": {"minutes": entry["idleMinutes"], "lastActivityAt": entry["lastActivityAt"],
                        "source": entry["lastActivitySource"]},
               "authorityRef": authority, "snapshot": snap, "receipts": receipts}
+    # Compare-and-swap under the lease lock, immediately before the receipt and
+    # the replacement; the fencing token rejects any writer that bypassed the lock.
+    if lease_path.read_bytes() != original or file_identity(lease_path) != identity:
+        raise PermissionError("Lease changed during takeover (compare-and-swap lost); re-observe.")
     trace = primary / RECEIPT_DIR / f"{ticket}.jsonl"
     trace.parent.mkdir(parents=True, exist_ok=True)
     with trace.open("a", encoding="utf-8") as handle:
