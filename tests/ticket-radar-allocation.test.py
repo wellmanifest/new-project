@@ -115,6 +115,33 @@ class RadarFileAllocationTest(fixture.TicketAllocationWorktreeTest):
         self.assertEqual(lease['phase'], 'claimed')
         self.assertIn('"executionAuthorized": false', result.stdout)
 
+    def test_helper_without_radar_subcommand_degrades_to_the_advisory_marker(self):
+        # A historical 0.20.32 helper rejects the radar subcommand at argparse
+        # time (exit 2). The allocation must survive it and record the same
+        # advisory marker, never fail the ticket identity allocation.
+        helper = self.root / '.governance/ticket_storage.py'
+        real = self.root / '.governance/ticket_storage.py.real'
+        helper.rename(real)
+        helper.write_text(
+            '#!' + sys.executable + '\n'
+            + 'import runpy, sys\n'
+            + "if len(sys.argv) > 1 and sys.argv[1] == 'radar':\n"
+            + "    sys.stderr.write('ticket_storage.py: error: argument command: "
+            "invalid choice: \\'radar\\' (choose from \\'digest\\', \\'verify\\', \\'highest\\',"
+            " \\'create\\', \\'active\\', \\'scope\\')\\n')\n"
+            + '    raise SystemExit(2)\n'
+            + f'runpy.run_path({str(real)!r}, run_name="__main__")\n')
+        self.git('add', '-A')
+        self.git('commit', '-m', 'downgrade the storage helper to the historical 0.20.32 shape')
+        result = self.allocate()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        readme = (self.root / '.worktrees/ticket-001--canonical-ticket/project/ticket-001/README.md').read_text()
+        self.assertIn('## Ticket Radar', readme)
+        self.assertIn('Assessment unavailable', readme)
+        self.assertIn('declined the radar assessment', readme)
+        self.assertNotIn('| Impact score |', readme)
+        self.assertNotIn('invalid choice', readme)
+
 
 class RadarSQLiteAllocationTest(unittest.TestCase):
     setUpClass = classmethod(sqlite_fixture.AllocationTests.setUpClass.__func__)
