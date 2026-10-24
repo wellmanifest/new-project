@@ -93,7 +93,9 @@ class PolicyDslAdoptionTest(unittest.TestCase):
             self.assertEqual(len(policy_findings(checker, target)), 1)
 
     def test_installed_runtime_requires_an_environment_default_literal(self):
-        for tail, expected_findings in (("DEFAULT", 1), ('DEFAULT ""', 0)):
+        for tail, expected_findings in (("DEFAULT", 1), ("DEFAULT ", 1),
+                                        ("DEFAULT\t", 1), ('DEFAULT ""', 0),
+                                        ('DEFAULT "operator"', 0)):
             with self.subTest(tail=tail), tempfile.TemporaryDirectory(prefix="policy-dsl-default-") as directory:
                 target = pathlib.Path(directory)
                 install_managed_payload(target)

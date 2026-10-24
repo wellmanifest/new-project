@@ -31,7 +31,7 @@
     "budgets": {
       "maxImplementationFiles": 4,
       "maxAffectedComponents": 2,
-      "maxPublicInterfaceChanges": 0,
+      "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
     },
     "runtimeDependencies": [],
@@ -62,7 +62,9 @@
           ]
         }
       ],
-      "interfaceChanges": [],
+      "interfaceChanges": [
+        "scripts/governance_check.py: update its existing closed Policy DSL dependency record to the exact independently merged producer; this is one manifest-classified public interface path."
+      ],
       "dataChanges": [],
       "ui": {
         "impact": "none",

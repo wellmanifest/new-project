@@ -41,3 +41,7 @@ Initial planned-scope estimate; advisory only, not execution or merge approval.
 
 Diagnostics: RADAR-ACCEPTANCE-MISSING, RADAR-BUDGET-EXCEEDED.
 <!-- ticket-radar:end -->
+
+## Bounded replan before PR
+
+GOV-BUDGET-001 identified one already-scoped public interface path: scripts/governance_check.py, as declared by the hub manifest. The same immutable adoption still touches exactly four implementation files and two components. C-APPROVAL-003 retains session execution authorization for the same objective and safe prerequisites. Replan explicitly allocates one public-interface slot for the closed dependency resolver record; no source path, owner, trust rule, runtime dependency or campaign timebox is expanded. Independent review remains required. The initial commit is preserved; no PR or merge was requested for its failed budget.
