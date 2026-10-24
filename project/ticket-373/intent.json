@@ -14,7 +14,8 @@
     "project/TICKETS.md",
     "project/new-ticket.sh",
     "scripts/ticket_storage.py",
-    "tests/ticket-radar-allocation.test.py"
+    "tests/ticket-radar-allocation.test.py",
+    "tests/governance-scripts.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -34,21 +35,22 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 3,
+      "maxImplementationFiles": 4,
       "maxAffectedComponents": 1,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Reuse the existing external product CLI via argv/stdin; managed ticket-storage bridge renders bounded advisory Markdown for both ticket stores after actual scope is known.",
+      "decision": "Reuse the existing external product CLI via argv/stdin; managed ticket-storage bridge renders bounded advisory Markdown for both ticket stores after actual scope is known. Amended (same objective): the CI wiring guard requires the radar suite to be wired through tests/governance-scripts.test.sh, added to scope and the component; budget files raised 3->4 accordingly.",
       "components": [
         {
           "name": "ticket-creation",
           "paths": [
             "project/new-ticket.sh",
             "scripts/ticket_storage.py",
-            "tests/ticket-radar-allocation.test.py"
+            "tests/ticket-radar-allocation.test.py",
+            "tests/governance-scripts.test.sh"
           ]
         }
       ],

@@ -166,6 +166,30 @@ class RadarSQLiteAllocationTest(unittest.TestCase):
         self.assertIn('advisory only, not execution or merge approval', readme)
         self.assertFalse((self.root / 'project/ticket-001').exists())
 
+    def test_sqlite_allocation_survives_a_helper_without_the_radar_subcommand(self):
+        # SQLite allocation never invokes the radar assessment; a storage
+        # helper older than the radar subcommand must not fail it either.
+        helper = self.root / '.governance/ticket_storage.py'
+        real = self.root / '.governance/ticket_storage.py.real'
+        helper.rename(real)
+        helper.write_text(
+            '#!' + sys.executable + '\n'
+            + 'import runpy, sys\n'
+            + "if len(sys.argv) > 1 and sys.argv[1] == 'radar':\n"
+            + "    sys.stderr.write('ticket_storage.py: error: argument command: "
+            "invalid choice: \\'radar\\'\\n')\n"
+            + '    raise SystemExit(2)\n'
+            + f'runpy.run_path({str(real)!r}, run_name="__main__")\n')
+        self.git('add', '-A')
+        self.git('commit', '-m', 'downgrade the storage helper to the historical 0.20.32 shape')
+        with patch.dict(os.environ, {'PATH': os.environ['PATH']}):
+            result = self.allocate(None, '--agent', 'codex', '--writer-actor', 'agent:codex',
+                                   '--writer-session', 'radar-fixture', '--path', 'project/new-ticket.sh')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        readme = storage.read_file(self.root, 'ticket-001', 'README.md').decode()
+        self.assertNotIn('## Ticket Radar', readme)
+        self.assertFalse((self.root / 'project/ticket-001').exists())
+
 
 if __name__ == '__main__':
     unittest.main()
