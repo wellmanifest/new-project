@@ -1,0 +1,101 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-381",
+  "summary": "Adopt the reviewed Policy DSL parser fixes for missing defaults and transition endpoints",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-381/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/policy-dsl.lock.json",
+    "scripts/governance_check.py",
+    "scripts/policy_dsl_check.py",
+    "tests/policy_dsl_adoption_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "outcome": "Adopt exact independently merged Policy DSL producer0ffa41e so the installed standard rejects missing DEFAULT operands and dangling IR transition endpoints (new-project#534 findings1and2).",
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "runtimeDependencies": [],
+    "nonGoals": [
+      "No edits inside the vendored parser; its bytes must equal the exact approved producer artifact.",
+      "No release tag, fleet rollout, unrelated issue534 findings, trust-policy waiver or scope takeover.",
+      "No schema fork or hand-written alternate transition/default checker."
+    ],
+    "targetBranch": "main",
+    "acceptedBaseSha": "376f20c05e8095944d6cbc9a830e9a2ff5973dd7",
+    "architecture": {
+      "status": "accepted",
+      "decision": "Copy exact tests/policy_dsl_check.py from producer merge0ffa41efd903d3e0fc3dbf4431f2771b34c1f70e; update the closed dependency lock and identical embedded resolver record atomically. Reuse existing package installation tests to validate the actual digest-checked installed runtime.",
+      "responsibilityChanges": false,
+      "components": [
+        {
+          "name": "pinned-policy-runtime",
+          "paths": [
+            "scripts/policy_dsl_check.py",
+            "governance/policy-dsl.lock.json",
+            "scripts/governance_check.py"
+          ]
+        },
+        {
+          "name": "installed-adoption-regressions",
+          "paths": [
+            "tests/policy_dsl_adoption_test.py"
+          ]
+        }
+      ],
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this immutable dependency adoption through the same protected review and publication process."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -B tests/policy_dsl_adoption_test.py"
+        ],
+        "evidence": "The installed digest-checked parser rejects missing DEFAULT operands; valid literal/default policy still passes."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -B tests/policy_dsl_adoption_test.py"
+        ],
+        "evidence": "The installed parser rejects transitions whose target is not in declared IR states while valid transitions pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/agent-hosts.test.sh",
+          "bash tests/governance-scripts.test.sh",
+          "./project/governance-check.sh",
+          "git diff --check"
+        ],
+        "evidence": "Source bytes and both lock projections agree; focused checks and full native suite pass against current base before independent exact-head review and merge."
+      }
+    ]
+  }
+}

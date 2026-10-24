@@ -92,6 +92,36 @@ class PolicyDslAdoptionTest(unittest.TestCase):
             checker = load_installed_checker(target)
             self.assertEqual(len(policy_findings(checker, target)), 1)
 
+    def test_installed_runtime_requires_an_environment_default_literal(self):
+        for tail, expected_findings in (("DEFAULT", 1), ('DEFAULT ""', 0)):
+            with self.subTest(tail=tail), tempfile.TemporaryDirectory(prefix="policy-dsl-default-") as directory:
+                target = pathlib.Path(directory)
+                install_managed_payload(target)
+                policy = ("# Contributing\n\n```dsl\nDOCUMENT CONTRIBUTING\nVERSION 1\n"
+                          "MODE PROCEDURAL\nVARIABLE AGENT TYPE STRING FROM ENV " + tail + "\n```\n")
+                (target / "CONTRIBUTING.md").write_text(policy, encoding="utf-8")
+                checker = load_installed_checker(target)
+                findings = policy_findings(checker, target)
+                self.assertEqual(len(findings), expected_findings)
+                if findings:
+                    self.assertIn("POLICY-SYNTAX-001", findings[0].message)
+
+    def test_installed_runtime_rejects_undeclared_ir_transition_endpoints(self):
+        with tempfile.TemporaryDirectory(prefix="policy-dsl-transition-") as directory:
+            target = pathlib.Path(directory)
+            install_managed_payload(target)
+            checker = load_installed_checker(target)
+            runtime = checker.load_policy_dsl_module(target)
+            policy = ("DOCUMENT TRANSITIONS\nVERSION 1\nMODE STRICT\n"
+                      "STATE START\nSTATE END\nTRANSITION START -> END\n")
+            runtime.validate_ir(runtime.parse(policy))
+            for endpoint in ("from", "to"):
+                with self.subTest(endpoint=endpoint):
+                    ir = runtime.parse(policy)
+                    ir["transitions"][0][endpoint] = "MISSING"
+                    with self.assertRaisesRegex(runtime.PolicyError, "undeclared state"):
+                        runtime.validate_ir(ir)
+
     def test_hub_contributing_policy_validates_with_installed_runtime(self):
         with tempfile.TemporaryDirectory(prefix="policy-dsl-hub-") as directory:
             target = pathlib.Path(directory)
