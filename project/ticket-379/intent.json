@@ -1,0 +1,109 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-379",
+  "summary": "Fail closed when a ticket writer checker is missing (issue534)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-379/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".githooks/pre-commit",
+    ".githooks/pre-push",
+    "template/files/pre-commit.template.sh",
+    "template/files/pre-push.template.sh",
+    "tests/pre_push_hook_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "outcome": "Resolve issue534 finding3: both hub and adopted commit/push hooks refuse ticket writes when neither managed nor hub writer-lease checker exists, preserving normal fencing and all non-ticket publication controls.",
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "runtimeDependencies": [],
+    "nonGoals": [
+      "No parser, IR endpoint, seed-baseline, evidence-policy or other issue534 findings.",
+      "No source ownership transfer, lease-schema change, fixture-policy waiver, new deployment or standard release tag.",
+      "No change to legitimate managed/hub checker lookup, non-ticket target-push controls or independent review/merge."
+    ],
+    "targetBranch": "main",
+    "acceptedBaseSha": "b923f8972149208d9ec087f22c9c014e0230b94d",
+    "architecture": {
+      "status": "accepted",
+      "decision": "Make the existing checker-presence prerequisite explicit in the four maintained hook projections. Reuse real-Git writer fixtures in the current pre-push suite for commit/amend and push rejection, plus a real checker fallback control. No new permission or duplicated lease implementation.",
+      "responsibilityChanges": false,
+      "components": [
+        {
+          "name": "writer-hook-guards",
+          "paths": [
+            ".githooks/pre-commit",
+            ".githooks/pre-push",
+            "template/files/pre-commit.template.sh",
+            "template/files/pre-push.template.sh"
+          ]
+        },
+        {
+          "name": "hook-integration-regressions",
+          "paths": [
+            "tests/pre_push_hook_test.py"
+          ]
+        }
+      ],
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source change through the same governed independent publication route. Do not restore missing checker files or leases by hand in adopters."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/pre_push_hook_test.py"
+        ],
+        "evidence": "Real Git commit and amend attempts fail with the stable missing-checker diagnostic and preserve HEAD for hub and managed hook variants."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/pre_push_hook_test.py"
+        ],
+        "evidence": "Real Git pushes fail and leave the bare remote unchanged when the checker has disappeared."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 tests/pre_push_hook_test.py",
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Actual valid writer/session and managed/hub fallback controls pass; existing unauthorized session, force-push and target branch checks remain enforced."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "./project/governance-check.sh",
+          "git diff --check"
+        ],
+        "evidence": "Canonical governance and native complete stack checks pass for current head/base before independent protected review and merge."
+      }
+    ]
+  }
+}

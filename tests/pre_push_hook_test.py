@@ -146,6 +146,61 @@ class PrePushHookTest(unittest.TestCase):
                     self.assertEqual(git(self.repo, "rev-parse", "HEAD").stdout, before)
             git(self.repo, "commit", "--amend", "--no-edit")
 
+    def test_missing_checker_blocks_commits_and_amends_without_changing_head(self):
+        self.install_writer()
+        ticket = self.repo / "project/ticket-001"
+        ticket.mkdir(parents=True)
+        (ticket / "README.md").write_text("- **Status**: IN_PROGRESS\n")
+        (self.repo / ".governance/worktree_guard.py").write_text("raise SystemExit(0)\n")
+        (self.repo / ".governance/change_lease_check.py").unlink()
+        before = git(self.repo, "rev-parse", "HEAD").stdout
+        for source in (ROOT / ".githooks/pre-commit", ROOT / "template/files/pre-commit.template.sh"):
+            shutil.copy2(source, self.repo / ".githooks/pre-commit")
+            (self.repo / ".githooks/pre-commit").chmod(0o755)
+            (self.repo / "README.md").write_text(str(source))
+            git(self.repo, "add", "README.md", "project/ticket-001/README.md")
+            for args in (("commit", "-m", "ticket-001 missing checker"),
+                         ("commit", "--amend", "--no-edit")):
+                result = git(self.repo, *args, check=False)
+                self.assertNotEqual(result.returncode, 0, str(source))
+                self.assertIn("GOV-CHANGE-LEASE-001", result.stdout + result.stderr)
+                self.assertEqual(git(self.repo, "rev-parse", "HEAD").stdout, before)
+
+    def test_missing_checker_blocks_ticket_push_without_changing_remote(self):
+        self.install_writer()
+        (self.repo / ".governance/change_lease_check.py").unlink()
+        before = git(self.remote, "show-ref", check=False).stdout
+        for source in (HOOK, ROOT / ".githooks/pre-push"):
+            shutil.copy2(source, self.repo / ".githooks/pre-push")
+            (self.repo / ".githooks/pre-push").chmod(0o755)
+            result = git(self.repo, "push", "origin", "ticket/001-example", check=False)
+            self.assertNotEqual(result.returncode, 0, str(source))
+            self.assertIn("GOV-CHANGE-LEASE-001", result.stdout + result.stderr)
+            self.assertEqual(git(self.remote, "show-ref", check=False).stdout, before)
+
+    def test_real_hub_checker_fallback_allows_owner_commit_and_push(self):
+        self.install_writer()
+        scripts = self.repo / "scripts"
+        scripts.mkdir()
+        (self.repo / ".governance/change_lease_check.py").rename(scripts / "change_lease_check.py")
+        shutil.copy2(self.repo / ".governance/change-lease.schema.json", scripts / "change-lease.schema.json")
+        ticket = self.repo / "project/ticket-001"
+        ticket.mkdir(parents=True)
+        (ticket / "README.md").write_text("- **Status**: IN_PROGRESS\n")
+        (self.repo / ".governance/worktree_guard.py").write_text("raise SystemExit(0)\n")
+        for commit_hook, push_hook in (
+                (ROOT / ".githooks/pre-commit", ROOT / ".githooks/pre-push"),
+                (ROOT / "template/files/pre-commit.template.sh", HOOK)):
+            for source, name in ((commit_hook, "pre-commit"), (push_hook, "pre-push")):
+                shutil.copy2(source, self.repo / ".githooks" / name)
+                (self.repo / ".githooks" / name).chmod(0o755)
+            (self.repo / "README.md").write_text(str(commit_hook))
+            git(self.repo, "add", "README.md", "project/ticket-001/README.md")
+            git(self.repo, "commit", "-m", "ticket-001 real hub checker")
+            git(self.repo, "push", "origin", "ticket/001-example")
+            self.assertEqual(git(self.remote, "rev-parse", "refs/heads/ticket/001-example").stdout,
+                             git(self.repo, "rev-parse", "HEAD").stdout)
+
     def manifest(self, branches: list[str]) -> None:
         (self.repo / ".governance").mkdir(exist_ok=True)
         (self.repo / ".governance/manifest.json").write_text(
