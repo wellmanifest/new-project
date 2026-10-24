@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-380",
+  "summary": "Prepare the local-pin hook fixture with a real writer lease",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-380/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "tests/precommit-local-pin.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "outcome": "Prepare local-pin hook tests with a genuine isolated writer lease so continuity pin checks remain reachable under mandatory writer verification.",
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "runtimeDependencies": [],
+    "nonGoals": [
+      "No production hook, lease policy, dependency or unrelated fixture changes.",
+      "No changes to ticket-379 source or scope."
+    ],
+    "targetBranch": "main",
+    "acceptedBaseSha": "b923f8972149208d9ec087f22c9c014e0230b94d",
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the existing scalar lease fixture builder, disposable primary and canonical linked worktree, actual managed checker and schema, and explicit writer environment. Preserve staged-pin and forbidden-updater assertions.",
+      "responsibilityChanges": false,
+      "components": [
+        {
+          "name": "local-pin-hook-fixture",
+          "paths": [
+            "tests/precommit-local-pin.test.py"
+          ]
+        }
+      ],
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material source change through the same governed independent publication route. Do not restore missing checker files or leases by hand in adopters."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/precommit-local-pin.test.py"
+        ],
+        "evidence": "Valid pin reaches guard; invalid and absent pins fail continuity verification after real writer verification."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/precommit-standard-update.test.sh",
+          "./project/governance-check.sh",
+          "git diff --check"
+        ],
+        "evidence": "Updater and governance controls remain green."
+      }
+    ]
+  }
+}
