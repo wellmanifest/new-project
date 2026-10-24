@@ -1285,6 +1285,8 @@ cp "$repo_root/scripts/work_start_check.py" "$wide/.governance/work_start_check.
 cp "$repo_root/scripts/worktree_overlap_check.py" "$wide/.governance/worktree_overlap_check.py"
 cp "$repo_root/scripts/ticket_input.py" "$wide/.governance/ticket_input.py"
 cp "$repo_root/scripts/ticket_activity.py" "$wide/.governance/ticket_activity.py"
+cp "$repo_root/scripts/change_lease_check.py" "$wide/.governance/change_lease_check.py"
+cp "$repo_root/subprojects/change-lease/change-lease.schema.json" "$wide/.governance/change-lease.schema.json"
 cp "$repo_root/subprojects/worktrees/conformance.py" "$wide/.governance/worktree_path_check.py"
 cp "$repo_root/template/files/pre-commit.template.sh" "$wide/.githooks/pre-commit"
 chmod +x "$wide/.githooks/pre-commit"
@@ -1302,13 +1304,16 @@ printf '%s\n' 'raise SystemExit(0)' > "$wide/.governance/worktree_guard.py"
   git config core.hooksPath .githooks
   printf '%s\n' 999 > .git/new-project-ticket-high-water
   bash project/new-ticket.sh --title 'Allocated beyond display width' --agent codex \
+    --writer-actor agent:fixture-wide --writer-session fixture-wide \
     --workstream application > "$fixture/wide-allocation.out"
   delivery="$wide/.worktrees/ticket-1000--allocated-beyond-display-width"
   test -f "$delivery/project/ticket-1000/intent.json"
   cd "$delivery"
   printf '%s\n' 'value = 1' > app.py
   git add project/ticket-1000 app.py
-  git commit -qm 'Exercise complete four-digit hook binding'
+  NEW_PROJECT_WRITER_ACTOR=agent:fixture-wide NEW_PROJECT_WRITER_SESSION=fixture-wide \
+    NEW_PROJECT_LEASE_REVISION=1 NEW_PROJECT_FENCING_TOKEN=1 \
+    git commit -qm 'Exercise complete four-digit hook binding'
 )
 python3 - "$repo_root" "$wide" <<'PY'
 import hashlib, json, pathlib, re, sys

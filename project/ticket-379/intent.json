@@ -16,7 +16,8 @@
     ".githooks/pre-push",
     "template/files/pre-commit.template.sh",
     "template/files/pre-push.template.sh",
-    "tests/pre_push_hook_test.py"
+    "tests/pre_push_hook_test.py",
+    "tests/governance-scripts.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -28,9 +29,9 @@
   "delivery": {
     "outcome": "Resolve issue534 finding3: both hub and adopted commit/push hooks refuse ticket writes when neither managed nor hub writer-lease checker exists, preserving normal fencing and all non-ticket publication controls.",
     "complexity": "S",
-    "estimatedMinutes": 20,
+    "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 5,
+      "maxImplementationFiles": 6,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
@@ -45,7 +46,7 @@
     "acceptedBaseSha": "b923f8972149208d9ec087f22c9c014e0230b94d",
     "architecture": {
       "status": "accepted",
-      "decision": "Make the existing checker-presence prerequisite explicit in the four maintained hook projections. Reuse real-Git writer fixtures in the current pre-push suite for commit/amend and push rejection, plus a real checker fallback control. No new permission or duplicated lease implementation.",
+      "decision": "Make the existing checker-presence prerequisite explicit in the four maintained hook projections. Reuse real-Git writer fixtures in the current pre-push suite for commit/amend and push rejection, plus a real checker fallback control. No new permission or duplicated lease implementation. Full hosted CI exposed an existing four-digit allocation fixture that copied the hook without its checker. Include the actual managed checker/schema and explicit allocator-issued writer identity in that existing fixture; this is required positive coverage of the same missing-checker prerequisite, not a new objective or workstream.",
       "responsibilityChanges": false,
       "components": [
         {
@@ -60,7 +61,8 @@
         {
           "name": "hook-integration-regressions",
           "paths": [
-            "tests/pre_push_hook_test.py"
+            "tests/pre_push_hook_test.py",
+            "tests/governance-scripts.test.sh"
           ]
         }
       ],
@@ -92,7 +94,8 @@
         "criterion": "AC-03",
         "commands": [
           "python3 tests/pre_push_hook_test.py",
-          "bash tests/agent-hosts.test.sh"
+          "bash tests/agent-hosts.test.sh",
+          "bash tests/governance-scripts.test.sh"
         ],
         "evidence": "Actual valid writer/session and managed/hub fallback controls pass; existing unauthorized session, force-push and target branch checks remain enforced."
       },
