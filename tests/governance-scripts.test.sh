@@ -14,6 +14,7 @@ export TMPDIR="$fixture_cache"
 # Repositories initialized below this parent still find their own .git first.
 export GIT_CEILING_DIRECTORIES="$fixture_cache${GIT_CEILING_DIRECTORIES:+:$GIT_CEILING_DIRECTORIES}"
 python3 "$repo_root/tests/ticket-allocation-worktree.test.py"
+python3 "$repo_root/tests/ticket-radar-allocation.test.py"
 python3 "$repo_root/tests/work_start_test.py"
 fixture="$(mktemp -d "$fixture_cache/new-project-governance-test.XXXXXX")"
 cleanup() {
