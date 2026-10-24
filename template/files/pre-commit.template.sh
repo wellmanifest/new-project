@@ -21,9 +21,11 @@ fi
 if [[ "$branch" =~ ^ticket[-/][0-9]{3,} ]]; then
   writer_runner="$root/.governance/change_lease_check.py"
   [[ -f "$writer_runner" ]] || writer_runner="$root/scripts/change_lease_check.py"
-  if [[ -f "$writer_runner" ]]; then
-    python3 -B "$writer_runner" writer-check --root "$root" --operation commit --ref "refs/heads/$branch"
+  if [[ ! -f "$writer_runner" ]]; then
+    echo "GOV-CHANGE-LEASE-001: writer-lease checker is missing; restore the managed installation." >&2
+    exit 1
   fi
+  python3 -B "$writer_runner" writer-check --root "$root" --operation commit --ref "refs/heads/$branch"
 fi
 
 run_worktree_guard() {

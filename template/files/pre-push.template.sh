@@ -38,10 +38,11 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     if [[ "$ref" =~ ^refs/heads/ticket[-/][0-9]{3,} ]]; then
       writer_runner="$root/.governance/change_lease_check.py"
       [[ -f "$writer_runner" ]] || writer_runner="$root/scripts/change_lease_check.py"
-      if [[ -f "$writer_runner" ]]; then
-        if ! python3 -B "$writer_runner" writer-check --root "$root" --operation push --ref "$ref"; then
-          refused=1
-        fi
+      if [[ ! -f "$writer_runner" ]]; then
+        echo "GOV-CHANGE-LEASE-001: writer-lease checker is missing; restore the managed installation." >&2
+        refused=1
+      elif ! python3 -B "$writer_runner" writer-check --root "$root" --operation push --ref "$ref"; then
+        refused=1
       fi
     fi
   done
