@@ -1,0 +1,51 @@
+# Ticket 381: Adopt the reviewed Policy DSL parser fixes for missing defaults and transition endpoints
+
+- **ID**: ticket-381
+- **Owner**: agent:codex
+- **Status**: IN_PROGRESS
+- **Workflow state**: PUBLICATION
+- **Utworzono**: 2026-10-24
+
+## Cel i Zakres
+Adopt exact reviewed Policy DSL producer0ffa41e and verify the actual installed package against findings1and2 of issue #534. No parser forks or schema/policy waivers.
+
+SESSION_EXECUTION_AUTHORIZATION: user requested autonomous backlog implementation, tests and protected merges across ~/github/*/*. Independent exact-head review remains required.
+
+## Kryteria Odbioru (Acceptance Criteria)
+- [ ] AC-01: Installed parser rejects DEFAULT without a literal while valid declarations pass.
+- [ ] AC-02: Installed parser rejects undeclared IR transition endpoints.
+- [ ] AC-03: Exact producer bytes and dependency locks agree, full validation passes before protected publication.
+
+## Ryzyka i Uwagi
+- Keep this immutable adoption at four files and 20 estimated implementation minutes; preserve full checks and rollback through protected publication.
+
+## Granica katalogu
+
+Ten katalog przechowuje minimalny kontrakt i opcjonalne decyzje. Surowe logi
+pozostają poza śledzonym repozytorium; Git zapisuje tylko skrót wyniku i
+referencję do receiptu. Kod wykonywalny, skrypty badawcze i testy należą do
+zwykłych katalogów źródłowych, nie do `project/ticket-381/`.
+
+<!-- ticket-radar:start -->
+## Ticket Radar
+
+Initial planned-scope estimate; advisory only, not execution or merge approval.
+
+| Measure | Initial assessment |
+| --- | --- |
+| Impact score | 60/100 |
+| Complexity | L |
+| Estimated effort | 61 min |
+| Planning budget | 30 min |
+| Split recommended | yes |
+
+Diagnostics: RADAR-ACCEPTANCE-MISSING, RADAR-BUDGET-EXCEEDED.
+<!-- ticket-radar:end -->
+
+## Bounded replan before PR
+
+GOV-BUDGET-001 identified one already-scoped public interface path: scripts/governance_check.py, as declared by the hub manifest. The same immutable adoption still touches exactly four implementation files and two components. C-APPROVAL-003 retains session execution authorization for the same objective and safe prerequisites. Replan explicitly allocates one public-interface slot for the closed dependency resolver record; no source path, owner, trust rule, runtime dependency or campaign timebox is expanded. Independent review remains required. The initial commit is preserved; no PR or merge was requested for its failed budget.
+
+## Packaged runtime prerequisite
+
+Required Linux and Windows CI exposed WELLMAN-BUNDLE-DRIFT for the existing packaged governance_check.py projection. Before changing it, extend this same-objective safe-prerequisite intent to five source files, preserving two components, one public interface and the original timebox. Sync only through the canonical projection tool, then obtain fresh exact-head validation and independent review.
