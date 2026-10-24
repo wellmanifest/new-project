@@ -3,10 +3,13 @@
 from pathlib import Path
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import tempfile
 import unittest
+
+from change_lease_safety_test import lease
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -19,10 +22,31 @@ class LocalPinTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.repo = Path(self.temp.name)
-        self.git("init", "-b", "ticket/001-test")
+        self.primary = Path(self.temp.name)
+        self.repo = self.primary
+        self.git("init", "-b", "main")
+        self.git("-c", "user.name=fixture", "-c", "user.email=fixture@example.test",
+                 "commit", "--allow-empty", "-m", "fixture base")
+        worktree = self.primary / ".worktrees/ticket-001--test"
+        self.git("worktree", "add", "-b", "ticket/001-test", str(worktree))
+        self.repo = worktree
+        self.writer_env = {**os.environ,
+                           "NEW_PROJECT_WRITER_ACTOR": "agent:fixture",
+                           "NEW_PROJECT_WRITER_SESSION": "session-fixture",
+                           "NEW_PROJECT_LEASE_REVISION": "1",
+                           "NEW_PROJECT_FENCING_TOKEN": "1"}
+        lease_path = self.primary / ".subactor/leases/ticket-001--test.json"
+        lease_path.parent.mkdir(parents=True)
+        writer = lease()
+        writer.update(branchRef="refs/heads/ticket/001-test", worktreeId="ticket-001--test",
+                      repositoryRef="local/" + hashlib.sha256(str(self.primary.resolve()).encode()).hexdigest())
+        lease_path.write_text(json.dumps(writer))
         for directory in (".governance", ".subactor", "project/ticket-001"):
             (self.repo / directory).mkdir(parents=True)
+        shutil.copyfile(ROOT / "scripts/change_lease_check.py",
+                        self.repo / ".governance/change_lease_check.py")
+        shutil.copyfile(ROOT / "subprojects/change-lease/change-lease.schema.json",
+                        self.repo / ".governance/change-lease.schema.json")
         managed = {}
         for name in (".subactor/manifest.json", ".subactor/.gitignore"):
             shutil.copyfile(ROOT / name, self.repo / name)
@@ -47,7 +71,7 @@ class LocalPinTest(unittest.TestCase):
 
     def hook(self):
         return subprocess.run(["bash", str(ROOT / "template/files/pre-commit.template.sh")],
-                              cwd=self.repo, capture_output=True, text=True)
+                              cwd=self.repo, capture_output=True, text=True, env=self.writer_env)
 
     def test_valid_staged_pin_does_not_run_updater(self):
         result = self.hook()
