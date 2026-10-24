@@ -15,7 +15,8 @@
     "governance/policy-dsl.lock.json",
     "scripts/governance_check.py",
     "scripts/policy_dsl_check.py",
-    "tests/policy_dsl_adoption_test.py"
+    "tests/policy_dsl_adoption_test.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -27,9 +28,9 @@
   "delivery": {
     "outcome": "Adopt exact independently merged Policy DSL producer0ffa41e so the installed standard rejects missing DEFAULT operands and dangling IR transition endpoints (new-project#534 findings1and2).",
     "complexity": "S",
-    "estimatedMinutes": 20,
+    "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 4,
+      "maxImplementationFiles": 5,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
@@ -44,7 +45,7 @@
     "acceptedBaseSha": "376f20c05e8095944d6cbc9a830e9a2ff5973dd7",
     "architecture": {
       "status": "accepted",
-      "decision": "Copy exact tests/policy_dsl_check.py from producer merge0ffa41efd903d3e0fc3dbf4431f2771b34c1f70e; update the closed dependency lock and identical embedded resolver record atomically. Reuse existing package installation tests to validate the actual digest-checked installed runtime.",
+      "decision": "Copy exact tests/policy_dsl_check.py from producer merge0ffa41efd903d3e0fc3dbf4431f2771b34c1f70e; update the closed dependency lock and identical embedded resolver record atomically. Reuse existing package installation tests to validate the actual digest-checked installed runtime. Synchronize the existing packaged CLI governance_check.py projection through packages/wellman/sync_bundled.py; the full required CI identified this mechanical closure prerequisite before further source edits.",
       "responsibilityChanges": false,
       "components": [
         {
@@ -52,7 +53,8 @@
           "paths": [
             "scripts/policy_dsl_check.py",
             "governance/policy-dsl.lock.json",
-            "scripts/governance_check.py"
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py"
           ]
         },
         {
