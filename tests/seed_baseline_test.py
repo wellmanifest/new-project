@@ -9,11 +9,13 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / 'scripts'))
 import governance_check
+import seed_baseline
 
 
 class SeedTest(unittest.TestCase):
@@ -88,6 +90,151 @@ class SeedTest(unittest.TestCase):
 
     def unborn(self):
         self.assertNotEqual(self.cmd('git', 'rev-parse', '--verify', 'HEAD', check=False).returncode, 0)
+
+    def preparation_fixture(self):
+        # Model the allocator's state between preflight and prepare, without
+        # invoking its commit/publication path in these rejection tests.
+        self.ticket = 'ticket-001'
+        directory = self.target / 'project' / self.ticket
+        directory.mkdir()
+        self.ticket_readme = directory / 'README.md'
+        self.ticket_intent = directory / 'intent.json'
+        self.ticket_readme.write_text('# First product task\n')
+        self.ticket_intent.write_text(json.dumps({'ticket': self.ticket}))
+        (self.target / '.git/new-project-ticket-high-water').write_text('1\n')
+        (self.target / '.git/new-project-ticket-allocation.lock').mkdir()
+        self.reservation = self.target / '.git/new-project-seed-reservation.json'
+
+    def preparation_state(self):
+        return (self.ticket_readme.read_bytes(), self.ticket_intent.read_bytes(),
+                (self.target / '.git/index').read_bytes(),
+                self.cmd('git', 'ls-files', '--stage', '-z').stdout,
+                self.reservation.read_bytes() if self.reservation.exists() else None)
+
+    def prepare(self):
+        return seed_baseline.prepare(self.target, self.request, 'agent:fixture',
+                                     'fixture-seed-session', self.ticket)
+
+    def assert_preparation_refused(self, reason, *, unread_ticket=False):
+        before = self.preparation_state()
+        original_open = Path.open
+
+        def guarded_open(path, *args, **kwargs):
+            if unread_ticket and path in (self.ticket_readme, self.ticket_intent):
+                self.fail('ticket content accessed before validation')
+            return original_open(path, *args, **kwargs)
+
+        with patch.object(Path, 'open', guarded_open):
+            with self.assertRaisesRegex(seed_baseline.SeedError, reason):
+                self.prepare()
+        self.assertEqual(self.preparation_state(), before)
+        self.unborn()
+
+    def test_prepare_validates_request_before_ticket_content_access(self):
+        self.preparation_fixture()
+        cases = [('schema', 'unknown', 'request_shape'),
+                 ('extra', True, 'request_shape'),
+                 ('root', '/different', 'request_binding'),
+                 ('createRepository', False, 'explicit_new_repository_authority_required'),
+                 ('execute', False, 'explicit_new_repository_authority_required'),
+                 ('authorizationRef', '', 'explicit_new_repository_authority_required'),
+                 ('ownerActor', 'agent:other', 'writer_binding'),
+                 ('ownerSession', 'other', 'writer_binding'),
+                 ('repositoryRef', 'invalid', 'repository_binding'),
+                 ('repositoryRef', 'paxlet-com/other', 'check_repository_binding'),
+                 ('lockSha256', '0' * 64, 'adoption_lock_drift')]
+        valid = dict(self.payload)
+        for field, value, reason in cases:
+            with self.subTest(field=field, value=value):
+                self.payload = {**valid, field: value}
+                self.save_request()
+                self.assert_preparation_refused(reason, unread_ticket=True)
+
+    def test_prepare_rejects_malformed_json_before_ticket_content_access(self):
+        self.preparation_fixture()
+        self.request.write_text('{')
+        before = self.preparation_state()
+        with patch.object(Path, 'read_text', side_effect=AssertionError('premature ticket read')):
+            with self.assertRaises(json.JSONDecodeError):
+                self.prepare()
+        self.assertEqual(self.preparation_state(), before)
+
+    def test_prepare_rejects_symlinked_ticket_components_before_content_access(self):
+        self.preparation_fixture()
+        paths = [self.target / 'project', self.ticket_readme.parent,
+                 self.ticket_readme, self.ticket_intent]
+        for number, path in enumerate(paths):
+            with self.subTest(path=path.relative_to(self.target)):
+                external = Path(self.temp.name) / f'external-{number}'
+                path.rename(external)
+                path.symlink_to(external, target_is_directory=external.is_dir())
+                sentinels = list(external.rglob('*')) if external.is_dir() else [external]
+                before = {p: p.read_bytes() for p in sentinels if p.is_file()}
+                try:
+                    self.assert_preparation_refused('symlink_path', unread_ticket=True)
+                    self.assertEqual({p: p.read_bytes() for p in before}, before)
+                finally:
+                    path.unlink()
+                    external.rename(path)
+
+    def test_prepare_rejects_invalid_reservation_before_mutation(self):
+        self.preparation_fixture()
+        counter = self.target / '.git/new-project-ticket-high-water'
+        counter.write_text('2\n')
+        self.assert_preparation_refused('native_reservation_required', unread_ticket=True)
+        counter.write_text('1\n')
+        lock = self.target / '.git/new-project-ticket-allocation.lock'
+        lock.rmdir()
+        self.assert_preparation_refused('allocator_lock_required', unread_ticket=True)
+        lock.mkdir()
+        self.reservation.write_text('{"existing": true}\n')
+        self.assert_preparation_refused('seed_already_reserved', unread_ticket=True)
+
+    def test_prepare_rejects_invalid_intent_before_mutation(self):
+        self.preparation_fixture()
+        for intent in ({'ticket': 'ticket-002'}, {'ticket': self.ticket, 'delivery': {}}):
+            with self.subTest(intent=intent):
+                self.ticket_intent.write_text(json.dumps(intent))
+                self.assert_preparation_refused('unborn_ticket_binding')
+
+    def test_prepare_rejects_seed_drift_before_mutation(self):
+        self.preparation_fixture()
+        readme = self.target / 'README.md'
+        readme.write_text('# Changed seed\n')
+        self.assert_preparation_refused('index_worktree_drift')
+        self.cmd('git', 'add', 'README.md')
+        self.assert_preparation_refused('seed_content_drift')
+
+    def test_prepare_rejects_extra_inventory_before_mutation(self):
+        self.preparation_fixture()
+        extra = self.ticket_readme.parent / 'extra.md'
+        extra.write_text('not an allocator carrier\n')
+        self.assert_preparation_refused('untracked_path', unread_ticket=True)
+        # Ignoring the extra file does not hide it from the inventory check.
+        (self.target / '.git/info/exclude').write_text('/project/ticket-001/extra.md\n')
+        self.assert_preparation_refused('untracked_path', unread_ticket=True)
+        self.cmd('git', 'add', '-f', str(extra))
+        self.assert_preparation_refused('exact_seed_stage_required')
+
+    def test_prepare_rejects_secret_carriers_before_mutation(self):
+        self.preparation_fixture()
+        self.ticket_readme.write_text('ghp_' + 'A' * 40 + '\n')
+        self.assert_preparation_refused('secret_material')
+
+    def test_prepare_accepts_exact_untracked_carriers_and_keeps_other_callers_strict(self):
+        self.preparation_fixture()
+        for operation in (seed_baseline.context, seed_baseline.preflight, seed_baseline.hook_check):
+            with self.subTest(operation=operation.__name__):
+                with self.assertRaisesRegex(seed_baseline.SeedError, 'untracked_path'):
+                    operation(self.target, self.request, 'agent:fixture', 'fixture-seed-session')
+        record = self.prepare()
+        self.assertEqual(set(record['files']), set(self.payload['files']) | {
+            'project/ticket-001/README.md', 'project/ticket-001/intent.json'})
+        self.assertEqual(self.ticket_readme.read_text().count('SESSION_EXECUTION_AUTHORIZATION'), 1)
+        self.assertEqual(json.loads(self.reservation.read_text()), record)
+        self.assertEqual(seed_baseline.hook_check(self.target, self.request, 'agent:fixture',
+                                                'fixture-seed-session'), record)
+        self.assert_preparation_refused('seed_already_reserved', unread_ticket=True)
 
     def test_real_first_seed_and_canonical_allocation_then_refuse_second_seed(self):
         self.allocate(check=True)
