@@ -1,0 +1,105 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-375",
+  "summary": "Idle takeover slice 2/3: idle_takeover runtime and autonomy board",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-375/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "error/GOV-IDLE-TAKEOVER.md",
+    "governance/diagnostics.json",
+    "governance/package-manifest.json",
+    "scripts/idle_takeover.py",
+    "tests/idle_takeover_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b746f8f67316d492f8b8af794fffbef85636d088",
+    "targetBranch": "main",
+    "outcome": "scripts/idle_takeover.py observes every ticket lease against the manifest idleTakeover policy and the pinned lease contract, writes the autonomy board (worktree and lease roots, project, pull request and issue links) to .subactor/cache, and takes over only an IDLE_TAKEOVER_ELIGIBLE ticket after a content-addressed snapshot, a CAS expire/release/claim and a receipt; the runtime is packaged with its GOV-IDLE-TAKEOVER diagnostics and runbook.",
+    "nonGoals": [
+      "No work-start refresh or AGENTS instruction change (ticket-376)",
+      "No version release",
+      "No adopter upgrade"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "One stdlib CLI reads the policy from the governance manifest and the layout roots and transitions from the repository's pinned change_lease_check.py; it repeats neither. Takeover reuses evaluate_transition for every lease step and refuses on any concurrent byte change.",
+      "components": [
+        {
+          "name": "idle-takeover-runtime",
+          "paths": [
+            "scripts/idle_takeover.py",
+            "tests/idle_takeover_test.py"
+          ]
+        },
+        {
+          "name": "diagnostics",
+          "paths": [
+            "governance/diagnostics.json",
+            "error/GOV-IDLE-TAKEOVER.md"
+          ]
+        },
+        {
+          "name": "packaging",
+          "paths": [
+            "governance/package-manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "idle_takeover.py observe/takeover CLI",
+        "GOV-IDLE-TAKEOVER-001/002",
+        "autonomy board new-project.autonomy-board/v1"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; no existing script imports idle_takeover.py and leases keep their schema."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/idle_takeover_test.py",
+          "bash tests/agent-hosts.test.sh",
+          "bash tests/rule-enforcement.test.sh",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "project/ticket-375/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-375/README.md"
+      }
+    ]
+  }
+}

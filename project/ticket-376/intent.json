@@ -1,0 +1,110 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-376",
+  "summary": "Idle takeover slice 3/3: work-start board refresh and agent worktree rules",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-376/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "AGENTS.md",
+    "docs/STANDARD_UPGRADE.md",
+    "error/GOV-ARCHITECTURE-001.md",
+    "error/GOV-IDLE-TAKEOVER.md",
+    "error/GOV-WORK-START.md",
+    "scripts/work_start_check.py",
+    "template/files/AGENTS.template.md",
+    "tests/idle_takeover_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "fb0a5a3d68af4d48bb61cf9a1bdba4e784f75b65",
+    "targetBranch": "main",
+    "outcome": "Every work_start_check.py run refreshes the autonomy board and names idle takeover candidates on stderr without changing its route, and AGENTS (hub rule 10b and the adopter template) tells every agent to read the board, continue an idle ticket only through idle_takeover.py takeover and take its worktree, lease and writer environment only from the JSON result, inside the canonical wellmanifest/worktrees v5 path.",
+    "nonGoals": [
+      "No change to idle_takeover.py classification or takeover",
+      "No version release",
+      "No adopter upgrade"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "work_start_check.py loads its sibling idle_takeover.py best effort after the route is decided, so an observation error never alters allocation; agent instructions and runbooks describe the one measured exception to accepted handoff.",
+      "components": [
+        {
+          "name": "work-start",
+          "paths": [
+            "scripts/work_start_check.py",
+            "tests/idle_takeover_test.py"
+          ]
+        },
+        {
+          "name": "agent-instructions",
+          "paths": [
+            "AGENTS.md",
+            "template/files/AGENTS.template.md"
+          ]
+        },
+        {
+          "name": "runbooks",
+          "paths": [
+            "error/GOV-IDLE-TAKEOVER.md",
+            "error/GOV-WORK-START.md",
+            "error/GOV-ARCHITECTURE-001.md",
+            "docs/STANDARD_UPGRADE.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "work_start_check.py stderr autonomy board line",
+        "AGENTS rule 10b idle takeover exception"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; idle_takeover.py keeps working standalone and work-start routes are unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/idle_takeover_test.py",
+          "bash tests/agent-hosts.test.sh",
+          "bash tests/rule-enforcement.test.sh",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "project/ticket-376/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-376/README.md"
+      }
+    ]
+  }
+}

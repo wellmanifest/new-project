@@ -1,13 +1,13 @@
 # ticket-373: Assess ticket impact during README creation
 
 - **Owner**: agent:codex-ticket-radar
-- **Status**: BLOCKED
+- **Status**: IN_PROGRESS
 
-Blocked 2026-10-23 by accepted handoff (human:tom, executed by agent:claude):
-PR #531 CI is red (`test`, `windows-governance`, `onedev/local-verify`) and the
-writer was idle for 11 h while this ticket held the only governance slot. The
-implementation and PR #531 are unchanged; resume by returning the status to
-IN_PROGRESS through a new lease once a governance slot is free.
+Resumed 2026-10-24 by agent:claude (renewed lease after the accepted
+2026-10-23 handoff): main merged into the branch so CI checks only this
+ticket's range, which the pre-369/372 base could not. Delivery class
+corrected from M/60 to S/30: the measured change is one component, two files
+(`scripts/ticket_storage.py` +81, `tests/ticket-radar-allocation.test.py` +144).
 - **Workflow state**: VALIDATION
 - **Parent**: maskservice PLF-17343
 

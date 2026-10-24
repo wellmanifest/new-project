@@ -31,8 +31,8 @@
       "No execution/merge authority from radar scores.",
       "No automatic runtime installation or rewriting historical tickets."
     ],
-    "complexity": "M",
-    "estimatedMinutes": 60,
+    "complexity": "S",
+    "estimatedMinutes": 30,
     "budgets": {
       "maxImplementationFiles": 3,
       "maxAffectedComponents": 1,

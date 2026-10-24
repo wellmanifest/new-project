@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.20.120
+
+- Idle takeover policy, slice 1 of 3 (tickets 374–376): the manifest schema and validator accept the optional, closed `coordination.idleTakeover` policy (`enabled`, `idleMinutes` 5–240, `leaseMinutes` 15–480 and greater than `idleMinutes`). The default and hub manifests enable it at 15 minutes with a 120-minute lease; the policy has no effect until the `idle_takeover.py` runtime ships. The hub allows two active governance tickets.
+- `change_lease_check.py` exports the wellmanifest/worktrees v5 roots (`WORKTREES_ROOT`, `LEASE_ROOT`) and `MAX_LEASE_BYTES`; the writer check reads them instead of repeating the literals.
+
 ## 0.20.119
 
 - The allocator indexes the ticket it has just created (issue #516): `new-ticket.sh` runs `project/readme.sh` with `T2C_TICKET_INDEX_OWN=project/ticket-NNN`, so a ticket's own PR carries exactly its own `project/TICKETS.md` row instead of the next ticket's PR adding it. Other untracked tickets in the checkout stay out of the index, and a malformed own-ticket value is refused.

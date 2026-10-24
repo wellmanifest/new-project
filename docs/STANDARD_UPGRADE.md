@@ -112,7 +112,8 @@ governance and stack gates, then independent exact-head review before delivery.
 
 On `GOV-TICKET-ALLOCATION-003`, preserve the checkout and inspect the fixed
 diagnostic. Refresh stale observations only after reconciling their owner.
-An expired/foreign lease needs a controller-observed handoff, not a new local
+An expired/foreign lease needs a controller-observed handoff or a
+`GOV-IDLE-TAKEOVER` CAS takeover, not a new local
 claim. A colliding identity must be reconciled, never overwritten. Interrupted
 materialization keeps its reservation and any partial carriers; do not remove
 the lock or decrement high-water without independently verifying the allocator

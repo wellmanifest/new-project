@@ -1,0 +1,129 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-374",
+  "summary": "Idle takeover slice 1/3: manifest policy and lease-contract worktree layout roots",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-374/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "error/GOV-ARCHITECTURE-001.md",
+    "error/GOV-IDLE-TAKEOVER.md",
+    "error/GOV-WORK-START.md",
+    "governance/diagnostics.json",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/manifest.schema.json",
+    "governance/package-manifest.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/change_lease_check.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/change_lease_check.py",
+    "scripts/governance_check.py",
+    "scripts/idle_takeover.py",
+    "scripts/work_start_check.py",
+    "template/files/AGENTS.template.md",
+    "tests/idle_takeover_test.py",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "07d2cf4c34ea308929a6a2c78497f20901a58b3e",
+    "targetBranch": "main",
+    "outcome": "The governance manifest can carry the closed coordination.idleTakeover policy (default and hub: enabled, 15 min, 120 min lease; hub allows two active governance tickets) and change_lease_check.py exports the wellmanifest/worktrees v5 layout roots as the single source for the writer check and the later idle_takeover.py runtime.",
+    "nonGoals": [
+      "No idle_takeover.py runtime, board or takeover in this slice (ticket-375)",
+      "No work-start or AGENTS instruction change (ticket-376)",
+      "No adopter upgrade"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "governance_check.py validates an optional closed idleTakeover object next to the existing coordination fields and the schema declares the same bounds; change_lease_check.py names its worktree and lease roots once and the bundled copy stays byte-identical.",
+      "components": [
+        {
+          "name": "lease-layout",
+          "paths": [
+            "scripts/change_lease_check.py",
+            "packages/wellman/src/wellman/_bundled/change_lease_check.py"
+          ]
+        },
+        {
+          "name": "manifest-policy",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "governance/manifest.schema.json",
+            "tests/idle_takeover_test.py",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "manifest coordination.idleTakeover",
+        "change_lease_check.py WORKTREES_ROOT/LEASE_ROOT/MAX_LEASE_BYTES",
+        "scripts/governance_check.py coordination validation"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; manifests without idleTakeover stay valid and the writer check keeps the same paths."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/idle_takeover_test.py",
+          "python3 tests/change_lease_safety_test.py",
+          "bash tests/wellman-package.test.sh",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "project/ticket-374/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-374/README.md"
+      }
+    ]
+  }
+}
