@@ -1,0 +1,99 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-383",
+  "summary": "Distinguish integrated staged bytes from outstanding work-start scope",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-383/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "docs/AGENT_DECISIONS.md",
+    "scripts/work_start_check.py",
+    "tests/work_start_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "outcome": "Observe only outstanding dirty contributions when a detached ancestor checkout has staged bytes already identical to the observed target. Preserve every checkout, index, ref, ticket and lease.",
+    "nonGoals": [
+      "No cleanup, lease transfer, primary branch switch or allocator/adoption guard changes.",
+      "No exemption for active intent, named branches, unique commits, different staged/worktree content, unknown file types or incomplete observations.",
+      "No downstream source admission from an advisory report."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "targetBranch": "main",
+    "acceptedBaseSha": "67467d9bfd60d191dd270e76e976f23bf379b109",
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep all dirty observations and digest bindings. Only for non-primary detached ancestor checkouts, exclude a path from pending-delta overlap when target blob/mode, stage-zero index entry and raw worktree blob/mode exactly agree. Recheck index/content/ref state before returning. Existing intent reservation, ancestry and ownership gates remain independent.",
+      "responsibilityChanges": false,
+      "components": [
+        {
+          "name": "read-only-work-observation",
+          "paths": [
+            "scripts/work_start_check.py",
+            "docs/AGENT_DECISIONS.md"
+          ]
+        },
+        {
+          "name": "real-git-regressions",
+          "paths": [
+            "tests/work_start_test.py"
+          ]
+        }
+      ],
+      "interfaceChanges": [],
+      "dataChanges": [
+        "Observation digest additionally binds stage-zero/conflict index entries; no persistent state mutation."
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the observer change through independent protected publication; all source, index and lease evidence remains intact."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -B tests/work_start_test.py"
+        ],
+        "evidence": "Real Git detached ancestor with exact staged target bytes no longer reserves those paths; raw dirty observations, index bytes and refs are preserved."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -B tests/work_start_test.py"
+        ],
+        "evidence": "Different index or raw bytes/mode, active named ticket, unique ancestry, missing observation and index-only race remain blocked."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh",
+          "git diff --check"
+        ],
+        "evidence": "Managed governance, focused regressions and required protected CI pass before independent approval."
+      }
+    ]
+  }
+}

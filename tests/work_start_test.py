@@ -629,6 +629,83 @@ class WorkStartTest(unittest.TestCase):
         (peer / "api/a.txt").write_text("uncommitted work\n")
         self.assertEqual(self.report()["route"], "RECONCILE")
 
+    def detached_staged_delivery(self):
+        peer = self.root / ".worktrees/detached-copy"
+        self.git(self.root, "worktree", "add", "--detach", str(peer), self.base)
+        (self.root / "api/a.txt").write_bytes(b"accepted delivery\n")
+        self.git(self.root, "commit", "-am", "accepted delivery")
+        (peer / "api/a.txt").write_bytes((self.root / "api/a.txt").read_bytes())
+        self.git(peer, "add", "api/a.txt")
+        return peer
+
+    def test_detached_staged_target_bytes_preserve_evidence_without_reserving_scope(self):
+        peer = self.detached_staged_delivery()
+        (peer / "ui/a.txt").write_text("unrelated pending work\n")
+        index = Path(self.git(peer, "rev-parse", "--path-format=absolute", "--git-path", "index"))
+        before = index.read_bytes(), self.git(self.root, "show-ref"), self.git(peer, "status", "--porcelain")
+        report = self.report(paths=["api/a.txt"])
+        self.assertEqual(report["route"], "NEW_TICKET_CANDIDATE")
+        observed = next(e for e in report["worktrees"] if e["path"] == str(peer))
+        self.assertIn("api/a.txt", observed["dirtyPaths"])
+        self.assertTrue(observed["pending"])
+        self.assertEqual(before, (index.read_bytes(), self.git(self.root, "show-ref"),
+                                  self.git(peer, "status", "--porcelain")))
+        self.assertEqual(self.report(stream="ui", paths=["ui/a.txt"])["route"], "RECONCILE")
+
+    def test_detached_target_equality_cannot_hide_staged_or_raw_work(self):
+        peer = self.detached_staged_delivery()
+        (peer / "api/a.txt").write_text("not accepted\n")
+        self.assertEqual(self.report()["route"], "RECONCILE")
+        self.git(peer, "add", "api/a.txt")
+        (peer / "api/a.txt").write_bytes((self.root / "api/a.txt").read_bytes())
+        self.assertEqual(self.report()["route"], "RECONCILE")
+
+    def test_detached_hidden_raw_work_is_not_accepted_from_index_equality(self):
+        peer = self.detached_staged_delivery()
+        self.git(peer, "update-index", "--assume-unchanged", "api/a.txt")
+        (peer / "api/a.txt").write_text("hidden pending work\n")
+        self.assertEqual(self.report()["route"], "RECONCILE")
+
+    @unittest.skipUnless(os.name == "posix", "POSIX executable mode")
+    def test_detached_mode_drift_is_pending_even_when_git_ignores_filemode(self):
+        peer = self.detached_staged_delivery()
+        self.git(peer, "config", "core.fileMode", "false")
+        (peer / "api/a.txt").chmod(0o755)
+        self.assertEqual(self.report()["route"], "RECONCILE")
+
+    def test_detached_unique_commit_is_not_exempted_by_matching_staged_bytes(self):
+        peer = self.detached_staged_delivery()
+        self.git(peer, "commit", "-m", "unique unpublished identity")
+        (peer / "api/a.txt").write_text("unique work\n")
+        self.git(peer, "commit", "-am", "unique work")
+        (peer / "api/a.txt").write_bytes((self.root / "api/a.txt").read_bytes())
+        self.git(peer, "add", "api/a.txt")
+        self.assertEqual(self.report()["route"], "RECONCILE")
+
+    def test_named_active_ticket_still_reserves_integrated_staged_path(self):
+        peer = self.sibling()
+        (self.root / "api/a.txt").write_text("accepted delivery\n")
+        self.git(self.root, "commit", "-am", "accepted delivery")
+        (peer / "api/a.txt").write_bytes((self.root / "api/a.txt").read_bytes())
+        self.git(peer, "add", "api/a.txt")
+        self.assertEqual(self.report()["route"], "ASSIST_READ_ONLY")
+
+    def test_index_only_change_invalidates_dirty_observation(self):
+        peer = self.detached_staged_delivery()
+        accepted = (peer / "api/a.txt").read_bytes()
+        (peer / "api/a.txt").write_text("first staged content\n")
+        self.git(peer, "add", "api/a.txt")
+        (peer / "api/a.txt").write_bytes(accepted)
+        before = start.dirty_observation(peer)
+        status = self.git(peer, "status", "--porcelain")
+        (peer / "api/a.txt").write_text("different staged content\n")
+        self.git(peer, "add", "api/a.txt")
+        (peer / "api/a.txt").write_bytes(accepted)
+        changed = start.dirty_observation(peer)
+        self.assertEqual(status, self.git(peer, "status", "--porcelain"))
+        # Identical status letters and filesystem bytes must not hide index drift.
+        self.assertNotEqual(before[1], changed[1])
+
     def test_target_tree_index_is_read_once_and_not_cached_across_observations(self):
         _, accepted = self.integrated_copy()
         self.git(self.root, "branch", "another-old-copy", "recovery/old-copy")

@@ -429,7 +429,40 @@ def dirty_observation(root):
                 hashes[rel] = checksum.hexdigest()
         else:
             hashes[rel] = "absent-or-submodule"
-    return material(sorted(paths)), digest({"status": status, "files": hashes}), sorted(paths)
+    index = git(root, "ls-files", "--stage", "-z")
+    return material(sorted(paths)), digest({"status": status, "files": hashes, "index": index}), sorted(paths)
+
+
+def outstanding_detached_paths(root, paths, target):
+    """Subtract exact integrated bytes, without modifying or releasing the checkout."""
+    trees = {}
+    for item in git(root, "ls-tree", "-r", "--full-tree", "-z", target).split("\0"):
+        if item:
+            metadata, name = item.split("\t", 1)
+            mode, kind, oid = metadata.split()
+            if kind == "blob" and mode in {"100644", "100755"}:
+                trees[name] = (mode, oid)
+    indexes = {}
+    for item in git(root, "ls-files", "--stage", "-z").split("\0"):
+        if item:
+            metadata, name = item.split("\t", 1)
+            mode, oid, stage = metadata.split()
+            indexes.setdefault(name, []).append((mode, oid, stage))
+    outstanding = []
+    for name in paths:
+        path = root / name
+        accepted = trees.get(name)
+        if (not accepted or indexes.get(name) != [(*accepted, "0")]
+                or any(p.is_symlink() for p in (path, *path.parents)) or not path.is_file()):
+            outstanding.append(name)
+            continue
+        mode = "100755" if path.stat().st_mode & 0o100 else "100644"
+        # Raw hashing deliberately ignores clean/textconv filters and index
+        # flags: assume-unchanged cannot conceal different filesystem bytes.
+        oid = git(root, "hash-object", "--no-filters", "--", name).strip()
+        if (mode, oid) != accepted:
+            outstanding.append(name)
+    return outstanding
 
 
 def dirty_modified(root, paths):
@@ -816,6 +849,9 @@ def inspect(root, workstream, requested_paths=(), ticket=None, storage=None,
         contribution = changes(root, comparison_sha, entry["headSha"])
         pending_paths = [p for p in entry["dirtyPaths"]
                          if not (Path(entry["path"]) == primary and p in bootstrap_owned)]
+        if (pending_paths and Path(entry["path"]) != primary and entry["branch"] is None
+                and entry["ticket"] is None and not entry["active"] and entry["ahead"] == 0):
+            pending_paths = outstanding_detached_paths(Path(entry["path"]), pending_paths, target_sha)
         contested = intersects(requested, pending_paths + contribution)
         reserved = entry["active"] and intersects(requested, entry["allowedPaths"])
         if contested or reserved:
