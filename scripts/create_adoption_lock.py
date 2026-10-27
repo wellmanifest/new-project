@@ -111,9 +111,17 @@ def allocation_target_state(root: Path, names: set[str]) -> dict[str, object]:
     if (top != root or primary != "worktree " + str(root)
             or not (root / ".git").is_dir() or (root / ".git").is_symlink()):
         raise SystemExit("adoption plan requires the registered primary Git checkout")
-    branch = os.fsdecode(plan_git(root, "symbolic-ref", "--short", "HEAD")).strip()
-    if branch != "main":
-        raise SystemExit("adoption plan requires the primary target branch")
+    try:
+        branch_ref = os.fsdecode(plan_git(root, "symbolic-ref", "HEAD")).strip()
+        head = os.fsdecode(plan_git(root, "rev-parse", "--verify", "HEAD^{commit}")).strip()
+        if branch_ref != "refs/heads/main":
+            local_target = plan_git(root, "rev-parse", "--verify", "refs/heads/main^{commit}").strip()
+            remote_target = plan_git(root, "rev-parse", "--verify", "refs/remotes/origin/main^{commit}").strip()
+            if not branch_ref.startswith("refs/heads/") or local_target != head.encode() or remote_target != head.encode():
+                raise SystemExit("adoption plan requires an exact named alias of local and origin main")
+    except subprocess.CalledProcessError as error:
+        raise SystemExit("adoption plan requires a named primary and complete target observations") from error
+    branch = branch_ref.removeprefix("refs/heads/")
     status = plan_git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
     fields = iter(os.fsdecode(status).split("\0"))
     dirty = set()
@@ -126,7 +134,7 @@ def allocation_target_state(root: Path, names: set[str]) -> dict[str, object]:
     if index.is_symlink():
         raise SystemExit("adoption plan refuses a symlinked Git index")
     return {
-        "root": str(root), "head": os.fsdecode(plan_git(root, "rev-parse", "HEAD")).strip(),
+        "root": str(root), "head": head,
         "branch": branch, "statusSha256": hashlib.sha256(status).hexdigest(),
         "index": plan_file(index),
         "dirtyFiles": {name: plan_file(plan_path(root, name)) for name in sorted(dirty)},

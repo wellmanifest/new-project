@@ -200,6 +200,48 @@ class AdoptionPlanFixture:
 
 
 class AdoptionAllocationPlanTest(AdoptionPlanFixture, unittest.TestCase):
+    def test_alias_missing_divergent_or_detached_target_refuses_plan(self):
+        head = self.command(self.target, "git", "rev-parse", "HEAD").stdout.strip()
+        other = self.command(self.target, "git", "commit-tree", "HEAD^{tree}", "-p", head,
+                             "-m", "Other observed target").stdout.strip()
+        self.command(self.target, "git", "checkout", "-b", "maintenance-alias")
+        for local, remote, detached in ((head, None, False), (head, other, False),
+                                        (other, head, False), (head, head, True)):
+            with self.subTest(local=local, remote=remote, detached=detached):
+                self.command(self.target, "git", "update-ref", "refs/heads/main", local)
+                args = ["update-ref", "refs/remotes/origin/main", remote] if remote else [
+                    "update-ref", "-d", "refs/remotes/origin/main"]
+                self.command(self.target, "git", *args)
+                if detached:
+                    self.command(self.target, "git", "checkout", "--detach", head)
+                with self.assertRaises(SystemExit):
+                    self.export()
+                self.assertFalse(self.plan_path.exists())
+
+    def test_alias_target_and_branch_changes_invalidate_exported_plan(self):
+        head = self.command(self.target, "git", "rev-parse", "HEAD").stdout.strip()
+        other = self.command(self.target, "git", "commit-tree", "HEAD^{tree}", "-p", head,
+                             "-m", "Changed observed target").stdout.strip()
+        self.command(self.target, "git", "checkout", "-b", "maintenance-alias")
+        self.export()
+        self.command(self.target, "git", "update-ref", "refs/remotes/origin/main", other)
+        with self.assertRaises(SystemExit):
+            self.verify()
+        self.command(self.target, "git", "update-ref", "refs/remotes/origin/main", head)
+        self.command(self.target, "git", "checkout", "-b", "different-alias")
+        with self.assertRaises(SystemExit):
+            self.verify()
+
+    def test_exact_primary_alias_exports_and_verifies_without_switch(self):
+        self.command(self.target, "git", "checkout", "-b", "maintenance-alias")
+        before = (self.target / ".git/index").read_bytes()
+        plan = self.export()
+        self.assertEqual(plan["target"]["branch"], "maintenance-alias")
+        self.verify()
+        self.assertEqual(self.command(self.target, "git", "branch", "--show-current").stdout.strip(),
+                         "maintenance-alias")
+        self.assertEqual((self.target / ".git/index").read_bytes(), before)
+
     def test_export_is_read_only_and_independently_recomputed(self):
         before = self.command(self.target, "git", "status", "--porcelain").stdout
         plan = self.export()

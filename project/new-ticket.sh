@@ -874,14 +874,25 @@ if [[ -n "$PRIMARY_CHECKOUT" && "$SEED_MODE" != true ]]; then
     echo "GOV-TICKET-ALLOCATION-003: dirty primary requires an explicit disjoint --path scope admitted by work-start; preserve existing changes." >&2
     exit 5
   fi
-  if [[ "$(git -C "$PRIMARY_CHECKOUT" symbolic-ref --quiet --short HEAD 2>/dev/null || true)" != "$TARGET_BRANCH" ]]; then
-    echo "GOV-TICKET-ALLOCATION-003: allocation requires the registered primary checkout on $TARGET_BRANCH." >&2
+  observe_primary_base() {
+    local branch head target remote
+    branch="$(git -C "$PRIMARY_CHECKOUT" symbolic-ref --quiet HEAD 2>/dev/null)" || return 1
+    head="$(git -C "$PRIMARY_CHECKOUT" rev-parse --verify 'HEAD^{commit}')" || return 1
+    target="$(git -C "$PRIMARY_CHECKOUT" rev-parse --verify "refs/heads/$TARGET_BRANCH^{commit}")" || return 1
+    remote="$(git -C "$PRIMARY_CHECKOUT" rev-parse --verify "refs/remotes/origin/$TARGET_BRANCH^{commit}" 2>/dev/null || true)"
+    [[ "$head" == "$target" ]] || return 1
+    if [[ "$branch" != "refs/heads/$TARGET_BRANCH" ]]; then
+      # A named alias is safe only with a complete, identical observed target.
+      # This does not refresh refs, switch primary or release active scope.
+      [[ "$branch" == refs/heads/* && "$remote" == "$head" ]] || return 1
+    fi
+    printf '%s\t%s\t%s\t%s\n' "$branch" "$head" "$target" "$remote"
+  }
+  if ! primary_base_observation="$(observe_primary_base)"; then
+    echo "GOV-TICKET-ALLOCATION-003: primary must be on $TARGET_BRANCH or a named alias exactly matching local and origin target commits." >&2
     exit 5
   fi
-  if ! base_sha="$(git -C "$PRIMARY_CHECKOUT" rev-parse --verify "refs/heads/$TARGET_BRANCH^{commit}")"; then
-    echo "GOV-TICKET-ALLOCATION-003: observed target branch is unavailable." >&2
-    exit 5
-  fi
+  base_sha="$(cut -f2 <<< "$primary_base_observation")"
   # The layout contract needs a stable label, not a remote URL (which may
   # contain credentials in misconfigured clones).
   repository_ref="$(basename "$PRIMARY_CHECKOUT")"
@@ -919,6 +930,11 @@ for key in ("branch", "worktreePath", "leasePath"):
 
   if [[ -n "$STANDARD_ADOPTION_PLAN" && "$(verify_standard_adoption)" != "$ADOPTION_PROJECTION" ]]; then
     echo "GOV-TICKET-ALLOCATION-003: adoption plan changed at the identity boundary." >&2
+    exit 5
+  fi
+  if ! rechecked_primary_base="$(observe_primary_base)" \
+      || [[ "$rechecked_primary_base" != "$primary_base_observation" ]]; then
+    echo "GOV-TICKET-ALLOCATION-003: primary branch or target changed before ticket reservation." >&2
     exit 5
   fi
   reserve_ticket_number

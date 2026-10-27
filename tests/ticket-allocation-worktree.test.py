@@ -153,6 +153,67 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
         self.assertEqual((worktree / "src/other.py").read_text(), "original\n")
         self.assertFalse((worktree / ".planfile/current.yaml").exists())
 
+    def test_exact_primary_alias_preserves_dirty_bytes_and_allocates_target(self) -> None:
+        before = self.dirty_primary()
+        head = self.git("rev-parse", "HEAD").stdout.strip()
+        self.git("update-ref", "refs/remotes/origin/main", head)
+        self.git("checkout", "-b", "maintenance-alias")
+        result = self.allocate("--path", "src/fix.py")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.git("branch", "--show-current").stdout.strip(), "maintenance-alias")
+        self.assertEqual(self.git("rev-parse", "HEAD").stdout.strip(), head)
+        for name, content in before.items():
+            self.assertEqual((self.root / name).read_bytes(), content, name)
+        worktree = self.root / ".worktrees/ticket-001--canonical-ticket"
+        self.assertEqual(self.git("-C", str(worktree), "rev-parse", "HEAD").stdout.strip(), head)
+        self.assertEqual((worktree / "src/other.py").read_text(), "original\n")
+
+    def test_nonmatching_primary_alias_is_refused_before_reservation(self) -> None:
+        head = self.git("rev-parse", "HEAD").stdout.strip()
+        other = self.git("commit-tree", "HEAD^{tree}", "-p", head, "-m", "Other observed commit").stdout.strip()
+        self.git("checkout", "-b", "maintenance-alias")
+        for local, remote, detached in ((head, None, False), (head, other, False),
+                                        (other, head, False), (head, head, True)):
+            with self.subTest(local=local, remote=remote, detached=detached):
+                self.git("update-ref", "refs/heads/main", local)
+                if remote:
+                    self.git("update-ref", "refs/remotes/origin/main", remote)
+                else:
+                    self.git("update-ref", "-d", "refs/remotes/origin/main")
+                if detached:
+                    self.git("checkout", "--detach", head)
+                result = self.allocate("--path", "src/fix.py")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("GOV-TICKET-ALLOCATION-003", result.stderr)
+                self.assertFalse((self.root / ".git/new-project-ticket-high-water").exists())
+                self.assertEqual(self.git("branch", "--list", "ticket/*").stdout, "")
+
+    @unittest.skipUnless(os.name == "posix", "executable interpreter fixture")
+    def test_alias_target_race_is_refused_before_reservation(self) -> None:
+        head = self.git("rev-parse", "HEAD").stdout.strip()
+        other = self.git("commit-tree", "HEAD^{tree}", "-p", head, "-m", "Changed target").stdout.strip()
+        self.git("update-ref", "refs/remotes/origin/main", head)
+        self.git("checkout", "-b", "maintenance-alias")
+        shim = Path(self.temp.name) / "shim"
+        shim.mkdir()
+        interpreter = shim / "python3"
+        interpreter.write_text("#!" + sys.executable + "\n" + "\n".join([
+            "import subprocess, sys",
+            "args = sys.argv[1:]",
+            "result = subprocess.run([" + repr(sys.executable) + ", *args])",
+            "if len(args) >= 2 and args[0].endswith('worktree_path_check.py') and args[1] == 'validate':",
+            "    subprocess.run(['git', 'update-ref', 'refs/remotes/origin/main', " + repr(other) + "], check=True)",
+            "raise SystemExit(result.returncode)",
+        ]) + "\n")
+        interpreter.chmod(0o755)
+        with patch.dict(os.environ, {"PATH": str(shim) + os.pathsep + os.environ["PATH"]}):
+            result = self.allocate("--path", "src/fix.py")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("changed before ticket reservation", result.stderr)
+        self.assertFalse((self.root / ".git/new-project-ticket-high-water").exists())
+        self.assertEqual(self.git("branch", "--list", "ticket/*").stdout, "")
+        self.assertEqual(self.git("branch", "--show-current").stdout.strip(), "maintenance-alias")
+
     def test_overlapping_dirty_primary_refused_without_reservation(self) -> None:
         before = self.dirty_primary()
         result = self.allocate("--path", "src/other.py")
@@ -328,6 +389,14 @@ class NativeStandardAdoptionPlanTest(AdoptionPlanFixture, unittest.TestCase):
             "--standard-adoption-plan", str(self.plan_path), *arguments,
             env=self.publication_environment(), check=False)
 
+    def test_published_plan_allocates_from_exact_primary_alias(self):
+        self.command(self.target, "git", "checkout", "-b", "maintenance-alias")
+        before = (self.target / ".git/index").read_bytes()
+        self.test_exact_plan_allocates_complete_intent_before_reservation_hashes()
+        self.assertEqual(self.command(self.target, "git", "branch", "--show-current").stdout.strip(),
+                         "maintenance-alias")
+        self.assertEqual((self.target / ".git/index").read_bytes(), before)
+
     def test_exact_plan_allocates_complete_intent_before_reservation_hashes(self):
         import hashlib
 
@@ -346,7 +415,8 @@ class NativeStandardAdoptionPlanTest(AdoptionPlanFixture, unittest.TestCase):
         self.assertEqual(intent['delivery'], plan['delivery'])
         Draft202012Validator(json.loads((ROOT / 'governance/intent.schema.json').read_text())).validate(intent)
         lease = json.loads(Path(receipt['leasePath']).read_text())
-        canonical = lambda value: json.dumps(value, sort_keys=True, separators=(',', ':')).encode()
+        def canonical(value):
+            return json.dumps(value, sort_keys=True, separators=(',', ':')).encode()
         self.assertEqual(lease['planHash'], hashlib.sha256(canonical(intent)).hexdigest())
         self.assertEqual(lease['scopeHash'], hashlib.sha256(canonical(intent['allowedPaths'])).hexdigest())
         self.assertEqual(lease['phase'], 'claimed')
