@@ -2,6 +2,19 @@
 
 ## Overview
 
+### Named primary aliases
+
+Native allocation and immutable adoption plans may preserve a named primary
+branch other than the target when HEAD, the local target and the observed
+`origin` target identify the same commit. An alias with missing or divergent
+refs, or a detached primary, is refused. These are observed local refs, not a
+claim of network freshness. The primary branch, index and unrelated dirty
+files remain unchanged. Native allocation rechecks the exact branch and target
+observations immediately before reserving an identity; adoption verification
+recomputes the package and target plan. Work-start ownership, WIP, published
+source, managed metadata, fencing and independent publication still apply.
+
+
 ### Binding required checks on first adoption (0.20.115)
 
 The adopter binds `.governance/required-checks.json` to the target's real

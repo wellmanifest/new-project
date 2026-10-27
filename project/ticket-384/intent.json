@@ -1,0 +1,106 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-384",
+  "summary": "Admit exact target aliases without switching primary checkout",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-384/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/standard-adoption-plan.schema.json",
+    "project/new-ticket.sh",
+    "scripts/create_adoption_lock.py",
+    "tests/adoption_upgrade_harmonization_test.py",
+    "tests/ticket-allocation-worktree.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "outcome": "Allow a named primary alias only when its HEAD, local target and observed origin target identify the same commit; preserve primary branch, dirty content and index.",
+    "nonGoals": [
+      "No checkout switching or cleanup, ref update, lease takeover or authority from observation.",
+      "No acceptance of detached, ahead, behind, missing remote target, active overlapping work or stale adoption metadata.",
+      "No release or adopter rollout in this source ticket."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "targetBranch": "main",
+    "acceptedBaseSha": "8248d2dc6cd37fc37ed689b4b9c074cb78687fdf",
+    "architecture": {
+      "status": "accepted",
+      "decision": "Preserve native work-start and published-package verification. At the allocation and adoption boundaries admit named aliases only with exact HEAD/local target/origin target equality and re-observe before reservation. Existing main behavior remains unchanged.",
+      "responsibilityChanges": false,
+      "components": [
+        {
+          "name": "native-allocation",
+          "paths": [
+            "project/new-ticket.sh",
+            "tests/ticket-allocation-worktree.test.py"
+          ]
+        },
+        {
+          "name": "adoption-plan",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "governance/standard-adoption-plan.schema.json",
+            "tests/adoption_upgrade_harmonization_test.py",
+            "docs/STANDARD_UPGRADE.md"
+          ]
+        }
+      ],
+      "interfaceChanges": [
+        "Existing adoption plan target.branch accepts a verified named alias."
+      ],
+      "dataChanges": [
+        "No target source/index/ref mutation; the existing plan digest continues to bind observed branch and HEAD."
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the observer change through independent protected publication; all source, index and lease evidence remains intact."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -B tests/ticket-allocation-worktree.test.py"
+        ],
+        "evidence": "Real Git alias admission preserves primary and refuses divergent/detached/missing/racing targets before reservation."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -B tests/adoption_upgrade_harmonization_test.py"
+        ],
+        "evidence": "Published-plan fixture accepts only exact aliases; stale/missing target and branch changes refuse."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Affected suites, native governance, required CI and independent protected publication pass."
+      }
+    ]
+  }
+}
