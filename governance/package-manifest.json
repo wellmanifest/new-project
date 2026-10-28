@@ -2,6 +2,12 @@
   "schema": "new-project.package-manifest/v1",
   "files": [
     {
+      "source": "scripts/terminal_lease_release.py",
+      "target": ".governance/terminal_lease_release.py",
+      "strategy": "managed",
+      "executable": true
+    },
+    {
       "source": "scripts/snapshot_allocation.py",
       "target": ".governance/snapshot_allocation.py",
       "strategy": "managed",

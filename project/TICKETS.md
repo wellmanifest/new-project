@@ -380,6 +380,7 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-382** | [`README.md`](./ticket-382/README.md) | - | - | - | - | - |
 | **ticket-383** | [`README.md`](./ticket-383/README.md) | - | - | - | - | - |
 | **ticket-384** | [`README.md`](./ticket-384/README.md) | - | - | - | - | - |
+| **ticket-385** | [`README.md`](./ticket-385/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 

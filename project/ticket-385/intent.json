@@ -1,0 +1,97 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-385",
+  "summary": "Release a finished local lease through explicit current-owner handoff",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-385/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "error/GOV-CHANGE-LEASE.md",
+    "governance/package-manifest.json",
+    "scripts/terminal_lease_release.py",
+    "tests/terminal_lease_release_test.py",
+    ".github/workflows/ci.yml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "outcome": "Provide an exact-owner, fenced and recoverable terminal lease release for local-single-clone controllers.",
+    "nonGoals": [
+      "No timeout takeover, invalid completed normalization, unknown-owner release, worktree or branch deletion, hosted approval or adopter activation.",
+      "Frozen publication phases require their existing controller; do not manufacture missing approval transitions."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "targetBranch": "main",
+    "acceptedBaseSha": "42033b4327b8b3e96bef42ee2b9efdbbe9f4868c",
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse canonical lease transitions and managed terminal-receipt verification. Serialize explicit current-owner handoff with the existing lease lock name; retain a write-ahead receipt for exact idempotent recovery. In-scope owner amendment: include the required CI invocation for the new suite; keep all existing hosted Linux/Windows gates and local verification.",
+      "responsibilityChanges": false,
+      "components": [
+        {
+          "name": "terminal-owner-controller",
+          "paths": [
+            "scripts/terminal_lease_release.py",
+            "tests/terminal_lease_release_test.py"
+          ]
+        },
+        {
+          "name": "managed-adoption",
+          "paths": [
+            "governance/package-manifest.json",
+            "error/GOV-CHANGE-LEASE.md",
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "interfaceChanges": [
+        "Managed terminal_lease_release.py request/apply boundary.",
+        "The existing hosted verification jobs explicitly execute the new owner-release regression suite."
+      ],
+      "dataChanges": [
+        "Ignored local lease revisions/fencing and write-ahead operational receipts only."
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Preserve original bytes and journal; do not undo accepted release or decrease fencing. Publish corrective code if needed."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python tests/terminal_lease_release_test.py"
+        ],
+        "evidence": "Real Git repositories: exact same-owner release, stale/CAS/foreign/frozen refusals, crash replay and path races."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Managed source package and native governance pass before independent protected publication."
+      }
+    ]
+  }
+}
