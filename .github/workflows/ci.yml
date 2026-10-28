@@ -172,6 +172,8 @@ jobs:
         run: python3 tests/remediation_plan_safety_test.py
       - name: Test portable lease scalar document validation
         run: python3 tests/change_lease_safety_test.py
+      - name: Test explicit terminal owner lease release
+        run: python3 tests/terminal_lease_release_test.py
       # These suites existed but no step ran them. Suites with a __main__ entry run
       # directly (hyphenated names cannot be imported by pytest); the three that only
       # define bare test functions would run nothing that way, so pytest collects them.
@@ -271,4 +273,6 @@ jobs:
           python tests/remediation_plan_safety_test.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/change_lease_safety_test.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/terminal_lease_release_test.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
