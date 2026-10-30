@@ -1,0 +1,72 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-386",
+  "summary": "Propose release-bump admission class for native adoption gates",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-386/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "docs/information/release-bump-admission.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "02721a30ea349a89e6f1be452948322edb2bc251",
+    "outcome": "Publish a proposal document for a release-bump admission class; no gate behavior changes.",
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "nonGoals": [
+      "No gate, schema or manifest change.",
+      "No approval, execution or merge authority."
+    ],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Documentation only.",
+      "components": [
+        {
+          "name": "docs",
+          "paths": [
+            "docs/information/release-bump-admission.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Delete the document."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "test -s docs/information/release-bump-admission.md"
+        ],
+        "evidence": "project/ticket-386/README.md"
+      }
+    ]
+  }
+}
