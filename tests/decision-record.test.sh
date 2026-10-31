@@ -98,6 +98,74 @@ assert rec["inputs"] == rec2["inputs"]
 print("round-trip OK")
 PY
 
+for parser in "$ROOT/scripts/decision_record.py" "$ROOT/packages/wellman/src/wellman/_bundled/decision_record.py"; do
+echo "== advisory JSON string round-trip and malformed escape rejection: $parser =="
+$PY - "$good" "$parser" <<'PY'
+import copy
+import importlib.util
+import sys
+from pathlib import Path
+spec = importlib.util.spec_from_file_location("decision_parser", sys.argv[2])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+parse_dsl_record, to_dsl, validate_record = module.parse_dsl_record, module.to_dsl, module.validate_record
+
+base = parse_dsl_record(Path(sys.argv[1]).read_text())
+canonical = to_dsl(base)
+assert parse_dsl_record(canonical) == base
+assert 'ADVISORY llm_verdict = "APPROVE" MODEL "openrouter/z-ai/glm-5.2"' in canonical
+for model in ['provider/"quoted"', r'provider\route', 'provider\nnext', 'model żółć']:
+    record = copy.deepcopy(base)
+    record["advisory"]["model"] = model
+    assert validate_record(record) == []
+    encoded = to_dsl(record)
+    assert parse_dsl_record(encoded) == record, repr(model)
+    assert to_dsl(parse_dsl_record(encoded)) == encoded
+malformed = canonical.replace('MODEL "openrouter/z-ai/glm-5.2"', r'MODEL "invalid\q"')
+try:
+    parse_dsl_record(malformed)
+except ValueError:
+    pass
+else:
+    raise AssertionError("invalid JSON escape accepted in advisory text")
+print("advisory string regressions OK")
+PY
+
+echo "== mixed bare/fenced history preserves order and append-only checks =="
+$PY - "$good" "$parser" <<'PY'
+import importlib.util
+import sys
+from pathlib import Path
+spec = importlib.util.spec_from_file_location("decision_parser", sys.argv[2])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+check_append_only, parse_dsl_record, split_decision_blocks = module.check_append_only, module.parse_dsl_record, module.split_decision_blocks
+
+good = Path(sys.argv[1]).read_text()
+records = [good.replace("D-031-0007", f"D-031-{n:04d}") for n in range(7, 11)]
+def render(forms):
+    return "# Decisions\n\n" + "\n".join(
+        "```dsl\n" + record + "```\n" if fenced else record
+        for record, fenced in forms
+    )
+for flags in [(False, True), (True, False), (False, True, False, True), (True, False, True, False), (True, True), (False, False)]:
+    forms = list(zip(records, flags))
+    previous = render(forms)
+    blocks = split_decision_blocks(previous)
+    assert [parse_dsl_record(b)["decisionId"] for b in blocks] == [f"D-031-{n:04d}" for n in range(7, 7 + len(flags))]
+    assert check_append_only(previous, previous) == []
+    appended = previous + "\n```dsl\n" + good.replace("D-031-0007", "D-031-0011") + "```\n"
+    assert check_append_only(previous, appended) == []
+    for index, (record, fenced) in enumerate(forms):
+        mutated = list(forms)
+        mutated[index] = (record.replace("NO_UNSAFE_CHANGE_REASON_FOUND", "MUTATED_HISTORY"), fenced)
+        for current in [render(mutated), render(forms[:index] + forms[index + 1:])]:
+            errors = check_append_only(previous, current)
+            assert any("GOV-DECISION-001" in error for error in errors), (flags, index)
+print("mixed-format history regressions OK")
+PY
+done
+
 echo "== parser diagnostics remain exact =="
 $PY - <<PY
 import sys

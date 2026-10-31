@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import contextlib
+import io
 import importlib.util
 import json
 import os
@@ -11,10 +13,12 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
+from unittest import mock
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 LOCK_PATH = ROOT / "governance" / "worktrees.lock.json"
-SOURCE_REVISION = "57bcd6b6f5d266fa9952824f1d89d4d45d8a386d"
+SOURCE_REVISION = "0be9ad1387bd416fd5c1c6ee68a7b7050d5f2a3e"
 
 
 def sha256(path: pathlib.Path) -> str:
@@ -46,6 +50,34 @@ def run(*args: str, cwd: pathlib.Path | None = None) -> str:
 
 
 class WorktreesAdoptionTest(unittest.TestCase):
+    def test_inventory_cli_selects_native_path_style(self):
+        checker = load_checker()
+        for host, style, primary in (
+            ("posix", "posix", "/Code Projects/new-project"),
+            ("nt", "windows", "C:/Code Projects/new-project"),
+        ):
+            with self.subTest(host=host):
+                output = io.StringIO()
+                with (
+                    mock.patch.object(checker, "os", SimpleNamespace(name=host)),
+                    mock.patch.object(checker, "resolve_primary_checkout", return_value=primary),
+                    mock.patch.object(checker, "registered_worktrees", return_value=[
+                        {"path": primary, "branch": "main"},
+                    ]),
+                    mock.patch.object(sys, "argv", [
+                        "conformance.py", "inventory", "--repository", "example/new-project",
+                        "--repository-name", "new-project", "--from-worktree", ".",
+                    ]),
+                    contextlib.redirect_stdout(output),
+                ):
+                    result = checker.main()
+                self.assertEqual(result, 0)
+                record = json.loads(output.getvalue())
+                self.assertEqual(record["pathStyle"], style)
+                self.assertTrue(record["readOnly"])
+                self.assertEqual(record["entries"][0]["classification"], "primary")
+                self.assertEqual(checker.validate(record), [])
+
     def test_lifecycle_audits_observed_repository_basenames(self):
         with tempfile.TemporaryDirectory(prefix="observed-repositories-") as directory:
             workspace = pathlib.Path(directory)
@@ -138,13 +170,13 @@ class WorktreesAdoptionTest(unittest.TestCase):
         lock = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
         self.assertEqual(lock["schema"], "new-project.worktrees-lock/v1")
         self.assertEqual(lock["dependency"]["id"], "wellmanifest/worktrees")
-        self.assertEqual(lock["dependency"]["version"], "0.5.3")
+        self.assertEqual(lock["dependency"]["version"], "0.5.4")
         self.assertEqual(lock["dependency"]["sourceRevision"], SOURCE_REVISION)
         expected = {
             "subprojects/worktrees/worktrees.schema.json":
-                "bb5989c19ee33d9beafa34576ef568ef70384a664ccf763ac2e29dde3a464756",
+                "6b57184758bdceda5cd5ea98889427af1a762dd0afe801ac8e1279d26ccb2cb8",
             "subprojects/worktrees/conformance.py":
-                "286fb1801fa437c9a5643a04a81dd421234a3f5412815c2cbba79bf5adf38562",
+                "106f91e6398564b96d5487dbd981ebb2078d7d366b327400b7d08467fa04c1fd",
         }
         self.assertEqual(
             {artifact["packageSourcePath"] for artifact in lock["artifacts"]},
