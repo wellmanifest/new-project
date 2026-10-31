@@ -1,0 +1,86 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-390",
+  "summary": "Prevent governance imports from creating bytecode in managed worktrees",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-390/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/governance_check.py",
+    "tests/ci-pr-range.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b562ec7fc5cbdc4abd11fc4c0331379aebc215db",
+    "targetBranch": "main",
+    "outcome": "Make managed governance validation read-only when dynamically importing trusted checks, so scheduled and PR checks do not create bytecode in adopter worktrees.",
+    "nonGoals": [
+      "Do not weaken scope, lease or required-check validation",
+      "Do not mutate other tickets or adopter repositories",
+      "Do not treat local validation as independent protected approval"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Suppress Python bytecode only while importing managed validators and restore the previous interpreter policy in finally. Keep the packaged checker synchronized and exercise scheduled workflows with real installed runtime.",
+      "components": [
+        {
+          "name": "managed governance validation",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "tests/ci-pr-range.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Protected revert of the checker and test changes."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python tests/ci-pr-range.test.py"
+        ],
+        "evidence": "Installed isolated runtime executes both scheduled workflows without bytecode or scope failures."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh",
+          "bash tests/wellman-package.test.sh",
+          "git diff --check"
+        ],
+        "evidence": "Governance, package and range checks stay enforced; protected OneDev and independent Validator still required."
+      }
+    ]
+  }
+}

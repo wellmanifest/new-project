@@ -44,7 +44,9 @@ class CIRangeTest(unittest.TestCase):
         self.git("config", "commit.gpgsign", "false")
         self.write("README.md", "Fixture\n")
         seed = self.commit("seed")
-        shutil.copytree(ROOT / "scripts", self.root / ".governance")
+        # Fixture must reflect managed source, not ignored bytecode from prior runs.
+        shutil.copytree(ROOT / "scripts", self.root / ".governance",
+                        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
         manifest = json.loads((ROOT / "governance/manifest.hub.json").read_text())
         manifest["coordination"]["maxActiveTicketsPerWorkstream"] = 2
         manifest["delivery"]["requiredForImplementation"] = False
@@ -205,7 +207,10 @@ jobs:
         self.git("update-ref", "refs/remotes/origin/main", "HEAD")
         for name in WORKFLOWS:
             with self.subTest(workflow=name):
-                self.assert_pass(self.run_gate(name))
+                result = self.run_gate(name)
+                self.assertEqual([], list((self.root / ".governance").rglob("__pycache__")),
+                                 "governance validation must not write bytecode into the worktree")
+                self.assert_pass(result)
 
     def test_managed_gate_rejects_committed_drift_with_exact_range(self):
         self.write("policy.txt", "Unauthorized changed policy\n")

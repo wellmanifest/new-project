@@ -448,7 +448,12 @@ def check_required_checks_declaration(root: Path, report: Report) -> None:
         if spec is None or spec.loader is None:
             raise ValueError("required-checks gate cannot be imported")
         module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        previous_bytecode_policy = sys.dont_write_bytecode
+        try:
+            sys.dont_write_bytecode = True
+            spec.loader.exec_module(module)
+        finally:
+            sys.dont_write_bytecode = previous_bytecode_policy
         code = module.main(["--root", str(root)])
     except SystemExit as error:
         code = error.code if isinstance(error.code, int) else 1
@@ -4914,7 +4919,12 @@ def check_change_lease(root: Path, report: Report) -> None:
         return
     module = importlib.util.module_from_spec(spec)
     try:
-        spec.loader.exec_module(module)
+        previous_bytecode_policy = sys.dont_write_bytecode
+        try:
+            sys.dont_write_bytecode = True
+            spec.loader.exec_module(module)
+        finally:
+            sys.dont_write_bytecode = previous_bytecode_policy
         findings = module.validate_repository(root)
     except Exception as error:
         report.add(
