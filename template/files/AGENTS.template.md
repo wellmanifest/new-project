@@ -49,7 +49,7 @@ files until a repository's protected CI adoption canary succeeds.
 This target repository follows `wellmanifest/new-project` policy-as-code.
 
 HOME vs ADOPT: wellmanifest owns standards; product CLI/daemons HOME in
-`subactor`, `semcod` or `paxlet-com`. "w ramach wellmanifest" means ADOPT packs such as
+`subactor`, `semcod`, `paxlet-com` or `dockuri`. "w ramach wellmanifest" means ADOPT packs such as
 `wellmanifest/{new-project,dsl,logs}`, not HOME wellmanifest. For
 SERVICE/FEATURE that create a repo, fill `intent.json` `placement`
 (`home`, `shape`, `runtimeOwner`, `adopt`) in WAIT_FOR_APPROVAL.

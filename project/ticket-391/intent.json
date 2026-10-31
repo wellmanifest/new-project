@@ -1,0 +1,98 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-391",
+  "summary": "Allow DockURI ownership for operational package repositories",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-391/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "AGENTS.md",
+    "governance/intent.schema.json",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "template/files/AGENTS.template.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "dc6bf0b825c7e5d2734e402886c126ac3eeaafb3",
+    "targetBranch": "main",
+    "outcome": "Permit explicitly selected dockuri ownership for reusable operational packages while retaining the standards/runtime boundary and rejecting unknown organization identities.",
+    "nonGoals": [
+      "Do not allow arbitrary organizations or product runtimes in wellmanifest",
+      "Do not alter reviewer authority, protected policy, registry publication or other tickets",
+      "Do not change release projections or the active bootstrap workflow correction"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add dockuri to the existing closed ownership vocabulary in schema, source/bundled runtime and agent guidance. Before first implementation, include the distributed AGENTS template as a necessary matching projection; read-only scope observation identifies only this ticket as a reservation. Existing session authority covers this standard correction; no new owner, runtime or remote repository is created. External scope-decision receipt is retained.",
+      "components": [
+        {
+          "name": "placement contract and checker",
+          "paths": [
+            "governance/intent.schema.json",
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "agent ownership guidance",
+          "paths": [
+            "AGENTS.md",
+            "template/files/AGENTS.template.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Accept dockuri as placement.home and placement.runtimeOwner"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independently reviewed revert; do not rewrite adopter pins or existing repositories."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "JSON Schema, runtime and actual governance fixtures accept dockuri; unknown owners and runtime_service HOME wellmanifest remain rejected."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh",
+          "goal -a --delivery-mode pull-request push --ticket ticket-391 --no-version-sync --no-tag --no-changelog --no-publish"
+        ],
+        "evidence": "Source and bundled runtimes agree; real source-hub and Python tests pass before protected exact-head independent merge."
+      }
+    ]
+  }
+}
