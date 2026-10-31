@@ -1,0 +1,88 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-387",
+  "summary": "Preserve unmerged pull request branches until explicit owner discard",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-387/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "template/files/new-project-branch-hygiene.workflow.yml",
+    "tests/branch_hygiene_template_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3c7c41ad744bff61f114c1d6638e3ff9d361506f",
+    "targetBranch": "main",
+    "outcome": "Publish and merge the branch-preservation fix through Goal pull-request delivery and independent protected Validator approval; release projections stay with this implementation.",
+    "nonGoals": [
+      "Discarding existing branches",
+      "Changing required checks or reviewer authority",
+      "Editing adopter managed copies"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "A close event only emits a notice. Explicit owner discard requires a separate authorized operation.",
+      "components": [
+        {
+          "name": "branch preservation workflow",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml",
+            "template/files/new-project-branch-hygiene.workflow.yml",
+            "tests/branch_hygiene_template_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Closed unmerged PR preserves its head branch"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Reviewed revert; do not restore automatic unmerged deletion without a new owner-authority design."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest -q tests/branch_hygiene_template_test.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Executed JavaScript with write-API traps and protected exact-head checks"
+      }
+    ]
+  }
+}

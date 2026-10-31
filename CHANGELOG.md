@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.20.121
+
+- Preserve head branches when an unmerged pull request is closed. The distributed close-only workflow now emits a read-only notice; branch discard requires separate reconciliation and explicit owner authority. GitHub handles branch deletion after merge through the repository setting.
+- Execute the workflow script in regression tests across ticket, long-lived, default and fork branch events, asserting that no branch-write API is called.
+
 ## 0.20.120
 
 - Idle takeover policy, slice 1 of 3 (tickets 374–376): the manifest schema and validator accept the optional, closed `coordination.idleTakeover` policy (`enabled`, `idleMinutes` 5–240, `leaseMinutes` 15–480 and greater than `idleMinutes`). The default and hub manifests enable it at 15 minutes with a 120-minute lease; the policy has no effect until the `idle_takeover.py` runtime ships. The hub allows two active governance tickets.
