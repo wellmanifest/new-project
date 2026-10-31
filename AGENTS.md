@@ -58,14 +58,14 @@ This repository is the central **Governance and Onboarding Hub** for both Human 
 ## HOME vs ADOPT (closed vocabulary)
 
 wellmanifest owns **standards**. Running CLI/daemons belong in the product org
-(`subactor`, `semcod` or `paxlet-com`). **"w ramach wellmanifest" / "within wellmanifest
+(`subactor`, `semcod`, `paxlet-com` or `dockuri`). **"w ramach wellmanifest" / "within wellmanifest
 standardization" means ADOPT, not HOME.**
 
 Emit these fields on `intent.json` `placement` for SERVICE/FEATURE that create
 or place a repository (optional on the schema so existing tickets still
 validate; fill them in `WAIT_FOR_APPROVAL` before execution):
 
-- `home`: `wellmanifest` | `subactor` | `semcod` | `paxlet-com`
+- `home`: `wellmanifest` | `subactor` | `semcod` | `paxlet-com` | `dockuri`
 - `shape`: `domain_pack` | `runtime_service` | `both`
 - `runtimeOwner`: same enum as `home` (who runs the CLI/daemon)
 - `adopt`: `wellmanifest/<pack>` ids — follow those packs; **adopt ≠ home**

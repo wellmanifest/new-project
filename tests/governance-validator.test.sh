@@ -205,6 +205,9 @@ placement_intent['placement'] = {
     'adopt': ['wellmanifest/new-project', 'wellmanifest/dsl', 'wellmanifest/logs'],
 }
 intent_validator.validate(placement_intent)
+dockuri_intent = json.loads(json.dumps(placement_intent))
+dockuri_intent['placement'].update(home='dockuri', runtimeOwner='dockuri')
+intent_validator.validate(dockuri_intent)
 for field, invalid in (
     ('home', 'maskservice'),
     ('shape', 'daemon'),
@@ -554,9 +557,15 @@ assert module.placement_error({
     'adopt': ['wellmanifest/new-project', 'wellmanifest/dsl', 'wellmanifest/logs'],
 }) is None
 assert module.placement_error({
+    'home': 'dockuri',
+    'shape': 'runtime_service',
+    'runtimeOwner': 'dockuri',
+    'adopt': ['wellmanifest/new-project'],
+}) is None
+assert module.placement_error({
     'home': 'wellmanifest',
     'shape': 'runtime_service',
-}) == 'runtime_service must not HOME wellmanifest; ADOPT packs from subactor or semcod'
+}) == 'runtime_service must not HOME wellmanifest; ADOPT packs from a product organization'
 assert module.placement_error({'home': 'subactor'}) == 'placement must contain home and shape'
 assert module.placement_error({
     'home': 'subactor',
@@ -2555,9 +2564,10 @@ make_fixture "$invalid_intent_path"
 sed -i 's#"allowedPaths": \["src/\*\*"\]#"allowedPaths": ["../outside/**"]#' "$invalid_intent_path/project/ticket-002/intent.json"
 expect_code GOV-INTENT-002 run_check "$invalid_intent_path" --changed-file TODO.md
 
-placement_ok="$fixture/placement-ok"
+for product_owner in subactor dockuri; do
+placement_ok="$fixture/placement-ok-$product_owner"
 make_fixture "$placement_ok"
-python3 - "$placement_ok/project/ticket-002/intent.json" <<'PY'
+python3 - "$placement_ok/project/ticket-002/intent.json" "$product_owner" <<'PY'
 import json
 import pathlib
 import sys
@@ -2565,15 +2575,16 @@ import sys
 path = pathlib.Path(sys.argv[1])
 intent = json.loads(path.read_text(encoding='utf-8'))
 intent['placement'] = {
-    'home': 'subactor',
-    'runtimeOwner': 'subactor',
+    'home': sys.argv[2],
+    'runtimeOwner': sys.argv[2],
     'shape': 'runtime_service',
     'adopt': ['wellmanifest/new-project', 'wellmanifest/dsl', 'wellmanifest/logs'],
 }
 path.write_text(json.dumps(intent, indent=2) + '\n', encoding='utf-8')
 PY
-run_check "$placement_ok" --changed-file src/app.js > "$fixture/placement-ok.out"
-grep -q '^GOV-PASS:' "$fixture/placement-ok.out"
+run_check "$placement_ok" --changed-file src/app.js > "$fixture/placement-ok-$product_owner.out"
+grep -q '^GOV-PASS:' "$fixture/placement-ok-$product_owner.out"
+done
 
 placement_home="$fixture/placement-home"
 make_fixture "$placement_home"

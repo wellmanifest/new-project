@@ -971,7 +971,7 @@ def check_physical_contract_changes(
         )
 
 
-PLACEMENT_HOMES = {"wellmanifest", "subactor", "semcod", "paxlet-com"}
+PLACEMENT_HOMES = {"wellmanifest", "subactor", "semcod", "paxlet-com", "dockuri"}
 PLACEMENT_SHAPES = {"domain_pack", "runtime_service", "both"}
 PLACEMENT_ADOPT = re.compile(r"^wellmanifest/[a-z0-9][a-z0-9-]*$")
 
@@ -989,7 +989,7 @@ def placement_error(value: Any) -> str | None:
     if runtime_owner is not None and runtime_owner not in PLACEMENT_HOMES:
         return "placement runtimeOwner is invalid"
     if value["home"] == "wellmanifest" and value["shape"] == "runtime_service":
-        return "runtime_service must not HOME wellmanifest; ADOPT packs from subactor or semcod"
+        return "runtime_service must not HOME wellmanifest; ADOPT packs from a product organization"
     adopt = value.get("adopt")
     if adopt is not None and (
         not string_list(adopt) or not all(PLACEMENT_ADOPT.fullmatch(item) for item in adopt)
