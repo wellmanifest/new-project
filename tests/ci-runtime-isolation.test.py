@@ -28,20 +28,34 @@ def install_body(path, step):
     return ("\n".join(body) + "\n").replace("${{ steps.version.outputs.standard }}", "0.20.93")
 
 
-PIP_FIXTURE = '''import json, os, pathlib, sys
+PIP_FIXTURE = '''import json, os, pathlib, site, sys
 assert sys.prefix != sys.base_prefix, "system interpreter must never install"
 pathlib.Path(os.environ["INSTALL_RECEIPT"]).write_text(json.dumps({"prefix": sys.prefix, "args": sys.argv[1:]}))
 if os.environ.get("INSTALL_FAIL") == "1":
     raise SystemExit(17)
-launcher = pathlib.Path(sys.executable).parent / "wellman"
-launcher.write_text("#!/bin/sh\\nprintf 'wellman fixture\\\\n'\\n")
-launcher.chmod(0o700)
+kind = os.environ.get("INSTALL_RUNTIME", "legacy")
+choices = {
+    "legacy": ("wellman", "wellman", "wellman.check:main"),
+    "modern": ("wellmanifest-governance", "wellman-governance", "wellmanifest_governance_runtime.check:main"),
+}
+selected = list(choices) if kind == "ambiguous" else ([] if kind == "missing" else ["modern" if kind in {"malformed", "bad-version"} else kind])
+for name in selected:
+    distribution, command, entry = choices[name]
+    if kind == "malformed":
+        entry = "untrusted.module:main"
+    metadata = pathlib.Path(site.getsitepackages()[0]) / (distribution.replace("-", "_") + "-1.0.dist-info")
+    metadata.mkdir()
+    metadata.joinpath("METADATA").write_text("Metadata-Version: 2.1\\nName: " + distribution + "\\nVersion: 1.0\\n")
+    metadata.joinpath("entry_points.txt").write_text("[console_scripts]\\n" + command + " = " + entry + "\\n")
+    launcher = pathlib.Path(sys.executable).parent / command
+    launcher.write_text("#!/bin/sh\\nexit 13\\n" if kind == "bad-version" else "#!/bin/sh\\nprintf 'wellman fixture\\\\n'\\n")
+    launcher.chmod(0o700)
 '''
 
 
 @unittest.skipIf(os.name == "nt", "Ubuntu workflow installers use POSIX shell and venv paths")
 class RuntimeIsolationTests(unittest.TestCase):
-    def run_installer(self, workflow, *, fail=False, runner_temp=True, case="base", nested=False):
+    def run_installer(self, workflow, *, fail=False, runner_temp=True, case="base", nested=False, runtime="legacy"):
         with tempfile.TemporaryDirectory(prefix="wellman install fixture ") as directory:
             root = Path(directory)
             (root / ".governance").mkdir()
@@ -108,7 +122,7 @@ class RuntimeIsolationTests(unittest.TestCase):
             receipt = root / "install.json"
             env = dict(os.environ, PATH=str(binaries) + os.pathsep + os.environ["PATH"],
                        GITHUB_PATH=str(exported), TMPDIR=str(scratch),
-                       INSTALL_RECEIPT=str(receipt), INSTALL_FAIL="1" if fail else "0")
+                       INSTALL_RECEIPT=str(receipt), INSTALL_FAIL="1" if fail else "0", INSTALL_RUNTIME=runtime)
             env.update(GOVERNANCE_ROOT=str(target), BASE_SHA=base, EVENT_NAME="pull_request",
                        BASE_REF="main", EVENT_SHA=base, EVENT_REF="refs/heads/main", DEFAULT_BRANCH="main",
                        PROTECTED_RUNTIME_SHA="")
@@ -141,6 +155,10 @@ class RuntimeIsolationTests(unittest.TestCase):
             self.assertEqual(installed["args"][-1],
                              "git+https://github.com/wellmanifest/new-project.git@" +
                              ("c" * 40 if case == "protected" else revision) + "#subdirectory=packages/wellman")
+            if runtime in {"missing", "ambiguous", "malformed", "bad-version"}:
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(exported.read_text(), "")
+                return
             if fail:
                 self.assertEqual(result.returncode, 17, result.stdout + result.stderr)
                 self.assertEqual(exported.read_text(), "")
@@ -148,7 +166,8 @@ class RuntimeIsolationTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertEqual(exported.read_text().splitlines(), [installed["prefix"] + "/bin"])
                 env["PATH"] = exported.read_text().strip() + os.pathsep + env["PATH"]
-                next_step = subprocess.run(["wellman", "--version"], env=env, cwd=root,
+                command = "wellman-governance" if runtime == "modern" else "wellman"
+                next_step = subprocess.run([command, "--version"], env=env, cwd=root,
                                            text=True, capture_output=True, timeout=10)
                 self.assertEqual(next_step.returncode, 0, next_step.stderr)
                 self.assertEqual(next_step.stdout.strip(), "wellman fixture")
@@ -176,6 +195,14 @@ class RuntimeIsolationTests(unittest.TestCase):
         for workflow in WORKFLOWS:
             with self.subTest(workflow=workflow):
                 self.run_installer(workflow)
+
+    def test_adopter_accepts_modern_runtime(self):
+        self.run_installer("adopter", runtime="modern")
+
+    def test_adopter_rejects_untrusted_runtime_identity_before_export(self):
+        for runtime in ("missing", "ambiguous", "malformed", "bad-version"):
+            with self.subTest(runtime=runtime):
+                self.run_installer("adopter", runtime=runtime)
 
     def test_failed_install_stops_without_exporting_runtime(self):
         for workflow in WORKFLOWS:

@@ -1,0 +1,86 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-388",
+  "summary": "Fix trusted governance runtime bootstrap for both entrypoints",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-388/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "template/files/new-project-governance.workflow.yml",
+    "tests/ci-runtime-isolation.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4850b60a4b24c4102e5b861fe54354e8a92c60c1",
+    "targetBranch": "main",
+    "outcome": "Run the trusted isolated governance runtime version probe for either supported published distribution; refuse invalid runtime identity before exporting it, then publish through independent protected review.",
+    "nonGoals": [
+      "Change protected runtime pin selection or reviewer authority",
+      "Modify adopter repositories or their pinned copies",
+      "Treat local tests as OneDev or Validator approval"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Resolve exactly one supported distribution and its matching console entrypoint from isolated installed metadata, execute its version probe, then export that venv. Existing base-pin selection remains unchanged.",
+      "components": [
+        {
+          "name": "trusted workflow installer",
+          "paths": [
+            "template/files/new-project-governance.workflow.yml",
+            "tests/ci-runtime-isolation.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Accept legacy wellman and modern wellman-governance runtime entrypoints after metadata validation"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Use a reviewed revert of the workflow template and test changes; retain existing source pins and protected checks."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ci-runtime-isolation.test.py"
+        ],
+        "evidence": "Offline installer fixtures exercise both supported runtime entrypoints and refuse missing, ambiguous or incorrect metadata before exporting PATH."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/ci-pr-range.test.py",
+          "./project/governance-check.sh",
+          "git diff --check"
+        ],
+        "evidence": "Existing workflow range and governance invariants remain enforced."
+      }
+    ]
+  }
+}
