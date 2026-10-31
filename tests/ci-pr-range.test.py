@@ -211,6 +211,8 @@ jobs:
                 self.assertEqual([], list((self.root / ".governance").rglob("__pycache__")),
                                  "governance validation must not write bytecode into the worktree")
                 self.assert_pass(result)
+                self.assertEqual("", self.git("status", "--porcelain"),
+                                 "governance validation must leave the checkout clean")
 
     def test_managed_gate_rejects_committed_drift_with_exact_range(self):
         self.write("policy.txt", "Unauthorized changed policy\n")
