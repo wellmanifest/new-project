@@ -3,7 +3,7 @@
 - **ID**: ticket-399
 - **Owner**: agent:codex
 - **Status**: IN_PROGRESS
-- **Workflow state**: VALIDATION
+- **Workflow state**: PUBLICATION
 - **Created**: 2026-11-01
 
 ## Authorization and bounded outcome
@@ -25,3 +25,5 @@ No target source, historical target ticket carrier, review policy or trusted app
 Material source and release projections are complete, with focused regressions passing. The initial intent mistakenly used the default L/110-minute profile; the hub requires XS/S and30 minutes. The unchanged small scope is corrected to S/25. The commit currency/time assertion stopped before any commit. Preserve the indexed material through its continuity snapshot. Subsequent work may validate and commit only that preserved source, under a separate bounded owned controller handoff; any further implementation requires revalidation. Complete/native checks and protected publication are still pending.
 
 Validation-only continuation accepts the preserved source hashes and previous continuity chain. No additional source implementation is permitted in this phase. The new controller lease is bounded to30 minutes; the original timing and intent failure remain in external evidence.
+
+CI coverage guard identified one omitted invocation of the new regression. A scoped handoff adds tests/governance-validator.test.sh solely to run that suite. Its controller deadline retains the prior validation deadline; no implementation clock extension or protected-policy change. Source is finalized for publication; exact-head complete validation, independent approval and merge remain pending.

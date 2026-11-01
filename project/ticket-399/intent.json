@@ -24,7 +24,8 @@
     "scripts/ticket_storage.py",
     "tests/legacy_ticket_state_test.py",
     "tests/scaffold_bootstrap_test.py",
-    "tests/scope_ownership_message_test.py"
+    "tests/scope_ownership_message_test.py",
+    "tests/governance-validator.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -52,7 +53,7 @@
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Keep packaging manifests with the declared integration workstream. A first bootstrap may admit only exact installer-owned governance assets proved by the existing native bootstrap contract and current dirty digest; ordinary integration allocations and arbitrary unowned paths remain rejected. Share one conservative status parser for canonical metadata and anchored legacy Status: VALUE / WORKFLOW. Conflicting observations fail closed. Source, bundled projections and immutable release version remain atomic.",
+      "decision": "Keep packaging manifests with the declared integration workstream. A first bootstrap may admit only exact installer-owned governance assets proved by the existing native bootstrap contract and current dirty digest; ordinary integration allocations and arbitrary unowned paths remain rejected. Share one conservative status parser for canonical metadata and anchored legacy Status: VALUE / WORKFLOW. Conflicting observations fail closed. Source, bundled projections and immutable release version remain atomic. The compatibility regression is invoked by the existing mandatory governance-validator shell suite; this adds no test dependency, runtime behavior or review authority.",
       "components": [
         {
           "name": "initial-native-allocation",
@@ -70,7 +71,8 @@
             "scripts/governance_check.py",
             "packages/wellman/src/wellman/_bundled/ticket_activity.py",
             "packages/wellman/src/wellman/_bundled/governance_check.py",
-            "tests/legacy_ticket_state_test.py"
+            "tests/legacy_ticket_state_test.py",
+            "tests/governance-validator.test.sh"
           ]
         },
         {
