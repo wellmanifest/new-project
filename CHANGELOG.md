@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.20.123
+
+- Keep governance Git fixtures in a private platform temporary root; preserve
+  Git discovery ceilings and every integration assertion, and clean the entire
+  owned fixture root through one exit handler [ticket-392].
+
 ## 0.20.122
 
 - Run fresh first-allocation authority tests directly in the protected adoption job. Preserve all cases while removing their duplicate nested whole-suite invocation from ordinary discovery.

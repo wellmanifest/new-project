@@ -1,0 +1,102 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-392",
+  "summary": "Keep governance test fixtures in private platform temporary directories",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-392/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "tests/governance-scripts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "e9002205e84d1d0138d636661747902031242f7a",
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "outcome": "Keep every governance integration assertion while allocating its disposable Git fixtures in a private platform temporary directory, retaining Git discovery ceilings and cleanup ownership. Join patch0.20.123 and publish through protected review, merge and the native immutable release workflow.",
+    "nonGoals": [
+      "Change production governance semantics, required checks or test deadlines.",
+      "Delete unknown work, change other active tickets or alter real repository worktree locations."
+    ],
+    "budgets": {
+      "maxAffectedComponents": 2,
+      "maxImplementationFiles": 6,
+      "maxRuntimeDependencies": 0,
+      "maxPublicInterfaceChanges": 0
+    },
+    "runtimeDependencies": [],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use mktemp to create one private fixture root under the platform TMPDIR fallback. Preserve existing source-cache symlink refusal, export the private root as TMPDIR and GIT_CEILING_DIRECTORIES before fixtures, and register cleanup before any child suite. Remove only that newly created root on exit. Preserve all three nested Python suites and every shell scenario. Keep source release projections synchronized.",
+      "components": [
+        {
+          "name": "governance-test-fixtures",
+          "paths": [
+            "tests/governance-scripts.test.sh"
+          ]
+        },
+        {
+          "name": "release-projections",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material change through protected delivery; leave unrelated directories and worktrees intact."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/governance-scripts.test.sh"
+        ],
+        "evidence": "The unchanged complete integration job passes within the existing bound using a private platform temporary root; all nested suite assertions remain present."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh",
+          "git diff --check"
+        ],
+        "evidence": "Source-cache symlink refusal and Git discovery ceilings remain; cleanup applies only to the newly allocated private fixture root."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/version-parity.test.sh"
+        ],
+        "evidence": "Patch0.20.123 projections are consistent; native Goal checks, Linux, Windows, exact-head OneDev and independent approval govern merge and immutable publication."
+      }
+    ]
+  }
+}
