@@ -3,7 +3,7 @@
   "schema": "new-project.governance/v2",
   "standard": {
     "id": "wellmanifest/new-project",
-    "version": "0.20.128"
+    "version": "0.20.129"
   },
   "requiredFiles": [
     "README.md",
