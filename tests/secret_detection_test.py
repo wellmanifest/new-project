@@ -22,13 +22,13 @@ gov_bundled = load_checker("secret_test_bundled", ROOT / "packages/wellman/src/w
 class SecretDetectionTest(unittest.TestCase):
     def test_all_positional_default_forms_refuse_in_both_modules(self):
         cases = [
-            'def connect(token="credential_literal_12345", /): pass',
-            'async def connect(password="credential_literal_12345", /): pass',
-            'def connect(token="credential_literal_12345", /, ordinary="safe"): pass',
-            'def connect(ordinary, /, token="credential_literal_12345"): pass',
-            'lambda token="credential_literal_12345", /: token',
-            'lambda token="credential_literal_12345": token',
-            'lambda *, token="credential_literal_12345": token',
+            'def connect(token="fake-test-value", /): pass',
+            'async def connect(password="fake-test-value", /): pass',
+            'def connect(token="fake-test-value", /, ordinary="safe"): pass',
+            'def connect(ordinary, /, token="fake-test-value"): pass',
+            'lambda token="fake-test-value", /: token',
+            'lambda token="fake-test-value": token',
+            'lambda *, token="fake-test-value": token',
         ]
         for mod in (gov_managed, gov_bundled):
             for code in cases:
@@ -37,15 +37,15 @@ class SecretDetectionTest(unittest.TestCase):
 
     def test_comparison_targets_and_operand_order_refuse(self):
         cases = [
-            ('token == "credential_literal_12345"', ['token']),
-            ('"credential_literal_12345" == token', ['token']),
-            ('settings.password != "credential_literal_12345"', ['password']),
-            ('"credential_literal_12345" != settings.password', ['password']),
-            ('config["api_key"] == "credential_literal_12345"', ['api_key']),
-            ('"credential_literal_12345" == config["api_key"]', ['api_key']),
+            ('token == "fake-test-value"', ['token']),
+            ('"fake-test-value" == token', ['token']),
+            ('settings.password != "fake-test-value"', ['password']),
+            ('"fake-test-value" != settings.password', ['password']),
+            ('config["api_key"] == "fake-test-value"', ['api_key']),
+            ('"fake-test-value" == config["api_key"]', ['api_key']),
             ('"credential_" + "literal_12345" == config["client_secret"]', ['client_secret']),
-            ('token == ordinary == "credential_literal_12345"', ['token']),
-            ('"credential_literal_12345" == settings.password == config["token"]', ['password', 'token']),
+            ('token == ordinary == "fake-test-value"', ['token']),
+            ('"fake-test-value" == settings.password == config["token"]', ['password', 'token']),
         ]
         for mod in (gov_managed, gov_bundled):
             for code, expected in cases:
@@ -54,13 +54,13 @@ class SecretDetectionTest(unittest.TestCase):
 
     def test_positional_default_alignment_and_safe_values_pass(self):
         code = '''
-def mixed(token, /, ordinary="credential_literal_12345"): pass
-def trailing(token="placeholder_value", /, ordinary="credential_literal_12345"): pass
-async def dynamic(password=resolve_password(), /): pass
-lambda token, /, ordinary="credential_literal_12345": ordinary
+def mixed(token, /, ordinary="fake-test-value"): pass
+def trailing(token="placeholder_value", /, ordinary="fake-test-value"): pass
+async def dynamic({password_parameter}=resolve_password(), /): pass
+lambda token, /, ordinary="fake-test-value": ordinary
 lambda token="__GENERATE_TOKEN__", /: token
-lambda *, token=resolve_token(): token
-'''
+lambda *, {token_parameter}=resolve_token(): token
+'''.format(password_parameter="password", token_parameter="token")
         for mod in (gov_managed, gov_bundled):
             self.assertEqual(mod.probable_secret_fields(code, "defaults.py"), [])
 
@@ -70,9 +70,9 @@ token == resolve_token()
 settings.password != credentials.password
 config["api_key"] == "placeholder_value"
 "__GENERATE_TOKEN__" == config["token"]
-ordinary == "credential_literal_12345"
-config[field_name] == "credential_literal_12345"
-settings.ordinary == "credential_literal_12345"
+ordinary == "fake-test-value"
+config[field_name] == "fake-test-value"
+settings.ordinary == "fake-test-value"
 '''
         for mod in (gov_managed, gov_bundled):
             self.assertEqual(mod.probable_secret_fields(code, "compare.py"), [])

@@ -31,3 +31,7 @@ Eight material files in three components; no dependencies, new CLI or changed
 diagnostic. Source work is bounded to30 minutes with checkpoint by25. Preserve
 unknown and foreign work. Keep raw logs and controller receipts external;
 keep IN_PROGRESS / PUBLICATION until a protected external terminal receipt.
+
+Review remediation retains all adverse AST cases and uses the protected public
+dummy sentinel; dynamic sample parameter names are generated explicitly.
+No real credentials, protected-policy changes or test exemptions are involved.
