@@ -3291,12 +3291,13 @@ def find_python_secrets(tree: ast.AST) -> list[str]:
                     if is_secret_literal(v):
                         add_field(k.value)
         elif isinstance(node, ast.Compare):
-            if isinstance(node.left, ast.Name) and SECRET_FIELD_NAME_RE.search(node.left.id):
-                for comp in node.comparators:
-                    if is_secret_literal(comp):
-                        add_field(node.left.id)
-        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            pos_args = node.args.args
+            operands = [node.left, *node.comparators]
+            literal = next((value for value in operands if is_secret_literal(value)), None)
+            if literal is not None:
+                for target in operands:
+                    assigned_literal(target, literal)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+            pos_args = [*node.args.posonlyargs, *node.args.args]
             defaults = node.args.defaults
             for arg, default in zip(pos_args[-len(defaults):], defaults):
                 if SECRET_FIELD_NAME_RE.search(arg.arg) and is_secret_literal(default):

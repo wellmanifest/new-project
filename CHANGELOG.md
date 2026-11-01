@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 0.20.129
+
+- Detect Python secret literals in positional-only and lambda defaults, keeping
+  mixed positional argument alignment correct [ticket-398].
+- Scan both sides of name, attribute and literal-subscript comparisons while
+  preserving dynamic values, safe placeholders and chained comparisons
+  [ticket-398].
+
 ## 0.20.128
 
 - Revalidate SQLite and external ticket snapshots instead of reusing a Git-only

@@ -20,6 +20,63 @@ gov_bundled = load_checker("secret_test_bundled", ROOT / "packages/wellman/src/w
 
 
 class SecretDetectionTest(unittest.TestCase):
+    def test_all_positional_default_forms_refuse_in_both_modules(self):
+        cases = [
+            'def connect(token="fake-test-value", /): pass',
+            'async def connect(password="fake-test-value", /): pass',
+            'def connect(token="fake-test-value", /, ordinary="safe"): pass',
+            'def connect(ordinary, /, token="fake-test-value"): pass',
+            'lambda token="fake-test-value", /: token',
+            'lambda token="fake-test-value": token',
+            'lambda *, token="fake-test-value": token',
+        ]
+        for mod in (gov_managed, gov_bundled):
+            for code in cases:
+                with self.subTest(module=mod.__name__, code=code):
+                    self.assertTrue(mod.probable_secret_fields(code, "defaults.py"))
+
+    def test_comparison_targets_and_operand_order_refuse(self):
+        cases = [
+            ('token == "fake-test-value"', ['token']),
+            ('"fake-test-value" == token', ['token']),
+            ('settings.password != "fake-test-value"', ['password']),
+            ('"fake-test-value" != settings.password', ['password']),
+            ('config["api_key"] == "fake-test-value"', ['api_key']),
+            ('"fake-test-value" == config["api_key"]', ['api_key']),
+            ('"credential_" + "literal_12345" == config["client_secret"]', ['client_secret']),
+            ('token == ordinary == "fake-test-value"', ['token']),
+            ('"fake-test-value" == settings.password == config["token"]', ['password', 'token']),
+        ]
+        for mod in (gov_managed, gov_bundled):
+            for code, expected in cases:
+                with self.subTest(module=mod.__name__, code=code):
+                    self.assertEqual(mod.probable_secret_fields(code, "compare.py"), expected)
+
+    def test_positional_default_alignment_and_safe_values_pass(self):
+        code = '''
+def mixed(token, /, ordinary="fake-test-value"): pass
+def trailing(token="placeholder_value", /, ordinary="fake-test-value"): pass
+async def dynamic({password_parameter}=resolve_password(), /): pass
+lambda token, /, ordinary="fake-test-value": ordinary
+lambda token="__GENERATE_TOKEN__", /: token
+lambda *, {token_parameter}=resolve_token(): token
+'''.format(password_parameter="password", token_parameter="token")
+        for mod in (gov_managed, gov_bundled):
+            self.assertEqual(mod.probable_secret_fields(code, "defaults.py"), [])
+
+    def test_comparisons_keep_dynamic_placeholders_and_other_fields_safe(self):
+        code = '''
+token == resolve_token()
+settings.password != credentials.password
+config["api_key"] == "placeholder_value"
+"__GENERATE_TOKEN__" == config["token"]
+ordinary == "fake-test-value"
+config[field_name] == "fake-test-value"
+settings.ordinary == "fake-test-value"
+'''
+        for mod in (gov_managed, gov_bundled):
+            self.assertEqual(mod.probable_secret_fields(code, "compare.py"), [])
+
     def test_managed_and_bundled_are_independent_modules(self):
         self.assertIsNot(gov_managed, gov_bundled)
         self.assertNotEqual(gov_managed.__file__, gov_bundled.__file__)

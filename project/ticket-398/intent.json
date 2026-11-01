@@ -1,0 +1,105 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-398",
+  "summary": "Detect Python secret literals in defaults and comparisons",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-398/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/governance_check.py",
+    "tests/secret_detection_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "d779aafac71dcf8522efea4f598712ed1d9ec84d",
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "outcome": "Detect hardcoded Python secret literals in positional-only and lambda defaults and in either side of name, attribute and literal-subscript comparisons. Preserve dynamic values, placeholders and normal existing detections. Join material patch0.20.129 through independent exact-head protected review, merge and immutable publication.",
+    "nonGoals": [
+      "Change ticket ownership, preflight cache, allocation schemas, product consumer heads, credentials, dependencies or protected approval policy.",
+      "Detect runtime-computed secrets, perform dataflow analysis or claim published standard equals deployed consumer adoption."
+    ],
+    "budgets": {
+      "maxAffectedComponents": 3,
+      "maxImplementationFiles": 8,
+      "maxRuntimeDependencies": 0,
+      "maxPublicInterfaceChanges": 1
+    },
+    "runtimeDependencies": [],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse existing constant-string classification, placeholder exclusions and name/attribute/literal-subscript target extraction. Align positional defaults against the complete positional-only plus ordinary argument sequence, also for lambda arguments. Examine all comparison operands symmetrically when a secret literal is present, preserving existing chained-name detection. Keep source and bundled checkers byte-identical, return only field names, and preserve public signatures and GOV-SECRET-001. Test both real modules independently with synthetic literals and dynamic, placeholder, ordinary-field and alignment negative controls.",
+      "components": [
+        {
+          "name": "python-secret-scanner",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py"
+          ]
+        },
+        {
+          "name": "secret-regressions",
+          "paths": [
+            "tests/secret_detection_test.py"
+          ]
+        },
+        {
+          "name": "release-projections",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this bounded material patch through protected delivery; preserve all foreign or unknown work."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/secret_detection_test.py"
+        ],
+        "evidence": "Reproduce missed positional-only, attribute, subscript and reversed comparisons on the current checker, then pass regressions independently in source and bundle, including mixed positional alignment, async/lambda defaults, dynamic values, safe placeholders and chained comparisons."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh",
+          "bash tests/version-parity.test.sh",
+          "git diff --check"
+        ],
+        "evidence": "Normal hooks, native23, root tests and exact-head Linux/Windows/OneDev pass. Independent protected review owns merge and native immutable129 publication."
+      }
+    ]
+  }
+}

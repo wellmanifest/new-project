@@ -388,10 +388,12 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-390** | [`README.md`](./ticket-390/README.md) | - | - | - | - | - |
 | **ticket-391** | [`README.md`](./ticket-391/README.md) | - | - | - | - | - |
 | **ticket-392** | [`README.md`](./ticket-392/README.md) | - | - | - | - | - |
+| **ticket-393** | [`README.md`](./ticket-393/README.md) | - | - | - | - | - |
 | **ticket-394** | [`README.md`](./ticket-394/README.md) | - | - | - | - | - |
 | **ticket-395** | [`README.md`](./ticket-395/README.md) | - | - | - | - | - |
 | **ticket-396** | [`README.md`](./ticket-396/README.md) | - | - | - | - | - |
 | **ticket-397** | [`README.md`](./ticket-397/README.md) | - | - | - | - | - |
+| **ticket-398** | [`README.md`](./ticket-398/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 
