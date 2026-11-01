@@ -5093,8 +5093,25 @@ def compute_preflight_cache_key(
     profiles_path: Path | None,
     work_classification_path: Path | None,
 ) -> str | None:
+    # A Git dirty digest cannot bind external ticket input, including SQLite WAL.
+    # Let the ordinary reader recheck its current contents and snapshot pins.
+    if not args.base or any((args.ticket_database, args.ticket_snapshot, args.ticket_snapshot_sha256)):
+        return None
+    try:
+        storage = git_output(root, ["config", "--local", "--get", "new-project.ticketStorage"]).decode().strip()
+    except subprocess.CalledProcessError as error:
+        if error.returncode != 1:
+            return None
+        storage = "files"
+    except (OSError, UnicodeError):
+        return None
+    if storage != "files":
+        return None
+
     head_sha = git_rev_parse(root, args.head or "HEAD")
-    base_sha = git_rev_parse(root, args.base) if args.base else "inferred"
+    base_sha = git_rev_parse(root, args.base)
+    if head_sha.startswith("unresolved:") or base_sha.startswith("unresolved:"):
+        return None
     dirty_digest = compute_git_dirty_digest(root)
     if dirty_digest == "git-status-failed":
         return None

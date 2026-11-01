@@ -407,3 +407,4 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
   ```bash
   ./project/readme.sh
   ```
+| **ticket-393** | [`README.md`](./ticket-393/README.md) | - | - | - | - | - |
