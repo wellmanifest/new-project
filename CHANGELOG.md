@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 0.20.125
+
+- Fence integrated-worktree branch cleanup with an atomic transaction binding
+  the observed branch and target tips; retain changed or refused refs without
+  forced deletion [ticket-395].
+- Preserve target checkouts, ignored data and unrelated missing registrations;
+  remove only the exact integrated checkout through Git.
+
 ## 0.20.124
 
 - Report deterministic packaging findings for malformed nested Python tool
