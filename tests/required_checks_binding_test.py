@@ -116,6 +116,8 @@ class WorkflowEventBindingTest(unittest.TestCase):
             ('on:\n  pull_request:\n    types: [closed, synchronize]', True),
             ('on:\n  pull_request:\n    types:\n      - closed\n      - opened', True),
             ('on:\n  pull_request:\n    types: [closed, labeled]', True),
+            ('env: {MESSAGE: "closed # payload"}\non: pull_request', True),
+            ("name: 'PR workflow'\non: push", False),
         ]
         for location in ('scripts/generate_required_checks.py',
                          'packages/wellman/src/wellman/_bundled/generate_required_checks.py'):
@@ -137,6 +139,21 @@ class WorkflowEventBindingTest(unittest.TestCase):
                             'on:\n  pull_request:\n    types: closed',
                             'on:\n  pull_request:\n    types: []',
                             'on:\n  pull_request:\n    types: [closed]\n    types: [opened]'):
+                with self.subTest(module=location, trigger=trigger), self.assertRaises(SystemExit):
+                    module.pull_request_gating(trigger + '\njobs:\n  test:\n    runs-on: ubuntu-latest\n')
+
+    def test_multiline_metadata_cannot_invent_a_trigger(self):
+        # Each metadata payload is valid YAML. Its real event is push; the
+        # literal reader must refuse the unsupported boundaries/key escape.
+        cases = [
+            "name: 'multi\non: pull_request\nfoo: end'\n\"\\u006fn\": push",
+            "env: {MSG: 'multi\non: pull_request\nfoo: end'}\n\"\\u006fn\": push",
+            '"\\u006fn": pull_request',
+        ]
+        for location in ('scripts/generate_required_checks.py',
+                         'packages/wellman/src/wellman/_bundled/generate_required_checks.py'):
+            module = load('metadata_refusal_' + location.split('/')[0], ROOT / location)
+            for trigger in cases:
                 with self.subTest(module=location, trigger=trigger), self.assertRaises(SystemExit):
                     module.pull_request_gating(trigger + '\njobs:\n  test:\n    runs-on: ubuntu-latest\n')
 

@@ -230,9 +230,10 @@ def resolved_checks_text(text: str, sources: dict[str, str], callers: list[str])
     return names
 
 
-def _trigger_line(line: str) -> str:
+def _trigger_line(line: str, *, complete: bool = False) -> str:
     """Strip YAML comments while retaining hashes inside quoted scalars."""
     quote = None
+    containers = []
     index = 0
     while index < len(line):
         char = line[index]
@@ -247,8 +248,16 @@ def _trigger_line(line: str) -> str:
         elif quote is None and char in "'\"":
             quote = char
         elif quote is None and char == '#' and (index == 0 or line[index - 1].isspace()):
-            return line[:index].rstrip()
+            line = line[:index]
+            break
+        elif complete and quote is None and char in '[{':
+            containers.append(char)
+        elif complete and quote is None and char in ']}':
+            if not containers or containers.pop() != {']': '[', '}': '{'}[char]:
+                raise SystemExit('unsupported workflow metadata flow value')
         index += 1
+    if complete and (quote is not None or containers):
+        raise SystemExit('unsupported multiline workflow metadata value')
     return line.rstrip()
 
 
@@ -311,6 +320,27 @@ def pull_request_gating(text: str) -> bool:
     parser. Ambiguous or unsupported trigger forms must refuse derivation.
     """
     lines = [active for line in text.splitlines() if (active := _trigger_line(line)).strip()]
+    # Establish literal root boundaries before searching for on. A multiline
+    # quoted/flow metadata value may otherwise contain a line resembling a key.
+    roots = set()
+    root_key, root_value = None, ''
+    for line in lines:
+        if line.startswith((' ', '\t')) or (line == '---' and not roots):
+            continue
+        if line.startswith('- ') and root_key == 'on' and not root_value:
+            continue
+        match = re.fullmatch(r'''([A-Za-z_][A-Za-z0-9_-]*|'[A-Za-z_][A-Za-z0-9_-]*'|"[A-Za-z_][A-Za-z0-9_-]*")\s*:\s*(.*)''', line)
+        if match is None:
+            raise SystemExit('unsupported literal workflow root mapping')
+        root_key, root_value = match[1].strip("'\""), match[2]
+        if root_key in roots:
+            raise SystemExit('duplicate workflow root field')
+        roots.add(root_key)
+        if root_key != 'on':
+            if root_value.startswith(("'", '"')):
+                scalar(root_value)
+            elif root_value.startswith(('[', '{')):
+                _trigger_line(root_value, complete=True)
     triggers = [(index, match[1]) for index, line in enumerate(lines)
                 if (match := re.fullmatch(r'''(?:on|'on'|"on")\s*:\s*(.*)''', line))]
     if not triggers:
