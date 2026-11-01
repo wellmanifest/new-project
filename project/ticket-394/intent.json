@@ -1,0 +1,111 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-394",
+  "summary": "Reject malformed Python packaging metadata and repair installed checker guidance",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-394/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "error/GOV-AGENT-HOST.md",
+    "error/GOV-PACKAGING.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/agent_host_check.py",
+    "scripts/agent_host_check.py",
+    "tests/agent-hosts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "6aef44244d652bd2a32afda8382a8c379ec3c4f6",
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "outcome": "Return normal packaging diagnostics for malformed nested Python tool metadata, preserve valid declarations and lifecycle binding, and document executable checker paths in adopters and the source hub. Join material patch0.20.124 and publish through native exact-head protected review, merge and immutable release.",
+    "nonGoals": [
+      "Change required checks, secret access, dependency versions, ticket ownership or protected review policy.",
+      "Modify other active tickets, adopted consumer checkouts or unrelated validation semantics."
+    ],
+    "budgets": {
+      "maxAffectedComponents": 2,
+      "maxImplementationFiles": 10,
+      "maxRuntimeDependencies": 0,
+      "maxPublicInterfaceChanges": 0
+    },
+    "runtimeDependencies": [],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Check mapping shape at every tool/pytest/ini_options lookup before calling get. Invalid metadata remains an ordinary GOV-PACKAGING-001/003 finding rather than an exception. Exercise actual packaging/CLI behavior with wrong-shaped and valid TOML values in the existing host suite; keep the bundled checker byte-identical. Distinguish installed .governance/agent_host_check.py from source-hub scripts/agent_host_check.py in both error guides. Preserve all production gates and existing valid behavior.",
+      "components": [
+        {
+          "name": "agent-host-packaging-validation",
+          "paths": [
+            "scripts/agent_host_check.py",
+            "packages/wellman/src/wellman/_bundled/agent_host_check.py",
+            "tests/agent-hosts.test.sh",
+            "error/GOV-AGENT-HOST.md",
+            "error/GOV-PACKAGING.md"
+          ]
+        },
+        {
+          "name": "release-projections",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded material patch through protected delivery; preserve unknown or foreign work."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Scalar and array tool/pytest/ini_options inputs produce deterministic diagnostic findings without traceback; valid and absent metadata retain their existing behavior."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/wellman-package.test.sh",
+          "git diff --check"
+        ],
+        "evidence": "Source and bundled checkers agree; shipped adopter guidance points at the installed checker and identifies the hub variant."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh",
+          "bash tests/version-parity.test.sh"
+        ],
+        "evidence": "Material patch0.20.124, full native23, root tests, Linux, Windows and exact-head OneDev pass; only the independent protected controller may approve, merge and close the ticket."
+      }
+    ]
+  }
+}

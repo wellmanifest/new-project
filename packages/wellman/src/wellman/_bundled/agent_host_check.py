@@ -342,7 +342,8 @@ def python_declaration(marker: Path) -> tuple[dict[str, Any] | None, dict[str, A
         document = tomllib.loads(marker.read_text(encoding="utf-8"))
     except (OSError, tomllib.TOMLDecodeError):
         return None, {}
-    declaration = document.get("tool", {}).get("wellmanifest")
+    tool = document.get("tool")
+    declaration = tool.get("wellmanifest") if isinstance(tool, dict) else None
     return (declaration if isinstance(declaration, dict) else None), document
 
 
@@ -362,7 +363,9 @@ def lifecycle_value(kind: str, document: dict[str, Any]) -> str:
         scripts = document.get("scripts")
         value = scripts.get("prepare") if isinstance(scripts, dict) else None
     else:
-        options = document.get("tool", {}).get("pytest", {}).get("ini_options", {})
+        tool = document.get("tool")
+        pytest = tool.get("pytest") if isinstance(tool, dict) else None
+        options = pytest.get("ini_options") if isinstance(pytest, dict) else None
         value = options.get("addopts") if isinstance(options, dict) else None
     if isinstance(value, list):
         return " ".join(str(item) for item in value)

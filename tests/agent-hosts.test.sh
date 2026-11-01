@@ -742,6 +742,50 @@ chmod +x "$fixture/.githooks/pre-commit"
 cp "$root/template/files/commit-msg.template.sh" "$fixture/.githooks/commit-msg"
 cp "$root/template/files/pre-push.template.sh" "$fixture/.githooks/pre-push"
 
+# Valid TOML with malformed nested packaging tables must yield diagnostics,
+# including from the independently bundled executable, rather than a traceback.
+python3 - "$root" "$fixture" <<'PYTOMLSHAPES'
+import json, os, pathlib, subprocess, sys
+root, fixture = map(pathlib.Path, sys.argv[1:])
+(fixture / "project").mkdir(exist_ok=True)
+(fixture / "project/governance-check.sh").write_text("#!/usr/bin/env bash\n")
+declaration = """[tool.wellmanifest]
+standard = "9.9.9"
+revision = "1111111111111111111111111111111111111111"
+gate = "project/governance-check.sh"
+"""
+missing = {"GOV-PACKAGING-001", "GOV-PACKAGING-003"}
+unbound = {"GOV-PACKAGING-003"}
+cases = [
+    ("absent tool", "[project]\nname = 'fixture'\n", missing),
+    ("empty tool", "[tool]\n", missing),
+    ("scalar tool", "tool = 'invalid'\n", missing),
+    ("array tool", "tool = [1, 2]\n", missing),
+    ("scalar pytest", "[tool]\npytest = 'invalid'\n" + declaration, unbound),
+    ("array pytest", "[tool]\npytest = [1, 2]\n" + declaration, unbound),
+    ("absent pytest", declaration, unbound),
+    ("scalar ini_options", declaration + "[tool.pytest]\nini_options = 'invalid'\n", unbound),
+    ("array ini_options", declaration + "[tool.pytest]\nini_options = [1, 2]\n", unbound),
+    ("empty ini_options", declaration + "[tool.pytest.ini_options]\n", unbound),
+    ("valid string", declaration + "[tool.pytest.ini_options]\naddopts = '-p wellmanifest_governance'\n", set()),
+    ("valid array", declaration + "[tool.pytest.ini_options]\naddopts = ['-p', 'wellmanifest_governance']\n", set()),
+]
+for checker in [root / "scripts/agent_host_check.py",
+                root / "packages/wellman/src/wellman/_bundled/agent_host_check.py"]:
+    for name, document, expected in cases:
+        (fixture / "pyproject.toml").write_text(document, encoding="utf-8")
+        result = subprocess.run(
+            [sys.executable, str(checker), "--root", str(fixture), "--format", "json"],
+            capture_output=True, text=True, env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        )
+        assert "Traceback" not in result.stderr, (checker, name, result.stderr)
+        report = json.loads(result.stdout)
+        actual = {item["code"] for item in report["findings"] if item["code"].startswith("GOV-PACKAGING-")}
+        assert actual == expected, (checker, name, actual, expected)
+        assert result.returncode == (1 if expected else 0), (checker, name, result.returncode, report)
+print("agent-host nested TOML shape diagnostics: PASS (24 executable cases)")
+PYTOMLSHAPES
+
 # A stack marker with no governance declaration and no lifecycle binding.
 cat > "$fixture/pyproject.toml" <<'TOML'
 [project]
