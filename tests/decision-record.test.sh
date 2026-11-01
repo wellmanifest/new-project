@@ -103,6 +103,7 @@ echo "== advisory JSON string round-trip and malformed escape rejection: $parser
 $PY - "$good" "$parser" <<'PY'
 import copy
 import importlib.util
+import json
 import sys
 from pathlib import Path
 spec = importlib.util.spec_from_file_location("decision_parser", sys.argv[2])
@@ -121,13 +122,24 @@ for model in ['provider/"quoted"', r'provider\route', 'provider\nnext', 'model Å
     encoded = to_dsl(record)
     assert parse_dsl_record(encoded) == record, repr(model)
     assert to_dsl(parse_dsl_record(encoded)) == encoded
-malformed = canonical.replace('MODEL "openrouter/z-ai/glm-5.2"', r'MODEL "invalid\q"')
-try:
-    parse_dsl_record(malformed)
-except ValueError:
-    pass
-else:
-    raise AssertionError("invalid JSON escape accepted in advisory text")
+advisory_line = next(line for line in canonical.splitlines() if line.startswith("ADVISORY "))
+for invalid_line in [
+    r'ADVISORY llm_verdict = "invalid\q" MODEL "x"',
+    r'ADVISORY llm_verdict = "APPROVE" MODEL "invalid\q"',
+    r'ADVISORY llm_verdict = "APPROVE" MODEL "\u12"',
+    'ADVISORY llm_verdict = "APPROVE" MODEL "invalid\x01"',
+]:
+    record = copy.deepcopy(base)
+    assert module.apply_decision_line(record, invalid_line) is False
+    assert record == base, "invalid advisory partially changed the record"
+    malformed = canonical.replace(advisory_line, invalid_line)
+    try:
+        parse_dsl_record(malformed)
+    except ValueError as error:
+        assert not isinstance(error, json.JSONDecodeError), "JSON decoder exception escaped"
+        assert str(error).startswith("unrecognized decision-record line:")
+    else:
+        raise AssertionError("invalid JSON advisory accepted")
 print("advisory string regressions OK")
 PY
 

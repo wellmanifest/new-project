@@ -127,10 +127,14 @@ def apply_decision_line(record: dict[str, Any], line: str) -> bool:
         return True
     match = ADVISORY_LINE.match(line)
     if match:
-        record["advisory"] = {
-            "llmVerdict": json.loads(match.group(1)),
-            "model": json.loads(match.group(2)),
-        }
+        try:
+            advisory = {
+                "llmVerdict": json.loads(match.group(1)),
+                "model": json.loads(match.group(2)),
+            }
+        except json.JSONDecodeError:
+            return False
+        record["advisory"] = advisory
         return True
     match = ASSERT_LINE.match(line)
     if match:
