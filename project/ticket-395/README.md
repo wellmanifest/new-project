@@ -42,3 +42,8 @@ The exact-ref Git transaction was also proved in a separate disposable repo.
 A further controlled red/green case proves that a symbolic-ref race cannot
 redirect deletion to an unrelated ref; the transaction disables dereferencing.
 Native health, root tests, protected CI/review and publication remain pending.
+
+Refinement: a changed symbolic alias with the same commit OID is now retained
+along with its unrelated referent. The transaction prepares both locks, verifies
+direct reference types under those locks, and commits only the unchanged refs.
+The strengthened case failed on3a988336 and all eight regressions now pass.

@@ -115,6 +115,10 @@ def test_declined_branch_delete_never_forces_or_globally_prunes(tmp_path, monkey
         return original(cwd, *args, **kwargs)
 
     monkeypatch.setattr(module, "git_cmd", decline)
+    monkeypatch.setattr(
+        module, "_delete_exact_branch",
+        lambda *args: subprocess.CompletedProcess(args, 1, "", "synthetic deletion refusal"),
+    )
     report = module.prune_merged_worktrees(repo)
     assert not wt.exists()
     assert _git(repo, "rev-parse", "refs/heads/" + branch) == head
@@ -237,3 +241,4 @@ def test_symbolic_branch_race_never_deletes_another_ref(tmp_path, monkeypatch):
     module.prune_merged_worktrees(repo)
     assert _git(repo, "rev-parse", unrelated) == head
     assert _git(repo, "rev-parse", "main") == head
+    assert _git(repo, "symbolic-ref", "refs/heads/" + branch) == unrelated

@@ -14,14 +14,17 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
 
-def git_cmd(cwd: Path, *args: str, input_text: str | None = None) -> subprocess.CompletedProcess[str]:
+def git_cmd(cwd: Path, *args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["git", "-C", str(cwd), *args], capture_output=True, text=True,
-        input=input_text, check=False,
+        ["git", "-C", str(cwd), *args],
+        capture_output=True,
+        text=True,
+        check=False,
     )
 
 
@@ -100,12 +103,52 @@ def _checkout_matches(path: Path, head: str, branch: str) -> bool:
 def _delete_exact_branch(
     repo: Path, branch: str, head: str, target: str, target_sha: str,
 ) -> subprocess.CompletedProcess[str]:
-    # Both refs are locked and compared in one transaction. No dereferencing
-    # means a racing symbolic alias cannot redirect deletion to another ref. A racing writer
-    # advancing either ref causes the complete transaction to refuse deletion.
+    # Prepare locks both exact names and verifies their expected OIDs. Inspect
+    # their direct/symbolic type while those locks are held, before committing.
+    command = ["git", "-C", str(repo), "update-ref", "--no-deref", "--stdin"]
     transaction = (f"start\nverify {target} {target_sha}\n"
-                   f"delete {branch} {head}\nprepare\ncommit\n")
-    return git_cmd(repo, "update-ref", "--no-deref", "--stdin", input_text=transaction)
+                   f"delete {branch} {head}\nprepare\n")
+    with tempfile.TemporaryFile(mode="w+t", encoding="utf-8", errors="replace") as errors:
+        try:
+            process = subprocess.Popen(
+                command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                stderr=errors, text=True, encoding="utf-8", errors="replace",
+            )
+        except OSError as error:
+            return subprocess.CompletedProcess(command, 1, "", str(error))
+        prefix = ""
+        declined = None
+        try:
+            process.stdin.write(transaction)
+            process.stdin.flush()
+            prefix = process.stdout.readline() + process.stdout.readline()
+            if prefix != "start: ok\nprepare: ok\n":
+                declined = "reference transaction preparation failed"
+            else:
+                for ref in (target, branch):
+                    if git_cmd(repo, "symbolic-ref", "--quiet", ref).returncode != 1:
+                        declined = "reference became symbolic or could not be verified under lock"
+                        break
+            if process.poll() is None:
+                process.stdin.write("abort\n" if declined else "commit\n")
+                process.stdin.flush()
+            output, _ = process.communicate()
+        except (OSError, ValueError) as error:
+            declined = f"reference transaction outcome unconfirmed: {error}"
+            if process.poll() is None:
+                process.kill()
+            output, _ = process.communicate()
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+        errors.seek(0)
+        detail = errors.read()
+        if declined:
+            return subprocess.CompletedProcess(command, 1, prefix + output, declined + ": " + detail)
+        if process.returncode == 0 and "commit: ok\n" not in output:
+            return subprocess.CompletedProcess(command, 1, prefix + output, "commit outcome unconfirmed: " + detail)
+        return subprocess.CompletedProcess(command, process.returncode, prefix + output, detail)
 
 
 def prune_merged_worktrees(
@@ -162,7 +205,7 @@ def prune_merged_worktrees(
         if branch:
             deleted = _delete_exact_branch(repo, branch, head, target_full, target_sha)
             if deleted.returncode != 0:
-                skip(f"branch retained; ref changed or deletion refused: {deleted.stderr.strip()}")
+                skip(f"branch cleanup declined or unconfirmed: {deleted.stderr.strip()}")
         pruned.append({"path": str(path), "branch": name, "action": "removed"})
     return {"target": target_ref, "pruned": pruned, "skipped": skipped}
 
