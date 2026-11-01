@@ -1,0 +1,117 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-397",
+  "summary": "Reject ambiguous snapshot and host bootstrap inputs",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-397/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/snapshot_migration.py",
+    "scripts/install-agent-hosts.sh",
+    "scripts/snapshot_migration.py",
+    "tests/agent-hosts.test.sh",
+    "tests/snapshot_migration_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "4eaa316751dbac96549dcde941f05a1fca9a7682",
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "outcome": "Reject duplicate or unreadable snapshot inventory paths and contain host-package bootstrap reads/writes to canonical source and target paths before copying. Preserve valid migration/bootstrap behavior and join material patch0.20.127 through exact-head protected review, merge and immutable publication.",
+    "nonGoals": [
+      "Change foreign393, cached validation, the Python secret scanner, local-origin URI grouping, consumer heads, dependencies or protected publication policy.",
+      "Install host files into any real target/user directory during regression tests or remove unknown work.",
+      "Provide filesystem isolation against a hostile process running with the same user privileges; callers retain exclusive target-checkout ownership."
+    ],
+    "budgets": {
+      "maxAffectedComponents": 3,
+      "maxImplementationFiles": 10,
+      "maxRuntimeDependencies": 0,
+      "maxPublicInterfaceChanges": 0
+    },
+    "runtimeDependencies": [],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep public CLI/function signatures. Reject duplicate decoded Git inventory paths before dictionary assignment, and return the existing typed migration diagnostic for unsupported inventory bytes. Keep the bundled migration module byte-identical. Preflight every selected host-package mapping before the first destination write: closed literal relative paths, no traversal, controls, Git metadata or symlink/reparse components, regular sources and unambiguous targets. Read validated source bytes before copying; replace regular destination files atomically so existing hardlink referents are preserved. Recheck parents at the effect boundary and retain ordinary managed hook modes and read-only --check behavior. Keep implementation self-contained in the existing installer with standard-library Python only. Every adverse filesystem fixture is newly created, owned and disposable.",
+      "components": [
+        {
+          "name": "snapshot-inventory",
+          "paths": [
+            "scripts/snapshot_migration.py",
+            "packages/wellman/src/wellman/_bundled/snapshot_migration.py",
+            "tests/snapshot_migration_test.py"
+          ]
+        },
+        {
+          "name": "host-package-bootstrap",
+          "paths": [
+            "scripts/install-agent-hosts.sh",
+            "tests/agent-hosts.test.sh"
+          ]
+        },
+        {
+          "name": "release-projections",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded material patch through protected delivery; preserve unknown and foreign data."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/snapshot_migration_test.py"
+        ],
+        "evidence": "Actual duplicate-name Git trees reject with the existing typed diagnostic in source and bundle; valid inventories and migration proofs still work."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Invalid source/target traversal, absolute/control paths, duplicates and symlink paths reject before file/config changes. Valid bootstrap/check/additional hooks still pass; atomic replacement retains an outside hardlink referent."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh",
+          "bash tests/version-parity.test.sh",
+          "git diff --check"
+        ],
+        "evidence": "Joined127, full native23, root tests and exact-head Linux/Windows/OneDev pass; independent protected approval owns merge and native immutable publication."
+      }
+    ]
+  }
+}

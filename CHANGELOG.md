@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 0.20.127
+
+- Reject duplicate or unreadable Git snapshot inventory paths with the existing
+  typed diagnostic, preserving source/runtime parity [ticket-397].
+- Validate the complete host bootstrap file plan before writing: canonical
+  contained paths, regular sources, distinct targets and matching contracts.
+  Refuse symlink/reparse paths and replace files atomically while retaining
+  hardlink referents and read-only checks [ticket-397].
+
 ## 0.20.126
 
 - Derive PR checks only from the literal pull_request trigger and its own

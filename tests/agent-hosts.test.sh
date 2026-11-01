@@ -1034,3 +1034,181 @@ python3 -B "$root/tests/pre_push_hook_test.py"
 
 # The adopter seed path must pass the same active host-hook boundary.
 python3 -B "$root/tests/seed_baseline_test.py"
+
+# All adverse bootstrap effects belong to newly created disposable fixtures.
+python3 - "$root" <<'PYHOSTCONFINEMENT'
+import hashlib
+import json
+import os
+from pathlib import Path
+import stat
+import subprocess
+import sys
+import tempfile
+import unittest
+from unittest import mock
+
+ROOT = Path(sys.argv[1])
+
+
+class BootstrapContainmentTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix='host-bootstrap-input-')
+        self.addCleanup(temporary.cleanup)
+        self.outer = Path(temporary.name).resolve()
+        self.source, self.target = self.outer / 'package', self.outer / 'target'
+        (self.source / 'governance').mkdir(parents=True)
+        (self.source / '.githooks').mkdir()
+        self.target.mkdir()
+        subprocess.run(['git', 'init', '-q', str(self.target)], check=True)
+        (self.source / 'host.txt').write_text('synthetic host fixture\n')
+        (self.source / 'other.txt').write_text('second synthetic host fixture\n')
+        (self.source / '.githooks/pre-commit').write_text('#!/bin/sh\nexit 0\n')
+        self.outside = self.outer / 'outside.txt'
+        self.outside.write_text('preserve fixture\n')
+        self.mappings = [
+            {'source': 'host.txt', 'target': 'AGENTS.md', 'executable': False},
+            {'source': '.githooks/pre-commit', 'target': '.githooks/pre-commit', 'executable': True},
+            {'source': 'governance/agent-hosts.json', 'target': '.governance/agent-hosts.json', 'executable': False},
+        ]
+        self.hosts = ['AGENTS.md']
+
+    def snapshot(self):
+        result = {}
+        for path in self.target.rglob('*'):
+            relative = path.relative_to(self.target).as_posix()
+            if path.is_symlink():
+                result[relative] = ('link', os.readlink(path))
+            elif path.is_file():
+                result[relative] = ('file', stat.S_IMODE(path.stat().st_mode), hashlib.sha256(path.read_bytes()).hexdigest())
+            else:
+                result[relative] = ('directory',)
+        return result
+
+    def invoke(self, *arguments):
+        contract = {'hosts': [{'file': name} for name in self.hosts],
+                    'hook': {'path': '.githooks/pre-commit', 'hooksPathConfig': '.githooks', 'runtimeFiles': []}}
+        encoding = getattr(self, 'metadata_encoding', 'utf-8')
+        (self.source / 'governance/agent-hosts.json').write_bytes(json.dumps(contract).encode(encoding))
+        (self.source / 'governance/package-manifest.json').write_bytes(json.dumps({'files': self.mappings}).encode(encoding))
+        return subprocess.run(['bash', str(ROOT / 'scripts/install-agent-hosts.sh'),
+                               '--source', str(self.source), '--target', str(self.target), *arguments],
+                              capture_output=True, text=True)
+
+    def assert_refused_without_writes(self):
+        before, outside = self.snapshot(), self.outside.read_bytes()
+        result = self.invoke()
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertIn('GOV-AGENT-HOST-004', result.stderr)
+        self.assertNotIn('Traceback', result.stderr)
+        self.assertEqual(self.snapshot(), before)
+        self.assertEqual(self.outside.read_bytes(), outside)
+
+    def test_late_unsafe_target_is_rejected_before_the_first_copy(self):
+        self.hosts.append('../outside.txt')
+        self.mappings.append({'source': 'other.txt', 'target': '../outside.txt', 'executable': False})
+        self.assert_refused_without_writes()
+
+    def test_metadata_encoding_matches_the_activation_reader_before_writes(self):
+        for encoding in ('utf-16', 'utf-8-sig'):
+            with self.subTest(encoding=encoding):
+                self.metadata_encoding = encoding
+                self.assert_refused_without_writes()
+
+    def test_source_traversal_is_rejected(self):
+        self.mappings[0]['source'] = '../outside.txt'
+        self.assert_refused_without_writes()
+
+    def test_absolute_paths_and_control_characters_are_rejected(self):
+        for field, value in [('source', str(self.outside)), ('target', str(self.outside)),
+                             ('source', 'host\n.txt'), ('target', 'host\t.md'), ('target', '.git/config'),
+                             ('target', 'AGENTS.md.'), ('target', 'AGENTS.md ')]:
+            with self.subTest(field=field, value=value):
+                original = self.mappings[0].copy()
+                original_hosts = self.hosts[:]
+                self.mappings[0][field] = value
+                if field == 'target':
+                    self.hosts = [value]
+                self.assert_refused_without_writes()
+                self.mappings[0], self.hosts = original, original_hosts
+
+    def test_source_and_destination_symlinks_are_rejected(self):
+        (self.source / 'host.txt').unlink()
+        (self.source / 'host.txt').symlink_to(self.outside)
+        self.assert_refused_without_writes()
+        (self.source / 'host.txt').unlink()
+        (self.source / 'host.txt').write_text('synthetic fixture\n')
+        (self.target / 'AGENTS.md').symlink_to(self.outside)
+        self.assert_refused_without_writes()
+        (self.target / 'AGENTS.md').unlink()
+        outside_hooks = self.outer / 'outside-hooks'
+        outside_hooks.mkdir()
+        (self.target / '.githooks').symlink_to(outside_hooks, target_is_directory=True)
+        self.assert_refused_without_writes()
+        self.assertEqual(list(outside_hooks.iterdir()), [])
+
+    def test_duplicate_target_or_invalid_mode_is_rejected(self):
+        self.mappings.append({'source': 'other.txt', 'target': 'AGENTS.md', 'executable': False})
+        self.assert_refused_without_writes()
+        self.mappings.pop()
+        self.mappings[0]['executable'] = 'not-a-boolean'
+        self.assert_refused_without_writes()
+
+    def test_unrelated_existing_contract_is_preserved_before_any_copy(self):
+        directory = self.target / 'governance'
+        directory.mkdir()
+        (directory / 'agent-hosts.json').write_text(json.dumps({
+            'hosts': [{'file': 'OTHER.md'}],
+            'hook': {'path': '.githooks/pre-commit', 'hooksPathConfig': '.githooks', 'runtimeFiles': []}}))
+        self.assert_refused_without_writes()
+
+    def test_validated_metadata_and_repeated_sources_use_the_same_frozen_bytes(self):
+        self.hosts += ['GEMINI.md', 'CLAUDE.md']
+        self.mappings[1:1] = [
+            {'source': 'other.txt', 'target': 'GEMINI.md', 'executable': False},
+            {'source': 'host.txt', 'target': 'CLAUDE.md', 'executable': False},
+        ]
+        self.invoke('--check')  # Write only this fixture's source metadata.
+        contract = self.source / 'governance/agent-hosts.json'
+        validated, first_source = contract.read_bytes(), (self.source / 'host.txt').read_bytes()
+        changed_contract = json.loads(validated)
+        changed_contract['hosts'] = [{'file': 'OTHER.md'}]
+        program = (ROOT / 'scripts/install-agent-hosts.sh').read_text().split('bootstrap_host_files() {', 1)[1]
+        program = program.split("<<'PY'\n", 1)[1].split('\nPY\n}', 1)[0]
+        original_open, changed, arguments = os.open, [], sys.argv
+        def interleaved_open(path, *args, **kwargs):
+            if Path(path) == self.source / 'other.txt' and not changed:
+                contract.write_text(json.dumps(changed_contract))
+                (self.source / 'host.txt').write_text('updated source fixture\n')
+                changed.append(True)
+            return original_open(path, *args, **kwargs)
+        try:
+            sys.argv = ['bootstrap-fixture', str(self.source), str(self.target), 'false']
+            with mock.patch.object(os, 'open', side_effect=interleaved_open):
+                exec(compile(program, 'actual-bootstrap-body', 'exec'), {'__name__': 'bootstrap_fixture'})
+        finally:
+            sys.argv = arguments
+        self.assertTrue(changed)
+        self.assertEqual((self.target / '.governance/agent-hosts.json').read_bytes(), validated)
+        self.assertEqual((self.target / 'AGENTS.md').read_bytes(), first_source)
+        self.assertEqual((self.target / 'CLAUDE.md').read_bytes(), first_source)
+
+    def test_valid_bootstrap_check_and_hardlink_referent_preservation(self):
+        (self.source / 'extra notes.txt').write_text('synthetic multilingual notes\n')
+        self.hosts.append('docs/host próba.md')
+        self.mappings.append({'source': 'extra notes.txt', 'target': 'docs/host próba.md', 'executable': False})
+        os.link(self.outside, self.target / 'AGENTS.md')
+        before = self.outside.read_bytes()
+        result = self.invoke()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.outside.read_bytes(), before)
+        self.assertEqual((self.target / 'AGENTS.md').read_bytes(), (self.source / 'host.txt').read_bytes())
+        self.assertTrue(os.access(self.target / '.githooks/pre-commit', os.X_OK))
+        installed = self.snapshot()
+        checked = self.invoke('--check')
+        self.assertEqual(checked.returncode, 0, checked.stderr)
+        self.assertEqual(self.snapshot(), installed)
+
+
+unittest.main(argv=[sys.argv[0]])
+PYHOSTCONFINEMENT
