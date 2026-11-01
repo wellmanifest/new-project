@@ -3,24 +3,29 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-fixture_cache="$repo_root/.subactor/cache"
-if [[ -L "$repo_root/.subactor" || -L "$fixture_cache" ]]; then
+workspace_cache="$repo_root/.subactor/cache"
+if [[ -L "$repo_root/.subactor" || -L "$workspace_cache" ]]; then
   echo 'FAIL: fixture cache must not be symlinked' >&2
   exit 1
 fi
-mkdir -p "$fixture_cache"
+mkdir -p "$workspace_cache"
+# Bulk Git fixtures belong in the host's temporary filesystem. A private root
+# also keeps cleanup bounded to data created by this test invocation.
+fixture_cache="$(mktemp -d "${TMPDIR:-/tmp}/new-project-governance-test.XXXXXX")"
+cleanup() {
+  rm -rf "$fixture_cache"
+}
+trap cleanup EXIT INT TERM
+fixture_cache="$(cd "$fixture_cache" && pwd -P)"
 export TMPDIR="$fixture_cache"
 # Non-Git cases must not discover the source hub above their private fixtures.
 # Repositories initialized below this parent still find their own .git first.
 export GIT_CEILING_DIRECTORIES="$fixture_cache${GIT_CEILING_DIRECTORIES:+:$GIT_CEILING_DIRECTORIES}"
+python3 "$repo_root/tests/governance_fixture_temp_test.py"
 python3 "$repo_root/tests/ticket-allocation-worktree.test.py"
 python3 "$repo_root/tests/ticket-radar-allocation.test.py"
 python3 "$repo_root/tests/work_start_test.py"
-fixture="$(mktemp -d "$fixture_cache/new-project-governance-test.XXXXXX")"
-cleanup() {
-  rm -rf "$fixture"
-}
-trap cleanup EXIT INT TERM
+fixture="$(mktemp -d "$fixture_cache/scenario.XXXXXX")"
 
 if grep -R -n 'file:///' \
   "$repo_root/AGENTS.md" "$repo_root/README.md" "$repo_root/llms.txt" >/dev/null; then
@@ -330,7 +335,7 @@ mv "$fixture/work-classification.dsl.json.bak" "$fixture/.governance/work-classi
 # in a throwaway repository so the fixture stays independent of this checkout.
 race="$(mktemp -d "${TMPDIR:-/tmp}/new-project-race-test.XXXXXX")"
 registered="$(mktemp -d "${TMPDIR:-/tmp}/new-project-registered-allocation.XXXXXX")"
-trap 'rm -rf "$fixture" "$race" "$registered"' EXIT INT TERM
+# These directories share the private root and its existing cleanup trap.
 
 git -C "$race" init -q --initial-branch=main origin.git --bare
 git -C "$race" clone -q origin.git upstream
