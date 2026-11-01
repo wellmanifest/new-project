@@ -1,0 +1,114 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-393",
+  "summary": "Prevent stale governance preflight cache for sqlite tickets",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-393/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/governance_check.py",
+    "tests/governance-preflight-cache.test.py",
+    "tests/ticket-input.test.py",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "6fdd67878eb5d726de194bb86cb7d35e3c8a3f48",
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "outcome": "Prevent reuse of stale governance preflight results for unbound comparison bases and mutable SQLite/external ticket inputs. Preserve safe explicit-base file-ticket caching; join material patch0.20.128 through exact-head protected review, merge and immutable publication.",
+    "nonGoals": [
+      "Change the secret scanner, ownership algorithms, local file-URL grouping, product consumers, dependencies, credentials or protected delivery policy.",
+      "Hash only SQLite main-file bytes as proof of current WAL state, or treat a cache result as execution/review authority."
+    ],
+    "budgets": {
+      "maxAffectedComponents": 3,
+      "maxImplementationFiles": 9,
+      "maxRuntimeDependencies": 0,
+      "maxPublicInterfaceChanges": 1
+    },
+    "runtimeDependencies": [],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Decline a preflight cache key when comparison base is not bound or ticket input depends on SQLite, an external snapshot/pin, or unknown/unreadable clone storage mode. Run the existing uncached reader and all its integrity/subject checks. Preserve ordinary explicit-base file-ticket caching and byte-identical source/bundle implementation. New tests use real, freshly owned Git/SQLite fixtures including WAL and stale pinned snapshots. No public CLI flags or signatures change.",
+      "components": [
+        {
+          "name": "governance-preflight-cache",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py"
+          ]
+        },
+        {
+          "name": "cache-and-ticket-input-regressions",
+          "paths": [
+            "tests/governance-preflight-cache.test.py",
+            "tests/ticket-input.test.py"
+          ]
+        },
+        {
+          "name": "release-projections",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded material patch through protected delivery; retain unknown and foreign data."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket-input.test.py"
+        ],
+        "evidence": "Actual SQLite status changes, configured storage and WAL cannot return an old cached PASS; mutated snapshots rerun digest verification."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/governance-preflight-cache.test.py"
+        ],
+        "evidence": "Unbound-base or unknown storage cannot reuse old results; explicit file-ticket cache hits, CI/no-cache and output boundaries remain correct."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh",
+          "bash tests/version-parity.test.sh",
+          "git diff --check"
+        ],
+        "evidence": "Normal hooks, native23/root and exact-head Linux/Windows/OneDev pass; protected independent review controls merge and native immutable128 publication."
+      }
+    ]
+  }
+}

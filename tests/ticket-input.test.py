@@ -111,13 +111,67 @@ class TicketInputTests(unittest.TestCase):
         path.write_text(json.dumps(doc))
         return str(path), hashlib.sha256(path.read_bytes()).hexdigest()
 
-    def run_gate(self, *args):
+    def run_gate(self, *args, env=None):
         result = subprocess.run([sys.executable, str(SOURCE / "scripts/governance_check.py"),
             "--root", str(self.root), "--manifest", "governance/manifest.hub.json", "--stack-profiles", "governance/stack-profiles.json",
             "--work-classification", "governance/work-classification.dsl.json", "--base", self.base, "--head", self.head,
-            "--expected-repository", "example/repo", "--format", "json", *args], capture_output=True, text=True)
+            "--expected-repository", "example/repo", "--format", "json", *args], capture_output=True, text=True, env=env)
         self.assertIn(result.returncode, [0, 1], result.stderr)
         return result.returncode, json.loads(result.stdout)
+
+    def local_cached_gate(self, cache, *selectors):
+        env = os.environ.copy()
+        env.pop("CI", None)
+        env.pop("GITHUB_ACTIONS", None)
+        return self.run_gate(*selectors, "--actor", "agent", "--cache-file", str(cache), env=env)
+
+    def test_sqlite_updates_revalidate_local_results_including_wal(self):
+        original_readme = self.files["README.md"]
+        for configured in (False, True):
+            for wal in (False, True):
+                with self.subTest(configured=configured, wal=wal):
+                    holder = None
+                    self.files["README.md"] = original_readme
+                    self.save()
+                    self.git("config", "new-project.ticketStorage", "sqlite" if configured else "files")
+                    cache = Path(self.temp.name) / f"cache-{configured}-{wal}.json"
+                    selectors = [] if configured else ["--ticket-database", str(self.database)]
+                    try:
+                        if wal:
+                            holder = sqlite3.connect(self.database)
+                            self.assertEqual(holder.execute("PRAGMA journal_mode=WAL").fetchone()[0], "wal")
+                            holder.execute("PRAGMA wal_autocheckpoint=0")
+                            holder.execute("BEGIN")
+                            holder.execute("SELECT COUNT(*) FROM ticket_versions").fetchone()
+                        code, report = self.local_cached_gate(cache, *selectors)
+                        self.assertEqual(code, 0, report)
+                        self.assertFalse(report.get("cached", False))
+                        main_bytes = self.database.read_bytes()
+                        self.files["README.md"] = b"# Ticket\n\n- **Status**: BACKLOG\n- **Workflow state**: PLAN\n"
+                        self.save()
+                        if wal:
+                            self.assertEqual(self.database.read_bytes(), main_bytes)
+                            self.assertTrue(Path(str(self.database) + "-wal").is_file())
+                        code, report = self.local_cached_gate(cache, *selectors)
+                        self.assertEqual(code, 1, report)
+                        self.assertFalse(report.get("cached", False))
+                        self.assertIn("GOV-TICKET-001", str(report))
+                    finally:
+                        if holder is not None:
+                            holder.close()
+
+    def test_changed_snapshot_rechecks_the_claimed_digest(self):
+        filename, pin = self.snapshot()
+        cache = Path(self.temp.name) / "snapshot-cache.json"
+        selectors = ["--ticket-snapshot", filename, "--ticket-snapshot-sha256", pin]
+        code, report = self.local_cached_gate(cache, *selectors)
+        self.assertEqual(code, 0, report)
+        self.assertFalse(report.get("cached", False))
+        Path(filename).write_text("{}\n")
+        code, report = self.local_cached_gate(cache, *selectors)
+        self.assertEqual(code, 1, report)
+        self.assertFalse(report.get("cached", False))
+        self.assertIn("digest", str(report).lower())
 
     def test_full_local_gate_passes_without_materializing_ticket(self):
         index = (self.root / ".git/index").read_bytes()

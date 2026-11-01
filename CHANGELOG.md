@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 0.20.128
+
+- Revalidate SQLite and external ticket snapshots instead of reusing a Git-only
+  preflight cache key; retain WAL visibility and current snapshot digest checks
+  [ticket-393].
+- Disable cache reuse for unbound comparison bases and unknown storage modes,
+  while retaining explicit-base file-ticket cache hits and existing CI gates
+  [ticket-393].
+
 ## 0.20.127
 
 - Reject duplicate or unreadable Git snapshot inventory paths with the existing

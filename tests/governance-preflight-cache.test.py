@@ -56,6 +56,40 @@ def setUpModule():
 
 
 class PreflightCacheTests(unittest.TestCase):
+    def local_cli(self, *arguments):
+        env = os.environ.copy()
+        env.pop("CI", None)
+        env.pop("GITHUB_ACTIONS", None)
+        command = [sys.executable, str(IMPLEMENTATION_SOURCE / "scripts/governance_check.py"),
+                   "--root", str(SOURCE), "--manifest", "governance/manifest.hub.json",
+                   "--stack-profiles", "governance/stack-profiles.json",
+                   "--work-classification", "governance/work-classification.dsl.json",
+                   "--head", "HEAD", "--actor", "agent", "--cache-file", str(self.cache_file),
+                   "--format", "json", *arguments]
+        result = subprocess.run(command, cwd=SOURCE, env=env, capture_output=True, text=True)
+        self.assertIn(result.returncode, (0, 1), result.stderr)
+        return result.returncode, json.loads(result.stdout)
+
+    def test_omitted_base_cannot_read_or_write_a_cached_result(self):
+        for _ in range(2):
+            code, report = self.local_cli()
+            self.assertEqual(code, 0, report)
+            self.assertFalse(report.get("cached", False))
+            self.assertFalse(self.cache_file.exists())
+
+    def test_unknown_storage_cannot_reuse_a_file_ticket_cache_hit(self):
+        code, report = self.local_cli("--base", "origin/main")
+        self.assertEqual(code, 0, report)
+        self.assertTrue(self.cache_file.is_file())
+        try:
+            subprocess.run(["git", "-C", str(SOURCE), "config", "new-project.ticketStorage", "invalid"], check=True)
+            code, report = self.local_cli("--base", "origin/main")
+            self.assertEqual(code, 1, report)
+            self.assertFalse(report.get("cached", False))
+            self.assertIn("GOV-INTENT-002", {finding["code"] for finding in report["findings"]})
+        finally:
+            subprocess.run(["git", "-C", str(SOURCE), "config", "--unset", "new-project.ticketStorage"], check=False)
+
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory(prefix="preflight-cache-test-")
         self.addCleanup(self.temp_dir.cleanup)
