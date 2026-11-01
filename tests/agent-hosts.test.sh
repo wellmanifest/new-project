@@ -1088,8 +1088,9 @@ class BootstrapContainmentTests(unittest.TestCase):
     def invoke(self, *arguments):
         contract = {'hosts': [{'file': name} for name in self.hosts],
                     'hook': {'path': '.githooks/pre-commit', 'hooksPathConfig': '.githooks', 'runtimeFiles': []}}
-        (self.source / 'governance/agent-hosts.json').write_text(json.dumps(contract))
-        (self.source / 'governance/package-manifest.json').write_text(json.dumps({'files': self.mappings}))
+        encoding = getattr(self, 'metadata_encoding', 'utf-8')
+        (self.source / 'governance/agent-hosts.json').write_bytes(json.dumps(contract).encode(encoding))
+        (self.source / 'governance/package-manifest.json').write_bytes(json.dumps({'files': self.mappings}).encode(encoding))
         return subprocess.run(['bash', str(ROOT / 'scripts/install-agent-hosts.sh'),
                                '--source', str(self.source), '--target', str(self.target), *arguments],
                               capture_output=True, text=True)
@@ -1107,6 +1108,12 @@ class BootstrapContainmentTests(unittest.TestCase):
         self.hosts.append('../outside.txt')
         self.mappings.append({'source': 'other.txt', 'target': '../outside.txt', 'executable': False})
         self.assert_refused_without_writes()
+
+    def test_metadata_encoding_matches_the_activation_reader_before_writes(self):
+        for encoding in ('utf-16', 'utf-8-sig'):
+            with self.subTest(encoding=encoding):
+                self.metadata_encoding = encoding
+                self.assert_refused_without_writes()
 
     def test_source_traversal_is_rejected(self):
         self.mappings[0]['source'] = '../outside.txt'

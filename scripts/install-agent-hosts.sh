@@ -203,7 +203,7 @@ def unique_object(pairs):
 
 
 def document(data):
-    value = json.loads(data, object_pairs_hook=unique_object)
+    value = json.loads(data.decode('utf-8'), object_pairs_hook=unique_object)
     if not isinstance(value, dict):
         fail('host package metadata must be an object')
     return value
