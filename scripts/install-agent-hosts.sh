@@ -215,8 +215,10 @@ try:
     contract_source = next((name for name in contract_names if (source / name).exists() or (source / name).is_symlink()), None)
     if contract_source is None:
         fail('source host contract is missing')
-    contract = document(source_bytes(source, contract_source))
-    manifest = document(source_bytes(source, 'governance/package-manifest.json'))
+    frozen = {contract_source: source_bytes(source, contract_source),
+              'governance/package-manifest.json': source_bytes(source, 'governance/package-manifest.json')}
+    contract = document(frozen[contract_source])
+    manifest = document(frozen['governance/package-manifest.json'])
     hook = contract['hook']
     if not isinstance(hook, dict):
         fail('host hook declaration must be an object')
@@ -245,7 +247,9 @@ try:
                 fail('duplicate target or invalid executable flag')
             targets.add(folded)
             checked(target, item['target'])
-            data = source_bytes(source, item['source'])
+            if item['source'] not in frozen:
+                frozen[item['source']] = source_bytes(source, item['source'])
+            data = frozen[item['source']]
             plan.append((item['target'], data, item['executable']))
             selected.append(item['target'])
             if item['source'] == contract_source:

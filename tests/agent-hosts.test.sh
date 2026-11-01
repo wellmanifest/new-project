@@ -1046,6 +1046,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 ROOT = Path(sys.argv[1])
 
@@ -1153,6 +1154,37 @@ class BootstrapContainmentTests(unittest.TestCase):
             'hosts': [{'file': 'OTHER.md'}],
             'hook': {'path': '.githooks/pre-commit', 'hooksPathConfig': '.githooks', 'runtimeFiles': []}}))
         self.assert_refused_without_writes()
+
+    def test_validated_metadata_and_repeated_sources_use_the_same_frozen_bytes(self):
+        self.hosts += ['GEMINI.md', 'CLAUDE.md']
+        self.mappings[1:1] = [
+            {'source': 'other.txt', 'target': 'GEMINI.md', 'executable': False},
+            {'source': 'host.txt', 'target': 'CLAUDE.md', 'executable': False},
+        ]
+        self.invoke('--check')  # Write only this fixture's source metadata.
+        contract = self.source / 'governance/agent-hosts.json'
+        validated, first_source = contract.read_bytes(), (self.source / 'host.txt').read_bytes()
+        changed_contract = json.loads(validated)
+        changed_contract['hosts'] = [{'file': 'OTHER.md'}]
+        program = (ROOT / 'scripts/install-agent-hosts.sh').read_text().split('bootstrap_host_files() {', 1)[1]
+        program = program.split("<<'PY'\n", 1)[1].split('\nPY\n}', 1)[0]
+        original_open, changed, arguments = os.open, [], sys.argv
+        def interleaved_open(path, *args, **kwargs):
+            if Path(path) == self.source / 'other.txt' and not changed:
+                contract.write_text(json.dumps(changed_contract))
+                (self.source / 'host.txt').write_text('updated source fixture\n')
+                changed.append(True)
+            return original_open(path, *args, **kwargs)
+        try:
+            sys.argv = ['bootstrap-fixture', str(self.source), str(self.target), 'false']
+            with mock.patch.object(os, 'open', side_effect=interleaved_open):
+                exec(compile(program, 'actual-bootstrap-body', 'exec'), {'__name__': 'bootstrap_fixture'})
+        finally:
+            sys.argv = arguments
+        self.assertTrue(changed)
+        self.assertEqual((self.target / '.governance/agent-hosts.json').read_bytes(), validated)
+        self.assertEqual((self.target / 'AGENTS.md').read_bytes(), first_source)
+        self.assertEqual((self.target / 'CLAUDE.md').read_bytes(), first_source)
 
     def test_valid_bootstrap_check_and_hardlink_referent_preservation(self):
         (self.source / 'extra notes.txt').write_text('synthetic multilingual notes\n')
