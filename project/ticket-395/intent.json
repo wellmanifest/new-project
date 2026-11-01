@@ -1,0 +1,105 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-395",
+  "summary": "Fence merged-worktree branch cleanup against ref changes",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-395/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/prune_merged_worktrees.py",
+    "tests/prune_merged_worktrees_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "6a77efb5dc8516be719e868a2ffd2ace89ae5ea0",
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "outcome": "Preserve concurrent branch/ref changes and declined deletions during integrated worktree cleanup. Remove force deletion and unrelated metadata pruning, verify live checkout/branch/target state and retain ignored data. Join material patch0.20.125 through native exact-head protected review, merge and immutable publication.",
+    "nonGoals": [
+      "Grant cleanup authority, remove any host worktree while testing, or infer ownership of unknown work.",
+      "Change source393, consumer branches, dependencies, required checks or protected approval policy."
+    ],
+    "budgets": {
+      "maxAffectedComponents": 2,
+      "maxImplementationFiles": 7,
+      "maxRuntimeDependencies": 0,
+      "maxPublicInterfaceChanges": 0
+    },
+    "runtimeDependencies": [],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep existing CLI/function inputs and report structure. Check the current branch/HEAD and integration target before removal. Delete only the exact observed integrated tip through an atomic Git reference transaction that verifies the target and expected branch OIDs; any changed/refused operation retains the branch and reports the decline. Never fall back to -D. Preserve target checkouts and ignored data. Use Git removal for the exact registration without global worktree prune. Exercise failure and ref-race behavior only inside controlled disposable repositories or mocks. Caller ownership/authority checks remain required.",
+      "components": [
+        {
+          "name": "merged-worktree-cleanup",
+          "paths": [
+            "scripts/prune_merged_worktrees.py",
+            "tests/prune_merged_worktrees_test.py"
+          ]
+        },
+        {
+          "name": "release-projections",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded material patch through protected delivery; preserve unknown and foreign data."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest tests/prune_merged_worktrees_test.py -q"
+        ],
+        "evidence": "Refused deletion never forces a branch; changed branch or target retains its exact current ref; ordinary integrated cleanup still succeeds."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -m pytest tests/prune_merged_worktrees_test.py -q",
+          "git diff --check"
+        ],
+        "evidence": "Target checkout, dirty/ignored data and unrelated missing registrations remain intact. Every Git mutation in tests belongs to a newly created disposable repository."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh",
+          "bash tests/version-parity.test.sh"
+        ],
+        "evidence": "Material patch0.20.125, full native23, root tests and exact-head Linux/Windows/OneDev pass; only the independent protected controller may approve, merge and close."
+      }
+    ]
+  }
+}
