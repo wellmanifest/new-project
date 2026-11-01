@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Real Git migration fixtures, isolated from developer repositories and grants."""
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -15,6 +16,37 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / 'scripts'))
 import snapshot_migration as migration
 import governance_check as governance
+
+
+class InventoryPathTests(unittest.TestCase):
+    def test_real_duplicate_and_unreadable_git_tree_paths_are_rejected(self):
+        modules = [migration]
+        spec = importlib.util.spec_from_file_location('bundled_inventory_paths',
+            ROOT / 'packages/wellman/src/wellman/_bundled/snapshot_migration.py')
+        bundled = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(bundled)
+        modules.append(bundled)
+        with tempfile.TemporaryDirectory(prefix='snapshot-tree-input-') as directory:
+            root = Path(directory)
+            subprocess.run(['git', 'init', '-q', str(root)], check=True)
+            def git(*arguments, data=None):
+                return subprocess.check_output(['git', '-C', str(root), *arguments], input=data)
+            first = git('hash-object', '-w', '--stdin', data=b'first fixture\n').decode().strip()
+            second = git('hash-object', '-w', '--stdin', data=b'second fixture\n').decode().strip()
+            def entry(name, oid):
+                return b'100644 ' + name + b'\0' + bytes.fromhex(oid)
+            valid = git('hash-object', '--literally', '-t', 'tree', '-w', '--stdin',
+                        data=entry(b'entry.txt', first)).decode().strip()
+            for module in modules:
+                self.assertEqual(module.tree(root, valid), {'entry.txt': {'mode': '100644', 'oid': first}})
+                for raw in (entry(b'duplicate.txt', first) + entry(b'duplicate.txt', second),
+                            entry(b'duplicate.txt', first) + entry(b'duplicate.txt', first),
+                            entry(b'bad-\xff.txt', first)):
+                    with self.subTest(module=module.__name__, raw=raw):
+                        with self.assertRaises(module.MigrationError) as caught:
+                            tree = git('hash-object', '--literally', '-t', 'tree', '-w', '--stdin', data=raw).decode().strip()
+                            module.tree(root, tree)
+                        self.assertEqual(caught.exception.code, 'GOV-SNAPSHOT-MIGRATION-005')
 
 
 class WorkspaceEntryTests(unittest.TestCase):
