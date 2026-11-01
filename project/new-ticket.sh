@@ -490,7 +490,12 @@ elif (( ${#SCOPE_ARGUMENTS[@]} )); then
     echo "GOV-WORK-START-001: explicit scope requires the managed ticket storage bridge." >&2
     exit 3
   fi
-  python3 "$TICKET_STORAGE_HELPER" scope --root "$PWD" --workstream "$WORKSTREAM" "${SCOPE_ARGUMENTS[@]}" >/dev/null
+  scope_bootstrap_arguments=()
+  if [[ -n "$BOOTSTRAP_ADOPTION_DIGEST" ]]; then
+    scope_bootstrap_arguments+=(--bootstrap-adoption-digest "$BOOTSTRAP_ADOPTION_DIGEST")
+  fi
+  python3 "$TICKET_STORAGE_HELPER" scope --root "$PWD" --workstream "$WORKSTREAM" \
+    "${scope_bootstrap_arguments[@]}" "${SCOPE_ARGUMENTS[@]}" >/dev/null
 fi
 
 allocation_config() {

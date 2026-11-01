@@ -16,7 +16,7 @@ sys.dont_write_bytecode = True
 
 ROOT = Path(__file__).resolve().parents[1]
 CHANGED = ('project/new-ticket.sh', 'scripts/create_adoption_lock.py', 'scripts/work_start_check.py',
-           'scripts/ticket_storage.py', 'scripts/governance_check.py')
+           'scripts/ticket_storage.py', 'scripts/governance_check.py', 'scripts/ticket_activity.py')
 
 
 class BootstrapTest(unittest.TestCase):
@@ -427,6 +427,76 @@ class FreshBootstrapTest(BootstrapTest):
         self.receipt.write_text(json.dumps(receipt))
         result, _ = self.observation(self.checksum())
         self.assertNotEqual(result.returncode, 0)
+
+
+    def integration_allocator(self, checksum=None, extra=(), workstream='integration'):
+        # Exact native assets, not an open-ended .governance/** permission.
+        receipt = json.loads(self.receipt.read_text())
+        args = ['bash', './project/new-ticket.sh', '--title', 'Initial integration adoption',
+                '--agent', 'fixture', '--writer-actor', 'agent:fixture',
+                '--writer-session', 'fixture-integration-bootstrap', '--workstream', workstream,
+                '--worktree-slug', 'integration-adoption']
+        for name in sorted(set(receipt['files']) | {'pyproject.toml'} | set(extra)):
+            args += ['--path', name]
+        if checksum is not None:
+            args += ['--bootstrap-adoption-digest', checksum]
+        return self.command(self.target, *args, check=False)
+
+    def test_integration_owner_carries_exact_bootstrap_assets_without_adoption_writes(self):
+        receipt_before = self.receipt.read_bytes()
+        result = self.integration_allocator(self.checksum())
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        row = next(json.loads(line) for line in result.stdout.splitlines()
+                   if line.startswith('{') and 'new-project.ticket-allocation-result/v1' in line)
+        self.assertFalse(row['executionAuthorized'])
+        wt = Path(row['worktreePath'])
+        intent = json.loads((wt / 'project' / row['ticket'] / 'intent.json').read_text())
+        self.assertEqual(intent['workstream'], 'integration')
+        self.assertIn('pyproject.toml', intent['allowedPaths'])
+        self.assertIn('.governance/manifest.lock.json', intent['allowedPaths'])
+        self.assertFalse((wt / '.governance/manifest.lock.json').exists())
+        self.assertEqual(self.command(wt, 'git', 'rev-parse', 'HEAD').stdout.strip(), self.head)
+        self.assertEqual(self.receipt.read_bytes(), receipt_before)
+        self.assertEqual((self.target / 'foreign.txt').read_text(), 'original\n')
+        again = self.integration_allocator(self.checksum())
+        self.assertNotEqual(again.returncode, 0, 'first-bootstrap exception is once-only')
+        self.assertTrue(wt.is_dir(), 'failed reuse must preserve the allocated checkout')
+
+    def test_integration_bootstrap_requires_exact_acknowledgement_and_role(self):
+        for digest, stream in [(None, 'integration'), ('0' * 64, 'integration'),
+                               (self.checksum(), 'application')]:
+            with self.subTest(digest=digest, workstream=stream):
+                result = self.integration_allocator(digest, workstream=stream)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse((self.target / '.git/new-project-ticket-high-water').exists())
+                self.assertEqual(len(self.command(self.target, 'git', 'worktree', 'list',
+                                                 '--porcelain').stdout.split('worktree ')), 2)
+
+    def test_integration_bootstrap_refuses_unowned_extras_and_wildcards(self):
+        for extra in [('foreign.txt',), ('.governance/**',), ('.governance/not-installed.py',)]:
+            with self.subTest(extra=extra):
+                before = (self.target / 'foreign.txt').read_bytes()
+                result = self.integration_allocator(self.checksum(), extra=extra)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual((self.target / 'foreign.txt').read_bytes(), before)
+                self.assertFalse((self.target / '.git/new-project-ticket-high-water').exists())
+
+    def test_integration_bootstrap_refuses_modified_installer_bytes(self):
+        path = self.target / '.governance/agent_host_check.py'
+        path.write_text(path.read_text() + '\n# Changed after installer acknowledgement\n')
+        result = self.integration_allocator(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((self.target / '.git/new-project-ticket-high-water').exists())
+
+    def test_bootstrap_scope_digest_cannot_mutate_an_existing_ticket(self):
+        result = self.command(self.target, sys.executable, '.governance/ticket_storage.py',
+                              'scope', '--root', '.', '--workstream', 'integration',
+                              '--path', 'pyproject.toml', '--ticket', 'ticket-007',
+                              '--bootstrap-adoption-digest', self.checksum(), check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('admission-only', result.stderr)
+        self.assertFalse((self.target / '.git/new-project-ticket-high-water').exists())
+
 
 
 class FreshLegacyBootstrapTest(FreshBootstrapTest):

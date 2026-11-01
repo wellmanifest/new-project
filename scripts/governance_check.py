@@ -35,7 +35,9 @@ _previous_bytecode_policy = sys.dont_write_bytecode
 sys.dont_write_bytecode = True
 try:
     try:
-        from ticket_activity import ActivityError, delivery_landed, resolve as resolve_ticket_activity
+        from ticket_activity import (ActivityError, delivery_landed,
+                                     parse_ticket_state_text as _shared_ticket_state,
+                                     resolve as resolve_ticket_activity)
     except ModuleNotFoundError:
         _activity_spec = importlib.util.spec_from_file_location(
             "ticket_activity", Path(__file__).with_name("ticket_activity.py")
@@ -48,6 +50,7 @@ try:
         ActivityError = _activity_module.ActivityError
         delivery_landed = _activity_module.delivery_landed
         resolve_ticket_activity = _activity_module.resolve
+        _shared_ticket_state = _activity_module.parse_ticket_state_text
 finally:
     sys.dont_write_bytecode = _previous_bytecode_policy
 
@@ -1774,12 +1777,7 @@ def parse_ticket_state(readme: Path) -> tuple[str | None, str | None]:
 
 
 def parse_ticket_state_text(text: str) -> tuple[str | None, str | None]:
-    status_match = re.search(r"(?mi)^-[ \t]+\*\*Status\*\*:[ \t]*([A-Z_]+)[ \t]*$", text)
-    state_match = re.search(r"(?mi)^-[ \t]+\*\*Workflow state\*\*:[ \t]*([A-Z_]+)[ \t]*$", text)
-    return (
-        status_match.group(1).upper() if status_match else None,
-        state_match.group(1).upper() if state_match else None,
-    )
+    return _shared_ticket_state(text)
 
 
 def ticket_directories(root: Path, config: dict[str, Any]) -> list[Path]:
