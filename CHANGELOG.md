@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 0.20.126
+
+- Derive PR checks only from the literal pull_request trigger and its own
+  activity types; preserve sibling event isolation and refuse unsupported or
+  ambiguous trigger declarations before writing [ticket-396].
+- Preserve distinct SSH users and non-default repository ports while retaining
+  conventional Git SSH aliases; reject ambiguous or password-bearing origins
+  without exposing credentials [ticket-396].
+
 ## 0.20.125
 
 - Fence integrated-worktree branch cleanup with an atomic transaction binding

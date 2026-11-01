@@ -493,5 +493,53 @@ class NativeStandardAdoptionPlanTest(AdoptionPlanFixture, unittest.TestCase):
         self.assertFalse((self.target / '.git/new-project-ticket-high-water').exists())
 
 
+class RepositoryAuthorityBindingTest(unittest.TestCase):
+    def normalize(self, url):
+        return subprocess.run([sys.executable, str(ROOT / 'scripts/ticket_allocation.py'),
+                               'repository-ref', '--url', url], capture_output=True, text=True)
+
+    def test_default_git_ssh_aliases_remain_stable(self):
+        for url in ('git@EXAMPLE.com:owner/repo.git', 'ssh://git@example.com/owner/repo.git',
+                    'ssh://git@example.com:22/owner/repo.git', 'git+ssh://git@example.com/owner/repo'):
+            with self.subTest(url=url):
+                result = self.normalize(url)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stdout.strip(), 'git+ssh://example.com/owner/repo')
+
+    def test_users_ports_and_ipv6_preserve_distinct_repository_authorities(self):
+        cases = {
+            'ssh://alice@example.com:2222/owner/repo.git': 'git+ssh://alice@example.com:2222/owner/repo',
+            'ssh://bob@example.com:2222/owner/repo.git': 'git+ssh://bob@example.com:2222/owner/repo',
+            'ssh://alice@example.com:2223/owner/repo.git': 'git+ssh://alice@example.com:2223/owner/repo',
+            'ssh://git@[2001:db8::1]:2222/owner/repo.git': 'git+ssh://[2001:db8::1]:2222/owner/repo',
+            'https://example.com:8443/owner/repo.git': 'https://example.com:8443/owner/repo',
+        }
+        observed = []
+        for url, expected in cases.items():
+            with self.subTest(url=url):
+                result = self.normalize(url)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stdout.strip(), expected)
+                observed.append(result.stdout.strip())
+        self.assertEqual(len(set(observed)), len(cases))
+
+    def test_ambiguous_or_credential_bearing_origins_refuse_without_echoing_secrets(self):
+        for url in ('ssh://alice:synthetic-password@example.com/owner/repo',
+                    'https://alice:synthetic-password@example.com/owner/repo',
+                    'ssh://git@example.com:not-a-port/owner/repo',
+                    'ssh://git@example.com:70000/owner/repo',
+                    'ssh://git@example.com/owner/repo?ref=main',
+                    'ssh://git@example.com/owner/repo#branch',
+                    'ssh://git@example.com/owner/repo name', 'ssh://git@example.com/',
+                    'ssh://example.com/owner/repo', 'git+ssh://example.com/owner/repo',
+                    'ssh://@example.com/owner/repo'):
+            with self.subTest(url=url):
+                result = self.normalize(url)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(result.stdout, '')
+                self.assertNotIn('Traceback', result.stderr)
+                self.assertNotIn('synthetic-password', result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,117 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-396",
+  "summary": "Preserve workflow event and repository authority bindings",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-396/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/generate_required_checks.py",
+    "scripts/generate_required_checks.py",
+    "scripts/ticket_allocation.py",
+    "tests/required_checks_binding_test.py",
+    "tests/ticket-allocation-worktree.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "b9d29b9e58985f564dea8fe1de75b26516f9748b",
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "outcome": "Repair the two currently reproduced adoption binding defects: classify checks from the actual pull_request event and its own activity types, and preserve identity-significant SSH authorities in registered ticket allocation. Join material patch0.20.126 and use native protected review, merge and immutable publication.",
+    "nonGoals": [
+      "Change foreign source393, consumer heads, protected review policy, dependencies or hosted required-check contexts.",
+      "Implement a general YAML parser, infer branch protection coverage, grant cleanup or campaign replay authority."
+    ],
+    "budgets": {
+      "maxAffectedComponents": 3,
+      "maxImplementationFiles": 10,
+      "maxRuntimeDependencies": 0,
+      "maxPublicInterfaceChanges": 0
+    },
+    "runtimeDependencies": [],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep existing public function/CLI signatures. Parse a conservative literal workflow trigger subset and inspect only on.pull_request and its direct types field; comments, scalar payloads and sibling events cannot contribute. Refuse unsupported or ambiguous trigger shapes rather than invent checks; retain ordinary block/scalar/sequence triggers and list activity types. Copy the generator byte-for-byte into its managed runtime bundle. Keep conventional git@host and ssh://git@host[:22] aliases stable while preserving non-default SSH users and ports, bracketed IPv6 and non-default URL ports. Reject embedded passwords and ambiguous URL suffixes without echoing credentials. Tests use text, isolated temporary repositories and synthetic URLs only.",
+      "components": [
+        {
+          "name": "workflow-check-binding",
+          "paths": [
+            "scripts/generate_required_checks.py",
+            "packages/wellman/src/wellman/_bundled/generate_required_checks.py",
+            "tests/required_checks_binding_test.py"
+          ]
+        },
+        {
+          "name": "registered-repository-identity",
+          "paths": [
+            "scripts/ticket_allocation.py",
+            "tests/ticket-allocation-worktree.test.py"
+          ]
+        },
+        {
+          "name": "release-projections",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the bounded material patch through protected delivery; preserve existing registered allocation evidence."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/required_checks_binding_test.py",
+          "python3 tests/reusable_checks_test.py"
+        ],
+        "evidence": "Source and bundled generator agree; sibling types and comments do not suppress or invent PR checks; closed-only PR triggers stay excluded; malformed/unsupported trigger inputs refuse without writes."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/ticket-allocation-worktree.test.py"
+        ],
+        "evidence": "Distinct SSH users/nondefault ports stay distinct; conventional aliases stay equal; unsafe/ambiguous origins reject without exposing password text."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh",
+          "bash tests/version-parity.test.sh",
+          "git diff --check"
+        ],
+        "evidence": "Joined version126, full native23, root tests and exact-head Linux/Windows/OneDev pass before independent approval, protected merge and native immutable release."
+      }
+    ]
+  }
+}
