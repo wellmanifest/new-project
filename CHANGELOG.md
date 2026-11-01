@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 0.20.124
+
+- Report deterministic packaging findings for malformed nested Python tool
+  metadata instead of raising AttributeError; preserve valid lifecycle binding
+  and the byte-identical bundled checker [ticket-394].
+- Use the installed adopter checker path in host and packaging error guides,
+  with the source-hub command stated separately [ticket-394].
+
 ## 0.20.123
 
 - Keep governance Git fixtures in a private platform temporary root; preserve
