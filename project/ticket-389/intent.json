@@ -1,0 +1,138 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-389",
+  "summary": "Preserve decision DSL history and adopt the published native worktree inventory repair",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-389/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/decision_record.py",
+    "tests/decision-record.test.sh",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/decision_record.py",
+    "governance/worktrees.lock.json",
+    "subprojects/worktrees/conformance.py",
+    "subprojects/worktrees/worktrees.schema.json",
+    "tests/worktrees-adoption.test.py",
+    "tests/adoption-lock.test.sh",
+    "tests/adoption_legacy_scaffold_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "targetBranch": "main",
+    "acceptedBaseSha": "dc6bf0b825c7e5d2734e402886c126ac3eeaafb3",
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "outcome": "Preserve schema-valid advisory strings and enforce append-only history across mixed bare and fenced DSL records; publish the material patch and its release projections through protected delivery. Distribute the independently approved Worktrees 0.5.4 artifacts so native Windows inventory works after adoption. Keep first-allocation authority checks in both native CI and ordinary test discovery without a duplicate nested whole-suite timeout.",
+    "nonGoals": [
+      "Grant review or merge authority through decision logs.",
+      "Change trusted publication, leases, other parser semantics or unrelated workstreams."
+    ],
+    "budgets": {
+      "maxAffectedComponents": 3,
+      "maxImplementationFiles": 14,
+      "maxRuntimeDependencies": 0,
+      "maxPublicInterfaceChanges": 0
+    },
+    "runtimeDependencies": [],
+    "architecture": {
+      "status": "accepted",
+      "decision": "Encode advisory strings as JSON string literals and decode them strictly. Extract bare and fenced DSL records in document order without counting fence bodies twice. Keep legacy valid records byte-stable and join the patch version projections to this implementation. Keep the installed runtime parser byte-for-byte synchronized through the declared package synchronizer and exercise both variants in the same regressions. Adopt Worktrees 0.5.4 from its immutable independently approved merge commit; generate the source dependency lock and vendor bytes from verified Git objects, then check native POSIX and Windows CLI inventory. Preserve all 24 FreshBootstrapTest authority-boundary cases in the protected adoption-lock job as a direct suite invocation. Remove only the duplicate aggregate wrapper from the legacy migration suite; normal root pytest already collects all 24 cases separately. Keep existing test assertions, production gates and bounded CI job timeouts unchanged.",
+      "components": [
+        {
+          "name": "decision-record",
+          "paths": [
+            "scripts/decision_record.py",
+            "tests/decision-record.test.sh",
+            "packages/wellman/src/wellman/_bundled/decision_record.py"
+          ]
+        },
+        {
+          "name": "release-projections",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        },
+        {
+          "name": "native-adoption",
+          "paths": [
+            "governance/worktrees.lock.json",
+            "subprojects/worktrees/conformance.py",
+            "subprojects/worktrees/worktrees.schema.json",
+            "tests/worktrees-adoption.test.py",
+            "tests/adoption-lock.test.sh",
+            "tests/adoption_legacy_scaffold_test.py"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the material patch through protected delivery; preserve prior history and do not mutate old logs."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/decision-record.test.sh"
+        ],
+        "evidence": "Schema-valid strings containing quotes, backslashes and newlines round-trip without changing plain legacy records."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/decision-record.test.sh"
+        ],
+        "evidence": "Both record orders, record removal and mutation are checked across mixed Markdown formats without double counting."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh",
+          "git diff --check"
+        ],
+        "evidence": "Hub governance and release consistency pass; Linux and Windows gates plus independent exact-head approval govern protected publication."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python tests/worktrees-adoption.test.py"
+        ],
+        "evidence": "Published dependency revision and hashes bind both vendor artifacts; actual inventory CLI preserves native Windows and POSIX path styles."
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "python -m pytest --collect-only -q tests/adoption_legacy_scaffold_test.py tests/scaffold_bootstrap_test.py"
+        ],
+        "evidence": "The protected shell entrypoint runs all 24 unchanged FreshBootstrapTest cases directly; root discovery retains those cases and removes only their duplicate wrapper. No timeout increase, gate retirement or assertion removal."
+      }
+    ]
+  }
+}

@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 0.20.122
+
+- Run fresh first-allocation authority tests directly in the protected adoption job. Preserve all cases while removing their duplicate nested whole-suite invocation from ordinary discovery.
+
+- Adopt independently published Worktrees 0.5.4 with native Windows inventory paths, complete Git observation arguments and preserved stale/merged recovery diagnostics. Bind both artifacts to the approved source revision and test the adopted CLI on POSIX and Windows paths.
+
+- Preserve quotes, backslashes and newlines in advisory model text through canonical decision DSL serialization and reject malformed JSON string escapes. Plain legacy advisory lines retain their representation.
+- Check bare and fenced decision records together in document order, so mixing Markdown formats cannot hide mutation or removal of an earlier append-only record.
+
 ## 0.20.121
 
 - Preserve head branches when an unmerged pull request is closed. The distributed close-only workflow now emits a read-only notice; branch discard requires separate reconciliation and explicit owner authority. GitHub handles branch deletion after merge through the repository setting.

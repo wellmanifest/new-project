@@ -263,13 +263,6 @@ class LegacyScaffoldMigrationTest(unittest.TestCase):
         self.assertIn('requires a committed Git repository', result.stderr)
         self.assertEqual(self.contents(), before)
 
-    def test_fresh_first_allocation_preserves_authority_boundaries(self):
-        # This suite is already part of the protected adoption-lock job. Run
-        # fresh first-allocation and refusal cases through the actual CLI.
-        result = subprocess.run([sys.executable, str(ROOT / 'tests/scaffold_bootstrap_test.py'),
-                                 'FreshBootstrapTest'], capture_output=True, text=True, timeout=120)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-
     def test_fresh_bootstrap_rejects_both_modes_before_writes(self):
         before = self.contents()
         result = self.run_adopter('--bootstrap-native-adoption', '--migrate-wellman-scaffold', '--check')
