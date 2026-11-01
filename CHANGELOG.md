@@ -4,7 +4,7 @@
 
 - Fence integrated-worktree branch cleanup with an atomic transaction binding
   the observed branch and target tips and verify direct reference types under
-  those locks; retain changed or refused refs without
+  those locks; retain checked-out, changed or refused refs without
   forced deletion [ticket-395].
 - Preserve target checkouts, ignored data and unrelated missing registrations;
   remove only the exact integrated checkout through Git.

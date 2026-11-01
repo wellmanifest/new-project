@@ -36,7 +36,7 @@ stay outside Git. Keep IN_PROGRESS / PUBLICATION until the protected terminal
 receipt; use native Goal and C-PUBLISH-007 for the resulting immutable release.
 
 Validation: five controlled regressions failed against the original helper.
-All eight tests now pass, including before/after-removal ref changes, target
+All nine tests now pass, including before/after-removal ref changes, target
 changes, rejected deletion, ignored data and unrelated registration retention.
 The exact-ref Git transaction was also proved in a separate disposable repo.
 A further controlled red/green case proves that a symbolic-ref race cannot
@@ -46,4 +46,8 @@ Native health, root tests, protected CI/review and publication remain pending.
 Refinement: a changed symbolic alias with the same commit OID is now retained
 along with its unrelated referent. The transaction prepares both locks, verifies
 direct reference types under those locks, and commits only the unchanged refs.
-The strengthened case failed on3a988336 and all eight regressions now pass.
+The strengthened case failed on3a988336 and the strengthened regressions pass.
+
+Final guard: another checkout using the same branch prevents deletion, even
+when that checkout is dirty. The case failed on2a5057c2; all nine tests pass
+after checking remaining registrations under the held reference locks.

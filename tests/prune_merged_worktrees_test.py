@@ -242,3 +242,16 @@ def test_symbolic_branch_race_never_deletes_another_ref(tmp_path, monkeypatch):
     assert _git(repo, "rev-parse", unrelated) == head
     assert _git(repo, "rev-parse", "main") == head
     assert _git(repo, "symbolic-ref", "refs/heads/" + branch) == unrelated
+
+
+def test_dirty_other_checkout_retains_shared_branch(tmp_path):
+    repo, wt, branch, _, head = _merged_fixture(tmp_path)
+    other = tmp_path / "other"
+    _git(repo, "worktree", "add", "--force", str(other), branch)
+    sentinel = other / "private-work.txt"
+    sentinel.write_text("retained caller data\n")
+    prune_merged_worktrees(repo)
+    assert not wt.exists()
+    assert sentinel.read_text() == "retained caller data\n"
+    assert _git(repo, "rev-parse", "refs/heads/" + branch) == head
+    assert _git(other, "rev-parse", "HEAD") == head

@@ -117,6 +117,7 @@ def _delete_exact_branch(
         except OSError as error:
             return subprocess.CompletedProcess(command, 1, "", str(error))
         prefix = ""
+        output = ""
         declined = None
         try:
             process.stdin.write(transaction)
@@ -129,19 +130,37 @@ def _delete_exact_branch(
                     if git_cmd(repo, "symbolic-ref", "--quiet", ref).returncode != 1:
                         declined = "reference became symbolic or could not be verified under lock"
                         break
+            if not declined:
+                try:
+                    if any(item.get("branch") == branch for item in get_worktrees(repo)):
+                        declined = "branch remains checked out elsewhere"
+                except RuntimeError as error:
+                    declined = f"could not verify other checkout registrations: {error}"
             if process.poll() is None:
                 process.stdin.write("abort\n" if declined else "commit\n")
                 process.stdin.flush()
             output, _ = process.communicate()
         except (OSError, ValueError) as error:
             declined = f"reference transaction outcome unconfirmed: {error}"
-            if process.poll() is None:
-                process.kill()
-            output, _ = process.communicate()
         finally:
-            if process.poll() is None:
-                process.kill()
-                process.wait()
+            if process.poll() is None or (process.stdout and not process.stdout.closed):
+                if process.poll() is None:
+                    try:
+                        process.stdin.write("abort\n")
+                        process.stdin.flush()
+                    except (OSError, ValueError):
+                        pass
+                try:
+                    remaining, _ = process.communicate(timeout=5)
+                    output += remaining or ""
+                except subprocess.TimeoutExpired:
+                    if process.poll() is None:
+                        process.kill()
+                        process.wait(timeout=5)
+                    for stream in (process.stdin, process.stdout):
+                        if stream and not stream.closed:
+                            stream.close()
+                    declined = "reference transaction interrupted; reconcile refs before retry"
         errors.seek(0)
         detail = errors.read()
         if declined:
