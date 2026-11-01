@@ -17,7 +17,8 @@
     "governance/manifest.default.json",
     "governance/manifest.hub.json",
     "packages/wellman/pyproject.toml",
-    "tests/governance-scripts.test.sh"
+    "tests/governance-scripts.test.sh",
+    "tests/governance_fixture_temp_test.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -30,7 +31,7 @@
     "targetBranch": "main",
     "acceptedBaseSha": "e9002205e84d1d0138d636661747902031242f7a",
     "complexity": "S",
-    "estimatedMinutes": 20,
+    "estimatedMinutes": 25,
     "outcome": "Keep every governance integration assertion while allocating its disposable Git fixtures in a private platform temporary directory, retaining Git discovery ceilings and cleanup ownership. Join patch0.20.123 and publish through protected review, merge and the native immutable release workflow.",
     "nonGoals": [
       "Change production governance semantics, required checks or test deadlines.",
@@ -38,19 +39,20 @@
     ],
     "budgets": {
       "maxAffectedComponents": 2,
-      "maxImplementationFiles": 6,
+      "maxImplementationFiles": 7,
       "maxRuntimeDependencies": 0,
       "maxPublicInterfaceChanges": 0
     },
     "runtimeDependencies": [],
     "architecture": {
       "status": "accepted",
-      "decision": "Use mktemp to create one private fixture root under the platform TMPDIR fallback. Preserve existing source-cache symlink refusal, export the private root as TMPDIR and GIT_CEILING_DIRECTORIES before fixtures, and register cleanup before any child suite. Remove only that newly created root on exit. Preserve all three nested Python suites and every shell scenario. Keep source release projections synchronized.",
+      "decision": "Use mktemp to create one private fixture root under the platform TMPDIR fallback. Preserve existing source-cache symlink refusal, export the private root as TMPDIR and GIT_CEILING_DIRECTORIES before fixtures, and register cleanup before any child suite. Remove only that newly created root on exit. Preserve all three nested Python suites and every shell scenario. Keep source release projections synchronized. Resolve the private root to its physical absolute path before exporting the Git ceiling. Retain tracked absolute/relative TMPDIR containment and caller-state regressions in the existing shell job and ordinary Python discovery.",
       "components": [
         {
           "name": "governance-test-fixtures",
           "paths": [
-            "tests/governance-scripts.test.sh"
+            "tests/governance-scripts.test.sh",
+            "tests/governance_fixture_temp_test.py"
           ]
         },
         {
@@ -85,6 +87,7 @@
       {
         "criterion": "AC-02",
         "commands": [
+          "python3 tests/governance_fixture_temp_test.py",
           "bash project/governance-check.sh",
           "git diff --check"
         ],

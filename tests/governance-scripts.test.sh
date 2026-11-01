@@ -16,10 +16,12 @@ cleanup() {
   rm -rf "$fixture_cache"
 }
 trap cleanup EXIT INT TERM
+fixture_cache="$(cd "$fixture_cache" && pwd -P)"
 export TMPDIR="$fixture_cache"
 # Non-Git cases must not discover the source hub above their private fixtures.
 # Repositories initialized below this parent still find their own .git first.
 export GIT_CEILING_DIRECTORIES="$fixture_cache${GIT_CEILING_DIRECTORIES:+:$GIT_CEILING_DIRECTORIES}"
+python3 "$repo_root/tests/governance_fixture_temp_test.py"
 python3 "$repo_root/tests/ticket-allocation-worktree.test.py"
 python3 "$repo_root/tests/ticket-radar-allocation.test.py"
 python3 "$repo_root/tests/work_start_test.py"
