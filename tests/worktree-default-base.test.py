@@ -112,7 +112,7 @@ class DefaultBaseTest(unittest.TestCase):
         original = overlap.run_git
 
         def fail_second_read(path, *args):
-            if path == self.new and args == ("diff", "--name-only", "--no-renames", self.main_sha, self.main_sha):
+            if path == self.new and args == ("diff", "--name-only", "-z", "--no-renames", self.main_sha, self.main_sha):
                 raise overlap.AuditError("fixture unreadable object")
             return original(path, *args)
 
@@ -167,7 +167,7 @@ class DefaultBaseTest(unittest.TestCase):
         original = overlap.run_git
 
         def fail_pair_read(path, *args):
-            if args == ("diff", "--name-only", shared, shared):
+            if args == ("diff", "--name-only", "-z", shared, shared):
                 raise overlap.AuditError("fixture unreadable pair contribution")
             return original(path, *args)
 

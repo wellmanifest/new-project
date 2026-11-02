@@ -1,0 +1,31 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-400",
+  "summary": "resolve 16 upstream SubLLM template findings and release v0.20.131",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-400/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "error/**",
+    "governance/**",
+    "packages/**",
+    "project/readme.sh",
+    "schemas/**",
+    "scripts/**",
+    "tests/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

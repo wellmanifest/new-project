@@ -154,11 +154,11 @@ def inspect_recovery(root, request, workstream):
     require(not (primary / "project.sqlite").exists(), "SQLite identity requires its registered adapter")
     for entry in registrations:
         require(not (safe_path(entry["worktree"]) / "project" / ticket).exists(), "Ticket already exists in a checkout")
-    refs = start.git(root, "for-each-ref", "--format=%(refname)", "refs/heads", "refs/remotes").splitlines()
+    refs = start.git(root, "for-each-ref", "--format=%(refname)", "refs/heads", "refs/remotes", "refs/tags").splitlines()
     origin_alias = "refs/remotes/origin/" + branch.removeprefix("refs/heads/")
     for ref in refs:
         require(not start.git(root, "ls-tree", "--name-only", ref, own.rstrip("/")).strip(), "Ticket already exists in Git history")
-        name = ref.removeprefix("refs/heads/") if ref.startswith("refs/heads/") else ref.split("/", 3)[-1]
+        name = ref.removeprefix("refs/heads/").removeprefix("refs/tags/") if ref.startswith(("refs/heads/", "refs/tags/")) else ref.split("/", 3)[-1]
         other = start.TICKET.fullmatch(name)
         same_published_branch = (ref == origin_alias
                                  and start.git(root, "rev-parse", ref).strip() == request["headSha"])

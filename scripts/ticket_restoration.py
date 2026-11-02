@@ -181,7 +181,8 @@ def observe(primary, request, record, files, intent):
 
 
 def write_new(common, path, content):
-    descriptor, temporary = tempfile.mkstemp(prefix="new-project-ticket-restore-", dir=common)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix="new-project-ticket-restore-", dir=path.parent)
     try:
         with os.fdopen(descriptor, "w") as stream:
             stream.write(content)

@@ -984,12 +984,12 @@ def placement_error(value: Any) -> str | None:
     allowed = required | {"runtimeOwner", "adopt"}
     if not isinstance(value, dict) or not required <= set(value) <= allowed:
         return "placement must contain home and shape"
-    if value["home"] not in PLACEMENT_HOMES:
+    if not isinstance(value.get("home"), str) or value["home"] not in PLACEMENT_HOMES:
         return "placement home is invalid"
-    if value["shape"] not in PLACEMENT_SHAPES:
+    if not isinstance(value.get("shape"), str) or value["shape"] not in PLACEMENT_SHAPES:
         return "placement shape is invalid"
     runtime_owner = value.get("runtimeOwner")
-    if runtime_owner is not None and runtime_owner not in PLACEMENT_HOMES:
+    if runtime_owner is not None and (not isinstance(runtime_owner, str) or runtime_owner not in PLACEMENT_HOMES):
         return "placement runtimeOwner is invalid"
     if value["home"] == "wellmanifest" and value["shape"] == "runtime_service":
         return "runtime_service must not HOME wellmanifest; ADOPT packs from a product organization"
@@ -1420,14 +1420,12 @@ def check_history_order(
     _, commit = first_implementation
     ticket_intent = f"{ticket_root.rstrip('/')}/{ticket_name}/{intent_path}"
     try:
-        subprocess.run(
-            ["git", "cat-file", "-e", f"{commit}:{ticket_intent}"], cwd=root,
-            check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-        )
-    except subprocess.CalledProcessError:
+        raw_blob = git_output(root, ["cat-file", "-p", f"{commit}:{ticket_intent}"])
+        json.loads(raw_blob.decode("utf-8"))
+    except (subprocess.CalledProcessError, ValueError, UnicodeDecodeError):
         report.add(
             "GOV-INTENT-003",
-            f"{ticket_intent} was absent from the first material implementation commit.",
+            f"{ticket_intent} was absent or invalid in the first material implementation commit.",
             "Include the validated intent atomically with the first material commit; do not create a separate plan-only commit.",
             [ticket_intent], {"firstImplementationCommit": commit},
         )
@@ -1944,8 +1942,9 @@ def load_repository_policy_ticket(
         "integrationTicket": None,
         "classification": {"kind": "SERVICE", "priority": "P2", "origin": "requested"},
     }
+    ticket_root = policy.get("tickets", {}).get("root", "project")
     return TicketRecord(
-        root / str(raw_path),
+        root / str(ticket_root) / adapter["ticket"],
         adapter["status"],
         adapter["workflow"],
         intent,
@@ -2852,12 +2851,19 @@ def validate_domain_errors(root: Path, errors: dict[str, Any], domain: str, comm
         {"code", "documentation", "retryability", "status", "rejectionEvent"},
         "errors",
     )
+    command_for_code = {
+        code: [cmd_name for cmd_name, cmd in commands.items() if code in cmd["rejects"]]
+        for code in error_index
+    }
     for error in error_index.values():
         contract_document(
             root, error["documentation"], f"error/{error['code']}.md", "error",
         )
         if error["rejectionEvent"] not in event_index:
             raise ValueError("error rejection event is unknown")
+        emitter = event_index[error["rejectionEvent"]]["emittedBy"]
+        if emitter not in command_for_code.get(error["code"], []):
+            raise ValueError("error rejection event emitter does not match rejecting command")
         if error["retryability"] not in {
             "never", "after-correction", "after-new-evidence",
         }:
@@ -2935,6 +2941,22 @@ def check_required_files(root: Path, manifest: dict[str, Any], report: Report) -
             )
 
 
+def _section_aware_toml_version(content: str, section_names: tuple[str, ...]) -> str | None:
+    current_section = None
+    for line in content.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            current_section = line.strip("[]").strip()
+            continue
+        if current_section in section_names:
+            m = re.match(r'^version\s*=\s*["\']([^"\']+)["\']', line)
+            if m:
+                return m.group(1).strip()
+    return None
+
+
 def _extract_pyproject_version(content: str) -> str | None:
     if tomllib is not None:
         try:
@@ -2950,8 +2972,7 @@ def _extract_pyproject_version(content: str) -> str | None:
                 return flit["version"].strip()
         except Exception:
             pass
-    m = re.search(r'^\s*version\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)
-    return m.group(1).strip() if m else None
+    return _section_aware_toml_version(content, ("project", "tool.poetry", "tool.flit.metadata"))
 
 
 def _extract_setup_py_version(content: str) -> str | None:
@@ -2971,8 +2992,7 @@ def _extract_cargo_version(content: str) -> str | None:
                 return pkg["version"].strip()
         except Exception:
             pass
-    m = re.search(r'^\s*version\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)
-    return m.group(1).strip() if m else None
+    return _section_aware_toml_version(content, ("package",))
 
 
 def check_version_parity(root: Path, manifest: dict[str, Any], report: Report) -> None:

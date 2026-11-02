@@ -352,12 +352,12 @@ def main():
         elif args.command == "scope":
             print(json.dumps(persist_scope(args)))
         elif args.command == "active":
-            from ticket_activity import parse_ticket_state_text, resolve
+            import ticket_activity
             text = read_file(args.root, args.ticket, "README.md").decode("utf-8")
-            status, _ = parse_ticket_state_text(text)
+            status, _ = ticket_activity.parse_ticket_state_text(text)
             if status is None:
                 raise ValueError("ticket status required")
-            result = resolve(args.root, args.root / "project" / args.ticket, set(args.active_status), status_override=status)
+            result = ticket_activity.resolve(args.root, args.root / "project" / args.ticket, set(args.active_status), status_override=status)
             raise SystemExit(0 if result.active else 1)
         elif args.command == "highest":
             database = primary_database(args.root)

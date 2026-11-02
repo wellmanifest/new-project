@@ -225,12 +225,11 @@ def validate_receipt(value: dict[str, Any]) -> list[dict[str, Any]]:
     for key in ("previousRevision", "leaseRevision", "previousFencingToken", "fencingToken"):
         if not isinstance(value.get(key), int) or value[key] < 1:
             errors.append(finding("GOV-CHANGE-LEASE-001", f"{key} must be a positive integer."))
+    if errors:
+        return errors
     if value.get("outcome") == "accepted" and (value["leaseRevision"] != value["previousRevision"] + 1 or value["fencingToken"] != value["previousFencingToken"] + 1):
         errors.append(finding("GOV-CHANGE-LEASE-002", "Accepted receipt must increment revision and fencing token exactly once."))
-    if value["outcome"] == "rejected" and (
-            value["leaseRevision"] != value["previousRevision"]
-            or value["fencingToken"] != value["previousFencingToken"]
-            or value["phaseAfter"] != value["phaseBefore"]):
+    if value.get("outcome") == "rejected" and (value["leaseRevision"] != value["previousRevision"] or value["fencingToken"] != value["previousFencingToken"] or value["phaseAfter"] != value["phaseBefore"]):
         errors.append(finding("GOV-CHANGE-LEASE-002", "Rejected receipt must not advance state."))
     if not valid_time(value.get("occurredAt")):
         errors.append(finding("GOV-CHANGE-LEASE-001", "Receipt timestamp is invalid."))

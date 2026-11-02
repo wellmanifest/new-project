@@ -533,11 +533,11 @@ def locked_takeover(root: Path, ticket: str, actor: str, session: str, now: date
     # the replacement; the fencing token rejects any writer that bypassed the lock.
     if lease_path.read_bytes() != original or file_identity(lease_path) != identity:
         raise PermissionError("Lease changed during takeover (compare-and-swap lost); re-observe.")
+    write_atomic(lease_path, (json.dumps(claimed, indent=2, sort_keys=True) + "\n").encode())
     trace = primary / RECEIPT_DIR / f"{ticket}.jsonl"
     trace.parent.mkdir(parents=True, exist_ok=True)
     with trace.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(record, sort_keys=True) + "\n")
-    write_atomic(lease_path, (json.dumps(claimed, indent=2, sort_keys=True) + "\n").encode())
     record["board"] = str(write_board(observe(root, now, runtime)))
     return record
 

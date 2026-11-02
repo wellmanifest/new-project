@@ -204,6 +204,8 @@ def adoption_record_findings(root, pack_id, record, models, findings) -> None:
     if not isinstance(revision, str) or SHA40.fullmatch(revision) is None:
         findings.append(finding("STD-ADOPTION-REVISION", f"{pack_id} needs an immutable 40-character revision"))
     evidence = record.get("evidence")
+    if not isinstance(evidence, list):
+        evidence = []
     by_level = {}
     for item in evidence or []:
         if (isinstance(item, dict) and isinstance(item.get("uri"), str)
@@ -302,11 +304,12 @@ def main(argv: list[str] | None = None) -> int:
         adoption: dict[str, Any] = {"mode": "enforce"}
     else:
         adoption = load_json(adoption_path)
+    adoption_data = adoption if isinstance(adoption, dict) else {}
     findings = structural or adoption_findings(root, catalog, adoption)
     result = {
         "schema": "wellmanifest.standard-adoption-report/v1",
-        "mode": adoption.get("mode", "enforce"),
-        "profile": adoption.get("profile"),
+        "mode": adoption_data.get("mode", "enforce"),
+        "profile": adoption_data.get("profile"),
         "strict": args.strict,
         "ok": not findings,
         "findings": findings,
@@ -320,7 +323,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{item['code']}: {item['message']}{suffix}")
     if structural:
         return 2
-    return 1 if findings and (args.strict or adoption.get("mode") == "enforce") else 0
+    return 1 if findings and (args.strict or adoption_data.get("mode") == "enforce") else 0
 
 
 if __name__ == "__main__":
