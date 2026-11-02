@@ -3149,4 +3149,6 @@ PY
 if python3 "$change_lease_checker" trace "$change_lease_dir/trace.jsonl" > "$change_lease_dir/bad-trace.out"; then exit 1; fi
 grep -q GOV-CHANGE-LEASE-002 "$change_lease_dir/bad-trace.out"
 
+python3 "$repo_root/tests/legacy_ticket_state_test.py"
+
 echo 'governance validator: PASS'

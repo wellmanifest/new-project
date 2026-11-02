@@ -163,7 +163,7 @@ def ownership_hint(manifest, workstream, unowned):
             "Drop them from --path, or allocate the work in the owning workstream.")
 
 
-def scoped_paths(root, workstream, paths):
+def scoped_paths(root, workstream, paths, bootstrap_adoption_digest=None):
     """Share the gate's ownership predicate; narrowing is never write authority."""
     if not paths:
         return []
@@ -181,7 +181,27 @@ def scoped_paths(root, workstream, paths):
     if not material(scope):
         raise ScopeOwnershipError(
             "scope has no implementation path; ticket tracking files alone are not material work")
+    bootstrap = set()
+    if bootstrap_adoption_digest is not None:
+        if (not isinstance(bootstrap_adoption_digest, str)
+                or re.fullmatch(r'[0-9a-f]{64}', bootstrap_adoption_digest) is None
+                or workstream not in {'governance', manifest['coordination']['integration']['workstream']}):
+            raise ScopeOwnershipError('first bootstrap requires an exact digest and its declared owner')
+        from work_start_check import ObservationError, bootstrap_owned_paths
+        try:
+            bootstrap = bootstrap_owned_paths(Path(root), manifest, bootstrap_adoption_digest)
+        except (ObservationError, OSError, ValueError) as error:
+            raise ScopeOwnershipError('bootstrap adoption ownership evidence unavailable') from error
     unowned = [path for path in scope if not any(pattern_covered_by(path, owner) for owner in owned)]
+    if (unowned and bootstrap_adoption_digest is not None
+            and workstream == manifest['coordination']['integration']['workstream']):
+        # Integration retains dependency-manifest ownership. Its first native
+        # adoption may also carry the exact installer-owned governance assets;
+        # this is the gate's verified-adoption exception, not arbitrary scope.
+        governance = patterns(workstreams['governance']['ownedPaths'])
+        verified = {path for path in bootstrap
+                    if any(pattern_covered_by(path, owner) for owner in governance)}
+        unowned = [path for path in unowned if path not in verified]
     if (unowned and workstream == 'governance'
             and (Path(root) / '.subactor/receipts/bootstrap-adoption.json').exists()):
         from work_start_check import ObservationError, bootstrap_seed_paths
@@ -196,7 +216,10 @@ def scoped_paths(root, workstream, paths):
 
 
 def persist_scope(args):
-    scope = scoped_paths(args.root, args.workstream, args.path)
+    if getattr(args, 'bootstrap_adoption_digest', None) is not None and args.ticket is not None:
+        raise ScopeOwnershipError('bootstrap digest is admission-only; it cannot rewrite a ticket')
+    scope = scoped_paths(args.root, args.workstream, args.path,
+                         getattr(args, 'bootstrap_adoption_digest', None))
     if args.ticket is not None:
         if not scope or re.fullmatch(r"ticket-[0-9]{3,}", args.ticket) is None:
             raise ValueError("reserved identity and explicit scope required")
@@ -317,21 +340,24 @@ def main():
     parser.add_argument("--runtime-sha256")
     parser.add_argument("--active-status", action="append", default=[])
     parser.add_argument("--path", action="append", default=[])
+    parser.add_argument("--bootstrap-adoption-digest")
     for name in ("ticket", "title", "workstream", "kind", "priority", "origin", "allocation-key"):
         parser.add_argument("--" + name)
     args = parser.parse_args()
     try:
+        if args.bootstrap_adoption_digest is not None and args.command != 'scope':
+            raise ValueError('bootstrap digest is scope-admission-only')
         if args.command == "radar":
             assess_file_ticket(args)
         elif args.command == "scope":
             print(json.dumps(persist_scope(args)))
         elif args.command == "active":
-            from ticket_activity import resolve
+            from ticket_activity import parse_ticket_state_text, resolve
             text = read_file(args.root, args.ticket, "README.md").decode("utf-8")
-            match = re.search(r"(?mi)^-[ \t]+\*\*Status\*\*:[ \t]*([A-Z_]+)[ \t]*$", text)
-            if match is None:
+            status, _ = parse_ticket_state_text(text)
+            if status is None:
                 raise ValueError("ticket status required")
-            result = resolve(args.root, args.root / "project" / args.ticket, set(args.active_status), status_override=match.group(1))
+            result = resolve(args.root, args.root / "project" / args.ticket, set(args.active_status), status_override=status)
             raise SystemExit(0 if result.active else 1)
         elif args.command == "highest":
             database = primary_database(args.root)

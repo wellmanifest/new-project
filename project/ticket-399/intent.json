@@ -1,0 +1,130 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-399",
+  "summary": "Support integration-owned initial adoption and legacy ticket states",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-399/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+    "project/new-ticket.sh",
+    "scripts/governance_check.py",
+    "scripts/ticket_activity.py",
+    "scripts/ticket_storage.py",
+    "tests/legacy_ticket_state_test.py",
+    "tests/scaffold_bootstrap_test.py",
+    "tests/scope_ownership_message_test.py",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "82fd58dbe175f90146ed49c07fa86fac91de00d5",
+    "targetBranch": "main",
+    "outcome": "Publish immutable new-project0.20.130 that supports the declared integration owner during verified first native adoption and consistently reads unambiguous historical ticket status headers.",
+    "nonGoals": [
+      "Transfer dependency-file ownership to governance",
+      "Relax dirty-digest, first-allocation, WIP, owner, lease or protected-publication requirements",
+      "Rewrite historical target ticket carriers or waive held reviews"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep packaging manifests with the declared integration workstream. A first bootstrap may admit only exact installer-owned governance assets proved by the existing native bootstrap contract and current dirty digest; ordinary integration allocations and arbitrary unowned paths remain rejected. Share one conservative status parser for canonical metadata and anchored legacy Status: VALUE / WORKFLOW. Conflicting observations fail closed. Source, bundled projections and immutable release version remain atomic. The compatibility regression is invoked by the existing mandatory governance-validator shell suite; this adds no test dependency, runtime behavior or review authority.",
+      "components": [
+        {
+          "name": "initial-native-allocation",
+          "paths": [
+            "project/new-ticket.sh",
+            "scripts/ticket_storage.py",
+            "tests/scaffold_bootstrap_test.py",
+            "tests/scope_ownership_message_test.py"
+          ]
+        },
+        {
+          "name": "ticket-state-reader",
+          "paths": [
+            "scripts/ticket_activity.py",
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "tests/legacy_ticket_state_test.py",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "immutable-standard-release",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Add a closed optional bootstrap-digest argument to the native scope bridge; no write or publication authority."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Protected revert of the material standard change; retain prior immutable release and all target work."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/scaffold_bootstrap_test.py",
+          "python3 tests/scope_ownership_message_test.py"
+        ],
+        "evidence": "Real first-allocation positive and negative fixtures bind exact native proof, owning integration workstream, digest and preserved unrelated data."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/legacy_ticket_state_test.py"
+        ],
+        "evidence": "Canonical and anchored legacy states agree across gate/activity readers; conflicting, malformed and narrative inputs remain refused."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh",
+          "native Source Hub health23",
+          "complete source tests",
+          "protected independent exact-head review and merge",
+          "native Goal immutable release"
+        ],
+        "evidence": "All required native checks, trusted current-head merge and immutable130 publication; no local PASS or model finding is merge approval."
+      }
+    ]
+  }
+}

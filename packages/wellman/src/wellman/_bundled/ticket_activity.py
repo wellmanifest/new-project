@@ -256,13 +256,62 @@ def repository_ref(root: Path) -> str:
     return f"local:{common}"
 
 
+def _ticket_state_fields(text: str) -> tuple[set[str], set[str]]:
+    """Read explicit metadata, including the historical inline header.
+
+    A status projection never grants authority. Ignore fenced examples and
+    refuse contradictory declarations rather than select whichever comes first.
+    """
+    statuses: set[str] = set()
+    states: set[str] = set()
+    fence: str | None = None
+    fence_length = 0
+    for raw_line in text.split("\n"):
+        line = raw_line.removesuffix("\r")
+        delimiter = re.match(r"^[ \t]{0,3}(`{3,}|~{3,})(.*)$", line)
+        if fence is not None:
+            if (delimiter and delimiter.group(1)[0] == fence
+                    and len(delimiter.group(1)) >= fence_length
+                    and not delimiter.group(2).strip()):
+                fence = None
+            continue
+        if delimiter:
+            fence = delimiter.group(1)[0]
+            fence_length = len(delimiter.group(1))
+            continue
+        status = re.fullmatch(r"-[ \t]+\*\*Status\*\*:[ \t]*([A-Z_]+)[ \t]*", line, re.I)
+        workflow = re.fullmatch(r"-[ \t]+\*\*Workflow state\*\*:[ \t]*([A-Z_]+)[ \t]*", line, re.I)
+        legacy = re.fullmatch(
+            r"Status:[ \t]*([A-Z_]+)(?:[ \t]*/[ \t]*([A-Z_]+))?[ \t]*\.?[ \t]*",
+            line, re.I,
+        )
+        if status:
+            statuses.add(status.group(1).upper())
+        if workflow:
+            states.add(workflow.group(1).upper())
+        if legacy:
+            statuses.add(legacy.group(1).upper())
+            if legacy.group(2):
+                states.add(legacy.group(2).upper())
+    return statuses, states
+
+
+def parse_ticket_state_text(text: str) -> tuple[str | None, str | None]:
+    statuses, states = _ticket_state_fields(text)
+    if len(statuses) > 1 or len(states) > 1:
+        return None, None
+    return next(iter(statuses), None), next(iter(states), None)
+
+
 def projection_status(ticket_dir: Path) -> str | None:
     try:
         text = _read_text(ticket_dir / "README.md")
     except OSError:
         return None
-    match = re.search(r"(?mi)^-[ \t]+\*\*Status\*\*:[ \t]*([A-Z_]+)[ \t]*$", text)
-    return match.group(1).upper() if match else None
+    statuses, states = _ticket_state_fields(text)
+    if len(statuses) > 1 or len(states) > 1:
+        raise ActivityError("ticket status or workflow declarations conflict")
+    return next(iter(statuses), None)
 
 
 def _validate_terminal_receipt(receipt, seen):
