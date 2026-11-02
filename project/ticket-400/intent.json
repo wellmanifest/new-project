@@ -13,13 +13,27 @@
     "TODO.md",
     "project/TICKETS.md",
     "VERSION",
-    "error/**",
-    "governance/**",
-    "packages/**",
+    "error/GOV-PHYS.md",
+    "error/GOV-VERSION.md",
+    "governance/change-evaluation.schema.json",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/protected-local-publication.schema.json",
+    "governance/ticket-allocation-receipt.schema.json",
+    "governance/ticket-allocation-request.schema.json",
+    "governance/ticket-allocation.schema.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/agent_host_check.py",
+    "packages/wellman/src/wellman/_bundled/decision_record.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
     "project/readme.sh",
-    "schemas/**",
-    "scripts/**",
-    "tests/**"
+    "scripts/agent_host_check.py",
+    "scripts/decision_record.py",
+    "scripts/governance_check.py",
+    "scripts/remediation_intent.py",
+    "scripts/ticket_storage.py",
+    "scripts/worktree_overlap_check.py",
+    "tests/worktree-default-base.test.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -27,5 +41,108 @@
   "stacks": [],
   "dependsOn": [],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4a7e308fa37b84a7649544732a4ebeb27657e49d",
+    "targetBranch": "main",
+    "outcome": "Resolve 16 upstream SubLLM template findings across scripts, schemas, error runbooks, and bundled packages, and publish immutable new-project 0.20.131.",
+    "nonGoals": [
+      "Alter core governance policies or introduce breaking schema changes",
+      "Waive protected review or validator boundaries"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 30,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Address the 16 advisory findings from semantic SubLLM review in the canonical upstream repository: harden dictionary type checks in agent_host_check, safely escape characters in decision_record DSL, use NUL delimiter -z in worktree_overlap_check and merge-tree, update adopter paths in error documentation, fix schema regex non-whitespace patterns to \\S+, and release immutable v0.20.131 atomically across VERSION, packages/wellman/pyproject.toml, and manifest files.",
+      "components": [
+        {
+          "name": "governance-scripts-and-bundled",
+          "paths": [
+            "packages/wellman/src/wellman/_bundled/agent_host_check.py",
+            "packages/wellman/src/wellman/_bundled/decision_record.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "scripts/agent_host_check.py",
+            "scripts/decision_record.py",
+            "scripts/governance_check.py",
+            "scripts/remediation_intent.py",
+            "scripts/ticket_storage.py",
+            "scripts/worktree_overlap_check.py",
+            "tests/worktree-default-base.test.py"
+          ]
+        },
+        {
+          "name": "governance-schemas-and-docs",
+          "paths": [
+            "error/GOV-PHYS.md",
+            "error/GOV-VERSION.md",
+            "governance/change-evaluation.schema.json",
+            "governance/protected-local-publication.schema.json",
+            "governance/ticket-allocation-receipt.schema.json",
+            "governance/ticket-allocation-request.schema.json",
+            "governance/ticket-allocation.schema.json",
+            "project/readme.sh"
+          ]
+        },
+        {
+          "name": "immutable-standard-release",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Protected revert of commit; prior v0.20.130 standard release remains available."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/worktree-default-base.test.py",
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Verification of fixed agent host check, decision record escaping, worktree overlap NUL framing, and schema patterns."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh",
+          "wellman check"
+        ],
+        "evidence": "Zero governance errors and standards conformance across all components."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "pytest tests/remediation_plan_safety_test.py",
+          "pytest tests/idle_takeover_test.py"
+        ],
+        "evidence": "Remediation plan safety, atomic lease takeover, and ticket activity compatibility."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "GOV-PASS with zero errors and zero warnings across complete repository state."
+      }
+    ]
+  }
 }

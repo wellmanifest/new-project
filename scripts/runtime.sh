@@ -238,7 +238,7 @@ function validateMinimumShape(evaluation) {
       diagnostics.push(diagnostic("EVD-SCHEMA-001", "subject.event is invalid", "subject.event", "use a v1 event"));
     }
     if (
-      evaluation.subject.event === "pull_request" &&
+      ["pull_request", "merge_group"].includes(evaluation.subject.event) &&
       (!Number.isInteger(evaluation.subject.pullRequest) || evaluation.subject.pullRequest < 1)
     ) {
       diagnostics.push(diagnostic("EVD-SCHEMA-001", "subject.pullRequest is required", "subject.pullRequest", "provide the PR number"));
@@ -261,7 +261,7 @@ function validateMinimumShape(evaluation) {
   }
   if (Array.isArray(evaluation.actors)) {
     for (const actor of evaluation.actors) {
-      if (!isObject(actor) || typeof actor.id !== "string" || typeof actor.role !== "string" || !Array.isArray(actor.contributionTypes)) {
+      if (!isObject(actor) || typeof actor.id !== "string" || !Array.isArray(actor.contributionTypes)) {
         diagnostics.push(diagnostic("EVD-SCHEMA-001", "actor entry is invalid", "actors", "provide id, role and contributionTypes"));
       }
     }

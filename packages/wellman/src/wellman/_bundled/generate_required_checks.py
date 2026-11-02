@@ -342,7 +342,7 @@ def pull_request_gating(text: str) -> bool:
             elif root_value.startswith(('[', '{')):
                 _trigger_line(root_value, complete=True)
     triggers = [(index, match[1]) for index, line in enumerate(lines)
-                if not line.startswith((' ', '\t')) and (match := re.fullmatch(r'''(?:on|'on'|"on")\s*:\s*(.*)''', line))]
+                if (match := re.fullmatch(r'''(?:on|'on'|"on")\s*:\s*(.*)''', line))]
     if not triggers:
         return False
     if len(triggers) != 1:
@@ -506,7 +506,7 @@ def inspect_declaration(root: Path, write: bool) -> dict[str, Any]:
     current = current_declaration(root)
     inherited_hub_declaration = (current or {}).get("repository") == HUB_REPOSITORY
     ignored = () if inherited_hub_declaration else tuple((current or {}).get(IGNORED_FIELD, ()) or ())
-    derived = declaration_for(root, ignored=ignored)
+    derived = declaration_for(root)
     if derived is not None and ignored:
         derived[IGNORED_FIELD] = list(ignored)
     entry = {
