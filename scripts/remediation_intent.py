@@ -1160,7 +1160,6 @@ def _validate_unresolved_paths(document, status, owner_route, allowed, findings,
             unresolved_paths.append(f"finding:{id_str}.affectedPaths")
         if any(isinstance(item, dict) and item.get("ref") == "unresolved:agent" for item in finding.get("evidence", [])):
             unresolved_paths.append(f"finding:{id_str}.evidence")
-            unresolved_paths.append(f"finding:{finding['id']}.evidence")
     for action in actions:
         if "unresolved:agent" in action.get("paths", []):
             unresolved_paths.append(f"action:{action['id']}.paths")
