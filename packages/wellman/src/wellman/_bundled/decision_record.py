@@ -198,8 +198,9 @@ def to_dsl(record: dict[str, Any]) -> str:
         f"VERDICT {record['verdict']} AUTHORITY {record['verdictAuthority']}"
     )
     rejected = record["rejected"]
+    because = " ".join(str(rejected["because"]).splitlines()).strip()
     lines.append(
-        f"REJECTED {rejected['alternative']} BECAUSE {rejected['because']}"
+        f"REJECTED {rejected['alternative']} BECAUSE {because}"
     )
     adv = record.get("advisory")
     if adv:
@@ -208,7 +209,8 @@ def to_dsl(record: dict[str, Any]) -> str:
             f'MODEL {format_value(adv.get("model", ""))}'
         )
     for assertion in record.get("assertions") or []:
-        lines.append(f"ASSERT {assertion}")
+        assert_text = " ".join(str(assertion).splitlines()).strip()
+        lines.append(f"ASSERT {assert_text}")
     return "\n".join(lines) + "\n"
 
 

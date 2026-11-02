@@ -393,7 +393,7 @@
     },
     "branchRef": {
       "type": "string",
-      "pattern": "^refs/heads/[^\\s]+$",
+      "pattern": "^refs/heads/\\S+$",
       "maxLength": 255
     }
   }

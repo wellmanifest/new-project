@@ -342,6 +342,8 @@ def python_declaration(marker: Path) -> tuple[dict[str, Any] | None, dict[str, A
         document = tomllib.loads(marker.read_text(encoding="utf-8"))
     except (OSError, tomllib.TOMLDecodeError):
         return None, {}
+    if not isinstance(document, dict):
+        return None, {}
     tool = document.get("tool")
     declaration = tool.get("wellmanifest") if isinstance(tool, dict) else None
     return (declaration if isinstance(declaration, dict) else None), document
@@ -359,6 +361,8 @@ def node_declaration(marker: Path) -> tuple[dict[str, Any] | None, dict[str, Any
 
 
 def lifecycle_value(kind: str, document: dict[str, Any]) -> str:
+    if not isinstance(document, dict):
+        return ""
     if kind == "npm-script":
         scripts = document.get("scripts")
         value = scripts.get("prepare") if isinstance(scripts, dict) else None
