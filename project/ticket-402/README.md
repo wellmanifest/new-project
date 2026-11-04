@@ -14,4 +14,4 @@ SESSION_EXECUTION_AUTHORIZATION: user requests systemic repairs, tests, merges a
 - [x] AC-02: Invalid inputs fail before effects, default refusal remains, and local adopter/native governance checks pass.
 - [ ] AC-03: Full source checks and independent exact-head approval/merge, followed by a canonical release, precede consumer use.
 
-Validation:26 adopter cases pass, including actual first native allocation and preserved foreign bytes. The immutable0.20.132 baseline rejects the new plan option. Native governance passes. Full Goal source-hub validation remains required; its initial300-second adoption-suite timeout is recorded externally and is being repeated with a bounded longer limit, preserving all checks.
+Validation:26 adopter regressions and native governance pass. An isolated full run passed22/23 checks; the final existing YAML guard exposed an undeclared PyYAML test prerequisite. CI now pins PyYAML6.0.3 with its existing build/schema tools. Full final-head qualification and independent protected publication remain required.

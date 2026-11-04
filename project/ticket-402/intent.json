@@ -18,7 +18,8 @@
     "VERSION",
     "governance/manifest.hub.json",
     "governance/manifest.default.json",
-    "packages/wellman/pyproject.toml"
+    "packages/wellman/pyproject.toml",
+    ".github/workflows/ci.yml"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -30,7 +31,7 @@
   "delivery": {
     "acceptedBaseSha": "ddbbe1cf2cee62ffcdf8ba8deb00f5c2ed7f505d",
     "targetBranch": "main",
-    "outcome": "Deliver the existing prerequisite-seed implementation and standard0.20.133 through immutable-head validation, independent protected review/merge and canonical release; implementation complete, no further source code changes in this remaining publication slice.",
+    "outcome": "Deliver the existing prerequisite-seed repair and standard0.20.133 with full independent publication; declare the existing PyYAML worktree-guard test prerequisite in CI so an isolated runtime can execute every required check. Product implementation remains unchanged.",
     "nonGoals": [
       "No consumer edits, legacy owner takeover, arbitrary file creation, overwrite, policy weakening or default seeding.",
       "No writer/publication authority in a seed plan or installer receipt; existing native allocation and independent approval remain mandatory."
@@ -38,9 +39,9 @@
     "complexity": "S",
     "estimatedMinutes": 15,
     "budgets": {
-      "maxImplementationFiles": 7,
-      "maxAffectedComponents": 2,
-      "maxPublicInterfaceChanges": 1,
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
@@ -62,6 +63,12 @@
             "governance/manifest.hub.json",
             "governance/manifest.default.json",
             "packages/wellman/pyproject.toml"
+          ]
+        },
+        {
+          "name": "Declared native CI prerequisites",
+          "paths": [
+            ".github/workflows/ci.yml"
           ]
         }
       ],
