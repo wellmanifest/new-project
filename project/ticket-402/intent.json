@@ -1,0 +1,110 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-402",
+  "summary": "Digest-bound prerequisites for first native adoption",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-402/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/create_adoption_lock.py",
+    "tests/adoption_legacy_scaffold_test.py",
+    "docs/STANDARD_UPGRADE.md",
+    "VERSION",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ddbbe1cf2cee62ffcdf8ba8deb00f5c2ed7f505d",
+    "targetBranch": "main",
+    "outcome": "Deliver the existing prerequisite-seed implementation and standard0.20.133 through immutable-head validation, independent protected review/merge and canonical release; implementation complete, no further source code changes in this remaining publication slice.",
+    "nonGoals": [
+      "No consumer edits, legacy owner takeover, arbitrary file creation, overwrite, policy weakening or default seeding.",
+      "No writer/publication authority in a seed plan or installer receipt; existing native allocation and independent approval remain mandatory."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "An optional bounded external closed JSON plan binds current target HEAD and literal content/digests for only absent required VERSION, CHANGELOG.md, TODO.md and project/TICKETS.md. Validate symlink/commit absence and reread before effects; create exclusively and include exact bytes in the existing bootstrap receipt. Existing first-allocation, ownership and independent protected publication guards remain unchanged.",
+      "components": [
+        {
+          "name": "Immutable bootstrap adopter",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "tests/adoption_legacy_scaffold_test.py",
+            "docs/STANDARD_UPGRADE.md"
+          ]
+        },
+        {
+          "name": "Standard patch release",
+          "paths": [
+            "VERSION",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Opt-in --bootstrap-prerequisites-plan for explicit first bootstrap only"
+      ],
+      "dataChanges": [
+        "Closed external new-project.bootstrap-prerequisites-plan/v1 plan; existing receipt format unchanged"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Protected revert; retain old immutable standard releases. Never use unreviewed candidate in actual consumer repositories."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "targeted bootstrap CLI and first-allocation regressions"
+        ],
+        "evidence": "Successful read-only review, bounded seed installation and exact native first allocation; existing target bytes/foreign paths preserved."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "negative stale/digest/path/symlink/existing-committed-file cases",
+          "native governance"
+        ],
+        "evidence": "Invalid or changed plans make no writes; default missing-prerequisite refusal unchanged."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "full protected source checks",
+          "independent Validator approval/merge",
+          "annotated standard release verification"
+        ],
+        "evidence": "No consumer use before independent source merge and actual canonical published0.20.133 release."
+      }
+    ]
+  }
+}

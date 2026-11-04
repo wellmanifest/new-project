@@ -222,6 +222,35 @@ full product validation and independent protected publication gates remain.
 
 ## Upgrade boundaries
 
+### Explicit missing prerequisites on first bootstrap (0.20.133)
+
+An existing project can lack the target-owned files required before its first
+native allocator is installed. An authorized bootstrap owner may supply
+`--bootstrap-prerequisites-plan /absolute/external/plan.json` with either
+`--bootstrap-native-adoption` or `--migrate-wellman-scaffold`. The option is
+refused for ordinary upgrades; omitting it preserves the missing-file refusal.
+
+The closed JSON object has `schema: new-project.bootstrap-prerequisites-plan/v1`,
+the current committed `baseSha`, and a nonempty `files` array. Each entry has
+exactly `path`, literal UTF-8 `content`, and its lowercase `sha256`. At most four
+entries of 64 KiB each may name missing required target-owned `VERSION`,
+`CHANGELOG.md`, `TODO.md`, or `project/TICKETS.md`. VERSION must contain the
+explicit project SemVer. These are project values, never the standard version.
+
+Review with `--check` before applying the same plan with `--upgrade`. Existing
+files, deleted committed files, duplicate keys/paths, digest or HEAD mismatches,
+symlinked inputs/parents and arbitrary source paths are refused before writes.
+Inputs are revalidated immediately before exclusive seed creation; a file
+appearing concurrently is never overwritten. As with other installer writes,
+an interrupted application can leave partial installation requiring owner
+reconciliation. Preserve it; do not automatically delete unknown files.
+
+The existing bootstrap receipt binds the installed seed bytes. It grants no
+writer or publication authority. Confirm its actual dirty digest at first
+allocation, acquire a real fenced writer, apply the reviewed package in the
+canonical worktree, then validate and publish independently. Foreign work and
+every existing allocation/ownership check remain in force.
+
 ### First adoption without a Wellman scaffold (0.20.84)
 
 For a committed repository with no governance manifest, lock, base or package

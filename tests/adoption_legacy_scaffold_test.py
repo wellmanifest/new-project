@@ -309,5 +309,144 @@ class LegacyScaffoldMigrationTest(unittest.TestCase):
         self.assertEqual(list(outside.iterdir()), [sentinel])
 
 
+class BootstrapPrerequisitePlanTest(unittest.TestCase):
+    contents = LegacyScaffoldMigrationTest.contents
+    run_adopter = LegacyScaffoldMigrationTest.run_adopter
+    commit_target = LegacyScaffoldMigrationTest.commit_target
+
+    def setUp(self):
+        LegacyScaffoldMigrationTest.setUp(self)
+        self.seeds = {"VERSION": "0.1.0\n", "CHANGELOG.md": "# Changelog\n",
+                      "TODO.md": "# TODO\n", "project/TICKETS.md": "# Tickets\n"}
+        for name in self.seeds:
+            (self.target / name).unlink()
+        (self.target / "foreign.txt").write_text("original\n")
+        self.commit_target()
+        self.plan_path = self.root / "prerequisites.json"
+        self.save_plan()
+
+    def save_plan(self, change=None):
+        plan = {"schema": "new-project.bootstrap-prerequisites-plan/v1",
+                "baseSha": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=self.target, text=True).strip(),
+                "files": [{"path": name, "content": content,
+                           "sha256": hashlib.sha256(content.encode()).hexdigest()}
+                          for name, content in self.seeds.items()]}
+        if change:
+            change(plan)
+        self.plan_path.write_text(json.dumps(plan))
+
+    def apply_plan(self, mode="--upgrade", kind="--migrate-wellman-scaffold"):
+        return self.run_adopter(mode, kind, "--bootstrap-prerequisites-plan", str(self.plan_path))
+
+    def test_review_is_read_only_and_install_receipt_binds_seed_bytes(self):
+        before = self.contents()
+        result = self.apply_plan("--check")
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn("CREATE VERSION", result.stdout)
+        self.assertEqual(before, self.contents())
+        result = self.apply_plan()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        receipt = json.loads((self.target / ".subactor/receipts/bootstrap-adoption.json").read_text())
+        for name, content in self.seeds.items():
+            self.assertEqual((self.target / name).read_text(), content)
+            self.assertEqual(receipt["files"][name], hashlib.sha256(content.encode()).hexdigest())
+        self.assertIs(receipt["grantsWriterAuthority"], False)
+        self.assertIs(receipt["grantsPublicationAuthority"], False)
+
+    def test_default_behavior_still_refuses_missing_prerequisites(self):
+        before = self.contents()
+        result = self.run_adopter("--upgrade", "--migrate-wellman-scaffold")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("MISSING target prerequisite VERSION", result.stdout)
+        self.assertEqual(before, self.contents())
+
+    def test_invalid_plans_make_no_target_writes(self):
+        mutations = [lambda p: p.update(baseSha="a" * 40),
+                     lambda p: p.update(extra="untrusted"),
+                     lambda p: p["files"][0].update(path="../VERSION"),
+                     lambda p: p["files"][0].update(path="src/worker.py"),
+                     lambda p: p["files"][0].update(sha256="0" * 64),
+                     lambda p: p["files"].append(p["files"][0]),
+                     lambda p: p["files"][0].update(content="x" * 65537)]
+        for index, mutation in enumerate(mutations):
+            with self.subTest(index=index):
+                self.save_plan(mutation)
+                before = self.contents()
+                result = self.apply_plan()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(before, self.contents())
+
+    def test_existing_and_deleted_committed_files_are_preserved(self):
+        version = self.target / "VERSION"
+        version.write_text("owner bytes\n")
+        before = self.contents()
+        self.assertNotEqual(self.apply_plan().returncode, 0)
+        self.assertEqual(before, self.contents())
+        self.commit_target()
+        version.unlink()
+        self.save_plan()
+        before = self.contents()
+        self.assertNotEqual(self.apply_plan().returncode, 0)
+        self.assertEqual(before, self.contents())
+
+    @unittest.skipIf(sys.platform == "win32", "symlink creation needs host privileges")
+    def test_symlinked_seed_parent_is_preserved(self):
+        (self.target / "project").rmdir()
+        outside = self.root / "outside"
+        outside.mkdir()
+        (outside / "sentinel").write_text("keep\n")
+        (self.target / "project").symlink_to(outside, target_is_directory=True)
+        before = self.contents()
+        self.assertNotEqual(self.apply_plan().returncode, 0)
+        self.assertEqual(before, self.contents())
+        self.assertFalse((outside / "TICKETS.md").exists())
+
+    def test_plan_is_not_available_to_ordinary_upgrade(self):
+        before = self.contents()
+        result = self.run_adopter("--upgrade", "--bootstrap-prerequisites-plan", str(self.plan_path))
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(before, self.contents())
+
+    def test_duplicate_json_keys_are_rejected(self):
+        text = self.plan_path.read_text()
+        self.plan_path.write_text(text.replace('"schema":', '"schema":"other", "schema":', 1))
+        before = self.contents()
+        self.assertNotEqual(self.apply_plan().returncode, 0)
+        self.assertEqual(before, self.contents())
+
+    def test_fresh_bootstrap_accepts_the_same_explicit_plan(self):
+        self.manifest.unlink()
+        self.commit_target()
+        self.save_plan()
+        result = self.apply_plan(kind="--bootstrap-native-adoption")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_real_first_allocator_keeps_seed_and_foreign_bytes_in_primary(self):
+        spec = importlib.util.spec_from_file_location("prerequisite_adopter", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        arguments = ["--target-root", str(self.target), "--source-revision", self.revision,
+                     "--migrate-wellman-scaffold", "--upgrade",
+                     "--bootstrap-prerequisites-plan", str(self.plan_path)]
+        # Publication alone is mocked in this fixture; the real allocator is not.
+        with patch.object(module, "verify_publication_evidence"):
+            self.assertEqual(module.main(arguments), 0)
+        foreign = self.target / "foreign.txt"
+        foreign.write_text("another owner\n")
+        checksum = subprocess.check_output([sys.executable, "-B", "-c",
+            "import sys;from pathlib import Path;sys.path.insert(0,'.governance');"
+            "import work_start_check;print(work_start_check.dirty_observation(Path('.'))[1])"],
+            cwd=self.target, text=True).strip()
+        result = subprocess.run(["bash", "project/new-ticket.sh", "--title", "Seeded adoption",
+            "--agent", "fixture", "--workstream", "governance", "--path", ".governance/**",
+            "--worktree-slug", "seeded", "--bootstrap-adoption-digest", checksum],
+            cwd=self.target, capture_output=True, text=True, timeout=60)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(foreign.read_text(), "another owner\n")
+        checkout = self.target / ".worktrees/ticket-001--seeded"
+        self.assertTrue((checkout / "project/ticket-001/intent.json").is_file())
+        self.assertFalse((checkout / "VERSION").exists())
+
+
 if __name__ == "__main__":
     unittest.main()

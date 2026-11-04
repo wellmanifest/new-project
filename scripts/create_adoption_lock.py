@@ -785,6 +785,60 @@ def _git_cat_file_exists(target_root: Path, ref_path: str) -> subprocess.Complet
     )
 
 
+def bootstrap_prerequisite_payloads(
+    target_root: Path, manifest: dict, payloads: dict[str, bytes], external: Path,
+) -> dict[str, bytes]:
+    """Validate opt-in missing target seeds; a plan grants no authority."""
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise SystemExit("duplicate bootstrap prerequisite plan key")
+            result[key] = value
+        return result
+
+    if (any(p.is_symlink() for p in (external, *external.parents))
+            or not external.is_file() or external.stat().st_size > MAX_RELEASE_METADATA_BYTES
+            or target_root.resolve() in external.resolve().parents):
+        raise SystemExit("bootstrap prerequisite plan requires a bounded external regular file")
+    try:
+        plan = json.loads(external.read_bytes(), object_pairs_hook=unique)
+    except (ValueError, UnicodeDecodeError, RecursionError) as error:
+        raise SystemExit("invalid bootstrap prerequisite plan JSON") from error
+    if (not isinstance(plan, dict) or set(plan) != {"schema", "baseSha", "files"}
+            or plan.get("schema") != "new-project.bootstrap-prerequisites-plan/v1"
+            or not isinstance(plan.get("baseSha"), str)
+            or re.fullmatch(r"[0-9a-f]{40}", plan["baseSha"]) is None
+            or not isinstance(plan.get("files"), list) or not 1 <= len(plan["files"]) <= 4):
+        raise SystemExit("unsupported bootstrap prerequisite plan shape")
+    head = subprocess.check_output(["git", "-C", str(target_root), "rev-parse", "HEAD"], text=True).strip()
+    if head != plan["baseSha"]:
+        raise SystemExit("bootstrap prerequisite plan HEAD changed")
+    allowed = {"VERSION", "CHANGELOG.md", "TODO.md", "project/TICKETS.md"}
+    missing = set(missing_target_prerequisites(target_root, manifest, payloads))
+    seeds = {}
+    for entry in plan["files"]:
+        if not isinstance(entry, dict) or set(entry) != {"path", "content", "sha256"}:
+            raise SystemExit("invalid bootstrap prerequisite entry")
+        name, content, checksum = entry["path"], entry["content"], entry["sha256"]
+        try:
+            encoded = content.encode() if isinstance(content, str) else b""
+        except UnicodeError as error:
+            raise SystemExit("bootstrap prerequisite content must be UTF-8") from error
+        if (not isinstance(name, str) or name not in allowed or name not in missing or name in seeds
+                or not encoded or len(encoded) > 65536
+                or not isinstance(checksum, str) or re.fullmatch(r"[0-9a-f]{64}", checksum) is None
+                or hashlib.sha256(encoded).hexdigest() != checksum):
+            raise SystemExit("bootstrap prerequisite is not an exact missing required seed")
+        path = plan_path(target_root, name)
+        if path.exists() or path.is_symlink() or _git_cat_file_exists(target_root, f"HEAD:{name}").returncode == 0:
+            raise SystemExit("bootstrap prerequisite must be absent in checkout and committed HEAD")
+        if name == "VERSION" and VERSION_PATTERN.fullmatch(content.strip()) is None:
+            raise SystemExit("bootstrap prerequisite VERSION requires explicit SemVer")
+        seeds[name] = encoded
+    return seeds
+
+
 def bootstrap_ownership_paths(
     target_root: Path,
     manifest: dict[str, object],
@@ -1142,6 +1196,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="External exact-state future reusable CI plan; never edits target workflows")
     parser.add_argument("--bootstrap-ownership-plan", type=Path,
                         help="External exact-base/digest plan declaring only existing unowned prerequisites")
+    parser.add_argument("--bootstrap-prerequisites-plan", type=Path,
+                        help="External exact-base/digest plan for missing required target seed files")
     parser.add_argument(
         "--check",
         action="store_true",
@@ -1155,7 +1211,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.allocation_plan and (not args.check or args.allow_unpublished_for_testing
             or args.bootstrap_native_adoption or args.migrate_wellman_scaffold
-            or args.bootstrap_reusable_plan or args.bootstrap_ownership_plan):
+            or args.bootstrap_reusable_plan or args.bootstrap_ownership_plan or args.bootstrap_prerequisites_plan):
         parser.error("--allocation-plan requires --check and a published native upgrade")
 
     if args.check and args.upgrade:
@@ -1168,6 +1224,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("a reusable CI bootstrap plan requires explicit fresh native bootstrap or scaffold migration")
     if args.bootstrap_ownership_plan and not (args.bootstrap_native_adoption or args.migrate_wellman_scaffold):
         parser.error("a prerequisite ownership plan requires explicit fresh native bootstrap or scaffold migration")
+    if args.bootstrap_prerequisites_plan and not (args.bootstrap_native_adoption or args.migrate_wellman_scaffold):
+        parser.error("a prerequisite seed plan requires explicit first bootstrap or scaffold migration")
 
     if re.fullmatch(r"[0-9a-f]{40}", args.source_revision) is None:
         parser.error("--source-revision must be a full lowercase 40-character commit SHA")
@@ -1310,6 +1368,11 @@ def main(argv: list[str] | None = None) -> int:
         for path in paths:
             print(f"PLANNED prerequisite ownership {stream}: {path}; no writer or publication authority")
     payloads[".gitignore"] = worktree_ignore_payload(target_root)
+    prerequisite_seeds = {}
+    if args.bootstrap_prerequisites_plan:
+        prerequisite_seeds = bootstrap_prerequisite_payloads(
+            target_root, manifest, payloads, args.bootstrap_prerequisites_plan)
+        payloads.update(prerequisite_seeds)
 
     expected_lock = lock_content(
         target_root,
@@ -1381,7 +1444,23 @@ def main(argv: list[str] | None = None) -> int:
         if bootstrap_ownership_paths(target_root, ownership_base,
                 {str(item["target"]) for item in files}, args.bootstrap_ownership_plan) != ownership:
             raise SystemExit("bootstrap ownership plan changed before writes")
+    if prerequisite_seeds:
+        without_seeds = {name: data for name, data in payloads.items() if name not in prerequisite_seeds}
+        if bootstrap_prerequisite_payloads(target_root, manifest, without_seeds,
+                args.bootstrap_prerequisites_plan) != prerequisite_seeds:
+            raise SystemExit("bootstrap prerequisite plan changed before writes")
+        # Exclusive creation precedes managed writes. Never replace a file that
+        # appeared after preflight, including a symlink at the destination.
+        for name, content in sorted(prerequisite_seeds.items()):
+            path = plan_path(target_root, name)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("xb") as output:
+                output.write(content)
+                output.flush()
+                os.fsync(output.fileno())
     for target, content in sorted(payloads.items()):
+        if target in prerequisite_seeds:
+            continue
         path = target_root / target
         if not path.exists() or path.read_bytes() != content:
             atomic_write(path, content, 0o755 if target in executable_targets else None)
