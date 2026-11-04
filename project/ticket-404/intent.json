@@ -1,0 +1,105 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-404",
+  "summary": "Preserve bootstrap seeds and diagnose partial creation failures",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-404/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/create_adoption_lock.py",
+    "tests/adoption_legacy_scaffold_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "cd670ce8cc3772c0834ef206f6b6af469761a849",
+    "targetBranch": "main",
+    "outcome": "Repair grounded PR568 late-conflict finding: pinned all-leaf preflight before seed effects; report preserved partial seed paths on subsequent concurrent or I/O failure; protect foreign bytes and stop before managed install/receipt. Publish independently reviewed standard0.20.134; retain unreleased133 incident.",
+    "nonGoals": [
+      "No unsafe rollback/unlink, no all-or-nothing guarantee under uncooperative concurrent mutation, no unknown-file deletion",
+      "No consumer edits, independent-review waiver, policy or runtime change; NP-024 remains disjoint"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Pin existing project/root descriptors; check every seed leaf before creating a missing project or any leaf; retain exclusive no-follow writes. If a later race or I/O error stops creation, name created leaves and project directory for explicit owner reconciliation. Never unlink by pathname after a stat: a concurrent replacement could be deleted. The installer already permits preserved partial installs; express this for late failure and add deterministic integration regressions. Independent controller must assess the grounded repair, not a caller waiver.",
+      "components": [
+        {
+          "name": "Bootstrap prerequisites",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "tests/adoption_legacy_scaffold_test.py",
+            "docs/STANDARD_UPGRADE.md"
+          ]
+        },
+        {
+          "name": "Standard patch version",
+          "paths": [
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Protected revert; preserve failed target files for owner reconciliation; no automatic deletion."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "targeted adopter regressions"
+        ],
+        "evidence": "Early existing destination causes no effects; late conflict leaves foreign bytes untouched and identifies partial paths; no managed files/receipt."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "native governance",
+          "full genuine Goal source health and product tests"
+        ],
+        "evidence": "All deterministic required checks pass on exact candidate."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "independent protected review and merge",
+          "canonical release verification"
+        ],
+        "evidence": "Actual App approval/merge and annotated0.20.134 release; no133release."
+      }
+    ]
+  }
+}

@@ -222,7 +222,7 @@ full product validation and independent protected publication gates remain.
 
 ## Upgrade boundaries
 
-### Explicit missing prerequisites on first bootstrap (0.20.133)
+### Explicit missing prerequisites on first bootstrap (0.20.134)
 
 An existing project can lack the target-owned files required before its first
 native allocator is installed. An authorized bootstrap owner may supply
@@ -239,11 +239,19 @@ explicit project SemVer. These are project values, never the standard version.
 
 Review with `--check` before applying the same plan with `--upgrade`. Existing
 files, deleted committed files, duplicate keys/paths, digest or HEAD mismatches,
-symlinked inputs/parents and arbitrary source paths are refused before writes.
-Inputs are revalidated immediately before exclusive seed creation; a file
-appearing concurrently is never overwritten. As with other installer writes,
-an interrupted application can leave partial installation requiring owner
-reconciliation. Preserve it; do not automatically delete unknown files.
+symlinked inputs/parents and arbitrary source paths found during validation
+are refused before seed writes. All destination leaves are checked again
+through pinned directories before any seed or missing parent is created.
+
+Exclusive creation never overwrites a file appearing afterward. Creation of
+multiple files is not an atomic transaction: a later concurrent conflict, I/O
+failure or interruption can leave earlier seeds, partially written leaves or
+a newly created `project/` directory. A caught creation error identifies the
+created paths for owner reconciliation; it stops before managed installation
+and before a bootstrap receipt is written. Preserve and inspect the target
+before retrying. Automatic pathname rollback could delete another owner's
+concurrent replacement, so it must not remove these files. A missing bootstrap
+receipt does not prove that the target is unchanged.
 
 This opt-in mode requires POSIX no-follow directory-descriptor operations;
 hosts without these primitives refuse it before effects. Actual plan reads

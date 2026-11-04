@@ -826,23 +826,47 @@ def _bootstrap_plan_bytes(external: Path) -> bytes:
 
 
 def create_bootstrap_prerequisites(target_root: Path, seeds: dict[str, bytes]) -> None:
-    """Create only absent seed leaves through the original pinned directories."""
+    """Check all absent leaves first; preserve and identify partial late failures."""
     if not set(seeds).issubset({"VERSION", "CHANGELOG.md", "TODO.md", "project/TICKETS.md"}):
         raise SystemExit("bootstrap prerequisite creation requires literal seed paths")
+    created = []
     try:
         with _bootstrap_directory(target_root) as root, contextlib.ExitStack() as cleanup:
             project = None
             if "project/TICKETS.md" in seeds:
                 try:
+                    project = os.open("project", _bootstrap_directory_flags(), dir_fd=root)
+                except FileNotFoundError:
+                    pass
+                else:
+                    cleanup.callback(os.close, project)
+            # Recheck every leaf through pinned directories before creating any
+            # file or missing parent. O_EXCL still guards each subsequent race.
+            for name in sorted(seeds):
+                parent = project if name == "project/TICKETS.md" else root
+                if parent is None:
+                    continue  # The project directory does not exist yet.
+                leaf = name.rsplit("/", 1)[-1]
+                try:
+                    os.stat(leaf, dir_fd=parent, follow_symlinks=False)
+                except FileNotFoundError:
+                    pass
+                else:
+                    raise FileExistsError("bootstrap seed appeared before creation")
+            if "project/TICKETS.md" in seeds and project is None:
+                try:
                     os.mkdir("project", dir_fd=root)
                 except FileExistsError:
                     pass
+                else:
+                    created.append("project/")
                 project = os.open("project", _bootstrap_directory_flags(), dir_fd=root)
                 cleanup.callback(os.close, project)
             for name, content in sorted(seeds.items()):
                 parent = project if name == "project/TICKETS.md" else root
                 descriptor = os.open(name.rsplit("/", 1)[-1],
                     os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644, dir_fd=parent)
+                created.append(name)
                 with os.fdopen(descriptor, "wb") as output:
                     output.write(content)
                     output.flush()
@@ -858,7 +882,13 @@ def create_bootstrap_prerequisites(target_root: Path, seeds: dict[str, bytes]) -
                 if not stat.S_ISDIR(named.st_mode) or (named.st_dev, named.st_ino) != (opened.st_dev, opened.st_ino):
                     raise SystemExit("bootstrap prerequisite parent changed before managed writes")
     except OSError as error:
-        raise SystemExit("bootstrap prerequisite creation refuses unsafe or concurrent paths") from error
+        message = "bootstrap prerequisite creation refuses unsafe or concurrent paths"
+        if created:
+            # Pathname rollback could unlink another owner's replacement after
+            # an inode check. Preserve files, including partially written ones.
+            message += ("; partial bootstrap prerequisites preserved (created paths: "
+                        + ", ".join(created) + "); reconcile target files before retrying")
+        raise SystemExit(message) from error
 
 
 def bootstrap_prerequisite_payloads(
