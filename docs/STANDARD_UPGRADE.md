@@ -2,6 +2,27 @@
 
 ## Overview
 
+### Terminal owner handoff after published checkout removal (0.20.135)
+
+The local terminal-release controller accepts the explicit current owner's
+handoff when the already-merged branch and canonical checkout have both been
+removed. In a nonfrozen allocation, `headSha` records the accepted base rather
+than the later publication head. The controller verifies that base against
+the receipt's merged source using real Git ancestry without replacement refs,
+and requires the checkout path, branch and worktree registration to be absent.
+
+Owner/session, exact lease digest and fencing, verified terminal receipt,
+atomic journal and filesystem checks remain required. A remaining checkout,
+registration or ref, unrelated base, Git failure or reviewed-head mismatch
+is refused. This releases only that owner's terminal reservation; it grants
+no fresh writer, takeover, cleanup, restoration or merge approval. Preserve
+the original lease and receipts until the published controller accepts the
+exact request.
+
+This patch also contains the previously approved baseline-equivalent history
+repair. Adopt the immutable published release through Goal; an independently
+merged but untagged source revision is not a production release.
+
 ### Named primary aliases
 
 Native allocation and immutable adoption plans may preserve a named primary

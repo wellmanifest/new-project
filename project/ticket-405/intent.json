@@ -1,0 +1,107 @@
+{
+  "allowedPaths": [
+    "project/ticket-405/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/terminal_lease_release.py",
+    "tests/terminal_lease_release_test.py"
+  ],
+  "classification": {
+    "kind": "BUG",
+    "origin": "regression",
+    "priority": "P2"
+  },
+  "conflictsWith": [],
+  "delivery": {
+    "acceptedBaseSha": "3741020eb1089099588d1f6fb12878bb2cd4d46b",
+    "architecture": {
+      "components": [
+        {
+          "name": "terminal-owner-controller",
+          "paths": [
+            "scripts/terminal_lease_release.py",
+            "tests/terminal_lease_release_test.py"
+          ]
+        },
+        {
+          "name": "producer-release-projections",
+          "paths": [
+            "VERSION",
+            "docs/STANDARD_UPGRADE.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "decision": "Keep exact owner/session/CAS and verified merged receipt. When the allocation head is an accepted ancestor rather than publication head, require both ref and canonical checkout/registration absent before terminal-only cancellation/release. Fail closed on Git/filesystem errors. Preserve immutable journal and no new owner grant. Bump producer metadata to0.20.135 in the same material change.",
+      "interfaceChanges": [],
+      "responsibilityChanges": false,
+      "rollback": "Independently reviewed revert; preserve all lease journals, original allocation projections and immutable tags.",
+      "status": "accepted",
+      "ui": {
+        "evidence": [],
+        "impact": "none",
+        "states": []
+      }
+    },
+    "budgets": {
+      "maxAffectedComponents": 2,
+      "maxImplementationFiles": 7,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "nonGoals": [
+      "No deletion, takeover, source restoration or new writer grant",
+      "No normalization of frozen/invalid leases",
+      "No consumer managed-file edits or release tag retargeting"
+    ],
+    "outcome": "Release only the explicit current owner after its verified merged checkout and branch are already absent; publish the material recovery with patch0.20.135, including the previously approved history repair.",
+    "runtimeDependencies": [],
+    "targetBranch": "main",
+    "validation": [
+      {
+        "commands": [
+          "Actual-Git missing merged branch/checkout regression; prove failure before repair and release after repair"
+        ],
+        "criterion": "AC-01",
+        "evidence": "tests/terminal_lease_release_test.py"
+      },
+      {
+        "commands": [
+          "Negative owner/CAS/receipt/ancestry/registration/symlink/Git-error regressions; existing interrupted-write controller tests"
+        ],
+        "criterion": "AC-02",
+        "evidence": "tests/terminal_lease_release_test.py"
+      },
+      {
+        "commands": [
+          "All23 required source-hub checks",
+          "Full Goal pytest and exact-head governance",
+          "Protected CI and independent Validator merge",
+          "Immutable v0.20.135 release"
+        ],
+        "criterion": "AC-03",
+        "evidence": "project/ticket-405/README.md"
+      }
+    ]
+  },
+  "dependsOn": [],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "integrationTicket": null,
+  "schema": "new-project.intent/v3",
+  "stacks": [],
+  "summary": "Release verified current owner after published checkout removal",
+  "ticket": "ticket-405",
+  "workstream": "governance"
+}
