@@ -27,7 +27,7 @@ class LegacyScaffoldMigrationTest(unittest.TestCase):
         self.root = Path(temporary.name)
         self.target = self.root / "target"
         self.target.mkdir()
-        subprocess.run(["git", "init", "-q"], cwd=self.target, check=True)
+        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=self.target, check=True)
         subprocess.run(["git", "remote", "add", "origin", "https://github.com/fixture/target.git"],
                        cwd=self.target, check=True)
         for name in ("README.md", "VERSION", "CHANGELOG.md", "TODO.md", "project/TICKETS.md"):
