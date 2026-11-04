@@ -19,7 +19,8 @@
     "governance/manifest.hub.json",
     "governance/manifest.default.json",
     "packages/wellman/pyproject.toml",
-    ".github/workflows/ci.yml"
+    ".github/workflows/ci.yml",
+    "tests/legacy_ticket_state_test.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -31,22 +32,22 @@
   "delivery": {
     "acceptedBaseSha": "ddbbe1cf2cee62ffcdf8ba8deb00f5c2ed7f505d",
     "targetBranch": "main",
-    "outcome": "Complete the existing first-bootstrap prerequisite repair including directory-symlink race refusal and bounded regular-file plan reads, then deliver standard0.20.133 through full qualified checks, independent review/merge and canonical release; retain explicit CI prerequisites.",
+    "outcome": "Complete the existing first-bootstrap prerequisite repair including directory-symlink race refusal and bounded regular-file plan reads, then deliver standard0.20.133 through full qualified checks, independent review/merge and canonical release; retain explicit CI prerequisites. Qualify the additional Goal-wide pytest collection and isolate the existing bridge fixture import without changing production status resolution.",
     "nonGoals": [
       "No consumer edits, legacy owner takeover, arbitrary file creation, overwrite, policy weakening or default seeding.",
       "No writer/publication authority in a seed plan or installer receipt; existing native allocation and independent approval remain mandatory."
     ],
     "complexity": "S",
-    "estimatedMinutes": 15,
+    "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 8,
+      "maxImplementationFiles": 9,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 2,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "An optional bounded external closed JSON plan binds current target HEAD and literal content/digests for only absent required VERSION, CHANGELOG.md, TODO.md and project/TICKETS.md. Validate symlink/commit absence and reread before effects; create exclusively and include exact bytes in the existing bootstrap receipt. Existing first-allocation, ownership and independent protected publication guards remain unchanged. Pin external plan parent directories and target seed directories with no-follow directory descriptors, read at most the metadata limit plus one byte from a regular nonblocking file descriptor, create leaf seeds exclusively, and reject replaced parent/root bindings before managed writes. The opt-in seed mode refuses hosts without the required race-resistant descriptor operations before effects.",
+      "decision": "An optional bounded external closed JSON plan binds current target HEAD and literal content/digests for only absent required VERSION, CHANGELOG.md, TODO.md and project/TICKETS.md. Validate symlink/commit absence and reread before effects; create exclusively and include exact bytes in the existing bootstrap receipt. Existing first-allocation, ownership and independent protected publication guards remain unchanged. Pin external plan parent directories and target seed directories with no-follow directory descriptors, read at most the metadata limit plus one byte from a regular nonblocking file descriptor, create leaf seeds exclusively, and reject replaced parent/root bindings before managed writes. The opt-in seed mode refuses hosts without the required race-resistant descriptor operations before effects. Keep the existing legacy SQLite bridge test bound to its explicitly patched ticket_activity module during shared pytest collection, which also loads isolated activity fixtures. Preserve its successful-status and conflicting-status assertions.",
       "components": [
         {
           "name": "Immutable bootstrap adopter",
@@ -68,7 +69,8 @@
         {
           "name": "Declared native CI prerequisites",
           "paths": [
-            ".github/workflows/ci.yml"
+            ".github/workflows/ci.yml",
+            "tests/legacy_ticket_state_test.py"
           ]
         }
       ],
