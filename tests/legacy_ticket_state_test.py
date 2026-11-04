@@ -72,6 +72,7 @@ class TicketStateCompatibilityTest(unittest.TestCase):
         arguments = ['ticket_storage.py', 'active', '--root', '/fixture',
                      '--ticket', 'ticket-004', '--active-status', 'IN_PROGRESS']
         with patch.object(sys, 'argv', arguments), \
+                patch.dict(sys.modules, {'ticket_activity': ticket_activity}), \
                 patch.object(ticket_storage, 'read_file', return_value=b'Status: IN_PROGRESS / EDIT.\n'), \
                 patch.object(ticket_activity, 'resolve', return_value=SimpleNamespace(active=True)) as resolved:
             with self.assertRaises(SystemExit) as result:
@@ -79,6 +80,7 @@ class TicketStateCompatibilityTest(unittest.TestCase):
             self.assertEqual(result.exception.code, 0)
             self.assertEqual(resolved.call_args.kwargs['status_override'], 'IN_PROGRESS')
         with patch.object(sys, 'argv', arguments), \
+                patch.dict(sys.modules, {'ticket_activity': ticket_activity}), \
                 patch.object(ticket_storage, 'read_file', return_value=b'Status: IN_PROGRESS\nStatus: DONE\n'), \
                 patch.object(ticket_activity, 'resolve') as resolved, redirect_stderr(io.StringIO()):
             with self.assertRaises(SystemExit) as result:

@@ -82,7 +82,7 @@ jobs:
           fi
           python3 scripts/branch_lifecycle_check.py "${arguments[@]}"
       - name: Install schema and wheel-test prerequisites
-        run: python3 -m pip install --disable-pip-version-check 'jsonschema==4.25.1' 'setuptools==80.9.0' 'wheel==0.45.1' 'pytest==9.1.1'
+        run: python3 -m pip install --disable-pip-version-check 'jsonschema==4.25.1' 'setuptools==80.9.0' 'wheel==0.45.1' 'pytest==9.1.1' 'PyYAML==6.0.3'
       - name: Validate JSON contracts
         run: |
           python3 -m json.tool governance/manifest.schema.json >/dev/null
