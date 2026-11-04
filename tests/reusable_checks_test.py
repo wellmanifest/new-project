@@ -55,6 +55,17 @@ class ReusableChecksTest(unittest.TestCase):
         declaration.write_text(json.dumps(doc))
         self.assertEqual(checker.main(['--root', str(self.root), '--source', str(declaration)]), 0)
 
+    def test_proposed_workflows_cannot_replace_pinned_external_callee(self):
+        overlays = {'.github/workflows/test.yml': CALLEE.replace('Linux tests', 'Local tests').encode()}
+        declaration = generator.declaration_for(self.root, workflow_payloads=overlays)
+        self.assertEqual(declaration['requiredChecks'], [
+            {'name': 'CI / Linux tests', 'workflowFile': '.github/workflows/ci.yml'}])
+        overlays['.github/workflows/ci.yml'] = self.caller.read_bytes().replace(
+            USES.encode(), b'./.github/workflows/test.yml')
+        declaration = generator.declaration_for(self.root, workflow_payloads=overlays)
+        self.assertEqual(declaration.get('requiredChecks', []), [])
+        self.assertEqual(declaration['reusableWorkflowCallers'], ['CI'])
+
     def test_bundled_checker_resolves_reusable_sources(self):
         path = ROOT / 'packages/wellman/src/wellman/_bundled/check_required_checks.py'
         spec = importlib.util.spec_from_file_location('bundled_reusable_checker', path)
