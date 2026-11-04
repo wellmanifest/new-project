@@ -31,7 +31,9 @@ the ordinary base; verified migrations retain their separate baseline rules.
 All 30 existing snapshot-migration regressions also pass. A read-only replay
 of the actual preserved Fixos candidate reproduces the adopted rejection and
 passes the candidate history check, without modifying consumer managed files.
-Native governance passes with zero errors and warnings.
+The gate on the first local commit reported `GOV-BUDGET-001`: the manifest
+counts `scripts/governance_check.py` as a public surface. Its budget is now
+one, with the behavior correction explicitly declared; signatures are unchanged.
 
 Goal's complete 23-check contract passed its first 19 stages in a private
 mount namespace with checkout-local temporary storage and an unprivileged
@@ -40,16 +42,19 @@ refusal to trust files in Git checkouts. Stage 20 stopped on missing build
 prerequisites; a separate checkout-owned environment now contains the exact CI
 build prerequisites. No required suite is waived and no full PASS is claimed.
 
-Publication is blocked: the tracked distribution copy at
-`packages/wellman/src/wellman/_bundled/governance_check.py` must accompany the
-canonical source. It was incorrectly identified as ignored during initial
-scope preparation. That path is outside this ticket's allocated scope; the
-original rev1/fence1 lease projection remains unchanged. The delivery needs
-native scope re-admission for this same ticket and checkout, adding only that
-distribution copy and increasing the implementation-file budget to four.
-The proposed exact scope, package delta and unchanged lease bindings are
-preserved in the private NP-024 recovery outbox. No package source is edited
-outside the current scope. Protected CI/review and publication remain pending.
+The tracked distribution copy at
+`packages/wellman/src/wellman/_bundled/governance_check.py` now accompanies the
+canonical source byte-for-byte through the existing bundle generator. It was
+incorrectly identified as ignored during initial scope preparation. The user's
+continuation covers the persisted bounded correction: that one distribution
+path, a four-file implementation budget and one declared public surface.
+The same live owner applied a descriptor-bound CAS using the native transition
+contract and filesystem primitives. The advisory allocation projection moved
+from rev1/fence1 to rev2/fence2; its original expiry remains unchanged. The
+immutable preparation and accepted transition records preserve both plans.
+No ownership transfer or protected approval is inferred from this local record.
+Exact committed governance, complete source-hub qualification, protected CI and
+independent publication must still pass before this ticket is complete.
 
 This ticket advances no release version and does not claim consumer adoption
 or disposal of preserved history. Ticket402 retains its release/version scope.

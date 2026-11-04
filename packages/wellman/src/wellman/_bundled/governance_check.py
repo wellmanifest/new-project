@@ -1388,7 +1388,7 @@ def check_history_order(
     if not base:
         return
     try:
-        arguments = ["rev-list", "--reverse", f"{base}..{head}"]
+        arguments = ["rev-list", "--reverse", "--topo-order", f"{base}..{head}"]
         migration = report.snapshot_migrations.get(ticket_name)
         if migration:
             arguments.append("^" + migration["sourceSha"])
@@ -1403,18 +1403,38 @@ def check_history_order(
     first_implementation: tuple[int, str] | None = None
     for index, commit in enumerate(commits):
         try:
-            raw = git_output(root, ["diff-tree", "--root", "--no-commit-id", "--name-only", "-r", "-z", commit])
-        except subprocess.CalledProcessError:
+            parents = git_output(root, ["rev-list", "--parents", "--max-count=1", commit]).decode().split()
+            tree_diff = ["diff-tree", "--no-commit-id", "--name-only", "--no-renames",
+                         "--no-ext-diff", "--no-textconv", "--ignore-submodules=none", "-r", "-z"]
+            # Diff merge resolutions against the first parent explicitly;
+            # diff-tree's default omits merges, while -m includes every parent.
+            previous = [parents[1], commit] if len(parents) > 1 else ["--root", commit]
+            raw = git_output(root, [*tree_diff, *previous])
+            paths = [path for path in raw.decode("utf-8", "surrogateescape").split("\0") if path]
+            material = {path for path in paths if not matches(path, governance_patterns)}
+            if not material:
+                continue
+            # A historical commit that only sets these entries to their exact
+            # baseline state introduces no new implementation for this ticket.
+            # Tree diffs retain modes, types and deletions; do not filter by the
+            # final HEAD diff, which could conceal transient unapproved code.
+            # Verified migrations define their own imported baseline. A repair
+            # that reverts imported material to the ordinary base still counts
+            # there and must not receive this inherited-history exemption.
+            if not migration:
+                relative = git_output(root, [*tree_diff, base, commit])
+                different_from_base = set(relative.decode("utf-8", "surrogateescape").split("\0"))
+                if not material.intersection(different_from_base):
+                    continue
+        except (subprocess.CalledProcessError, FileNotFoundError):
             report.add(
                 "GOV-DIFF-001", f"Git could not inspect commit {commit}.",
                 "Fetch complete commit objects and rerun the governance gate.",
                 evidence={"commit": commit},
             )
             return
-        paths = [path for path in raw.decode("utf-8", "surrogateescape").split("\0") if path]
-        if any(not matches(path, governance_patterns) for path in paths):
-            first_implementation = (index, commit)
-            break
+        first_implementation = (index, commit)
+        break
     if first_implementation is None:
         return
     _, commit = first_implementation
