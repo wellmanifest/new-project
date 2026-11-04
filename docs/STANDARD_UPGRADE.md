@@ -245,6 +245,12 @@ appearing concurrently is never overwritten. As with other installer writes,
 an interrupted application can leave partial installation requiring owner
 reconciliation. Preserve it; do not automatically delete unknown files.
 
+This opt-in mode requires POSIX no-follow directory-descriptor operations;
+hosts without these primitives refuse it before effects. Actual plan reads
+are bounded to 1 MiB from a verified regular descriptor. Seed creation pins
+the original directories, refuses symlink replacements, and checks their
+bindings before managed installation continues.
+
 The existing bootstrap receipt binds the installed seed bytes. It grants no
 writer or publication authority. Confirm its actual dirty digest at first
 allocation, acquire a real fenced writer, apply the reviewed package in the

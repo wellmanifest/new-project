@@ -31,7 +31,7 @@
   "delivery": {
     "acceptedBaseSha": "ddbbe1cf2cee62ffcdf8ba8deb00f5c2ed7f505d",
     "targetBranch": "main",
-    "outcome": "Deliver the existing prerequisite-seed repair and standard0.20.133 with full independent publication; declare the existing PyYAML worktree-guard test prerequisite in CI so an isolated runtime can execute every required check. Product implementation remains unchanged.",
+    "outcome": "Complete the existing first-bootstrap prerequisite repair including directory-symlink race refusal and bounded regular-file plan reads, then deliver standard0.20.133 through full qualified checks, independent review/merge and canonical release; retain explicit CI prerequisites.",
     "nonGoals": [
       "No consumer edits, legacy owner takeover, arbitrary file creation, overwrite, policy weakening or default seeding.",
       "No writer/publication authority in a seed plan or installer receipt; existing native allocation and independent approval remain mandatory."
@@ -46,7 +46,7 @@
     },
     "architecture": {
       "status": "accepted",
-      "decision": "An optional bounded external closed JSON plan binds current target HEAD and literal content/digests for only absent required VERSION, CHANGELOG.md, TODO.md and project/TICKETS.md. Validate symlink/commit absence and reread before effects; create exclusively and include exact bytes in the existing bootstrap receipt. Existing first-allocation, ownership and independent protected publication guards remain unchanged.",
+      "decision": "An optional bounded external closed JSON plan binds current target HEAD and literal content/digests for only absent required VERSION, CHANGELOG.md, TODO.md and project/TICKETS.md. Validate symlink/commit absence and reread before effects; create exclusively and include exact bytes in the existing bootstrap receipt. Existing first-allocation, ownership and independent protected publication guards remain unchanged. Pin external plan parent directories and target seed directories with no-follow directory descriptors, read at most the metadata limit plus one byte from a regular nonblocking file descriptor, create leaf seeds exclusively, and reject replaced parent/root bindings before managed writes. The opt-in seed mode refuses hosts without the required race-resistant descriptor operations before effects.",
       "components": [
         {
           "name": "Immutable bootstrap adopter",
@@ -77,7 +77,8 @@
         "Opt-in --bootstrap-prerequisites-plan for explicit first bootstrap only"
       ],
       "dataChanges": [
-        "Closed external new-project.bootstrap-prerequisites-plan/v1 plan; existing receipt format unchanged"
+        "Closed external new-project.bootstrap-prerequisites-plan/v1 plan; existing receipt format unchanged",
+        "Opt-in prerequisite plans require supported no-follow directory-descriptor operations; ordinary adoption modes retain their existing platform contract."
       ],
       "ui": {
         "impact": "none",

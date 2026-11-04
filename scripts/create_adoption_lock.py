@@ -785,6 +785,82 @@ def _git_cat_file_exists(target_root: Path, ref_path: str) -> subprocess.Complet
     )
 
 
+def _bootstrap_directory_flags() -> int:
+    if (any(not hasattr(os, name) for name in ("O_DIRECTORY", "O_NOFOLLOW", "O_NONBLOCK"))
+            or not {os.open, os.mkdir, os.stat}.issubset(os.supports_dir_fd)):
+        raise SystemExit("race-resistant bootstrap prerequisite file operations are unavailable on this host")
+    return os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+
+
+@contextlib.contextmanager
+def _bootstrap_directory(directory: Path):
+    """Pin every directory lookup without following replaced symlink parents."""
+    flags = _bootstrap_directory_flags()
+    absolute = directory.absolute()
+    descriptor = os.open(absolute.anchor, flags)
+    try:
+        for component in absolute.parts[1:]:
+            child = os.open(component, flags, dir_fd=descriptor)
+            os.close(descriptor)
+            descriptor = child
+        yield descriptor
+    finally:
+        os.close(descriptor)
+
+
+def _bootstrap_plan_bytes(external: Path) -> bytes:
+    try:
+        with _bootstrap_directory(external.parent) as parent:
+            descriptor = os.open(external.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+                                 dir_fd=parent)
+            with os.fdopen(descriptor, "rb") as stream:
+                observed = os.fstat(stream.fileno())
+                if not stat.S_ISREG(observed.st_mode) or observed.st_size > MAX_RELEASE_METADATA_BYTES:
+                    raise SystemExit("bootstrap prerequisite plan requires a bounded regular file")
+                raw = stream.read(MAX_RELEASE_METADATA_BYTES + 1)
+                if len(raw) > MAX_RELEASE_METADATA_BYTES:
+                    raise SystemExit("bootstrap prerequisite plan exceeds its read limit")
+                return raw
+    except OSError as error:
+        raise SystemExit("bootstrap prerequisite plan refuses unsafe or replaced input paths") from error
+
+
+def create_bootstrap_prerequisites(target_root: Path, seeds: dict[str, bytes]) -> None:
+    """Create only absent seed leaves through the original pinned directories."""
+    if not set(seeds).issubset({"VERSION", "CHANGELOG.md", "TODO.md", "project/TICKETS.md"}):
+        raise SystemExit("bootstrap prerequisite creation requires literal seed paths")
+    try:
+        with _bootstrap_directory(target_root) as root, contextlib.ExitStack() as cleanup:
+            project = None
+            if "project/TICKETS.md" in seeds:
+                try:
+                    os.mkdir("project", dir_fd=root)
+                except FileExistsError:
+                    pass
+                project = os.open("project", _bootstrap_directory_flags(), dir_fd=root)
+                cleanup.callback(os.close, project)
+            for name, content in sorted(seeds.items()):
+                parent = project if name == "project/TICKETS.md" else root
+                descriptor = os.open(name.rsplit("/", 1)[-1],
+                    os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644, dir_fd=parent)
+                with os.fdopen(descriptor, "wb") as output:
+                    output.write(content)
+                    output.flush()
+                    os.fsync(output.fileno())
+                os.fsync(parent)
+            # A renamed original directory can be written safely by descriptor,
+            # but the following managed installer must not follow its replacement.
+            for named, opened in ((os.stat(target_root, follow_symlinks=False), os.fstat(root)),):
+                if not stat.S_ISDIR(named.st_mode) or (named.st_dev, named.st_ino) != (opened.st_dev, opened.st_ino):
+                    raise SystemExit("bootstrap target root changed before managed writes")
+            if project is not None:
+                named, opened = os.stat("project", dir_fd=root, follow_symlinks=False), os.fstat(project)
+                if not stat.S_ISDIR(named.st_mode) or (named.st_dev, named.st_ino) != (opened.st_dev, opened.st_ino):
+                    raise SystemExit("bootstrap prerequisite parent changed before managed writes")
+    except OSError as error:
+        raise SystemExit("bootstrap prerequisite creation refuses unsafe or concurrent paths") from error
+
+
 def bootstrap_prerequisite_payloads(
     target_root: Path, manifest: dict, payloads: dict[str, bytes], external: Path,
 ) -> dict[str, bytes]:
@@ -802,7 +878,7 @@ def bootstrap_prerequisite_payloads(
             or target_root.resolve() in external.resolve().parents):
         raise SystemExit("bootstrap prerequisite plan requires a bounded external regular file")
     try:
-        plan = json.loads(external.read_bytes(), object_pairs_hook=unique)
+        plan = json.loads(_bootstrap_plan_bytes(external), object_pairs_hook=unique)
     except (ValueError, UnicodeDecodeError, RecursionError) as error:
         raise SystemExit("invalid bootstrap prerequisite plan JSON") from error
     if (not isinstance(plan, dict) or set(plan) != {"schema", "baseSha", "files"}
@@ -1451,13 +1527,7 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit("bootstrap prerequisite plan changed before writes")
         # Exclusive creation precedes managed writes. Never replace a file that
         # appeared after preflight, including a symlink at the destination.
-        for name, content in sorted(prerequisite_seeds.items()):
-            path = plan_path(target_root, name)
-            path.parent.mkdir(parents=True, exist_ok=True)
-            with path.open("xb") as output:
-                output.write(content)
-                output.flush()
-                os.fsync(output.fileno())
+        create_bootstrap_prerequisites(target_root, prerequisite_seeds)
     for target, content in sorted(payloads.items()):
         if target in prerequisite_seeds:
             continue

@@ -14,4 +14,4 @@ SESSION_EXECUTION_AUTHORIZATION: user requests systemic repairs, tests, merges a
 - [x] AC-02: Invalid inputs fail before effects, default refusal remains, and local adopter/native governance checks pass.
 - [ ] AC-03: Full source checks and independent exact-head approval/merge, followed by a canonical release, precede consumer use.
 
-Validation:26 adopter regressions and native governance pass. An isolated full run passed22/23 checks; the final existing YAML guard exposed an undeclared PyYAML test prerequisite. CI now pins PyYAML6.0.3 with its existing build/schema tools. Full final-head qualification and independent protected publication remain required.
+Validation:26 existing adopter regressions and native governance passed. Three focused regressions reproduced the missing bounded-read and directory-race guarantees, including actual writes redirected outside a fixture project before the fix. Input reads and seed writes now use bounded no-follow descriptors; unsupported hosts refuse the opt-in mode before effects. CI declares PyYAML6.0.3. Final full qualification and independent protected publication remain required.

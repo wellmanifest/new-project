@@ -1,7 +1,9 @@
 """Actual CLI regressions for explicit migration of minimal Wellman scaffolds."""
 import importlib.util
+import contextlib
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -446,6 +448,79 @@ class BootstrapPrerequisitePlanTest(unittest.TestCase):
         checkout = self.target / ".worktrees/ticket-001--seeded"
         self.assertTrue((checkout / "project/ticket-001/intent.json").is_file())
         self.assertFalse((checkout / "VERSION").exists())
+
+    def loaded_adopter(self):
+        spec = importlib.util.spec_from_file_location("race_checked_adopter", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_plan_read_is_bounded_after_stale_size_observation(self):
+        module = self.loaded_adopter()
+        self.plan_path.write_bytes(self.plan_path.read_bytes() + b" " * module.MAX_RELEASE_METADATA_BYTES)
+        real_stat = Path.stat
+
+        def stale_size(path, *args, **kwargs):
+            value = real_stat(path, *args, **kwargs)
+            if path == self.plan_path:
+                fields = list(value)
+                fields[6] = 1  # File grew after the caller observed its metadata.
+                return os.stat_result(fields)
+            return value
+
+        before = self.contents()
+        with patch.object(Path, "stat", stale_size), self.assertRaises(SystemExit):
+            module.bootstrap_prerequisite_payloads(self.target,
+                {"requiredFiles": list(self.seeds)}, {}, self.plan_path)
+        self.assertEqual(before, self.contents())
+
+    @unittest.skipUnless(hasattr(os, "O_NOFOLLOW") and os.open in os.supports_dir_fd,
+                         "directory descriptor race fixture requires POSIX primitives")
+    def test_replaced_parent_never_receives_seed_or_managed_files(self):
+        module = self.loaded_adopter()
+        outside = self.root / "outside"
+        outside.mkdir()
+        original = self.target / "project-before-race"
+        switched = False
+        real_path_open, real_os_open = Path.open, os.open
+
+        def replace_parent():
+            nonlocal switched
+            if not switched:
+                (self.target / "project").rename(original)
+                (self.target / "project").symlink_to(outside, target_is_directory=True)
+                switched = True
+
+        def raced_path_open(path, *args, **kwargs):
+            mode = args[0] if args else kwargs.get("mode", "r")
+            if path == self.target / "project/TICKETS.md" and mode == "xb":
+                replace_parent()
+            return real_path_open(path, *args, **kwargs)
+
+        def raced_os_open(path, flags, *args, **kwargs):
+            if path == "TICKETS.md" and flags & os.O_CREAT:
+                replace_parent()
+            return real_os_open(path, flags, *args, **kwargs)
+
+        arguments = ["--target-root", str(self.target), "--source-revision", self.revision,
+                     "--migrate-wellman-scaffold", "--upgrade",
+                     "--bootstrap-prerequisites-plan", str(self.plan_path)]
+        with patch.object(module, "verify_publication_evidence"), \
+                patch.object(Path, "open", raced_path_open), \
+                patch.object(module.os, "open", raced_os_open), \
+                patch.object(module.os, "supports_dir_fd", os.supports_dir_fd | {raced_os_open}):
+            with contextlib.suppress(SystemExit, OSError):
+                module.main(arguments)
+        self.assertTrue(switched, "fixture must replace the parent at actual leaf creation")
+        self.assertEqual(list(outside.iterdir()), [], "a replaced parent must never redirect writes")
+
+    def test_unsupported_descriptor_host_refuses_before_effects(self):
+        module = self.loaded_adopter()
+        before = self.contents()
+        with patch.object(module.os, "supports_dir_fd", set()), self.assertRaises(SystemExit):
+            module.bootstrap_prerequisite_payloads(self.target,
+                {"requiredFiles": list(self.seeds)}, {}, self.plan_path)
+        self.assertEqual(before, self.contents())
 
 
 if __name__ == "__main__":
