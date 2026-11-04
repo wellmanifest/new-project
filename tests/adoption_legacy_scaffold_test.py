@@ -455,6 +455,51 @@ class BootstrapPrerequisitePlanTest(unittest.TestCase):
         spec.loader.exec_module(module)
         return module
 
+    def test_all_seed_destinations_are_checked_before_any_creation(self):
+        module = self.loaded_adopter()
+        (self.target / "project").rmdir()
+        (self.target / "VERSION").write_bytes(b"foreign version\n")
+        before = self.contents()
+        with self.assertRaises(SystemExit):
+            module.create_bootstrap_prerequisites(self.target,
+                {name: content.encode() for name, content in self.seeds.items()})
+        self.assertEqual(before, self.contents())
+        self.assertFalse((self.target / "project").exists())
+
+    def test_late_conflict_reports_partial_seeds_without_managed_writes(self):
+        module = self.loaded_adopter()
+        before = self.contents()
+        real_fdopen = module.os.fdopen
+        changed = False
+
+        @contextlib.contextmanager
+        def concurrent_version(descriptor, mode, *args, **kwargs):
+            nonlocal changed
+            with real_fdopen(descriptor, mode, *args, **kwargs) as stream:
+                yield stream
+            if mode == "wb" and not changed:
+                changed = True
+                (self.target / "VERSION").write_bytes(b"concurrent owner\n")
+
+        arguments = ["--target-root", str(self.target), "--source-revision", self.revision,
+                     "--migrate-wellman-scaffold", "--upgrade",
+                     "--bootstrap-prerequisites-plan", str(self.plan_path)]
+        with patch.object(module, "verify_publication_evidence"), \
+                patch.object(module.os, "fdopen", concurrent_version):
+            with self.assertRaises(SystemExit) as failure:
+                module.main(arguments)
+        self.assertTrue(changed, "fixture must introduce the conflict during actual creation")
+        self.assertIn("partial bootstrap prerequisites preserved", str(failure.exception))
+        self.assertIn("CHANGELOG.md", str(failure.exception))
+        self.assertIn("TODO.md", str(failure.exception))
+        self.assertIn("reconcile", str(failure.exception))
+        expected = dict(before)
+        expected.update({"CHANGELOG.md": self.seeds["CHANGELOG.md"].encode(),
+                         "TODO.md": self.seeds["TODO.md"].encode(),
+                         "VERSION": b"concurrent owner\n"})
+        self.assertEqual(expected, self.contents())
+        self.assertFalse((self.target / ".subactor/receipts/bootstrap-adoption.json").exists())
+
     def test_plan_read_is_bounded_after_stale_size_observation(self):
         module = self.loaded_adopter()
         self.plan_path.write_bytes(self.plan_path.read_bytes() + b" " * module.MAX_RELEASE_METADATA_BYTES)
