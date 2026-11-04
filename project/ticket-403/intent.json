@@ -6,7 +6,8 @@
     "scripts/governance_check.py",
     "tests/governance-validator.test.sh",
     "tests/history_order_test.py",
-    "packages/wellman/src/wellman/_bundled/governance_check.py"
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "tests/runtime_safety_test.py"
   ],
   "classification": {
     "kind": "BUG",
@@ -29,12 +30,13 @@
           "name": "registered-real-git-regressions",
           "paths": [
             "tests/history_order_test.py",
-            "tests/governance-validator.test.sh"
+            "tests/governance-validator.test.sh",
+            "tests/runtime_safety_test.py"
           ]
         }
       ],
       "dataChanges": [],
-      "decision": "Inspect each commit against its first parent and compare changed material paths with the exact base tree. Baseline-equivalent entries introduce no new implementation. Use topological order; preserve rejection of non-equivalent side histories, transient changes and late intent. Register real-Git regressions in the existing required validator harness. Never infer migration authority or cleanup permission from this check. Include the byte-identical tracked distribution copy in the same material commit.",
+      "decision": "Inspect each commit against its first parent and compare changed material paths with the exact base tree. Baseline-equivalent entries introduce no new implementation. Use topological order; preserve rejection of non-equivalent side histories, transient changes and late intent. Register real-Git regressions in the existing required validator harness. Never infer migration authority or cleanup permission from this check. Include the byte-identical tracked distribution copy in the same material commit. Execute the existing cached-output regression through its normal unittest entry point so its isolated module fixture and cleanup run during Goal-wide pytest.",
       "interfaceChanges": [
         "Correct history-order behavior on the manifest-declared public surface scripts/governance_check.py; no function signature change."
       ],
@@ -49,7 +51,7 @@
     },
     "budgets": {
       "maxAffectedComponents": 2,
-      "maxImplementationFiles": 4,
+      "maxImplementationFiles": 5,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
     },
@@ -83,7 +85,8 @@
         "commands": [
           "bash tests/governance-validator.test.sh",
           "./project/governance-check.sh",
-          "Goal publication preflight; exact-head protected CI and independent Validator"
+          "Goal publication preflight; exact-head protected CI and independent Validator",
+          "Complete Goal-wide pytest, including the cached-output runtime bridge"
         ],
         "criterion": "AC-03",
         "evidence": "project/ticket-403/README.md"

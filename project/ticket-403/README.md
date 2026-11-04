@@ -35,23 +35,30 @@ The gate on the first local commit reported `GOV-BUDGET-001`: the manifest
 counts `scripts/governance_check.py` as a public surface. Its budget is now
 one, with the behavior correction explicitly declared; signatures are unchanged.
 
-Goal's complete 23-check contract passed its first 19 stages in a private
-mount namespace with checkout-local temporary storage and an unprivileged
-interpreter. This filesystem boundary preserves the external-snapshot tests'
-refusal to trust files in Git checkouts. Stage 20 stopped on missing build
-prerequisites; a separate checkout-owned environment now contains the exact CI
-build prerequisites. No required suite is waived and no full PASS is claimed.
+Candidate `4b9109c4` passed all 23 source-hub stages, including the built and
+installed package, using a private filesystem boundary with checkout-local
+temporary storage and an unprivileged interpreter. The checkout-owned runtime
+contains the exact CI build prerequisites. No required suite is waived.
+
+Goal's broader pytest then reported 741 passes, one failure, four skips and
+1005 passing subtests. The runtime cached-output bridge called an existing
+test method without its module fixture. That reproduced independently of the
+publication transport. The bridge now invokes the unchanged case through its
+normal unittest entry point, preserving every assertion and running its
+isolated checkout setup and cleanup. Full requalification remains required.
 
 The tracked distribution copy at
 `packages/wellman/src/wellman/_bundled/governance_check.py` now accompanies the
 canonical source byte-for-byte through the existing bundle generator. It was
 incorrectly identified as ignored during initial scope preparation. The user's
-continuation covers the persisted bounded correction: that one distribution
-path, a four-file implementation budget and one declared public surface.
+continuation covers the bounded distribution and required validation repair:
+five implementation files and one declared public surface.
 The same live owner applied a descriptor-bound CAS using the native transition
 contract and filesystem primitives. The advisory allocation projection moved
-from rev1/fence1 to rev2/fence2; its original expiry remains unchanged. The
-immutable preparation and accepted transition records preserve both plans.
+from rev1/fence1 to rev2/fence2 without extending its original expiry. The
+required test-fixture repair uses rev3/fence3 and one live CAS renewal, bounded
+to three hours total from original issuance. Immutable preparation and accepted
+transition records preserve the plans and exact owner/session.
 No ownership transfer or protected approval is inferred from this local record.
 Exact committed governance, complete source-hub qualification, protected CI and
 independent publication must still pass before this ticket is complete.
