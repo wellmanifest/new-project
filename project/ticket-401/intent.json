@@ -15,6 +15,7 @@
     "scripts/repository_policy.py",
     "packages/wellman/src/wellman/_bundled/repository_policy.py",
     "tests/repository_policy_input_test.py",
+    "tests/repository-policy.test.sh",
     "tests/reusable_checks_test.py",
     "VERSION",
     "governance/manifest.hub.json",
@@ -40,7 +41,7 @@
     "complexity": "S",
     "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 8,
+      "maxImplementationFiles": 9,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
@@ -55,6 +56,7 @@
             "scripts/repository_policy.py",
             "packages/wellman/src/wellman/_bundled/repository_policy.py",
             "tests/repository_policy_input_test.py",
+          "tests/repository-policy.test.sh",
             "tests/reusable_checks_test.py"
           ]
         },
