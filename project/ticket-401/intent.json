@@ -1,0 +1,104 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-401",
+  "summary": "Reject malformed repository policy arrays without validator crashes",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-401/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/repository_policy.py",
+    "packages/wellman/src/wellman/_bundled/repository_policy.py",
+    "tests/repository_policy_input_test.py",
+    "tests/repository-policy.test.sh",
+    "tests/reusable_checks_test.py",
+    "VERSION",
+    "governance/manifest.hub.json",
+    "governance/manifest.default.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3926cecf965cd03a39cc992aa40bf82ae2e97a13",
+    "targetBranch": "main",
+    "outcome": "Reject unhashable JSON list members with controlled policy errors; preserve reusable-workflow immutable-source semantics and publish standard0.20.132 with this material repair.",
+    "nonGoals": [
+      "Change the canonical Policy DSL runtime or its immutable pin",
+      "Add local reusable-workflow support",
+      "Change protected delivery authority or target repositories"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Validate element types before duplicate sets in repository policy and adapter readers, synchronize the canonical bundled module, and add regression coverage. Workflow overlays do not replace independently pinned external reusable sources; prove this boundary with a regression instead of weakening it.",
+      "components": [
+        {
+          "name": "policy-input-validation",
+          "paths": [
+            "scripts/repository_policy.py",
+            "packages/wellman/src/wellman/_bundled/repository_policy.py",
+            "tests/repository_policy_input_test.py",
+          "tests/repository-policy.test.sh",
+            "tests/reusable_checks_test.py"
+          ]
+        },
+        {
+          "name": "immutable-standard-release",
+          "paths": [
+            "VERSION",
+            "governance/manifest.hub.json",
+            "governance/manifest.default.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Protected revert; preserve previously published standard releases."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python tests/repository_policy_input_test.py",
+          "bash tests/repository-policy.test.sh"
+        ],
+        "evidence": "Malformed and valid JSON arrays across source and bundled module."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python tests/reusable_checks_test.py",
+          "python packages/wellman/sync_bundled.py --check",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "External immutable reusable-source boundary, package parity and native governance; genuine OneDev and independent Validator publication remain mandatory."
+      }
+    ]
+  }
+}

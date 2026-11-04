@@ -168,10 +168,12 @@ def policy_error(value: Any) -> str | None:
     if delivery.get("checkout") not in {"linked-worktree", "primary"}:
         return "repositoryPolicy.delivery.checkout is invalid"
     branches = delivery.get("targetBranches")
-    if not isinstance(branches, list) or not branches or len(branches) != len(set(branches)):
+    if not isinstance(branches, list) or not branches:
         return "repositoryPolicy.delivery.targetBranches must be unique and non-empty"
     if not all(isinstance(item, str) and item and "/" not in item for item in branches):
         return "repositoryPolicy.delivery.targetBranches contains an invalid branch"
+    if len(branches) != len(set(branches)):
+        return "repositoryPolicy.delivery.targetBranches must be unique and non-empty"
     tickets = value.get("tickets")
     if not isinstance(tickets, dict):
         return "repositoryPolicy.tickets must be an object"
@@ -265,12 +267,14 @@ def adapter_error(
         return "external ticket adapter workstream is invalid"
     for field in ("allowedPaths", "forbiddenPaths", "sourcePaths"):
         values = adapter.get(field)
-        if not isinstance(values, list) or len(values) != len(set(values)):
+        if not isinstance(values, list):
             return f"external ticket adapter {field} is invalid"
         for item in values:
             error = relative_path_error(item, pattern=field != "sourcePaths")
             if error:
                 return f"external ticket adapter {field} is invalid: {error}"
+        if len(values) != len(set(values)):
+            return f"external ticket adapter {field} is invalid"
     if not adapter["allowedPaths"]:
         return "external ticket adapter allowedPaths is empty"
     for source in adapter["sourcePaths"]:

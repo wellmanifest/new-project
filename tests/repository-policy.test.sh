@@ -160,3 +160,5 @@ with tempfile.TemporaryDirectory() as directory:
 
 print("repository-policy.test.sh OK")
 PY
+
+python3 "$root/tests/repository_policy_input_test.py"
