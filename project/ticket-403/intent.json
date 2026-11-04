@@ -1,0 +1,106 @@
+{
+  "allowedPaths": [
+    "project/ticket-403/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "tests/history_order_test.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "tests/runtime_safety_test.py"
+  ],
+  "classification": {
+    "kind": "BUG",
+    "origin": "regression",
+    "priority": "P2"
+  },
+  "conflictsWith": [],
+  "delivery": {
+    "acceptedBaseSha": "ddbbe1cf2cee62ffcdf8ba8deb00f5c2ed7f505d",
+    "architecture": {
+      "components": [
+        {
+          "name": "history-order-check",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py"
+          ]
+        },
+        {
+          "name": "registered-real-git-regressions",
+          "paths": [
+            "tests/history_order_test.py",
+            "tests/governance-validator.test.sh",
+            "tests/runtime_safety_test.py"
+          ]
+        }
+      ],
+      "dataChanges": [],
+      "decision": "Inspect each commit against its first parent and compare changed material paths with the exact base tree. Baseline-equivalent entries introduce no new implementation. Use topological order; preserve rejection of non-equivalent side histories, transient changes and late intent. Register real-Git regressions in the existing required validator harness. Never infer migration authority or cleanup permission from this check. Include the byte-identical tracked distribution copy in the same material commit. Execute the existing cached-output regression through its normal unittest entry point so its isolated module fixture and cleanup run during Goal-wide pytest.",
+      "interfaceChanges": [
+        "Correct history-order behavior on the manifest-declared public surface scripts/governance_check.py; no function signature change."
+      ],
+      "responsibilityChanges": false,
+      "rollback": "Independently reviewed revert of the bounded gate/test patch; keep current adopted pins and private consumer preservation unchanged.",
+      "status": "accepted",
+      "ui": {
+        "evidence": [],
+        "impact": "none",
+        "states": []
+      }
+    },
+    "budgets": {
+      "maxAffectedComponents": 2,
+      "maxImplementationFiles": 5,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "nonGoals": [
+      "No cleanup, ownership or migration grants",
+      "No consumer managed-file edits before qualified source release",
+      "No changes to active ticket402 version, release or CI scopes; no package version advance in this source patch"
+    ],
+    "outcome": "Correct first-material history checking for baseline-equivalent imported payloads while preserving intent atomicity for every new material change, including merge resolutions.",
+    "runtimeDependencies": [],
+    "targetBranch": "main",
+    "validation": [
+      {
+        "commands": [
+          "Real Git baseline-equivalent import and synthetic CI merge regressions"
+        ],
+        "criterion": "AC-01",
+        "evidence": "tests/history_order_test.py"
+      },
+      {
+        "commands": [
+          "Negative late-intent, mode/deletion, transient payload, non-equivalent import and Git-error regressions",
+          "Existing snapshot migration regressions"
+        ],
+        "criterion": "AC-02",
+        "evidence": "tests/history_order_test.py"
+      },
+      {
+        "commands": [
+          "bash tests/governance-validator.test.sh",
+          "./project/governance-check.sh",
+          "Goal publication preflight; exact-head protected CI and independent Validator",
+          "Complete Goal-wide pytest, including the cached-output runtime bridge"
+        ],
+        "criterion": "AC-03",
+        "evidence": "project/ticket-403/README.md"
+      }
+    ]
+  },
+  "dependsOn": [],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "integrationTicket": null,
+  "schema": "new-project.intent/v3",
+  "stacks": [],
+  "summary": "Validate first material history without misclassifying baseline-equivalent imports",
+  "ticket": "ticket-403",
+  "workstream": "governance"
+}

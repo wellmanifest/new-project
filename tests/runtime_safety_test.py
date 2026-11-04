@@ -496,11 +496,14 @@ exec "$TASK_SIGNAL_REAL_GIT" "$@"
 
 
     def test_cached_output_errors_through_actual_source_and_bundle_cli(self):
-        spec = importlib.util.spec_from_file_location("cached_output_cli_fixture", ROOT / "tests/governance-preflight-cache.test.py")
-        fixture = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(fixture)
-        case = fixture.CachedOutputTests("test_current_output_errors_are_combined_with_cached_results")
-        case.test_current_output_errors_are_combined_with_cached_results()
+        # The normal runner owns setUpModule/cleanup and its isolated checkout.
+        # Calling the method directly would test outputs against the real repo.
+        result = subprocess.run(
+            [sys.executable, str(ROOT / "tests/governance-preflight-cache.test.py"),
+             "CachedOutputTests.test_current_output_errors_are_combined_with_cached_results"],
+            cwd=ROOT, capture_output=True, text=True, timeout=120,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_ticket_suffix_boundaries_through_actual_git_activity(self):
         spec = importlib.util.spec_from_file_location(
