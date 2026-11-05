@@ -1,0 +1,131 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-409",
+  "summary": "Preserve schema-valid decision identifiers and diagnose malformed governance inputs",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-409/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/decision_record.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/decision_record.py",
+    "scripts/governance_check.py",
+    "tests/decision-record.test.sh",
+    "tests/decision_record_codec_test.py",
+    "tests/governance-validator.test.sh",
+    "tests/malformed_governance_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-407"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "fe7a81debd90c551376af35cd6ff8a2c58057c4e",
+    "targetBranch": "main",
+    "outcome": "Repair schema-valid decision INPUT names/rejected alternatives and malformed delivery-profile/lock diagnostics in source and bundled checker. Publish material138 through actual CI and independent protected approval.",
+    "nonGoals": [
+      "PyPI administration/credential changes",
+      "Consumer source changes",
+      "Derived metadata/free-text decision normalization changes",
+      "Foreign cache/workspace cleanup",
+      "Protected approval/model/cap changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Quote non-legacy INPUT identifiers without changing legacy bare grammar; add an unambiguous explicit JSON alternative form when whitespace requires it. Retain fixture-only role and replay authority boundaries. Reject profiles:null consistently with existing JSON schema while preserving omitted/default and valid profile resolution. Refuse nonobject locks with existing typed001 before indexing. Keep all canonical tests/default300s and runtime/review pins. Bump138 only with material fixes. The configured public-interface path governance_check.py and existing decision-v1 codec are explicitly acknowledged; no new CLI commands or trusted approval producer. Keep legacy normalized free text/derived metadata outside this repair.",
+      "components": [
+        {
+          "name": "decision-codec",
+          "paths": [
+            "scripts/decision_record.py",
+            "packages/wellman/src/wellman/_bundled/decision_record.py",
+            "tests/decision_record_codec_test.py",
+            "tests/decision-record.test.sh"
+          ]
+        },
+        {
+          "name": "malformed-input-diagnostics",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "tests/malformed_governance_test.py",
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Decision-v1 INPUT identifier and rejected-alternative encoding becomes lossless while old bare DSL remains parseable.",
+        "Governance CLI diagnoses invalid typed profile/lock input through existing001 codes before effects; valid policy and lock behavior remains."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independently reviewed revert; retain137 immutable tag/assets and existing consumer pins."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python tests/decision_record_codec_test.py",
+          "bash tests/decision-record.test.sh"
+        ],
+        "evidence": "Both source and bundled parsers roundtrip schema-valid named fields and preserve legacy canonical bytes; malformed identifiers never partly mutate records. Fixtures have no approval authority."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python tests/malformed_governance_test.py",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Source/bundle malformed locks produceGOV-SYNC-001 and null profiles produceGOV-MANIFEST-001 via the real CLI; absent/default and canonical valid profiles/locks remain accepted."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh",
+          "goal -a --no-publish --delivery-mode pull-request push --ticket ticket-409"
+        ],
+        "evidence": "Native scope, every canonical check/default300s, full tests, actualCI and protected exact-head App review before immutable138."
+      }
+    ]
+  }
+}

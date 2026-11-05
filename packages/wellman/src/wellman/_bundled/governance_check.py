@@ -593,7 +593,7 @@ def delivery_classes_valid(value: Any) -> bool:
 
 def delivery_profiles_valid(value: dict[str, Any], classes_valid: bool) -> bool:
     profiles = value.get("profiles")
-    return profiles is None or (
+    return "profiles" not in value or (
         classes_valid
         and isinstance(profiles, dict)
         and set(profiles) == set(value["allowedComplexityClasses"])
@@ -1670,6 +1670,8 @@ def lock_standard_valid(standard: Any, expected_version: str) -> bool:
 
 def load_managed_lock(lock_path: Path, manifest: dict[str, Any]) -> dict[str, str]:
     lock = load_json(lock_path)
+    if not isinstance(lock, dict):
+        raise ValueError("lock must be an object")
     managed = lock["managedFiles"]
     if (
         lock.get("schema") != "new-project.lock/v1"

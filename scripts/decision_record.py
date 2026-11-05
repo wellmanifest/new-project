@@ -53,11 +53,15 @@ def classify_action(action: str) -> dict[str, Any]:
 
 DECISION_START = re.compile(r"^DECISION\s+(D-\d{3}-\d{4,})\s*$")
 FIELD = re.compile(r"^([A-Z][A-Z0-9_]*)\s+(.+)$")
-INPUT_LINE = re.compile(r"^INPUT\s+([A-Za-z0-9_]+)\s*=\s*(.+)$")
+JSON_STRING_PATTERN = r'"(?:[^"\\]|\\.)*"'
+INPUT_LINE = re.compile(rf"^INPUT\s+({JSON_STRING_PATTERN}|[A-Za-z0-9_]+)\s*=\s*(.+)$")
 VERDICT_LINE = re.compile(
     r"^VERDICT\s+(\S+)\s+AUTHORITY\s+(DETERMINISTIC|ADVISORY)\s*$"
 )
 REJECTED_LINE = re.compile(r"^REJECTED\s+(\S+)\s+BECAUSE\s+(.+)$")
+# The explicit JSON marker avoids reinterpreting legacy bare alternatives
+# such as '"quoted"' or 'JSON'. Only previously unrepresentable names need it.
+REJECTED_JSON_LINE = re.compile(rf"^REJECTED\s+JSON\s+({JSON_STRING_PATTERN})\s+BECAUSE\s+(.+)$")
 ADVISORY_LINE = re.compile(
     r'^ADVISORY\s+llm_verdict\s*=\s*("(?:[^"\\]|\\.)*")\s+'
     r'MODEL\s+("(?:[^"\\]|\\.)*")\s*$'
@@ -80,7 +84,7 @@ def format_value(value: Any) -> str:
 def decision_body(text: str) -> str:
     body = text.strip()
     if body.startswith("```"):
-        lines = body.splitlines()
+        lines = body.split("\n")
         if lines[0].startswith("```"):
             lines = lines[1:]
         if lines and lines[-1].strip() == "```":
@@ -111,12 +115,31 @@ def apply_decision_line(record: dict[str, Any], line: str) -> bool:
         return True
     match = INPUT_LINE.match(line)
     if match:
-        record["inputs"][match.group(1)] = parse_value(match.group(2))
+        name = match.group(1)
+        if name.startswith('"'):
+            try:
+                name = json.loads(name)
+            except json.JSONDecodeError:
+                return False
+        record["inputs"][name] = parse_value(match.group(2))
         return True
     match = VERDICT_LINE.match(line)
     if match:
         record["verdict"] = match.group(1)
         record["verdictAuthority"] = match.group(2)
+        return True
+    match = REJECTED_JSON_LINE.match(line)
+    if match:
+        try:
+            alternative = json.loads(match.group(1))
+        except json.JSONDecodeError:
+            return False
+        if not alternative:
+            return False
+        record["rejected"] = {
+            "alternative": alternative,
+            "because": match.group(2).strip(),
+        }
         return True
     match = REJECTED_LINE.match(line)
     if match:
@@ -173,7 +196,9 @@ def parse_dsl_record(text: str) -> dict[str, Any]:
         "advisory": None,
         "derivedFrom": None,
     }
-    for line in decision_body(text).splitlines():
+    # JSON strings may contain Unicode line separators. DSL records are
+    # separated by physical LF (with optional CR), not those string values.
+    for line in decision_body(text).split("\n"):
         line = line.rstrip()
         if not line or line.startswith("#"):
             continue
@@ -193,14 +218,18 @@ def to_dsl(record: dict[str, Any]) -> str:
         f"APPLIED_RULE {record['appliedRule']}",
     ]
     for key in sorted(record["inputs"]):
-        lines.append(f"INPUT {key} = {format_value(record['inputs'][key])}")
+        name = key if re.fullmatch(r"[A-Za-z0-9_]+", key) else format_value(key)
+        lines.append(f"INPUT {name} = {format_value(record['inputs'][key])}")
     lines.append(
         f"VERDICT {record['verdict']} AUTHORITY {record['verdictAuthority']}"
     )
     rejected = record["rejected"]
     because = " ".join(str(rejected["because"]).splitlines()).strip()
+    alternative = rejected["alternative"]
+    if not re.fullmatch(r"\S+", alternative):
+        alternative = f"JSON {format_value(alternative)}"
     lines.append(
-        f"REJECTED {rejected['alternative']} BECAUSE {because}"
+        f"REJECTED {alternative} BECAUSE {because}"
     )
     adv = record.get("advisory")
     if adv:

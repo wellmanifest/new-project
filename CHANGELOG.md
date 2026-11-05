@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.20.138
+
+- Preserve schema-valid decision input names and rejected alternatives without changing legacy bare-token parsing or replay authority [ticket-409].
+- Reject null delivery profiles consistently with the existing schema and report non-object locks through GOV-SYNC-001 [ticket-409].
+
 ## 0.20.137
 
 - Match ticket markers at branch segment boundaries in writer routing and commit binding, preserving ordinary embedded-substring refs and all real ticket fencing [ticket-407].

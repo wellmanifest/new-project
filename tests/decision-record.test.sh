@@ -7,6 +7,7 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 PY=python3
 SCRIPT=scripts/decision_record.py
+python3 -B "$ROOT/tests/decision_record_codec_test.py"
 
 good="$TMP/good.dsl"
 cat >"$good" <<'EOF'
