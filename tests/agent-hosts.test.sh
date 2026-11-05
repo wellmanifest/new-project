@@ -1025,6 +1025,37 @@ PY_SOURCE_COMPLETENESS
 python3 "$root/scripts/audit_diagnostics.py" --root "$root" >/dev/null \
   || fail "diagnostics catalog must cover every emitted code"
 
+python3 - "$root" "$tmp/required-checks-types" <<'PYREQUIREDTYPES'
+from pathlib import Path
+import importlib.util, json, shutil, sys
+source, root = map(Path, sys.argv[1:])
+root.mkdir()
+contract = json.loads((source / 'governance/agent-hosts.json').read_text())
+for host in contract['hosts']:
+    path = root / host['file']
+    path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source / host['file'], path)
+shutil.copytree(source / '.github/workflows', root / '.github/workflows')
+declaration = root / contract['anomalyChecks']['ci']['requiredChecksCandidates'][0]
+declaration.parent.mkdir(parents=True, exist_ok=True)
+valid = json.loads((source / 'governance/required-checks.json').read_text())
+for index, relative in enumerate(('scripts/agent_host_check.py', 'packages/wellman/src/wellman/_bundled/agent_host_check.py')):
+    spec = importlib.util.spec_from_file_location('required_check_shape_' + str(index), source / relative)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    for value in (valid, [], None, 'invalid', 42, True, {}):
+        declaration.write_text(json.dumps(value))
+        findings = module.check_guidance_anomalies(root, contract)
+        codes = [finding.code for finding in findings]
+        assert codes == ([] if value == valid else ['GOV-AGENT-HOST-004']), (relative, value, codes)
+    declaration.write_text('{ invalid')
+    assert [f.code for f in module.check_guidance_anomalies(root, contract)] == ['GOV-AGENT-HOST-004']
+    declaration.unlink()
+    assert [f.code for f in module.check_guidance_anomalies(root, contract)] == ['GOV-AGENT-HOST-004']
+print('Required-check declaration type/readability: PASS (18 source/bundled cases)')
+PYREQUIREDTYPES
+
 echo "agent-hosts.test.sh OK"
 
 # Exercise the Git commit-message boundary in the existing CI host-contract suite.

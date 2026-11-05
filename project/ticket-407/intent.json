@@ -1,7 +1,7 @@
 {
   "schema": "new-project.intent/v3",
   "ticket": "ticket-407",
-  "summary": "Fail closed in managed Git hooks",
+  "summary": "Refuse invalid policies and unfenced ticket refs in managed governance guards",
   "workstream": "governance",
   "classification": {
     "kind": "BUG",
@@ -21,7 +21,10 @@
     "packages/wellman/pyproject.toml",
     "template/files/pre-commit.template.sh",
     "template/files/pre-push.template.sh",
-    "tests/pre_push_hook_test.py"
+    "tests/pre_push_hook_test.py",
+    "scripts/agent_host_check.py",
+    "packages/wellman/src/wellman/_bundled/agent_host_check.py",
+    "tests/agent-hosts.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -33,7 +36,7 @@
   "delivery": {
     "acceptedBaseSha": "de22d44bd692cfac3721f567d587c57390b04ebf",
     "targetBranch": "main",
-    "outcome": "Correct reproduced hook lease/target-policy bypasses in source and managed payloads, release137 with material fix",
+    "outcome": "Fix all three independently reproduced managedguard findings: ticketref fencing, targetpolicy parse refusal and required-check declaration types;137joinsmaterialimplementation",
     "nonGoals": [
       "Protected policy waiver",
       "Consumer adoption or merge",
@@ -49,20 +52,23 @@
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Keep current hook interfaces and canonical writer checker; fence every ticket-bearing ref before profile exceptions and refuse malformed or explicitly invalid target declarations instead of changing protected targets. Preserve absence-only bootstrap fallback.",
+      "decision": "Keep current hook interfaces and canonical writer checker; fence every ticket-bearing ref before profile exceptions and refuse malformed or explicitly invalid target declarations instead of changing protected targets. Preserve absence-only bootstrap fallback. Reject every non-object required-check declaration with the existing004diagnostic in source and bundled runtime; exact valid contract remains accepted.",
       "components": [
         {
-          "name": "hooks",
+          "name": "managed-governance-guards",
           "paths": [
             ".githooks/**",
             "template/files/pre-commit.template.sh",
-            "template/files/pre-push.template.sh"
+            "template/files/pre-push.template.sh",
+            "scripts/agent_host_check.py",
+            "packages/wellman/src/wellman/_bundled/agent_host_check.py"
           ]
         },
         {
           "name": "regressions",
           "paths": [
-            "tests/pre_push_hook_test.py"
+            "tests/pre_push_hook_test.py",
+            "tests/agent-hosts.test.sh"
           ]
         },
         {
@@ -94,6 +100,13 @@
           "python3 tests/pre_push_hook_test.py"
         ],
         "evidence": "Real disposable Git remote/ref/HEAD unchanged on malformed target and unowned prefixed ticket attempts; canonical owners and main-only positives retained."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Actualhostcontract/workflows: valid declaration passes; nonobjects, malformed/unreadable declaration refuse004 in source and bundled runtime."
       },
       {
         "criterion": "AC-02",

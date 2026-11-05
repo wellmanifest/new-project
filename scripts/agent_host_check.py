@@ -594,6 +594,12 @@ def check_guidance_anomalies(root: Path, contract: dict[str, Any]) -> list[Findi
         ))
         return findings
     if not isinstance(declaration, dict):
+        findings.append(Finding(
+            "GOV-AGENT-HOST-004",
+            "CI required-checks declaration must be a JSON object.",
+            "Restore a valid managed required-checks declaration.",
+            [str(checks_path.relative_to(root))],
+        ))
         return findings
     pairs: list[tuple[str, str]] = []
     bound = declaration.get("requiredChecks")

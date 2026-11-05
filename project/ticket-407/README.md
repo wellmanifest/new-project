@@ -11,3 +11,5 @@ SESSION_EXECUTION_AUTHORIZATION: user continue, merge and test Maskservice campa
 
 - AC-01: Every ticket-bearing ref is fenced before profile exceptions; malformed/unreadable or explicitly invalid target declarations refuse, absence-only fallback retained. Real Git regressions preserve remote refs and local HEAD.
 - AC-02: Live/template parity, native gate, real full source CI and independent exact-head App review before immutable137 publication. Consumers remain frozen separately.
+
+- AC-03: Source and bundled runtime refuse non-object required-check declarations with GOV-AGENT-HOST-004; real valid declarations still pass. Eighteen actual contract/host/workflow fixture cases cover both implementations. Same13materialpaths within original15file/3component limits; no policy or check waiver.
