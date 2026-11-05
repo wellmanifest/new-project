@@ -183,7 +183,8 @@ def allocation_delivery(manifest: dict, state: dict, scope: list[str],
             "status": "accepted", "decision": "Native allocation independently recomputes the exact published package and target state. Only its closed adoption paths are admitted; protected authority remains separate.",
             "components": [{"name": "immutable-standard-adoption", "paths": scope}],
             "responsibilityChanges": False, "interfaceChanges": [],
-            "dataChanges": ["Immutable standard package and adoption lock"],
+            "dataChanges": [{"kind": "component-local-state", "component": "immutable-standard-adoption",
+                             "description": "Immutable standard package and adoption lock"}],
             "ui": {"impact": "none", "states": [], "evidence": []},
             "rollback": "Revert through protected review; preserve the previous immutable adoption pin.",
         },
@@ -199,7 +200,7 @@ def adoption_allocation_plan(standard_root: Path, revision: str, version: str,
                              target_root: Path, files: list[dict[str, object]],
                              payloads: dict[str, bytes], expected_lock: bytes,
                              executable: set[str], manifest: dict, before: dict,
-                             additions: list[str]) -> dict:
+                             additions: list[str], ownership: dict | None = None) -> dict:
     after = allocation_target_state(target_root, set(before["files"]))
     if before != after:
         raise SystemExit("target changed while preparing the adoption plan")
@@ -232,19 +233,27 @@ def adoption_allocation_plan(standard_root: Path, revision: str, version: str,
             raise SystemExit("installed managed closure differs from its adoption pin")
     old_package = json.loads((target_root / ".governance/package-manifest.json").read_bytes())
     old_strategies = {item["target"]: item["strategy"] for item in old_package["files"]}
+    required = {name for name in scope if strategies.get(name) == "managed"
+                and before["files"][name] is not None
+                and (old_strategies.get(name) != "managed"
+                     or old_managed.get(name) != before["files"][name]["sha256"])}
+    takeovers = upgrade_ownership_bindings(target_root, revision, before, strategies,
+        old_strategies, old_managed, required, ownership)
     for name in scope:
         if strategies.get(name) == "managed":
             current = before["files"][name]
             if current is not None and (old_strategies.get(name) != "managed"
                     or old_managed.get(name) != current["sha256"]):
-                raise SystemExit("managed adoption path requires explicit takeover or repair")
+                if name not in {item["path"] for item in takeovers}:
+                    raise SystemExit("managed adoption path requires explicit takeover or repair")
         elif (not any(fnmatch.fnmatchcase(name, pattern) for pattern in owned)
                 or any(fnmatch.fnmatchcase(name, pattern) for pattern in integration)):
             raise SystemExit("adoption plan cannot transfer target-owned path: " + name)
     desired = {**payloads, ".governance/manifest.lock.json": expected_lock}
     def desired_mode(name, content):
         current = before["files"].get(name)
-        if name != ".governance/manifest.lock.json" and current is not None and current["sha256"] == hashlib.sha256(content).hexdigest():
+        if name != ".governance/manifest.lock.json" and current is not None and (
+                current["sha256"] == hashlib.sha256(content).hexdigest() or name in required):
             mode = current["mode"]
             if name not in executable or mode & 0o111:
                 return "100755" if mode & 0o100 else "100644"
@@ -263,8 +272,84 @@ def adoption_allocation_plan(standard_root: Path, revision: str, version: str,
         "allowedPaths": scope,
         "delivery": allocation_delivery(manifest, before, scope, previous, revision),
     }
+    if takeovers:
+        plan["delivery"]["standardAdoption"]["managedTargetTakeovers"] = takeovers
     plan["digest"] = hashlib.sha256(json_bytes(plan)).hexdigest()
     return plan
+
+
+def upgrade_ownership_bindings(root: Path, revision: str, before: dict,
+                               strategies: dict, old_strategies: dict,
+                               old_managed: dict, required: set[str], document: dict | None) -> list[dict]:
+    """Acknowledge exact committed governance data, never a writer or foreign owner."""
+    if document is None:
+        return []
+    _bootstrap_directory_flags()  # Self-contained native replay retains this mode's host boundary.
+    if (not isinstance(document, dict)
+            or set(document) != {"schema", "baseSha", "sourceRevision", "paths"}
+            or document.get("schema") != "new-project.upgrade-ownership-plan/v1"
+            or document.get("baseSha") != before["head"]
+            or document.get("sourceRevision") != revision):
+        raise SystemExit("upgrade ownership plan must bind the exact target base and incoming source")
+    manifest = json.loads(plan_git(root, "show", before["head"] + ":" + MANIFEST_TARGET))
+    streams = manifest["coordination"]["workstreams"]
+    entries = document["paths"]
+    if (not isinstance(entries, list) or not entries
+            or len(entries) > manifest["delivery"]["maxImplementationFiles"]):
+        raise SystemExit("upgrade ownership paths exceed the declared implementation budget")
+    result = {}
+    for item in entries:
+        if not isinstance(item, dict) or set(item) != {"path", "baseDigest"}:
+            raise SystemExit("invalid upgrade ownership binding")
+        name, checksum = item["path"], item["baseDigest"]
+        if (not isinstance(name, str) or not isinstance(checksum, str)
+                or re.fullmatch(r"[0-9a-f]{64}", checksum) is None):
+            raise SystemExit("invalid upgrade ownership path or digest")
+        plan_path(root, name)
+        if (name in result or name not in required or strategies.get(name) != "managed"
+                or old_strategies.get(name) == "managed" or name in old_managed):
+            raise SystemExit("upgrade ownership requires exact newly managed changed targets")
+        owners = {stream for stream, value in streams.items()
+                  if any(fnmatch.fnmatchcase(name, pattern) for pattern in value["ownedPaths"])}
+        integration = manifest["coordination"]["integration"]
+        if (owners != {"governance"} or any(fnmatch.fnmatchcase(name, pattern)
+                for pattern in integration["requiredForPaths"])):
+            raise SystemExit("upgrade ownership cannot transfer foreign or integration-owned paths")
+        current = before["files"][name]
+        row = plan_git(root, "--literal-pathspecs", "ls-tree", "-z", before["head"], "--", name)
+        fields = row.rstrip(b"\0").split(b"\t")
+        if (len(fields) != 2 or fields[1] != name.encode() or b"\0" in row.rstrip(b"\0")
+                or fields[0].split()[:2] not in ([b"100644", b"blob"], [b"100755", b"blob"])):
+            raise SystemExit("upgrade ownership requires a committed regular file")
+        executable = fields[0].split()[0] == b"100755"
+        if (current is None or current["sha256"] != checksum
+                or bool(current["mode"] & 0o111) != executable
+                or hashlib.sha256(plan_git(root, "show", before["head"] + ":" + name)).hexdigest() != checksum):
+            raise SystemExit("upgrade ownership differs from committed file bytes or executable mode")
+        result[name] = {"path": name, "baseDigest": checksum}
+    if set(result) != required:
+        raise SystemExit("upgrade ownership must acknowledge every existing newly managed changed target")
+    return [result[name] for name in sorted(result)]
+
+
+def upgrade_ownership_document(path: Path, target_root: Path) -> dict:
+    """Read an external bounded acknowledgment through no-follow descriptors."""
+    if ".." in path.parts or target_root == path.absolute() or target_root in path.absolute().parents:
+        raise SystemExit("upgrade ownership plan must be outside the target repository")
+    def unique(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise SystemExit("duplicate upgrade ownership plan field")
+            result[key] = value
+        return result
+    try:
+        document = json.loads(_bootstrap_plan_bytes(path.absolute(), label="upgrade ownership"), object_pairs_hook=unique)
+    except (ValueError, UnicodeError) as error:
+        raise SystemExit("invalid upgrade ownership plan JSON") from error
+    if not isinstance(document, dict):
+        raise SystemExit("upgrade ownership plan must be a closed object")
+    return document
 
 
 def verify_allocation_plan(path: Path, target_root: Path, workstream: str,
@@ -297,9 +382,16 @@ def verify_allocation_plan(path: Path, target_root: Path, workstream: str,
     if (standard_root / "project/new-ticket.sh").read_bytes() != git_bytes(standard_root, revision, "project/new-ticket.sh"):
         raise SystemExit("allocator differs from the immutable source package")
     output = io.StringIO()
+    try:
+        takeovers = plan["delivery"]["standardAdoption"].get("managedTargetTakeovers")
+        ownership = None if takeovers is None else {
+            "schema": "new-project.upgrade-ownership-plan/v1", "baseSha": plan["target"]["head"],
+            "sourceRevision": revision, "paths": takeovers}
+    except (KeyError, TypeError, AttributeError) as error:
+        raise SystemExit("invalid adoption allocation ownership bindings") from error
     with contextlib.redirect_stdout(output):
         result = main(["--target-root", str(target_root), "--source-revision", revision,
-                       "--check", "--allocation-plan"])
+                       "--check", "--allocation-plan"], _upgrade_ownership=ownership)
     if result != 0 or json_bytes(plan) != json_bytes(json.loads(output.getvalue())):
         raise SystemExit("adoption allocation plan changed or target state is stale")
     with path.open("rb") as stream:
@@ -808,7 +900,7 @@ def _bootstrap_directory(directory: Path):
         os.close(descriptor)
 
 
-def _bootstrap_plan_bytes(external: Path) -> bytes:
+def _bootstrap_plan_bytes(external: Path, *, label: str = "bootstrap prerequisite") -> bytes:
     try:
         with _bootstrap_directory(external.parent) as parent:
             descriptor = os.open(external.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
@@ -816,13 +908,13 @@ def _bootstrap_plan_bytes(external: Path) -> bytes:
             with os.fdopen(descriptor, "rb") as stream:
                 observed = os.fstat(stream.fileno())
                 if not stat.S_ISREG(observed.st_mode) or observed.st_size > MAX_RELEASE_METADATA_BYTES:
-                    raise SystemExit("bootstrap prerequisite plan requires a bounded regular file")
+                    raise SystemExit(f"{label} plan requires a bounded regular file")
                 raw = stream.read(MAX_RELEASE_METADATA_BYTES + 1)
                 if len(raw) > MAX_RELEASE_METADATA_BYTES:
-                    raise SystemExit("bootstrap prerequisite plan exceeds its read limit")
+                    raise SystemExit(f"{label} plan exceeds its read limit")
                 return raw
     except OSError as error:
-        raise SystemExit("bootstrap prerequisite plan refuses unsafe or replaced input paths") from error
+        raise SystemExit(f"{label} plan refuses unsafe or replaced input paths") from error
 
 
 def create_bootstrap_prerequisites(target_root: Path, seeds: dict[str, bytes]) -> None:
@@ -1277,7 +1369,7 @@ def validate_wellman_scaffold(target_root: Path, files: list[dict[str, object]])
         raise SystemExit("Wellman scaffold migration refuses existing native adoption evidence or invalid legacy registration") from error
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target-root", required=True)
     parser.add_argument("--source-revision", required=True)
@@ -1311,9 +1403,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--allocation-plan", action="store_true",
                         help="With --check, export a read-only exact-state native upgrade allocation plan")
+    parser.add_argument("--upgrade-ownership-plan", type=Path,
+                        help="External exact-base/source/digest acknowledgment of existing newly managed governance files; allocation planning only")
     parser.add_argument("--repository", metavar="OWNER/NAME",
                         help="Bind required checks to this repository before an origin remote exists")
     args = parser.parse_args(argv)
+
+    if (args.upgrade_ownership_plan is not None or _upgrade_ownership is not None) and (
+            not args.allocation_plan or not args.check or args.upgrade
+            or (args.upgrade_ownership_plan is not None and _upgrade_ownership is not None)):
+        parser.error("upgrade ownership acknowledgment requires read-only native allocation planning")
 
     if args.allocation_plan and (not args.check or args.allow_unpublished_for_testing
             or args.bootstrap_native_adoption or args.migrate_wellman_scaffold
@@ -1348,6 +1447,8 @@ def main(argv: list[str] | None = None) -> int:
     target_root = requested_root.resolve()
     if args.allocation_plan and ".." in Path(args.target_root).parts:
         raise SystemExit("adoption plan refuses traversal in target roots")
+    if args.upgrade_ownership_plan is not None:
+        _upgrade_ownership = upgrade_ownership_document(args.upgrade_ownership_plan, target_root)
     fresh_base_sha = None
     if args.bootstrap_native_adoption:
         for name in ("manifest.json", "manifest.lock.json", "manifest.base.json", "package-manifest.json"):
@@ -1503,7 +1604,7 @@ def main(argv: list[str] | None = None) -> int:
         assert plan_before is not None
         print(json.dumps(adoption_allocation_plan(standard_root, args.source_revision, version,
             target_root, files, payloads, expected_lock, executable_targets, manifest,
-            plan_before, seed_additions), sort_keys=True))
+            plan_before, seed_additions, _upgrade_ownership), sort_keys=True))
         return 0
 
     if args.check:

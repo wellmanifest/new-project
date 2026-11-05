@@ -243,6 +243,46 @@ full product validation and independent protected publication gates remain.
 
 ## Upgrade boundaries
 
+### Explicit existing-file acknowledgment in native upgrade plans (0.20.136)
+
+An older native package can leave independently maintained files at paths that
+the incoming package now manages. The default allocation planner still refuses
+to overwrite these files. An authorized upgrade owner can review an external
+`--upgrade-ownership-plan /absolute/path/ownership.json` with
+`--check --allocation-plan`. This option is for planning only; it is refused
+with bootstrap, unpublished testing or installation modes.
+
+The closed JSON object contains `schema: new-project.upgrade-ownership-plan/v1`,
+`baseSha` (the current committed target HEAD), `sourceRevision` (the incoming
+published standard SHA), and a nonempty `paths` array. Each entry contains
+exactly `path` and `baseDigest`, the SHA-256 of its committed existing bytes.
+Name every changed, existing target that becomes managed, exactly once.
+
+Only regular files owned exclusively by the target's existing governance
+workstream qualify. Their bytes and executable mode must still match the
+committed base. Foreign or overlapping owners, integration requirements,
+old managed targets, damaged managed closure, missing files, extra bindings
+and stale hashes are refused. This acknowledges an exact data transition;
+it cannot transfer a live writer's lease or repair an invalid adoption pin.
+
+The input must be outside the target repository, at most 1 MiB, and readable
+through POSIX no-follow directory descriptors. Unsupported hosts refuse this
+optional mode. The resulting allocation plan embeds the existing
+`delivery.standardAdoption.managedTargetTakeovers` bindings. Native allocation
+recomputes the complete immutable plan under its existing lock before reserving
+an identity; it needs no mutable path to the original acknowledgment file.
+The generated intent describes the package and lock as component-local
+governance state, so the unchanged architecture gate does not mistake this
+bounded adoption for movement of product data between workstreams.
+
+Pass that reviewed result to the published native allocator's existing
+`--standard-adoption-plan` option. After allocation, acquire the actual fenced
+writer and apply the complete pinned package through the ordinary adopter in
+the canonical worktree. The unchanged gate verifies and consumes every exact
+takeover binding against the reviewed base and installed managed payload.
+Neither acknowledgment nor allocation grants execution, approval or merge
+authority. Publish this source and its matching release before production use.
+
 ### Explicit missing prerequisites on first bootstrap (0.20.134)
 
 An existing project can lack the target-owned files required before its first
