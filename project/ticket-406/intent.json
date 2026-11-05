@@ -1,0 +1,112 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-406",
+  "summary": "Plan explicit existing managed-target ownership in native upgrades",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-406/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/create_adoption_lock.py",
+    "tests/adoption_upgrade_harmonization_test.py",
+    "tests/ticket-allocation-worktree.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a4a550031454f2f6e8267016b6e209b14fc59f08",
+    "targetBranch": "main",
+    "outcome": "Let exact read-only native upgrade plans acknowledge existing newly managed governance files using the existing managedTargetTakeovers contract, preserving every actual ownership and publication gate.",
+    "nonGoals": [
+      "Repair modified old managed closure",
+      "Transfer foreign workstream or live writer ownership",
+      "Consumer adoption, legacy deletion, IMG or PyPI deployment",
+      "NP-027 historical branch admission changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Validate an explicit bounded external base/source/path/digest acknowledgment against committed regular-file state and existing governance ownership; embed existing managedTargetTakeovers in the native allocation plan and independently recompute it under the existing allocator lock.",
+      "components": [
+        {
+          "name": "native-upgrade-planning",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "tests/adoption_upgrade_harmonization_test.py",
+            "tests/ticket-allocation-worktree.test.py"
+          ]
+        },
+        {
+          "name": "immutable-release",
+          "paths": [
+            "VERSION",
+            "packages/wellman/pyproject.toml",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "docs/STANDARD_UPGRADE.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Optional --upgrade-ownership-plan for read-only published native allocation planning"
+      ],
+      "dataChanges": [
+        "Existing standardAdoption.managedTargetTakeovers bindings; no new authority"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the scoped capability through protected review and retain immutable135 and consumer managed pins."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m unittest discover -s tests -p adoption_upgrade_harmonization_test.py"
+        ],
+        "evidence": "Real Git positive/default refusal and stale, foreign, mode, malformed, path and publication negatives."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python tests/ticket-allocation-worktree.test.py"
+        ],
+        "evidence": "Native allocator recomputation carries exact acknowledgment into intent/lease and refuses tampering before reservation."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh",
+          "goal --delivery-mode pull-request --no-publish -a push --ticket ticket-406"
+        ],
+        "evidence": "Required source checks, full Goal tests and independent exact-head Validator before immutable136 release."
+      }
+    ]
+  }
+}

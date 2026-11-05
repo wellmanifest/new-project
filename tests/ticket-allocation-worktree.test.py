@@ -14,7 +14,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from adoption_upgrade_harmonization_test import AdoptionPlanFixture
+from adoption_upgrade_harmonization_test import AdoptionPlanFixture, ExistingOwnershipFixture
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -491,6 +491,76 @@ class NativeStandardAdoptionPlanTest(AdoptionPlanFixture, unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('exclusive local file allocation', result.stderr)
         self.assertFalse((self.target / '.git/new-project-ticket-high-water').exists())
+
+
+@unittest.skipUnless(os.name == "posix", "Explicit ownership inputs require no-follow descriptor operations")
+class NativeExistingOwnershipPlanTest(ExistingOwnershipFixture, unittest.TestCase):
+    def allocate_plan(self):
+        return self.command(self.target, "bash", str(self.source / "project/new-ticket.sh"),
+            "--title", "Adopt reviewed independent files", "--agent", "fixture",
+            "--writer-actor", "agent:fixture", "--writer-session", "session-fixture",
+            "--workstream", "governance", "--worktree-slug", "acknowledged-upgrade",
+            "--standard-adoption-plan", str(self.plan_path),
+            env=self.publication_environment(), check=False)
+
+    def test_native_plan_preserves_acknowledgment_in_intent_and_lease(self):
+        import hashlib
+        from jsonschema import Draft202012Validator
+
+        self.command(self.target, 'git', 'remote', 'set-url', 'origin', 'https://github.com/fixture/product.git')
+        plan = self.export_ownership()
+        self.ownership_path.unlink()  # Native replay relies on the bound plan, never a mutable input path.
+        before = self.command(self.target, "git", "status", "--porcelain").stdout
+        result = self.allocate_plan()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        receipt = next(json.loads(line) for line in result.stdout.splitlines()
+                       if line.startswith('{') and 'ticket-allocation-result' in line)
+        self.assertFalse(receipt['executionAuthorized'])
+        worktree = Path(receipt['worktreePath'])
+        intent = json.loads((worktree / 'project/ticket-001/intent.json').read_text())
+        self.assertEqual(intent['delivery'], plan['delivery'])
+        Draft202012Validator(json.loads((ROOT / 'governance/intent.schema.json').read_text())).validate(intent)
+        lease = json.loads(Path(receipt['leasePath']).read_text())
+        canonical = lambda value: json.dumps(value, sort_keys=True, separators=(',', ':')).encode()
+        self.assertEqual(lease['planHash'], hashlib.sha256(canonical(intent)).hexdigest())
+        self.assertEqual(self.command(self.target, "git", "status", "--porcelain").stdout, before)
+        # The real incoming installer replaces the acknowledged data, and the
+        # existing unchanged gate must consume every exact takeover binding.
+        with patch.object(self.adopter, 'verify_publication_evidence'):
+            import contextlib
+            import io
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(self.adopter.main(['--target-root', str(worktree),
+                    '--source-revision', self.revision, '--upgrade', '--repository', 'fixture/product']), 0)
+        # Construct an immutable fixture head without borrowing a production
+        # controller or publication identity. The actual gate below is unchanged.
+        self.command(worktree, 'git', 'config', 'core.hooksPath', os.devnull)
+        self.command(worktree, 'git', 'add', '.')
+        self.command(worktree, 'git', 'commit', '--quiet', '-m', 'Reviewed complete adoption fixture')
+        self.command(worktree, 'git', 'config', 'core.hooksPath', '.githooks')
+        head = self.command(worktree, 'git', 'rev-parse', 'HEAD').stdout.strip()
+        gate = self.command(worktree, sys.executable, '.governance/governance_check.py', '--root', str(worktree),
+            '--manifest', '.governance/manifest.json', '--lock', '.governance/manifest.lock.json',
+            '--stack-profiles', '.governance/stack-profiles.json', '--base', plan['target']['head'],
+            '--head', head, '--format', 'json', check=False)
+        self.assertEqual(gate.returncode, 0, gate.stdout + gate.stderr)
+
+    def test_native_rejects_changed_acknowledged_file_before_reservation(self):
+        self.export_ownership()
+        (self.target / self.ownership_paths[0]).write_text('changed after acknowledgment\n')
+        result = self.allocate_plan()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((self.target / '.git/new-project-ticket-high-water').exists())
+        self.assertFalse((self.target / '.worktrees').exists())
+
+    def test_native_rejects_forged_acknowledgment_before_reservation(self):
+        plan = self.export_ownership()
+        plan['delivery']['standardAdoption']['managedTargetTakeovers'][0]['baseDigest'] = 'a' * 64
+        self.plan_path.write_text(json.dumps(plan))
+        result = self.allocate_plan()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((self.target / '.git/new-project-ticket-high-water').exists())
+        self.assertFalse((self.target / '.worktrees').exists())
 
 
 class RepositoryAuthorityBindingTest(unittest.TestCase):

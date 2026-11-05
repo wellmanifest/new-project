@@ -105,7 +105,7 @@ class AdoptionPlanFixture:
         # A genuine older package lacks incoming ownership and two targets.
         p = cls.source / "governance/package-manifest.json"
         package = json.loads(p.read_text())
-        missing = {".gitattributes", ".github/workflows/new-project-branch-hygiene.yml"}
+        missing = getattr(cls, "missing_targets", {".gitattributes", ".github/workflows/new-project-branch-hygiene.yml"})
         package["files"] = [item for item in package["files"] if item["target"] not in missing]
         p.write_text(json.dumps(package, indent=2) + "\n")
         p = cls.source / "governance/manifest.default.json"
@@ -160,11 +160,11 @@ class AdoptionPlanFixture:
         self.plan_path = self.target / ".subactor/receipts/allocation-plan.json"
         self.plan_path.parent.mkdir(parents=True)
 
-    def export(self):
+    def export(self, *arguments):
         output = io.StringIO()
         with patch.object(self.adopter, "verify_publication_evidence"), contextlib.redirect_stdout(output):
             result = self.adopter.main(["--target-root", str(self.target),
-                "--source-revision", self.revision, "--check", "--allocation-plan"])
+                "--source-revision", self.revision, "--check", "--allocation-plan", *arguments])
         self.assertEqual(result, 0)
         plan = json.loads(output.getvalue())
         self.plan_path.write_text(json.dumps(plan))
@@ -197,6 +197,157 @@ class AdoptionPlanFixture:
                            PYTHONPATH=str(support), PYTHONDONTWRITEBYTECODE="1", GH_TOKEN="fixture")
         environment.pop("GITHUB_TOKEN", None)
         return environment
+
+
+class ExistingOwnershipFixture(AdoptionPlanFixture):
+    ownership_paths = (".governance/policy-dsl.lock.json", ".governance/policy_dsl_check.py")
+    missing_targets = {".gitattributes", ".github/workflows/new-project-branch-hygiene.yml", *ownership_paths}
+
+    def setUp(self):
+        super().setUp()
+        for name in self.ownership_paths:
+            (self.target / name).write_text("Independently owned fixture: " + name + "\n")
+        self.command(self.target, "git", "add", ".")
+        self.command(self.target, "git", "commit", "--quiet", "-m", "Existing independent dependency files")
+        # These independent files belong to the observed published baseline;
+        # the normal native guard must still reject unpublished main deltas.
+        self.command(self.target, "git", "update-ref", "refs/remotes/origin/main", "HEAD")
+        self.ownership_path = self.case / "reviewed-ownership.json"
+
+    def ownership_document(self):
+        return dict(schema="new-project.upgrade-ownership-plan/v1",
+            baseSha=self.command(self.target, "git", "rev-parse", "HEAD").stdout.strip(),
+            sourceRevision=self.revision,
+            paths=[dict(path=name, baseDigest=hashlib.sha256((self.target / name).read_bytes()).hexdigest())
+                   for name in self.ownership_paths])
+
+    def export_ownership(self, document=None):
+        self.ownership_path.write_text(json.dumps(self.ownership_document() if document is None else document))
+        return self.export("--upgrade-ownership-plan", str(self.ownership_path))
+
+
+@unittest.skipUnless(os.name == "posix", "Explicit ownership inputs require no-follow descriptor operations")
+class AdoptionExistingOwnershipTest(ExistingOwnershipFixture, unittest.TestCase):
+    def test_explicit_plan_is_read_only_and_self_contained_for_recomputation(self):
+        with self.assertRaises(SystemExit):
+            self.export()
+        before = {name: (self.target / name).read_bytes() for name in self.ownership_paths}
+        index = (self.target / ".git/index").read_bytes()
+        document = self.ownership_document()
+        plan = self.export_ownership(document)
+        self.assertEqual(plan["delivery"]["standardAdoption"]["managedTargetTakeovers"], document["paths"])
+        self.assertTrue(plan["readOnly"])
+        self.assertFalse(plan["grantsAuthority"])
+        self.ownership_path.unlink()
+        self.assertEqual(self.verify(), plan)
+        self.assertEqual((self.target / ".git/index").read_bytes(), index)
+        self.assertEqual({name: (self.target / name).read_bytes() for name in before}, before)
+
+    def test_committed_executable_mode_is_preserved_and_bound(self):
+        name = self.ownership_paths[1]
+        (self.target / name).chmod(0o755)
+        self.command(self.target, "git", "add", name)
+        self.command(self.target, "git", "commit", "--quiet", "-m", "Committed dependency mode")
+        plan = self.export_ownership()
+        self.assertEqual(next(row for row in plan["files"] if row["path"] == name)["gitMode"], "100755")
+        (self.target / name).chmod(0o644)
+        with self.assertRaises(SystemExit):
+            self.verify()
+
+    def test_uncommitted_bytes_modes_and_deleted_files_refuse_acknowledgment(self):
+        name = self.ownership_paths[1]
+        path = self.target / name
+        content = path.read_bytes()
+        document = self.ownership_document()
+        for mutation in (lambda: path.write_bytes(content + b"dirty\n"), lambda: path.chmod(0o755), path.unlink):
+            with self.subTest(mutation=mutation):
+                mutation()
+                with self.assertRaises(SystemExit):
+                    self.export_ownership(document)
+                path.write_bytes(content)
+                path.chmod(0o644)
+
+    def test_closed_shape_source_base_hash_path_and_consumption_are_required(self):
+        original = self.ownership_document()
+        changes = [lambda d: d.update(schema="foreign/v1"), lambda d: d.update(baseSha="a" * 40),
+            lambda d: d.update(sourceRevision="b" * 40), lambda d: d.update(grantsAuthority=True),
+            lambda d: d.update(paths=[]), lambda d: d["paths"].append(copy.deepcopy(d["paths"][0])),
+            lambda d: d["paths"][0].update(baseDigest="c" * 64), lambda d: d["paths"][0].update(baseDigest=True),
+            lambda d: d["paths"][0].update(path="../outside"), lambda d: d["paths"][0].update(path=".governance/*"),
+            lambda d: d["paths"][0].update(path=".governance/manifest.json"),
+            lambda d: d["paths"][0].update(path="README.md"), lambda d: d["paths"].pop(),
+            lambda d: d["paths"][0].update(unknown="ignored")]
+        before = self.command(self.target, "git", "status", "--porcelain").stdout
+        for index, change in enumerate(changes):
+            with self.subTest(index=index):
+                document = copy.deepcopy(original)
+                change(document)
+                with self.assertRaises(SystemExit):
+                    self.export_ownership(document)
+                self.assertEqual(self.command(self.target, "git", "status", "--porcelain").stdout, before)
+                self.assertFalse((self.target / ".git/new-project-ticket-high-water").exists())
+
+    def test_foreign_or_overlapping_owner_is_not_transferred(self):
+        path = self.target / ".governance/manifest.json"
+        original = json.loads(path.read_text())
+        for overlap in (False, True):
+            manifest = copy.deepcopy(original)
+            streams = manifest["coordination"]["workstreams"]
+            if not overlap:
+                streams["governance"]["ownedPaths"] = [p for p in streams["governance"]["ownedPaths"] if p != ".governance/**"]
+            streams["infrastructure"]["ownedPaths"] += list(self.ownership_paths)
+            path.write_text(json.dumps(manifest))
+            self.command(self.target, "git", "add", ".")
+            self.command(self.target, "git", "commit", "--quiet", "-m", "Foreign ownership fixture")
+            with self.subTest(overlap=overlap), self.assertRaises(SystemExit):
+                self.export_ownership()
+
+    def test_existing_old_managed_damage_is_not_repaired_by_acknowledgment(self):
+        path = self.target / "AGENTS.md"
+        path.write_text(path.read_text() + "\nlocal damage\n")
+        self.command(self.target, "git", "add", ".")
+        self.command(self.target, "git", "commit", "--quiet", "-m", "Changed old managed file")
+        with self.assertRaises(SystemExit):
+            self.export_ownership()
+
+    def test_plan_forgery_and_current_file_changes_refuse_recomputation(self):
+        plan = self.export_ownership()
+        for field in ("path", "baseDigest"):
+            forged = copy.deepcopy(plan)
+            forged["delivery"]["standardAdoption"]["managedTargetTakeovers"][0][field] = "d" * 64
+            self.plan_path.write_text(json.dumps(forged))
+            with self.subTest(field=field), self.assertRaises(SystemExit):
+                self.verify()
+        self.plan_path.write_text(json.dumps(plan))
+        (self.target / self.ownership_paths[0]).write_text("new owner bytes\n")
+        with self.assertRaises(SystemExit):
+            self.verify()
+
+    def test_external_input_must_be_bounded_regular_and_non_symlinked(self):
+        self.ownership_path.write_text(json.dumps(self.ownership_document()))
+        link = self.case / "input-link.json"
+        link.symlink_to(self.ownership_path)
+        fifo = self.case / "input-fifo"
+        os.mkfifo(fifo)
+        internal = self.target / ".subactor/receipts/ownership.json"
+        internal.write_text(self.ownership_path.read_text())
+        huge = self.case / "huge.json"
+        huge.write_bytes(b" " * (1024 * 1024 + 1))
+        duplicate = self.case / "duplicate.json"
+        duplicate.write_text('{"schema":"x","schema":"y"}')
+        for path in (link, fifo, internal, huge, duplicate):
+            with self.subTest(path=path.name), self.assertRaises(SystemExit):
+                self.export("--upgrade-ownership-plan", str(path))
+
+    def test_unpublished_install_and_unsupported_replay_modes_refuse(self):
+        self.export_ownership()
+        with patch.object(os, "supports_dir_fd", set()), self.assertRaises(SystemExit):
+            self.verify()
+        with self.assertRaises(SystemExit):
+            self.export("--upgrade-ownership-plan", str(self.ownership_path), "--allow-unpublished-for-testing")
+        with self.assertRaises(SystemExit):
+            self.adopter.main(["--target-root", str(self.target), "--source-revision", self.revision,
+                               "--upgrade", "--upgrade-ownership-plan", str(self.ownership_path)])
 
 
 class AdoptionAllocationPlanTest(AdoptionPlanFixture, unittest.TestCase):
