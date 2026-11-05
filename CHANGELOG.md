@@ -2,6 +2,8 @@
 
 ## 0.20.137
 
+- Keep unchanged work-admission queries in the related worktree suite, preserving every canonical check and stage timeout [ticket-407].
+
 - Reject non-object required-check declarations with the existing managed audit diagnostic [ticket-407].
 
 - Refuse malformed target-branch policy without silently changing protected targets [ticket-407].

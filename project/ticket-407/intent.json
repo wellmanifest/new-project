@@ -1,7 +1,7 @@
 {
   "schema": "new-project.intent/v3",
   "ticket": "ticket-407",
-  "summary": "Refuse invalid policies and unfenced ticket refs in managed governance guards",
+  "summary": "Validate managed guard inputs and keep every worktree test within canonical stage bounds",
   "workstream": "governance",
   "classification": {
     "kind": "BUG",
@@ -24,7 +24,9 @@
     "tests/pre_push_hook_test.py",
     "scripts/agent_host_check.py",
     "packages/wellman/src/wellman/_bundled/agent_host_check.py",
-    "tests/agent-hosts.test.sh"
+    "tests/agent-hosts.test.sh",
+    "tests/governance-scripts.test.sh",
+    "tests/worktree-overlap.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -52,7 +54,7 @@
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Keep current hook interfaces and canonical writer checker; fence every ticket-bearing ref before profile exceptions and refuse malformed or explicitly invalid target declarations instead of changing protected targets. Preserve absence-only bootstrap fallback. Reject every non-object required-check declaration with the existing004diagnostic in source and bundled runtime; exact valid contract remains accepted.",
+      "decision": "Keep current hook interfaces and canonical writer checker; fence every ticket-bearing ref before profile exceptions and refuse malformed or explicitly invalid target declarations instead of changing protected targets. Preserve absence-only bootstrap fallback. Reject every non-object required-check declaration with the existing004diagnostic in source and bundled runtime; exact valid contract remains accepted. Move unchanged work-start fixture invocation to the existing related worktree suite, retaining exact privateTMP/Gitceiling, everytest and default300s bound.",
       "components": [
         {
           "name": "managed-governance-guards",
@@ -68,7 +70,9 @@
           "name": "regressions",
           "paths": [
             "tests/pre_push_hook_test.py",
-            "tests/agent-hosts.test.sh"
+            "tests/agent-hosts.test.sh",
+            "tests/governance-scripts.test.sh",
+            "tests/worktree-overlap.test.sh"
           ]
         },
         {

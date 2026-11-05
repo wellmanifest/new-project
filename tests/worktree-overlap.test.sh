@@ -3,6 +3,17 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Work-admission queries own their private non-Git fixtures, alongside the
+# related overlap checks. Keep all queries within the existing stage budget.
+(
+  work_start_fixture_root="$(mktemp -d "${TMPDIR:-/tmp}/new-project-work-start-test.XXXXXX")"
+  trap 'rm -rf "$work_start_fixture_root"' EXIT INT TERM
+  work_start_fixture_root="$(cd "$work_start_fixture_root" && pwd -P)"
+  export TMPDIR="$work_start_fixture_root"
+  export GIT_CEILING_DIRECTORIES="$work_start_fixture_root${GIT_CEILING_DIRECTORIES:+:$GIT_CEILING_DIRECTORIES}"
+  python3 "$repo_root/tests/work_start_test.py"
+)
 cache="$repo_root/.subactor/cache"
 if [[ -L "$repo_root/.subactor" || -L "$cache" ]]; then
   echo 'FAIL: overlap fixture cache must not be symlinked' >&2
