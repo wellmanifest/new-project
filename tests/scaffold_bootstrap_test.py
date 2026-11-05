@@ -21,6 +21,7 @@ CHANGED = ('project/new-ticket.sh', 'scripts/create_adoption_lock.py', 'scripts/
 
 class BootstrapTest(unittest.TestCase):
     fresh = False
+    untracked_scaffold = False
     legacy_carriers = False
     expected_ticket = 'ticket-001'
 
@@ -64,7 +65,8 @@ class BootstrapTest(unittest.TestCase):
             carrier.mkdir(parents=True)
             (carrier / 'README.md').write_text('# Historical ticket\nStatus: IN_PROGRESS\n')
             (carrier / 'intent.json').write_text('{"ticket":"ticket-007","allowedPaths":["old.py"]}\n')
-        self.command(self.target, 'git', 'add', '.')
+        paths = ['.', ':!.governance/manifest.json'] if self.untracked_scaffold else ['.']
+        self.command(self.target, 'git', 'add', *paths)
         self.command(self.target, 'git', 'commit', '--quiet', '-m', 'Legacy scaffold')
         self.head = self.command(self.target, 'git', 'rev-parse', 'HEAD').stdout.strip()
         for rel in ['VERSION', 'CHANGELOG.md', 'TODO.md', 'project/TICKETS.md']:
@@ -120,7 +122,7 @@ class BootstrapTest(unittest.TestCase):
         # The allocator writes metadata only: product and adoption source stay on their old base.
         self.assertEqual((wt / 'foreign.txt').read_text(), 'original\n')
         self.assertEqual((self.target / 'foreign.txt').read_text(), 'another writer\n')
-        if self.fresh:
+        if self.fresh or self.untracked_scaffold:
             self.assertFalse((wt / '.governance/manifest.json').exists())
         else:
             self.assertEqual(json.loads((wt / '.governance/manifest.json').read_text())['schema'],
@@ -543,6 +545,12 @@ class FreshLegacyBootstrapTest(FreshBootstrapTest):
         self.assertNotEqual(result.returncode, 0)
 
 
+class UntrackedScaffoldTest(BootstrapTest):
+    """The same real allocator and refusal cases with no manifest in HEAD."""
+
+    untracked_scaffold = True
+
+
 class HistoricalRefObservationTest(unittest.TestCase):
     """Exercise the actual source against real Git, including error outcomes."""
 
@@ -578,6 +586,28 @@ class HistoricalRefObservationTest(unittest.TestCase):
                 path.write_text(sha + '\n')
                 with self.assertRaises(self.guard.ObservationError):
                     self.guard.bootstrap_historical_refs(self.root, self.head)
+
+    def test_missing_scaffold_requires_an_empty_readable_governance_tree(self):
+        self.guard.bootstrap_scaffold_at_head(self.root, self.head)
+        governance = self.root / '.governance'
+        governance.mkdir()
+        (governance / 'manifest.lock.json').write_text('{}\n')
+        self.git('add', '.governance')
+        self.git('commit', '--quiet', '-m', 'Native governance remains')
+        head = self.git('rev-parse', 'HEAD')
+        with self.assertRaisesRegex(self.guard.ObservationError, 'committed governance'):
+            self.guard.bootstrap_scaffold_at_head(self.root, head)
+        with self.assertRaisesRegex(self.guard.ObservationError, 'Git observation failed'):
+            self.guard.bootstrap_scaffold_at_head(self.root, 'f' * 40)
+
+    def test_committed_native_manifest_is_not_a_legacy_scaffold(self):
+        governance = self.root / '.governance'
+        governance.mkdir()
+        (governance / 'manifest.json').write_text('{"schema":"new-project.governance/v2"}\n')
+        self.git('add', '.governance')
+        self.git('commit', '--quiet', '-m', 'Native governance')
+        with self.assertRaisesRegex(self.guard.ObservationError, 'exact legacy scaffold'):
+            self.guard.bootstrap_scaffold_at_head(self.root, self.git('rev-parse', 'HEAD'))
 
     def test_shallow_history_and_symlinked_lease_directory_are_refused(self):
         shallow = self.root / '.git/shallow'

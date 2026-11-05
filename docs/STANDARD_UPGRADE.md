@@ -233,8 +233,13 @@ bounded intent, acquire the real controller writer lease, then apply the same
 pinned adopter there. Preserve the primary bootstrap and unrelated changes
 until their owner reconciles them; allocation never cleans or commits primary.
 
-Acknowledgement is restricted to the first file-backed allocation from a
-committed exact legacy scaffold. Changed installed bytes, a stale dirty digest,
+Acknowledgement is restricted to the first file-backed allocation from an
+exact legacy scaffold. An untracked scaffold is accepted only when a checked
+read of the original Git tree proves that no committed `.governance` entries
+existed. An unreadable tree or remaining committed governance still refuses
+admission. The published installer's exact-byte receipt is required in either
+case; do not create a preliminary scaffold commit or edit that receipt.
+Changed installed bytes, a stale dirty digest,
 a moved HEAD, another clone, symlinked receipt/payload paths, unpublished locks,
 foreign receipt paths, existing tickets/worktrees and incompatible allocator
 modes are refused. Unrecorded changes overlapping the requested scope still
