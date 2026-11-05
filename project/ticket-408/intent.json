@@ -1,0 +1,93 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-408",
+  "summary": "Admit first migration from an exact untracked Wellman scaffold when original HEAD contains no governance, preserving all bootstrap ownership checks",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-408/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/work_start_check.py",
+    "tests/scaffold_bootstrap_test.py",
+    "docs/STANDARD_UPGRADE.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "de22d44bd692cfac3721f567d587c57390b04ebf",
+    "targetBranch": "main",
+    "outcome": "Admit a first exact installer-owned untracked legacy scaffold when the original committed governance tree is absent; preserve all existing ownership, publication and freshness checks.",
+    "nonGoals": [
+      "Change protected publication authority",
+      "Take over another ticket or dirty product source",
+      "Edit managed consumer hashes",
+      "Device or live service effects"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use a checked read of the exact original Git tree. Accept only absent governance or the existing exact committed legacy manifest, then retain installer receipt, clone/HEAD, installed hash, dirty digest, first allocation and lease checks.",
+      "components": [
+        {
+          "name": "first-scaffold-admission",
+          "paths": [
+            "scripts/work_start_check.py",
+            "tests/scaffold_bootstrap_test.py",
+            "docs/STANDARD_UPGRADE.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through independent review and preserve the previously published package and consumer bootstrap receipt."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python tests/scaffold_bootstrap_test.py UntrackedScaffoldTest"
+        ],
+        "evidence": "Actual immutable installer and real Git allocation preserve foreign dirty bytes and leave source unchanged."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python tests/scaffold_bootstrap_test.py"
+        ],
+        "evidence": "Committed, fresh and untracked scaffold regressions; native manifests, remaining governance and unreadable Git tree refuse admission."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh",
+          "goal --delivery-mode pull-request --no-publish -a push --ticket ticket-408"
+        ],
+        "evidence": "Required checks and independently approved exact-head publication. Immutable release remains gated by the concurrent release owner."
+      }
+    ]
+  }
+}
