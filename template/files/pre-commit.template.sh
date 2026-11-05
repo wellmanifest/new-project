@@ -18,7 +18,7 @@ fi
 
 # Run before every profile/status success path. Identity is supplied by the
 # session launcher; the hook must never infer it from the lease holder.
-if [[ "$branch" =~ ticket[-/][0-9]{3,} ]]; then
+if [[ "$branch" =~ (^|/)ticket[-/][0-9]{3,} ]]; then
   writer_runner="$root/.governance/change_lease_check.py"
   [[ -f "$writer_runner" ]] || writer_runner="$root/scripts/change_lease_check.py"
   if [[ ! -f "$writer_runner" ]]; then
@@ -90,13 +90,13 @@ if [[ -z "$branch" || "$branch" == "HEAD" ]]; then
   exit 1
 fi
 
-if [[ ! "$branch" =~ ticket[-/]([0-9]{3,}) ]]; then
+if [[ ! "$branch" =~ (^|/)ticket[-/]([0-9]{3,}) ]]; then
   echo "GOV-AGENT-HOST-001: branch '$branch' is not bound to ticket-NNN." >&2
   echo "  Allocate with ./project/new-ticket.sh and commit on a ticket branch." >&2
   exit 1
 fi
 
-ticket="ticket-${BASH_REMATCH[1]}"
+ticket="ticket-${BASH_REMATCH[2]}"
 readme_rel="project/$ticket/README.md"
 
 ticket_storage="$(git config --local --get new-project.ticketStorage 2>/dev/null || true)"

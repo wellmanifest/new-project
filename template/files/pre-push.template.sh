@@ -52,7 +52,7 @@ refused=0
 while read -r local_ref local_sha remote_ref remote_sha; do
   [[ -n "${remote_ref:-}" ]] || continue
   for ref in "$local_ref" "$remote_ref"; do
-    if [[ "$ref" =~ ^refs/heads/.*ticket[-/][0-9]{3,} ]]; then
+    if [[ "$ref" =~ ^refs/heads/(.*/)?ticket[-/][0-9]{3,} ]]; then
       writer_runner="$root/.governance/change_lease_check.py"
       [[ -f "$writer_runner" ]] || writer_runner="$root/scripts/change_lease_check.py"
       if [[ ! -f "$writer_runner" ]]; then

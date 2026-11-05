@@ -2,6 +2,8 @@
 
 ## 0.20.137
 
+- Match ticket markers at branch segment boundaries in writer routing and commit binding, preserving ordinary embedded-substring refs and all real ticket fencing [ticket-407].
+
 - Keep unchanged work-admission queries in the related worktree suite, preserving every canonical check and stage timeout [ticket-407].
 
 - Reject non-object required-check declarations with the existing managed audit diagnostic [ticket-407].
