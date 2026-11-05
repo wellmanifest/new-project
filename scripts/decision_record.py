@@ -53,15 +53,15 @@ def classify_action(action: str) -> dict[str, Any]:
 
 DECISION_START = re.compile(r"^DECISION\s+(D-\d{3}-\d{4,})\s*$")
 FIELD = re.compile(r"^([A-Z][A-Z0-9_]*)\s+(.+)$")
-JSON_STRING_TOKEN = r'"(?:[^"\\]|\\.)*"'
-INPUT_LINE = re.compile(rf"^INPUT\s+({JSON_STRING_TOKEN}|[A-Za-z0-9_]+)\s*=\s*(.+)$")
+JSON_STRING_PATTERN = r'"(?:[^"\\]|\\.)*"'
+INPUT_LINE = re.compile(rf"^INPUT\s+({JSON_STRING_PATTERN}|[A-Za-z0-9_]+)\s*=\s*(.+)$")
 VERDICT_LINE = re.compile(
     r"^VERDICT\s+(\S+)\s+AUTHORITY\s+(DETERMINISTIC|ADVISORY)\s*$"
 )
 REJECTED_LINE = re.compile(r"^REJECTED\s+(\S+)\s+BECAUSE\s+(.+)$")
 # The explicit JSON marker avoids reinterpreting legacy bare alternatives
 # such as '"quoted"' or 'JSON'. Only previously unrepresentable names need it.
-REJECTED_JSON_LINE = re.compile(rf"^REJECTED\s+JSON\s+({JSON_STRING_TOKEN})\s+BECAUSE\s+(.+)$")
+REJECTED_JSON_LINE = re.compile(rf"^REJECTED\s+JSON\s+({JSON_STRING_PATTERN})\s+BECAUSE\s+(.+)$")
 ADVISORY_LINE = re.compile(
     r'^ADVISORY\s+llm_verdict\s*=\s*("(?:[^"\\]|\\.)*")\s+'
     r'MODEL\s+("(?:[^"\\]|\\.)*")\s*$'
