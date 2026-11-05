@@ -270,6 +270,30 @@ def bootstrap_historical_refs(root, head):
     return refs
 
 
+def bootstrap_scaffold_at_head(root, head):
+    """Verify committed legacy provenance, or prove governance was absent.
+
+    The published installer also accepts an exact untracked scaffold. Its
+    receipt still binds the original clone/HEAD and every installed byte;
+    absence in Git is not a reason to invent a preliminary scaffold commit.
+    A checked tree read distinguishes absence from an unreadable Git object.
+    """
+    paths = set(git(root, "ls-tree", "-r", "--name-only", "-z", head,
+                    "--", ".governance").split("\0")) - {""}
+    if ".governance/manifest.json" not in paths:
+        if paths:
+            raise ObservationError("Untracked scaffold cannot replace committed governance")
+        return
+    original = json.loads(git(root, "show", f"{head}:.governance/manifest.json"))
+    standard = original.get("standard", {}) if isinstance(original, dict) else {}
+    if (not isinstance(original, dict) or set(original) != {"schema", "standard"}
+            or original.get("schema") != "wellmanifest.manifest/v1"
+            or not isinstance(standard, dict) or set(standard) != {"id", "version"}
+            or standard.get("id") != "profile:baseline"
+            or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", str(standard.get("version", "")))):
+        raise ObservationError("Bootstrap requires an exact legacy scaffold")
+
+
 def bootstrap_owned_paths(root, manifest, expected_digest):
     """A first allocator may acknowledge only exact installer-owned bytes.
 
@@ -296,14 +320,7 @@ def bootstrap_owned_paths(root, manifest, expected_digest):
             if git(root, "cat-file", "-e", f"{head}:.governance/{name}", optional=True) is not None:
                 raise ObservationError("Fresh bootstrap cannot replace committed governance")
     elif kind == "legacy-scaffold":
-        original = json.loads(git(root, "show", f"{head}:.governance/manifest.json"))
-        standard = original.get("standard", {})
-        if (set(original) != {"schema", "standard"}
-                or original.get("schema") != "wellmanifest.manifest/v1"
-                or set(standard) != {"id", "version"}
-                or standard.get("id") != "profile:baseline"
-                or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", str(standard.get("version", "")))):
-            raise ObservationError("Bootstrap requires a committed exact legacy scaffold")
+        bootstrap_scaffold_at_head(root, head)
     else:
         raise ObservationError("Unknown bootstrap kind")
     if (len(worktrees(root)) != 1
