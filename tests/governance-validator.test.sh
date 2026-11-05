@@ -2,6 +2,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+python3 -B "$repo_root/tests/malformed_governance_test.py"
 python3 -B "$repo_root/tests/snapshot_migration_test.py"
 python3 -B "$repo_root/tests/history_order_test.py"
 if [[ "$(uname -s)" == Linux ]]; then
@@ -3151,5 +3152,32 @@ if python3 "$change_lease_checker" trace "$change_lease_dir/trace.jsonl" > "$cha
 grep -q GOV-CHANGE-LEASE-002 "$change_lease_dir/bad-trace.out"
 
 python3 "$repo_root/tests/legacy_ticket_state_test.py"
+
+echo '== source and bundled CLI keep malformed-policy diagnostics typed =='
+typed_case=0
+for typed_checker in "$repo_root/scripts/governance_check.py" \
+  "$repo_root/packages/wellman/src/wellman/_bundled/governance_check.py"; do
+  typed_case=$((typed_case + 1))
+  typed_target="$fixture/typed-policy-$typed_case"
+  make_fixture "$typed_target"
+  cp "$typed_target/.governance/manifest.json" "$fixture/typed-manifest-$typed_case.json"
+  python3 - "$typed_target/.governance/manifest.json" <<'PY_TYPED_PROFILE'
+import json, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+manifest = json.loads(path.read_text())
+manifest['delivery']['profiles'] = None
+path.write_text(json.dumps(manifest))
+PY_TYPED_PROFILE
+  expect_code GOV-MANIFEST-001 python3 "$typed_checker" --root "$typed_target" \
+    --manifest .governance/manifest.json --stack-profiles .governance/stack-profiles.json \
+    --changed-file src/app.js
+  cp "$fixture/typed-manifest-$typed_case.json" "$typed_target/.governance/manifest.json"
+  for typed_lock in 'null' '[]' '[1]' 'false' '"invalid"' '1' '1.5'; do
+    printf '%s\n' "$typed_lock" > "$typed_target/.governance/manifest.lock.json"
+    expect_code GOV-SYNC-001 python3 "$typed_checker" --root "$typed_target" \
+      --manifest .governance/manifest.json --stack-profiles .governance/stack-profiles.json \
+      --changed-file src/app.js --lock .governance/manifest.lock.json
+  done
+done
 
 echo 'governance validator: PASS'
