@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -163,6 +164,117 @@ class TerminalOwnerRelease(unittest.TestCase):
         (self.tree / 'source.txt').write_text('another change')
         self.git('commit', '-qam', 'unmerged', root=self.tree)
         self.refused()
+
+    def remove_merged_checkout_and_ref(self):
+        self.git('worktree', 'remove', str(self.tree))
+        self.git('branch', '-d', 'ticket/123-example')
+
+    def test_removed_merged_checkout_and_ref_release_only_current_owner(self):
+        self.remove_merged_checkout_and_ref()
+        before = self.lease.read_bytes()
+        self.assertNotEqual(self.value['headSha'], self.head)
+        head = self.git('rev-parse', 'HEAD')
+        self.assertEqual(self.invoke(False)['status'], 'planned')
+        self.assertEqual(self.lease.read_bytes(), before)
+        self.assertEqual(self.invoke()['status'], 'released')
+        current = json.loads(self.lease.read_bytes())
+        self.assertEqual((current['phase'], current['leaseRevision'], current['fencingToken']), ('released', 3, 3))
+        for field in ('ownerActor', 'ownerSession', 'headSha', 'issuedAt', 'expiresAt'):
+            self.assertEqual(current[field], self.value[field])
+        self.assertEqual(self.invoke()['status'], 'idempotent')
+        self.assertFalse(self.tree.exists())
+        self.assertEqual(self.git('rev-parse', 'HEAD'), head)
+        self.assertEqual(subprocess.run(['git', '-C', str(self.root), 'show-ref', '--verify', '--quiet',
+            'refs/heads/ticket/123-example']).returncode, 1)
+
+    def test_removed_ref_nonfrozen_allocation_phases_plan_without_mutation(self):
+        self.remove_merged_checkout_and_ref()
+        for phase in ('claimed', 'editing', 'validating'):
+            with self.subTest(phase=phase):
+                self.value['phase'] = phase
+                self.write_lease()
+                before = self.lease.read_bytes()
+                self.request['expectedLeaseSha256'] = hashlib.sha256(before).hexdigest()
+                self.assertEqual(self.invoke(False)['status'], 'planned')
+                self.assertEqual(self.lease.read_bytes(), before)
+
+    def test_removed_ref_preserves_remaining_checkout_and_symlink(self):
+        self.remove_merged_checkout_and_ref()
+        self.tree.mkdir()
+        retained = self.tree / 'retained.txt'
+        retained.write_text('unknown work')
+        self.refused()
+        self.assertEqual(retained.read_text(), 'unknown work')
+        shutil.rmtree(self.tree)
+        target = self.root.parent / 'retained-target'
+        target.mkdir()
+        self.tree.symlink_to(target, target_is_directory=True)
+        self.refused()
+        self.tree.unlink()
+        target.rmdir()
+        self.tree.symlink_to(target, target_is_directory=True)
+        self.refused()
+        self.assertTrue(self.tree.is_symlink())
+
+    def test_removed_ref_preserves_prunable_worktree_registration(self):
+        self.git('update-ref', '-d', 'refs/heads/ticket/123-example')
+        shutil.rmtree(self.tree)
+        before = self.git('worktree', 'list', '--porcelain')
+        self.assertIn(str(self.tree), before)
+        self.refused()
+        self.assertEqual(self.git('worktree', 'list', '--porcelain'), before)
+
+    def test_removed_ref_rejects_allocation_from_unrelated_history(self):
+        self.remove_merged_checkout_and_ref()
+        tree = self.git('rev-parse', self.head + '^{tree}')
+        unrelated = subprocess.check_output(['git', '-C', str(self.root), 'commit-tree', tree],
+            input='unrelated root\n', text=True).strip()
+        self.value['headSha'] = unrelated
+        self.write_lease()
+        self.request['expectedLeaseSha256'] = hashlib.sha256(self.lease.read_bytes()).hexdigest()
+        self.refused()
+        replacement = subprocess.check_output(['git', '-C', str(self.root), 'commit-tree', tree, '-p', unrelated],
+            input='replacement ancestry\n', text=True).strip()
+        self.git('replace', self.head, replacement)
+        self.refused()
+
+    def test_removed_ref_rejects_unverified_terminal_receipt(self):
+        self.remove_merged_checkout_and_ref()
+        self.git('reset', '--hard', self.value['headSha'])
+        self.refused()
+
+    def test_removed_ref_still_requires_owner_and_exact_cas(self):
+        self.remove_merged_checkout_and_ref()
+        for field, value in [('ownerSession', 'another-session'), ('ownerActor', 'agent:other'),
+                             ('expectedRevision', 2), ('expectedFencingToken', 2),
+                             ('expectedLeaseSha256', 'f'*64), ('ownerHandoff', False)]:
+            with self.subTest(field=field):
+                original = self.request[field]
+                self.request[field] = value
+                self.refused()
+                self.request[field] = original
+
+    def test_removed_ref_never_replaces_reviewed_publication_head(self):
+        self.remove_merged_checkout_and_ref()
+        for phase in ('approved', 'merged', 'closed'):
+            with self.subTest(phase=phase):
+                self.value.update(phase=phase, publicationFrozen=phase in canonical.FROZEN_PHASES,
+                                  pullRequest=1, validatorRunId='fixture-validator')
+                self.write_lease()
+                self.request['expectedLeaseSha256'] = hashlib.sha256(self.lease.read_bytes()).hexdigest()
+                self.refused()
+
+    def test_removed_ref_git_observation_errors_fail_closed(self):
+        self.remove_merged_checkout_and_ref()
+        original = release.git
+        for command in ('worktree', 'for-each-ref', 'merge-base'):
+            with self.subTest(command=command):
+                def unavailable(root, *args, **kwargs):
+                    if command in args:
+                        raise PermissionError('git_observation_unavailable')
+                    return original(root, *args, **kwargs)
+                with patch.object(release, 'git', side_effect=unavailable):
+                    self.refused()
 
     def test_wrong_repository_and_hardlinked_lease_refuse(self):
         self.value['repositoryRef'] = 'local/' + 'f'*64

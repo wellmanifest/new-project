@@ -182,7 +182,22 @@ def _verify_terminal(root, request, lease):
             require(lease['headSha'] == receipt['headSha'], 'publication_head_mismatch')
         tree = root / '.worktrees' / lease['worktreeId']
         branch_head = git(root, 'rev-parse', '--verify', lease['branchRef'], check=False)
-        require((branch_head or lease['headSha']) == receipt['headSha'], 'terminal_head_mismatch')
+        if not branch_head and lease['phase'] in {'claimed', 'editing', 'validating'}:
+            # An allocation head is the accepted base, not the later published
+            # commit. Explicit owner handoff may release an already-removed
+            # delivery, but may neither remove nor normalize remaining state.
+            require(not os.path.lexists(tree), 'terminal_checkout_still_present')
+            require(not git(root, 'for-each-ref', '--format=%(refname)', lease['branchRef']),
+                    'terminal_ref_still_present')
+            registrations = git(root, 'worktree', 'list', '--porcelain', '-z')
+            require(not any('worktree ' + str(tree) in fields or 'branch ' + lease['branchRef'] in fields
+                            for fields in (row.split('\0') for row in registrations.split('\0\0'))),
+                    'terminal_checkout_still_registered')
+            require(lease['headSha'] is not None
+                    and git(root, '--no-replace-objects', 'merge-base', lease['headSha'], receipt['headSha'])
+                    == lease['headSha'], 'terminal_allocation_base_unverified')
+        else:
+            require((branch_head or lease['headSha']) == receipt['headSha'], 'terminal_head_mismatch')
         if tree.exists():
             with directory(tree): pass
             require(git(tree, 'rev-parse', 'HEAD') == receipt['headSha']
