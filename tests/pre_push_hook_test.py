@@ -246,5 +246,46 @@ class PrePushHookTest(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
 
 
+    def test_invalid_target_policy_never_pushes_custom_branch(self):
+        git(self.repo, "branch", "stable")
+        invalid = ["{ invalid", '{"delivery": null}', '{"delivery":{"targetBranches":null}}',
+                   '{"delivery":{"targetBranches":[]}}', '{"delivery":{"targetBranches":[1]}}',
+                   '{"delivery":{"targetBranches":[""]}}']
+        for source in (HOOK, ROOT / ".githooks/pre-push"):
+            shutil.copy2(source, self.repo / ".githooks/pre-push")
+            for value in invalid:
+                with self.subTest(source=source, manifest=value):
+                    self.manifest(["stable"])
+                    (self.repo / ".governance/manifest.json").write_text(value)
+                    result = git(self.repo, "push", "origin", "stable", check=False)
+                    self.assertNotEqual(result.returncode, 0, result.stderr)
+                    self.assertIn("GOV-PUSH-001", result.stderr)
+                    self.assertEqual(git(self.remote, "show-ref", check=False).stdout, "")
+
+    def test_prefixed_ticket_source_and_destination_require_writer(self):
+        for source in (HOOK, ROOT / ".githooks/pre-push"):
+            shutil.copy2(source, self.repo / ".githooks/pre-push")
+            for ref in ("feature/ticket-001-unowned", "feature/ticket/001-unowned"):
+                git(self.repo, "branch", ref, check=False)
+                for spec in (ref, "main:" + ref):
+                    with self.subTest(source=source, spec=spec):
+                        result = git(self.repo, "push", "origin", spec, check=False)
+                        self.assertNotEqual(result.returncode, 0, result.stderr)
+                        self.assertIn("GOV-CHANGE-LEASE-001", result.stderr)
+                        self.assertEqual(git(self.remote, "show-ref", check=False).stdout, "")
+
+    def test_prefixed_ticket_commit_is_fenced_before_profile_exception(self):
+        git(self.repo, "checkout", "-q", "-b", "feature/ticket-001-unowned")
+        self.profile("local-audit")
+        before = git(self.repo, "rev-parse", "HEAD").stdout
+        for source in (ROOT / ".githooks/pre-commit", ROOT / "template/files/pre-commit.template.sh"):
+            shutil.copy2(source, self.repo / ".githooks/pre-commit")
+            (self.repo / ".githooks/pre-commit").chmod(0o755)
+            result = git(self.repo, "commit", "--allow-empty", "-m", "unowned prefix", check=False)
+            self.assertNotEqual(result.returncode, 0, str(source))
+            self.assertIn("GOV-CHANGE-LEASE-001", result.stderr)
+            self.assertEqual(git(self.repo, "rev-parse", "HEAD").stdout, before)
+
+
 if __name__ == "__main__":
     unittest.main()

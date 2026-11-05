@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 0.20.137
+
+- Keep unchanged work-admission queries in the related worktree suite, preserving every canonical check and stage timeout [ticket-407].
+
+- Reject non-object required-check declarations with the existing managed audit diagnostic [ticket-407].
+
+- Refuse malformed target-branch policy without silently changing protected targets [ticket-407].
+- Fence ticket-bearing prefixed commit and push refs before delivery-profile shortcuts [ticket-407].
+
 ## 0.20.129
 
 - Detect Python secret literals in positional-only and lambda defaults, keeping
