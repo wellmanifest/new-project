@@ -1,0 +1,108 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-407",
+  "summary": "Fail closed in managed Git hooks",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-407/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".githooks/pre-commit",
+    ".githooks/pre-push",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "template/files/pre-commit.template.sh",
+    "template/files/pre-push.template.sh",
+    "tests/pre_push_hook_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "de22d44bd692cfac3721f567d587c57390b04ebf",
+    "targetBranch": "main",
+    "outcome": "Correct reproduced hook lease/target-policy bypasses in source and managed payloads, release137 with material fix",
+    "nonGoals": [
+      "Protected policy waiver",
+      "Consumer adoption or merge",
+      "Foreign source/worktree cleanup"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep current hook interfaces and canonical writer checker; fence every ticket-bearing ref before profile exceptions and refuse malformed or explicitly invalid target declarations instead of changing protected targets. Preserve absence-only bootstrap fallback.",
+      "components": [
+        {
+          "name": "hooks",
+          "paths": [
+            ".githooks/**",
+            "template/files/pre-commit.template.sh",
+            "template/files/pre-push.template.sh"
+          ]
+        },
+        {
+          "name": "regressions",
+          "paths": [
+            "tests/pre_push_hook_test.py"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "packages/wellman/pyproject.toml",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independent reviewed revert; retain immutable older pins and frozen consumer heads."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/pre_push_hook_test.py"
+        ],
+        "evidence": "Real disposable Git remote/ref/HEAD unchanged on malformed target and unowned prefixed ticket attempts; canonical owners and main-only positives retained."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh",
+          "goal --delivery-mode pull-request --no-publish -a push --ticket ticket-407"
+        ],
+        "evidence": "Native scope/host/package checks, genuine Goal publication and actual full offline source CI; independent App review before immutable release."
+      }
+    ]
+  }
+}

@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.20.137
+
+- Refuse malformed target-branch policy without silently changing protected targets [ticket-407].
+- Fence ticket-bearing prefixed commit and push refs before delivery-profile shortcuts [ticket-407].
+
 ## 0.20.129
 
 - Detect Python secret literals in positional-only and lambda defaults, keeping
