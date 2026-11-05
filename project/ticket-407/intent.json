@@ -1,7 +1,7 @@
 {
   "schema": "new-project.intent/v3",
   "ticket": "ticket-407",
-  "summary": "Validate managed guard inputs and keep every worktree test within canonical stage bounds",
+  "summary": "Recognize ticket markers at branch segment boundaries after verified partial integration",
   "workstream": "governance",
   "classification": {
     "kind": "BUG",
@@ -36,9 +36,9 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "de22d44bd692cfac3721f567d587c57390b04ebf",
+    "acceptedBaseSha": "2337aeb603fd71c6ecb24911e9b256204f841c2c",
     "targetBranch": "main",
-    "outcome": "Fix all three independently reproduced managedguard findings: ticketref fencing, targetpolicy parse refusal and required-check declaration types;137joinsmaterialimplementation",
+    "outcome": "Deliver remaining boundary refinement from local2d76eb6 after protected PR577 merged original guard repairs. Preserve native407 and published history; fresh exact-head validation, independent review and immutable standard publication remain required.",
     "nonGoals": [
       "Protected policy waiver",
       "Consumer adoption or merge",
@@ -54,7 +54,7 @@
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Keep current hook interfaces and canonical writer checker; fence every ticket-bearing ref before profile exceptions and refuse malformed or explicitly invalid target declarations instead of changing protected targets. Preserve absence-only bootstrap fallback. Reject every non-object required-check declaration with the existing004diagnostic in source and bundled runtime; exact valid contract remains accepted. Move unchanged work-start fixture invocation to the existing related worktree suite, retaining exact privateTMP/Gitceiling, everytest and default300s bound.",
+      "decision": "Keep current hook interfaces and canonical writer checker; fence every ticket-bearing ref before profile exceptions and refuse malformed or explicitly invalid target declarations instead of changing protected targets. Preserve absence-only bootstrap fallback. Reject every non-object required-check declaration with the existing004diagnostic in source and bundled runtime; exact valid contract remains accepted. Move unchanged work-start fixture invocation to the existing related worktree suite, retaining exact privateTMP/Gitceiling, everytest and default300s bound. Refine ticket recognition consistently in writer routing and final commit binding: a marker starts the branch or follows a slash; embedded noticket/plain-ticket substrings stay ordinary refs. Canonical writer checker and all real prefixed-ticket refusals remain unchanged. Rebuild only the unpublished2d76eb6 refinement onto the verified merged target after preserving a verified recoverable bundle; published refs stay unchanged. Stage the complete remaining material delta and reviewed intent in one ordinary commit, retaining normal writer/material guards.",
       "components": [
         {
           "name": "managed-governance-guards",
@@ -103,7 +103,7 @@
         "commands": [
           "python3 tests/pre_push_hook_test.py"
         ],
-        "evidence": "Real disposable Git remote/ref/HEAD unchanged on malformed target and unowned prefixed ticket attempts; canonical owners and main-only positives retained."
+        "evidence": "Real disposable Git remote/ref/HEAD unchanged on malformed target and unowned prefixed ticket attempts; canonical owners and main-only positives retained. Boundary regressions cover unrelated embedded substrings in both ref directions, native commit refusal and declared local-audit behavior; capture numeric ticket identity consistently."
       },
       {
         "criterion": "AC-03",

@@ -286,6 +286,49 @@ class PrePushHookTest(unittest.TestCase):
             self.assertIn("GOV-CHANGE-LEASE-001", result.stderr)
             self.assertEqual(git(self.repo, "rev-parse", "HEAD").stdout, before)
 
+    def test_embedded_ticket_substrings_do_not_fence_ordinary_pushes(self):
+        for hook_index, source in enumerate((HOOK, ROOT / ".githooks/pre-push")):
+            shutil.copy2(source, self.repo / ".githooks/pre-push")
+            for index, branch in enumerate(("noticket-001", "feature/noticket-001", "plain-ticket-001")):
+                local = f"{branch}-source-{hook_index}"
+                git(self.repo, "branch", local)
+                for spec, destination in (
+                    (f"{local}:ordinary-{hook_index}-{index}", f"ordinary-{hook_index}-{index}"),
+                    (f"main:{branch}-destination-{hook_index}", f"{branch}-destination-{hook_index}"),
+                ):
+                    with self.subTest(source=source, spec=spec):
+                        result = git(self.repo, "push", "origin", spec, check=False)
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        self.assertEqual(git(self.remote, "rev-parse", "refs/heads/" + destination).stdout,
+                                         git(self.repo, "rev-parse", "HEAD").stdout)
+
+    def test_embedded_ticket_substrings_are_not_native_commit_bindings(self):
+        before = git(self.repo, "rev-parse", "HEAD").stdout
+        for index, source in enumerate((ROOT / ".githooks/pre-commit", ROOT / "template/files/pre-commit.template.sh")):
+            shutil.copy2(source, self.repo / ".githooks/pre-commit")
+            (self.repo / ".githooks/pre-commit").chmod(0o755)
+            for branch in ("noticket-001", "feature/noticket-001", "plain-ticket-001"):
+                git(self.repo, "checkout", "-q", "-b", f"{branch}-{index}")
+                (self.repo / "README.md").write_text(f"ordinary branch {branch}\n")
+                git(self.repo, "add", "README.md")
+                result = git(self.repo, "commit", "-m", "ordinary branch has no native ticket", check=False)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("GOV-AGENT-HOST-001", result.stderr)
+                self.assertNotIn("GOV-CHANGE-LEASE-001", result.stderr)
+                self.assertEqual(git(self.repo, "rev-parse", "HEAD").stdout, before)
+
+    def test_local_audit_adopter_does_not_fence_embedded_ticket_substrings(self):
+        self.profile("local-audit")
+        shutil.copy2(ROOT / "template/files/pre-commit.template.sh", self.repo / ".githooks/pre-commit")
+        (self.repo / ".githooks/pre-commit").chmod(0o755)
+        for branch in ("noticket-001", "feature/noticket-001", "plain-ticket-001"):
+            git(self.repo, "checkout", "-q", "-b", branch)
+            (self.repo / "README.md").write_text(f"local audit ordinary branch {branch}\n")
+            git(self.repo, "add", "README.md")
+            result = git(self.repo, "commit", "-m", "ordinary local audit change", check=False)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+
 
 if __name__ == "__main__":
     unittest.main()
