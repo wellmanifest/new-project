@@ -21,7 +21,8 @@
     "packages/wellman/src/wellman/_bundled/change_lease_check.py",
     "scripts/change_lease_check.py",
     "subprojects/change-lease/change-lease.schema.json",
-    "tests/change_lease_safety_test.py"
+    "tests/change_lease_safety_test.py",
+    ".github/workflows/ci.yml"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -42,14 +43,14 @@
     "complexity": "S",
     "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 10,
+      "maxImplementationFiles": 11,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Tighten the shared canonical Git object ID scalar and matching semantic predicate; regenerate existing bundled copies. Regression matrix covers lease, request and receipt rejection and valid algorithm lengths. No new runtime dependency or effect.",
+      "decision": "Tighten the shared canonical Git object ID scalar and matching semantic predicate; regenerate existing bundled copies. Regression matrix covers lease, request and receipt rejection and valid algorithm lengths. No new runtime dependency or effect. Install the already pinned Linux jsonschema test prerequisite in the native Windows job so the same schema-reader regression matrix actually runs; preserve all checks and job names.",
       "components": [
         {
           "name": "lease-validation",
@@ -58,7 +59,8 @@
             "packages/wellman/src/wellman/_bundled/change_lease_check.py",
             "scripts/change_lease_check.py",
             "subprojects/change-lease/change-lease.schema.json",
-            "tests/change_lease_safety_test.py"
+            "tests/change_lease_safety_test.py",
+            ".github/workflows/ci.yml"
           ]
         },
         {
