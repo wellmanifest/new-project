@@ -7,7 +7,7 @@
 - **Utworzono**: 2026-11-06
 
 ## Cel i Zakres
-Repair four current138 defects in dirty cache digest, staged index paths, complete snapshot byte limits and idle-handoff success publication. Keep every ownership/policy/CI/default limit; tests affect synthetic fixtures only. Material139 belongs to this repair.
+Repair four current138 defects in dirty cache digest, staged index paths, complete snapshot byte limits and idle-handoff success publication. Keep every ownership/policy/CI/default limit; tests affect synthetic fixtures only. Material139 belongs to this repair. Profiled validation overhead is addressed in the existing fixtures: check the report schema once per process and borrow immutable source Git objects while keeping every fixture index/ref/worktree independent. All test cases and the300-second stage budget remain unchanged.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 - [x] AC-01: Exact R/C pathname parsing and source/bundle dirty cache confinement; actual content changes invalidate.

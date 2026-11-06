@@ -38,7 +38,9 @@ class BootstrapTest(unittest.TestCase):
         self.base = Path(self.temp.name)
         self.source = self.base / 'standard'
         self.target = self.base / 'product'
-        self.command(self.base, 'git', 'clone', '--quiet', '--no-hardlinks', str(ROOT), str(self.source))
+        # Borrow immutable source objects without copying them for every case.
+        # Each clone still owns its working files, index, refs and new objects.
+        self.command(self.base, 'git', 'clone', '--quiet', '--shared', '--no-hardlinks', str(ROOT), str(self.source))
         if not os.environ.get('NP_TEST_BASELINE'):
             for rel in CHANGED:
                 shutil.copy2(ROOT / rel, self.source / rel)

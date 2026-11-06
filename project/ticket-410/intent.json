@@ -24,7 +24,9 @@
     "scripts/repository_policy.py",
     "tests/governance-preflight-cache.test.py",
     "tests/idle_takeover_test.py",
-    "tests/repository_policy_input_test.py"
+    "tests/repository_policy_input_test.py",
+    "tests/work_start_test.py",
+    "tests/scaffold_bootstrap_test.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -38,7 +40,7 @@
   "delivery": {
     "acceptedBaseSha": "6f15a1b11cec27e41f01cfea8a37f3f9d622f613",
     "targetBranch": "main",
-    "outcome": "Fix reproduced porcelain parsing, staged-index path validation, complete snapshot byte accounting and false handoff-success publication. Publish material139 through realCI and independentApp.",
+    "outcome": "Fix reproduced porcelain parsing, staged-index path validation, complete snapshot byte accounting and false handoff-success publication. Publish material139 through realCI and independentApp. Remove repeated immutable fixture preparation costs so unchanged full validation can complete inside existing stage limits.",
     "nonGoals": [
       "No new takeover authority or automatic reclamation/timeout ownership transfer",
       "No controller/foreign lease effect outside synthetic tests",
@@ -56,7 +58,7 @@
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Bounded repair of four reproduced defects across two existing pathname readers and one existing takeover module. Keep legacy successful trace shape, all owner/fencing/policy checks and all limits. Prepare an explicitly nonauthoritative recovery record before lease mutation, publish success only after accepted matching bytes; never execute a production takeover in this task. Existing idle tool is shipped by managed standard only, not part of governance-only pip bundle; synchronize only the two existing bundled readers. Digest malformed/unsafe path observations disable cache; no new validation or ownership authority. Existing snapshot cap includes tracked diff and complete archive bytes. An ignored prepared transaction binds exact before/after lease hashes; final success trace shape remains compatible.",
+      "decision": "Bounded repair of four reproduced defects across two existing pathname readers and one existing takeover module. Keep legacy successful trace shape, all owner/fencing/policy checks and all limits. Prepare an explicitly nonauthoritative recovery record before lease mutation, publish success only after accepted matching bytes; never execute a production takeover in this task. Existing idle tool is shipped by managed standard only, not part of governance-only pip bundle; synchronize only the two existing bundled readers. Digest malformed/unsafe path observations disable cache; no new validation or ownership authority. Existing snapshot cap includes tracked diff and complete archive bytes. An ignored prepared transaction binds exact before/after lease hashes; final success trace shape remains compatible. Scope amendment under continued execution authorization: existing validation fixtures use a checked once-per-process report schema while validating every report, and local clones borrow read-only immutable Git objects with separate worktrees/indexes/refs. No cases, assertions, stage commands, CI/default300 limits or production behavior are removed or changed;15 material paths remain inside the existing15-file/3-component budget.",
       "components": [
         {
           "name": "snapshot-path-readers",
@@ -66,7 +68,9 @@
             "packages/wellman/src/wellman/_bundled/governance_check.py",
             "packages/wellman/src/wellman/_bundled/repository_policy.py",
             "tests/governance-preflight-cache.test.py",
-            "tests/repository_policy_input_test.py"
+            "tests/repository_policy_input_test.py",
+            "tests/work_start_test.py",
+            "tests/scaffold_bootstrap_test.py"
           ]
         },
         {
@@ -127,10 +131,11 @@
       {
         "criterion": "AC-04",
         "commands": [
+          "bash tests/worktree-overlap.test.sh",
           "bash project/governance-check.sh",
           "goal -a --no-publish --delivery-mode pull-request push --ticket ticket-410"
         ],
-        "evidence": "Native gate, all canonical/default300 and fulltests, actualLinux/Windows/OneDev, exact independentApp then immutable139 before done."
+        "evidence": "Native gate, all canonical/default300 and fulltests, actualLinux/Windows/OneDev, exact independentApp then immutable139 before done. Existing103 work-admission/bootstrap tests and11+18 follow-up tests retain exact coverage after fixture preparation optimization; full Goal tests cover all bootstrap variants."
       }
     ]
   }
