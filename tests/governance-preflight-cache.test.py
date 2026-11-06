@@ -325,5 +325,107 @@ class CachedOutputTests(unittest.TestCase):
 
 
 
+
+
+class DirtyPathRecordTests(unittest.TestCase):
+    """Synthetic files/status records grant no lease or review authority."""
+    def readers(self):
+        import importlib.util
+        for number, relative in enumerate(('scripts/governance_check.py',
+                'packages/wellman/src/wellman/_bundled/governance_check.py')):
+            name = 'dirty_path_fixture_' + str(number)
+            spec = importlib.util.spec_from_file_location(name, IMPLEMENTATION_SOURCE / relative)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[name] = module
+            spec.loader.exec_module(module)
+            yield relative, module
+
+    def git(self, root, *args):
+        env = {k: v for k, v in os.environ.items() if not k.startswith(('GIT_', 'NEW_PROJECT_'))}
+        env.update(GIT_AUTHOR_NAME='Fixture', GIT_AUTHOR_EMAIL='fixture@example.invalid',
+                   GIT_COMMITTER_NAME='Fixture', GIT_COMMITTER_EMAIL='fixture@example.invalid')
+        return subprocess.check_output(['git', '-C', str(root), *args], env=env, stderr=subprocess.DEVNULL)
+
+    def test_actual_staged_rename_with_unstaged_edit_never_reads_external_source(self):
+        for reader, module in self.readers():
+            with self.subTest(reader=reader), tempfile.TemporaryDirectory() as td:
+                parent = Path(td); root = parent / 'repo'; root.mkdir()
+                outside = parent / 'outside.txt'; outside.write_text('outside first')
+                self.git(root, 'init', '-q')
+                old = root / ('old' + outside.as_posix()[len(outside.drive):]); old.parent.mkdir(parents=True)
+                old.write_text('fixture base\n' * 200)
+                self.git(root, 'add', '.'); self.git(root, 'commit', '-qm', 'fixture base')
+                self.git(root, 'mv', str(old.relative_to(root)), 'renamed.txt')
+                (root / 'renamed.txt').write_text('fixture base\n' * 200 + 'unstaged edit\n')
+                self.assertTrue(self.git(root, 'status', '--porcelain=v1', '-z').startswith(b'RM '))
+                first = module.compute_git_dirty_digest(root)
+                outside.write_text('outside changed')
+                self.assertEqual(module.compute_git_dirty_digest(root), first)
+                (root / 'renamed.txt').write_text('actual content changed')
+                self.assertNotEqual(module.compute_git_dirty_digest(root), first)
+
+    def test_rename_and_copy_in_either_column_consume_one_exact_source_record(self):
+        from unittest.mock import patch
+        from types import SimpleNamespace
+        for reader, module in self.readers():
+            for status in (b'R ', b'RM', b' R', b'MR', b'C ', b'CM', b' C', b'MC'):
+                with self.subTest(reader=reader, status=status), tempfile.TemporaryDirectory() as td:
+                    parent = Path(td); root = parent / 'repo'; root.mkdir()
+                    outside = parent / 'outside.txt'; outside.write_text('outside first')
+                    old = root / ('old' + outside.as_posix()[len(outside.drive):]); old.parent.mkdir(parents=True); old.write_text('source first')
+                    (root / 'new.txt').write_text('destination')
+                    raw = status + b' new.txt\0' + os.fsencode(old.relative_to(root).as_posix()) + b'\0'
+                    with patch.object(module.subprocess, 'run', return_value=SimpleNamespace(stdout=raw)):
+                        first = module.compute_git_dirty_digest(root)
+                        outside.write_text('outside changed')
+                        self.assertEqual(module.compute_git_dirty_digest(root), first)
+                        old.write_text('source changed')
+                        self.assertNotEqual(module.compute_git_dirty_digest(root), first)
+
+    @unittest.skipUnless(os.name == 'posix', 'invalid UTF-8 filenames are a POSIX filesystem case')
+    def test_non_utf8_path_bytes_still_bind_actual_content(self):
+        from unittest.mock import patch
+        from types import SimpleNamespace
+        for reader, module in self.readers():
+            with self.subTest(reader=reader), tempfile.TemporaryDirectory() as td:
+                root = Path(td); name = b'fixture-\xff.txt'; path = root / os.fsdecode(name); path.write_bytes(b'first')
+                with patch.object(module.subprocess, 'run', return_value=SimpleNamespace(stdout=b'?? ' + name + b'\0')):
+                    first = module.compute_git_dirty_digest(root); path.write_bytes(b'second')
+                    self.assertNotEqual(module.compute_git_dirty_digest(root), first)
+
+    def test_malformed_and_unsafe_records_disable_cache(self):
+        from unittest.mock import patch
+        from types import SimpleNamespace
+        for reader, module in self.readers():
+            for raw in (b'RM file\0', b' M /outside\0', b' M ../outside\0', b'malformed\0', b'\0', b' M file', b' M file\0\0', b' M .\0'):
+                with self.subTest(reader=reader, raw=raw), tempfile.TemporaryDirectory() as td:
+                    with patch.object(module.subprocess, 'run', return_value=SimpleNamespace(stdout=raw)):
+                        self.assertEqual(module.compute_git_dirty_digest(Path(td)), 'git-status-failed')
+
+    def test_parent_symlink_disables_cache_without_hashing_external_bytes(self):
+        for reader, module in self.readers():
+            with self.subTest(reader=reader), tempfile.TemporaryDirectory() as td:
+                parent = Path(td); root = parent / 'repo'; root.mkdir(); self.git(root, 'init', '-q')
+                directory = root / 'linked'; directory.mkdir(); (directory / 'file.txt').write_text('tracked')
+                self.git(root, 'add', '.'); self.git(root, 'commit', '-qm', 'fixture base')
+                (directory / 'file.txt').unlink(); directory.rmdir()
+                outside = parent / 'outside'; outside.mkdir(); (outside / 'file.txt').write_text('external fixture')
+                directory.symlink_to(outside, target_is_directory=True)
+                self.assertEqual(module.compute_git_dirty_digest(root), 'git-status-failed')
+
+    def test_leaf_symlink_and_literal_pathnames_keep_content_invalidation(self):
+        for reader, module in self.readers():
+            with self.subTest(reader=reader), tempfile.TemporaryDirectory() as td:
+                parent = Path(td); root = parent / 'repo'; root.mkdir(); self.git(root, 'init', '-q')
+                path = root / 'space [literal]\nżółć.txt'; path.write_text('first')
+                first = module.compute_git_dirty_digest(root); path.write_text('second')
+                self.assertNotEqual(module.compute_git_dirty_digest(root), first)
+                outside = parent / 'outside.txt'; outside.write_text('outside first')
+                link = root / 'leaf'; link.symlink_to(outside); first = module.compute_git_dirty_digest(root)
+                outside.write_text('outside second'); self.assertEqual(module.compute_git_dirty_digest(root), first)
+                link.unlink(); link.symlink_to(parent / 'different-target')
+                self.assertNotEqual(module.compute_git_dirty_digest(root), first)
+
+
 if __name__ == "__main__":
     unittest.main()

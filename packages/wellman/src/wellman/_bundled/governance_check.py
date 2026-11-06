@@ -5007,29 +5007,36 @@ def compute_git_dirty_digest(root: Path) -> str:
     if not raw:
         return "clean"
 
-    fields = iter(raw.split(b"\0"))
+    if not raw.endswith(b"\0"):
+        return "git-status-failed"
+    fields = iter(raw[:-1].split(b"\0"))
     dirty_files: list[str] = []
     for field in fields:
         if not field:
-            continue
-        path_bytes = field[3:]
-        try:
-            rel_path = path_bytes.decode("utf-8")
-        except UnicodeDecodeError:
-            rel_path = path_bytes.decode("utf-8", errors="replace")
-        dirty_files.append(rel_path)
-        if field[:2] in (b"R ", b"C "):
-            try:
-                dest = next(fields).decode("utf-8", errors="replace")
-                dirty_files.append(dest)
-            except StopIteration:
-                pass
+            return "git-status-failed"
+        if len(field) < 4 or field[2:3] != b" ":
+            return "git-status-failed"
+        dirty_files.append(field[3:].decode("utf-8", errors="surrogateescape"))
+        # Porcelain -z has one additional source pathname for a rename/copy
+        # in either column, including RM, MR and unstaged rename/copy states.
+        if b"R" in field[:2] or b"C" in field[:2]:
+            source = next(fields, b"")
+            if not source:
+                return "git-status-failed"
+            dirty_files.append(source.decode("utf-8", errors="surrogateescape"))
 
     file_hashes: dict[str, str] = {}
     for rel_path in sorted(set(dirty_files)):
+        relative = Path(rel_path)
+        if not relative.parts or relative.anchor or ".." in relative.parts:
+            return "git-status-failed"
         if rel_path.startswith(".subactor/cache/"):
             continue
-        p = root / rel_path
+        # A tracked child may remain in status after its parent directory was
+        # replaced by a link. Disable caching rather than hash its external target.
+        if any((root / parent).is_symlink() for parent in relative.parents if parent != Path(".")):
+            return "git-status-failed"
+        p = root / relative
         if p.is_symlink():
             try:
                 target = os.readlink(p)
@@ -5051,7 +5058,7 @@ def compute_git_dirty_digest(root: Path) -> str:
     hasher = hashlib.sha256()
     hasher.update(raw)
     for k in sorted(file_hashes.keys()):
-        hasher.update(f"\n{k}:{file_hashes[k]}".encode("utf-8"))
+        hasher.update(f"\n{k}:{file_hashes[k]}".encode("utf-8", errors="surrogateescape"))
     return hasher.hexdigest()
 
 

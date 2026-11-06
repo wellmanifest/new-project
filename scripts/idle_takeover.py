@@ -394,11 +394,25 @@ def board_markdown(board: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def sync_directory(path: Path) -> None:
+    """Persist rename/creation ordering where directory fsync is supported."""
+    if os.name == "posix":
+        descriptor = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+
+
 def write_atomic(path: Path, data: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    temporary.write_bytes(data)
+    with temporary.open("xb") as handle:
+        handle.write(data)
+        handle.flush()
+        os.fsync(handle.fileno())
     os.replace(temporary, path)
+    sync_directory(path.parent)
 
 
 @contextmanager
@@ -439,6 +453,10 @@ def snapshot(primary: Path, entry: dict[str, Any]) -> dict[str, Any] | None:
     buffer, total = io.BytesIO(), 0
     with tarfile.open(fileobj=buffer, mode="w", format=tarfile.PAX_FORMAT) as archive:
         def add(name: str, data: bytes) -> None:
+            nonlocal total
+            total += len(data)
+            if total > MAX_SNAPSHOT_BYTES:
+                raise ValueError("Dirty work exceeds the bounded snapshot size; hand off instead.")
             info = tarfile.TarInfo(name)
             info.size, info.mtime, info.mode = len(data), 0, 0o644
             archive.addfile(info, io.BytesIO(data))
@@ -448,11 +466,10 @@ def snapshot(primary: Path, entry: dict[str, Any]) -> dict[str, Any] | None:
             path = worktree / item
             if path.is_file() and not path.is_symlink():
                 data = path.read_bytes()
-                total += len(data)
-                if total > MAX_SNAPSHOT_BYTES:
-                    raise ValueError("Dirty work exceeds the bounded snapshot size; hand off instead.")
                 add("files/" + item, data)
     data = buffer.getvalue()
+    if len(data) > MAX_SNAPSHOT_BYTES:
+        raise ValueError("Dirty work exceeds the bounded snapshot size; hand off instead.")
     digest = hashlib.sha256(data).hexdigest()
     target = primary / SNAPSHOT_DIR / entry["ticket"] / f"{digest}.tar"
     if not target.exists():
@@ -534,10 +551,37 @@ def locked_takeover(root: Path, ticket: str, actor: str, session: str, now: date
     if lease_path.read_bytes() != original or file_identity(lease_path) != identity:
         raise PermissionError("Lease changed during takeover (compare-and-swap lost); re-observe.")
     trace = primary / RECEIPT_DIR / f"{ticket}.jsonl"
-    trace.parent.mkdir(parents=True, exist_ok=True)
+    claimed_bytes = (json.dumps(claimed, indent=2, sort_keys=True) + "\n").encode()
+    prepared = {"schema": "new-project.idle-takeover-prepare/v1", "state": "prepared",
+                "grantsAuthority": False, "beforeSha256": hashlib.sha256(original).hexdigest(),
+                "afterSha256": hashlib.sha256(claimed_bytes).hexdigest(),
+                "lease": claimed, "record": record}
+    prepared_bytes = (json.dumps(prepared, sort_keys=True) + "\n").encode()
+    digest = hashlib.sha256(prepared_bytes).hexdigest()
+    pending = trace.with_name(f"{ticket}.{digest}.prepared.json")
+    if pending.exists():
+        if pending.read_bytes() != prepared_bytes:
+            raise PermissionError("Prepared handoff changed; preserve it and reconcile.")
+    else:
+        write_atomic(pending, prepared_bytes)
+    # Preparing recovery data is an I/O boundary: compare the original lease
+    # again immediately before replacement. Prepared data grants no authority.
+    if lease_path.read_bytes() != original or file_identity(lease_path) != identity:
+        raise PermissionError("Lease changed while preparing takeover (compare-and-swap lost); re-observe.")
+    write_atomic(lease_path, claimed_bytes)
+    if lease_path.read_bytes() != claimed_bytes:
+        raise PermissionError("Replaced lease changed; preserve prepared recovery data and reconcile.")
+    # Publish success only after the matching lease is applied. If append fails,
+    # the prepared record binds both hashes for explicit controller recovery.
     with trace.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(record, sort_keys=True) + "\n")
-    write_atomic(lease_path, (json.dumps(claimed, indent=2, sort_keys=True) + "\n").encode())
+        handle.flush()
+        os.fsync(handle.fileno())
+    sync_directory(trace.parent)
+    try:
+        pending.unlink()
+    except OSError:
+        pass  # Final lease and success trace are committed; stale prepare is harmless.
     record["board"] = str(write_board(observe(root, now, runtime)))
     return record
 

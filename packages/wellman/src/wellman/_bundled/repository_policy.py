@@ -139,6 +139,10 @@ def _safe_snapshot_path(root: Path, raw_path: str, *, staged: bool) -> str | Non
         return error
     if _index_has_symlink(root, raw_path) if staged else _working_tree_has_symlink(root, raw_path):
         return "path contains a symlink"
+    if staged:
+        # Syntax and index mode were checked above. Staged bytes are read only
+        # from Git; mutable working-tree links or missing paths are irrelevant.
+        return None
     try:
         repository = root.resolve()
         resolved = (root / raw_path).resolve(strict=False)

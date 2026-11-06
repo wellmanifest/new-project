@@ -242,6 +242,107 @@ class IdleTakeoverTest(unittest.TestCase):
         self.assertEqual(json.loads(self.lease_path.read_text())["ownerActor"], "agent:next")
 
 
+    def test_snapshot_counts_tracked_diff_before_writing(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        entry = {'dirtyCount': 1, 'worktree': str(self.worktree), 'ticket': 'ticket-001', 'dirtyPaths': []}
+        with patch.object(runtime, 'MAX_SNAPSHOT_BYTES', 32), \
+                patch.object(runtime.subprocess, 'run', return_value=SimpleNamespace(stdout=b'x' * 64)), \
+                patch.object(runtime, 'dirty_paths', return_value=[]), patch.object(runtime, 'git', return_value='a' * 40):
+            with self.assertRaises(ValueError): runtime.snapshot(self.primary, entry)
+        self.assertFalse(list((self.primary / runtime.SNAPSHOT_DIR).rglob('*.tar')))
+
+    def test_snapshot_total_payload_and_tar_framing_obey_existing_limit(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        entry = {'dirtyCount': 1, 'worktree': str(self.worktree), 'ticket': 'ticket-001', 'dirtyPaths': ['payload.txt']}
+        for diff_size, file_size, limit in ((6000, 6000, 10000), (1, 1, 512)):
+            with self.subTest(diff=diff_size, file=file_size, limit=limit):
+                (self.worktree / 'payload.txt').write_bytes(b'f' * file_size)
+                with patch.object(runtime, 'MAX_SNAPSHOT_BYTES', limit), \
+                        patch.object(runtime.subprocess, 'run', return_value=SimpleNamespace(stdout=b'd' * diff_size)), \
+                        patch.object(runtime, 'dirty_paths', return_value=['payload.txt']), patch.object(runtime, 'git', return_value='a' * 40):
+                    with self.assertRaises(ValueError): runtime.snapshot(self.primary, entry)
+        self.assertFalse(list((self.primary / runtime.SNAPSHOT_DIR).rglob('*.tar')))
+
+    def test_valid_snapshot_binds_complete_archive_and_both_payloads(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        import hashlib, tarfile
+        (self.worktree / 'payload.txt').write_bytes(b'f' * 16)
+        entry = {'dirtyCount': 1, 'worktree': str(self.worktree), 'ticket': 'ticket-001', 'dirtyPaths': ['payload.txt']}
+        with patch.object(runtime, 'MAX_SNAPSHOT_BYTES', 10240), \
+                patch.object(runtime.subprocess, 'run', return_value=SimpleNamespace(stdout=b'd' * 16)), \
+                patch.object(runtime, 'dirty_paths', return_value=['payload.txt']), patch.object(runtime, 'git', return_value='a' * 40):
+            result = runtime.snapshot(self.primary, entry)
+        path = Path(result['path']); self.assertLessEqual(path.stat().st_size, 10240)
+        self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), result['sha256'])
+        with tarfile.open(path) as archive:
+            self.assertEqual(archive.extractfile('tracked.diff').read(), b'd' * 16)
+            self.assertEqual(archive.extractfile('files/payload.txt').read(), b'f' * 16)
+
+    def test_lease_replace_fault_never_publishes_success(self):
+        from unittest.mock import patch
+        import hashlib
+        before = self.lease_path.read_bytes(); original = runtime.write_atomic
+        def fault(path, data):
+            if path == self.lease_path: raise OSError('synthetic lease replace fault')
+            return original(path, data)
+        with patch.object(runtime, 'write_atomic', side_effect=fault):
+            with self.assertRaises(OSError): runtime.takeover(self.primary, 'ticket-001', 'agent:next', 'session-next', self.now)
+        self.assertEqual(self.lease_path.read_bytes(), before)
+        directory = self.primary / runtime.RECEIPT_DIR
+        self.assertFalse((directory / 'ticket-001.jsonl').exists())
+        prepared = list(directory.glob('*.prepared.json')); self.assertEqual(len(prepared), 1)
+        proposal = json.loads(prepared[0].read_text()); self.assertEqual(proposal['state'], 'prepared')
+        self.assertEqual(proposal['beforeSha256'], hashlib.sha256(before).hexdigest())
+
+    def test_journal_fault_preserves_recoverable_prepare_after_applied_lease(self):
+        from unittest.mock import patch
+        import hashlib
+        before = self.lease_path.read_bytes(); trace = self.primary / runtime.RECEIPT_DIR / 'ticket-001.jsonl'
+        original_open = Path.open
+        def fault(path, mode='r', *args, **kwargs):
+            if path == trace and mode == 'a': raise OSError('synthetic journal append fault')
+            return original_open(path, mode, *args, **kwargs)
+        with patch.object(Path, 'open', new=fault):
+            with self.assertRaises(OSError): runtime.takeover(self.primary, 'ticket-001', 'agent:next', 'session-next', self.now)
+        applied = self.lease_path.read_bytes(); self.assertNotEqual(applied, before)
+        self.assertEqual(json.loads(applied)['ownerActor'], 'agent:next')
+        self.assertFalse(trace.exists())
+        prepared = list(trace.parent.glob('*.prepared.json')); self.assertEqual(len(prepared), 1)
+        proposal = json.loads(prepared[0].read_text()); self.assertEqual(proposal['state'], 'prepared')
+        self.assertEqual(proposal['beforeSha256'], hashlib.sha256(before).hexdigest())
+        self.assertEqual(proposal['afterSha256'], hashlib.sha256(applied).hexdigest())
+        self.assertEqual(proposal['lease'], json.loads(applied))
+
+    def test_prepare_fault_refuses_before_lease_or_success_trace(self):
+        from unittest.mock import patch
+        original = runtime.write_atomic; before = self.lease_path.read_bytes()
+        def fault(path, data):
+            if path.name.endswith('.prepared.json'): raise OSError('synthetic prepare fault')
+            return original(path, data)
+        with patch.object(runtime, 'write_atomic', side_effect=fault):
+            with self.assertRaises(OSError): runtime.takeover(self.primary, 'ticket-001', 'agent:next', 'session-next', self.now)
+        self.assertEqual(self.lease_path.read_bytes(), before)
+        self.assertFalse((self.primary / runtime.RECEIPT_DIR / 'ticket-001.jsonl').exists())
+
+    def test_prepare_io_boundary_rechecks_lease_cas(self):
+        from unittest.mock import patch
+        original = runtime.write_atomic
+        def racing(path, data):
+            result = original(path, data)
+            if path.name.endswith('.prepared.json'):
+                self.write_lease(leaseRevision=2, fencingToken=2, heartbeatAt=stamp(self.now))
+            return result
+        with patch.object(runtime, 'write_atomic', side_effect=racing):
+            with self.assertRaises(PermissionError): runtime.takeover(self.primary, 'ticket-001', 'agent:next', 'session-next', self.now)
+        lease = json.loads(self.lease_path.read_text()); self.assertEqual(lease['ownerActor'], 'agent:previous')
+        self.assertEqual(lease['leaseRevision'], 2)
+        self.assertFalse((self.primary / runtime.RECEIPT_DIR / 'ticket-001.jsonl').exists())
+
+
+
 
 governance = load("idle_policy_governance", ROOT / "scripts/governance_check.py")
 lease = load("idle_policy_lease", ROOT / "scripts/change_lease_check.py")
