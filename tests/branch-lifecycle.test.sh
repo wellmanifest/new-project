@@ -12,6 +12,85 @@ trap cleanup EXIT INT TERM
 validator="$repo_root/scripts/branch_lifecycle_check.py"
 test -f "$validator"
 
+# The snapshot carries literal branch names, never Git revision expressions.
+# Compare the parser with Git in an empty directory so @{-1} cannot expand a
+# checkout from the developer's reflog. Exercise every public snapshot field.
+python3 - "$validator" "$fixture" <<'PY'
+import copy
+import importlib.util
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+validator, fixture = map(Path, sys.argv[1:])
+spec = importlib.util.spec_from_file_location("branch_refs", validator)
+runtime = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = runtime
+spec.loader.exec_module(runtime)
+valid = ["main", "ticket/412-valid-refs", "@", "topic./child", "topic.locked",
+         "refs/heads/main", "release/v1.2", "feature/zażółć", "!topic", "a" * 255]
+invalid = ["", "x..y", "x@{y", "trailing.", "/leading", "trailing/", "a//b",
+           ".hidden", "a/.hidden", "a.lock", "a.lock/b", "a/b.lock", "-option",
+           "HEAD", "@{-1}", "space name", "a~b", "a^b", "a:b", "a?b", "a*b",
+           "a[b", "a\\b", "a\tb", "a\nb", "a\rb", "a\x7fb", "a\x01b"]
+base = {"schema": runtime.SNAPSHOT_SCHEMA, "repository": "example/product",
+        "defaultBranch": "main", "deleteBranchOnMerge": True, "branches": ["main"],
+        "openPullRequests": []}
+
+def snapshot(name, field):
+    result = copy.deepcopy(base)
+    if field == "defaultBranch":
+        result.update(defaultBranch=name, branches=[name])
+    elif field == "branches":
+        result["branches"] = ["main", name] if name != "main" else ["main"]
+    else:
+        result["openPullRequests"] = [
+            {"number": 1, "headRepository": "someone/fork", "headRef": name}]
+    return result
+
+for name in valid + invalid:
+    git_env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    actual = subprocess.run(["git", "check-ref-format", "--branch", name],
+                            cwd=fixture, env=git_env, capture_output=True, check=False)
+    assert (actual.returncode == 0) == (name in valid), repr(name)
+    for field in ("defaultBranch", "branches", "headRef"):
+        document = snapshot(name, field)
+        if name in valid:
+            parsed = runtime.parse_snapshot(document, "example/product")
+            observed = parsed["openPullRequests"][0]["headRef"] if field == "headRef" else parsed[field]
+            expected = document["openPullRequests"][0]["headRef"] if field == "headRef" else document[field]
+            assert observed == expected
+        else:
+            try:
+                runtime.parse_snapshot(document, "example/product")
+            except runtime.SnapshotError:
+                pass
+            else:
+                raise AssertionError(f"{field} accepted invalid literal branch {name!r}")
+
+# Bounds/types are a snapshot contract in addition to Git syntax.
+for name in (None, 1, [], {}, "a" * 256):
+    try:
+        runtime.parse_snapshot(snapshot(name, "headRef"), "example/product")
+    except runtime.SnapshotError:
+        pass
+    else:
+        raise AssertionError(f"accepted invalid branch value {name!r}")
+
+for field in ("defaultBranch", "branches", "headRef"):
+    path = fixture / "invalid-ref.json"
+    path.write_text(json.dumps(snapshot("x..y", field)), encoding="utf-8")
+    result = subprocess.run([sys.executable, str(validator), "--snapshot", str(path),
+                             "--format", "json"], capture_output=True, text=True)
+    assert result.returncode == 1, result
+    report = json.loads(result.stdout)
+    assert report["status"] == "failed", report
+    assert [item["code"] for item in report["findings"]] == ["GOV-BRANCH-LIFECYCLE-003"], report
+print("branch name validation: 38 Git cases across 3 snapshot fields; bounds and CLI passed")
+PY
+
 cat > "$fixture/clean.json" <<'JSON'
 {"schema":"new-project.branch-lifecycle-snapshot/v1","repository":"wellmanifest/example","defaultBranch":"main","deleteBranchOnMerge":true,"branches":["main"],"openPullRequests":[]}
 JSON

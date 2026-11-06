@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.141] - 2026-11-06
+
+- Reject malformed literal branch names consistently across default-branch, branch-list and pull-request observations before evaluating lifecycle findings; preserve valid Unicode names and existing fail-closed diagnostics. [ticket-412]
+
 ## [0.20.140] - 2026-11-06
 
 - Require complete 40-character SHA-1 or 64-character SHA-256 object IDs in lease state, transition requests and receipts; preserve existing nullable fields and controller authority. [ticket-411]
