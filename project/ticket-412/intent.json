@@ -1,0 +1,100 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-412",
+  "summary": "Reject malformed branch lifecycle references",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-412/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/branch_lifecycle_check.py",
+    "tests/branch-lifecycle.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2a36f2d1d4e1bcb86fd33b21249bba522cc39d9a",
+    "targetBranch": "main",
+    "outcome": "Reject malformed literal Git branch names in branch lifecycle observations before evaluating cleanup findings; retain valid Unicode and ordinary ticket branches.",
+    "nonGoals": [
+      "No branch deletion, cleanup authority, or review policy change",
+      "No consumer managed file edits",
+      "Release capability deployment remains STARTER-032"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend the existing offline require_ref boundary for all three branch-name fields with Git literal branch syntax. Preserve the 255-character input bound and typed malformed-snapshot diagnostic. Validate against real Git in isolated test fixtures; do not execute Git or expand revision shorthand in the runtime checker.",
+      "components": [
+        {
+          "name": "branch-lifecycle",
+          "paths": [
+            "scripts/branch_lifecycle_check.py",
+            "tests/branch-lifecycle.test.sh"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Malformed branch names produce GOV-BRANCH-LIFECYCLE-003 before lifecycle evaluation."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independent reviewed revert; preserve refs and immutable tags."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/branch-lifecycle.test.sh"
+        ],
+        "evidence": "Malformed default/list/PR refs and literal revision shorthands rejected; valid Git branch cases preserved; public CLI fails with existing malformed-snapshot code."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh",
+          "goal -a --no-publish --delivery-mode pull-request push --ticket ticket-412"
+        ],
+        "evidence": "Native source checks and independent current-head approval precede merge."
+      }
+    ]
+  }
+}
