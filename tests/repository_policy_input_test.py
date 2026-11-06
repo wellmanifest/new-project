@@ -57,5 +57,51 @@ class RepositoryPolicyInputTest(unittest.TestCase):
                                 candidate, root, policy['tickets']['adapterPath'], policy['tickets']), str)
 
 
+    def git(self, root, *args):
+        import os, subprocess
+        env = {k: v for k, v in os.environ.items() if not k.startswith(('GIT_', 'NEW_PROJECT_'))}
+        return subprocess.check_output(['git', '-C', str(root), *args], env=env, stderr=subprocess.DEVNULL)
+
+    def test_staged_regular_adapter_ignores_unstaged_missing_or_symlinked_file(self):
+        for reader, module in self.readers():
+            with self.subTest(reader=reader), tempfile.TemporaryDirectory() as td:
+                parent = Path(td); root = parent / 'repo'; root.mkdir(); self.git(root, 'init', '-q')
+                path = root / 'żółć adapter.json'; path.write_bytes(b'{}'); self.git(root, 'add', path.name)
+                path.unlink(); outside = parent / 'outside.json'; outside.write_text('external fixture'); path.symlink_to(outside)
+                self.assertIsNone(module._safe_snapshot_path(root, path.name, staged=True))
+                self.assertEqual(module._snapshot_bytes(root, path.name, staged=True), b'{}')
+                self.assertIsInstance(module._safe_snapshot_path(root, path.name, staged=False), str)
+                path.unlink()
+                self.assertIsNone(module._safe_snapshot_path(root, path.name, staged=True))
+                self.assertEqual(module._snapshot_bytes(root, path.name, staged=True), b'{}')
+
+    def test_staged_regular_source_ignores_unstaged_parent_symlink(self):
+        for reader, module in self.readers():
+            with self.subTest(reader=reader), tempfile.TemporaryDirectory() as td:
+                parent = Path(td); root = parent / 'repo'; root.mkdir(); self.git(root, 'init', '-q')
+                directory = root / 'nested'; directory.mkdir(); path = directory / 'source.json'; path.write_bytes(b'{"fixture":true}')
+                self.git(root, 'add', 'nested/source.json'); path.unlink(); directory.rmdir()
+                outside = parent / 'outside'; outside.mkdir(); (outside / 'source.json').write_text('outside fixture')
+                directory.symlink_to(outside, target_is_directory=True)
+                self.assertIsNone(module._safe_snapshot_path(root, 'nested/source.json', staged=True))
+                self.assertEqual(module._snapshot_bytes(root, 'nested/source.json', staged=True), b'{"fixture":true}')
+                self.assertIsInstance(module._safe_snapshot_path(root, 'nested/source.json', staged=False), str)
+
+    def test_indexed_symlink_is_rejected_even_when_working_file_is_regular(self):
+        for reader, module in self.readers():
+            with self.subTest(reader=reader), tempfile.TemporaryDirectory() as td:
+                root = Path(td); self.git(root, 'init', '-q'); path = root / 'adapter.json'
+                path.symlink_to(root / 'target.json'); self.git(root, 'add', 'adapter.json'); path.unlink(); path.write_text('{}')
+                self.assertIsInstance(module._safe_snapshot_path(root, 'adapter.json', staged=True), str)
+
+    def test_unsafe_staged_syntax_is_rejected_before_index_lookup(self):
+        from unittest.mock import patch
+        for reader, module in self.readers():
+            for path in ('../outside', '/outside', 'dir/../outside', 'C:/outside', 'dir//file', './file', 'dir\\..\\outside'):
+                with self.subTest(reader=reader, path=path), tempfile.TemporaryDirectory() as td:
+                    with patch.object(module, '_index_has_symlink', side_effect=AssertionError('unsafe index lookup')):
+                        self.assertIsInstance(module._safe_snapshot_path(Path(td), path, staged=True), str)
+
+
 if __name__ == '__main__':
     unittest.main()

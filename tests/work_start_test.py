@@ -21,6 +21,14 @@ import work_start_check as start
 import jsonschema
 
 
+# The schema is immutable during this suite. Check its metaschema once, while
+# still validating every report and malformed-report regression below.
+REPORT_SCHEMA = json.loads((ROOT / "governance/work-start-report.schema.json").read_text())
+REPORT_VALIDATOR_TYPE = jsonschema.validators.validator_for(REPORT_SCHEMA)
+REPORT_VALIDATOR_TYPE.check_schema(REPORT_SCHEMA)
+REPORT_VALIDATOR = REPORT_VALIDATOR_TYPE(REPORT_SCHEMA)
+
+
 class WorkStartTest(unittest.TestCase):
     def test_work_registration_contract(self):
         # CI already invokes this suite: keep registration regressions covered
@@ -90,7 +98,7 @@ class WorkStartTest(unittest.TestCase):
     def report(self, root=None, stream="api", paths=(), ticket=None, publication=False, expected=None):
         result = start.inspect(root or self.root, stream, paths, ticket,
                                observe_publication=publication, expected_dirty_digest=expected)
-        jsonschema.validate(result, json.loads((ROOT / "governance/work-start-report.schema.json").read_text()))
+        REPORT_VALIDATOR.validate(result)
         self.assertFalse(result["grantsAuthority"])
         self.assertFalse(result["createsWorktree"])
         return result
@@ -938,7 +946,7 @@ class WorkStartTest(unittest.TestCase):
         report = self.report()
         report["allowWrite"] = True
         with self.assertRaises(jsonschema.ValidationError):
-            jsonschema.validate(report, json.loads((ROOT / "governance/work-start-report.schema.json").read_text()))
+            REPORT_VALIDATOR.validate(report)
         package = json.loads((ROOT / "governance/package-manifest.json").read_text())
         mapping = {entry["source"]: entry for entry in package["files"]}
         self.assertEqual(mapping["scripts/work_start_check.py"]["target"], ".governance/work_start_check.py")

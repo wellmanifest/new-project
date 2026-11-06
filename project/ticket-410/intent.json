@@ -1,0 +1,142 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-410",
+  "summary": "Constrain dirty snapshot paths and publish handoff success only after lease replacement",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-410/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "packages/wellman/src/wellman/_bundled/repository_policy.py",
+    "scripts/governance_check.py",
+    "scripts/idle_takeover.py",
+    "scripts/repository_policy.py",
+    "tests/governance-preflight-cache.test.py",
+    "tests/idle_takeover_test.py",
+    "tests/repository_policy_input_test.py",
+    "tests/work_start_test.py",
+    "tests/scaffold_bootstrap_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-409"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6f15a1b11cec27e41f01cfea8a37f3f9d622f613",
+    "targetBranch": "main",
+    "outcome": "Fix reproduced porcelain parsing, staged-index path validation, complete snapshot byte accounting and false handoff-success publication. Publish material139 through realCI and independentApp. Remove repeated immutable fixture preparation costs so unchanged full validation can complete inside existing stage limits.",
+    "nonGoals": [
+      "No new takeover authority or automatic reclamation/timeout ownership transfer",
+      "No controller/foreign lease effect outside synthetic tests",
+      "No policy, model, SDK, CI/default300, max-snapshot or complexity-cap changes",
+      "Broad continuity/hook transaction anchoring remainsNP032",
+      "No consumer-managed patch, device OTA, PyPI enrollment or foreign-cache cleanup"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Bounded repair of four reproduced defects across two existing pathname readers and one existing takeover module. Keep legacy successful trace shape, all owner/fencing/policy checks and all limits. Prepare an explicitly nonauthoritative recovery record before lease mutation, publish success only after accepted matching bytes; never execute a production takeover in this task. Existing idle tool is shipped by managed standard only, not part of governance-only pip bundle; synchronize only the two existing bundled readers. Digest malformed/unsafe path observations disable cache; no new validation or ownership authority. Existing snapshot cap includes tracked diff and complete archive bytes. An ignored prepared transaction binds exact before/after lease hashes; final success trace shape remains compatible. Scope amendment under continued execution authorization: existing validation fixtures use a checked once-per-process report schema while validating every report, and local clones borrow read-only immutable Git objects with separate worktrees/indexes/refs. No cases, assertions, stage commands, CI/default300 limits or production behavior are removed or changed;15 material paths remain inside the existing15-file/3-component budget.",
+      "components": [
+        {
+          "name": "snapshot-path-readers",
+          "paths": [
+            "scripts/governance_check.py",
+            "scripts/repository_policy.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/repository_policy.py",
+            "tests/governance-preflight-cache.test.py",
+            "tests/repository_policy_input_test.py",
+            "tests/work_start_test.py",
+            "tests/scaffold_bootstrap_test.py"
+          ]
+        },
+        {
+          "name": "handoff-storage",
+          "paths": [
+            "scripts/idle_takeover.py",
+            "tests/idle_takeover_test.py"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Governance dirty-state cache digest consumes both pathname records for R/C in either status column and refuses unsafe observations without reading outside.",
+        "Existing ignored idle-handoff storage gains nonauthoritative prepared recovery data; successful returned/final trace records retain their existing shape."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independently reviewed revert; retain immutable138 and consumer pins."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python tests/governance-preflight-cache.test.py"
+        ],
+        "evidence": "Actual RM and synthetic R/C matrix, content invalidation, invalid filename bytes and unsafe parent cases through both readers; malformed observations disable cache."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python tests/idle_takeover_test.py"
+        ],
+        "evidence": "Track diff, files and archive framing obey unchanged cap; lease/journal fault injections produce no false success and leave exact recovery state; existing positive/lock/CAS/frozen behavior retained."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python tests/repository_policy_input_test.py",
+          "bash tests/repository-policy.test.sh"
+        ],
+        "evidence": "Staged regular bytes remain authoritative despite working-tree symlinks/missing files; staged symlinks, unsafe syntax and working-tree escapes remain refused in both readers."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "bash tests/worktree-overlap.test.sh",
+          "bash project/governance-check.sh",
+          "goal -a --no-publish --delivery-mode pull-request push --ticket ticket-410"
+        ],
+        "evidence": "Native gate, all canonical/default300 and fulltests, actualLinux/Windows/OneDev, exact independentApp then immutable139 before done. Existing103 work-admission/bootstrap tests and11+18 follow-up tests retain exact coverage after fixture preparation optimization; full Goal tests cover all bootstrap variants."
+      }
+    ]
+  }
+}
