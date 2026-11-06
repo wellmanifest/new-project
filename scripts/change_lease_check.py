@@ -20,7 +20,9 @@ LEASE_SCHEMA = "wellmanifest.change-lease/v1"
 REQUEST_SCHEMA = "wellmanifest.change-lease-transition/v1"
 RECEIPT_SCHEMA = "wellmanifest.change-lease-receipt/v1"
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
-GIT_SHA_RE = re.compile(r"^[0-9a-f]{40,64}$")
+# JSON Schema patterns search strings; unlike $, this assertion cannot match
+# just before a final line terminator and is portable to ECMAScript engines.
+GIT_SHA_RE = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\s\S])")
 PHASES = {"claimed", "editing", "validating", "publication_frozen", "dispatching", "approved", "merged", "closed", "cancelled", "expired", "released"}
 FROZEN_PHASES = {"publication_frozen", "dispatching", "approved"}
 TERMINAL_REPLACEMENT_PHASES = {"merged", "closed", "cancelled", "released"}

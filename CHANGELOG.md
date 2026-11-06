@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.140] - 2026-11-06
+
+- Require complete 40-character SHA-1 or 64-character SHA-256 object IDs in lease state, transition requests and receipts; preserve existing nullable fields and controller authority. [ticket-411]
+
 ## [0.20.139] - 2026-11-06
 
 - Preserve exact dirty Git pathname records and staged-index authority, including renamed/copied files and mutable working-tree links. [ticket-410]

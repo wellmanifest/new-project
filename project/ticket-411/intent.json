@@ -1,0 +1,115 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-411",
+  "summary": "Reject incomplete Git object IDs in lease evidence",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-411/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/change-lease.schema.json",
+    "packages/wellman/src/wellman/_bundled/change_lease_check.py",
+    "scripts/change_lease_check.py",
+    "subprojects/change-lease/change-lease.schema.json",
+    "tests/change_lease_safety_test.py",
+    ".github/workflows/ci.yml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "0a9546b14172c006b682eb83215091b9ffb1ac59",
+    "targetBranch": "main",
+    "outcome": "Reject incomplete or malformed Git object IDs in portable lease state, transition requests and receipts; retain exact SHA-1/SHA-256 support. Ship material fix as0.20.140 through independent publication.",
+    "nonGoals": [
+      "No authority, transition, controller or policy change",
+      "No consumer managed copy modification",
+      "Other semantic review findings remain separate canonical backlog"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 11,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Tighten the shared canonical Git object ID scalar and matching semantic predicate; regenerate existing bundled copies. Regression matrix covers lease, request and receipt rejection and valid algorithm lengths. No new runtime dependency or effect. Install the already pinned Linux jsonschema test prerequisite in the native Windows job so the same schema-reader regression matrix actually runs; preserve all checks and job names.",
+      "components": [
+        {
+          "name": "lease-validation",
+          "paths": [
+            "packages/wellman/src/wellman/_bundled/change-lease.schema.json",
+            "packages/wellman/src/wellman/_bundled/change_lease_check.py",
+            "scripts/change_lease_check.py",
+            "subprojects/change-lease/change-lease.schema.json",
+            "tests/change_lease_safety_test.py",
+            ".github/workflows/ci.yml"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Lease documents reject hex object IDs whose length is neither40 nor64."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independently reviewed revert; preserve existing immutable versions."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/change_lease_safety_test.py"
+        ],
+        "evidence": "Real source and bundled lease/request/receipt validation reject malformed and41-63-character IDs;40/64 and allowed null accepted."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Canonical schema/runtime bundle parity and native governance pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "goal -a --no-publish --delivery-mode pull-request push --ticket ticket-411"
+        ],
+        "evidence": "Full declared native tests and independent Validator exact-head review precede merge/release."
+      }
+    ]
+  }
+}

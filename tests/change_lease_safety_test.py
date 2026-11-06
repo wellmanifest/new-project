@@ -11,6 +11,8 @@ import sys
 import tempfile
 import unittest
 
+from jsonschema import Draft202012Validator
+
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("lease_safety_runtime", ROOT / "scripts/change_lease_check.py")
 runtime = importlib.util.module_from_spec(spec)
@@ -87,6 +89,48 @@ class LeaseSafetyTests(unittest.TestCase):
                 changed = deepcopy(document)
                 changed[key] = value
                 self.assertTrue(validator(changed))
+
+    def test_git_object_ids_are_complete_sha1_or_sha256_in_every_document(self):
+        bundled_spec = importlib.util.spec_from_file_location(
+            "bundled_lease_safety_runtime",
+            ROOT / "packages/wellman/src/wellman/_bundled/change_lease_check.py",
+        )
+        bundled = importlib.util.module_from_spec(bundled_spec)
+        bundled_spec.loader.exec_module(bundled)
+        invalid = ["a" * size for size in range(39, 66) if size not in (40, 64)]
+        invalid += ["", "A" * 40, "g" * 64, "a" * 40 + "\n", " " + "a" * 64,
+                    "b" * 64 + "\n", "a" * 40 + "\r", "b" * 64 + "\u2028"]
+        for checker in (runtime, bundled):
+            schema_path = (ROOT / "subprojects/change-lease/change-lease.schema.json"
+                           if checker is runtime else
+                           ROOT / "packages/wellman/src/wellman/_bundled/change-lease.schema.json")
+            schema_validator = Draft202012Validator(json.loads(schema_path.read_text()))
+            for document, validator, key in [
+                (self.lease, checker.validate_lease, "headSha"),
+                (self.request, checker.validate_request, "targetHeadSha"),
+                (self.receipt, checker.validate_receipt, "headSha"),
+            ]:
+                for value in invalid + [None, "a" * 40, "b" * 64]:
+                    with self.subTest(checker=checker.__name__, field=key, value=value):
+                        changed = deepcopy(document)
+                        changed[key] = value
+                        errors = validator(changed)
+                        self.assertEqual(schema_validator.is_valid(changed), value not in invalid)
+                        if value in invalid:
+                            self.assertTrue(errors)
+                        else:
+                            self.assertEqual(errors, [])
+
+    def test_malformed_git_object_id_transition_cannot_produce_a_receipt(self):
+        for document, key in [(self.lease, "headSha"), (self.request, "targetHeadSha")]:
+            for size in (41, 63):
+                with self.subTest(field=key, size=size):
+                    changed_lease, changed_request = deepcopy(self.lease), deepcopy(self.request)
+                    target = changed_lease if document is self.lease else changed_request
+                    target[key] = "a" * size
+                    receipt, errors = runtime.evaluate_transition(changed_lease, changed_request)
+                    self.assertIsNone(receipt)
+                    self.assertTrue(errors)
 
     def test_explicit_offset_rfc3339_values_remain_supported(self):
         for value in ["2026-01-01T00:00:00Z", "2026-01-01t00:00:00z",
