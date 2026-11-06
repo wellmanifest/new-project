@@ -624,7 +624,9 @@ def _windows_stream_descriptor(path: Path, append: bool, *, readwrite: bool = Fa
     handles = []
     descriptor = None
     def open_handle(candidate, directory=False):
-        access = 0x80 if directory else (
+        # Attribute-only handles do not participate in delete-sharing checks.
+        # FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES protects empty parents too.
+        access = 0x81 if directory else (
             0xC0000080 if readwrite else (0x40000080 if append else 0x80000000))
         flags = 0x00200000 | (0x02000000 if directory else 0)
         creation = 4 if append and not directory else 3  # OPEN_ALWAYS / OPEN_EXISTING
