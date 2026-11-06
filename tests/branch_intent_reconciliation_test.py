@@ -97,6 +97,42 @@ class ReconciliationTest(unittest.TestCase):
         self.assertEqual(self.run_report()["unresolvedCriteria"], ["AC-01"])
         self.assertEqual(self.run_report()["status"], "needs-review")
 
+    def test_remaining_work_requires_one_consistent_disposition(self):
+        discard = self.receipt("decision", {"decisionRef": "decision:discard", "actor": "owner:verified",
+                                            "disposition": "discard"})
+        follow = self.receipt("follow-up", {"ticketRef": "ticket:002", "intentSha256": "8" * 64})
+        for outcome in ("missing", "partial"):
+            for decision, follow_up in ((discard, None), (None, follow), (discard, follow)):
+                with self.subTest(outcome=outcome, discard=decision is not None, follow_up=follow_up is not None):
+                    self.row.update(outcome=outcome, evidence=[] if outcome == "missing" else [self.proof],
+                                    decision=decision, followUp=follow_up)
+                    if decision is not None and follow_up is not None:
+                        self.invalid("cannot both discard and defer")
+                    else:
+                        result = self.run_report()
+                        self.assertEqual(result["status"], "ready-for-owner-review")
+                        self.assertEqual(result["authority"], "none")
+                        self.assertIs(result["deletionAuthorized"], False)
+
+    def test_cli_rejects_conflicting_dispositions_without_changing_evidence(self):
+        self.row["decision"] = self.receipt("decision", {"decisionRef": "decision:discard", "actor": "owner:verified",
+                                                        "disposition": "discard"})
+        self.row["followUp"] = self.receipt("follow-up", {"ticketRef": "ticket:002", "intentSha256": "8" * 64})
+        report, observation = self.root / "report.json", self.root / "observation.json"
+        for outcome in ("missing", "partial"):
+            with self.subTest(outcome=outcome):
+                self.row.update(outcome=outcome, evidence=[] if outcome == "missing" else [self.proof])
+                report.write_text(json.dumps(self.report))
+                observation.write_text(json.dumps(self.observation))
+                before = {p.name: p.read_bytes() for p in self.root.iterdir()}
+                result = subprocess.run([sys.executable, "-B", str(SCRIPT), "--report", str(report),
+                                         "--observation", str(observation), "--evidence-root", str(self.root)],
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                self.assertIn("cannot both discard and defer", result.stdout)
+                self.assertIs(json.loads(result.stdout)["deletionAuthorized"], False)
+                self.assertEqual(before, {p.name: p.read_bytes() for p in self.root.iterdir()})
+
     def test_advisory_only_cannot_prove_implementation(self):
         self.row["evidence"] = [self.receipt("advisory", {"analysisRef": "analysis:llm-aligned"})]
         self.invalid("advisory is insufficient")
