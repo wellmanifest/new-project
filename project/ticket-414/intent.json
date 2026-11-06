@@ -1,0 +1,85 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-414",
+  "summary": "Reject contradictory remaining-work dispositions",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-414/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/branch_intent_reconciliation.py",
+    "tests/branch_intent_reconciliation_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a2886d73c5b3382663763028c86f146ea0135798",
+    "targetBranch": "main",
+    "outcome": "Reject conflicting discard and follow-up dispositions for missing or partial criteria before declaring branch-intent reconciliation ready for owner review.",
+    "nonGoals": [
+      "No deletion authority or evidence trust policy changes",
+      "No edits to ticket413 or release projections",
+      "No immutable version advancement in this source-only slice; retain STARTER032 release dependency"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Require mutually exclusive disposition receipts in the existing remaining-work branch; exercise public reconcile and CLI with real digest-bound receipts and positive follow-up-only/discard-only controls.",
+      "components": [
+        {
+          "name": "branch-intent-reconciliation",
+          "paths": [
+            "scripts/branch_intent_reconciliation.py",
+            "tests/branch_intent_reconciliation_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Conflicting remaining-work dispositions return the existing Invalid/CLI exit2 boundary."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independent reviewed revert with prior receipts preserved."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -B -m unittest discover -s tests -p branch_intent_reconciliation_test.py"
+        ],
+        "evidence": "Both conflicting missing/partial fail with unchanged fixture bytes; valid single dispositions remain reviewable without authority."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh",
+          "goal -a --no-publish --delivery-mode pull-request push --ticket ticket-414"
+        ],
+        "evidence": "Required full gates and independent exact-head App approval before merge."
+      }
+    ]
+  }
+}
