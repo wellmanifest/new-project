@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.144] - 2026-11-06
+
+- Reject allocator classifications unless the entire argument is a declared scalar before reserving a ticket identity; escape every dynamic fallback JSON field and preserve supported Unicode titles. [ticket-416]
+
 ## [0.20.143] - 2026-11-06
 
 - Bind continuity journal and index parents before transaction waits; use held POSIX directory descriptors for reads, writes and atomic index replacement, and retain Windows ancestor handles throughout the transaction. Preserve private files and crash/replay behavior. [ticket-415]

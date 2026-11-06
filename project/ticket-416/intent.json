@@ -1,0 +1,105 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-416",
+  "summary": "Reject non-scalar allocator classifications before reservation and safely serialize fallback intent",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-416/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "project/new-ticket.sh",
+    "tests/ticket-classification-allocation.test.py",
+    "tests/governance-scripts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f7c45fd6834f33975c14a8e81ff6a11f71db4d63",
+    "targetBranch": "main",
+    "outcome": "Reject any non-exact declared classification scalar before allocator identity effects, preserve all valid values and Unicode titles; material0.20.144.",
+    "nonGoals": [
+      "No registered receipt authentication or seed/activity/priority contract changes (NP035/36/37)",
+      "No runtime dependencies, controller takeover, cap changes or managed consumer edits"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Compare complete argument strings to declared enum using existing Python contract reader; serialize every fallback dynamic JSON scalar through existing escaping. Template path retains its serializer. Reuse native allocator fixture and wire regression suite into existing canonical shell suite.",
+      "components": [
+        {
+          "name": "allocator",
+          "paths": [
+            "project/new-ticket.sh"
+          ]
+        },
+        {
+          "name": "allocator-regressions",
+          "paths": [
+            "tests/ticket-classification-allocation.test.py",
+            "tests/governance-scripts.test.sh"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independent reviewed revert; preserve immutable releases and all external state."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket-classification-allocation.test.py"
+        ],
+        "evidence": "Actual allocator rejects multiline/control tokens without changing refs, high-water, registration, leases or tickets; all declared values and both rendering modes preserve valid Unicode inputs."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/governance-scripts.test.sh",
+          "bash project/governance-check.sh",
+          "goal -a --no-publish --delivery-mode pull-request push --ticket ticket-416"
+        ],
+        "evidence": "Scoped red/green regression, actual full canonical default300/Goal plus required Linux/nativeWindows/current-base OneDev and independent App publication."
+      }
+    ]
+  }
+}
