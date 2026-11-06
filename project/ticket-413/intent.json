@@ -1,0 +1,100 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-413",
+  "summary": "Validate in-place host activation paths",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-413/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/install-agent-hosts.sh",
+    "tests/agent-hosts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "02209f9a153b121e4dbc9082a6ae7d1e87ef554f",
+    "targetBranch": "main",
+    "outcome": "Validate all in-place host contract paths and directory consistency before chmod/Git config; reuse bootstrap canonical validation and preserve valid hub/adopter behavior. Ship material fix as0.20.142.",
+    "nonGoals": [
+      "No continuity transaction changes (NP-042)",
+      "No ownership transfer or protected policy/check changes",
+      "No consumer managed file edits or new runtime dependency"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 7,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Share the existing bootstrap path validator with in-place preflight, validate complete declarations and hub mappings before effects, and use the frozen validated activation output. Add actual malformed-path and positive regression fixtures in the existing host suite.",
+      "components": [
+        {
+          "name": "host-activation",
+          "paths": [
+            "scripts/install-agent-hosts.sh",
+            "tests/agent-hosts.test.sh"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Malformed in-place contract paths produce existing GOV-AGENT-HOST-004 before activation effects."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independent reviewed revert; retain immutable releases and all unknown work."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Seven malformed variants reject before effects, two positive controls and existing hub/adopter tests pass."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh",
+          "goal -a --no-publish --delivery-mode pull-request push --ticket ticket-413"
+        ],
+        "evidence": "Actual source/canonical checks and independent exact-head App publication before immutable release."
+      }
+    ]
+  }
+}

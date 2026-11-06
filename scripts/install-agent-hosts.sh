@@ -60,62 +60,10 @@ if [[ -z "$TARGET" && "$USER_INSTALL" == false ]]; then
   fi
 fi
 
-contract_path() {
-  local root="$1"
-  for candidate in "governance/agent-hosts.json" ".governance/agent-hosts.json"; do
-    if [[ -f "$root/$candidate" ]]; then
-      python3 - "$root/$candidate" <<'PY' || return 1
-import json, sys
-contract = json.load(open(sys.argv[1], encoding="utf-8"))
-hooks = contract.get("hook", {}).get("additionalHooks", [])
-allowed = {".githooks/commit-msg", ".githooks/prepare-commit-msg", ".githooks/pre-push"}
-if (not isinstance(hooks, list)
-        or any(not isinstance(hook, str) or hook not in allowed for hook in hooks)
-        or len(hooks) != len(set(hooks))):
-    raise SystemExit("GOV-AGENT-HOST-004: invalid additional hook declaration")
-PY
-      printf '%s\n' "$root/$candidate"
-      return 0
-    fi
-  done
-  echo "Agent host contract not found under $root" >&2
-  return 1
-}
-
-# Emits "<target-path>\t<is-hook>" lines for every file the contract governs.
-contract_targets() {
-  python3 - "$1" "$2" <<'PY'
-import json, pathlib, sys
-contract = json.load(open(sys.argv[1], encoding="utf-8"))
-root = pathlib.Path(sys.argv[2])
-hub = root / "governance/manifest.hub.json"
-source_paths = {}
-if hub.is_file():
-    package = json.loads((root / "governance/package-manifest.json").read_text())
-    source_paths = {item["target"]: item["source"] for item in package["files"]}
-for host in contract["hosts"]:
-    print(f"{host['file']}\t0")
-print(f"{contract['hook']['path']}\t1")
-for hook in contract["hook"].get("additionalHooks", []):
-    print(f"{hook}\t1")
-for runtime_file in contract["hook"]["runtimeFiles"]:
-    # The hub owns package sources; adopters own the managed target paths.
-    relative = source_paths.get(runtime_file, runtime_file)
-    print(f"{relative}\t0")
-PY
-}
-
-hooks_path_config() {
-  python3 - "$1" <<'PY'
-import json, sys
-print(json.load(open(sys.argv[1], encoding="utf-8"))["hook"]["hooksPathConfig"])
-PY
-}
-
 # Validate the complete selected package before copying anything. The caller
 # owns the target checkout exclusively; observed path changes fail closed.
 bootstrap_host_files() {
-  python3 - "$1" "$2" "$3" <<'PY'
+  python3 - "$1" "$2" "$3" "${4:-bootstrap}" <<'PY'
 import json
 import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
@@ -215,10 +163,8 @@ try:
     contract_source = next((name for name in contract_names if (source / name).exists() or (source / name).is_symlink()), None)
     if contract_source is None:
         fail('source host contract is missing')
-    frozen = {contract_source: source_bytes(source, contract_source),
-              'governance/package-manifest.json': source_bytes(source, 'governance/package-manifest.json')}
+    frozen = {contract_source: source_bytes(source, contract_source)}
     contract = document(frozen[contract_source])
-    manifest = document(frozen['governance/package-manifest.json'])
     hook = contract['hook']
     if not isinstance(hook, dict):
         fail('host hook declaration must be an object')
@@ -227,12 +173,38 @@ try:
     allowed = {'.githooks/commit-msg', '.githooks/prepare-commit-msg', '.githooks/pre-push'}
     if not isinstance(additional, list) or len(set(additional)) != len(additional) or any(name not in allowed for name in additional):
         fail('invalid additional hook declaration')
-    governed = set(hosts + [hook['path']] + additional + hook['runtimeFiles'])
+    runtime = hook['runtimeFiles']
+    if not isinstance(runtime, list):
+        fail('host runtime files must be an array')
+    governed = set(hosts + [hook['path']] + additional + runtime)
     for name in governed:
         relative(name)
     relative(hook['hooksPathConfig'])
     if PurePosixPath(hook['path']).parent.as_posix() != hook['hooksPathConfig']:
         fail('hook path and hooksPathConfig disagree')
+    if len(sys.argv) > 4 and sys.argv[4] == 'in-place':
+        source_paths = {}
+        if (source / 'governance/manifest.hub.json').is_file():
+            package = document(source_bytes(source, 'governance/package-manifest.json'))
+            if not isinstance(package['files'], list):
+                fail('host package mappings must be an array')
+            for item in package['files']:
+                relative(item['target'])
+                relative(item['source'])
+                source_paths[item['target']] = item['source']
+        activation = [(name, False) for name in hosts]
+        activation += [(hook['path'], True), *((name, True) for name in additional)]
+        activation += [(source_paths.get(name, name), False) for name in runtime]
+        checked(target, hook['hooksPathConfig'], required=True, directory=True)
+        for name, _ in activation:
+            checked(target, name, required=True)
+        # Return only this validated snapshot; activation never re-reads the contract.
+        print(hook['hooksPathConfig'])
+        for name, executable in activation:
+            print(name + '\t' + ('1' if executable else '0'))
+        raise SystemExit(0)
+    frozen['governance/package-manifest.json'] = source_bytes(source, 'governance/package-manifest.json')
+    manifest = document(frozen['governance/package-manifest.json'])
     selected, targets, plan, contracts = [], set(), [], []
     if not isinstance(manifest['files'], list):
         fail('host package mappings must be an array')
@@ -292,10 +264,10 @@ PY
 activate_in_place() {
   local dest="$1"
   dest="$(cd "$dest" && pwd)"
-  local contract hooks targets
-  contract="$(contract_path "$dest")" || return 1
-  hooks="$(hooks_path_config "$contract")" || return 1
-  targets="$(contract_targets "$contract" "$dest")" || return 1
+  local activation hooks targets
+  activation="$(bootstrap_host_files "$dest" "$dest" true in-place)" || return 1
+  hooks="${activation%%$'\n'*}"
+  targets="${activation#*$'\n'}"
   local missing=()
 
   while IFS=$'\t' read -r target is_hook; do
