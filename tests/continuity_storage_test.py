@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Real process contention and recovery of advisory continuity storage."""
 import argparse
+from contextlib import contextmanager, ExitStack
 import errno
 import json
 import multiprocessing
@@ -459,6 +460,106 @@ class ContinuityStorageTests(unittest.TestCase):
             continuity.append_event(self.root, fixture_event())
 
 
+    def test_commit_and_rebuild_use_distinct_storage_parents(self):
+        event, index = self.root / "sessions/events.jsonl", self.root / "recovery/index.json"
+        value = fixture_event()
+        with patch.object(continuity, "storage_paths", return_value=(event, index, 128, 262144)):
+            self.assertEqual(continuity.commit_event(self.root, value)["status"], "recorded")
+            expected = continuity.index_from_events(REPOSITORY, [value], 128)
+            self.assertEqual(json.loads(index.read_text()), expected)
+            index.unlink()
+            self.assertEqual(continuity.rebuild_index(argparse.Namespace(root=self.root))["status"], "rebuilt")
+            self.assertEqual(json.loads(index.read_text()), expected)
+            self.assertEqual(list(continuity.iter_events(event)), [value])
+
+    @unittest.skipUnless(os.name == "posix", "POSIX complete transaction namespace boundary")
+    def test_transaction_confines_distinct_storage_namespaces(self):
+        cases = [("index", "before", True), ("index", "acquired", False),
+                 ("index", "acquired", True), ("journal", "acquired", False),
+                 ("journal", "acquired", True), ("index", "waiting", True),
+                 ("index", "append", True), ("index", "replace", True)]
+        for target, moment, link in cases:
+            with self.subTest(target=target, moment=moment, symlink=link), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp).resolve()
+                event, index = root / "repo/sessions/events.jsonl", root / "repo/recovery/index.json"
+                event.parent.mkdir(parents=True)
+                index.parent.mkdir(parents=True)
+                outside = root / "outside"
+                outside.mkdir()
+                parent = event.parent if target == "journal" else index.parent
+                redirected = outside if link else parent
+                changed = False
+                def swap():
+                    nonlocal changed
+                    parent.rename(root / "held")
+                    parent.symlink_to(outside, target_is_directory=True) if link else parent.mkdir()
+                    changed = True
+                original_lock, original_append = continuity._locked_transaction, continuity.append_event
+                import fcntl
+                original_flock, original_replace = fcntl.flock, os.replace
+                @contextmanager
+                def acquired(*args):
+                    with original_lock(*args):
+                        swap()
+                        yield
+                def waiting(fd, operation):
+                    if not changed and operation & fcntl.LOCK_EX:
+                        swap()
+                    return original_flock(fd, operation)
+                def append(*args):
+                    swap()
+                    return original_append(*args)
+                def replace(src, dst, *args, **kwargs):
+                    if str(dst) in {str(index), index.name} and not changed:
+                        swap()
+                        # This is fixture input; only the resulting index move is the writer's effect.
+                        (outside / Path(src).name).write_bytes(b"replacement fixture\n")
+                    return original_replace(src, dst, *args, **kwargs)
+                if moment == "before":
+                    swap()
+                with ExitStack() as stack:
+                    stack.enter_context(patch.object(continuity, "storage_paths", return_value=(event, index, 128, 262144)))
+                    if moment == "acquired":
+                        stack.enter_context(patch.object(continuity, "_locked_transaction", side_effect=acquired))
+                    elif moment == "waiting":
+                        stack.enter_context(patch.object(fcntl, "flock", side_effect=waiting))
+                    elif moment == "append":
+                        stack.enter_context(patch.object(continuity, "append_event", side_effect=append))
+                    elif moment == "replace":
+                        stack.enter_context(patch.object(continuity.os, "replace", side_effect=replace))
+                    with self.assertRaises(continuity.ContinuityError):
+                        continuity.commit_event(root / "repo", fixture_event())
+                self.assertFalse((redirected / ("events.jsonl" if target == "journal" else "index.json")).exists())
+
+    @unittest.skipUnless(os.name == "posix", "POSIX transaction journal read boundary")
+    def test_transaction_cannot_read_regular_replacement_parent(self):
+        parent = self.root / "read-sessions"
+        parent.mkdir()
+        path = parent / "events.jsonl"
+        continuity.append_event(path, fixture_event())
+        original = continuity._locked_transaction
+        @contextmanager
+        def substitute(*args):
+            with original(*args):
+                parent.rename(self.root / "held-read")
+                parent.mkdir()
+                path.write_bytes(continuity.canonical_bytes(fixture_event("ticket-002", "writer-002")) + b"\n")
+                yield
+        with patch.object(continuity, "_locked_transaction", side_effect=substitute):
+            with self.assertRaises(continuity.ContinuityError):
+                with continuity.storage_transaction(path):
+                    list(continuity.iter_events(path))
+
+    @unittest.skipUnless(os.name == "nt", "Windows complete transaction directory protection")
+    def test_windows_transaction_holds_distinct_index_parent(self):
+        index = self.root / "recovery/index.json"
+        index.parent.mkdir()
+        with continuity.storage_transaction(self.paths[0], index):
+            with self.assertRaises(OSError):
+                index.parent.rename(self.root / "replacement-recovery")
+        index.parent.rename(self.root / "released-recovery")
+
+
 class CompactRoutineIntentContinuityTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -550,6 +651,8 @@ class CompactRoutineIntentContinuityTest(unittest.TestCase):
         with self.assertRaises(continuity.ContinuityError) as ctx:
             continuity.intent_state(self.root, "ticket-001")
         self.assertEqual(ctx.exception.code, "GOV-CONTINUITY-001")
+
+
 
 
 if __name__ == "__main__":

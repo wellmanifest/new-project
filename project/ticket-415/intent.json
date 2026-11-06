@@ -1,0 +1,108 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-415",
+  "summary": "Anchor continuity transaction storage paths",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-415/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/work_continuity.py",
+    "tests/continuity_storage_test.py",
+    "tests/work-continuity.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "a2886d73c5b3382663763028c86f146ea0135798",
+    "targetBranch": "main",
+    "outcome": "Anchor journal/index parent namespaces throughout continuity transactions, including lock waits and atomic index effects. Ship material fix as0.20.143.",
+    "nonGoals": [
+      "No artifact disposition changes owned by foreign414",
+      "No dirty-byte verifier, event line-limit or optional-platform-flag changes (separately recorded observations)",
+      "No ownership reclamation, cap changes, new runtime dependency or consumer managed edits"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Bind journal and distinct index parent namespaces before transaction lock waits. Reuse held no-follow POSIX parent descriptors for stream and atomic-index effects; retain Windows no-DELETE-sharing ancestor handles for the full transaction. Preserve schema, private regular-file, contention and replay semantics.",
+      "components": [
+        {
+          "name": "continuity-runtime",
+          "paths": [
+            "scripts/work_continuity.py"
+          ]
+        },
+        {
+          "name": "continuity-regressions",
+          "paths": [
+            "tests/continuity_storage_test.py",
+            "tests/work-continuity.test.sh"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Internal transaction accepts additional storage paths so canonical commit/rebuild bind both parents before waiting."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independent reviewed revert; retain immutable releases and all foreign state."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/continuity_storage_test.py",
+          "bash tests/work-continuity.test.sh"
+        ],
+        "evidence": "Control cases and7redirected writes/1redirected read regressions; no replacement namespace effects; existing contention/replay/private-file behavior remains."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh",
+          "goal -a --no-publish --delivery-mode pull-request push --ticket ticket-415"
+        ],
+        "evidence": "Actual default-limit source checks/full Python plus Linux/windows/current-base OneDev and independent App publication."
+      }
+    ]
+  }
+}
