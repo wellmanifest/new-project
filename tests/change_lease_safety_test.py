@@ -11,6 +11,8 @@ import sys
 import tempfile
 import unittest
 
+from jsonschema import Draft202012Validator
+
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("lease_safety_runtime", ROOT / "scripts/change_lease_check.py")
 runtime = importlib.util.module_from_spec(spec)
@@ -96,8 +98,13 @@ class LeaseSafetyTests(unittest.TestCase):
         bundled = importlib.util.module_from_spec(bundled_spec)
         bundled_spec.loader.exec_module(bundled)
         invalid = ["a" * size for size in range(39, 66) if size not in (40, 64)]
-        invalid += ["", "A" * 40, "g" * 64, "a" * 40 + "\n", " " + "a" * 64]
+        invalid += ["", "A" * 40, "g" * 64, "a" * 40 + "\n", " " + "a" * 64,
+                    "b" * 64 + "\n", "a" * 40 + "\r", "b" * 64 + "\u2028"]
         for checker in (runtime, bundled):
+            schema_path = (ROOT / "subprojects/change-lease/change-lease.schema.json"
+                           if checker is runtime else
+                           ROOT / "packages/wellman/src/wellman/_bundled/change-lease.schema.json")
+            schema_validator = Draft202012Validator(json.loads(schema_path.read_text()))
             for document, validator, key in [
                 (self.lease, checker.validate_lease, "headSha"),
                 (self.request, checker.validate_request, "targetHeadSha"),
@@ -108,6 +115,7 @@ class LeaseSafetyTests(unittest.TestCase):
                         changed = deepcopy(document)
                         changed[key] = value
                         errors = validator(changed)
+                        self.assertEqual(schema_validator.is_valid(changed), value not in invalid)
                         if value in invalid:
                             self.assertTrue(errors)
                         else:
