@@ -1243,3 +1243,53 @@ class BootstrapContainmentTests(unittest.TestCase):
 
 unittest.main(argv=[sys.argv[0]])
 PYHOSTCONFINEMENT
+
+# Validate every in-place declaration before changing permissions or Git config.
+python3 - "$root" "$tmp" <<'PYINPLACE'
+import json, os, pathlib, subprocess, sys, tempfile
+source, fixtures = map(pathlib.Path, sys.argv[1:])
+env = {k:v for k,v in os.environ.items() if not k.startswith(('GIT_', 'NEW_PROJECT_'))}
+failures = []
+cases = ['valid', 'valid-additional', 'hook-traversal', 'hooks-config-traversal',
+         'host-traversal', 'runtime-traversal', 'hook-symlink', 'parent-symlink',
+         'config-parent-mismatch', 'absolute-hooks-config', 'windows-runtime-path']
+for case in cases:
+    with tempfile.TemporaryDirectory(prefix='inplace-path-', dir=fixtures) as temporary:
+        base = pathlib.Path(temporary); root = base/'checkout'
+        (root/'.githooks').mkdir(parents=True); (root/'governance').mkdir(); (root/'scripts').mkdir()
+        outside = base/'outside-owned'; outside.mkdir()
+        external = outside/'pre-commit'; external.write_text('#!/bin/sh\n'); external.chmod(0o600)
+        hook = root/'.githooks/pre-commit'; hook.write_text('#!/bin/sh\n'); hook.chmod(0o600)
+        (root/'AGENTS.md').write_text('# Fixture\n'); (root/'scripts/runtime.py').write_text('# Fixture\n')
+        name, hooks = '.githooks/pre-commit', '.githooks'
+        hosts, runtime, additional = [{'file':'AGENTS.md'}], ['scripts/runtime.py'], []
+        if case == 'hook-traversal': name, hooks = '../outside-owned/pre-commit', '../outside-owned'
+        elif case == 'hooks-config-traversal': hooks = '../outside-owned'
+        elif case == 'host-traversal': hosts = [{'file':'../outside-owned/pre-commit'}]
+        elif case == 'runtime-traversal': runtime = ['../outside-owned/pre-commit']
+        elif case == 'hook-symlink': hook.unlink(); hook.symlink_to(external)
+        elif case == 'parent-symlink':
+            hook.unlink(); hook.parent.rmdir(); hook.parent.symlink_to(outside, target_is_directory=True)
+        elif case == 'config-parent-mismatch': hooks = 'different-hook-directory'
+        elif case == 'absolute-hooks-config': hooks = str(outside)
+        elif case == 'windows-runtime-path': runtime = ['C:/outside-owned/pre-commit']
+        elif case == 'valid-additional':
+            p = root/'.githooks/commit-msg'; p.write_text('#!/bin/sh\n'); p.chmod(0o600)
+            additional = ['.githooks/commit-msg']
+        (root/'governance/agent-hosts.json').write_text(json.dumps({'hosts':hosts,
+            'hook':{'path':name, 'hooksPathConfig':hooks, 'runtimeFiles':runtime, 'additionalHooks':additional}}))
+        subprocess.run(['git','init','-q',str(root)], env=env, check=True)
+        result = subprocess.run(['bash',str(source/'scripts/install-agent-hosts.sh'),
+            '--source',str(root),'--target',str(root)], cwd=root, env=env, capture_output=True, text=True)
+        config = subprocess.run(['git','-C',str(root),'config','--local','--get','core.hooksPath'],
+            env=env, capture_output=True, text=True)
+        if case.startswith('valid'):
+            ok = result.returncode == 0 and config.stdout.strip() == '.githooks' and hook.stat().st_mode & 0o111
+            if additional: ok = ok and (root/additional[0]).stat().st_mode & 0o111
+        else:
+            ok = result.returncode != 0 and not config.stdout and not hook.stat().st_mode & 0o111
+            ok = ok and not external.stat().st_mode & 0o111
+        if not ok: failures.append({'case':case, 'rc':result.returncode, 'hooks':config.stdout.strip()})
+assert not failures, failures
+print('In-place host paths: 11 positive/negative effect-boundary cases PASS')
+PYINPLACE

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.142] - 2026-11-06
+
+- Validate all in-place host paths, aliases, hub mappings and hook-directory consistency before activation; share bootstrap validation and use its frozen activation values. [ticket-413]
+
 ## [0.20.141] - 2026-11-06
 
 - Reject malformed literal branch names consistently across default-branch, branch-list and pull-request observations before evaluating lifecycle findings; preserve valid Unicode names and existing fail-closed diagnostics. [ticket-412]
