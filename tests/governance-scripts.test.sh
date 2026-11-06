@@ -24,6 +24,7 @@ export GIT_CEILING_DIRECTORIES="$fixture_cache${GIT_CEILING_DIRECTORIES:+:$GIT_C
 python3 "$repo_root/tests/governance_fixture_temp_test.py"
 python3 "$repo_root/tests/ticket-allocation-worktree.test.py"
 python3 "$repo_root/tests/ticket-radar-allocation.test.py"
+python3 "$repo_root/tests/ticket-classification-allocation.test.py"
 fixture="$(mktemp -d "$fixture_cache/scenario.XXXXXX")"
 
 if grep -R -n 'file:///' \

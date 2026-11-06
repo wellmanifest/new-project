@@ -410,6 +410,8 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-412** | [`README.md`](./ticket-412/README.md) | - | - | - | - | - |
 | **ticket-413** | [`README.md`](./ticket-413/README.md) | - | - | - | - | - |
 | **ticket-414** | [`README.md`](./ticket-414/README.md) | - | - | - | - | - |
+| **ticket-415** | [`README.md`](./ticket-415/README.md) | - | - | - | - | - |
+| **ticket-416** | [`README.md`](./ticket-416/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 

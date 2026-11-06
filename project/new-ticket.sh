@@ -439,10 +439,11 @@ require_classification_value() {
     exit 1
   fi
   local allowed
-  allowed="$(python3 -c 'import json,sys
+  if ! allowed="$(python3 -c 'import json,sys
 data = json.load(open(sys.argv[1]))
-print("\n".join(data["dimensions"][sys.argv[2]]))' "$dsl" "$dimension")"
-  if ! grep -Fxq -- "$value" <<< "$allowed"; then
+values = data["dimensions"][sys.argv[2]]
+print("\n".join(values))
+raise SystemExit(0 if sys.argv[3] in values else 1)' "$dsl" "$dimension" "$value")"; then
     echo "GOV-CLASS-001: '$value' is not a declared $dimension in $dsl." >&2
     echo "  accepted: $(printf '%s' "$allowed" | tr '\n' ' ')" >&2
     exit 1
@@ -1040,15 +1041,15 @@ else
   cat > "$ticket_dir/intent.json" <<EOF
 {
   "schema": "new-project.intent/v3",
-  "ticket": "$ticket_id",
+  "ticket": "$(json_escape "$ticket_id")",
   "summary": "$(json_escape "$TITLE")",
-  "workstream": "$WORKSTREAM",
+  "workstream": "$(json_escape "$WORKSTREAM")",
   "classification": {
-    "kind": "$KIND",
-    "priority": "$PRIORITY",
-    "origin": "$ORIGIN"
+    "kind": "$(json_escape "$KIND")",
+    "priority": "$(json_escape "$PRIORITY")",
+    "origin": "$(json_escape "$ORIGIN")"
   },
-  "allowedPaths": ["project/$ticket_id/**", "TODO.md", "project/TICKETS.md"],
+  "allowedPaths": ["project/$(json_escape "$ticket_id")/**", "TODO.md", "project/TICKETS.md"],
   "forbiddenPaths": ["project/ticket-*/user-*.md"],
   "stacks": [],
   "dependsOn": [],
