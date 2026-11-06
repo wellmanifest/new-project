@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.143] - 2026-11-06
+
+- Bind continuity journal and index parents before transaction waits; use held POSIX directory descriptors for reads, writes and atomic index replacement, and retain Windows ancestor handles throughout the transaction. Preserve private files and crash/replay behavior. [ticket-415]
+
 ## [0.20.142] - 2026-11-06
 
 - Validate all in-place host paths, aliases, hub mappings and hook-directory consistency before activation; share bootstrap validation and use its frozen activation values. [ticket-413]
