@@ -407,12 +407,22 @@ def sync_directory(path: Path) -> None:
 def write_atomic(path: Path, data: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    with temporary.open("xb") as handle:
-        handle.write(data)
-        handle.flush()
-        os.fsync(handle.fileno())
-    os.replace(temporary, path)
-    sync_directory(path.parent)
+    created = False
+    try:
+        with temporary.open("xb") as handle:
+            created = True
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+        sync_directory(path.parent)
+    finally:
+        # A failed exclusive open must not remove an existing attempt's file.
+        if created:
+            try:
+                temporary.unlink()
+            except FileNotFoundError:
+                pass  # Successful replacement already consumed the temporary.
 
 
 @contextmanager

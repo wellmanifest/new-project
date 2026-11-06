@@ -4,6 +4,7 @@
 
 - Preserve exact dirty Git pathname records and staged-index authority, including renamed/copied files and mutable working-tree links. [ticket-410]
 - Count complete snapshot bytes and retain prepared handoff recovery data; publish success only after matching lease replacement and committed receipt. [ticket-410]
+- Remove a failed atomic write's own temporary file so the same process can retry; preserve existing collision files and applied lease recovery data. [ticket-410]
 
 - Reuse checked report schemas and immutable Git objects in isolated validation fixtures; retain every test and existing stage limit. [ticket-410]
 

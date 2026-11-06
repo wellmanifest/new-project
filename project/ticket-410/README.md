@@ -17,7 +17,7 @@ Repair four current138 defects in dirty cache digest, staged index paths, comple
 
 ## Ryzyka i Uwagi
 - Recoverable ignored prepared records are proposals only; no production takeover or owner transfer is executed in this task. Existing success records, caps and gates stay compatible.
-- Concrete13material files/3components/S25, no runtime dependency. Initial allocator radar without final AC is advisory.
+- Concrete15material files/3components/S25, no runtime dependency. Initial allocator radar without final AC is advisory.
 
 ## Granica katalogu
 
