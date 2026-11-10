@@ -7,6 +7,7 @@ import argparse
 import base64
 import binascii
 import contextlib
+import copy
 import fnmatch
 import hashlib
 import importlib.util
@@ -24,7 +25,14 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python 3.11+ includes tomllib
+    tomllib = None
+
 PACKAGE_MANIFEST = "governance/package-manifest.json"
+AGENT_HOSTS_SOURCE = "governance/agent-hosts.json"
+AGENT_HOSTS_TARGET = ".governance/agent-hosts.json"
 MANIFEST_SOURCE = "governance/manifest.default.json"
 MANIFEST_BASE_TARGET = ".governance/manifest.base.json"
 MANIFEST_TARGET = ".governance/manifest.json"
@@ -196,11 +204,522 @@ def allocation_delivery(manifest: dict, state: dict, scope: list[str],
     }
 
 
+class _PackagingError(ValueError):
+    """Raised when a target-owned packaging declaration is malformed or unbound."""
+
+
+def _unique_json_pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise _PackagingError(f"duplicate JSON key '{key}'")
+        result[key] = value
+    return result
+
+
+def packaging_contract_from_bytes(raw: bytes | None) -> dict[str, dict[str, object]]:
+    if raw is None:
+        return {}
+    document = load_json_bytes(raw, AGENT_HOSTS_TARGET)
+    if not isinstance(document, dict):
+        raise SystemExit(f"{AGENT_HOSTS_TARGET} must be a JSON object")
+    packaging = document.get("packaging", {})
+    if not isinstance(packaging, dict):
+        raise SystemExit(f"{AGENT_HOSTS_TARGET} packaging section must be an object")
+    bindings: dict[str, dict[str, object]] = {}
+    for ecosystem, binding in sorted(packaging.items()):
+        if not isinstance(binding, dict):
+            raise SystemExit(f"{AGENT_HOSTS_TARGET} packaging.{ecosystem} must be an object")
+        marker = binding.get("marker")
+        declaration = binding.get("declaration")
+        lifecycle = binding.get("lifecycle")
+        if (not isinstance(marker, str) or not marker
+                or not isinstance(declaration, str) or not declaration
+                or not isinstance(lifecycle, dict)
+                or not all(isinstance(lifecycle.get(k), str) and lifecycle[k]
+                           for k in ("kind", "field", "mustContain"))):
+            raise SystemExit(f"{AGENT_HOSTS_TARGET} packaging.{ecosystem} has invalid fields")
+        bindings[str(ecosystem)] = binding
+    return bindings
+
+
+def source_packaging_markers(standard_root: Path, revision: str,
+                             files: list[dict[str, object]]) -> set[str]:
+    source = next(
+        (str(item["source"]) for item in files if item["target"] == AGENT_HOSTS_TARGET),
+        None,
+    )
+    if source is None:
+        return set()
+    contract = packaging_contract_from_bytes(git_bytes(standard_root, revision, source))
+    return {str(binding["marker"]) for binding in contract.values()}
+
+
+def _safe_projected_gate(target_root: Path, payloads: dict[str, bytes], relative: str) -> bool:
+    if re.fullmatch(
+        r"^(?!.*(?:^|/)\.\.(?:/|$))[^/\\:\x00-\x1f\x7f]+(?:/[^/\\:\x00-\x1f\x7f]+)*$",
+        relative,
+    ) is None:
+        return False
+    try:
+        base = target_root.resolve(strict=True)
+        current = base
+        for part in relative.split("/"):
+            current = current / part
+            if current.is_symlink():
+                return False
+        resolved = current.resolve(strict=False)
+        resolved.relative_to(base)
+    except (OSError, ValueError):
+        return False
+    if relative in payloads:
+        return not current.exists() or current.is_file()
+    return current.is_file()
+
+
+def _packaging_lifecycle_value(kind: str, document: dict[str, object]) -> str:
+    if kind == "npm-script":
+        scripts = document.get("scripts")
+        value = scripts.get("prepare") if isinstance(scripts, dict) else None
+    else:
+        tool = document.get("tool")
+        pytest_cfg = tool.get("pytest") if isinstance(tool, dict) else None
+        options = pytest_cfg.get("ini_options") if isinstance(pytest_cfg, dict) else None
+        value = options.get("addopts") if isinstance(options, dict) else None
+    if isinstance(value, list):
+        return " ".join(str(item) for item in value)
+    return value if isinstance(value, str) else ""
+
+
+def _validate_declaration_block(
+    target_root: Path,
+    marker: str,
+    binding: dict[str, object],
+    declaration: object,
+    document: dict[str, object],
+    payloads: dict[str, bytes],
+) -> dict[str, object]:
+    if not isinstance(declaration, dict):
+        raise _PackagingError(f"{marker} declares no '{binding['declaration']}' governance block")
+    for key in ("standard", "revision", "gate"):
+        val = declaration.get(key)
+        if not isinstance(val, str) or not val.strip():
+            raise _PackagingError(f"{marker} governance block is missing the '{key}' field")
+    gate = str(declaration["gate"])
+    if not _safe_projected_gate(target_root, payloads, gate):
+        raise _PackagingError(f"{marker} declares missing or unsafe gate '{gate}'")
+    lifecycle = binding["lifecycle"]
+    assert isinstance(lifecycle, dict)
+    if str(lifecycle["mustContain"]) not in _packaging_lifecycle_value(str(lifecycle["kind"]), document):
+        raise _PackagingError(
+            f"{marker} {lifecycle['field']} does not run '{lifecycle['mustContain']}'"
+        )
+    return declaration
+
+
+def _skip_toml_ws(text: str, pos: int) -> int:
+    while pos < len(text) and text[pos] in (" ", "\t"):
+        pos += 1
+    return pos
+
+
+def _read_toml_string_end(text: str, start: int) -> int:
+    n = len(text)
+    if text.startswith('"""', start):
+        j = start + 3
+        while j < n:
+            if text[j] == "\\":
+                j += 2
+                continue
+            if text.startswith('"""', j):
+                j += 3
+                extra = 0
+                while j + extra < n and text[j + extra] == '"' and extra < 2:
+                    extra += 1
+                return j + extra
+            j += 1
+        raise _PackagingError("unterminated multiline basic string")
+    if text.startswith("'''", start):
+        end = text.find("'''", start + 3)
+        if end < 0:
+            raise _PackagingError("unterminated multiline literal string")
+        j = end + 3
+        extra = 0
+        while j + extra < n and text[j + extra] == "'" and extra < 2:
+            extra += 1
+        return j + extra
+    quote_ch = text[start]
+    j = start + 1
+    while j < n:
+        if quote_ch == '"' and text[j] == "\\":
+            j += 2
+            continue
+        if text[j] in ("\r", "\n"):
+            break
+        if text[j] == quote_ch:
+            return j + 1
+        j += 1
+    raise _PackagingError("unterminated TOML string")
+
+
+def _parse_toml_dotted_key(text: str, start: int) -> tuple[tuple[str, ...], int] | None:
+    assert tomllib is not None
+    parts: list[str] = []
+    pos = start
+    n = len(text)
+    while True:
+        pos = _skip_toml_ws(text, pos)
+        if pos >= n:
+            return None
+        if text[pos] in ('"', "'") and not text.startswith(('"""', "'''"), pos):
+            seg_end = _read_toml_string_end(text, pos)
+            decoded = tomllib.loads(f"{text[pos:seg_end]} = 1")
+            parts.append(next(iter(decoded)))
+            pos = seg_end
+        else:
+            match = re.match(r"[A-Za-z0-9_-]+", text[pos:])
+            if match is None:
+                return None
+            seg = match.group(0)
+            parts.append(seg)
+            pos += len(seg)
+        dot_pos = _skip_toml_ws(text, pos)
+        if dot_pos < n and text[dot_pos] == ".":
+            pos = dot_pos + 1
+            continue
+        return tuple(parts), pos
+
+
+def _rewrite_toml_wellmanifest(
+    marker: str,
+    text: str,
+    parsed: dict[str, object],
+    version: str,
+    revision: str,
+) -> str:
+    assert tomllib is not None
+    current_table: tuple[str, ...] = ()
+    brace_depth = 0
+    bracket_depth = 0
+    at_statement_start = True
+    spans: dict[str, tuple[int, int, str]] = {}
+    i = 0
+    n = len(text)
+    while i < n:
+        i = _skip_toml_ws(text, i)
+        if i >= n:
+            break
+        ch = text[i]
+        if ch in ("\r", "\n"):
+            i += 1
+            if brace_depth == 0 and bracket_depth == 0:
+                at_statement_start = True
+            continue
+        if ch == "#":
+            while i < n and text[i] not in ("\r", "\n"):
+                i += 1
+            continue
+        if at_statement_start and brace_depth == 0 and bracket_depth == 0:
+            if ch == "[":
+                is_array = text.startswith("[[", i)
+                header = _parse_toml_dotted_key(text, i + (2 if is_array else 1))
+                close_token = "]]" if is_array else "]"
+                if header is None:
+                    raise _PackagingError(f"{marker} has an unreadable table header")
+                key_parts, after_header = header
+                after_header = _skip_toml_ws(text, after_header)
+                if not text.startswith(close_token, after_header):
+                    raise _PackagingError(f"{marker} has an unclosed table header")
+                current_table = ("__array__", *key_parts) if is_array else key_parts
+                i = after_header + len(close_token)
+                at_statement_start = False
+                continue
+            parsed_key = _parse_toml_dotted_key(text, i)
+            if parsed_key is not None:
+                key_parts, after_key = parsed_key
+                eq_pos = _skip_toml_ws(text, after_key)
+                if eq_pos < n and text[eq_pos] == "=":
+                    full_key = current_table + key_parts
+                    val_pos = _skip_toml_ws(text, eq_pos + 1)
+                    if full_key in {
+                        ("tool", "wellmanifest", "standard"),
+                        ("tool", "wellmanifest", "revision"),
+                    }:
+                        if (val_pos >= n or text[val_pos] not in ('"', "'")
+                                or text.startswith(('"""', "'''"), val_pos)):
+                            raise _PackagingError(
+                                f"{marker} [tool.wellmanifest] {full_key[-1]} must be a single-line string literal"
+                            )
+                        val_end = _read_toml_string_end(text, val_pos)
+                        spans[full_key[-1]] = (val_pos, val_end, text[val_pos])
+                        i = val_end
+                        at_statement_start = False
+                        continue
+                    i = val_pos
+                    at_statement_start = False
+                    continue
+        if ch in ('"', "'"):
+            i = _read_toml_string_end(text, i)
+            continue
+        if ch == "{":
+            brace_depth += 1
+        elif ch == "}":
+            brace_depth = max(0, brace_depth - 1)
+        elif ch == "[":
+            bracket_depth += 1
+        elif ch == "]":
+            bracket_depth = max(0, bracket_depth - 1)
+        i += 1
+
+    if set(spans) != {"standard", "revision"}:
+        raise _PackagingError(
+            f"{marker} must declare standard and revision as table keys under [tool.wellmanifest]"
+        )
+    replacements = sorted(
+        (
+            (spans["standard"][0], spans["standard"][1], f"{spans['standard'][2]}{version}{spans['standard'][2]}"),
+            (spans["revision"][0], spans["revision"][1], f"{spans['revision'][2]}{revision}{spans['revision'][2]}"),
+        ),
+        key=lambda item: item[0],
+        reverse=True,
+    )
+    updated = text
+    for start, end, replacement in replacements:
+        updated = updated[:start] + replacement + updated[end:]
+    reparsed = tomllib.loads(updated)
+    expected = copy.deepcopy(parsed)
+    expected["tool"]["wellmanifest"]["standard"] = version  # type: ignore[index]
+    expected["tool"]["wellmanifest"]["revision"] = revision  # type: ignore[index]
+    if reparsed != expected:
+        raise _PackagingError(f"{marker} surgical packaging update failed semantic verification")
+    return updated
+
+
+def _rewrite_json_wellmanifest(
+    marker: str,
+    text: str,
+    parsed: dict[str, object],
+    version: str,
+    revision: str,
+) -> str:
+    tokens: list[tuple[str, object, int, int]] = []
+    i = 0
+    n = len(text)
+    while i < n:
+        ch = text[i]
+        if ch in " \t\r\n":
+            i += 1
+            continue
+        if ch in "{}[]:,":
+            tokens.append((ch, ch, i, i + 1))
+            i += 1
+            continue
+        if ch == '"':
+            j = i + 1
+            while j < n:
+                if text[j] == "\\":
+                    j += 2
+                    continue
+                if text[j] == '"':
+                    break
+                j += 1
+            tokens.append(("str", json.loads(text[i:j + 1]), i, j + 1))
+            i = j + 1
+            continue
+        j = i
+        while j < n and text[j] not in ' \t\r\n{}[]:,"':
+            j += 1
+        tokens.append(("prim", None, i, j))
+        i = j
+
+    containers: list[tuple[str, bool]] = []
+    pending_wellmanifest_obj = False
+    spans: dict[str, tuple[int, int]] = {}
+    for idx, (kind, val, start, end) in enumerate(tokens):
+        if kind == "{":
+            containers.append(("obj", pending_wellmanifest_obj))
+            pending_wellmanifest_obj = False
+            continue
+        if kind == "[":
+            containers.append(("arr", False))
+            pending_wellmanifest_obj = False
+            continue
+        if kind in ("}", "]"):
+            if containers:
+                containers.pop()
+            pending_wellmanifest_obj = False
+            continue
+        if (kind == "str" and containers and containers[-1][0] == "obj"
+                and idx > 0 and tokens[idx - 1][0] in ("{", ",")
+                and idx + 2 < len(tokens) and tokens[idx + 1][0] == ":"):
+            val_kind, _val_obj, val_start, val_end = tokens[idx + 2]
+            if len(containers) == 1 and val == "wellmanifest" and val_kind == "{":
+                pending_wellmanifest_obj = True
+            elif len(containers) == 2 and containers[-1][1] and val in {"standard", "revision"}:
+                if val_kind != "str":
+                    raise _PackagingError(f"{marker} wellmanifest.{val} must be a JSON string")
+                spans[str(val)] = (val_start, val_end)
+
+    if set(spans) != {"standard", "revision"}:
+        raise _PackagingError(f"{marker} must declare string fields wellmanifest.standard and wellmanifest.revision")
+    replacements = sorted(
+        (
+            (spans["standard"][0], spans["standard"][1], json.dumps(version)),
+            (spans["revision"][0], spans["revision"][1], json.dumps(revision)),
+        ),
+        key=lambda item: item[0],
+        reverse=True,
+    )
+    updated = text
+    for start, end, replacement in replacements:
+        updated = updated[:start] + replacement + updated[end:]
+    reparsed = json.loads(updated, object_pairs_hook=_unique_json_pairs)
+    expected = copy.deepcopy(parsed)
+    expected["wellmanifest"]["standard"] = version  # type: ignore[index]
+    expected["wellmanifest"]["revision"] = revision  # type: ignore[index]
+    if reparsed != expected:
+        raise _PackagingError(f"{marker} surgical packaging update failed semantic verification")
+    return updated
+
+
+def project_packaging_declarations(
+    target_root: Path,
+    payloads: dict[str, bytes],
+    version: str,
+    revision: str,
+) -> tuple[set[str], list[str]]:
+    contract = packaging_contract_from_bytes(payloads.get(AGENT_HOSTS_TARGET))
+    packaging_targets: set[str] = set()
+    errors: list[str] = []
+    for ecosystem, binding in sorted(contract.items()):
+        marker = str(binding["marker"])
+        marker_path = plan_path(target_root, marker)
+        if not marker_path.exists():
+            continue
+        if not marker_path.is_file():
+            errors.append(f"{marker}: packaging marker must be a regular file")
+            continue
+        raw = marker_path.read_bytes()
+        try:
+            try:
+                text = raw.decode("utf-8")
+            except UnicodeDecodeError as error:
+                raise _PackagingError(f"{marker} is not valid UTF-8") from error
+            if ecosystem == "python":
+                if tomllib is None:
+                    raise _PackagingError(
+                        f"{marker} requires Python 3.11+ tomllib to verify packaging declarations"
+                    )
+                try:
+                    document = tomllib.loads(text)
+                except tomllib.TOMLDecodeError as error:
+                    raise _PackagingError(f"{marker} is not valid TOML ({error})") from error
+                tool = document.get("tool")
+                declaration = tool.get("wellmanifest") if isinstance(tool, dict) else None
+                validated = _validate_declaration_block(
+                    target_root, marker, binding, declaration, document, payloads,
+                )
+                if validated["standard"] == version and validated["revision"] == revision:
+                    projected = raw
+                else:
+                    projected = _rewrite_toml_wellmanifest(
+                        marker, text, document, version, revision,
+                    ).encode("utf-8")
+            else:
+                try:
+                    loaded = json.loads(text, object_pairs_hook=_unique_json_pairs)
+                except json.JSONDecodeError as error:
+                    raise _PackagingError(f"{marker} is not valid JSON ({error})") from error
+                if not isinstance(loaded, dict):
+                    raise _PackagingError(f"{marker} must contain a top-level JSON object")
+                declaration = loaded.get("wellmanifest")
+                validated = _validate_declaration_block(
+                    target_root, marker, binding, declaration, loaded, payloads,
+                )
+                if validated["standard"] == version and validated["revision"] == revision:
+                    projected = raw
+                else:
+                    projected = _rewrite_json_wellmanifest(
+                        marker, text, loaded, version, revision,
+                    ).encode("utf-8")
+            packaging_targets.add(marker)
+            payloads[marker] = projected
+        except _PackagingError as error:
+            errors.append(str(error))
+    return packaging_targets, errors
+
+
+def verify_packaging_plan_admission(
+    target_root: Path,
+    before: dict,
+    manifest: dict,
+    name: str,
+) -> None:
+    if name in before["dirtyFiles"]:
+        raise SystemExit(
+            f"packaging declaration {name} has unmanaged local edits; "
+            "commit or revert changes before allocating an adoption plan"
+        )
+    row = plan_git(target_root, "--literal-pathspecs", "ls-tree", "-z", before["head"], "--", name)
+    fields = row.rstrip(b"\0").split(b"\t")
+    if (len(fields) != 2 or fields[1] != name.encode() or b"\0" in row.rstrip(b"\0")
+            or fields[0].split()[:2] not in ([b"100644", b"blob"], [b"100755", b"blob"])):
+        raise SystemExit(f"packaging declaration {name} must be a committed regular file at HEAD")
+    executable_blob = fields[0].split()[0] == b"100755"
+    current = before["files"].get(name)
+    committed_bytes = plan_git(target_root, "show", f"{before['head']}:{name}")
+    if (current is None
+            or bool(current["mode"] & 0o111) != executable_blob
+            or (target_root / name).read_bytes() != committed_bytes
+            or current["sha256"] != hashlib.sha256(committed_bytes).hexdigest()):
+        raise SystemExit(
+            f"packaging declaration {name} has unmanaged local edits; "
+            "commit or revert changes before allocating an adoption plan"
+        )
+    committed_manifest = json.loads(plan_git(target_root, "show", f"{before['head']}:{MANIFEST_TARGET}"))
+    for label, candidate in (("committed", committed_manifest), ("prospective", manifest)):
+        coordination = candidate.get("coordination", {})
+        streams = coordination.get("workstreams", {})
+        integration_cfg = coordination.get("integration", {})
+        integration_stream = integration_cfg.get("workstream")
+        owners = {
+            stream for stream, value in streams.items()
+            if any(fnmatch.fnmatchcase(name, pattern) for pattern in value.get("ownedPaths", []))
+        }
+        allowed_owners = (
+            ({"governance"}, {integration_stream})
+            if isinstance(integration_stream, str) and integration_stream
+            else ({"governance"},)
+        )
+        if not owners:
+            raise SystemExit(
+                f"packaging declaration {name} has no owning workstream in {label} {MANIFEST_TARGET}; "
+                f"declare exclusive governance or {integration_stream or 'integration'} ownership"
+            )
+        if owners not in allowed_owners:
+            raise SystemExit(
+                f"packaging declaration {name} has conflicting workstream ownership "
+                f"({', '.join(sorted(owners))}) in {label} {MANIFEST_TARGET}; "
+                f"adoption plan requires exclusive governance or {integration_stream or 'integration'} ownership"
+            )
+    if any(fnmatch.fnmatchcase(name, pattern)
+           for pattern in manifest.get("delivery", {}).get("publicInterfacePaths", [])):
+        raise SystemExit(
+            f"packaging declaration {name} matches delivery.publicInterfacePaths and requires explicit interface review"
+        )
+    repo_cfg = manifest.get("repository", {})
+    if repo_cfg.get("mode") == "monorepo" and not any(
+            fnmatch.fnmatchcase(name, pattern) for pattern in repo_cfg.get("componentRoots", [])):
+        raise SystemExit(f"packaging declaration {name} is outside monorepo componentRoots")
+
+
 def adoption_allocation_plan(standard_root: Path, revision: str, version: str,
                              target_root: Path, files: list[dict[str, object]],
                              payloads: dict[str, bytes], expected_lock: bytes,
                              executable: set[str], manifest: dict, before: dict,
-                             additions: list[str], ownership: dict | None = None) -> dict:
+                             additions: list[str], ownership: dict | None = None,
+                             packaging_targets: set[str] | None = None) -> dict:
+    admitted_packaging = packaging_targets or set()
     after = allocation_target_state(target_root, set(before["files"]))
     if before != after:
         raise SystemExit("target changed while preparing the adoption plan")
@@ -246,6 +765,8 @@ def adoption_allocation_plan(standard_root: Path, revision: str, version: str,
                     or old_managed.get(name) != current["sha256"]):
                 if name not in {item["path"] for item in takeovers}:
                     raise SystemExit("managed adoption path requires explicit takeover or repair")
+        elif name in admitted_packaging:
+            verify_packaging_plan_admission(target_root, before, manifest, name)
         elif (not any(fnmatch.fnmatchcase(name, pattern) for pattern in owned)
                 or any(fnmatch.fnmatchcase(name, pattern) for pattern in integration)):
             raise SystemExit("adoption plan cannot transfer target-owned path: " + name)
@@ -253,7 +774,8 @@ def adoption_allocation_plan(standard_root: Path, revision: str, version: str,
     def desired_mode(name, content):
         current = before["files"].get(name)
         if name != ".governance/manifest.lock.json" and current is not None and (
-                current["sha256"] == hashlib.sha256(content).hexdigest() or name in required):
+                current["sha256"] == hashlib.sha256(content).hexdigest()
+                or name in required or name in admitted_packaging):
             mode = current["mode"]
             if name not in executable or mode & 0o111:
                 return "100755" if mode & 0o100 else "100644"
@@ -1493,6 +2015,7 @@ def main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = Non
             raise SystemExit("adoption plan requires an installed managed hash closure")
         plan_before = allocation_target_state(target_root,
             {str(item["target"]) for item in files} | set(old_managed)
+            | source_packaging_markers(standard_root, args.source_revision, files)
             | {".governance/manifest.lock.json", ".gitignore"})
     if args.migrate_wellman_scaffold:
         validate_wellman_scaffold(target_root, files)
@@ -1581,6 +2104,18 @@ def main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = Non
             target_root, manifest, payloads, args.bootstrap_prerequisites_plan)
         payloads.update(prerequisite_seeds)
 
+    packaging_targets: set[str] = set()
+    packaging_errors: list[str] = []
+    lock_marker = target_root / ".governance/manifest.lock.json"
+    if (lock_marker.exists() or lock_marker.is_symlink()) and not (
+        args.bootstrap_native_adoption or args.migrate_wellman_scaffold
+    ):
+        packaging_targets, packaging_errors = project_packaging_declarations(
+            target_root, payloads, version, args.source_revision,
+        )
+    if packaging_errors and (args.allocation_plan or not args.check):
+        raise SystemExit("invalid target packaging declaration: " + "; ".join(packaging_errors))
+
     expected_lock = lock_content(
         target_root,
         args.source_revision,
@@ -1604,18 +2139,20 @@ def main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = Non
         assert plan_before is not None
         print(json.dumps(adoption_allocation_plan(standard_root, args.source_revision, version,
             target_root, files, payloads, expected_lock, executable_targets, manifest,
-            plan_before, seed_additions, _upgrade_ownership), sort_keys=True))
+            plan_before, seed_additions, _upgrade_ownership, packaging_targets), sort_keys=True))
         return 0
 
     if args.check:
-        if not changes:
+        if not changes and not packaging_errors:
             print(f"up-to-date wellmanifest/new-project {version} at {args.source_revision}")
         else:
             for action, target in changes:
                 print(f"{action} {target}")
-            print(f"drift detected: {len(changes)} change(s) required")
+            for error in packaging_errors:
+                print(f"INVALID packaging declaration {error}")
+            print(f"drift detected: {len(changes) + len(packaging_errors)} change(s) required")
         report_missing_target_prerequisites(missing_prerequisites)
-        return 1 if changes or missing_prerequisites else 0
+        return 1 if changes or packaging_errors or missing_prerequisites else 0
 
     # A complete payload is not a usable adoption when target-owned required
     # files are absent. Check the projected manifest before the first write,
