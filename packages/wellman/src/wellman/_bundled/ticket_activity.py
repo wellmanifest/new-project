@@ -63,6 +63,8 @@ class ActivityReadBatch:
         self.root = root.resolve()
         self.queries = {}
         self.files = {}
+        self.ancestors = {}
+        self.derived = {}
         self.context_reset = None
 
     def __enter__(self):
@@ -70,6 +72,8 @@ class ActivityReadBatch:
             raise ActivityError("activity read batch is already open")
         self.queries.clear()
         self.files.clear()
+        self.ancestors.clear()
+        self.derived.clear()
         self.context_reset = _READ_BATCH.set(self)
         try:
             # Fence checkout identity, HEAD and registration even when every
@@ -100,6 +104,9 @@ class ActivityReadBatch:
                 for (args, check), expected in self.queries.items():
                     if _run_git(self.root, *args, check=check) != expected:
                         raise ActivityError("Git state changed during activity inspection; retry")
+                for (older, newer), expected in self.ancestors.items():
+                    if _run_ancestor(self.root, older, newer) != expected:
+                        raise ActivityError("Git state changed during activity inspection; retry")
                 for (path, operation), expected in self.files.items():
                     if _file_observation(path, operation) != expected:
                         raise ActivityError("activity document changed during inspection; retry")
@@ -108,6 +115,8 @@ class ActivityReadBatch:
         finally:
             self.queries.clear()
             self.files.clear()
+            self.ancestors.clear()
+            self.derived.clear()
 
 
 def _file_observation(path: Path, operation: str):
@@ -351,13 +360,25 @@ def _validate_registry(value: Any, expected_repository: str) -> list[dict[str, s
     return receipts
 
 
-def _ancestor(root: Path, older: str, newer: str) -> bool:
+def _run_ancestor(root: Path, older: str, newer: str) -> bool:
     result = subprocess.run(
         ["git", "-C", str(root), "merge-base", "--is-ancestor", older, newer],
         capture_output=True, check=False, timeout=20,
         env={key: value for key, value in os.environ.items() if not key.startswith("GIT_")},
     )
     return result.returncode == 0
+
+
+def _ancestor(root: Path, older: str, newer: str) -> bool:
+    batch = _READ_BATCH.get()
+    if batch is None:
+        return _run_ancestor(root, older, newer)
+    if root.resolve() != batch.root:
+        raise ActivityError("activity read batch cannot cross checkouts")
+    key = (older, newer)
+    if key not in batch.ancestors:
+        batch.ancestors[key] = _run_ancestor(root, older, newer)
+    return batch.ancestors[key]
 
 
 def _linear_series(root: Path, base: str, head: str) -> list[str] | None:
@@ -525,17 +546,55 @@ def _advanced_ticket_branch(root: Path, ticket: str, head_sha: str, terminal_sha
     return bool(current and current != head_sha and _ancestor(root, head_sha, current) and not _ancestor(root, current, terminal_sha))
 
 
+TICKET_BRANCH_TOKEN_RE = re.compile(
+    r"(?:^|[^0-9a-z])ticket[-_/]?0*([0-9]+)(?=[^0-9a-z]|$)", re.IGNORECASE
+)
+
+
+def _branch_heads_by_ticket(listed: str) -> dict[str, tuple[str, ...]]:
+    grouped: dict[str, list[str]] = {}
+    for entry in listed.splitlines():
+        ref, _, head = entry.partition(" ")
+        branch = ref.removeprefix("refs/remotes/origin/").removeprefix("refs/heads/")
+        for match in TICKET_BRANCH_TOKEN_RE.finditer(branch):
+            number = str(int(match.group(1)))
+            heads = grouped.setdefault(number, [])
+            if head not in heads:
+                heads.append(head)
+    return {number: tuple(heads) for number, heads in grouped.items()}
+
+
 def _unmerged_ticket_branch(root: Path, ticket: str, target: str) -> bool:
     """Keep supported outstanding ticket branches active from a strict inventory."""
     listed = _git(root, "for-each-ref", "--format=%(refname) %(objectname)",
                   "refs/remotes/origin", "refs/heads")
-    for entry in listed.splitlines():
-        ref, _, head = entry.partition(" ")
-        branch = ref.removeprefix("refs/remotes/origin/").removeprefix("refs/heads/")
-        if _ticket_branch_matches(branch, ticket) and not _ancestor(root, head, target):
-            return True
-    return False
+    batch = _READ_BATCH.get()
+    if batch is not None:
+        key = ("branch_heads", listed)
+        if key not in batch.derived:
+            batch.derived[key] = _branch_heads_by_ticket(listed)
+        heads = batch.derived[key].get(str(int(ticket.removeprefix("ticket-"))), ())
+    else:
+        heads = tuple(
+            entry.partition(" ")[2]
+            for entry in listed.splitlines()
+            if _ticket_branch_matches(
+                entry.partition(" ")[0].removeprefix("refs/remotes/origin/").removeprefix("refs/heads/"),
+                ticket,
+            )
+        )
+    return any(not _ancestor(root, head, target) for head in heads)
 
+
+def _target_tree_entries(root: Path, spec: str) -> frozenset[str]:
+    raw = _git(root, "ls-tree", "--name-only", spec, check=False)
+    batch = _READ_BATCH.get()
+    if batch is not None:
+        key = ("tree_entries", spec, raw)
+        if key not in batch.derived:
+            batch.derived[key] = frozenset(raw.splitlines())
+        return batch.derived[key]
+    return frozenset(raw.splitlines())
 
 
 def delivery_landed(root: Path, ticket_dir: Path, target: str) -> bool:
@@ -563,12 +622,9 @@ def delivery_landed(root: Path, ticket_dir: Path, target: str) -> bool:
         relative = ticket_dir.resolve().relative_to(root.resolve()).as_posix()
     except ValueError:
         return False
-    present = subprocess.run(
-        ["git", "-C", str(root), "cat-file", "-e", f"{target}:{relative}"],
-        capture_output=True, check=False, timeout=20,
-        env={key: value for key, value in os.environ.items() if not key.startswith("GIT_")},
-    )
-    if present.returncode != 0:
+    parent, _, name = relative.rpartition("/")
+    spec = f"{target}:{parent}" if parent else target
+    if not name or name not in _target_tree_entries(root, spec):
         return False
     return not _unmerged_ticket_branch(root, ticket_dir.name, target)
 
