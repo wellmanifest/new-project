@@ -1,0 +1,84 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-417",
+  "summary": "Reject malformed adoption binding registry inputs",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-417/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/governance_check.py",
+    "tests/malformed_governance_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "8724674cfa7eebf0c64df2db63ff528ad8dbd159",
+    "targetBranch": "main",
+    "outcome": "Reject malformed adoption-binding registries as invalid instead of throwing unhandled exceptions.",
+    "nonGoals": [
+      "Do not change valid registry acceptance, workflow authorization or any other unresolved issue 583 findings.",
+      "Do not assert consumer adoption or source publication from local tests."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Check registry object type before field access, and verify list members are strings before uniqueness operations; keep source and distributed checker identical.",
+      "components": [
+        {
+          "name": "governance adoption binding validation",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "tests/malformed_governance_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this bounded source change through the protected publication process."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest -q tests/malformed_governance_test.py"
+        ],
+        "evidence": "Malformed registry values and mixed/unhashable path entries return invalid, and a valid registry remains valid in both checker copies."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "managed governance and affected tests",
+          "independent exact-head protected verification and review"
+        ],
+        "evidence": "Source and distributed checker remain identical; guarded CI and independent review precede merge."
+      }
+    ]
+  }
+}
