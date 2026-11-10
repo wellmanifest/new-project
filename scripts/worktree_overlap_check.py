@@ -755,7 +755,9 @@ def has_pending_work(path: Path, dirty: bool) -> bool:
     return True
 
 
-def inspect_checkout(path: Path, ignore: tuple[str, ...]) -> Checkout:
+def inspect_checkout(
+    path: Path, ignore: tuple[str, ...], only_identity: str | None = None
+) -> Checkout:
     common = Path(run_git(path, "rev-parse", "--path-format=absolute", "--git-common-dir")).resolve()
     try:
         head = run_git(path, "rev-parse", "--verify", "HEAD")
@@ -764,19 +766,21 @@ def inspect_checkout(path: Path, ignore: tuple[str, ...]) -> Checkout:
     branch = run_git(path, "branch", "--show-current") or None
     dirty = bool(run_git(path, "status", "--porcelain=v1", "--untracked-files=all"))
     pending = has_pending_work(path, dirty)
-    scopes, activity_errors = ticket_scopes(path) if pending else ((), ())
+    identity = repository_identity(path)
+    in_scope = pending and (only_identity is None or identity == only_identity)
+    scopes, activity_errors = ticket_scopes(path) if in_scope else ((), ())
     return Checkout(
         path=path.resolve(),
         common_git_dir=common,
-        identity=repository_identity(path),
+        identity=identity,
         head=head,
         branch=branch,
         dirty=dirty,
         pending=pending,
-        # A leftover contributes nothing to any merge, so skip the three
-        # expensive reads it would only feed into comparisons that are skipped.
-        dirty_paths=dirty_paths(path, ignore) if pending else (),
-        changed_paths=changed_paths(path, ignore) if pending else (),
+        # A leftover or out-of-scope identity contributes nothing to any merge
+        # in this audit, so skip the expensive reads that would be discarded.
+        dirty_paths=dirty_paths(path, ignore) if in_scope else (),
+        changed_paths=changed_paths(path, ignore) if in_scope else (),
         tickets=scopes,
         activity_errors=activity_errors,
     )
@@ -821,7 +825,9 @@ def workspace_candidates(workspace_root):
     return candidate_paths
 
 
-def discover_checkouts(workspace_root: Path, ignore: tuple[str, ...]) -> list[Checkout]:
+def discover_checkouts(
+    workspace_root: Path, ignore: tuple[str, ...], only_identity: str | None = None
+) -> list[Checkout]:
     candidate_paths = workspace_candidates(workspace_root)
 
     pending = sorted(candidate_paths, key=str)
@@ -845,7 +851,7 @@ def discover_checkouts(workspace_root: Path, ignore: tuple[str, ...]) -> list[Ch
     checkouts: list[Checkout] = []
     for candidate in sorted(candidate_paths, key=str):
         try:
-            checkouts.append(inspect_checkout(candidate, ignore))
+            checkouts.append(inspect_checkout(candidate, ignore, only_identity))
         except AuditError as error:
             raise AuditError(f"Cannot inspect checkout {candidate}: {error}") from error
     return checkouts
@@ -1168,7 +1174,9 @@ def main(argv: list[str] | None = None) -> int:
             if args.focus_checkout is not None
             else None
         )
-        checkouts = discover_checkouts(args.workspace_root.expanduser().resolve(), ignore)
+        checkouts = discover_checkouts(
+            args.workspace_root.expanduser().resolve(), ignore, only_identity
+        )
         inventory = workspace_inventory(checkouts)
         findings = overlap_findings(
             checkouts, ignore, only_identity, focus_checkout, inventory

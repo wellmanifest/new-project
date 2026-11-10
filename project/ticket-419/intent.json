@@ -1,0 +1,100 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-419",
+  "summary": "Batch Git ancestry and scope reads in activity and overlap checks",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-419/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+    "scripts/ticket_activity.py",
+    "scripts/worktree_overlap_check.py",
+    "tests/ticket_activity_batch_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "70348071baa0a35f4531e4ef01e0d4109a325fb7",
+    "targetBranch": "main",
+    "outcome": "Batch and revalidate Git tree and ancestry reads in ActivityReadBatch and skip out-of-scope repository ticket scans under --identity-of.",
+    "nonGoals": [
+      "Do not weaken workspace-wide checkout discovery, broken-checkout fail-closed reporting, or ActivityReadBatch TOCTOU invalidation.",
+      "Do not modify consumer adopter checkouts directly outside pinned upgrades."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Route delivery_landed tree checks through _git('ls-tree', '--name-only', ...) and cache/revalidate _ancestor and parsed ticket-branch maps inside ActivityReadBatch; narrow inspect_checkout scope reads to matching identities when only_identity is set while keeping hub and bundled ticket_activity.py identical.",
+      "components": [
+        {
+          "name": "ticket activity read batch",
+          "paths": [
+            "scripts/ticket_activity.py",
+            "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+            "tests/ticket_activity_batch_test.py"
+          ]
+        },
+        {
+          "name": "worktree overlap identity-scoped discovery",
+          "paths": [
+            "scripts/worktree_overlap_check.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this bounded commit through the protected publication process."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest -q tests/ticket_activity_batch_test.py tests/workspace_activity_test.py",
+          "python3 packages/wellman/sync_bundled.py --check"
+        ],
+        "evidence": "Git-ancestry batch resolution matches standalone resolution in <= 20 subprocesses across 40 tickets and revalidates cached tree/ancestry reads on exit; bundled ticket_activity.py matches scripts/ticket_activity.py."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/worktree-overlap.test.sh",
+          "bash tests/ticket-activity.test.sh"
+        ],
+        "evidence": "Identity-scoped overlap audits preserve full checkout inventory while inspecting ticket scopes only for matching repository identities."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh",
+          "wellman check"
+        ],
+        "evidence": "Managed governance and Wellman conformance checks pass."
+      }
+    ]
+  }
+}

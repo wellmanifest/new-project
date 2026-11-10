@@ -127,6 +127,8 @@ class BatchTests(unittest.TestCase):
             self.assertFalse(self.resolve().active)
         self.assertEqual(batch.queries, {})
         self.assertEqual(batch.files, {})
+        self.assertEqual(batch.ancestors, {})
+        self.assertEqual(batch.derived, {})
         self.git('switch', '-qc', 'ticket/001-followup')
         (self.root / 'followup').write_text('new work')
         self.git('add', '.')
@@ -154,6 +156,50 @@ class BatchTests(unittest.TestCase):
         policy.write_text(json.dumps(value))
         self.git('branch', 'ticket/001-followup', self.head)
         self.assert_invalidated(lambda: self.git('update-ref', 'refs/heads/ticket/001-followup', self.terminal))
+
+    def test_git_ancestry_batch_avoids_per_ticket_cat_file_and_ancestor_subprocesses(self):
+        self.registry.unlink()
+        policy = self.root / 'governance/ticket-activity.json'
+        value = json.loads(policy.read_text())
+        value['registry']['missingPolicy'] = 'git-ancestry'
+        policy.write_text(json.dumps(value))
+        self.git('branch', 'ticket/002-active', self.terminal)
+        (self.root / 'extra').write_text('unmerged')
+        self.git('switch', '-q', 'ticket/002-active')
+        self.git('add', 'extra')
+        self.git('commit', '-qm', 'unmerged ticket branch')
+        self.git('switch', '-q', 'main')
+
+        with patch.object(activity.subprocess, 'run', wraps=subprocess.run) as calls:
+            ordinary = [self.resolve(i) for i in range(len(self.tickets))]
+            baseline = calls.call_count
+        with patch.object(activity.subprocess, 'run', wraps=subprocess.run) as calls:
+            with activity.ActivityReadBatch(self.root):
+                batched = [self.resolve(i) for i in range(len(self.tickets))]
+            optimized = calls.call_count
+
+        self.assertEqual(ordinary, batched)
+        self.assertEqual([r.ticket for r in batched if r.active], ['ticket-002'])
+        self.assertLessEqual(optimized, 20, (baseline, optimized))
+        self.assertLess(optimized * 4, baseline, (baseline, optimized))
+
+    def test_scoped_overlap_discovery_skips_unrelated_identity_ticket_scopes(self):
+        workspace = Path(self.temp.name) / 'workspace'
+        workspace.mkdir()
+        target_repo = workspace / 'target'
+        sibling_repo = workspace / 'sibling'
+        shutil.copytree(self.root, target_repo)
+        shutil.copytree(self.root, sibling_repo)
+        subprocess.check_call(['git', '-C', str(target_repo), 'remote', 'set-url', 'origin', 'https://example.invalid/target.git'])
+        subprocess.check_call(['git', '-C', str(sibling_repo), 'remote', 'set-url', 'origin', 'https://example.invalid/sibling.git'])
+        (target_repo / 'dirty.txt').write_text('target edit\n')
+        (sibling_repo / 'dirty.txt').write_text('sibling edit\n')
+
+        only_identity = overlap.repository_identity(target_repo)
+        with patch.object(overlap, 'ticket_scopes', wraps=overlap.ticket_scopes) as scope_calls:
+            checkouts = overlap.discover_checkouts(workspace, overlap.DEFAULT_IGNORE, only_identity)
+        self.assertEqual(len(checkouts), 2)
+        self.assertEqual([call.args[0] for call in scope_calls.call_args_list], [target_repo.resolve()])
 
     def test_failed_batch_cannot_produce_clean_overlap_report(self):
         original = overlap.resolve_ticket_activity
