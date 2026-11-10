@@ -65,6 +65,9 @@ class ActivityReadBatch:
         self.files = {}
         self.ancestors = {}
         self.derived = {}
+        self.branch_heads = None
+        self.consulted_ticket_numbers = set()
+        self.worktree_registration = ""
         self.context_reset = None
 
     def __enter__(self):
@@ -74,13 +77,15 @@ class ActivityReadBatch:
         self.files.clear()
         self.ancestors.clear()
         self.derived.clear()
+        self.branch_heads = None
+        self.consulted_ticket_numbers.clear()
         self.context_reset = _READ_BATCH.set(self)
         try:
-            # Fence checkout identity, HEAD and registration even when every
-            # historical receipt belongs to a different ticket branch.
+            # Fence checkout identity, HEAD and this checkout's own worktree
+            # registration without coupling unrelated sibling worktree commits.
             _git(self.root, "rev-parse", "--path-format=absolute", "--git-common-dir", check=False)
             _git(self.root, "rev-parse", "--verify", "HEAD", check=False)
-            _git(self.root, "worktree", "list", "--porcelain", check=False)
+            self.worktree_registration = self._worktree_registration()
             self.directory_names = self._directories()
         except BaseException as error:
             _READ_BATCH.reset(self.context_reset)
@@ -89,6 +94,23 @@ class ActivityReadBatch:
                 raise ActivityError("activity inputs unavailable during inspection") from error
             raise
         return self
+
+    def _worktree_registration(self) -> str:
+        raw = _run_git(self.root, "worktree", "list", "--porcelain", "-z", check=False)
+        if not raw:
+            return ""
+        matched: list[str] = []
+        for stanza in raw.split("\0\0"):
+            fields = [item for item in stanza.split("\0") if item]
+            if not fields or not fields[0].startswith("worktree "):
+                continue
+            path_str = fields[0].removeprefix("worktree ")
+            try:
+                if Path(path_str).resolve() == self.root:
+                    matched.append("\0".join(fields))
+            except OSError:
+                continue
+        return "\0\0".join(matched) if matched else raw
 
     def _directories(self):
         project = self.root / "project"
@@ -101,9 +123,23 @@ class ActivityReadBatch:
             if kind is None:
                 if self.directory_names != self._directories():
                     raise ActivityError("ticket inventory changed during activity inspection; retry")
+                if self.worktree_registration != self._worktree_registration():
+                    raise ActivityError("Git state changed during activity inspection; retry")
                 for (args, check), expected in self.queries.items():
                     if _run_git(self.root, *args, check=check) != expected:
                         raise ActivityError("Git state changed during activity inspection; retry")
+                if self.branch_heads is not None and self.consulted_ticket_numbers:
+                    latest_listed = _run_git(
+                        self.root,
+                        "for-each-ref",
+                        "--format=%(refname) %(objectname)",
+                        "refs/remotes/origin",
+                        "refs/heads",
+                    )
+                    latest_heads = _branch_heads_by_ticket(latest_listed)
+                    for number in self.consulted_ticket_numbers:
+                        if latest_heads.get(number, ()) != self.branch_heads.get(number, ()):
+                            raise ActivityError("Git state changed during activity inspection; retry")
                 for (older, newer), expected in self.ancestors.items():
                     if _run_ancestor(self.root, older, newer) != expected:
                         raise ActivityError("Git state changed during activity inspection; retry")
@@ -117,6 +153,8 @@ class ActivityReadBatch:
             self.files.clear()
             self.ancestors.clear()
             self.derived.clear()
+            self.branch_heads = None
+            self.consulted_ticket_numbers.clear()
 
 
 def _file_observation(path: Path, operation: str):
@@ -566,15 +604,25 @@ def _branch_heads_by_ticket(listed: str) -> dict[str, tuple[str, ...]]:
 
 def _unmerged_ticket_branch(root: Path, ticket: str, target: str) -> bool:
     """Keep supported outstanding ticket branches active from a strict inventory."""
-    listed = _git(root, "for-each-ref", "--format=%(refname) %(objectname)",
-                  "refs/remotes/origin", "refs/heads")
     batch = _READ_BATCH.get()
     if batch is not None:
-        key = ("branch_heads", listed)
-        if key not in batch.derived:
-            batch.derived[key] = _branch_heads_by_ticket(listed)
-        heads = batch.derived[key].get(str(int(ticket.removeprefix("ticket-"))), ())
+        if root.resolve() != batch.root:
+            raise ActivityError("activity read batch cannot cross checkouts")
+        if batch.branch_heads is None:
+            listed = _run_git(
+                root,
+                "for-each-ref",
+                "--format=%(refname) %(objectname)",
+                "refs/remotes/origin",
+                "refs/heads",
+            )
+            batch.branch_heads = _branch_heads_by_ticket(listed)
+        number = str(int(ticket.removeprefix("ticket-")))
+        batch.consulted_ticket_numbers.add(number)
+        heads = batch.branch_heads.get(number, ())
     else:
+        listed = _git(root, "for-each-ref", "--format=%(refname) %(objectname)",
+                      "refs/remotes/origin", "refs/heads")
         heads = tuple(
             entry.partition(" ")[2]
             for entry in listed.splitlines()
