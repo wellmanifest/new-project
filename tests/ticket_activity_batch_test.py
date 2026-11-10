@@ -215,6 +215,38 @@ class BatchTests(unittest.TestCase):
             _, errors = overlap.ticket_scopes(self.root)
         self.assertTrue(any('changed' in e for e in errors), errors)
 
+    def test_sibling_worktree_commit_does_not_invalidate_inspected_checkout_batch(self):
+        sibling_a = Path(self.temp.name) / 'wt-099'
+        sibling_b = Path(self.temp.name) / 'wt-100'
+        self.git('worktree', 'add', '-q', '-b', 'ticket/099-sibling', str(sibling_a), 'main')
+
+        # 1. Terminal-receipt mode: sibling commit + new sibling worktree mid-batch succeed.
+        with activity.ActivityReadBatch(self.root):
+            self.assertFalse(self.resolve(0).active)
+            (sibling_a / 'sibling.txt').write_text('disjoint work\n')
+            subprocess.check_call(['git', '-C', str(sibling_a), 'add', 'sibling.txt'])
+            subprocess.check_call(['git', '-C', str(sibling_a), 'commit', '-qm', 'sibling commit 1'])
+            self.git('worktree', 'add', '-q', '-b', 'ticket/100-sibling', str(sibling_b), 'main')
+
+        # 2. git-ancestry mode: unconsulted sibling ticket commit mid-batch succeeds.
+        self.registry.unlink()
+        policy = self.root / 'governance/ticket-activity.json'
+        value = json.loads(policy.read_text())
+        value['registry']['missingPolicy'] = 'git-ancestry'
+        policy.write_text(json.dumps(value))
+
+        with activity.ActivityReadBatch(self.root):
+            self.assertFalse(self.resolve(0).active)
+            (sibling_b / 'sibling2.txt').write_text('more disjoint work\n')
+            subprocess.check_call(['git', '-C', str(sibling_b), 'add', 'sibling2.txt'])
+            subprocess.check_call(['git', '-C', str(sibling_b), 'commit', '-qm', 'sibling commit 2'])
+
+        # 3. Mutating the inspected worktree's own registration (e.g. locking it) still invalidates.
+        with self.assertRaisesRegex(activity.ActivityError, 'changed'):
+            with activity.ActivityReadBatch(sibling_a):
+                self.assertTrue(activity.resolve(sibling_a, sibling_a / 'project/ticket-001', {'IN_PROGRESS'}).active)
+                self.git('worktree', 'lock', str(sibling_a))
+
 
 if __name__ == '__main__':
     unittest.main()

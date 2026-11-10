@@ -1,0 +1,87 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-420",
+  "summary": "Scope ActivityReadBatch worktree fence to inspected checkout",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-420/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+    "scripts/ticket_activity.py",
+    "tests/ticket_activity_batch_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f3dd9c77703b8918acca7c302cea5a92193ec1ef",
+    "targetBranch": "main",
+    "outcome": "Fence only the inspected checkout's own worktree registration stanza and consulted ticket branch heads in ActivityReadBatch so concurrent sibling worktree allocations and commits do not trigger false-positive GOV-TICKET-ACTIVITY-001 aborts.",
+    "nonGoals": [
+      "Do not weaken TOCTOU revalidation of the inspected checkout's HEAD, worktree registration, target refs, registry files, or consulted ticket branches.",
+      "Do not directly mutate consumer adopter repositories outside pinned governance upgrades."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extract the inspected root's own porcelain worktree stanza in ActivityReadBatch._worktree_registration() (falling back to full output only if root is not a top-level worktree entry) and revalidate for-each-ref branch heads strictly for ticket numbers consulted during the batch, keeping scripts/ticket_activity.py and bundled wellman _bundled/ticket_activity.py byte-identical.",
+      "components": [
+        {
+          "name": "ticket activity read batch",
+          "paths": [
+            "scripts/ticket_activity.py",
+            "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+            "tests/ticket_activity_batch_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this bounded commit through an independently reviewed pull request."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "pytest -q tests/ticket_activity_batch_test.py tests/workspace_activity_test.py"
+        ],
+        "evidence": "Sibling worktree commits and allocations no longer invalidate ActivityReadBatch, while mutating the inspected checkout's registration, HEAD, target ref, or consulted ticket branch still fails closed."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/worktree-overlap.test.sh",
+          "bash tests/ticket-activity.test.sh",
+          "./project/governance-check.sh",
+          "wellman check"
+        ],
+        "evidence": "All overlap, ticket-activity, governance, and Wellman checks pass."
+      }
+    ]
+  }
+}
