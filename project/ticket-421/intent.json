@@ -31,7 +31,7 @@
       "Do not silently transfer workstream ownership or bypass dirty-file/lease fencing."
     ],
     "complexity": "S",
-    "estimatedMinutes": 35,
+    "estimatedMinutes": 25,
     "budgets": {
       "maxImplementationFiles": 2,
       "maxAffectedComponents": 1,

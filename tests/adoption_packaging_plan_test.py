@@ -79,7 +79,10 @@ class HistoricalPythonAdopterTest(unittest.TestCase):
 
     @classmethod
     def command(cls, root: Path, *args: str, check: bool = True, env: dict[str, str] | None = None):
-        environment = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+        environment = {
+            k: v for k, v in os.environ.items()
+            if not k.startswith(("GIT_", "NEW_PROJECT_"))
+        }
         environment["PYTHONDONTWRITEBYTECODE"] = "1"
         if env is not None:
             environment.update(env)
@@ -259,7 +262,10 @@ class HistoricalPythonAdopterTest(unittest.TestCase):
             "urllib.request.urlopen = fixture_release\n",
             encoding="utf-8",
         )
-        environment = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+        environment = {
+            k: v for k, v in os.environ.items()
+            if not k.startswith(("GIT_", "NEW_PROJECT_"))
+        }
         environment.update(
             PATH=str(support) + os.pathsep + environment["PATH"],
             PYTHONPATH=str(support),
@@ -556,6 +562,34 @@ class HistoricalPythonAdopterTest(unittest.TestCase):
             self.export_plan()
         with self.assertRaisesRegex(SystemExit, "symlink"):
             self.run_check()
+
+    def test_crlf_line_endings_are_preserved_byte_for_byte(self):
+        gitattributes = self.target / ".gitattributes"
+        if gitattributes.exists():
+            gitattributes.write_text(
+                gitattributes.read_text(encoding="utf-8") + "\npyproject.toml -text\n",
+                encoding="utf-8",
+            )
+            self.command(self.target, "git", "add", ".gitattributes")
+        crlf_pyproject = RICH_PYPROJECT_TEMPLATE.format(
+            standard="0.20.35", revision=self.old_revision,
+        ).replace("\n", "\r\n").encode("utf-8")
+        (self.target / "pyproject.toml").write_bytes(crlf_pyproject)
+        self.command(self.target, "git", "add", "pyproject.toml")
+        self.command(self.target, "git", "commit", "-m", "Use CRLF pyproject.toml")
+
+        plan = self.export_plan()
+        expected = RICH_PYPROJECT_TEMPLATE.format(
+            standard=self.version, revision=self.revision,
+        ).replace("\n", "\r\n").encode("utf-8")
+        file_entries = {item["path"]: item for item in plan["files"]}
+        self.assertEqual(
+            file_entries["pyproject.toml"]["sha256"],
+            hashlib.sha256(expected).hexdigest(),
+        )
+        rc, _ = self.run_upgrade()
+        self.assertEqual(rc, 0)
+        self.assertEqual((self.target / "pyproject.toml").read_bytes(), expected)
 
 
 if __name__ == "__main__":
