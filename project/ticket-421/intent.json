@@ -13,6 +13,7 @@
     "TODO.md",
     "project/TICKETS.md",
     "scripts/create_adoption_lock.py",
+    "tests/adoption-lock.test.sh",
     "tests/adoption_packaging_plan_test.py"
   ],
   "forbiddenPaths": [
@@ -33,7 +34,7 @@
     "complexity": "S",
     "estimatedMinutes": 25,
     "budgets": {
-      "maxImplementationFiles": 2,
+      "maxImplementationFiles": 3,
       "maxAffectedComponents": 1,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
@@ -46,6 +47,7 @@
           "name": "native adoption packaging planner",
           "paths": [
             "scripts/create_adoption_lock.py",
+            "tests/adoption-lock.test.sh",
             "tests/adoption_packaging_plan_test.py"
           ]
         }

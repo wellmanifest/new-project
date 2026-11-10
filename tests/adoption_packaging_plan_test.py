@@ -105,16 +105,31 @@ class HistoricalPythonAdopterTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cache = ROOT / ".subactor/cache/adoption-packaging-tests"
-        cache.mkdir(parents=True, exist_ok=True)
-        cls.temporary = tempfile.TemporaryDirectory(prefix="pkg548-", dir=cache)
+        cls.temporary = tempfile.TemporaryDirectory(prefix="pkg548-")
         cls.addClassCleanup(cls.temporary.cleanup)
         cls.base = Path(cls.temporary.name)
         cls.version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
         cls.old_version = "0.20.35"
 
         cls.source = cls.base / "standard"
-        cls.command(cls.base, "git", "clone", "--quiet", "--no-hardlinks", str(ROOT), str(cls.source))
+        cls.source.mkdir(parents=True, exist_ok=True)
+        for directory in ("governance", "scripts", "error"):
+            shutil.copytree(ROOT / directory, cls.source / directory)
+        (cls.source / "project").mkdir(parents=True, exist_ok=True)
+        for item in (ROOT / "project").iterdir():
+            if item.is_file():
+                shutil.copy2(item, cls.source / "project" / item.name)
+        incoming_package = json.loads((ROOT / "governance/package-manifest.json").read_text(encoding="utf-8"))
+        for entry in incoming_package["files"]:
+            dest = cls.source / entry["source"]
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / entry["source"], dest)
+        for extra in ("VERSION", "worktree-guard.yaml", "packages/wellman/pyproject.toml"):
+            if (ROOT / extra).is_file():
+                dest = cls.source / extra
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(ROOT / extra, dest)
+        cls.command(cls.base, "git", "init", "--quiet", "-b", "main", str(cls.source))
         for key, value in (
             ("user.name", "Fixture"),
             ("user.email", "fixture@example.invalid"),
