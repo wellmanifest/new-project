@@ -24,6 +24,29 @@ def load(path):
 
 
 class MalformedGovernanceTest(unittest.TestCase):
+    def test_adoption_binding_registry_rejects_malformed_values_without_crashing(self):
+        valid = json.loads((ROOT / 'governance/adoption-bindings.json').read_text())
+        for implementation in IMPLEMENTATIONS:
+            module = load(implementation)
+            with tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                registry = root / 'governance/adoption-bindings.json'
+                registry.parent.mkdir()
+                registry.write_text(json.dumps(valid))
+                self.assertEqual(module.adoption_binding_registry(root), (
+                    valid['revisionBoundWorkflowPaths'], valid['digestBoundTargetPatterns']))
+                invalid = [None, [], {}, 'invalid', 1]
+                for field in ('revisionBoundWorkflowPaths', 'digestBoundTargetPatterns'):
+                    duplicate = [valid[field][0], valid[field][0]]
+                    for paths in ([{}], [[]], ['valid', {}], [None], duplicate):
+                        document = copy.deepcopy(valid)
+                        document[field] = paths
+                        invalid.append(document)
+                for document in invalid:
+                    with self.subTest(implementation=str(implementation), document=document):
+                        registry.write_text(json.dumps(document))
+                        self.assertIsNone(module.adoption_binding_registry(root))
+
     def test_null_profiles_are_rejected_consistently_with_manifest_schema(self):
         for path in IMPLEMENTATIONS:
             module = load(path)

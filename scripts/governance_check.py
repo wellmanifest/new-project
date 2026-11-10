@@ -2187,13 +2187,13 @@ def adoption_path_list_valid(paths: Any, pattern: str) -> bool:
     return (
         isinstance(paths, list)
         and bool(paths)
-        and len(paths) == len(set(paths))
         and all(
             isinstance(path, str)
             and re.fullmatch(pattern, path) is not None
             and relative_pattern(path)
             for path in paths
         )
+        and len(paths) == len(set(paths))
     )
 
 
@@ -2214,6 +2214,8 @@ def adoption_binding_registry(root: Path) -> tuple[list[str], list[str]] | None:
     try:
         registry = load_json(registry_path)
     except (OSError, UnicodeError, json.JSONDecodeError, TypeError, ValueError):
+        return None
+    if not isinstance(registry, dict):
         return None
     workflow_paths = registry.get("revisionBoundWorkflowPaths")
     target_patterns = registry.get("digestBoundTargetPatterns")
