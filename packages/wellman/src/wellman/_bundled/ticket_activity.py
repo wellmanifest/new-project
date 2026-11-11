@@ -645,6 +645,92 @@ def _target_tree_entries(root: Path, spec: str) -> frozenset[str]:
     return frozenset(raw.splitlines())
 
 
+def _is_tracking_carrier(path: str, parent: str) -> bool:
+    prefix = f"{parent}/" if parent else ""
+    if path in {"TODO.md", f"{prefix}TICKETS.md", "project/TICKETS.md"}:
+        return True
+    return re.match(rf"^{re.escape(prefix)}ticket-[0-9]{{3,}}(?:/|$)", path) is not None
+
+
+def _target_delivery_evidence(
+    root: Path,
+    target: str,
+    parent: str,
+) -> tuple[dict[str, str | None], frozenset[str], frozenset[str]]:
+    status_raw = _git(
+        root,
+        "grep",
+        "-I",
+        "-E",
+        r"^[[:space:]]*-[[:space:]]*\*\*Status\*\*:",
+        target,
+        "--",
+        parent or ".",
+        check=False,
+    )
+    log_raw = _git(
+        root,
+        "log",
+        "-m",
+        "--first-parent",
+        "--format=@@COMMIT@@%s",
+        "-z",
+        "--name-only",
+        target,
+        check=False,
+    )
+    batch = _READ_BATCH.get()
+    key = ("target_delivery_evidence", target, parent, status_raw, log_raw)
+    if batch is not None and key in batch.derived:
+        return batch.derived[key]
+
+    prefix = f"{parent}/" if parent else ""
+    readme_re = re.compile(rf"^{re.escape(prefix)}(ticket-[0-9]{{3,}})/README\.md$")
+    ticket_path_re = re.compile(rf"^{re.escape(prefix)}(ticket-[0-9]{{3,}})(?:/|$)")
+
+    statuses: dict[str, str | None] = {}
+    target_prefix = f"{target}:"
+    for line in status_raw.splitlines():
+        if not line.startswith(target_prefix):
+            continue
+        rel_path, sep, matched = line[len(target_prefix):].partition(":")
+        if not sep:
+            continue
+        match = readme_re.fullmatch(rel_path)
+        if match is None:
+            continue
+        ticket_name = match.group(1)
+        if ticket_name not in statuses:
+            parsed_status, _ = parse_ticket_state_text(matched)
+            statuses[ticket_name] = parsed_status
+
+    delivered_names: set[str] = set()
+    delivered_numbers: set[str] = set()
+    for record in log_raw.split("@@COMMIT@@"):
+        if not record:
+            continue
+        parts = record.split("\x00")
+        subject = parts[0]
+        paths: list[str] = []
+        for index, raw_path in enumerate(parts[1:]):
+            cleaned = raw_path.removeprefix("\n") if index == 0 else raw_path
+            if cleaned:
+                paths.append(cleaned)
+        if not any(not _is_tracking_carrier(path, parent) for path in paths):
+            continue
+        for path in paths:
+            path_match = ticket_path_re.match(path)
+            if path_match is not None:
+                delivered_names.add(path_match.group(1))
+        for token_match in TICKET_BRANCH_TOKEN_RE.finditer(subject):
+            delivered_numbers.add(str(int(token_match.group(1))))
+
+    result = (statuses, frozenset(delivered_names), frozenset(delivered_numbers))
+    if batch is not None:
+        batch.derived[key] = result
+    return result
+
+
 def delivery_landed(root: Path, ticket_dir: Path, target: str) -> bool:
     """Answer from Git whether this ticket's delivery is already on the target.
 
@@ -660,11 +746,11 @@ def delivery_landed(root: Path, ticket_dir: Path, target: str) -> bool:
     release — was reasoning over that noise, which is why declaring a conflict
     never helped anyone.
 
-    A ticket's own directory is committed together with its delivery, because a
-    commit carrying only tracking carriers is refused. Its presence on the
-    target ref is therefore the ancestry evidence the policy asks for. A branch
-    for the same ticket that the target does not yet contain means more of the
-    delivery is still in flight, and the ticket stays active.
+    Mere directory existence on the target ref is insufficient when planning or
+    allocation commits the ticket stub before implementation lands. Require
+    either a terminal ticket status on the target ref or a first-parent commit
+    on the target ref tying the ticket to at least one non-carrier delivery
+    path, with no unmerged ticket branch still in flight.
     """
     try:
         relative = ticket_dir.resolve().relative_to(root.resolve()).as_posix()
@@ -674,7 +760,16 @@ def delivery_landed(root: Path, ticket_dir: Path, target: str) -> bool:
     spec = f"{target}:{parent}" if parent else target
     if not name or name not in _target_tree_entries(root, spec):
         return False
-    return not _unmerged_ticket_branch(root, ticket_dir.name, target)
+    if _unmerged_ticket_branch(root, ticket_dir.name, target):
+        return False
+    statuses, delivered_names, delivered_numbers = _target_delivery_evidence(root, target, parent)
+    target_status = statuses.get(name)
+    if target_status in {"DONE", "CANCELLED", "CLOSED"}:
+        return True
+    if target_status in {"PLAN", "BACKLOG", "BLOCKED"}:
+        return False
+    number = str(int(name.removeprefix("ticket-"))) if TICKET_RE.fullmatch(name) else None
+    return name in delivered_names or (number is not None and number in delivered_numbers)
 
 
 def resolve(root: Path, ticket_dir: Path, active_statuses: set[str], *, status_override: str | None = None) -> ActivityResolution:

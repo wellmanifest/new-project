@@ -102,6 +102,60 @@ class RepositoryPolicyInputTest(unittest.TestCase):
                     with patch.object(module, '_index_has_symlink', side_effect=AssertionError('unsafe index lookup')):
                         self.assertIsInstance(module._safe_snapshot_path(Path(td), path, staged=True), str)
 
+    def test_adapter_source_paths_require_non_empty_exact_binding_to_policy(self):
+        import json
+        base_adapter = dict(
+            schema='wellmanifest.external-ticket-adapter/v1',
+            ticket='PLF-9',
+            summary='Source binding fixture',
+            status='IN_PROGRESS',
+            workflow='EDIT',
+            workstream='governance',
+            allowedPaths=['src/**'],
+            forbiddenPaths=[],
+            sourcePaths=['.planfile/events.jsonl'],
+        )
+        base_tickets = dict(
+            backend='planfile',
+            idPattern=r'^PLF-[0-9]+$',
+            referenceRequired=True,
+            adapterPath='.governance/ticket-adapter.json',
+            sourcePaths=['.planfile/events.jsonl'],
+        )
+        for reader, module in self.readers():
+            with self.subTest(reader=reader), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                (root / '.planfile').mkdir()
+                (root / 'forged').mkdir()
+                payload = json.dumps({'event': {'ticket_id': 'PLF-9', 'status': 'open'}}) + '\n'
+                (root / '.planfile/events.jsonl').write_text(payload, encoding='utf-8')
+                (root / 'forged/events.jsonl').write_text(payload, encoding='utf-8')
+
+                self.assertIsNone(
+                    module.adapter_error(base_adapter, root, base_tickets['adapterPath'], base_tickets)
+                )
+
+                empty_sources = copy.deepcopy(base_adapter)
+                empty_sources['sourcePaths'] = []
+                self.assertIn(
+                    'sourcePaths is empty',
+                    module.adapter_error(empty_sources, root, base_tickets['adapterPath'], base_tickets) or '',
+                )
+
+                forged_sources = copy.deepcopy(base_adapter)
+                forged_sources['sourcePaths'] = ['forged/events.jsonl']
+                self.assertIn(
+                    'must match repositoryPolicy.tickets.sourcePaths',
+                    module.adapter_error(forged_sources, root, base_tickets['adapterPath'], base_tickets) or '',
+                )
+
+                missing_policy_sources = copy.deepcopy(base_tickets)
+                del missing_policy_sources['sourcePaths']
+                self.assertIsInstance(
+                    module.adapter_error(base_adapter, root, base_tickets['adapterPath'], missing_policy_sources),
+                    str,
+                )
+
 
 if __name__ == '__main__':
     unittest.main()

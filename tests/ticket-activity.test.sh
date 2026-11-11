@@ -362,6 +362,42 @@ target = ta._target_ref(root, "main")
 assert not ta.delivery_landed(root, root / "project/ticket-011", target)
 PY
 
+# Restore valid override and verify planning/allocation-only commits on target
+# never mark an unimplemented active ticket as landed, whereas terminal status does.
+git -C "$derived" checkout -- governance/ticket-activity.override.json
+mkdir -p "$derived/project/ticket-012" "$derived/project/ticket-013" "$derived/project/ticket-014"
+printf '%s\n' '- **Status**: IN_PROGRESS' > "$derived/project/ticket-012/README.md"
+git -C "$derived" add project/ticket-012/README.md
+git -C "$derived" commit --quiet -m 'allocate carrier-only ticket-012 on main'
+
+printf '%s\n' '- **Status**: PLAN' > "$derived/project/ticket-013/README.md"
+printf '%s\n' 'roadmap' > "$derived/roadmap.md"
+git -C "$derived" add project/ticket-013/README.md roadmap.md
+git -C "$derived" commit --quiet -m 'plan ticket-013 alongside roadmap'
+printf '%s\n' '- **Status**: IN_PROGRESS' > "$derived/project/ticket-013/README.md"
+
+printf '%s\n' '- **Status**: DONE' > "$derived/project/ticket-014/README.md"
+git -C "$derived" add project/ticket-014/README.md
+git -C "$derived" commit --quiet -m 'close ticket-014 as DONE on main'
+printf '%s\n' '- **Status**: IN_PROGRESS' > "$derived/project/ticket-014/README.md"
+
+python3 - "$derived" "$repo_root" <<'PY'
+import pathlib, sys
+sys.path.insert(0, str(pathlib.Path(sys.argv[2]) / "scripts"))
+import ticket_activity as ta
+root = pathlib.Path(sys.argv[1])
+target = ta._target_ref(root, "main")
+assert not ta.delivery_landed(root, root / "project/ticket-012", target), \
+    "carrier-only allocation commit on target must remain active"
+assert ta.resolve(root, root / "project/ticket-012", {"IN_PROGRESS"}).active is True
+assert not ta.delivery_landed(root, root / "project/ticket-013", target), \
+    "PLAN stub on target must remain active when working copy starts implementation"
+assert ta.resolve(root, root / "project/ticket-013", {"IN_PROGRESS"}).active is True
+assert ta.delivery_landed(root, root / "project/ticket-014", target), \
+    "terminal DONE status on target must resolve as landed"
+assert ta.resolve(root, root / "project/ticket-014", {"IN_PROGRESS"}).active is False
+PY
+
 echo "ticket activity: git-derived terminal resolution OK"
 
 # The overlap inspector batches the same resolver; exercise its isolation fence.

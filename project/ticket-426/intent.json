@@ -1,0 +1,134 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-426",
+  "summary": "Harden governance checks, external adapter source binding, and worktree newline regression for v0.20.145",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-426/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/generate_required_checks.py",
+    "packages/wellman/src/wellman/_bundled/repository_policy.py",
+    "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+    "scripts/generate_required_checks.py",
+    "scripts/repository_policy.py",
+    "scripts/ticket_activity.py",
+    "scripts/ticket_storage.py",
+    "scripts/work_start_check.py",
+    "tests/governance-scripts.test.sh",
+    "tests/governance-v145-regressions.test.py",
+    "tests/repository_policy_input_test.py",
+    "tests/ticket-activity.test.sh",
+    "tests/worktree-default-base.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b3e3c73823e65c1bb4cfb00cc39cdb18cc28cb1c",
+    "targetBranch": "main",
+    "outcome": "Harden quoted uses parsing, planfile adapter source binding, target delivery ancestry evidence, scope traversal rejection, subprocess observation safety, and worktree newline regression for v0.20.145.",
+    "nonGoals": [
+      "No edits to scripts/governance_check.py or bundled governance_check.py while ticket-418 holds its lease",
+      "No runtime dependencies, controller takeover, or consumer managed-copy edits"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 20,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Fix regex capture extraction in generate_required_checks, enforce exact non-empty sourcePaths binding in repository_policy, bind delivery_landed to batched target status/material-commit evidence in ticket_activity, reject '..' components in ticket_storage, catch subprocess.SubprocessError in work_start_check, sync _bundled copies, and wire real Git regression suites.",
+      "components": [
+        {
+          "name": "governance-scripts",
+          "paths": [
+            "scripts/generate_required_checks.py",
+            "packages/wellman/src/wellman/_bundled/generate_required_checks.py",
+            "scripts/repository_policy.py",
+            "packages/wellman/src/wellman/_bundled/repository_policy.py",
+            "scripts/ticket_activity.py",
+            "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+            "scripts/ticket_storage.py",
+            "scripts/work_start_check.py"
+          ]
+        },
+        {
+          "name": "governance-regressions",
+          "paths": [
+            "tests/worktree-default-base.test.py",
+            "tests/repository_policy_input_test.py",
+            "tests/ticket-activity.test.sh",
+            "tests/governance-v145-regressions.test.py",
+            "tests/governance-scripts.test.sh"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independent reviewed revert; preserve immutable releases and external state."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/governance-v145-regressions.test.py"
+        ],
+        "evidence": "Quoted and unquoted reusable workflow uses keys resolve identically across source and bundled scripts."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/repository-policy.test.sh",
+          "python3 tests/governance-v145-regressions.test.py"
+        ],
+        "evidence": "Empty or forged external adapter sourcePaths and '..' scope components are deterministically rejected."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/ticket-activity.test.sh",
+          "python3 tests/worktree-default-base.test.py",
+          "python3 tests/worktree-pending-merge.test.py",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Target delivery ancestry, batch subprocess bounds, worktree newline overlap detection, and repository governance pass."
+      }
+    ]
+  }
+}

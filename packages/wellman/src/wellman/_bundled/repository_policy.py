@@ -215,8 +215,8 @@ def policy_error(value: Any) -> str | None:
         return f"repositoryPolicy profile {profile} does not match its ticket backend"
     if profile != "local-audit" and value.get("enforcement") != preset["enforcement"]:
         return f"repositoryPolicy profile {profile} must use enforcement={preset['enforcement']}"
-    if tickets.get("backend") == "planfile" and "adapterPath" not in tickets:
-        return "planfile profile requires tickets.adapterPath"
+    if tickets.get("backend") == "planfile" and ("adapterPath" not in tickets or "sourcePaths" not in tickets):
+        return "planfile profile requires tickets.adapterPath and tickets.sourcePaths"
     return None
 
 
@@ -281,6 +281,19 @@ def adapter_error(
             return f"external ticket adapter {field} is invalid"
     if not adapter["allowedPaths"]:
         return "external ticket adapter allowedPaths is empty"
+    if not adapter["sourcePaths"]:
+        return "external ticket adapter sourcePaths is empty"
+    declared_sources = tickets.get("sourcePaths")
+    if (
+        not isinstance(declared_sources, list)
+        or not declared_sources
+        or any(relative_path_error(item) is not None for item in declared_sources)
+    ):
+        return "repositoryPolicy.tickets.sourcePaths must be a safe non-empty path list"
+    normalized_declared = {item.replace("\\", "/") for item in declared_sources}
+    normalized_adapter = {item.replace("\\", "/") for item in adapter["sourcePaths"]}
+    if normalized_adapter != normalized_declared:
+        return "external ticket adapter sourcePaths must match repositoryPolicy.tickets.sourcePaths"
     for source in adapter["sourcePaths"]:
         path_error = _safe_snapshot_path(root, source, staged=staged)
         if path_error:
