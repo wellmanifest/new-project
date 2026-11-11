@@ -179,8 +179,36 @@ class MigrationTests(unittest.TestCase):
         self.contract = {'schema': migration.CONTRACT_SCHEMA, 'repository': 'fixture/product',
                          'baseSha': self.base, 'sourceSha': self.source, 'sourceTree': observed['sourceTree'],
                          'inventorySha256': observed['inventorySha256'], 'authorizationRef': 'authorization:fixture/migration-1'}
-        self.intent = {'ticket': 'ticket-001', 'delivery': {'acceptedBaseSha': self.base, 'targetBranch': 'main',
-                                                          'snapshotMigration': self.contract}}
+        self.intent = {
+            'schema': 'new-project.intent/v3',
+            'ticket': 'ticket-001',
+            'summary': 'Snapshot migration fixture',
+            'workstream': 'api',
+            'classification': {'kind': 'BUG', 'priority': 'P1', 'origin': 'health'},
+            'allowedPaths': ['api/**', 'project/ticket-001/**'],
+            'forbiddenPaths': ['project/ticket-*/user-*.md'],
+            'stacks': [],
+            'dependsOn': [],
+            'conflictsWith': [],
+            'integrationTicket': None,
+            'delivery': {
+                'acceptedBaseSha': self.base,
+                'targetBranch': 'main',
+                'snapshotMigration': self.contract,
+                'outcome': 'Preserve original import with independent approval',
+                'nonGoals': ['Grant ordinary repair ownership'],
+                'complexity': 'S',
+                'estimatedMinutes': 15,
+                'budgets': {'maxImplementationFiles': 1, 'maxAffectedComponents': 1,
+                            'maxPublicInterfaceChanges': 0, 'maxRuntimeDependencies': 0},
+                'architecture': {'status': 'accepted', 'decision': 'Preserve exact-source history',
+                    'components': [{'name': 'api', 'paths': ['api/**']}], 'responsibilityChanges': False,
+                    'interfaceChanges': [], 'dataChanges': [], 'ui': {'impact': 'none', 'states': [], 'evidence': []},
+                    'rollback': 'Preserve original source refs'},
+                'runtimeDependencies': [],
+                'validation': [{'criterion': 'AC-01', 'commands': ['true'], 'evidence': 'Fixture only'}],
+            },
+        }
         self.grant_path = self.outer / 'authorization.json'
         self.authorize()
         self.git('read-tree', '--reset', '-u', self.source)

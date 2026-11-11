@@ -346,20 +346,27 @@ def bootstrap_owned_paths(root, manifest, expected_digest):
         raise ObservationError("Bootstrap receipt includes paths outside adoption")
     if not set(lock["managedFiles"]).issubset(files):
         raise ObservationError("Bootstrap receipt omits managed files")
-    for rel, checksum in files.items():
-        patterns([rel])
-        path = root / rel
-        if (any(p.is_symlink() for p in (path, *path.parents)) or not path.is_file()
-                or not re.fullmatch(r"[0-9a-f]{64}", str(checksum))
-                or hashlib.sha256(path.read_bytes()).hexdigest() != checksum
-                or (rel in lock["managedFiles"] and lock["managedFiles"][rel] != checksum)):
-            raise ObservationError("Bootstrap payload changed or is not installed")
+    def verify_bootstrap_files():
+        for rel, checksum in files.items():
+            patterns([rel])
+            path = root / rel
+            if (any(p.is_symlink() for p in (path, *path.parents)) or not path.is_file()
+                    or not re.fullmatch(r"[0-9a-f]{64}", str(checksum))
+                    or hashlib.sha256(path.read_bytes()).hexdigest() != checksum
+                    or (rel in lock["managedFiles"] and lock["managedFiles"][rel] != checksum)):
+                raise ObservationError("Bootstrap payload changed or is not installed")
+
+    verify_bootstrap_files()
     if (git(root, "rev-parse", "HEAD").strip() != head
             or bootstrap_historical_refs(root, head) != historical_refs
             or len(worktrees(root)) != 1
             or (Path(common) / "new-project-ticket-high-water").exists()):
         raise ObservationError("Bootstrap allocation state changed during observation")
-    return set(dirty).intersection(files)
+    _, final_digest, final_dirty = dirty_observation(root)
+    if final_digest != expected_digest or final_dirty != dirty:
+        raise ObservationError("Bootstrap changed during admission")
+    verify_bootstrap_files()
+    return set(final_dirty).intersection(files)
 
 
 def bootstrap_seed_paths(root, manifest):
