@@ -385,14 +385,18 @@ if [[ -z "$SNAPSHOT_PROPOSAL$SNAPSHOT_MATERIALIZE$RECOVER_REQUEST" ]]; then
 fi
 
 is_active_ticket() {
-  local directory="$1" resolver status arguments=() runner=()
+  local directory="$1" resolver status arguments=() runner=() candidates=()
   if [[ "$TICKET_STORAGE" != sqlite ]]; then
     [[ -f "$directory/README.md" ]] || return 1
   fi
-  for resolver in .governance/ticket_activity.py scripts/ticket_activity.py; do
-    [[ -f "$resolver" ]] && break
+  candidates=(.governance/ticket_activity.py scripts/ticket_activity.py)
+  if [[ -n "$STANDARD_ADOPTION_PLAN" ]]; then
+    candidates+=("$ALLOCATOR_PACKAGE_ROOT/scripts/ticket_activity.py")
+  fi
+  for resolver in "${candidates[@]}"; do
+    [[ -f "$resolver" && ! -L "$resolver" ]] && break
   done
-  if [[ ! -f "$resolver" ]]; then
+  if [[ ! -f "$resolver" || -L "$resolver" ]]; then
     echo "GOV-TICKET-ACTIVITY-001: managed ticket activity resolver is missing." >&2
     echo "  remediation: restore the complete pinned governance package before allocating." >&2
     exit 1
@@ -483,6 +487,9 @@ if [[ -n "$STANDARD_ADOPTION_PLAN" ]]; then
     echo "GOV-TICKET-ALLOCATION-003: adoption allocation proof is invalid; preserve the target and recompute the exact published plan." >&2
     exit 5
   fi
+  if [[ -z "$TICKET_STORAGE_HELPER" && -f "$ALLOCATOR_PACKAGE_ROOT/scripts/ticket_storage.py" && ! -L "$ALLOCATOR_PACKAGE_ROOT/scripts/ticket_storage.py" ]]; then
+    TICKET_STORAGE_HELPER="$ALLOCATOR_PACKAGE_ROOT/scripts/ticket_storage.py"
+  fi
   mapfile -t adoption_paths < <(python3 -B -c 'import json,sys; print("\n".join(json.load(sys.stdin)["allowedPaths"]))' <<< "$ADOPTION_PROJECTION")
   SCOPE_ARGUMENTS=()
   for adoption_path in "${adoption_paths[@]}"; do SCOPE_ARGUMENTS+=("--path=$adoption_path"); done
@@ -511,15 +518,19 @@ allocation_config() {
 }
 
 allocation_runtime() {
-  local candidate
+  local candidate candidates=()
   if [[ -n "$SNAPSHOT_PROPOSAL" || -n "$SNAPSHOT_MATERIALIZE" || -n "$MIGRATION_AUTHORIZATION" || -n "$MIGRATION_AUTHORIZATION_SHA256" ]]; then
     for candidate in "$ALLOCATOR_PACKAGE_ROOT/scripts/ticket_allocation.py" "$ALLOCATOR_PACKAGE_ROOT/.governance/ticket_allocation.py"; do
       if [[ -f "$candidate" ]]; then printf '%s' "$candidate"; return 0; fi
     done
     return 1
   fi
-  for candidate in .governance/ticket_allocation.py scripts/ticket_allocation.py; do
-    if [[ -f "$candidate" ]]; then
+  candidates=(.governance/ticket_allocation.py scripts/ticket_allocation.py)
+  if [[ -n "$STANDARD_ADOPTION_PLAN" ]]; then
+    candidates+=("$ALLOCATOR_PACKAGE_ROOT/scripts/ticket_allocation.py")
+  fi
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" && ! -L "$candidate" ]]; then
       printf '%s' "$candidate"
       return 0
     fi
@@ -686,8 +697,12 @@ if [[ -n "$STANDARD_ADOPTION_PLAN" ]]; then
 fi
 if git rev-parse --verify HEAD >/dev/null 2>&1; then
   start_runtime=""
-  for candidate in .governance/work_start_check.py scripts/work_start_check.py; do
-    if [[ -f "$candidate" ]]; then
+  start_candidates=(.governance/work_start_check.py scripts/work_start_check.py)
+  if [[ -n "$STANDARD_ADOPTION_PLAN" ]]; then
+    start_candidates+=("$ALLOCATOR_PACKAGE_ROOT/scripts/work_start_check.py")
+  fi
+  for candidate in "${start_candidates[@]}"; do
+    if [[ -f "$candidate" && ! -L "$candidate" ]]; then
       start_runtime="$candidate"
       break
     fi
@@ -853,8 +868,12 @@ if [[ -n "$PRIMARY_CHECKOUT" && "$SEED_MODE" != true ]]; then
   fi
 
   WORKTREE_CONTRACT=""
-  for candidate in .governance/worktree_path_check.py subprojects/worktrees/conformance.py; do
-    if [[ -f "$candidate" ]]; then
+  worktree_candidates=(.governance/worktree_path_check.py subprojects/worktrees/conformance.py)
+  if [[ -n "$STANDARD_ADOPTION_PLAN" ]]; then
+    worktree_candidates+=("$ALLOCATOR_PACKAGE_ROOT/subprojects/worktrees/conformance.py")
+  fi
+  for candidate in "${worktree_candidates[@]}"; do
+    if [[ -f "$candidate" && ! -L "$candidate" ]]; then
       WORKTREE_CONTRACT="$candidate"
       break
     fi

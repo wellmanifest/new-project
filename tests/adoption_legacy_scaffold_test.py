@@ -196,10 +196,39 @@ class LegacyScaffoldMigrationTest(unittest.TestCase):
         for name in ("README.md", "VERSION", "CHANGELOG.md", "TODO.md", "project/TICKETS.md"):
             self.assertEqual((self.target / name).read_bytes(), before[name])
 
+    def test_canonical_wellman_profile_scaffolds_migrate_cleanly(self):
+        for profile in ("profile:runtime-service", "profile:domain-pack",
+                        "profile:agent-executor", "profile:deployment",
+                        "profile:embedded-fleet", "profile:full"):
+            with self.subTest(profile=profile):
+                subprocess.run(["git", "clean", "-fdq"], cwd=self.target, check=True)
+                for name in ("README.md", "VERSION", "CHANGELOG.md", "TODO.md", "project/TICKETS.md"):
+                    path = self.target / name
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text("target-owned prerequisite\n")
+                self.manifest.parent.mkdir(parents=True, exist_ok=True)
+                self.manifest.write_text(json.dumps({
+                    "schema": "wellmanifest.manifest/v1",
+                    "standard": {"id": profile, "version": "0.20.38"},
+                }, indent=2) + "\n")
+                before = self.contents()
+                review = self.run_adopter("--check", "--migrate-wellman-scaffold")
+                self.assertEqual(review.returncode, 1, review.stderr)
+                self.assertIn("UPDATE .governance/manifest.json", review.stdout)
+                self.assertEqual(self.contents(), before)
+                result = self.run_adopter("--upgrade", "--migrate-wellman-scaffold")
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                manifest = json.loads(self.manifest.read_text())
+                self.assertEqual(manifest["schema"], "new-project.governance/v2")
+                (self.manifest.parent / "manifest.lock.json").unlink()
+                (self.manifest.parent / "manifest.base.json").unlink()
+                (self.manifest.parent / "package-manifest.json").unlink()
+
     def test_custom_and_native_manifests_cannot_use_migration(self):
         cases = [[], {**LEGACY, "coordination": {"policy": "keep"}},
                  {**LEGACY, "schema": "new-project.governance/v2"},
                  {**LEGACY, "standard": {"id": "wellmanifest/new-project", "version": "0.20.80"}},
+                 {**LEGACY, "standard": {"id": "profile:unknown-custom", "version": "0.20.38"}},
                  {**LEGACY, "standard": {**LEGACY["standard"], "sourceRevision": "a" * 40}},
                  {**LEGACY, "standard": {**LEGACY["standard"], "version": 37}},
                  {**LEGACY, "standard": {**LEGACY["standard"], "version": ""}}]
