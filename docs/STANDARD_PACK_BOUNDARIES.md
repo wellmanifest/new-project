@@ -73,3 +73,38 @@ The rollout sequence is: classify the repository role, attach its profile,
 record immutable evidence, enable the exact required check, protect the default
 branch, switch to `enforce`, and let the fleet report create drift work rather
 than editing repositories concurrently.
+
+## Declared evidence and verification limits
+
+The evidence policy retains the existing declared external proof behavior in
+`scripts/standard_pack_check.py`. External evidence is recognized by a URI
+prefix matching `[A-Za-z][A-Za-z0-9+.-]+:`: the scheme has at least two
+characters. HTTPS and custom schemes are accepted without a scheme allowlist;
+Windows drive paths such as `C:\proof.json` and `C:/proof.json` do not qualify.
+This prefix check does not validate the rest of the URI or establish that it
+identifies an external service.
+
+Every evidence entry must declare a SHA-256 of exactly 64 lowercase hexadecimal
+characters. For external evidence, the checker validates this syntax and takes
+the proof as declared. It does not fetch the URI, compare the digest with remote
+content, authenticate an issuer, verify a signature, or assess freshness.
+Repository-local evidence must instead name an existing file inside the
+repository whose actual SHA-256 matches the declaration.
+
+An adoption record needs valid evidence for every level from S0 through its
+claimed level. S3 requires a recognized CI definition or declared external
+proof; S4 and S5 require declared external proof. Each S3, S4 and S5 proof URI
+must differ from every lower-level proof URI. This enforces distinct URI
+strings, without establishing that different URIs identify different content.
+The execution model must also support the claimed level:
+`protected-conformance` supports at most S4; S5 requires
+`runtime-conformance`.
+
+Checker acceptance therefore establishes consistency of the adoption record
+and installed projections within these limits. It does not establish actual
+S4 branch protection or S5 runtime conformance. Those meanings remain defined
+by the [conformance scale](STANDARD_CONFORMANCE.md#co-znaczy-egzekwowalne) and
+the existing HOME packs. Independent exact-head approval remains owned by
+`wellmanifest/validation-attestation` and the adopting protected publication
+controller, subject to the [approval rules](../POLICY.md). A declared URI,
+digest, or passing standard-pack check supplies no publication authority.
