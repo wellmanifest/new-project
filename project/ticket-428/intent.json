@@ -1,0 +1,134 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-428",
+  "summary": "Prevent disjoint peer work-start starvation and bound controller store observation (v0.20.147)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-428/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/package-manifest.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/controller_store_compaction.py",
+    "scripts/ticket_recovery.py",
+    "scripts/ticket_restoration.py",
+    "scripts/work_start_check.py",
+    "tests/governance-scripts.test.sh",
+    "tests/governance-v147-regressions.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "de85f4fcc3558e31802ed237608de25075a0ef80",
+    "targetBranch": "main",
+    "outcome": "Eliminate work-start admission starvation under continuous disjoint peer writes (#602), restore bounded streaming controller store observation above 4 MiB across work-start/recovery/restoration plus authenticated archive-preserving controller store compaction (#599), and prepare release 0.20.147.",
+    "nonGoals": [
+      "No runtime dependencies or implicit controller mutations from read-only observers",
+      "No edits to sibling ticket worktrees or foreign lease files"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Scope work_start_check end-of-observation retry failures so disjoint uncommitted mutations inside already-registered, non-quarantined peer ticket worktrees with unchanged HEAD/branch/intent/activity update coherently; add a stdlib streaming RFC 8259 controller projection parser in work_start_check shared by ticket_recovery and ticket_restoration; and ship managed controller_store_compaction.py with CAS, flock, and content-addressed archival.",
+      "components": [
+        {
+          "name": "governance-admission-and-controller",
+          "paths": [
+            "governance/package-manifest.json",
+            "scripts/controller_store_compaction.py",
+            "scripts/ticket_recovery.py",
+            "scripts/ticket_restoration.py",
+            "scripts/work_start_check.py"
+          ]
+        },
+        {
+          "name": "governance-regressions",
+          "paths": [
+            "tests/governance-scripts.test.sh",
+            "tests/governance-v147-regressions.test.py"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independent reviewed revert; preserve immutable releases and external controller state."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/governance-v147-regressions.test.py",
+          "python3 tests/work_start_test.py"
+        ],
+        "evidence": "Disjoint peer dirty progression admits coherently while selected/primary/overlapping/intent/status/ref mutations fail closed."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/governance-v147-regressions.test.py",
+          "python3 tests/work_start_controller_test.py",
+          "python3 tests/ticket-recovery.test.py",
+          "python3 tests/ticket-restoration.test.py",
+          "python3 tests/snapshot_allocation_test.py"
+        ],
+        "evidence": "Controller stores exceeding 4 MiB stream cleanly in O(1) lease memory across work-start, recovery, restoration, and snapshot materialization while malformed/duplicate/racing/oversize stores fail closed."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 tests/governance-v147-regressions.test.py",
+          "bash tests/adoption-lock.test.sh"
+        ],
+        "evidence": "controller_store_compaction.py compacts >4 MiB historical stores under flock + CAS, writes content-addressed archives, and preserves fencing tokens, active/expired/merged leases, and idempotency receipts."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "bash tests/version-parity.test.sh",
+          "bash tests/wellman-package.test.sh",
+          "bash tests/governance-scripts.test.sh",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "All regression suites, version parity checks, wellman wheel checks, and repository governance checks pass for 0.20.147."
+      }
+    ]
+  }
+}

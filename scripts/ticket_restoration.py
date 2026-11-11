@@ -110,9 +110,15 @@ def reservation(primary, common, request, workstream):
 
 
 def controller(store, request, record, intent, repository):
-    state = recovery.load(store / "state.json")
+    resource = start.digest({"repositoryRef": repository, "targetBranch": record["targetBranch"]})
+    try:
+        state = start.read_controller_projection(
+            safe(store), resources=(resource,), lease_ids=(request["leaseId"],))
+    except (start.ObservationError, OSError, ValueError, KeyError, TypeError) as error:
+        raise recovery.RecoveryError("Unsupported or unreadable controller store") from error
     require(state.get("schema") == "subactor.repository-change-lease-store/v1", "Unsupported controller store")
-    lease = state["leases"][request["leaseId"]]
+    lease = state["leases"].get(request["leaseId"])
+    require(isinstance(lease, dict), "Controller owner, scope or CAS mismatch")
     expected = {"schema": "wellmanifest.change-lease/v1", "leaseId": request["leaseId"],
                 "leaseRevision": request["leaseRevision"], "fencingToken": request["fencingToken"],
                 "ownerActor": request["ownerActor"], "ownerSession": request["ownerSession"],
@@ -122,7 +128,6 @@ def controller(store, request, record, intent, repository):
                 "scopeHash": start.digest(intent["allowedPaths"]), "publicationFrozen": False}
     require(all(lease.get(k) == v for k, v in expected.items()) and lease.get("phase") in RESTORING_PHASES,
             "Controller owner, scope or CAS mismatch")
-    resource = start.digest({"repositoryRef": repository, "targetBranch": record["targetBranch"]})
     require(state["active"].get(resource) == lease["leaseId"], "Lease is not the active controller owner")
     expires = datetime.fromisoformat(lease["expiresAt"].replace("Z", "+00:00"))
     require(expires.tzinfo is not None and expires > datetime.now(timezone.utc),

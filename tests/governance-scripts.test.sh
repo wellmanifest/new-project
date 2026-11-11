@@ -1347,3 +1347,4 @@ PY
 
 python3 "$repo_root/tests/governance-v145-regressions.test.py"
 python3 "$repo_root/tests/governance-v146-regressions.test.py"
+python3 "$repo_root/tests/governance-v147-regressions.test.py"
