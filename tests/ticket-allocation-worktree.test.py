@@ -492,6 +492,74 @@ class NativeStandardAdoptionPlanTest(AdoptionPlanFixture, unittest.TestCase):
         self.assertIn('exclusive local file allocation', result.stderr)
         self.assertFalse((self.target / '.git/new-project-ticket-high-water').exists())
 
+    def test_damaged_modern_target_missing_locked_helper_does_not_fall_back(self):
+        self.export()
+        (self.target / '.governance/work_start_check.py').unlink()
+        result = self.allocate_plan()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((self.target / '.git/new-project-ticket-high-water').exists())
+        self.assertFalse((self.target / '.worktrees').exists())
+
+
+class Pre02030AdoptionPlanTest(AdoptionPlanFixture, unittest.TestCase):
+    missing_targets = {
+        ".gitattributes",
+        ".github/workflows/new-project-branch-hygiene.yml",
+        ".governance/work_start_check.py",
+        ".governance/ticket_storage.py",
+        ".governance/ticket_activity.py",
+        ".governance/ticket_allocation.py",
+        ".governance/worktree_path_check.py",
+    }
+
+    def allocate_plan(self, *arguments):
+        if not hasattr(self, "_pub_env"):
+            self._pub_env = self.publication_environment()
+        return self.command(self.target, "bash", str(self.source / "project/new-ticket.sh"),
+            "--title", "Upgrade pre-0.20.30 adopter", "--agent", "fixture",
+            "--writer-actor", "agent:fixture", "--writer-session", "session-fixture",
+            "--workstream", "governance", "--worktree-slug", "pre02030-upgrade",
+            "--standard-adoption-plan", str(self.plan_path), *arguments,
+            env=self._pub_env, check=False)
+
+    def test_pre02030_target_allocates_using_verified_source_helpers(self):
+        import hashlib
+        from jsonschema import Draft202012Validator
+
+        for missing in (".governance/work_start_check.py", ".governance/ticket_storage.py",
+                        ".governance/ticket_activity.py", ".governance/ticket_allocation.py",
+                        ".governance/worktree_path_check.py"):
+            self.assertFalse((self.target / missing).exists(), missing)
+        plan = self.export()
+        before = self.command(self.target, "git", "status", "--porcelain").stdout
+        result = self.allocate_plan()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        receipt = next(json.loads(line) for line in result.stdout.splitlines()
+                       if line.startswith("{") and "ticket-allocation-result" in line)
+        worktree = Path(receipt["worktreePath"])
+        intent = json.loads((worktree / "project/ticket-001/intent.json").read_text())
+        self.assertEqual(intent["delivery"], plan["delivery"])
+        Draft202012Validator(json.loads((ROOT / "governance/intent.schema.json").read_text())).validate(intent)
+        lease = json.loads(Path(receipt["leasePath"]).read_text())
+        canonical = lambda value: json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+        self.assertEqual(lease["planHash"], hashlib.sha256(canonical(intent)).hexdigest())
+        self.assertEqual(self.command(self.target, "git", "status", "--porcelain").stdout, before)
+
+    def test_tampered_source_helper_refuses_before_identity_reservation(self):
+        self.export()
+        for helper in ("scripts/work_start_check.py", "scripts/ticket_storage.py",
+                       "subprojects/worktrees/conformance.py"):
+            path = self.source / helper
+            original = path.read_bytes()
+            try:
+                path.write_bytes(original + b"\n# tampered helper\n")
+                result = self.allocate_plan()
+                self.assertNotEqual(result.returncode, 0, helper)
+                self.assertFalse((self.target / ".git/new-project-ticket-high-water").exists())
+                self.assertFalse((self.target / ".worktrees").exists())
+            finally:
+                path.write_bytes(original)
+
 
 @unittest.skipUnless(os.name == "posix", "Explicit ownership inputs require no-follow descriptor operations")
 class NativeExistingOwnershipPlanTest(ExistingOwnershipFixture, unittest.TestCase):

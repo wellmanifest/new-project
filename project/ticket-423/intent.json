@@ -1,0 +1,101 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-423",
+  "summary": "Support pre-0.20.30 adoption plan helpers and Wellman profile scaffolds",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-423/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "project/new-ticket.sh",
+    "scripts/create_adoption_lock.py",
+    "tests/adoption_legacy_scaffold_test.py",
+    "tests/ticket-allocation-worktree.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "57d8d2fdf436f8424a8699f550a402bc79acdedd",
+    "targetBranch": "main",
+    "outcome": "Allow --standard-adoption-plan ticket allocation on genuine pre-0.20.30 adopters via verified immutable-source helper fallback, and allow --migrate-wellman-scaffold for the closed set of canonical minimal Wellman profile scaffolds.",
+    "nonGoals": [
+      "Do not weaken broken managedFiles digest closure checks on damaged target repositories.",
+      "Do not admit custom, native, or arbitrary profile IDs in --migrate-wellman-scaffold."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend verify_allocation_plan in scripts/create_adoption_lock.py to bind the full allocator helper closure in standard_root to git_bytes(standard_root, revision, ...) and non-symlink checks, fall back to $ALLOCATOR_PACKAGE_ROOT helpers in project/new-ticket.sh only after verify_standard_adoption succeeds under --standard-adoption-plan, and generalize validate_wellman_scaffold to accept the closed canonical WELLMAN_SCAFFOLD_PROFILES allowlist.",
+      "components": [
+        {
+          "name": "native adoption plan allocator",
+          "paths": [
+            "project/new-ticket.sh",
+            "tests/ticket-allocation-worktree.test.py"
+          ]
+        },
+        {
+          "name": "adoption lock and scaffold verifier",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "tests/adoption_legacy_scaffold_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "validate_wellman_scaffold accepts the closed set of canonical Wellman profile IDs in addition to profile:baseline."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this bounded commit through the protected publication process."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "PYTHONPATH=tests python3 tests/ticket-allocation-worktree.test.py",
+          "PYTHONPATH=tests python3 tests/adoption_upgrade_harmonization_test.py"
+        ],
+        "evidence": "Pre-0.20.30 adoption plan fixture lacking local work_start_check.py and ticket_storage.py allocates cleanly via verified immutable source helpers while tampered source helpers or broken target locks fail closed."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "PYTHONPATH=tests python3 tests/adoption_legacy_scaffold_test.py"
+        ],
+        "evidence": "Minimal canonical Wellman profile scaffolds (including profile:runtime-service) migrate cleanly while custom, native, and unknown profile IDs fail closed without writes."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh --base origin/main --head HEAD",
+          "wellman check --root ."
+        ],
+        "evidence": "Managed governance checks and Wellman v0.23.0 conformance checks pass with zero errors."
+      }
+    ]
+  }
+}

@@ -901,8 +901,14 @@ def verify_allocation_plan(path: Path, target_root: Path, workstream: str,
             or workstream != "governance"):
         raise SystemExit("invalid adoption allocation source or workstream")
     standard_root = Path(__file__).resolve().parent.parent
-    if (standard_root / "project/new-ticket.sh").read_bytes() != git_bytes(standard_root, revision, "project/new-ticket.sh"):
-        raise SystemExit("allocator differs from the immutable source package")
+    for helper in ALLOCATION_PLAN_SOURCE_HELPERS:
+        helper_path = standard_root / helper
+        if (
+            any(part.is_symlink() for part in (helper_path, *helper_path.parents))
+            or not helper_path.is_file()
+            or helper_path.read_bytes() != git_bytes(standard_root, revision, helper)
+        ):
+            raise SystemExit("allocator differs from the immutable source package")
     output = io.StringIO()
     try:
         takeovers = plan["delivery"]["standardAdoption"].get("managedTargetTakeovers")
@@ -1813,6 +1819,29 @@ def report_missing_target_prerequisites(paths: list[str]) -> None:
         print(f"MISSING target prerequisite {path}")
 
 
+ALLOCATION_PLAN_SOURCE_HELPERS = (
+    "project/new-ticket.sh",
+    "scripts/ticket_storage.py",
+    "scripts/ticket_activity.py",
+    "scripts/ticket_allocation.py",
+    "scripts/work_start_check.py",
+    "scripts/ticket_input.py",
+    "scripts/worktree_overlap_check.py",
+    "scripts/governance_check.py",
+    "subprojects/worktrees/conformance.py",
+)
+
+WELLMAN_SCAFFOLD_PROFILES = frozenset({
+    "profile:baseline",
+    "profile:domain-pack",
+    "profile:runtime-service",
+    "profile:agent-executor",
+    "profile:deployment",
+    "profile:embedded-fleet",
+    "profile:full",
+})
+
+
 def validate_wellman_scaffold(target_root: Path, files: list[dict[str, object]]) -> None:
     """Accept only an explicit, policy-free legacy baseline initialization."""
     targets = {str(item["target"]) for item in files}
@@ -1842,7 +1871,7 @@ def validate_wellman_scaffold(target_root: Path, files: list[dict[str, object]])
         isinstance(document, dict) and set(document) == {"schema", "standard"}
         and document["schema"] == "wellmanifest.manifest/v1"
         and isinstance(standard, dict) and set(standard) == {"id", "version"}
-        and standard["id"] == "profile:baseline"
+        and standard["id"] in WELLMAN_SCAFFOLD_PROFILES
         and isinstance(standard["version"], str) and VERSION_PATTERN.fullmatch(standard["version"])
     ):
         raise SystemExit("migration requires the exact minimal Wellman baseline scaffold")
