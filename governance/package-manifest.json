@@ -774,6 +774,12 @@
       "target": ".governance/seed_baseline.py",
       "strategy": "managed",
       "executable": true
+    },
+    {
+      "source": "scripts/controller_store_compaction.py",
+      "target": ".governance/controller_store_compaction.py",
+      "strategy": "managed",
+      "executable": true
     }
   ]
 }

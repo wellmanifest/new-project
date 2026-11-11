@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.20.147] - 2026-11-11
+
+- Prevent `work_start_check.py` admission starvation under continuous disjoint peer writes by coherently updating uncommitted dirty observations for unchanged, non-quarantined, non-overlapping peer ticket worktrees while failing closed on selected/primary/caller checkout mutations, ref/manifest/registration/SQLite changes, foreign ticket carriers, or material scope overlap. [ticket-428]
+- Replace the 4 MiB whole-file controller `state.json` cap across `work_start_check.py`, `ticket_recovery.py`, and `ticket_restoration.py` with a strict RFC 8259 bounded streaming projection reader (`MAX_CONTROLLER_STATE_BYTES = 128 MiB`), and add managed `controller_store_compaction.py` for `flock`-serialized, CAS-bound, archive-preserving retention compaction of historical terminal lease/receipt records. [ticket-428]
+
 ## [0.20.146] - 2026-11-11
 
 - Harden `v0.20.146` audit findings across `work_continuity` (`O_WRONLY | O_APPEND`), `branch_lifecycle_check` (`@` ref rejection), `governance_check` (first-commit `validate_intent_value`, symlink/containment/size-bounded `__init__.py` scan, strict `legacy_base` exemption), `policy_dsl_check` (`VARIABLE DEFAULT` scalar literal validation and duplicate `DOCUMENT` fence rejection), `remediation_intent` (lowercase plan corpus normalization), `work_start_check` (end-of-proof bootstrap dirty/checksum stability), `ticket_restoration` (same-filesystem staging in `write_new`), `idle_takeover` (`O_NOFOLLOW` lock verification and pre-replace idle/CAS re-observation), `project/new-ticket.sh` (collision-resistant default `WRITER_SESSION`), and `scripts/install-agent-hosts.sh` (`merge.ticket-index.driver` + `merge.wellmanifest-ticket-index.driver` idempotent auto-wiring). [ticket-427]
