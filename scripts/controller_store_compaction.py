@@ -375,10 +375,21 @@ def _write_archive(store_fd: int, archive_name: str, archive_bytes: bytes) -> st
                 os.link(temp_name, archive_name, src_dir_fd=archive_dir_fd, dst_dir_fd=archive_dir_fd,
                         follow_symlinks=False)
             except FileExistsError:
-                existing_fd = os.open(archive_name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=archive_dir_fd)
+                existing_fd = os.open(archive_name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+                                      dir_fd=archive_dir_fd)
+                existing_hasher = hashlib.sha256()
+                existing_total = 0
                 with os.fdopen(existing_fd, "rb") as existing_stream:
-                    existing_sha = hashlib.sha256(existing_stream.read(MAX_STORE_BYTES + 1)).hexdigest()
-                require(existing_sha == hashlib.sha256(archive_bytes).hexdigest(),
+                    require(stat.S_ISREG(os.fstat(existing_stream.fileno()).st_mode),
+                            "archive_not_regular")
+                    while True:
+                        chunk = existing_stream.read(CHUNK_BYTES)
+                        if not chunk:
+                            break
+                        existing_total += len(chunk)
+                        require(existing_total <= MAX_STORE_BYTES, "archive_exceeds_bound")
+                        existing_hasher.update(chunk)
+                require(existing_hasher.hexdigest() == hashlib.sha256(archive_bytes).hexdigest(),
                         "archive_collision_mismatch")
             finally:
                 try:
@@ -520,7 +531,7 @@ def compact_store(
                 }
                 archive_bytes = _encode(archive_payload)
                 archive_sha = hashlib.sha256(archive_bytes).hexdigest()
-                archive_name = f"compaction-{pre_sha[:16]}-{post_sha[:16]}.json"
+                archive_name = f"compaction-{archive_sha}.json"
                 archive_rel = _write_archive(store_fd, archive_name, archive_bytes)
                 verify()
                 _atomic_replace_state(store_fd, post_raw)

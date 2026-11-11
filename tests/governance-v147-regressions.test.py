@@ -688,6 +688,42 @@ class LargeControllerStoreAndCompactionRegressionTest(unittest.TestCase):
         self.assertEqual(obs_after["state"], "HELD_BY_TICKET")
         self.assertEqual(obs_after["stateDigest"], applied["postStateSha256"])
 
+        # 6. Crash after _write_archive before _atomic_replace_state recovers cleanly on retry
+        crash_store = Path(self.fixture.temp.name) / "crash-recovery-controller"
+        crash_store.mkdir()
+        (crash_store / "state.json").write_bytes(raw)
+        with patch.object(compaction, "_atomic_replace_state", side_effect=OSError("simulated crash")):
+            with self.assertRaises(OSError):
+                compaction.compact_store(
+                    crash_store,
+                    apply=True,
+                    operator_actor="controller:ops",
+                    expected_state_sha256=pre_sha,
+                    min_recent_leases=10,
+                    min_recent_acquisitions=10,
+                    min_recent_requests=10,
+                    now=self.now,
+                )
+        self.assertEqual((crash_store / "state.json").read_bytes(), raw)
+        self.assertEqual(len(list((crash_store / "archive").glob("compaction-*.json"))), 1)
+
+        recovered = compaction.compact_store(
+            crash_store,
+            apply=True,
+            operator_actor="controller:ops-retry",
+            expected_state_sha256=pre_sha,
+            min_recent_leases=10,
+            min_recent_acquisitions=10,
+            min_recent_requests=10,
+            now=self.now + timedelta(seconds=15),
+        )
+        self.assertTrue(recovered["applied"])
+        self.assertEqual(recovered["postStateSha256"], applied["postStateSha256"])
+        self.assertEqual(
+            hashlib.sha256((crash_store / "state.json").read_bytes()).hexdigest(),
+            recovered["postStateSha256"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
