@@ -1,0 +1,89 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-422",
+  "summary": "Deduplicate per-checkout git status and disjoint merge-tree probes in worktree_overlap_check",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-422/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/worktree_overlap_check.py",
+    "tests/worktree-overlap.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "bf1b0578cec020fb01318e0e5e8f087e56c959b2",
+    "targetBranch": "main",
+    "outcome": "Deduplicate per-checkout git status probes (from 3 to 1) in worktree_overlap_check.py and skip O(N^2) git merge-tree invocations when two branches share origin/<default> without overlapping changed paths.",
+    "nonGoals": [
+      "Do not weaken rename/directory-rename conflict attribution when renames are present.",
+      "Do not alter dirty-path or ancestor/descendant overlap verdicts."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Introduce unignored_dirty_paths(path) in scripts/worktree_overlap_check.py so inspect_checkout reads git status --porcelain=v1 -z --untracked-files=all once per checkout and forwards filtered_dirty into changed_paths(..., dirty=filtered_dirty); in contested_paths(), compute shared_pair_overlap = first_changes & second_changes and skip merge_tree_conflicts() when shared_default is True (already proving zero renames on both sides) and shared_pair_overlap is empty.",
+      "components": [
+        {
+          "name": "worktree overlap governance checker",
+          "paths": [
+            "scripts/worktree_overlap_check.py",
+            "tests/worktree-overlap.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this bounded commit through the protected publication process."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/worktree-overlap.test.sh"
+        ],
+        "evidence": "Single-status invariant test verifies inspect_checkout invokes git status exactly once per inspected checkout while preserving all dirty/untracked/rename overlap checks."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/worktree-overlap.test.sh"
+        ],
+        "evidence": "Disjoint shared-default invariant test verifies contested_paths never invokes merge_tree_conflicts when shared_default is True and changed-path sets are disjoint."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh --base origin/main --head HEAD",
+          "wellman check --root ."
+        ],
+        "evidence": "Full worktree-overlap test suite (132 unittest cases plus shell integration fixtures), managed governance checks, and Wellman v0.23.0 conformance checks pass."
+      }
+    ]
+  }
+}

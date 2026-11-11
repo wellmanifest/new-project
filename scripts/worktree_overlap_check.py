@@ -379,7 +379,7 @@ def nul_records(output: str) -> list[str]:
     return records
 
 
-def dirty_paths(path: Path, ignore: tuple[str, ...]) -> tuple[str, ...]:
+def unignored_dirty_paths(path: Path) -> set[str]:
     names: set[str] = set()
     records = iter(nul_records(run_git(
         path, "status", "--porcelain=v1", "-z", "--untracked-files=all")))
@@ -395,7 +395,13 @@ def dirty_paths(path: Path, ignore: tuple[str, ...]) -> tuple[str, ...]:
             if original is None:
                 raise AuditError('Git status is missing a rename/copy source path')
             names.add(original)
-    return tuple(sorted(name for name in names if name and not path_ignored(name, ignore)))
+    return {name for name in names if name}
+
+
+def dirty_paths(path: Path, ignore: tuple[str, ...]) -> tuple[str, ...]:
+    return tuple(
+        sorted(name for name in unignored_dirty_paths(path) if not path_ignored(name, ignore))
+    )
 
 
 def committed_against(
@@ -571,20 +577,22 @@ def contested_paths(
     dirty_overlap = (first_dirty & second_changes) | (second_dirty & first_changes)
     conflicts: set[str] = set()
     if first.head and second.head and first.head != second.head:
-        if not is_ancestor(first.path, first.head, second.head) and not is_ancestor(
-            first.path, second.head, first.head
-        ):
-            reported = merge_tree_conflicts(first.path, first.head, second.head)
-            if reported is None:
-                # No usable merge-tree: fall back to the path-intersection proxy.
-                conflicts = first_changes & second_changes
-            else:
-                conflicts = set(reported)
-                if shared_default:
-                    # A branch can conflict with main without contending with
-                    # this particular peer. Keep the conflict in its inventory,
-                    # but require contributions from both writers for pairing.
-                    conflicts &= first_changes & second_changes
+        shared_pair_overlap = first_changes & second_changes
+        if not (shared_default and not shared_pair_overlap):
+            if not is_ancestor(first.path, first.head, second.head) and not is_ancestor(
+                first.path, second.head, first.head
+            ):
+                reported = merge_tree_conflicts(first.path, first.head, second.head)
+                if reported is None:
+                    # No usable merge-tree: fall back to the path-intersection proxy.
+                    conflicts = shared_pair_overlap
+                else:
+                    conflicts = set(reported)
+                    if shared_default:
+                        # A branch can conflict with main without contending with
+                        # this particular peer. Keep the conflict in its inventory,
+                        # but require contributions from both writers for pairing.
+                        conflicts &= shared_pair_overlap
     return tuple(
         sorted(
             name
@@ -594,13 +602,18 @@ def contested_paths(
     )
 
 
-def changed_paths(path: Path, ignore: tuple[str, ...]) -> tuple[str, ...]:
+def changed_paths(
+    path: Path,
+    ignore: tuple[str, ...],
+    *,
+    dirty: tuple[str, ...] | None = None,
+) -> tuple[str, ...]:
     """Everything this checkout has touched relative to the default branch.
 
     Used for reporting and for attributing a ticket to the checkout writing it,
     never for deciding whether two checkouts collide.
     """
-    names: set[str] = set(dirty_paths(path, ignore))
+    names: set[str] = set(dirty_paths(path, ignore) if dirty is None else dirty)
     branch = default_branch(path)
     base = None
     for candidate in (f"origin/{branch}", branch):
@@ -764,11 +777,17 @@ def inspect_checkout(
     except AuditError:
         head = None
     branch = run_git(path, "branch", "--show-current") or None
-    dirty = bool(run_git(path, "status", "--porcelain=v1", "--untracked-files=all"))
+    raw_dirty = unignored_dirty_paths(path)
+    dirty = bool(raw_dirty)
     pending = has_pending_work(path, dirty)
     identity = repository_identity(path)
     in_scope = pending and (only_identity is None or identity == only_identity)
     scopes, activity_errors = ticket_scopes(path) if in_scope else ((), ())
+    filtered_dirty = (
+        tuple(sorted(name for name in raw_dirty if not path_ignored(name, ignore)))
+        if in_scope
+        else ()
+    )
     return Checkout(
         path=path.resolve(),
         common_git_dir=common,
@@ -779,8 +798,8 @@ def inspect_checkout(
         pending=pending,
         # A leftover or out-of-scope identity contributes nothing to any merge
         # in this audit, so skip the expensive reads that would be discarded.
-        dirty_paths=dirty_paths(path, ignore) if in_scope else (),
-        changed_paths=changed_paths(path, ignore) if in_scope else (),
+        dirty_paths=filtered_dirty,
+        changed_paths=changed_paths(path, ignore, dirty=filtered_dirty) if in_scope else (),
         tickets=scopes,
         activity_errors=activity_errors,
     )
