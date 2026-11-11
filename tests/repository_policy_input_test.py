@@ -156,6 +156,37 @@ class RepositoryPolicyInputTest(unittest.TestCase):
                     str,
                 )
 
+                base_policy = dict(
+                    profile='main-only-planfile',
+                    enforcement='enforce',
+                    delivery=dict(mode='main-only', checkout='primary', targetBranches=['main']),
+                    tickets=copy.deepcopy(base_tickets),
+                )
+                self.assertIsNone(module.policy_error(base_policy))
+
+                missing_policy = copy.deepcopy(base_policy)
+                del missing_policy['tickets']['sourcePaths']
+                self.assertIn(
+                    'tickets.sourcePaths',
+                    module.policy_error(missing_policy) or '',
+                )
+
+                for invalid_sources in (
+                    [],
+                    '.planfile/events.jsonl',
+                    None,
+                    ['../outside/events.jsonl'],
+                    ['.planfile/*.jsonl'],
+                    ['.planfile/events.jsonl', '.planfile/events.jsonl'],
+                ):
+                    with self.subTest(reader=reader, invalid_sources=invalid_sources):
+                        bad_policy = copy.deepcopy(base_policy)
+                        bad_policy['tickets']['sourcePaths'] = invalid_sources
+                        self.assertIn(
+                            'sourcePaths must be a safe non-empty path list',
+                            module.policy_error(bad_policy) or '',
+                        )
+
 
 if __name__ == '__main__':
     unittest.main()
