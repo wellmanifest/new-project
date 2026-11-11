@@ -712,3 +712,67 @@ assert len(r['summary']['identitiesWithMultipleWorktrees']) == 1, r
 assert any(x['code']=='GOV-WORKTREE-OVERLAP-001' for x in r['findings']), r
 PY
 printf 'local-only worktree identity: PASS\n'
+
+# Performance & complexity invariants: single git status per inspected checkout
+# and zero git merge-tree calls when shared-default contributions are disjoint.
+python3 - "$checker" "$writer" <<'PY'
+import importlib.util
+from pathlib import Path
+import sys
+
+checker_path = Path(sys.argv[1])
+writer_path = Path(sys.argv[2])
+spec = importlib.util.spec_from_file_location("woc_perf", checker_path)
+woc = importlib.util.module_from_spec(spec)
+sys.modules["woc_perf"] = woc
+spec.loader.exec_module(woc)
+
+real_run_git = woc.run_git
+status_calls = 0
+
+def counting_run_git(path, *args):
+    global status_calls
+    if args and args[0] == "status":
+        status_calls += 1
+    return real_run_git(path, *args)
+
+woc.run_git = counting_run_git
+woc.inspect_checkout(writer_path, woc.DEFAULT_IGNORE)
+assert status_calls == 1, f"expected 1 git status call per checkout, got {status_calls}"
+
+first = woc.Checkout(
+    path=writer_path,
+    common_git_dir=writer_path / ".git",
+    identity="remote:github.com/example/repo",
+    head="a" * 40,
+    branch="ticket/001-a",
+    dirty=False,
+    pending=True,
+    dirty_paths=(),
+    changed_paths=("src/a.py",),
+    tickets=(),
+    activity_errors=(),
+)
+second = woc.Checkout(
+    path=writer_path,
+    common_git_dir=writer_path / ".git",
+    identity="remote:github.com/example/repo",
+    head="b" * 40,
+    branch="ticket/002-b",
+    dirty=False,
+    pending=True,
+    dirty_paths=(),
+    changed_paths=("src/b.py",),
+    tickets=(),
+    activity_errors=(),
+)
+woc.merge_base = lambda *_args: None
+woc.changes_against_shared_default = lambda *_args: ({"src/a.py"}, {"src/b.py"}, True)
+
+def forbid_merge_tree(*_args, **_kwargs):
+    raise AssertionError("disjoint shared-default checkouts must not invoke git merge-tree")
+
+woc.merge_tree_conflicts = forbid_merge_tree
+assert woc.contested_paths(first, second, ()) == ()
+PY
+printf 'single-status and disjoint merge-tree short-circuit: PASS\n'
