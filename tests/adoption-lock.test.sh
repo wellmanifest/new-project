@@ -822,5 +822,6 @@ python3 "$repo_root/tests/adoption_legacy_scaffold_test.py"
 # imposed an unrelated aggregate deadline on all of its real CLI fixtures.
 python3 "$repo_root/tests/scaffold_bootstrap_test.py" FreshBootstrapTest
 python3 "$repo_root/tests/bootstrap_reusable_plan_test.py"
+python3 "$repo_root/tests/adoption_packaging_plan_test.py"
 
 echo 'adoption lock: PASS'

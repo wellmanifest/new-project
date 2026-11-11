@@ -1,0 +1,92 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-421",
+  "summary": "Include target packaging declarations in native adoption plan (#548)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-421/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/create_adoption_lock.py",
+    "tests/adoption-lock.test.sh",
+    "tests/adoption_packaging_plan_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "cc4ad8981a83d93881074170297abc9baa1eb4fd",
+    "targetBranch": "main",
+    "outcome": "Detect, validate, surgically project, and scope-bind target packaging declarations (pyproject.toml, package.json) across native adoption --check, --allocation-plan, and --upgrade without modifying managed hash closures.",
+    "nonGoals": [
+      "Do not modify .governance/manifest.lock.json managedFiles hashes for target-owned packaging markers.",
+      "Do not silently transfer workstream ownership or bypass dirty-file/lease fencing."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Read the packaging contract from projected .governance/agent-hosts.json in create_adoption_lock.py; observe declared markers in allocation_target_state; surgically rewrite only [tool.wellmanifest] / wellmanifest standard and revision string literals while re-parsing to prove byte-for-byte preservation of unrelated metadata; admit packaging markers in adoption_allocation_plan only when clean at HEAD and exclusively owned by governance or integration; fail closed on missing/malformed declarations, unsafe gates, unbound lifecycles, unmanaged edits, or conflicting ownership.",
+      "components": [
+        {
+          "name": "native adoption packaging planner",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "tests/adoption-lock.test.sh",
+            "tests/adoption_packaging_plan_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this bounded commit through the protected publication process."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest -q tests/adoption_packaging_plan_test.py tests/adoption_upgrade_harmonization_test.py tests/scaffold_bootstrap_test.py",
+          "python3 tests/worktrees-adoption.test.py"
+        ],
+        "evidence": "Historical Python and Node adopter fixtures verify exact scope admission, byte-for-byte metadata preservation, post-upgrade agent_host_check and governance-check passage, --check inconsistency detection, and fail-closed refusals for missing authority, stale target, conflicting ownership, unmanaged edits, and malformed declarations."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/adoption-lock.test.sh"
+        ],
+        "evidence": "Existing adoption lock shell regression suite passes without modifying managedFiles closure semantics."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh",
+          "wellman check --root ."
+        ],
+        "evidence": "Managed governance and Wellman conformance checks pass."
+      }
+    ]
+  }
+}
