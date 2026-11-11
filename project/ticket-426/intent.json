@@ -25,6 +25,7 @@
     "scripts/ticket_activity.py",
     "scripts/ticket_storage.py",
     "scripts/work_start_check.py",
+    "tests/delivery-post-merge-base.test.py",
     "tests/governance-scripts.test.sh",
     "tests/governance-v145-regressions.test.py",
     "tests/repository_policy_input_test.py",
@@ -74,6 +75,7 @@
         {
           "name": "governance-regressions",
           "paths": [
+            "tests/delivery-post-merge-base.test.py",
             "tests/worktree-default-base.test.py",
             "tests/repository_policy_input_test.py",
             "tests/ticket-activity.test.sh",
@@ -123,6 +125,7 @@
         "criterion": "AC-03",
         "commands": [
           "bash tests/ticket-activity.test.sh",
+          "python3 tests/delivery-post-merge-base.test.py",
           "python3 tests/worktree-default-base.test.py",
           "python3 tests/worktree-pending-merge.test.py",
           "bash project/governance-check.sh"
