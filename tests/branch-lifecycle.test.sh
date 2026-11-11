@@ -29,11 +29,11 @@ spec = importlib.util.spec_from_file_location("branch_refs", validator)
 runtime = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = runtime
 spec.loader.exec_module(runtime)
-valid = ["main", "ticket/412-valid-refs", "@", "topic./child", "topic.locked",
+valid = ["main", "ticket/412-valid-refs", "topic./child", "topic.locked",
          "refs/heads/main", "release/v1.2", "feature/zażółć", "!topic", "a" * 255]
 invalid = ["", "x..y", "x@{y", "trailing.", "/leading", "trailing/", "a//b",
            ".hidden", "a/.hidden", "a.lock", "a.lock/b", "a/b.lock", "-option",
-           "HEAD", "@{-1}", "space name", "a~b", "a^b", "a:b", "a?b", "a*b",
+           "HEAD", "@", "@{-1}", "space name", "a~b", "a^b", "a:b", "a?b", "a*b",
            "a[b", "a\\b", "a\tb", "a\nb", "a\rb", "a\x7fb", "a\x01b"]
 base = {"schema": runtime.SNAPSHOT_SCHEMA, "repository": "example/product",
         "defaultBranch": "main", "deleteBranchOnMerge": True, "branches": ["main"],
@@ -54,7 +54,9 @@ for name in valid + invalid:
     git_env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
     actual = subprocess.run(["git", "check-ref-format", "--branch", name],
                             cwd=fixture, env=git_env, capture_output=True, check=False)
-    assert (actual.returncode == 0) == (name in valid), repr(name)
+    # Git ref-format rule 9 forbids single-character '@' (a synonym for HEAD),
+    # even when `check-ref-format --branch` expands `refs/heads/@`.
+    assert (actual.returncode == 0 and name != "@") == (name in valid), repr(name)
     for field in ("defaultBranch", "branches", "headRef"):
         document = snapshot(name, field)
         if name in valid:

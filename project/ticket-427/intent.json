@@ -1,0 +1,161 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-427",
+  "summary": "Harden v0.20.146 audit findings and auto-wire ticket-index merge driver",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-427/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/policy-dsl.lock.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "project/new-ticket.sh",
+    "scripts/branch_lifecycle_check.py",
+    "scripts/governance_check.py",
+    "scripts/idle_takeover.py",
+    "scripts/install-agent-hosts.sh",
+    "scripts/policy_dsl_check.py",
+    "scripts/remediation_intent.py",
+    "scripts/ticket_restoration.py",
+    "scripts/work_continuity.py",
+    "scripts/work_start_check.py",
+    "tests/branch-lifecycle.test.sh",
+    "tests/governance-scripts.test.sh",
+    "tests/governance-v146-regressions.test.py",
+    "tests/history_order_test.py",
+    "tests/snapshot_migration_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [
+    "ticket-418"
+  ],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f5dc9ebd662d7cdb56f7ab18ac13f3c832005dd9",
+    "targetBranch": "main",
+    "outcome": "Resolve all 13 v0.20.146 audit hardening items from wellmanifest/new-project#600, idempotently auto-wire merge.ticket-index.driver and merge.wellmanifest-ticket-index.driver in install-agent-hosts.sh, synchronize bundled Wellman assets and Policy DSL digest pins, and prepare release 0.20.146.",
+    "nonGoals": [
+      "No runtime dependencies or external controller mutations",
+      "No edits to sibling ticket worktrees or foreign lease files"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 25,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Apply minimal fail-closed fixes across governance/continuity/policy/lifecycle/allocation/host scripts, synchronize _bundled/governance_check.py and policy-dsl.lock.json SHA-256, auto-wire both ticket-index and wellmanifest-ticket-index Git merge drivers in install-agent-hosts.sh, and add deterministic regression tests.",
+      "components": [
+        {
+          "name": "governance-scripts",
+          "paths": [
+            "project/new-ticket.sh",
+            "scripts/branch_lifecycle_check.py",
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "scripts/idle_takeover.py",
+            "scripts/install-agent-hosts.sh",
+            "scripts/policy_dsl_check.py",
+            "governance/policy-dsl.lock.json",
+            "scripts/remediation_intent.py",
+            "scripts/ticket_restoration.py",
+            "scripts/work_continuity.py",
+            "scripts/work_start_check.py"
+          ]
+        },
+        {
+          "name": "governance-regressions",
+          "paths": [
+            "tests/branch-lifecycle.test.sh",
+            "tests/governance-scripts.test.sh",
+            "tests/governance-v146-regressions.test.py",
+            "tests/history_order_test.py",
+            "tests/snapshot_migration_test.py"
+          ]
+        },
+        {
+          "name": "release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "scripts/governance_check.py: validate historical intent schema, bound symlink-free __init__.py scan, and restrict legacy_base lock exemption"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independent reviewed revert; preserve immutable releases and external state."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/governance-v146-regressions.test.py",
+          "python3 tests/idle_takeover_test.py",
+          "python3 tests/ticket-restoration.test.py",
+          "python3 tests/work_start_test.py"
+        ],
+        "evidence": "Continuity descriptor flags, ref syntax, criterion lowercase matching, same-filesystem staging, bootstrap stability, idle takeover CAS/lock, and writer session entropy pass."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/governance-v146-regressions.test.py",
+          "python3 tests/history_order_test.py",
+          "python3 tests/snapshot_migration_test.py",
+          "bash tests/version-parity.test.sh"
+        ],
+        "evidence": "Historical intent validation, symlink/size-bounded __init__.py scan, and strict legacy_base lock verification pass across source and bundled governance_check."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 scripts/policy_dsl_check.py validate-markdown CONTRIBUTING.md",
+          "python3 scripts/policy_dsl_check.py validate-markdown POLICY.md",
+          "python3 tests/policy_dsl_adoption_test.py",
+          "python3 tests/governance-v146-regressions.test.py"
+        ],
+        "evidence": "Policy DSL VARIABLE DEFAULT literal types, duplicate DOCUMENT fence rejection, and pinned sourceSha256 pass."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "bash tests/agent-hosts.test.sh",
+          "python3 tests/ticket_index_merge_test.py",
+          "bash tests/wellman-package.test.sh",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "install-agent-hosts.sh idempotently configures merge.ticket-index.driver and merge.wellmanifest-ticket-index.driver, packaging parity holds, and governance gate passes."
+      }
+    ]
+  }
+}

@@ -380,7 +380,7 @@ if [[ -z "$SNAPSHOT_PROPOSAL$SNAPSHOT_MATERIALIZE$RECOVER_REQUEST" ]]; then
     fi
   else
     WRITER_ACTOR="agent:${AGENT}"
-    WRITER_SESSION="allocation-$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    WRITER_SESSION="allocation-$(date -u +"%Y-%m-%dT%H:%M:%SZ")-$$-$(python3 -c 'import secrets; print(secrets.token_hex(4))')"
   fi
 fi
 

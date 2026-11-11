@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.146] - 2026-11-11
+
+- Harden `v0.20.146` audit findings across `work_continuity` (`O_WRONLY | O_APPEND`), `branch_lifecycle_check` (`@` ref rejection), `governance_check` (first-commit `validate_intent_value`, symlink/containment/size-bounded `__init__.py` scan, strict `legacy_base` exemption), `policy_dsl_check` (`VARIABLE DEFAULT` scalar literal validation and duplicate `DOCUMENT` fence rejection), `remediation_intent` (lowercase plan corpus normalization), `work_start_check` (end-of-proof bootstrap dirty/checksum stability), `ticket_restoration` (same-filesystem staging in `write_new`), `idle_takeover` (`O_NOFOLLOW` lock verification and pre-replace idle/CAS re-observation), `project/new-ticket.sh` (collision-resistant default `WRITER_SESSION`), and `scripts/install-agent-hosts.sh` (`merge.ticket-index.driver` + `merge.wellmanifest-ticket-index.driver` idempotent auto-wiring). [ticket-427]
+
 ## [0.20.145] - 2026-11-11
 
 - Parse quoted `uses` keys safely in `resolved_checks_text`, bind external planfile adapter `sourcePaths` to non-empty `repositoryPolicy.tickets.sourcePaths`, require delivery or terminal evidence on the target ref in `delivery_landed`, catch `subprocess.SubprocessError` in `publication_observation`, reject `..` path components in `scoped_paths`, and add real temporary Git worktree regression coverage for newline-containing contested filenames. [ticket-426]

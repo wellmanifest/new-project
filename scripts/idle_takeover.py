@@ -28,6 +28,7 @@ import io
 import json
 import os
 import re
+import stat
 import subprocess
 import sys
 import tarfile
@@ -428,9 +429,19 @@ def write_atomic(path: Path, data: bytes) -> None:
 @contextmanager
 def lease_lock(lease_path: Path):
     """Serialize every idle-takeover transition of one lease; a held lock refuses, never waits."""
+    if any(p.is_symlink() for p in (lease_path, *lease_path.parents)):
+        raise PermissionError("Symlinked lease path is unsafe; preserve and reconcile.")
+    lease_path.parent.mkdir(parents=True, exist_ok=True)
     lock = lease_path.with_name(lease_path.name + ".lock")
-    descriptor = os.open(lock, os.O_RDWR | os.O_CREAT, 0o600)
+    flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
     try:
+        descriptor = os.open(lock, flags, 0o600)
+    except OSError as error:
+        raise PermissionError("Unsafe lease lock file; preserve and reconcile.") from error
+    try:
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+            raise PermissionError("Unsafe lease lock file; preserve and reconcile.")
         try:
             if fcntl:
                 fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -438,6 +449,9 @@ def lease_lock(lease_path: Path):
                 msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
         except OSError as error:
             raise PermissionError("Another transition holds this lease; re-observe.") from error
+        named = os.stat(lock, follow_symlinks=False)
+        if not stat.S_ISREG(named.st_mode) or (named.st_dev, named.st_ino) != (info.st_dev, info.st_ino):
+            raise PermissionError("Lease lock changed during acquisition; re-observe.")
         yield
     finally:
         os.close(descriptor)
@@ -500,10 +514,26 @@ def takeover(root: Path, ticket: str, actor: str, session: str, now: datetime | 
         raise PermissionError(f"{ticket} is NO_LIVE_LEASE; idle takeover needs IDLE_TAKEOVER_ELIGIBLE.")
     with lease_lock(Path(entry["leasePath"])):
         # Decide again under the lock: the first observation only located the lease.
-        return locked_takeover(root, ticket, actor, session, now, runtime)
+        return locked_takeover(root, ticket, actor, session, now, runtime, _lock_held=True)
 
 
-def locked_takeover(root: Path, ticket: str, actor: str, session: str, now: datetime, runtime) -> dict[str, Any]:
+def locked_takeover(
+    root: Path,
+    ticket: str,
+    actor: str,
+    session: str,
+    now: datetime,
+    runtime,
+    *,
+    _lock_held: bool = False,
+) -> dict[str, Any]:
+    if not _lock_held:
+        board = observe(root, now, runtime)
+        entry = next((item for item in board["tickets"] if item["ticket"] == ticket), None)
+        if entry is None:
+            raise PermissionError(f"{ticket} is NO_LIVE_LEASE; idle takeover needs IDLE_TAKEOVER_ELIGIBLE.")
+        with lease_lock(Path(entry["leasePath"])):
+            return locked_takeover(root, ticket, actor, session, now, runtime, _lock_held=True)
     board = observe(root, now, runtime)
     entry = next((item for item in board["tickets"] if item["ticket"] == ticket), None)
     if entry is None or entry["state"] != "IDLE_TAKEOVER_ELIGIBLE":
@@ -574,9 +604,20 @@ def locked_takeover(root: Path, ticket: str, actor: str, session: str, now: date
             raise PermissionError("Prepared handoff changed; preserve it and reconcile.")
     else:
         write_atomic(pending, prepared_bytes)
-    # Preparing recovery data is an I/O boundary: compare the original lease
-    # again immediately before replacement. Prepared data grants no authority.
-    if lease_path.read_bytes() != original or file_identity(lease_path) != identity:
+    # Preparing recovery data is an I/O boundary: re-verify idle eligibility and
+    # compare the original lease again under lease_lock immediately before replacement.
+    # Prepared data grants no authority.
+    latest_board = observe(root, now, runtime)
+    latest_entry = next((item for item in latest_board["tickets"] if item["ticket"] == ticket), None)
+    if (
+        latest_entry is None
+        or latest_entry["state"] != "IDLE_TAKEOVER_ELIGIBLE"
+        or Path(latest_entry["leasePath"]) != lease_path
+        or git(worktree, "rev-parse", "HEAD") != claimed["headSha"]
+        or lease_path.is_symlink()
+        or lease_path.read_bytes() != original
+        or file_identity(lease_path) != identity
+    ):
         raise PermissionError("Lease changed while preparing takeover (compare-and-swap lost); re-observe.")
     write_atomic(lease_path, claimed_bytes)
     if lease_path.read_bytes() != claimed_bytes:

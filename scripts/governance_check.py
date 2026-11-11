@@ -83,7 +83,7 @@ POLICY_DSL_LOCK = {
         "sourceRepository": "wellmanifest/policy-dsl",
         "sourceRevision": "0ffa41efd903d3e0fc3dbf4431f2771b34c1f70e",
         "sourcePath": "tests/policy_dsl_check.py",
-        "sourceSha256": "15439706ef54953ff90a20bbd2a89c9fef2e6ef9ec7a423025d9d597c78a848c"
+        "sourceSha256": "9bc02c1805ef208a5d136c045c6a829b7394bc652208c26942dd2e31561881ac"
     },
     "installation": {
         "packageSourcePath": "scripts/policy_dsl_check.py",
@@ -1441,7 +1441,10 @@ def check_history_order(
     ticket_intent = f"{ticket_root.rstrip('/')}/{ticket_name}/{intent_path}"
     try:
         raw_blob = git_output(root, ["cat-file", "-p", f"{commit}:{ticket_intent}"])
-        json.loads(raw_blob.decode("utf-8"))
+        parsed_intent = json.loads(raw_blob.decode("utf-8"))
+        _, intent_error = validate_intent_value(parsed_intent, ticket_name)
+        if intent_error is not None:
+            raise ValueError(intent_error)
     except (subprocess.CalledProcessError, ValueError, UnicodeDecodeError):
         report.add(
             "GOV-INTENT-003",
@@ -3118,12 +3121,50 @@ def check_version_parity(root: Path, manifest: dict[str, Any], report: Report) -
         "tests", "test", "build", "dist", "node_modules", "fixtures",
         "__pycache__", ".tox", ".nox", ".pytest_cache"
     }
+    resolved_root = root.resolve()
+    max_init_bytes = 1024 * 1024
     for init_file in root.glob("**/__init__.py"):
         rel_parts = init_file.relative_to(root).parts
         if any(part in skip_dirs for part in rel_parts):
             continue
+        cur = init_file
+        has_symlink = False
+        while cur != root:
+            if cur.is_symlink():
+                has_symlink = True
+                break
+            cur = cur.parent
+        if has_symlink:
+            rel_p = rel(root, init_file)
+            report.add(
+                "GOV-VERSION-001",
+                f"Symlinked Python package initializer {rel_p} is forbidden in version parity scan.",
+                "Replace symlinked __init__.py or package directory with a regular repository-contained file.",
+                [rel_p],
+            )
+            continue
         try:
-            text = init_file.read_text(encoding="utf-8")
+            resolved_init = init_file.resolve()
+            resolved_init.relative_to(resolved_root)
+            open_flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+            fd = os.open(init_file, open_flags)
+            try:
+                st = os.fstat(fd)
+                if not stat.S_ISREG(st.st_mode) or st.st_size > max_init_bytes:
+                    continue
+                chunks: list[bytes] = []
+                total = 0
+                while total <= max_init_bytes:
+                    chunk = os.read(fd, min(65536, max_init_bytes + 1 - total))
+                    if not chunk:
+                        break
+                    chunks.append(chunk)
+                    total += len(chunk)
+                if total > max_init_bytes:
+                    continue
+                text = b"".join(chunks).decode("utf-8")
+            finally:
+                os.close(fd)
             m = re.search(r'^__version__\s*=\s*["\']([^"\']+)["\']', text, re.MULTILINE)
             if m:
                 found_v = m.group(1).strip()
@@ -3135,7 +3176,7 @@ def check_version_parity(root: Path, manifest: dict[str, Any], report: Report) -
                         "Use dynamic version discovery (importlib.metadata / VERSION) or synchronize __version__ with VERSION.",
                         [rel_p, "VERSION"],
                     )
-        except (OSError, UnicodeDecodeError):
+        except (OSError, UnicodeDecodeError, ValueError):
             pass
 
 
@@ -4470,7 +4511,7 @@ def load_standard_adoption_evidence(
     head_hashes = adoption_lock(head_lock_path.read_bytes(), adoption["toRevision"])
     base_managed = {path for path, strategy in base_strategies.items() if strategy == "managed"}
     head_managed = {path for path, strategy in head_strategies.items() if strategy == "managed"}
-    legacy_base = not base_strategies or (set(base_hashes) <= set(base_strategies))
+    legacy_base = base_package_content is None
     if (
         frozenset(base_hashes) not in {frozenset(base_strategies), frozenset(base_managed)}
         and not legacy_base

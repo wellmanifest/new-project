@@ -181,15 +181,23 @@ def observe(primary, request, record, files, intent):
 
 
 def write_new(common, path, content):
-    descriptor, temporary = tempfile.mkstemp(prefix="new-project-ticket-restore-", dir=common)
+    parent = path.parent
+    require(not any(p.is_symlink() for p in (parent, *parent.parents)) and parent.is_dir(),
+            "Ticket metadata directory must be a non-symlinked directory")
+    descriptor, temporary = tempfile.mkstemp(prefix=".new-project-ticket-restore-", dir=parent)
     try:
         with os.fdopen(descriptor, "w") as stream:
             stream.write(content)
             stream.flush()
             os.fsync(stream.fileno())
+        require(os.stat(temporary, follow_symlinks=False).st_dev == os.stat(parent, follow_symlinks=False).st_dev,
+                "Temporary restoration file must reside on the destination filesystem")
         os.link(temporary, path)  # never replaces an existing file
     finally:
-        os.unlink(temporary)
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
 
 
 def restore(root, request_path, store, workstream):

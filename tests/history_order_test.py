@@ -38,7 +38,19 @@ class HistoryOrderTests(unittest.TestCase):
         path.write_text(value)
 
     def intent(self):
-        self.write('project/ticket-001/intent.json', json.dumps({'ticket': 'ticket-001'}))
+        self.write('project/ticket-001/intent.json', json.dumps({
+            'schema': 'new-project.intent/v3',
+            'ticket': 'ticket-001',
+            'summary': 'History order test fixture',
+            'workstream': 'governance',
+            'classification': {'kind': 'BUG', 'priority': 'P1', 'origin': 'health'},
+            'allowedPaths': ['project/ticket-001/**', 'payload.txt', 'operator.md', 'temporary.py', 'imported.py'],
+            'forbiddenPaths': ['project/ticket-*/user-*.md'],
+            'stacks': [],
+            'dependsOn': [],
+            'conflictsWith': [],
+            'integrationTicket': None,
+        }))
 
     def commit(self, message, stage=True):
         if stage:
