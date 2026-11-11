@@ -18,6 +18,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -723,30 +724,42 @@ def ticket_scopes(root: Path) -> tuple[tuple[TicketScope, ...], tuple[str, ...]]
     statuses = active_statuses(root)
     if not statuses:
         return (), ()
-    try:
-        with ActivityReadBatch(root):
-            directories = (project / name for name in virtual) if virtual is not None else project.iterdir()
-            for directory in sorted(directories, key=lambda item: item.name):
-                if (virtual is None and not directory.is_dir()) or TICKET_DIRECTORY_RE.fullmatch(directory.name) is None:
-                    continue
-                override = ticket_status_override(virtual, directory)
-                try:
-                    resolution = resolve_ticket_activity(root, directory, statuses, **override)
-                except ActivityError as error:
-                    errors.append(f"{directory.name}: {error}")
-                    resolution = None
-                if resolution is not None and not resolution.active:
-                    continue
-                try:
-                    intent = scope_intent(directory, virtual)
-                except AuditError as error:
-                    # Keep the checkout and its known identity. The error
-                    # fails its audit without blocking an unrelated identity.
-                    errors.append(f"{directory.name}: {error}")
-                    continue
-                scopes.append(ticket_scope_record(directory, intent))
-    except ActivityError as error:
-        errors.append(str(error))
+    transient_git_messages = {
+        "Git state changed during activity inspection; retry",
+        "ticket inventory changed during activity inspection; retry",
+    }
+    for attempt in range(3):
+        scopes = []
+        errors = []
+        try:
+            with ActivityReadBatch(root):
+                directories = (project / name for name in virtual) if virtual is not None else project.iterdir()
+                for directory in sorted(directories, key=lambda item: item.name):
+                    if (virtual is None and not directory.is_dir()) or TICKET_DIRECTORY_RE.fullmatch(directory.name) is None:
+                        continue
+                    override = ticket_status_override(virtual, directory)
+                    try:
+                        resolution = resolve_ticket_activity(root, directory, statuses, **override)
+                    except ActivityError as error:
+                        errors.append(f"{directory.name}: {error}")
+                        resolution = None
+                    if resolution is not None and not resolution.active:
+                        continue
+                    try:
+                        intent = scope_intent(directory, virtual)
+                    except AuditError as error:
+                        # Keep the checkout and its known identity. The error
+                        # fails its audit without blocking an unrelated identity.
+                        errors.append(f"{directory.name}: {error}")
+                        continue
+                    scopes.append(ticket_scope_record(directory, intent))
+            break
+        except ActivityError as error:
+            if str(error) in transient_git_messages and attempt < 2:
+                time.sleep(0.05 * (attempt + 1))
+                continue
+            errors.append(str(error))
+            break
     return tuple(scopes), tuple(errors)
 
 

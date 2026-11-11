@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-425",
+  "summary": "Retry transient Git snapshot invalidations in worktree overlap ticket_scopes",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-425/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/worktree_overlap_check.py",
+    "tests/ticket_activity_batch_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "912cb631c410c58430411bcbb62a5c97abf4d50b",
+    "targetBranch": "main",
+    "outcome": "Retry transient Git state or ticket inventory invalidations up to 3 attempts inside worktree_overlap_check.ticket_scopes so concurrent sibling ref/worktree updates do not trigger spurious GOV-TICKET-ACTIVITY-001 aborts, while preserving per-attempt snapshot consistency and fail-closed reporting on persistent churn or document corruption.",
+    "nonGoals": [
+      "Do not weaken ActivityReadBatch snapshot validation or suppress persistent Git churn across all retry attempts.",
+      "Do not retry activity document tampering or invalid receipt registries."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Wrap the read-only ActivityReadBatch loop in scripts/worktree_overlap_check.py:ticket_scopes in a bounded 3-attempt retry (50ms/100ms backoff) restricted to transient Git/inventory invalidation messages, resetting partial scopes/errors between attempts and failing closed on exhaustion.",
+      "components": [
+        {
+          "name": "worktree-overlap-activity-batch",
+          "paths": [
+            "scripts/worktree_overlap_check.py",
+            "tests/ticket_activity_batch_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this bounded commit via protected PR delivery."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -B tests/ticket_activity_batch_test.py"
+        ],
+        "evidence": "Transient Git ref updates mid-batch recover cleanly on retry while persistent churn and registry tampering still fail closed."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh --actor agent",
+          "wellman check"
+        ],
+        "evidence": "Repository governance and Wellman standards checks pass with 0 errors."
+      }
+    ]
+  }
+}
