@@ -271,7 +271,10 @@ class PublishedDeliveryBaseTest(unittest.TestCase):
         ticket_dir = self.root / "project" / "ticket-001"
         ticket_dir.mkdir(parents=True, exist_ok=True)
         (ticket_dir / "README.md").write_text("Status: IN_PROGRESS\n", encoding="utf-8")
-        self.git("add", "project/ticket-001/README.md")
+        adoption_lock = self.root / ".governance" / "manifest.lock.json"
+        adoption_lock.parent.mkdir(parents=True, exist_ok=True)
+        adoption_lock.write_text("{}\n", encoding="utf-8")
+        self.git("add", "project/ticket-001/README.md", ".governance/manifest.lock.json")
         self.git("commit", "-qm", "landed adoption commit")
         self.publish()
         record = SimpleNamespace(

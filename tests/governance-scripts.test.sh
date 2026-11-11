@@ -1344,3 +1344,5 @@ for schema in ['intent', 'approval-evidence', 'decision-record', 'remediation-in
     assert re.fullmatch(pattern, 'ticket-13632')
     assert not re.fullmatch(pattern, 'ticket-01')
 PY
+
+python3 "$repo_root/tests/governance-v145-regressions.test.py"

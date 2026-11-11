@@ -190,6 +190,16 @@ class DefaultBaseTest(unittest.TestCase):
         self.git(self.new, "commit", "-m", "rename contribution")
         self.assertIn("renamed.txt", self.contested())
 
+    def test_committed_versus_dirty_newline_filename_remains_contested(self):
+        newline_name = "contested\nfile.txt"
+        if sys.platform.startswith("win"):
+            self.skipTest("Windows filesystems reject newline characters in filenames")
+        (self.new / newline_name).write_text("committed newline path\n")
+        self.git(self.new, "add", "--", newline_name)
+        self.git(self.new, "commit", "-m", "commit newline path")
+        (self.old / newline_name).write_text("untracked competing edit\n")
+        self.assertEqual(self.contested(), (newline_name,))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -598,7 +598,7 @@ def publication_observation(root, entries, target):
             observation["status"] = "changed"
             return unknown()
         return observation
-    except (ObservationError, ValueError):
+    except (ObservationError, ValueError, subprocess.SubprocessError):
         observation["status"] = "unavailable"
         return unknown()
 

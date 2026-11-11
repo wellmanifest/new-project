@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.145] - 2026-11-11
+
+- Parse quoted `uses` keys safely in `resolved_checks_text`, bind external planfile adapter `sourcePaths` to non-empty `repositoryPolicy.tickets.sourcePaths`, require delivery or terminal evidence on the target ref in `delivery_landed`, catch `subprocess.SubprocessError` in `publication_observation`, reject `..` path components in `scoped_paths`, and add real temporary Git worktree regression coverage for newline-containing contested filenames. [ticket-426]
+
 ## [0.20.144] - 2026-11-06
 
 - Reject allocator classifications unless the entire argument is a declared scalar before reserving a ticket identity; escape every dynamic fallback JSON field and preserve supported Unicode titles. [ticket-416]
