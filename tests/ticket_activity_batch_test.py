@@ -215,6 +215,42 @@ class BatchTests(unittest.TestCase):
             _, errors = overlap.ticket_scopes(self.root)
         self.assertTrue(any('changed' in e for e in errors), errors)
 
+    def test_transient_git_invalidation_retries_once_and_persistent_git_churn_fails_closed(self):
+        original = overlap.resolve_ticket_activity
+        flips = 0
+
+        def transient_git_flip(*args, **kwargs):
+            nonlocal flips
+            result = original(*args, **kwargs)
+            if flips == 0:
+                self.git('update-ref', 'refs/remotes/origin/main', self.head)
+                flips += 1
+            return result
+
+        with patch.object(overlap, 'active_statuses', return_value={'IN_PROGRESS'}), patch.object(
+            overlap, 'resolve_ticket_activity', side_effect=transient_git_flip
+        ):
+            scopes, errors = overlap.ticket_scopes(self.root)
+        self.assertEqual(errors, ())
+        self.assertEqual(len(scopes), len(self.tickets))
+
+        step = 0
+
+        def persistent_git_flip(*args, **kwargs):
+            nonlocal step
+            result = original(*args, **kwargs)
+            if args[1] == self.tickets[0]:
+                target_sha = self.terminal if step % 2 == 0 else self.head
+                self.git('update-ref', 'refs/remotes/origin/main', target_sha)
+                step += 1
+            return result
+
+        with patch.object(overlap, 'active_statuses', return_value={'IN_PROGRESS'}), patch.object(
+            overlap, 'resolve_ticket_activity', side_effect=persistent_git_flip
+        ):
+            _, persistent_errors = overlap.ticket_scopes(self.root)
+        self.assertTrue(any('Git state changed during activity inspection; retry' in e for e in persistent_errors))
+
     def test_sibling_worktree_commit_does_not_invalidate_inspected_checkout_batch(self):
         sibling_a = Path(self.temp.name) / 'wt-099'
         sibling_b = Path(self.temp.name) / 'wt-100'
