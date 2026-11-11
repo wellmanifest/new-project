@@ -28,7 +28,7 @@ sys.dont_write_bytecode = True
 STORE_SCHEMA = "subactor.repository-change-lease-store/v1"
 REPORT_SCHEMA = "new-project.controller-store-compaction-report/v1"
 ARCHIVE_SCHEMA = "new-project.controller-store-compaction-archive/v1"
-CODE = "GOV-CHANGE-LEASE-COMPACT-001"
+CODE = "GOV-CHANGE-LEASE-002"
 ALLOWED_TOP_KEYS = {
     "schema", "nextFencingToken", "leases", "active",
     "acquisitions", "requests", "evidence", "identities",
