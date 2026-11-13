@@ -138,6 +138,20 @@ jobs:
         run: python3 tests/scope_ownership_message_test.py
       - name: Test ticket governance scripts
         run: bash tests/governance-scripts.test.sh
+      - name: Test governance fixture temp
+        run: bash tests/governance-fixture-temp.test.sh
+      - name: Test ticket allocation worktree
+        run: bash tests/ticket-allocation-worktree.test.sh
+      - name: Test ticket radar allocation
+        run: bash tests/ticket-radar-allocation.test.sh
+      - name: Test ticket classification allocation
+        run: bash tests/ticket-classification-allocation.test.sh
+      - name: Test governance v145 regressions
+        run: bash tests/governance-v145-regressions.test.sh
+      - name: Test governance v146 regressions
+        run: bash tests/governance-v146-regressions.test.sh
+      - name: Test governance v147 regressions
+        run: bash tests/governance-v147-regressions.test.sh
       - name: Test terminal receipt activity resolver
         run: bash tests/ticket-activity.test.sh
       - name: Test receipts across a regenerated ticket index
@@ -152,6 +166,14 @@ jobs:
         run: bash tests/governance-env.test.sh
       - name: Test immutable adoption lock
         run: bash tests/adoption-lock.test.sh
+      - name: Test adoption legacy scaffold
+        run: bash tests/adoption-legacy-scaffold.test.sh
+      - name: Test adoption fresh bootstrap
+        run: bash tests/adoption-fresh-bootstrap.test.sh
+      - name: Test adoption reusable plan
+        run: bash tests/adoption-reusable-plan.test.sh
+      - name: Test adoption packaging plan
+        run: bash tests/adoption-packaging-plan.test.sh
       - name: Test automatic pre-commit standard update preparation
         run: bash tests/precommit-standard-update.test.sh
       - name: Test fleet conformance audit of adopter governance instances

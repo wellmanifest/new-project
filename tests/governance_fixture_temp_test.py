@@ -24,7 +24,7 @@ class GovernanceFixtureTempTest(unittest.TestCase):
 
     def check_containment(self, relative):
         script = (ROOT / "tests/governance-scripts.test.sh").read_text()
-        marker = 'python3 "$repo_root/tests/ticket-allocation-worktree.test.py"'
+        marker = 'fixture="$(mktemp -d "$fixture_cache/scenario.XXXXXX")"'
         self.assertIn(marker, script)
         preamble = script.split(marker, 1)[0]
         preamble = preamble.replace('python3 "$repo_root/tests/governance_fixture_temp_test.py"\n', '')

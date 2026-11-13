@@ -21,10 +21,6 @@ export TMPDIR="$fixture_cache"
 # Non-Git cases must not discover the source hub above their private fixtures.
 # Repositories initialized below this parent still find their own .git first.
 export GIT_CEILING_DIRECTORIES="$fixture_cache${GIT_CEILING_DIRECTORIES:+:$GIT_CEILING_DIRECTORIES}"
-python3 "$repo_root/tests/governance_fixture_temp_test.py"
-python3 "$repo_root/tests/ticket-allocation-worktree.test.py"
-python3 "$repo_root/tests/ticket-radar-allocation.test.py"
-python3 "$repo_root/tests/ticket-classification-allocation.test.py"
 fixture="$(mktemp -d "$fixture_cache/scenario.XXXXXX")"
 
 if grep -R -n 'file:///' \
@@ -1344,7 +1340,3 @@ for schema in ['intent', 'approval-evidence', 'decision-record', 'remediation-in
     assert re.fullmatch(pattern, 'ticket-13632')
     assert not re.fullmatch(pattern, 'ticket-01')
 PY
-
-python3 "$repo_root/tests/governance-v145-regressions.test.py"
-python3 "$repo_root/tests/governance-v146-regressions.test.py"
-python3 "$repo_root/tests/governance-v147-regressions.test.py"

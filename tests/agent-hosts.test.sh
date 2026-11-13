@@ -506,6 +506,92 @@ grep -Fq 'GOV-AGENT-HOST-007' "$tmp/tracking-only.err" \
   || fail "ticket-only rejection must expose GOV-AGENT-HOST-007"
 git -C "$tmp/adopter" reset -q --hard HEAD
 
+# Renames are material even when Git reports R rather than A/M. Exercise each
+# complete hook with actual staged renames, preserving the carrier/status gates.
+python3 - "$root" "$tmp" <<'PYRENAMES'
+import pathlib
+import shutil
+import subprocess
+import sys
+
+root, scratch = map(pathlib.Path, sys.argv[1:])
+material_cases = ('pure', 'edited', 'into-carrier', 'into-carrier-edited',
+                  'from-carrier', 'unusual')
+cases = (*material_cases, 'carrier', 'carrier-unusual', 'tracking-only',
+         'BACKLOG', 'PLAN', 'BLOCKED')
+for variant, hook in (('hub', '.githooks/pre-commit'),
+                      ('adopter', 'template/files/pre-commit.template.sh')):
+    for case in cases:
+        repo = scratch / f'rename-{variant}-{case}'
+        repo.mkdir()
+
+        def git(*args):
+            return subprocess.run(['git', '-C', str(repo), *args],
+                                  capture_output=True, text=True, check=True)
+
+        git('init', '--quiet')
+        for key, value in (('user.email', 'test@example.com'),
+                           ('user.name', 'Test'), ('commit.gpgsign', 'false'),
+                           ('diff.renames', 'true'), ('core.hooksPath', '.githooks')):
+            git('config', key, value)
+        ticket = repo / 'project/ticket-001'
+        ticket.mkdir(parents=True)
+        readme = ticket / 'README.md'
+        readme.write_text('# Ticket 001\n\n- **Status**: IN_PROGRESS\n')
+        (ticket / 'evidence.md').write_text('tracking evidence\n')
+        source = repo / 'test original.py'
+        source.write_text(''.join(f'# source line {i}\n' for i in range(100)))
+        git('add', '.')
+        git('commit', '-qm', 'seed rename fixture')
+        git('checkout', '-qb', 'ticket/001-material-rename')
+        hooks = repo / '.githooks'
+        hooks.mkdir()
+        shutil.copy2(root / hook, hooks / 'pre-commit')
+        (hooks / 'pre-commit').chmod(0o755)
+        runtime = repo / '.governance'
+        runtime.mkdir()
+        # Lease and overlap algorithms have their own suites. Isolate their
+        # inputs here; all material/status logic executes in the real hook.
+        for name in ('change_lease_check.py', 'worktree_guard.py'):
+            (runtime / name).write_text('raise SystemExit(0)\n')
+
+        if case in ('carrier', 'carrier-unusual', 'from-carrier'):
+            old, new = 'project/ticket-001/evidence.md', 'project/ticket-001/renamed.md'
+            if case == 'from-carrier':
+                new = 'relocated evidence.md'
+            elif case == 'carrier-unusual':
+                new = 'project/ticket-001/renamed evidence\twith\nnewline.md'
+        else:
+            old, new = 'test original.py', 'test renamed.py'
+            if case in ('into-carrier', 'into-carrier-edited'):
+                new = 'project/ticket-001/relocated source.py'
+            elif case == 'unusual':
+                new = 'test renamed\twith\nnewline.py'
+        readme.write_text(readme.read_text() + '\nBounded tracking update.\n')
+        if case in ('BACKLOG', 'PLAN', 'BLOCKED'):
+            readme.write_text(readme.read_text().replace('IN_PROGRESS', case))
+        if case != 'tracking-only':
+            git('mv', old, new)
+            if case in ('edited', 'into-carrier-edited'):
+                with (repo / new).open('a') as stream:
+                    stream.write('# additional regression\n')
+        git('add', '-u')
+        if case != 'tracking-only':
+            status = git('diff', '--cached', '--name-status').stdout
+            assert any(line.startswith('R') for line in status.splitlines()), status
+        result = subprocess.run(['git', '-C', str(repo), 'commit', '-qm',
+                                 'exercise material rename (ticket-001)'],
+                                capture_output=True, text=True)
+        if case in material_cases:
+            assert result.returncode == 0, (variant, case, result.stderr)
+        else:
+            code = ('GOV-AGENT-HOST-003' if case in ('BACKLOG', 'PLAN', 'BLOCKED')
+                    else 'GOV-AGENT-HOST-007')
+            assert result.returncode != 0 and code in result.stderr, (
+                variant, case, result.returncode, result.stderr)
+print(f'Material rename admission and retained carrier/status gates: {2 * len(cases)} cases PASS')
+PYRENAMES
+
 # Terminal state belongs to the protected external receipt. Neither a
 # governance-only payload nor a material payload may create a closure commit.
 for terminal_status in DONE CANCELLED; do
