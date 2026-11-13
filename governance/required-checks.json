@@ -4,8 +4,15 @@
   "repository": "wellmanifest/new-project",
   "workflowFile": ".github/workflows/ci.yml",
   "requiredCheckNames": [
+    "onedev/local-verify",
     "test",
     "windows-governance"
+  ],
+  "externalChecks": [
+    {
+      "name": "onedev/local-verify",
+      "provider": "onedev"
+    }
   ],
   "circularGovernanceChecksIgnoredByValidator": [
     "governance / enforce",

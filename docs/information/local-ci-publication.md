@@ -85,6 +85,15 @@ from both configuration files. Missing profiles are gaps, never success.
 ## Required agent workflow
 
 1. Read the target's required checks through the protected Validator resolver.
+   A legacy `workflowFile` / `requiredCheckNames` declaration can explicitly
+   identify `onedev/local-verify` with
+   `externalChecks: [{"name": "onedev/local-verify", "provider": "onedev"}]`.
+   The context remains in `requiredCheckNames` and required by the protected
+   registry. This closed binding keeps the hosted job comparison exact; it
+   does not run OneDev, attest deployment, create a status or grant approval.
+   Unknown providers, hosted-job aliases and duplicate or undeclared external
+   names are refused. The independent publisher still requires the genuine
+   exact-head/base OneDev result and every hosted/platform check.
    Observe whether the local timer already selected or published the exact PR;
    reuse its receipt before creating duplicate work.
 2. Verify OneDev coverage and runtime health. OneDev must execute the repository's

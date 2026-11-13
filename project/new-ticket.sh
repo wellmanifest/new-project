@@ -531,7 +531,7 @@ allocation_runtime() {
   fi
   for candidate in "${candidates[@]}"; do
     if [[ -f "$candidate" && ! -L "$candidate" ]]; then
-      printf '%s' "$candidate"
+      printf '%s' "$(cd "$(dirname "$candidate")" && pwd -P)/$(basename "$candidate")"
       return 0
     fi
   done
@@ -551,6 +551,9 @@ if ALLOCATION_CONFIG="$(allocation_config)"; then
     echo "  remediation: restore a valid managed ticket-allocation/v1 policy." >&2
     exit 5
   fi
+fi
+if [[ -n "$PRIMARY_CHECKOUT" && -z "$ALLOCATION_RUNTIME" ]]; then
+  ALLOCATION_RUNTIME="$(allocation_runtime || true)"
 fi
 if [[ "$ALLOCATION_MODE" == "local-single-clone" && ( -n "$ALLOCATION_KEY" || -n "$ALLOCATION_RECEIPT" ) ]]; then
   echo "GOV-TICKET-ALLOCATION-003: registered allocation inputs are forbidden in local-single-clone mode." >&2
@@ -874,7 +877,7 @@ if [[ -n "$PRIMARY_CHECKOUT" && "$SEED_MODE" != true ]]; then
   fi
   for candidate in "${worktree_candidates[@]}"; do
     if [[ -f "$candidate" && ! -L "$candidate" ]]; then
-      WORKTREE_CONTRACT="$candidate"
+      WORKTREE_CONTRACT="$(cd "$(dirname "$candidate")" && pwd -P)/$(basename "$candidate")"
       break
     fi
   done
@@ -918,11 +921,39 @@ if [[ -n "$PRIMARY_CHECKOUT" && "$SEED_MODE" != true ]]; then
     exit 5
   fi
   base_sha="$(cut -f2 <<< "$primary_base_observation")"
-  # The layout contract needs a stable label, not a remote URL (which may
-  # contain credentials in misconfigured clones).
-  repository_ref="$(basename "$PRIMARY_CHECKOUT")"
-  if ! layout="$(python3 "$WORKTREE_CONTRACT" plan --repository "$repository_ref" \
-      --repository-name "$(basename "$PRIMARY_CHECKOUT")" --ticket "$ticket_id" \
+  # Leases bind the canonical owner/repository identity; path planning binds a
+  # separate local label that never becomes repositoryRef.
+  origin_url="$(git -C "$PRIMARY_CHECKOUT" config --get remote.origin.url 2>/dev/null || true)"
+  if [[ -n "$origin_url" && -n "$ALLOCATION_RUNTIME" ]]; then
+    canonical_origin="$(python3 "$ALLOCATION_RUNTIME" repository-ref --url "$origin_url" 2>/dev/null || true)"
+  else
+    canonical_origin=""
+  fi
+  if [[ -n "$canonical_origin" ]]; then
+    repository_ref="$(python3 - "$canonical_origin" <<'PY'
+from urllib.parse import urlparse
+import sys
+value = urlparse(sys.argv[1])
+parts = value.path.strip('/').split('/')
+if len(parts) == 2 and value.netloc and all(part not in ('', '.', '..') for part in parts):
+    print('/'.join(parts))
+PY
+)"
+  else
+    repository_ref=""
+  fi
+  if [[ -z "${repository_ref:-}" ]]; then
+    repository_ref="local/$(python3 - "$PRIMARY_CHECKOUT" <<'PY'
+import hashlib
+from pathlib import Path
+import sys
+print(hashlib.sha256(str(Path(sys.argv[1]).resolve(strict=True)).encode('utf-8')).hexdigest())
+PY
+)" || exit 5
+  fi
+  layout_repository_name="$(basename "$PRIMARY_CHECKOUT")"
+  if ! layout="$(python3 "$WORKTREE_CONTRACT" plan --repository "$layout_repository_name" \
+      --repository-name "$layout_repository_name" --ticket "$ticket_id" \
       --slug "$WORKTREE_SLUG" --from-worktree "$PRIMARY_CHECKOUT" \
       --path-style "$(python3 -c 'import os; print("windows" if os.name == "nt" else "posix")')")"; then
     echo "GOV-TICKET-ALLOCATION-003: canonical Worktrees v5 layout could not be planned." >&2
@@ -1158,9 +1189,37 @@ if [[ "$SEED_MODE" == true ]]; then
   if [[ -z "$WORKTREE_SLUG" ]]; then
     WORKTREE_SLUG="$(printf '%s' "$TITLE" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')"
   fi
-  repository_ref="$(basename "$PRIMARY_CHECKOUT")"
-  layout="$(python3 .governance/worktree_path_check.py plan --repository "$repository_ref" \
-    --repository-name "$repository_ref" --ticket "$ticket_id" --slug "$WORKTREE_SLUG" \
+  origin_url="$(git -C "$PRIMARY_CHECKOUT" config --get remote.origin.url 2>/dev/null || true)"
+  if [[ -n "$origin_url" && -n "$ALLOCATION_RUNTIME" ]]; then
+    canonical_origin="$(python3 "$ALLOCATION_RUNTIME" repository-ref --url "$origin_url" 2>/dev/null || true)"
+  else
+    canonical_origin=""
+  fi
+  if [[ -n "$canonical_origin" ]]; then
+    repository_ref="$(python3 - "$canonical_origin" <<'PY'
+from urllib.parse import urlparse
+import sys
+value = urlparse(sys.argv[1])
+parts = value.path.strip('/').split('/')
+if len(parts) == 2 and value.netloc and all(part not in ('', '.', '..') for part in parts):
+    print('/'.join(parts))
+PY
+)"
+  else
+    repository_ref=""
+  fi
+  if [[ -z "${repository_ref:-}" ]]; then
+    repository_ref="local/$(python3 - "$PRIMARY_CHECKOUT" <<'PY'
+import hashlib
+from pathlib import Path
+import sys
+print(hashlib.sha256(str(Path(sys.argv[1]).resolve(strict=True)).encode('utf-8')).hexdigest())
+PY
+)" || exit 5
+  fi
+  layout_repository_name="$(basename "$PRIMARY_CHECKOUT")"
+  layout="$(python3 .governance/worktree_path_check.py plan --repository "$layout_repository_name" \
+    --repository-name "$layout_repository_name" --ticket "$ticket_id" --slug "$WORKTREE_SLUG" \
     --from-worktree "$PRIMARY_CHECKOUT" --path-style posix)"
   python3 .governance/worktree_path_check.py validate - --check-filesystem <<< "$layout" >/dev/null
   mapfile -t layout_values < <(python3 -c 'import json,sys; v=json.load(sys.stdin); print(v["branch"]); print(v["worktreePath"]); print(v["leasePath"])' <<< "$layout")
