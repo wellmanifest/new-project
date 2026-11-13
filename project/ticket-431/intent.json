@@ -1,0 +1,93 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-431",
+  "summary": "use canonical repository URI in local allocation leases",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-431/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "project/new-ticket.sh",
+    "scripts/ticket_allocation.py",
+    "tests/ticket-allocation-worktree.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "511eb0ab1c0f9f8697c44f5748ba93b25da5e0d9",
+    "targetBranch": "main",
+    "outcome": "Generate canonical, schema-valid local allocation leases: derive repositoryRef as owner/repository from an origin URL, or local/<sha256> from the primary checkout when no origin exists; keep the local checkout basename separate for Worktrees v5 layout planning.",
+    "nonGoals": [
+      "No migration or mutation of historical malformed leases.",
+      "No changes to change-lease schema semantics.",
+      "No ticket number or worktree naming changes."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Separate canonical lease repository identity from local filesystem layout label; share the existing URL normalizer and derive clone-local identity through its sibling function.",
+      "components": [
+        {
+          "name": "ticket allocator",
+          "paths": [
+            "project/new-ticket.sh",
+            "scripts/ticket_allocation.py",
+            "tests/ticket-allocation-worktree.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "ticket_allocation.py repository-slug and local-repository-ref commands"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert allocator and regression changes; do not rewrite historical lease records."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket-allocation-worktree.test.py"
+        ],
+        "evidence": "Origin-backed fixture creates owner/repository repositoryRef; layout label remains local."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/ticket-allocation-worktree.test.py"
+        ],
+        "evidence": "Origin-less fixture creates local/<sha256>; both generated leases pass canonical change-lease validation."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Ticket changed-file governance passes on the exact implementation scope."
+      }
+    ]
+  }
+}

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import shutil
 import stat
@@ -39,7 +40,7 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
             target = self.root / ".governance" / ("manifest.json" if name == "manifest.default.json" else name)
             shutil.copy2(source, target)
         for name in ("ticket_activity.py", "ticket_input.py", "work_start_check.py", "worktree_overlap_check.py",
-                     "ticket_storage.py", "governance_check.py", "repository_policy.py"):
+                     "ticket_storage.py", "ticket_allocation.py", "governance_check.py", "repository_policy.py"):
             shutil.copy2(ROOT / "scripts" / name, self.root / ".governance" / name)
         shutil.copy2(ROOT / "subprojects/worktrees/conformance.py", self.root / ".governance/worktree_path_check.py")
         (self.root / ".gitignore").write_text("/.worktrees/\n/.subactor/leases/\n", encoding="utf-8")
@@ -99,6 +100,55 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
                                    "validate", str(lease)], text=True, capture_output=True)
         self.assertEqual(verified.returncode, 0, verified.stderr)
         self.assertEqual(self.git("status", "--porcelain").stdout, "")
+
+    def test_local_lease_uses_canonical_repository_slug_not_checkout_basename(self) -> None:
+        origin = "git@github.com:example-org/canonical-project.git"
+        self.git("remote", "add", "origin", origin)
+
+        result = self.allocate()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        worktree = self.root / ".worktrees/ticket-001--canonical-ticket"
+        lease = json.loads((self.root / ".subactor/leases/ticket-001--canonical-ticket.json").read_text())
+        self.assertEqual(lease["repositoryRef"], "example-org/canonical-project")
+        self.assertNotEqual(lease["repositoryRef"], self.root.name)
+        self.assertEqual(worktree.name, "ticket-001--canonical-ticket")
+        verified = subprocess.run(
+            [sys.executable, str(ROOT / "scripts/change_lease_check.py"), "validate",
+             str(self.root / ".subactor/leases/ticket-001--canonical-ticket.json")],
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(verified.returncode, 0, verified.stderr)
+
+    def test_existing_repository_ref_normalizer_returns_canonical_uri_for_lease_slug(self) -> None:
+        normalized = subprocess.run(
+            [sys.executable, str(ROOT / "scripts/ticket_allocation.py"), "repository-ref", "--url",
+             "git@github.com:example-org/canonical-project.git"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        self.assertEqual(normalized, "git+ssh://github.com/example-org/canonical-project")
+        source = (ROOT / "project/new-ticket.sh").read_text()
+        self.assertIn('plan --repository "$layout_repository_name"', source)
+        self.assertIn('"$WORKTREE_BRANCH" "$WORKTREE_SLUG" "$repository_ref"', source)
+
+    def test_local_lease_without_origin_uses_canonical_clone_local_ref(self) -> None:
+        expected = "local/" + hashlib.sha256(str(self.root.resolve()).encode()).hexdigest()
+
+        result = self.allocate()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        lease_path = self.root / ".subactor/leases/ticket-001--canonical-ticket.json"
+        lease = json.loads(lease_path.read_text(encoding="utf-8"))
+        self.assertEqual(lease["repositoryRef"], expected)
+        verified = subprocess.run(
+            [sys.executable, str(ROOT / "scripts/change_lease_check.py"), "validate", str(lease_path)],
+            text=True,
+            capture_output=True,
+        )
+        self.assertEqual(verified.returncode, 0, verified.stderr)
 
     def test_invalid_or_missing_identity_has_no_effect(self):
         before = self.git("status", "--porcelain").stdout
