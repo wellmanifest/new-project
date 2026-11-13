@@ -20,6 +20,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+from contextvars import ContextVar
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
@@ -69,9 +70,67 @@ MAX_RELEASE_METADATA_BYTES = 1024 * 1024
 VERSION_PATTERN = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
 
 
-def git_bytes(root: Path, revision: str, source: str) -> bytes:
+_SOURCE_BLOBS: ContextVar[dict | None] = ContextVar("adoption_source_blobs", default=None)
+
+
+def _git_show_bytes(root: Path, revision: str, source: str) -> bytes:
     return subprocess.check_output(["git", "show", f"{revision}:{source}"], cwd=root,
                                    env=plan_git_environment())
+
+
+def git_bytes(root: Path, revision: str, source: str) -> bytes:
+    cache = _SOURCE_BLOBS.get()
+    key = (root.resolve(), revision, source)
+    immutable = re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", revision) is not None
+    if cache is not None and immutable and key in cache:
+        return cache[key]
+    content = _git_show_bytes(root, revision, source)
+    if cache is not None and immutable:
+        cache[key] = content
+    return content
+
+
+def read_source_blobs(root: Path, revision: str, sources: set[str]) -> None:
+    """Validate the package through one binary-safe batch, scoped to one main call."""
+    cache = _SOURCE_BLOBS.get()
+    if cache is None or re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", revision) is None:
+        for source in sorted(sources):
+            git_bytes(root, revision, source)
+        return
+    root = root.resolve()
+    wanted = sorted(source for source in sources if (root, revision, source) not in cache)
+    if not wanted:
+        return
+    if any("\0" in source for source in wanted):
+        raise ValueError("embedded null byte")
+    requests = b"".join(f"{revision}:{source}".encode("utf-8", "surrogateescape") + b"\0"
+                        for source in wanted)
+    output = subprocess.check_output(["git", "cat-file", "--batch", "-Z"],
+                                     input=requests, cwd=root, env=plan_git_environment())
+    cursor, loaded = 0, {}
+    for source in wanted:
+        boundary = output.find(b"\0", cursor)
+        if boundary < 0:
+            raise SystemExit("invalid immutable Git batch header")
+        header, cursor = output[cursor:boundary], boundary + 1
+        if header.endswith(b" missing"):
+            raise subprocess.CalledProcessError(128, ["git", "show", f"{revision}:{source}"])
+        fields = header.split(b" ")
+        if (len(fields) != 3 or fields[1] not in {b"blob", b"tree", b"commit", b"tag"}
+                or not re.fullmatch(rb"[0-9a-f]{40}|[0-9a-f]{64}", fields[0])
+                or not fields[2].isdigit()):
+            raise SystemExit("invalid immutable Git batch header")
+        size = int(fields[2])
+        end = cursor + size
+        if end >= len(output) or output[end:end + 1] != b"\0":
+            raise SystemExit("truncated immutable Git batch payload")
+        # Preserve git-show behavior for unusual tree/commit source expressions.
+        content = output[cursor:end] if fields[1] == b"blob" else _git_show_bytes(root, revision, source)
+        loaded[(root, revision, source)] = content
+        cursor = end + 1
+    if cursor != len(output):
+        raise SystemExit("unexpected immutable Git batch payload")
+    cache.update(loaded)
 
 
 def plan_git_environment() -> dict[str, str]:
@@ -1078,10 +1137,11 @@ def package_files(root: Path, revision: str) -> list[dict[str, object]]:
             raise SystemExit(f"duplicate package target: {target}")
         sources.add(source)
         targets.add(target)
-        try:
-            git_bytes(root, revision, source)
-        except subprocess.CalledProcessError as error:
-            raise SystemExit(f"package source is missing at {revision}: {source}") from error
+    try:
+        read_source_blobs(root, revision, sources)
+    except subprocess.CalledProcessError as error:
+        source = str(error.cmd[-1]).split(":", 1)[-1]
+        raise SystemExit(f"package source is missing at {revision}: {source}") from error
     if PACKAGE_MANIFEST not in sources:
         raise SystemExit(f"package manifest must manage itself: {PACKAGE_MANIFEST}")
     entries = {str(item["target"]): item for item in files}
@@ -1920,7 +1980,7 @@ def validate_wellman_scaffold(target_root: Path, files: list[dict[str, object]])
         raise SystemExit("Wellman scaffold migration refuses existing native adoption evidence or invalid legacy registration") from error
 
 
-def main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = None) -> int:
+def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target-root", required=True)
     parser.add_argument("--source-revision", required=True)
@@ -2296,6 +2356,14 @@ def main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = Non
     print(f"adopted wellmanifest/new-project {version} at {args.source_revision}")
     report_missing_target_prerequisites(missing_prerequisites)
     return 0
+
+
+def main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = None) -> int:
+    token = _SOURCE_BLOBS.set({})
+    try:
+        return _main(argv, _upgrade_ownership=_upgrade_ownership)
+    finally:
+        _SOURCE_BLOBS.reset(token)
 
 
 if __name__ == "__main__":
