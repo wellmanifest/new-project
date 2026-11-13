@@ -3193,7 +3193,10 @@ def version_scan_initializers(root: Path) -> list[Path]:
     except (subprocess.CalledProcessError, FileNotFoundError):
         return list(root.glob("**/__init__.py"))
     names = raw.decode("utf-8", "surrogateescape").split("\0")
-    return [root / name for name in names if name == "__init__.py" or name.endswith("/__init__.py")]
+    return [candidate for name in names
+            if name == "__init__.py" or name.endswith("/__init__.py")
+            for candidate in (root / name,)
+            if candidate.is_file()]
 
 
 def immutable_image_reference(reference: str) -> bool:
