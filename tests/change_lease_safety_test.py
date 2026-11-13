@@ -357,5 +357,77 @@ class WriterSafetyTests(unittest.TestCase):
         self.assertEqual(self.check(session="successor", revision="2", fencing="2"), [])
 
 
+class GovernanceLeaseCheckerSelectionTests(unittest.TestCase):
+    def implementations(self):
+        for index, path in enumerate((ROOT / "scripts/governance_check.py",
+                                      ROOT / "packages/wellman/src/wellman/_bundled/governance_check.py")):
+            name = f"lease_checker_governance_{index}"
+            spec = importlib.util.spec_from_file_location(name, path)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[name] = module
+            spec.loader.exec_module(module)
+            yield module
+
+    def test_candidate_checkers_never_run_and_trusted_checker_validates_data(self):
+        for checker in self.implementations():
+            with self.subTest(checker=checker.__file__), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                for directory in (root / "scripts", root / ".governance"):
+                    directory.mkdir()
+                    (directory / "change_lease_check.py").write_text(
+                        "from pathlib import Path\n"
+                        "Path(__file__).with_name('executed').touch()\n"
+                        "def validate_repository(root): return []\n"
+                    )
+                report = checker.Report(root)
+                checker.check_change_lease(root, report)
+                self.assertEqual(report.findings, [])
+                (root / ".governance/change-lease.json").write_text('{}')
+                report = checker.Report(root)
+                checker.check_change_lease(root, report)
+                self.assertEqual([item.code for item in report.findings], ["GOV-CHANGE-LEASE-001"])
+                self.assertFalse((root / "scripts/executed").exists())
+                self.assertFalse((root / ".governance/executed").exists())
+
+    def test_missing_or_symlinked_trusted_sibling_fails_closed(self):
+        for checker in self.implementations():
+            with self.subTest(checker=checker.__file__), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp) / "candidate"
+                root.mkdir()
+                (root / "scripts").mkdir()
+                shadow = root / "scripts/change_lease_check.py"
+                shadow.write_text("from pathlib import Path\nPath(__file__).with_name('executed').touch()\ndef validate_repository(root): return []\n")
+                trusted = Path(tmp) / "validator"
+                trusted.mkdir()
+                checker.__file__ = str(trusted / "governance_check.py")
+                report = checker.Report(root)
+                checker.check_change_lease(root, report)
+                self.assertEqual([item.code for item in report.findings], ["GOV-CHANGE-LEASE-001"])
+                self.assertFalse((root / "scripts/executed").exists())
+                try:
+                    (trusted / "change_lease_check.py").symlink_to(shadow)
+                except (OSError, NotImplementedError):
+                    continue
+                report = checker.Report(root)
+                checker.check_change_lease(root, report)
+                self.assertEqual([item.code for item in report.findings], ["GOV-CHANGE-LEASE-001"])
+                self.assertFalse((root / "scripts/executed").exists())
+
+
+class CanonicalRepositoryIdentity(unittest.TestCase):
+    def test_scp_and_https_origin_reduce_to_owner_name(self):
+        for url in ("git@github.com:wellmanifest/new-project.git",
+                    "ssh://git@github.com/wellmanifest/new-project.git",
+                    "https://github.com/wellmanifest/new-project"):
+            with self.subTest(url=url):
+                self.assertEqual(runtime.canonical_owner_repository(url), "wellmanifest/new-project")
+
+    def test_ambiguous_or_empty_origins_are_rejected(self):
+        for url in ("", "https://github.com/only-owner", "https://github.com/a/b/c",
+                    "file:///tmp/local-repo"):
+            with self.subTest(url=url):
+                self.assertIsNone(runtime.canonical_owner_repository(url))
+
+
 if __name__ == "__main__":
     unittest.main()

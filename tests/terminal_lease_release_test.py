@@ -152,6 +152,21 @@ class TerminalOwnerRelease(unittest.TestCase):
         policy.write_text('{"schema":"new-project.ticket-allocation/v1","mode":"registered"}')
         self.refused()
 
+    def test_declared_no_change_outcome_releases_the_same_lease(self):
+        no_change = dict(self.receipt, receiptRef='receipt:test/no-change-123', outcome='no-change')
+        activity.record(self.root, no_change)
+        self.request['terminalReceiptRef'] = no_change['receiptRef']
+        result = self.invoke()
+        current = json.loads(self.lease.read_bytes())
+        self.assertEqual(result['status'], 'released')
+        self.assertEqual((current['phase'], current['leaseRevision'], current['fencingToken']), ('released', 3, 3))
+        self.assertEqual(canonical.validate_lease(current), [])
+
+    def test_undeclared_terminal_outcome_is_still_refused(self):
+        unknown = dict(self.receipt, receiptRef='receipt:test/superseded-123', outcome='superseded')
+        with self.assertRaises(activity.ActivityError):
+            activity.record(self.root, unknown)
+
     def test_dirty_or_advanced_worktree_refuses_but_dirty_primary_is_preserved(self):
         (self.tree / 'retained.txt').write_text('unpublished')
         self.refused()

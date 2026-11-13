@@ -1,0 +1,139 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-432",
+  "summary": "Honour declared terminal outcomes and skip ignored runtime trees",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-432/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "packages/wellman/src/wellman/_bundled/change_lease_check.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/change_lease_check.py",
+    "scripts/governance_check.py",
+    "scripts/terminal_lease_release.py",
+    "tests/change_lease_safety_test.py",
+    "tests/governance-validator.test.sh",
+    "tests/terminal_lease_release_test.py",
+    "tests/version-parity.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2cb43dbeafbad4f324a3745eb2961f08d3fda07f",
+    "targetBranch": "main",
+    "outcome": "Terminal lease release honours every policy-declared terminal outcome, version parity ignores git-ignored runtime trees, and writer-check accepts the canonical lease repository identity.",
+    "nonGoals": [
+      "No change to review, approval, publication or merge authority.",
+      "No weakening of ancestry, fencing, phase or ownership checks.",
+      "No release/version bump and no consumer adoption in this ticket."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Take the terminal outcome from the managed ticket-activity policy instead of a hardcoded name; enumerate version-parity candidates through git ls-files -co --exclude-standard with the previous glob as a non-Git fallback; accept either the canonical owner/name identity written by the allocator or the legacy local digest in writer-check. Bundled validator copies stay byte-identical and delivery verification stays ancestry-bound.",
+      "components": [
+        {
+          "name": "lease-release",
+          "paths": [
+            "scripts/terminal_lease_release.py",
+            "tests/terminal_lease_release_test.py"
+          ]
+        },
+        {
+          "name": "version-parity",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "tests/version-parity.test.sh"
+          ]
+        },
+        {
+          "name": "writer-identity",
+          "paths": [
+            "scripts/change_lease_check.py",
+            "packages/wellman/src/wellman/_bundled/change_lease_check.py",
+            "tests/change_lease_safety_test.py",
+            "tests/governance-validator.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "writer-check accepts the canonical owner/name lease identity in addition to the legacy local digest; foreign actors and repositories still refuse."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independently reviewed revert; preserve the ticket branch and adopted releases."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m unittest discover -s tests -p 'terminal_lease_release_test.py'"
+        ],
+        "evidence": "A no-change receipt releases a claimed lease through cancel then release."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m unittest discover -s tests -p 'terminal_lease_release_test.py'"
+        ],
+        "evidence": "Undeclared outcomes, foreign owners, stale fences and dirty worktrees still refuse."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/version-parity.test.sh"
+        ],
+        "evidence": "Ignored runtime trees are skipped while a tracked mismatching initializer is still reported."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python -m unittest discover -s tests -p 'change_lease_safety_test.py'",
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Lease checking loads from the validator package; hub and bundled copies stay identical."
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "bash tests/version-parity.test.sh",
+          "bash tests/governance-validator.test.sh",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Canonical governance gates pass on the ticket head."
+      },
+      {
+        "criterion": "AC-06",
+        "commands": [
+          "python -m unittest discover -s tests -p 'change_lease_safety_test.py'"
+        ],
+        "evidence": "Canonical owner/name lease identity is accepted while foreign actors still refuse."
+      }
+    ]
+  }
+}
