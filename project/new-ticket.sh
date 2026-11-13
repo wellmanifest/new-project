@@ -99,10 +99,10 @@ Usage: ./project/new-ticket.sh [options]
       --worktree-slug SLUG
                           Canonical linked-worktree slug; defaults to a stable title slug
 
-Accepted classification values are read from the work classification contract,
-not hardcoded here. The defaults are that contract's own answer for an
-unclassified new ticket (rule W-CLASS-006 plus the service priority default);
-declare the three explicitly for a defect or new behavior.
+Accepted classification values come from the work classification contract,
+not hardcoded here. The defaults for an unclassified new ticket follow that
+contract (rule W-CLASS-006 plus the service priority default); declare the
+three explicitly for a defect or new behavior.
 
 Only a human may authorize --force-new. Human-owned user-*.md files must be
 created and written by that human or by a trusted intake boundary.
