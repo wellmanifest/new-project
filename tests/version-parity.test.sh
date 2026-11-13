@@ -9,6 +9,7 @@ python3 - <<'PY'
 import sys
 import tempfile
 import json
+import subprocess
 from pathlib import Path
 
 # Add scripts directory to sys.path
@@ -114,6 +115,39 @@ def test_dynamic_init_py_ignored():
         assert report.errors == 0, f"Expected 0 errors, got: {report.findings}"
         print("  ✓ test_dynamic_init_py_ignored")
 
+def test_ignored_runtime_tree_is_skipped():
+    with tempfile.TemporaryDirectory() as tmp:
+        t = Path(tmp)
+        subprocess.run(["git", "init", "-q"], cwd=t, check=True)
+        (t / "VERSION").write_text("1.2.3\n", encoding="utf-8")
+        (t / ".gitignore").write_text(".run/\n", encoding="utf-8")
+        pkg = t / "src" / "demo"
+        pkg.mkdir(parents=True)
+        (pkg / "__init__.py").write_text('__version__ = "1.2.3"\n', encoding="utf-8")
+        vendor = t / ".run" / "venv" / "lib" / "site-packages" / "pip"
+        vendor.mkdir(parents=True)
+        (vendor / "__init__.py").write_text('__version__ = "25.3"\n', encoding="utf-8")
+
+        report = Report(t)
+        check_version_parity(t, {}, report)
+        assert report.errors == 0, f"git-ignored runtime tree must not be scanned: {report.findings}"
+        print("  ✓ test_ignored_runtime_tree_is_skipped")
+
+def test_tracked_init_py_mismatch_still_detected_in_git_checkout():
+    with tempfile.TemporaryDirectory() as tmp:
+        t = Path(tmp)
+        subprocess.run(["git", "init", "-q"], cwd=t, check=True)
+        (t / "VERSION").write_text("1.2.3\n", encoding="utf-8")
+        pkg = t / "src" / "demo"
+        pkg.mkdir(parents=True)
+        (pkg / "__init__.py").write_text('__version__ = "9.9.9"\n', encoding="utf-8")
+
+        report = Report(t)
+        check_version_parity(t, {}, report)
+        assert report.errors == 1, f"tracked package initializer must stay in scope: {report.findings}"
+        assert report.findings[0].code == "GOV-VERSION-001"
+        print("  ✓ test_tracked_init_py_mismatch_still_detected_in_git_checkout")
+
 test_version_parity_pass()
 test_pyproject_version_mismatch()
 test_setup_py_version_mismatch()
@@ -121,6 +155,8 @@ test_package_json_mismatch()
 test_cargo_toml_mismatch()
 test_init_py_version_mismatch()
 test_dynamic_init_py_ignored()
+test_ignored_runtime_tree_is_skipped()
+test_tracked_init_py_mismatch_still_detected_in_git_checkout()
 print("All version-parity tests passed successfully.")
 PY
 

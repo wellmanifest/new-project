@@ -35,7 +35,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "1ee8c7abac4e804c15780c27e959f9154736c56f",
+    "acceptedBaseSha": "b0a6c4ebf275f6395e21b51725019cb1de186cbf",
     "targetBranch": "main",
     "outcome": "Initialize an explicit digest-bound repository continuity namespace while preserving the complete legacy journal; publish the managed helper and version0.20.148.",
     "nonGoals": [

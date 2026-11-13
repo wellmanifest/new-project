@@ -110,3 +110,13 @@ namespace implementation or consumer activation is allowed. Qualified Goal-a
 preparation leaves all full source Linux/Windows/OneDev checks and independent
 exact-head approval mandatory in protected CI. Historical local health failures
 and their unchanged limits remain evidence, not success caches.
+
+## Authoritative base refresh during preparation
+
+Goal correctly refused the frozen candidate after independent PR610 advanced
+origin/main to b0a6c4eb. No push or PR was created by that attempt. The current
+unfrozen native owner10 integrates this independently approved base, preserving
+all13 namespace feature files. This is metadata/base reconciliation within the
+existing21:51:06Z total continuation bound; no new implementation, timeout
+waiver, source-stage extension or consumer activation is allowed. A fresh
+exact-head controller binding and all required CI/review gates remain mandatory.
