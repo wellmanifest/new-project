@@ -32,6 +32,7 @@ MIGRATION_AUTHORIZATION=""
 MIGRATION_AUTHORIZATION_SHA256=""
 RECOVER_REQUEST=""
 RECOVERY_HELPER=ticket_recovery
+LOCAL_RESTORATION=false
 RECOVERY_LEASE_STORE=""
 WORKTREE_SLUG=""
 BOOTSTRAP_ADOPTION_DIGEST=""
@@ -87,6 +88,8 @@ Usage: ./project/new-ticket.sh [options]
                           Explicit exact-state pre-adoption recovery request
       --restore-request FILE
                           Exact request restoring an already reserved ticket checkout
+      --restore-local-request FILE
+                          Restore under the explicit live local writer and exact reservation digest
       --recovery-lease-store DIR
                           Existing external local controller store (recovery/restoration)
       --bootstrap-adoption-digest SHA
@@ -173,13 +176,14 @@ while [[ $# -gt 0 ]]; do
       require_value "$@"; MIGRATION_AUTHORIZATION="$2"; shift 2 ;;
     --migration-authorization-sha256)
       require_value "$@"; MIGRATION_AUTHORIZATION_SHA256="$2"; shift 2 ;;
-    --recover-request|--restore-request)
+    --recover-request|--restore-request|--restore-local-request)
       require_value "$@"
       if [[ -n "$RECOVER_REQUEST" ]]; then
         echo "GOV-TICKET-ALLOCATION-003: pass exactly one recovery or restoration request." >&2
         exit 5
       fi
-      [[ "$1" == --restore-request ]] && RECOVERY_HELPER=ticket_restoration
+      [[ "$1" != --recover-request ]] && RECOVERY_HELPER=ticket_restoration
+      [[ "$1" == --restore-local-request ]] && LOCAL_RESTORATION=true
       RECOVER_REQUEST="$2"; shift 2 ;;
     --recovery-lease-store)
       require_value "$@"; RECOVERY_LEASE_STORE="$2"; shift 2 ;;
@@ -621,7 +625,9 @@ if [[ -n "$SNAPSHOT_PROPOSAL" || -n "$SNAPSHOT_MATERIALIZE" || -n "$MIGRATION_AU
 fi
 
 if [[ -n "$RECOVER_REQUEST" || -n "$RECOVERY_LEASE_STORE" ]]; then
-  if [[ -z "$RECOVER_REQUEST" || -z "$RECOVERY_LEASE_STORE" || "$TICKET_STORAGE" != files || "$ALLOCATION_MODE" != local-single-clone || "$REFRESH_REMOTE" == true || "$FORCE_NEW" == true || ${#SCOPE_ARGUMENTS[@]} -ne 0 ]]; then
+  if [[ -z "$RECOVER_REQUEST" || "$TICKET_STORAGE" != files || "$ALLOCATION_MODE" != local-single-clone || "$REFRESH_REMOTE" == true || "$FORCE_NEW" == true || ${#SCOPE_ARGUMENTS[@]} -ne 0 ]] \
+      || { [[ "$LOCAL_RESTORATION" == false ]] && [[ -z "$RECOVERY_LEASE_STORE" ]]; } \
+      || { [[ "$LOCAL_RESTORATION" == true ]] && [[ -n "$RECOVERY_LEASE_STORE" || "$WRITER_IDENTITY_EXPLICIT" != true || -z "$WRITER_ACTOR" || -z "$WRITER_SESSION" ]]; }; then
     echo "GOV-TICKET-ALLOCATION-003: recovery requires both inputs, file storage and local allocation; scope comes only from the bound request." >&2
     exit 5
   fi
@@ -632,9 +638,13 @@ if [[ -n "$RECOVER_REQUEST" || -n "$RECOVERY_LEASE_STORE" ]]; then
   # Restoration re-registers an already reserved identity whose checkout is
   # lost; it shares these inputs and exclusions but never reserves a number.
   cd "$CALLER_CHECKOUT"
+  restoration_authority=(--lease-store "$RECOVERY_LEASE_STORE")
+  if [[ "$LOCAL_RESTORATION" == true ]]; then
+    restoration_authority=(--local-reservation --actor "$WRITER_ACTOR" --session "$WRITER_SESSION")
+  fi
   for candidate in ".governance/$RECOVERY_HELPER.py" "scripts/$RECOVERY_HELPER.py"; do
     if [[ -f "$candidate" ]]; then
-      exec python3 "$candidate" --root . --request "$RECOVER_REQUEST" --lease-store "$RECOVERY_LEASE_STORE" --workstream "$WORKSTREAM"
+      exec python3 "$candidate" --root . --request "$RECOVER_REQUEST" "${restoration_authority[@]}" --workstream "$WORKSTREAM"
     fi
   done
   echo "GOV-TICKET-ALLOCATION-003: restore the managed recovery helper." >&2
