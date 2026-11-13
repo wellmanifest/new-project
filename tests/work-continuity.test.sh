@@ -4,6 +4,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 runtime="$repo_root/scripts/work_continuity.py"
+python3 "$repo_root/tests/continuity_namespace_test.py"
 fixture="$(mktemp -d "${TMPDIR:-/tmp}/new-project-continuity.XXXXXX")"
 cleanup() { rm -rf "$fixture"; }
 trap cleanup EXIT INT TERM

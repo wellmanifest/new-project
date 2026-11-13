@@ -62,6 +62,13 @@ referencje (maksymalnie 128, 256 KiB), jest zapisywany przez atomic replace i
 może zostać odbudowany ze streamu. Oba pozostają ignorowanym, lokalnym cache'em
 i same nie chronią przed utratą dysku lub klona.
 
+## Zmiana kanonicznego origin
+
+Odmiennego repositoryRef nie wolno przepisywać w historycznych eventach.
+Jawna [osobna przestrzeń repozytorium](information/continuity-namespaces.md)
+zachowuje stary dziennik i indeks. `init-namespace` domyślnie tylko planuje;
+nie udziela authority ani nie dowodzi równoważności dwóch repozytoriów.
+
 ## Brudny workspace
 
 Brudny workspace jest odtwarzalny tylko w jednym z dwóch wariantów:
