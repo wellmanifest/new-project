@@ -1,0 +1,122 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-435",
+  "summary": "Recover expired local reservations without a checkout",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-435/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/README.md",
+    "error/GOV-IDLE-TAKEOVER.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/idle_takeover.py",
+    "tests/idle_takeover_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ec2677a853b0d95e27f469be3d5aa1e37f376aef",
+    "targetBranch": "main",
+    "outcome": "Continue local reservation ownership through explicit fenced recovery of expired missing checkouts and live-owner head checkpoints; ship these material fixes in standard0.20.149.",
+    "nonGoals": [
+      "No automatic takeover or source replay",
+      "No recovery of released, frozen, live or already integrated reservations",
+      "No expiry extension, protected-policy changes or permission inferred from a snapshot"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse pinned lease transitions, restoration identity/snapshot checks and anchored atomic storage. Missing-checkout recovery requires enabled idle policy, elapsed expiry/idle time, no branch/worktree/live deleted-cwd writer, exact file digest/CAS and fresh explicit caller identity. A separate live-owner checkpoint records current canonical HEAD without extending expiry. Prepared receipts bind both lease versions for idempotent interruption recovery. Existing automatic observer/takeover rules remain conservative.",
+      "components": [
+        {
+          "name": "native-lease-continuation",
+          "paths": [
+            "scripts/idle_takeover.py"
+          ]
+        },
+        {
+          "name": "regression-fixtures",
+          "paths": [
+            "tests/idle_takeover_test.py"
+          ]
+        },
+        {
+          "name": "runbook-and-material-release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "docs/README.md",
+            "error/GOV-IDLE-TAKEOVER.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "idle_takeover.py recover-reservation --request FILE --actor ID --session ID",
+        "idle_takeover.py checkpoint-owner --request FILE --actor ID --session ID"
+      ],
+      "dataChanges": [
+        "Monotonic fenced local lease transition and immutable prepare/result receipts; recover returns a new bound restoration request but does not restore source or grant edit/merge authority."
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Reviewed source revert; retain all reservations, transition receipts, snapshots and worktrees."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/idle_takeover_test.py"
+        ],
+        "evidence": "Disposable real Git reproduces expired missing identity deadlock, explicit fresh fenced claim, then same-identity restoration through the existing controller."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/idle_takeover_test.py",
+          "python3 tests/ticket-restoration.test.py"
+        ],
+        "evidence": "Wrong owner/CAS/digest, active/frozen/released/policy-disabled states, deleted-cwd writer, collisions and interrupted writes fail closed or replay the same immutable receipt."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 tests/idle_takeover_test.py",
+          "bash tests/version-parity.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Live owner checkpoint binds actual HEAD without extending TTL; managed version149 projections, all protected Linux/Windows/OneDev checks and independent exact-head publication qualify delivery."
+      }
+    ]
+  }
+}
