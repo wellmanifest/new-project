@@ -515,7 +515,10 @@ import subprocess
 import sys
 
 root, scratch = map(pathlib.Path, sys.argv[1:])
-cases = ('pure', 'edited', 'carrier', 'tracking-only', 'BACKLOG', 'PLAN', 'BLOCKED')
+material_cases = ('pure', 'edited', 'into-carrier', 'into-carrier-edited',
+                  'from-carrier', 'unusual')
+cases = (*material_cases, 'carrier', 'carrier-unusual', 'tracking-only',
+         'BACKLOG', 'PLAN', 'BLOCKED')
 for variant, hook in (('hub', '.githooks/pre-commit'),
                       ('adopter', 'template/files/pre-commit.template.sh')):
     for case in cases:
@@ -552,16 +555,24 @@ for variant, hook in (('hub', '.githooks/pre-commit'),
         for name in ('change_lease_check.py', 'worktree_guard.py'):
             (runtime / name).write_text('raise SystemExit(0)\n')
 
-        if case == 'carrier':
+        if case in ('carrier', 'carrier-unusual', 'from-carrier'):
             old, new = 'project/ticket-001/evidence.md', 'project/ticket-001/renamed.md'
+            if case == 'from-carrier':
+                new = 'relocated evidence.md'
+            elif case == 'carrier-unusual':
+                new = 'project/ticket-001/renamed evidence\twith\nnewline.md'
         else:
             old, new = 'test original.py', 'test renamed.py'
+            if case in ('into-carrier', 'into-carrier-edited'):
+                new = 'project/ticket-001/relocated source.py'
+            elif case == 'unusual':
+                new = 'test renamed\twith\nnewline.py'
         readme.write_text(readme.read_text() + '\nBounded tracking update.\n')
         if case in ('BACKLOG', 'PLAN', 'BLOCKED'):
             readme.write_text(readme.read_text().replace('IN_PROGRESS', case))
         if case != 'tracking-only':
             git('mv', old, new)
-            if case == 'edited':
+            if case in ('edited', 'into-carrier-edited'):
                 with (repo / new).open('a') as stream:
                     stream.write('# additional regression\n')
         git('add', '-u')
@@ -571,14 +582,14 @@ for variant, hook in (('hub', '.githooks/pre-commit'),
         result = subprocess.run(['git', '-C', str(repo), 'commit', '-qm',
                                  'exercise material rename (ticket-001)'],
                                 capture_output=True, text=True)
-        if case in ('pure', 'edited'):
+        if case in material_cases:
             assert result.returncode == 0, (variant, case, result.stderr)
         else:
             code = ('GOV-AGENT-HOST-003' if case in ('BACKLOG', 'PLAN', 'BLOCKED')
                     else 'GOV-AGENT-HOST-007')
             assert result.returncode != 0 and code in result.stderr, (
                 variant, case, result.returncode, result.stderr)
-print('Material rename admission and retained carrier/status gates: 14 cases PASS')
+print(f'Material rename admission and retained carrier/status gates: {2 * len(cases)} cases PASS')
 PYRENAMES
 
 # Terminal state belongs to the protected external receipt. Neither a
