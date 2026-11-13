@@ -1,5 +1,7 @@
 # Documentation
 
+- [Explicit repository continuity namespaces](information/continuity-namespaces.md) — preserve complete historical journals across origin changes without aliasing identities or granting authority.
+
 - [Physical interface contracts](information/physical-interface-contracts.md) — declared pin, polarity and capability semantics, per-property intent entries and hardware acceptance.
 
 - [One-time lossless snapshot migration](information/snapshot-migration.md): exact inventory, protected authorization, preserved history and ordinary repair budgets.

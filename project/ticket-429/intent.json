@@ -1,0 +1,130 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-429",
+  "summary": "Explicit repository namespaces preserve continuity history",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-429/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/README.md",
+    "docs/WORK_CONTINUITY.md",
+    "docs/information/continuity-namespaces.md",
+    "error/GOV-WORK-CONTINUITY.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "governance/package-manifest.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/continuity_namespace.py",
+    "scripts/work_continuity.py",
+    "tests/continuity_namespace_test.py",
+    "tests/work-continuity.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b0a6c4ebf275f6395e21b51725019cb1de186cbf",
+    "targetBranch": "main",
+    "outcome": "Initialize an explicit digest-bound repository continuity namespace while preserving the complete legacy journal; publish the managed helper and version0.20.148.",
+    "nonGoals": [
+      "No repository alias authorization or event rebinding",
+      "No consumer adoption, deployment, lease or protected policy changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 18,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep legacy storage as default. An explicit init-namespace operation validates the complete expected legacy chain and stream digest, then atomically installs a repository-derived advisory selector using the existing anchored storage transaction. Selected storage never aliases repositories or grants authority.",
+      "components": [
+        {
+          "name": "continuity-runtime",
+          "paths": [
+            "scripts/work_continuity.py",
+            "scripts/continuity_namespace.py",
+            "governance/package-manifest.json"
+          ]
+        },
+        {
+          "name": "continuity-regressions",
+          "paths": [
+            "tests/continuity_namespace_test.py",
+            "tests/work-continuity.test.sh"
+          ]
+        },
+        {
+          "name": "release-and-documentation",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "docs/README.md",
+            "docs/WORK_CONTINUITY.md",
+            "docs/information/continuity-namespaces.md",
+            "error/GOV-WORK-CONTINUITY.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "work_continuity.py init-namespace (plan by default, explicit --apply)"
+      ],
+      "dataChanges": [
+        "Optional advisory per-repository selector and isolated ignored journal/index; preserve legacy bytes."
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Reviewed source revert; retain all legacy and namespaced journals and selectors for separately authorized recovery."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/continuity_namespace_test.py"
+        ],
+        "evidence": "Real CLI changed-origin reproduction, read-only planning, explicit activation, replay and current capture/resolve/verify."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/continuity_namespace_test.py",
+          "python3 tests/continuity_storage_test.py"
+        ],
+        "evidence": "Wrong digest/repository, malformed or occupied selection, links, interrupted publication, idempotency and contention preserve original history."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/work-continuity.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check",
+          "bash tests/version-parity.test.sh",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Managed package includes helper, canonical documentation/index and version148 agree; independent protected exact-head CI and Validator gate publication."
+      }
+    ]
+  }
+}
