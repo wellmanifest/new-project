@@ -1,0 +1,107 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-433",
+  "summary": "Restore locally reserved checkouts with owner fencing",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-433/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "error/GOV-TICKET-ALLOCATION.md",
+    "project/new-ticket.sh",
+    "scripts/ticket_restoration.py",
+    "tests/ticket-restoration.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b0a6c4ebf275f6395e21b51725019cb1de186cbf",
+    "targetBranch": "main",
+    "outcome": "Restore a missing locally reserved checkout from exact metadata under the current live local owner, without creating a new identity or changing the lease.",
+    "nonGoals": [
+      "No expired-owner renewal or takeover",
+      "No external-controller fallback, source replay, publication or policy changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add an explicit local reservation route; reuse anchored lease locking and canonical lease validation. Require exact lease bytes, owner CAS, scope and live phase before each restoration effect. Preserve the existing external controller route.",
+      "components": [
+        {
+          "name": "restoration-controller",
+          "paths": [
+            "scripts/ticket_restoration.py"
+          ]
+        },
+        {
+          "name": "entrypoint-and-runbook",
+          "paths": [
+            "project/new-ticket.sh",
+            "error/GOV-TICKET-ALLOCATION.md"
+          ]
+        },
+        {
+          "name": "regression-fixtures",
+          "paths": [
+            "tests/ticket-restoration.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Explicit --restore-local-request FILE with writer identity; never infer or fall back"
+      ],
+      "dataChanges": [
+        "No lease changes; restore only missing own README.md and intent.json"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Reviewed source revert; preserve all reservations, snapshots and restored checkouts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket-restoration.test.py"
+        ],
+        "evidence": "Disposable real Git fixtures restore the same identity, including lost branch, and resume idempotently without a controller store."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/ticket-restoration.test.py",
+          "python3 tests/ticket-recovery.test.py"
+        ],
+        "evidence": "Wrong owner, stale CAS/digest, expired/frozen lease, collisions and changes between effects fail closed; external route regressions remain green."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Canonical scope and delivery validation; protected current-base/head CI and independent App review before merge."
+      }
+    ]
+  }
+}
