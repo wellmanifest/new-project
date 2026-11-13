@@ -16,6 +16,7 @@ writer check passed. This document grants no writer or publication authority.
 The amended intent adds these implementation paths:
 
 - `governance/required-checks.json`
+- `governance/required-checks.schema.json`
 - `scripts/check_required_checks.py`
 - `scripts/agent_host_check.py`
 - `packages/wellman/src/wellman/_bundled/check_required_checks.py`

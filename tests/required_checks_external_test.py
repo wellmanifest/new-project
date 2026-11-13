@@ -153,6 +153,22 @@ class ExternalCheckTests(unittest.TestCase):
         for findings in self.host_findings():
             self.assertTrue(any(f.code == 'GOV-AGENT-HOST-004' for f in findings))
 
+    def test_schema_accepts_the_supported_external_declaration(self):
+        import jsonschema
+        schema = json.loads((ROOT / 'governance/required-checks.schema.json').read_text())
+        jsonschema.validate(self.document, schema)
+
+    def test_schema_keeps_external_producer_and_shape_closed(self):
+        import jsonschema
+        schema = json.loads((ROOT / 'governance/required-checks.schema.json').read_text())
+        for bindings in [[{**EXTERNAL, 'provider': 'untrusted'}],
+                         [{**EXTERNAL, 'name': 'windows-governance'}],
+                         [{**EXTERNAL, 'extra': True}], [EXTERNAL, EXTERNAL]]:
+            with self.subTest(bindings=bindings):
+                self.document['externalChecks'] = bindings
+                with self.assertRaises(jsonschema.ValidationError):
+                    jsonschema.validate(self.document, schema)
+
 
 if __name__ == '__main__':
     unittest.main()

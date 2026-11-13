@@ -21,7 +21,8 @@
     "tests/required-checks.test.sh",
     "docs/information/local-ci-publication.md",
     "scripts/agent_host_check.py",
-    "packages/wellman/src/wellman/_bundled/agent_host_check.py"
+    "packages/wellman/src/wellman/_bundled/agent_host_check.py",
+    "governance/required-checks.schema.json"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -44,7 +45,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 10,
+      "maxImplementationFiles": 11,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
@@ -70,7 +71,8 @@
             "tests/required-checks.test.sh",
             "docs/information/local-ci-publication.md",
             "scripts/agent_host_check.py",
-            "packages/wellman/src/wellman/_bundled/agent_host_check.py"
+            "packages/wellman/src/wellman/_bundled/agent_host_check.py",
+            "governance/required-checks.schema.json"
           ]
         }
       ],

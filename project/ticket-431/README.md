@@ -72,6 +72,12 @@ checkout's ignored development environment received pytest-cov 7.1.0 and coverag
 Testless plans are advisory and are not applied. New-head protected checks and
 independent approval remain required.
 
+Fresh hosted CI correctly refused the first head because the closed JSON
+schema did not yet admit `externalChecks`. The follow-up adds the same closed
+producer contract to that schema and two schema regressions. The original
+failed CI is retained; the complete required-check shell suite and fresh CI
+must validate the resulting head before publication.
+
 <!-- ticket-radar:start -->
 ## Ticket Radar
 
