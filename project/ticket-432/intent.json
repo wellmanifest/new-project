@@ -1,0 +1,32 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-432",
+  "summary": "Honour declared terminal outcomes and skip ignored runtime trees",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-432/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "packages/wellman/src/wellman/_bundled/change_lease_check.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/change_lease_check.py",
+    "scripts/governance_check.py",
+    "scripts/terminal_lease_release.py",
+    "tests/change_lease_safety_test.py",
+    "tests/governance-validator.test.sh",
+    "tests/terminal_lease_release_test.py",
+    "tests/version-parity.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

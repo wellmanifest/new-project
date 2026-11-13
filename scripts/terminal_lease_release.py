@@ -173,9 +173,13 @@ def _verify_terminal(root, request, lease):
         policy = activity.load_policy(root)
         rows = activity._validate_registry(activity._load(activity.registry_path(root, policy)), activity.repository_ref(root))
         receipt = next((r for r in rows if r['receiptRef'] == request['terminalReceiptRef']), None)
+        # Any terminal outcome the managed policy declares with
+        # releasesReservation=true may release an already-finished lease;
+        # landed delivery is still verified against Git ancestry below.
+        rule = policy['terminalOutcomes'].get(receipt['outcome']) if receipt is not None else None
         require(receipt is not None and receipt['ticket'] == lease['ticketId']
-                and receipt['outcome'] == 'merged' and receipt['targetBranch'] == lease['targetBranch'], 'matching_merged_receipt_required')
-        rule = policy['terminalOutcomes'].get('merged')
+                and rule is not None and rule.get('releasesReservation') is True
+                and receipt['targetBranch'] == lease['targetBranch'], 'matching_merged_receipt_required')
         require(rule and rule.get('releasesReservation') is True
                 and activity._terminal_verified(root, receipt, rule, activity._target_ref(root, receipt['targetBranch'])), 'terminal_delivery_unverified')
         if lease['phase'] in {'approved', 'merged', 'closed'}:
