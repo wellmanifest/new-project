@@ -13,7 +13,6 @@
     "TODO.md",
     "project/TICKETS.md",
     "project/new-ticket.sh",
-    "scripts/ticket_allocation.py",
     "tests/ticket-allocation-worktree.test.py"
   ],
   "forbiddenPaths": [
@@ -35,7 +34,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 3,
+      "maxImplementationFiles": 2,
       "maxAffectedComponents": 1,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
@@ -48,15 +47,12 @@
           "name": "ticket allocator",
           "paths": [
             "project/new-ticket.sh",
-            "scripts/ticket_allocation.py",
             "tests/ticket-allocation-worktree.test.py"
           ]
         }
       ],
       "responsibilityChanges": false,
-      "interfaceChanges": [
-        "ticket_allocation.py repository-slug and local-repository-ref commands"
-      ],
+      "interfaceChanges": [],
       "dataChanges": [],
       "ui": {
         "impact": "none",

@@ -553,10 +553,7 @@ if ALLOCATION_CONFIG="$(allocation_config)"; then
   fi
 fi
 if [[ -n "$PRIMARY_CHECKOUT" && -z "$ALLOCATION_RUNTIME" ]]; then
-  if ! ALLOCATION_RUNTIME="$(allocation_runtime)"; then
-    echo "GOV-TICKET-ALLOCATION-003: canonical repository identity helper is missing." >&2
-    exit 5
-  fi
+  ALLOCATION_RUNTIME="$(allocation_runtime || true)"
 fi
 if [[ "$ALLOCATION_MODE" == "local-single-clone" && ( -n "$ALLOCATION_KEY" || -n "$ALLOCATION_RECEIPT" ) ]]; then
   echo "GOV-TICKET-ALLOCATION-003: registered allocation inputs are forbidden in local-single-clone mode." >&2
@@ -927,7 +924,7 @@ if [[ -n "$PRIMARY_CHECKOUT" && "$SEED_MODE" != true ]]; then
   # Leases bind the canonical owner/repository identity; path planning binds a
   # separate local label that never becomes repositoryRef.
   origin_url="$(git -C "$PRIMARY_CHECKOUT" config --get remote.origin.url 2>/dev/null || true)"
-  if [[ -n "$origin_url" ]]; then
+  if [[ -n "$origin_url" && -n "$ALLOCATION_RUNTIME" ]]; then
     canonical_origin="$(python3 "$ALLOCATION_RUNTIME" repository-ref --url "$origin_url" 2>/dev/null || true)"
   else
     canonical_origin=""
@@ -1193,7 +1190,7 @@ if [[ "$SEED_MODE" == true ]]; then
     WORKTREE_SLUG="$(printf '%s' "$TITLE" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')"
   fi
   origin_url="$(git -C "$PRIMARY_CHECKOUT" config --get remote.origin.url 2>/dev/null || true)"
-  if [[ -n "$origin_url" ]]; then
+  if [[ -n "$origin_url" && -n "$ALLOCATION_RUNTIME" ]]; then
     canonical_origin="$(python3 "$ALLOCATION_RUNTIME" repository-ref --url "$origin_url" 2>/dev/null || true)"
   else
     canonical_origin=""

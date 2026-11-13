@@ -22,6 +22,10 @@ the isolated allocator fixture; do not mutate historical leases.
 - [x] AC-02: no-origin allocation uses canonical `local/<sha256>` and generated leases pass canonical validation
 - [x] AC-03: all 36 allocation-worktree tests and canonical governance pass; PR publication remains pending.
 
+CI compatibility: legacy fixtures without the allocation helper retain their
+prior clone-local hash fallback; origin-backed allocations use the canonical
+owner/repository slug when the pinned helper is available.
+
 ## Validation evidence
 
 `python3 tests/ticket-allocation-worktree.test.py` under Wellman: 36 tests

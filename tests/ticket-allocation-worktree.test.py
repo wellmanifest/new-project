@@ -13,6 +13,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from urllib.parse import urlparse
 from unittest.mock import patch
 
 from adoption_upgrade_harmonization_test import AdoptionPlanFixture, ExistingOwnershipFixture
@@ -122,14 +123,23 @@ class TicketAllocationWorktreeTest(unittest.TestCase):
         self.assertEqual(verified.returncode, 0, verified.stderr)
 
     def test_existing_repository_ref_normalizer_returns_canonical_uri_for_lease_slug(self) -> None:
-        normalized = subprocess.run(
-            [sys.executable, str(ROOT / "scripts/ticket_allocation.py"), "repository-ref", "--url",
-             "git@github.com:example-org/canonical-project.git"],
-            check=True,
-            capture_output=True,
-            text=True,
-        ).stdout.strip()
-        self.assertEqual(normalized, "git+ssh://github.com/example-org/canonical-project")
+        cases = (
+            ("git@github.com:example-org/canonical-project.git", "git+ssh://github.com/example-org/canonical-project"),
+            ("https://github.com/example-org/canonical-project.git", "https://github.com/example-org/canonical-project"),
+            ("ssh://git@github.com/example-org/canonical-project.git", "git+ssh://github.com/example-org/canonical-project"),
+        )
+        for origin, expected in cases:
+            with self.subTest(origin=origin):
+                normalized = subprocess.run(
+                    [sys.executable, str(ROOT / "scripts/ticket_allocation.py"), "repository-ref", "--url", origin],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                ).stdout.strip()
+                parsed = urlparse(normalized)
+                repository = "/".join(parsed.path.strip("/").split("/"))
+                self.assertEqual(normalized, expected)
+                self.assertEqual(repository, "example-org/canonical-project")
         source = (ROOT / "project/new-ticket.sh").read_text()
         self.assertIn('plan --repository "$layout_repository_name"', source)
         self.assertIn('"$WORKTREE_BRANCH" "$WORKTREE_SLUG" "$repository_ref"', source)
