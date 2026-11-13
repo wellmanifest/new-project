@@ -1,0 +1,88 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-434",
+  "summary": "Release terminal leases carrying the canonical repository identity",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-434/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/terminal_lease_release.py",
+    "tests/terminal_lease_release_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "e816cb49d8dbda2a1c77da99a13e7c6336e28c6f",
+    "targetBranch": "main",
+    "outcome": "The terminal owner release accepts a lease bound to the canonical owner/name repository identity, so merged leases can be released after publication.",
+    "nonGoals": [
+      "No change to review, approval or merge authority.",
+      "No weakening of owner, CAS, fencing, phase or ancestry checks."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse change_lease_check.canonical_owner_repository, already loaded as the canonical sibling, to accept the canonical owner/name identity in addition to the legacy local digest. Repository binding stays mandatory; a foreign identity still refuses.",
+      "components": [
+        {
+          "name": "terminal-release",
+          "paths": [
+            "scripts/terminal_lease_release.py",
+            "tests/terminal_lease_release_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independently reviewed revert; preserve the ticket branch and adopted releases."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m unittest discover -s tests -p 'terminal_lease_release_test.py'"
+        ],
+        "evidence": "A lease carrying the canonical owner/name releases through cancel then release."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m unittest discover -s tests -p 'terminal_lease_release_test.py'"
+        ],
+        "evidence": "A foreign repository identity still refuses; the legacy local digest keeps working."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Canonical governance gate passes on the ticket head."
+      }
+    ]
+  }
+}

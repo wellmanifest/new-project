@@ -167,6 +167,31 @@ class TerminalOwnerRelease(unittest.TestCase):
         with self.assertRaises(activity.ActivityError):
             activity.record(self.root, unknown)
 
+    def origin_bound_git(self, url='git@github.com:wellmanifest/new-project.git'):
+        original = release.git
+        def fake(root, *args, **kwargs):
+            if args == ('config', '--get', 'remote.origin.url'):
+                return url
+            return original(root, *args, **kwargs)
+        return patch.object(release, 'git', side_effect=fake)
+
+    def test_canonical_repository_identity_is_accepted(self):
+        with self.origin_bound_git():
+            self.value['repositoryRef'] = 'wellmanifest/new-project'
+            self.write_lease()
+            self.request['expectedLeaseSha256'] = hashlib.sha256(self.lease.read_bytes()).hexdigest()
+            result = self.invoke()
+        current = json.loads(self.lease.read_bytes())
+        self.assertEqual(result['status'], 'released')
+        self.assertEqual((current['phase'], current['leaseRevision'], current['fencingToken']), ('released', 3, 3))
+
+    def test_foreign_repository_identity_still_refuses(self):
+        with self.origin_bound_git():
+            self.value['repositoryRef'] = 'owner/other-repository'
+            self.write_lease()
+            self.request['expectedLeaseSha256'] = hashlib.sha256(self.lease.read_bytes()).hexdigest()
+            self.refused()
+
     def test_dirty_or_advanced_worktree_refuses_but_dirty_primary_is_preserved(self):
         (self.tree / 'retained.txt').write_text('unpublished')
         self.refused()

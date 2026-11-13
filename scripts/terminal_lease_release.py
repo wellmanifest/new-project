@@ -241,10 +241,19 @@ def _execute(root, request, fd, verify, name, apply):
     current = decode(raw)
     require(not canonical.validate_lease(current), 'invalid_canonical_lease')
     ticket, branch = request_identity(request)
+    accepted_repositories = {'local/' + sha(str(root).encode())}
+    origin_url = git(root, 'config', '--get', 'remote.origin.url', check=False)
+    try:
+        canonical_identity = canonical.canonical_owner_repository(origin_url) if origin_url else None
+    except Exception:
+        # An origin that cannot be canonicalized leaves the local digest authoritative.
+        canonical_identity = None
+    if canonical_identity:
+        accepted_repositories.add(canonical_identity)
     expected = {'ticketId': ticket, 'worktreeId': request['worktreeId'], 'branchRef': branch,
-        'repositoryRef': 'local/' + sha(str(root).encode()),
         'ownerActor': request['ownerActor'], 'ownerSession': request['ownerSession']}
-    require(all(current[k] == v for k, v in expected.items()), 'current_owner_or_repository_mismatch')
+    require(all(current[k] == v for k, v in expected.items())
+            and current['repositoryRef'] in accepted_repositories, 'current_owner_or_repository_mismatch')
     journal_path = root / '.subactor/receipts/terminal-owner-release' / (sha(encoded(request)) + '.json')
     if journal_path.exists() or journal_path.is_symlink():
         journal = read_path(journal_path)
