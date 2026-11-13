@@ -1,0 +1,172 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-430",
+  "summary": "Admit material file renames in pre-commit hooks",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-430/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".githooks/pre-commit",
+    "template/files/pre-commit.template.sh",
+    "tests/agent-hosts.test.sh",
+    "scripts/create_adoption_lock.py",
+    "tests/adoption_legacy_scaffold_test.py",
+    "tests/adoption-lock.test.sh",
+    "tests/adoption-legacy-scaffold.test.sh",
+    "tests/adoption-fresh-bootstrap.test.sh",
+    "tests/adoption-reusable-plan.test.sh",
+    "tests/adoption-packaging-plan.test.sh",
+    ".github/workflows/ci.yml",
+    "tests/governance-scripts.test.sh",
+    "tests/governance-fixture-temp.test.sh",
+    "tests/ticket-allocation-worktree.test.sh",
+    "tests/ticket-radar-allocation.test.sh",
+    "tests/ticket-classification-allocation.test.sh",
+    "tests/governance-v145-regressions.test.sh",
+    "tests/governance-v146-regressions.test.sh",
+    "tests/governance-v147-regressions.test.sh",
+    "tests/governance_fixture_temp_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2cb43dbeafbad4f324a3745eb2961f08d3fda07f",
+    "targetBranch": "main",
+    "outcome": "Admit material renames, bound immutable source reads and run the same adoption cases as separate mandatory bounded CI/Goal checks.",
+    "nonGoals": [
+      "No consumer hook edits or activation before a published immutable adoption.",
+      "No release/version changes or writes to ticket-429 scope.",
+      "No weakening of writer, pin, overlap, review or governance-only transition checks."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 20,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Include Git rename records in the existing NUL-delimited material-deliverable scan; exercise both real hooks in isolated Git fixtures with deterministic rename detection. Retain the separate governance-only DRC refusal. Read immutable source blobs through one NUL-framed Git batch per invocation; cache only literal immutable revision data within that invocation. Keep target-state and publication validation live. Move four identical Python invocations from the aggregate adoption shell suite into four mandatory shell suites; wire every suite explicitly in the existing protected Linux CI job. Keep the same300s per-command limit and every Windows check. The next observed aggregate also combines a33-case279s allocation module with six other Python modules and its core scenarios. Preserve these seven selections and their private TMPDIR/Git-discovery boundary in seven separately mandatory checks. The containment regression now anchors at the unchanged executable fixture-creation boundary instead of the moved allocation invocation; its real absolute/relative caller-preservation checks are unchanged.",
+      "components": [
+        {
+          "name": "commit-materiality",
+          "paths": [
+            ".githooks/pre-commit",
+            "template/files/pre-commit.template.sh",
+            "tests/agent-hosts.test.sh"
+          ]
+        },
+        {
+          "name": "immutable-adoption-source",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "tests/adoption_legacy_scaffold_test.py"
+          ]
+        },
+        {
+          "name": "adoption-check-contract",
+          "paths": [
+            "tests/adoption-lock.test.sh",
+            "tests/adoption-legacy-scaffold.test.sh",
+            "tests/adoption-fresh-bootstrap.test.sh",
+            "tests/adoption-reusable-plan.test.sh",
+            "tests/adoption-packaging-plan.test.sh",
+            ".github/workflows/ci.yml",
+            "tests/governance-scripts.test.sh",
+            "tests/governance-fixture-temp.test.sh",
+            "tests/ticket-allocation-worktree.test.sh",
+            "tests/ticket-radar-allocation.test.sh",
+            "tests/ticket-classification-allocation.test.sh",
+            "tests/governance-v145-regressions.test.sh",
+            "tests/governance-v146-regressions.test.sh",
+            "tests/governance-v147-regressions.test.sh",
+            "tests/governance_fixture_temp_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Existing Linux CI test job runs the same four Python suites as separate mandatory shell checks; protected context names and Windows validation unchanged."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independently reviewed revert; preserve ticket branches and immutable adopted releases."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Pure and edited source/test renames pass in both real hook variants; the same regressions fail on the accepted base."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Carrier-only renames and inactive implementation renames remain rejected with canonical diagnostics."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh",
+          "goal --delivery-mode pull-request --no-publish -a push --ticket ticket-430"
+        ],
+        "evidence": "Canonical governance and publication gates pass before exact-head OneDev and independent approval."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python tests/adoption_legacy_scaffold_test.py",
+          "bash tests/adoption-lock.test.sh"
+        ],
+        "evidence": "Real review has bounded Git process count with identical payloads; binary/unusual paths, missing blobs, malformed responses and hostile Git environment remain fail-closed. Existing migration/security regressions remain mandatory."
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "bash tests/adoption-legacy-scaffold.test.sh",
+          "bash tests/adoption-fresh-bootstrap.test.sh",
+          "bash tests/adoption-reusable-plan.test.sh",
+          "bash tests/adoption-packaging-plan.test.sh",
+          "python3 scripts/check_required_checks.py"
+        ],
+        "evidence": "Exact original four Python selections are each wired once; complete Goal discovery and protected Linux CI execute all suites, with the existing300s per-command bound and no coverage skips."
+      },
+      {
+        "criterion": "AC-06",
+        "commands": [
+          "bash tests/governance-scripts.test.sh",
+          "bash tests/governance-fixture-temp.test.sh",
+          "bash tests/ticket-allocation-worktree.test.sh",
+          "bash tests/ticket-radar-allocation.test.sh",
+          "bash tests/ticket-classification-allocation.test.sh",
+          "bash tests/governance-v145-regressions.test.sh",
+          "bash tests/governance-v146-regressions.test.sh",
+          "bash tests/governance-v147-regressions.test.sh"
+        ],
+        "evidence": "Seven original Python invocations and private fixture/Git-ceiling environment are retained; actual Goal and Linux CI require every new suite; source default timeout remains300s and Windows check is unchanged."
+      }
+    ]
+  }
+}

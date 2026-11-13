@@ -1,6 +1,7 @@
 """Actual CLI regressions for explicit migration of minimal Wellman scaffolds."""
 import importlib.util
 import contextlib
+import io
 import hashlib
 import json
 import os
@@ -47,6 +48,23 @@ class LegacyScaffoldMigrationTest(unittest.TestCase):
         return subprocess.run([sys.executable, str(SCRIPT), "--target-root", str(self.target),
                                "--source-revision", self.revision, "--allow-unpublished-for-testing",
                                *arguments], capture_output=True, text=True, timeout=60)
+
+    def test_review_bounds_immutable_source_git_processes(self):
+        spec = importlib.util.spec_from_file_location("source_process_budget", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        before = self.contents()
+        real_output = subprocess.check_output
+        with patch.object(module.subprocess, "check_output", wraps=real_output) as calls, \
+                contextlib.redirect_stdout(io.StringIO()):
+            code = module.main(["--target-root", str(self.target), "--source-revision",
+                                self.revision, "--allow-unpublished-for-testing",
+                                "--check", "--migrate-wellman-scaffold"])
+        self.assertEqual(code, 1)
+        self.assertEqual(self.contents(), before)
+        shows = [call for call in calls.call_args_list
+                 if call.args and call.args[0][:2] == ["git", "show"]]
+        self.assertLessEqual(len(shows), 3, "immutable package reads must not fork per blob")
 
     def committed_legacy_lock(self):
         names = ["AGENTS.md", "GEMINI.md", ".governance/manifest.json",
@@ -595,6 +613,78 @@ class BootstrapPrerequisitePlanTest(unittest.TestCase):
             module.bootstrap_prerequisite_payloads(self.target,
                 {"requiredFiles": list(self.seeds)}, {}, self.plan_path)
         self.assertEqual(before, self.contents())
+
+
+class ImmutableSourceReadTest(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.git("init", "-q")
+        (self.root / "plain.txt").write_bytes(b"original\n")
+        (self.root / "binary.bin").write_bytes(b"\0payload\n\xff\0")
+        self.commit()
+        self.revision = self.git("rev-parse", "HEAD").decode().strip()
+        spec = importlib.util.spec_from_file_location("immutable_source_reader", SCRIPT)
+        self.module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.module)
+        token = self.module._SOURCE_BLOBS.set({})
+        self.addCleanup(self.module._SOURCE_BLOBS.reset, token)
+
+    def git(self, *args):
+        return subprocess.check_output(["git", "-c", "user.name=Fixture",
+            "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false",
+            *args], cwd=self.root, stderr=subprocess.DEVNULL)
+
+    def commit(self):
+        self.git("add", ".")
+        self.git("commit", "-qm", "source fixture")
+
+    def test_binary_payloads_and_hostile_git_environment(self):
+        with patch.dict(os.environ, {"GIT_DIR": "/missing/foreign.git",
+                                     "GIT_WORK_TREE": "/missing/foreign"}):
+            self.module.read_source_blobs(self.root, self.revision, {"binary.bin", "plain.txt"})
+        for name in ("binary.bin", "plain.txt"):
+            self.assertEqual(self.module.git_bytes(self.root, self.revision, name),
+                             (self.root / name).read_bytes())
+
+    @unittest.skipIf(sys.platform == "win32", "POSIX names and symbolic links")
+    def test_unusual_names_and_symlink_blob_preserve_exact_bytes(self):
+        name = "space and\nnewline.txt"
+        (self.root / name).write_bytes(b"weird\0name\n")
+        (self.root / "link").symlink_to("plain.txt")
+        self.commit()
+        revision = self.git("rev-parse", "HEAD").decode().strip()
+        self.module.read_source_blobs(self.root, revision, {name, "link"})
+        self.assertEqual(self.module.git_bytes(self.root, revision, name), b"weird\0name\n")
+        self.assertEqual(self.module.git_bytes(self.root, revision, "link"), b"plain.txt")
+
+    def test_missing_source_retains_the_git_failure(self):
+        with self.assertRaises(subprocess.CalledProcessError):
+            self.module.read_source_blobs(self.root, self.revision, {"plain.txt", "missing.txt"})
+        self.assertEqual(self.module.git_bytes(self.root, self.revision, "plain.txt"), b"original\n")
+
+    def test_corrupt_response_never_publishes_partial_cached_content(self):
+        responses = (b"invalid\0", b"0" * 40 + b" blob 4\0x",
+                     b"0" * 40 + b" blob 1\0X\0invalid\0")
+        for response in responses:
+            token = self.module._SOURCE_BLOBS.set({})
+            try:
+                with self.subTest(response=response), patch.object(self.module.subprocess,
+                        "check_output", return_value=response), self.assertRaises(SystemExit):
+                    self.module.read_source_blobs(self.root, self.revision,
+                                                  {"binary.bin", "plain.txt"})
+                for name in ("binary.bin", "plain.txt"):
+                    self.assertEqual(self.module.git_bytes(self.root, self.revision, name),
+                                     (self.root / name).read_bytes())
+            finally:
+                self.module._SOURCE_BLOBS.reset(token)
+
+    def test_symbolic_revision_remains_fresh(self):
+        self.module.read_source_blobs(self.root, "HEAD", {"plain.txt"})
+        (self.root / "plain.txt").write_bytes(b"next\n")
+        self.commit()
+        self.assertEqual(self.module.git_bytes(self.root, "HEAD", "plain.txt"), b"next\n")
 
 
 if __name__ == "__main__":

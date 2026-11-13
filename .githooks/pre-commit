@@ -78,13 +78,14 @@ if grep -Eiq '^-[[:space:]]+\*\*Status\*\*:[[:space:]]*IN_PROGRESS([[:space:]]|$
     exit 0
   fi
 
+  # Git reports renamed source/tests as R, including edits within a rename.
   material=false
   while IFS= read -r -d '' path; do
     case "$path" in
       project/ticket-*/*|TODO.md|project/TICKETS.md|config/artifact-registry.json) ;;
       *) material=true; break ;;
     esac
-  done < <(git diff --cached --name-only -z --diff-filter=AM --)
+  done < <(git diff --cached --name-only -z --diff-filter=AMR --)
   if [[ "$material" != true ]]; then
     echo "GOV-AGENT-HOST-007: staged change contains only ticket tracking carriers." >&2
     echo "  Add the material source, test, configuration, standard or requested documentation change." >&2
