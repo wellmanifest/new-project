@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.148] - 2026-11-12
+
+- Add explicit digest-bound continuity repository namespaces with preserved legacy journal/index bytes, isolated advisory selectors, complete-chain validation, no-clobber publication and managed helper coverage. No repository aliases or execution/lease authority are granted. [ticket-429]
+
 ## [0.20.147] - 2026-11-11
 
 - Prevent `work_start_check.py` admission starvation under continuous disjoint peer writes by coherently updating uncommitted dirty observations for unchanged, non-quarantined, non-overlapping peer ticket worktrees while failing closed on selected/primary/caller checkout mutations, ref/manifest/registration/SQLite changes, foreign ticket carriers, or material scope overlap. [ticket-428]
