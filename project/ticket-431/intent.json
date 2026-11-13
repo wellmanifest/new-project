@@ -1,7 +1,7 @@
 {
   "schema": "new-project.intent/v3",
   "ticket": "ticket-431",
-  "summary": "use canonical repository URI in local allocation leases",
+  "summary": "Canonical allocation lease identities and complete required-check declarations",
   "workstream": "governance",
   "classification": {
     "kind": "BUG",
@@ -13,7 +13,15 @@
     "TODO.md",
     "project/TICKETS.md",
     "project/new-ticket.sh",
-    "tests/ticket-allocation-worktree.test.py"
+    "tests/ticket-allocation-worktree.test.py",
+    "scripts/check_required_checks.py",
+    "packages/wellman/src/wellman/_bundled/check_required_checks.py",
+    "governance/required-checks.json",
+    "tests/required_checks_external_test.py",
+    "tests/required-checks.test.sh",
+    "docs/information/local-ci-publication.md",
+    "scripts/agent_host_check.py",
+    "packages/wellman/src/wellman/_bundled/agent_host_check.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -25,23 +33,25 @@
   "delivery": {
     "acceptedBaseSha": "511eb0ab1c0f9f8697c44f5748ba93b25da5e0d9",
     "targetBranch": "main",
-    "outcome": "Generate canonical, schema-valid local allocation leases: derive repositoryRef as owner/repository from an origin URL, or local/<sha256> from the primary checkout when no origin exists; keep the local checkout basename separate for Worktrees v5 layout planning.",
+    "outcome": "Generate canonical, schema-valid local allocation leases: derive repositoryRef as owner/repository from an origin URL, or local/<sha256> from the primary checkout when no origin exists; keep the local checkout basename separate for Worktrees v5 layout planning. Resolve the protected publication prerequisite by declaring the already required OneDev context alongside the existing Linux/Windows checks and validating its closed external-provider binding without fabricating a workflow job or weakening hosted job checks.",
     "nonGoals": [
       "No migration or mutation of historical malformed leases.",
       "No changes to change-lease schema semantics.",
-      "No ticket number or worktree naming changes."
+      "No ticket number or worktree naming changes.",
+      "No required check, hosted job, protected registry or live runtime is removed or bypassed.",
+      "External-provider declaration is not a test result or publication authority."
     ],
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 2,
-      "maxAffectedComponents": 1,
-      "maxPublicInterfaceChanges": 0,
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
       "status": "accepted",
-      "decision": "Separate canonical lease repository identity from local filesystem layout label; share the existing URL normalizer and derive clone-local identity through its sibling function.",
+      "decision": "Separate canonical lease repository identity from local filesystem layout label; share the existing URL normalizer and derive clone-local identity through its sibling function. Treat the one existing protected-local OneDev context as an explicitly bound external producer, while preserving exact matching for all hosted jobs.",
       "components": [
         {
           "name": "ticket allocator",
@@ -49,10 +59,25 @@
             "project/new-ticket.sh",
             "tests/ticket-allocation-worktree.test.py"
           ]
+        },
+        {
+          "name": "required-check declaration",
+          "paths": [
+            "scripts/check_required_checks.py",
+            "packages/wellman/src/wellman/_bundled/check_required_checks.py",
+            "governance/required-checks.json",
+            "tests/required_checks_external_test.py",
+            "tests/required-checks.test.sh",
+            "docs/information/local-ci-publication.md",
+            "scripts/agent_host_check.py",
+            "packages/wellman/src/wellman/_bundled/agent_host_check.py"
+          ]
         }
       ],
       "responsibilityChanges": false,
-      "interfaceChanges": [],
+      "interfaceChanges": [
+        "Optional closed externalChecks declaration for onedev/local-verify; existing formats retain their behavior."
+      ],
       "dataChanges": [],
       "ui": {
         "impact": "none",
@@ -83,6 +108,15 @@
           "bash project/governance-check.sh"
         ],
         "evidence": "Ticket changed-file governance passes on the exact implementation scope."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "python3 tests/required_checks_external_test.py",
+          "bash tests/required-checks.test.sh",
+          "python3 packages/wellman/sync_bundled.py --check"
+        ],
+        "evidence": "OneDev remains mandatory; unknown/duplicate/provider-mismatched or undeclared external checks and omitted hosted jobs are rejected."
       }
     ]
   }
