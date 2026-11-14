@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.150] - 2026-11-14
+
+- Add explicit receipt-only recovery after a completed published bootstrap upgrade. Verify original clone/HEAD, first-allocation state, both published packages, installed managed bytes, unchanged target seeds and an exactly reversible manifest projection; preserve unrelated changes and grant no writer or publication authority. [ticket-437]
+
 ## [0.20.149] - 2026-11-14
 
 - Add explicit fenced recovery of expired missing local reservations and live-owner HEAD checkpoints, with prepared receipts, deleted-cwd process checks, unchanged expiry for checkpoints and no source/merge grant. [ticket-435]

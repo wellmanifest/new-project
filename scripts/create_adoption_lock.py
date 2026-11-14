@@ -1980,6 +1980,113 @@ def validate_wellman_scaffold(target_root: Path, files: list[dict[str, object]])
         raise SystemExit("Wellman scaffold migration refuses existing native adoption evidence or invalid legacy registration") from error
 
 
+BOOTSTRAP_RECEIPT = ".subactor/receipts/bootstrap-adoption.json"
+
+
+def bootstrap_refresh_observation(root: Path, names: set[str]) -> tuple[dict, dict]:
+    """Observe the original, never-allocated clone; acquire no authority."""
+    from work_start_check import (bootstrap_historical_refs, bootstrap_scaffold_at_head,
+                                 unchanged_committed_legacy_carriers, worktrees)
+
+    receipt_path = plan_path(root, BOOTSTRAP_RECEIPT)
+    try:
+        receipt = json.loads(_bootstrap_plan_bytes(receipt_path, label="bootstrap receipt"),
+                             object_pairs_hook=_unique_json_pairs)
+    except (ValueError, OSError) as error:
+        raise SystemExit("invalid existing bootstrap receipt") from error
+    required = {"schema", "baseSha", "commonGitDir", "sourceRevision", "files",
+                "grantsWriterAuthority", "grantsPublicationAuthority"}
+    if (not isinstance(receipt, dict) or not required.issubset(receipt)
+            or set(receipt) - required - {"bootstrapKind"}
+            or receipt["schema"] != "new-project.bootstrap-adoption/v1"
+            or receipt["grantsWriterAuthority"] is not False
+            or receipt["grantsPublicationAuthority"] is not False
+            or not re.fullmatch(r"[0-9a-f]{40}", str(receipt["sourceRevision"]))
+            or not isinstance(receipt["files"], dict) or not receipt["files"]):
+        raise SystemExit("invalid existing bootstrap receipt bindings")
+    for name, checksum in receipt["files"].items():
+        plan_path(root, name)
+        if not re.fullmatch(r"[0-9a-f]{64}", str(checksum)):
+            raise SystemExit("invalid existing bootstrap file digest")
+    observation = allocation_target_state(root, names | set(receipt["files"]) | {BOOTSTRAP_RECEIPT})
+    common = os.fsdecode(plan_git(root, "rev-parse", "--path-format=absolute", "--git-common-dir")).strip()
+    if receipt["baseSha"] != observation["head"] or receipt["commonGitDir"] != common:
+        raise SystemExit("bootstrap refresh requires the original clone and HEAD")
+    high_water = Path(common) / "new-project-ticket-high-water"
+    if len(worktrees(root)) != 1 or high_water.exists() or high_water.is_symlink():
+        raise SystemExit("bootstrap refresh is first-allocation only")
+    kind = receipt.get("bootstrapKind", "legacy-scaffold")
+    if kind == "fresh":
+        committed = plan_git(root, "ls-tree", "-r", "--name-only", observation["head"], "--", ".governance")
+        if committed:
+            raise SystemExit("fresh bootstrap cannot replace committed governance")
+        unchanged_committed_legacy_carriers(root, observation["head"])
+    elif kind == "legacy-scaffold":
+        bootstrap_scaffold_at_head(root, observation["head"])
+        plan_path(root, "project")
+        if list((root / "project").glob("ticket-*")):
+            raise SystemExit("bootstrap refresh is first-allocation only")
+    else:
+        raise SystemExit("unknown bootstrap kind")
+    observation["historicalRefs"] = bootstrap_historical_refs(root, observation["head"])
+    return receipt, observation
+
+
+def refreshed_bootstrap_receipt(standard_root: Path, root: Path, revision: str,
+                               files: list[dict], manifest: dict, expected_lock: bytes,
+                               receipt: dict) -> bytes:
+    """Advance verified managed bytes, never acknowledge changed target seeds."""
+    lock = json.loads(plan_path(root, ".governance/manifest.lock.json").read_bytes(),
+                      object_pairs_hook=_unique_json_pairs)
+    if lock != json.loads(expected_lock) or lock["standard"]["publicationStatus"] != "published":
+        raise SystemExit("bootstrap refresh requires the exact installed published lock")
+    previous = receipt["sourceRevision"]
+    old_version = git_bytes(standard_root, previous, "VERSION").decode().strip()
+    verify_publication_evidence(previous, old_version)
+    old_package = package_files(standard_root, previous)
+    old_managed = {str(item["target"]): item for item in old_package if item["strategy"] == "managed"}
+    if not set(old_managed).issubset(receipt["files"]):
+        raise SystemExit("bootstrap receipt omits its original managed closure")
+    # The old receipt must actually describe the immutable original package.
+    for name, item in old_managed.items():
+        original = git_bytes(standard_root, previous, str(item["source"]))
+        if name == MANIFEST_BASE_TARGET:
+            original = manifest_projection(original)
+        if hashlib.sha256(original).hexdigest() != receipt["files"][name]:
+            raise SystemExit("bootstrap receipt differs from its original published package")
+    admissible = {str(item["target"]) for item in files} | {".gitignore", ".governance/manifest.lock.json"}
+    for name in manifest.get("requiredFiles", []):
+        if _git_cat_file_exists(root, f"HEAD:{name}").returncode:
+            admissible.add(name)
+    if set(receipt["files"]) - admissible:
+        raise SystemExit("bootstrap receipt includes paths outside adoption")
+    owned = {}
+    for name, checksum in receipt["files"].items():
+        path = plan_path(root, name)
+        current = path.read_bytes()
+        actual = hashlib.sha256(current).hexdigest()
+        if name in lock["managedFiles"] or name == ".governance/manifest.lock.json":
+            owned[name] = actual
+            continue
+        if actual != checksum and name == MANIFEST_TARGET:
+            old_base = json.loads(manifest_projection(git_bytes(standard_root, previous, MANIFEST_SOURCE)))
+            new_base = json.loads(plan_path(root, MANIFEST_BASE_TARGET).read_bytes())
+            target = json.loads(current)
+            original = merge_projection(new_base, old_base, target)
+            if (hashlib.sha256(json_bytes(original)).hexdigest() != checksum
+                    or json_bytes(merge_projection(old_base, new_base, original)) != current):
+                raise SystemExit("bootstrap manifest upgrade is not exactly reversible")
+        elif actual != checksum:
+            raise SystemExit(f"bootstrap target-owned bytes changed: {name}")
+        owned[name] = actual
+    for name, checksum in lock["managedFiles"].items():
+        if hashlib.sha256(plan_path(root, name).read_bytes()).hexdigest() != checksum:
+            raise SystemExit("bootstrap managed payload differs from its published lock")
+        owned[name] = checksum
+    result = dict(receipt, sourceRevision=revision, files=dict(sorted(owned.items())))
+    return json_bytes(result)
+
+
 def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target-root", required=True)
@@ -1993,6 +2100,8 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
         ),
     )
     parser.add_argument("--upgrade", action="store_true", help="Replace differing standard-managed files")
+    parser.add_argument("--refresh-bootstrap-receipt", action="store_true",
+                        help="Explicit receipt-only refresh after a completed published upgrade")
     parser.add_argument(
         "--migrate-wellman-scaffold", action="store_true",
         help="Explicitly initialize native governance over the exact minimal legacy Wellman baseline scaffold",
@@ -2019,6 +2128,14 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
     parser.add_argument("--repository", metavar="OWNER/NAME",
                         help="Bind required checks to this repository before an origin remote exists")
     args = parser.parse_args(argv)
+
+    if args.refresh_bootstrap_receipt and (not (args.check or args.upgrade)
+            or args.allow_unpublished_for_testing or args.allocation_plan
+            or args.bootstrap_native_adoption or args.migrate_wellman_scaffold
+            or args.bootstrap_reusable_plan or args.bootstrap_ownership_plan
+            or args.bootstrap_prerequisites_plan or args.upgrade_ownership_plan
+            or _upgrade_ownership is not None):
+        parser.error("bootstrap receipt refresh requires --check or --upgrade alone with a published installation")
 
     if (args.upgrade_ownership_plan is not None or _upgrade_ownership is not None) and (
             not args.allocation_plan or not args.check or args.upgrade
@@ -2051,7 +2168,8 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
         parser.error("--repository must be OWNER/NAME")
     standard_root = Path(__file__).resolve().parent.parent
     requested_root = Path(args.target_root).absolute()
-    if (args.migrate_wellman_scaffold or args.bootstrap_native_adoption or args.allocation_plan) and any(
+    if (args.migrate_wellman_scaffold or args.bootstrap_native_adoption or args.allocation_plan
+            or args.refresh_bootstrap_receipt) and any(
         path.is_symlink() for path in (requested_root, *requested_root.parents)
     ):
         raise SystemExit("Wellman scaffold migration refuses symlinked target paths")
@@ -2094,6 +2212,10 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
         publication_status = "published"
 
     files = package_files(standard_root, args.source_revision)
+    refresh_before = None
+    if args.refresh_bootstrap_receipt:
+        refresh_names = {str(item["target"]) for item in files} | {".governance/manifest.lock.json", ".gitignore"}
+        refresh_receipt, refresh_before = bootstrap_refresh_observation(target_root, refresh_names)
     plan_before = None
     if args.allocation_plan:
         if Path(__file__).read_bytes() != git_bytes(standard_root, args.source_revision, "scripts/create_adoption_lock.py"):
@@ -2221,6 +2343,50 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
         )
     changes = planned_changes(target_root, payloads, expected_lock, executable_targets)
     missing_prerequisites = missing_target_prerequisites(target_root, manifest, payloads)
+
+    if args.refresh_bootstrap_receipt:
+        if changes or packaging_errors or missing_prerequisites:
+            raise SystemExit("complete the reviewed published upgrade before refreshing its bootstrap receipt")
+        refreshed = refreshed_bootstrap_receipt(standard_root, target_root, args.source_revision,
+                                               files, manifest, expected_lock, refresh_receipt)
+        again_receipt, again = bootstrap_refresh_observation(target_root, refresh_names)
+        if again != refresh_before or again_receipt != refresh_receipt:
+            raise SystemExit("bootstrap state changed during refresh; no receipt written")
+        path = plan_path(target_root, BOOTSTRAP_RECEIPT)
+        if path.read_bytes() == refreshed:
+            print("bootstrap receipt is up-to-date; no writer or publication authority")
+            return 0
+        if args.check:
+            print("UPDATE bootstrap receipt; no writer or publication authority")
+            return 1
+        # No managed writes, hooks, DSL rendering or source changes on this route.
+        with _bootstrap_directory(path.parent) as parent:
+            raw = _bootstrap_plan_bytes(path, label="bootstrap receipt")
+            if hashlib.sha256(raw).hexdigest() != refresh_before["files"][BOOTSTRAP_RECEIPT]["sha256"]:
+                raise SystemExit("bootstrap receipt changed before refresh")
+            temporary = ".bootstrap-refresh-" + os.urandom(16).hex()
+            descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                                 0o600, dir_fd=parent)
+            try:
+                with os.fdopen(descriptor, "wb") as stream:
+                    stream.write(refreshed)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                final_receipt, final_observation = bootstrap_refresh_observation(target_root, refresh_names)
+                if final_observation != refresh_before or final_receipt != refresh_receipt:
+                    raise SystemExit("bootstrap state changed before receipt replacement")
+                named_parent, held_parent = path.parent.stat(), os.fstat(parent)
+                if ((named_parent.st_dev, named_parent.st_ino) != (held_parent.st_dev, held_parent.st_ino)
+                        or _bootstrap_plan_bytes(path, label="bootstrap receipt") != raw):
+                    raise SystemExit("bootstrap receipt parent or bytes changed before refresh")
+                os.replace(temporary, path.name, src_dir_fd=parent, dst_dir_fd=parent)
+            finally:
+                try:
+                    os.unlink(temporary, dir_fd=parent)
+                except FileNotFoundError:
+                    pass
+        print("refreshed bootstrap receipt; no writer or publication authority")
+        return 0
 
     if args.allocation_plan:
         if missing_prerequisites:
