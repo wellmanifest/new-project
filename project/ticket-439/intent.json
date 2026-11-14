@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-439",
+  "summary": "Isolate branch-name Git oracle from parent checkout history",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-439/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "tests/branch-lifecycle.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "8e7e0a8877c5e0cbb99b0993f91a8dc57d4623dd",
+    "targetBranch": "main",
+    "outcome": "Make the literal branch-name Git oracle independent of parent repository/reflog discovery, including TMPDIR within a Git checkout.",
+    "nonGoals": [
+      "No production parser changes",
+      "No removed cases, ignored failures, timeout changes or new dependencies",
+      "No version, changelog, release or target adoption changes"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Create a controlled Git parent with a previous checkout and an empty child oracle directory. Bound discovery at that child parent with GIT_CEILING_DIRECTORIES, then retain every existing literal-name, bounds, CLI and reconciliation assertion. Verify that unbounded discovery expands @{-1} while the bounded oracle does not discover Git.",
+      "components": [
+        {
+          "name": "branch-lifecycle-test-fixture",
+          "paths": [
+            "tests/branch-lifecycle.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the fixture-only change after review; production validation and all original cases remain intact."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/branch-lifecycle.test.sh"
+        ],
+        "evidence": "Controlled nested Git regression plus all38 literal cases across3 fields, bounds/CLI and27 reconciliation unit cases pass under default SDK Git-nested TMPDIR and nonGit TMPDIR."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "git diff --check",
+          "bash project/governance-check.sh",
+          "goal --delivery-mode pull-request --no-publish -a push --ticket ticket-439 --no-version-sync --no-tag --no-changelog"
+        ],
+        "evidence": "Native hub checks and protected Linux/Windows/OneDev CI plus independent exact-head review before merge."
+      }
+    ]
+  }
+}
