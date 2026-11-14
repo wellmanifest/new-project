@@ -463,7 +463,10 @@ class ContinuityStorageTests(unittest.TestCase):
     def test_commit_and_rebuild_use_distinct_storage_parents(self):
         event, index = self.root / "sessions/events.jsonl", self.root / "recovery/index.json"
         value = fixture_event()
-        with patch.object(continuity, "storage_paths", return_value=(event, index, 128, 262144)):
+        with (
+            patch.object(continuity, "storage_paths", return_value=(event, index, 128, 262144)),
+            patch.object(continuity, "utc_now", return_value="2026-11-13T00:00:00Z"),
+        ):
             self.assertEqual(continuity.commit_event(self.root, value)["status"], "recorded")
             expected = continuity.index_from_events(REPOSITORY, [value], 128)
             self.assertEqual(json.loads(index.read_text()), expected)

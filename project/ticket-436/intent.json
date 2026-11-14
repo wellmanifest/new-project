@@ -1,0 +1,86 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-436",
+  "summary": "Fix issue #608 by making continuity-storage clock assertions deterministic across a second boundary.",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-436/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "tests/continuity_storage_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ec2677a853b0d95e27f469be3d5aa1e37f376aef",
+    "targetBranch": "main",
+    "outcome": "The continuity-storage commit/rebuild regression is deterministic across a wall-clock second boundary while retaining exact index and event assertions.",
+    "nonGoals": [
+      "No production clock or index format changes.",
+      "No weakened assertions, skips, protected checks or publication authority changes."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 5,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Patch continuity.utc_now to one fixed UTC timestamp only within the existing commit/rebuild distinct-storage-parent test. Keep every storage, event, index, and rebuild assertion unchanged.",
+      "components": [
+        {
+          "name": "continuity-storage-regression",
+          "paths": [
+            "tests/continuity_storage_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independently reviewed revert; preserve the ticket branch and adopted releases."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python tests/continuity_storage_test.py ContinuityStorageTests.test_commit_and_rebuild_use_distinct_storage_parents"
+        ],
+        "evidence": "Paired isolated diagnostic reproduces the original mismatch with a clock crossing a second; fixed test retains exact equality and passes."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python tests/continuity_storage_test.py"
+        ],
+        "evidence": "Full storage suite and required protected Linux/Windows and OneDev checks pass on the publication candidate."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Canonical scope and delivery gate passes without policy changes."
+      }
+    ]
+  }
+}
