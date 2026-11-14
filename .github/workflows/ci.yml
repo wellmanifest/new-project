@@ -228,6 +228,10 @@ jobs:
             tests/adoption_release_auth_test.py \
             tests/prune_merged_worktrees_test.py \
             tests/ticket_index_merge_driver_test.py
+      # Register before the separate source delivery introduces this suite.
+      - name: Test pending bootstrap receipt refresh
+        if: ${{ hashFiles('tests/bootstrap_upgrade_receipt_test.py') != '' }}
+        run: python3 -B tests/bootstrap_upgrade_receipt_test.py
       # Every tests/*.test.sh must be listed above. The list is hand-written, so
       # this refuses to pass when a suite exists that no step runs - which is how
       # governance-env.test.sh went unexecuted after ticket 020 added it.
