@@ -1,0 +1,83 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-438",
+  "summary": "Register pending bootstrap refresh regressions in CI",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-438/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c3aa6c0c35d6408cdb4b6bd10086baef7e77f3a6",
+    "targetBranch": "main",
+    "outcome": "Register the pending bootstrap receipt regression suite in the required Linux CI job before its separate source delivery lands.",
+    "nonGoals": [
+      "No edits to the frozen bootstrap implementation or its tests",
+      "No removed checks, waived failures or publication authority",
+      "No standard release/version change for this CI-only registration"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add one strict Python test step guarded only by existence of its pending source suite. This lets CI registration merge before the source file and executes every test once the source delivery is present. Keep existing workflow jobs, checks, dependency pins and inventory assertion unchanged.",
+      "components": [
+        {
+          "name": "required-linux-ci",
+          "paths": [
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "The existing Linux test job executes tests/bootstrap_upgrade_receipt_test.py when that file exists."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Reviewed removal of the additional registration step; preserve all existing checks."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -B -c \"import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))\"",
+          "git diff --check"
+        ],
+        "evidence": "All old steps remain byte-identical; the new suite is named and invoked without ignore-failure flags."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Canonical gate, protected required Linux/Windows/OneDev and independent review precede merge."
+      }
+    ]
+  }
+}
