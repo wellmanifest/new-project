@@ -13,8 +13,8 @@ validator="$repo_root/scripts/branch_lifecycle_check.py"
 test -f "$validator"
 
 # The snapshot carries literal branch names, never Git revision expressions.
-# Compare the parser with Git in an empty directory so @{-1} cannot expand a
-# checkout from the developer's reflog. Exercise every public snapshot field.
+# Compare the parser with Git in an empty directory with parent discovery
+# bounded, even when TMPDIR is inside a checkout. Exercise every snapshot field.
 python3 - "$validator" "$fixture" <<'PY'
 import copy
 import importlib.util
@@ -50,10 +50,33 @@ def snapshot(name, field):
             {"number": 1, "headRepository": "someone/fork", "headRef": name}]
     return result
 
+# Empty directories still discover ancestor repositories. Give this regression
+# its own parent checkout history so ordinary non-Git TMPDIR also exercises it.
+git_env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+parent = fixture / "git-parent"
+parent.mkdir()
+hooks = parent / "empty-hooks"
+hooks.mkdir()
+setup = ["git", "-c", f"core.hooksPath={hooks.resolve()}", "-c", "commit.gpgSign=false",
+         "-c", "user.name=Branch oracle fixture", "-c", "user.email=fixture@example.invalid"]
+for arguments in (["init", "--template=", "--initial-branch=oracle-main"],
+                  ["commit", "--allow-empty", "-m", "Fixture history"],
+                  ["switch", "-c", "oracle-previous"], ["switch", "oracle-main"]):
+    subprocess.run(setup + arguments, cwd=parent, env=git_env, capture_output=True, check=True)
+oracle = parent / "empty-child"
+oracle.mkdir()
+unbounded = subprocess.run(["git", "check-ref-format", "--branch", "@{-1}"],
+                           cwd=oracle, env=git_env, capture_output=True, text=True)
+assert unbounded.returncode == 0 and unbounded.stdout.strip() == "oracle-previous", unbounded
+# A ceiling equal to cwd does not stop discovery; use its resolved parent.
+git_env["GIT_CEILING_DIRECTORIES"] = str(oracle.parent.resolve())
+discovery = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                           cwd=oracle, env=git_env, capture_output=True)
+assert discovery.returncode != 0, "literal branch oracle discovered a Git ancestor"
+
 for name in valid + invalid:
-    git_env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
     actual = subprocess.run(["git", "check-ref-format", "--branch", name],
-                            cwd=fixture, env=git_env, capture_output=True, check=False)
+                            cwd=oracle, env=git_env, capture_output=True, check=False)
     # Git ref-format rule 9 forbids single-character '@' (a synonym for HEAD),
     # even when `check-ref-format --branch` expands `refs/heads/@`.
     assert (actual.returncode == 0 and name != "@") == (name in valid), repr(name)
