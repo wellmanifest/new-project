@@ -3,6 +3,7 @@
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 import importlib.util
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -10,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -441,6 +443,223 @@ class IdleTakeoverPolicyTest(unittest.TestCase):
         self.assertNotIn('".subactor/leases" /', source)
         bundled = ROOT / "packages/wellman/src/wellman/_bundled/change_lease_check.py"
         self.assertEqual(bundled.read_text(), source)
+
+
+@unittest.skipUnless(sys.platform.startswith("linux"), "explicit recovery requires observable Linux processes")
+class LocalContinuationTest(unittest.TestCase):
+    def setUp(self):
+        helpers = load("continuation_restoration_fixtures", ROOT / "tests/ticket-restoration.test.py")
+        self.local = helpers.LocalRestorationTest()
+        self.restoration_error = helpers.restoration.recovery.RecoveryError
+        self.local.setUp()
+        self.addCleanup(self.local.doCleanups)
+        self.case = self.local.case
+        self.primary = self.case.primary
+        self.actor, self.session = "agent:next", "recovered-session"
+        self.case.git(self.primary, "branch", "-D", "ticket/001-fixture")
+        old = datetime.now(timezone.utc) - timedelta(hours=2)
+        self.local.record.update(issuedAt=stamp(old), heartbeatAt=stamp(old),
+                                 expiresAt=stamp(old + timedelta(minutes=30)))
+        self.local.persist()
+        policy = self.primary / ".governance/manifest.json"
+        value = json.loads(policy.read_text())
+        value["coordination"]["idleTakeover"] = {"enabled": True, "idleMinutes": 15, "leaseMinutes": 120}
+        policy.write_text(json.dumps(value))
+        self.request = {"schema": "new-project.expired-reservation-recovery/v1", "requestId": "recover-fixture",
+                        "workstream": "api", "restoration": dict(self.case.request)}
+        self.request_path = self.case.temp / "continuation.json"
+        self.persist_request()
+
+    def persist_request(self):
+        self.request_path.write_text(json.dumps(self.request))
+
+    def recover(self):
+        return runtime.continue_local_lease(self.primary, self.request_path, self.actor, self.session, recover=True)
+
+    def reject(self):
+        original = self.case.record_path.read_bytes()
+        with self.assertRaises((PermissionError, RuntimeError, ValueError, OSError)):
+            self.recover()
+        self.assertEqual(self.case.record_path.read_bytes(), original)
+        self.assertFalse(self.case.checkout.exists())
+
+    def restore_claimed(self):
+        result = self.recover()
+        self.case.request = result["restorationRequest"]
+        self.case.request_path.write_text(json.dumps(self.case.request))
+        self.local.owner = (self.actor, self.session, str(result["leaseRevision"]), str(result["fencingToken"]))
+        self.local.restore()
+        return result
+
+    def test_expired_missing_reservation_requires_explicit_handoff_then_restores(self):
+        with self.assertRaises(PermissionError):
+            runtime.takeover(self.primary, "ticket-001", self.actor, self.session)
+        with self.assertRaises((PermissionError, RuntimeError, self.restoration_error)):
+            self.local.restore()
+        result = self.restore_claimed()
+        self.assertEqual((result["leaseRevision"], result["fencingToken"]), (5, 10))
+        self.assertFalse(result["grantsEditAuthority"] or result["grantsMergeAuthority"])
+        self.case.assert_metadata()
+        self.assertEqual((self.primary / ".git/new-project-ticket-high-water").read_text(), "1\n")
+        self.assertEqual(self.recover()["writerEnvironment"], result["writerEnvironment"])
+
+    def test_stale_digest_and_wrong_scope_preserve_reservation(self):
+        self.request["restoration"]["reservationSha256"] = "0" * 64
+        self.persist_request()
+        self.reject()
+        self.local.record["scopeHash"] = "0" * 64
+        self.local.persist()
+        self.request["restoration"] = dict(self.case.request)
+        self.persist_request()
+        self.reject()
+
+    def test_cli_recovery_returns_bound_machine_result(self):
+        completed = subprocess.run([sys.executable, str(ROOT / "scripts/idle_takeover.py"),
+                                    "--root", str(self.primary), "recover-reservation", "--request",
+                                    str(self.request_path), "--actor", self.actor, "--session", self.session],
+                                   capture_output=True, text=True)
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        result = json.loads(completed.stdout)
+        self.assertEqual(result["restorationRequest"]["ownerSession"], self.session)
+        self.assertEqual(result["fencingToken"], 10)
+        self.assertFalse(self.case.checkout.exists())
+
+    def test_already_expired_phase_uses_release_and_claim_once(self):
+        self.local.record["phase"] = "expired"; self.local.persist()
+        self.request["restoration"] = dict(self.case.request); self.persist_request()
+        result = self.recover()
+        self.assertEqual(result["fencingToken"], 9)
+        self.assertEqual([r["action"] for r in result["receipts"]], ["release"])
+
+    def test_links_and_tampered_metadata_are_refused(self):
+        original = self.case.record_path.read_bytes()
+        self.case.snapshot_path.write_text("{}")
+        self.reject()
+        self.local.persist(); self.request["restoration"] = dict(self.case.request); self.persist_request()
+        other = self.case.temp / "lease-link"; os.link(self.case.record_path, other)
+        self.reject(); other.unlink()
+        self.assertEqual(self.case.record_path.read_bytes(), original)
+
+    def test_duplicate_request_keys_are_refused_without_claim(self):
+        text = self.request_path.read_text()
+        self.request_path.write_text(text[:-1] + ', "requestId": "other"}')
+        self.reject()
+
+    def test_live_frozen_released_and_wrong_repository_are_refused(self):
+        original = dict(self.local.record)
+        for changes in ({"expiresAt": stamp(datetime.now(timezone.utc) + timedelta(minutes=10))},
+                        {"phase": "released"}, {"publicationFrozen": True},
+                        {"repositoryRef": "foreign/repository"}):
+            with self.subTest(changes=changes):
+                self.local.record = {**original, **changes}
+                self.local.persist()
+                self.request["restoration"] = dict(self.case.request)
+                self.persist_request()
+                self.reject()
+
+    def test_policy_disabled_and_same_old_identity_are_refused(self):
+        self.actor, self.session = "fixture", "fixture-session"
+        self.reject()
+        self.actor, self.session = "agent:next", "recovered-session"
+        policy = self.primary / ".governance/manifest.json"
+        value = json.loads(policy.read_text()); value["coordination"]["idleTakeover"]["enabled"] = False
+        policy.write_text(json.dumps(value)); self.reject()
+
+    def test_existing_branch_is_preserved(self):
+        self.case.git(self.primary, "branch", "ticket/001-fixture", self.case.base)
+        self.reject()
+        self.assertEqual(self.case.git(self.primary, "rev-parse", "ticket/001-fixture"), self.case.base)
+
+    @unittest.skipUnless(sys.platform.startswith("linux"), "deleted cwd is observed through Linux proc")
+    def test_live_deleted_checkout_writer_blocks_recovery(self):
+        self.case.git(self.primary, "worktree", "add", "--relative-paths", "-b", "ticket/001-fixture",
+                      str(self.case.checkout), self.case.base)
+        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"], cwd=self.case.checkout)
+        try:
+            self.case.lose()
+            self.assertIn(child.pid, runtime.live_processes(self.case.checkout))
+            self.reject()
+        finally:
+            child.terminate(); child.wait(timeout=5)
+
+    def test_interrupted_receipt_replays_same_claim(self):
+        original_loader = runtime.pinned_module
+        def loader(primary, name):
+            module = original_loader(primary, name)
+            if name == "terminal_lease_release.py":
+                original = module.atomic_at
+                def interrupt(fd, name, raw, **kwargs):
+                    if name == "recover-fixture.json":
+                        raise OSError("interrupted final receipt")
+                    return original(fd, name, raw, **kwargs)
+                module.atomic_at = interrupt
+            return module
+        with patch.object(runtime, "pinned_module", side_effect=loader):
+            with self.assertRaises(OSError):
+                self.recover()
+        claimed = self.case.record_path.read_bytes()
+        self.assertEqual(self.recover()["fencingToken"], 10)
+        self.assertEqual(self.case.record_path.read_bytes(), claimed)
+
+    def test_request_identity_cannot_be_reused_for_a_different_owner(self):
+        self.recover(); self.session = "other-session"; self.reject()
+
+    def test_lease_change_after_preparation_is_not_overwritten(self):
+        original_loader = runtime.pinned_module
+        def loader(primary, name):
+            module = original_loader(primary, name)
+            if name == "terminal_lease_release.py":
+                original = module.atomic_at
+                def change(fd, name, raw, **kwargs):
+                    result = original(fd, name, raw, **kwargs)
+                    if name.endswith(".prepared"):
+                        value = json.loads(self.case.record_path.read_text()); value["fencingToken"] += 1
+                        self.case.record_path.write_text(json.dumps(value))
+                    return result
+                module.atomic_at = change
+            return module
+        with patch.object(runtime, "pinned_module", side_effect=loader):
+            with self.assertRaises(PermissionError):
+                self.recover()
+        self.assertEqual(json.loads(self.case.record_path.read_text())["fencingToken"], 8)
+
+    def test_live_owner_checkpoint_records_head_without_extending_expiry(self):
+        first = self.restore_claimed()
+        (self.case.checkout / "api/a.txt").write_text("fixture change\n")
+        self.case.git(self.case.checkout, "add", "api/a.txt")
+        self.case.git(self.case.checkout, "commit", "-m", "fixture work")
+        before = json.loads(self.case.record_path.read_text())
+        request = {"schema": "new-project.owner-lease-checkpoint/v1", "requestId": "checkpoint-fixture",
+                   "ticket": "ticket-001", "reservationSha256": hashlib.sha256(self.case.record_path.read_bytes()).hexdigest(),
+                   "leaseRevision": first["leaseRevision"], "fencingToken": first["fencingToken"]}
+        self.request_path.write_text(json.dumps(request))
+        with self.assertRaises(PermissionError):
+            runtime.continue_local_lease(self.case.checkout, self.request_path, self.actor, "foreign", recover=False)
+        result = runtime.continue_local_lease(self.case.checkout, self.request_path, self.actor, self.session, recover=False)
+        after = json.loads(self.case.record_path.read_text())
+        self.assertEqual(after["expiresAt"], before["expiresAt"])
+        self.assertEqual(after["ownerSession"], before["ownerSession"])
+        self.assertEqual(result["headSha"], self.case.git(self.case.checkout, "rev-parse", "HEAD"))
+        self.assertEqual((result["leaseRevision"], result["fencingToken"]), (6, 11))
+        self.assertEqual(runtime.continue_local_lease(self.case.checkout, self.request_path, self.actor,
+                                                    self.session, recover=False), result)
+
+    def test_checkpoint_preserves_fractional_clock_ordering(self):
+        self.restore_claimed()
+        now = datetime.now(timezone.utc).replace(microsecond=900000)
+        value = json.loads(self.case.record_path.read_text())
+        value.update(issuedAt=(now - timedelta(milliseconds=200)).isoformat(),
+                     heartbeatAt=(now - timedelta(milliseconds=100)).isoformat())
+        self.case.record_path.write_text(json.dumps(value))
+        request = {"schema": "new-project.owner-lease-checkpoint/v1", "requestId": "fractional-checkpoint",
+                   "ticket": "ticket-001", "reservationSha256": hashlib.sha256(self.case.record_path.read_bytes()).hexdigest(),
+                   "leaseRevision": value["leaseRevision"], "fencingToken": value["fencingToken"]}
+        self.request_path.write_text(json.dumps(request))
+        runtime.continue_local_lease(self.case.checkout, self.request_path, self.actor, self.session,
+                                     recover=False, now=now)
+        after = json.loads(self.case.record_path.read_text())
+        self.assertLessEqual(datetime.fromisoformat(after["issuedAt"]), datetime.fromisoformat(after["heartbeatAt"]))
+        self.assertEqual(datetime.fromisoformat(after["heartbeatAt"]), now)
 
 
 if __name__ == "__main__":

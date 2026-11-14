@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.149] - 2026-11-14
+
+- Add explicit fenced recovery of expired missing local reservations and live-owner HEAD checkpoints, with prepared receipts, deleted-cwd process checks, unchanged expiry for checkpoints and no source/merge grant. [ticket-435]
+
 ## [0.20.148] - 2026-11-12
 
 - Add explicit digest-bound continuity repository namespaces with preserved legacy journal/index bytes, isolated advisory selectors, complete-chain validation, no-clobber publication and managed helper coverage. No repository aliases or execution/lease authority are granted. [ticket-429]

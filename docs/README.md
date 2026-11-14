@@ -1,5 +1,7 @@
 # Documentation
 
+- [Explicit local lease continuation](../error/GOV-IDLE-TAKEOVER.md) — recover expired missing reservations through a fenced controller and checkpoint a live owner without extending expiry.
+
 - [Explicit repository continuity namespaces](information/continuity-namespaces.md) — preserve complete historical journals across origin changes without aliasing identities or granting authority.
 
 - [Physical interface contracts](information/physical-interface-contracts.md) — declared pin, polarity and capability semantics, per-property intent entries and hardware acceptance.
