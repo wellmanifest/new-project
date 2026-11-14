@@ -1,0 +1,118 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-437",
+  "summary": "Refresh pending bootstrap receipt after verified adoption upgrade",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-437/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "docs/STANDARD_UPGRADE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/create_adoption_lock.py",
+    "tests/bootstrap_upgrade_receipt_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c3aa6c0c35d6408cdb4b6bd10086baef7e77f3a6",
+    "targetBranch": "main",
+    "outcome": "Restore first-allocation eligibility after an already completed published adoption upgrade through an explicit receipt-only verified refresh; ship the material fix in standard0.20.150.",
+    "nonGoals": [
+      "No target source changes or target reports in this hub",
+      "No editing or publication grant from a bootstrap receipt",
+      "No reset, silent receipt refresh, cleanup or lease takeover"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "An explicit --refresh-bootstrap-receipt operation accepts only an already up-to-date published installation. Verify original clone/base, first-allocation state, installed managed closure, unchanged seed bytes and an exactly reversible canonical manifest upgrade; compare the complete target observation again before the single receipt write. Reuse canonical read-only history checks. Fail closed before any write on uncertain provenance.",
+      "components": [
+        {
+          "name": "receipt-refresh",
+          "paths": [
+            "scripts/create_adoption_lock.py"
+          ]
+        },
+        {
+          "name": "regression-fixtures",
+          "paths": [
+            "tests/bootstrap_upgrade_receipt_test.py"
+          ]
+        },
+        {
+          "name": "material-release",
+          "paths": [
+            "docs/STANDARD_UPGRADE.md",
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "create_adoption_lock.py --refresh-bootstrap-receipt with --check or --upgrade"
+      ],
+      "dataChanges": [
+        "Ignored bootstrap receipt advances exact installed published pin and hashes; both authority booleans remain false."
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Reviewed source revert; preserve all existing installed files and failed refresh evidence."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python tests/bootstrap_upgrade_receipt_test.py"
+        ],
+        "evidence": "Real Git migration, published upgrade and receipt-only refresh permit a real first allocation while preserving unrelated bytes."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python tests/bootstrap_upgrade_receipt_test.py",
+          "python tests/scaffold_bootstrap_test.py"
+        ],
+        "evidence": "Changed seeds/manifest, wrong clone/base, malformed receipt, unpublished installation, prior allocations, symlinks and concurrent changes refuse without rewriting receipt or source."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/version-parity.test.sh",
+          "python packages/wellman/sync_bundled.py --check",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Version150 projections and full native gates pass before independent protected publication."
+      }
+    ]
+  }
+}

@@ -246,6 +246,46 @@ modes are refused. Unrecorded changes overlapping the requested scope still
 block admission; unrelated changes remain preserved. All WIP, branch, lease,
 full product validation and independent protected publication gates remain.
 
+### Refresh after an upgrade before the first allocation (0.20.150)
+
+An ordinary `--upgrade` deliberately leaves the bootstrap ownership receipt
+unchanged. When that upgrade completed before the first native allocation, use
+the published 0.20.150-or-later adopter to review and explicitly refresh that
+receipt. Pin the tool's own published checkout, and pass the exact full published
+revision **already installed** in the target lock. The tool may inspect an older
+published installed revision from its own immutable Git history.
+
+```bash
+python3 /path/to/published-new-project/scripts/create_adoption_lock.py \
+  --target-root /path/to/target --source-revision <installed-full-SHA> \
+  --refresh-bootstrap-receipt --check
+python3 /path/to/published-new-project/scripts/create_adoption_lock.py \
+  --target-root /path/to/target --source-revision <same-installed-full-SHA> \
+  --refresh-bootstrap-receipt --upgrade
+```
+
+The first command is read-only: exit1 means a verified receipt update is needed;
+exit0 means it is already current. The second command changes only the ignored
+receipt. Complete any separately reviewed managed upgrade first. Refresh never
+installs source, renders DSL, runs hooks or grants editing/publication authority.
+Do not use the unpublished fixture exception for this operation.
+
+Both the original and installed packages must have publication proof. The
+original clone/HEAD, absence of prior reservations/extra worktrees, integrated
+historical refs, original managed hashes and current installed closure are
+rechecked. Target seeds and ignore rules must retain their acknowledged bytes.
+A changed extendable manifest is accepted only if reversing the canonical
+projection reproduces its original receipt hash and replaying it reproduces the
+current bytes exactly. Added/removed managed fields or independent extensions
+that cannot be proven this way refuse; route those cases to the standard owner
+instead of editing the receipt or resetting the scaffold. Foreign receipt paths,
+symlinks, changed observations and malformed metadata also refuse before writes.
+
+After refresh, obtain a new work-start dirty digest and follow the normal first
+allocation procedure above. The receipt is still an ownership acknowledgement;
+source admission, the controller writer lease, validation and independent
+protected publication remain separate requirements.
+
 ## Upgrade boundaries
 
 ### Explicit existing-file acknowledgment in native upgrade plans (0.20.136)
