@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
+set -E
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fixture="$(mktemp -d "${TMPDIR:-/tmp}/new-project-adoption-test.XXXXXX")"
 trap 'rm -rf "$fixture"' EXIT INT TERM
+
+# Report unexpected failures before cleanup removes the private fixture logs.
+# Emit only numeric context; commands and fixture contents may contain secrets.
+report_failure() {
+  local failure_status="$1" failure_line="$2"
+  printf 'adoption lock: FAIL (line %s, exit %s)\n' "$failure_line" "$failure_status" >&2
+  exit "$failure_status"
+}
+trap 'report_failure "$?" "$LINENO"' ERR
 
 # The recovered worktree bootstrap template has traceable source commits and
 # must fail-close into the repository installer before a test suite starts.

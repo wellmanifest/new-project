@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-440",
+  "summary": "Report safe failure locations in the adoption-lock fixture",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-440/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "tests/adoption-lock.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ab875a24df01d3e0d1664999c46121f642e920cf",
+    "targetBranch": "main",
+    "outcome": "Make an unexpected adoption-lock fixture failure report a bounded numeric source line and the original nonzero exit status before existing cleanup.",
+    "nonGoals": [
+      "Do not claim the previous hosted CI root cause is established",
+      "No production installer, consumer adoption, version, release or runtime dependency changes",
+      "Do not remove assertions, accept more errors, change timeouts or print environment/fixture contents"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the existing errexit/pipefail and cleanup traps. Add an inherited ERR handler to the single Bash fixture. It emits only a fixed label, failing line and original status, then exits with that status. Conditional expected failures remain guarded as before.",
+      "components": [
+        {
+          "name": "adoption-lock-test-harness",
+          "paths": [
+            "tests/adoption-lock.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Reviewed revert of the diagnostic handler; original test assertions and cleanup remain intact."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/adoption-lock.test.sh",
+          "git diff --check"
+        ],
+        "evidence": "The full existing script succeeds without failure output. Bounded external fault-injection copies exercise top-level and function failures, verify original statuses, numeric line diagnostics and cleanup, with no secret/environment output."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh",
+          "goal --delivery-mode pull-request --no-publish -a push --ticket ticket-440 --no-version-sync --no-tag --no-changelog"
+        ],
+        "evidence": "Native hub checks/full Python suite, protected exact-head Linux/Windows/OneDev and independent review precede merge."
+      }
+    ]
+  }
+}
