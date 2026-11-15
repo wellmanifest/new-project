@@ -35,7 +35,7 @@ _previous_bytecode_policy = sys.dont_write_bytecode
 sys.dont_write_bytecode = True
 try:
     try:
-        from ticket_activity import (ActivityError, delivery_landed,
+        from ticket_activity import (ActivityError, ActivityReadBatch, delivery_landed,
                                      parse_ticket_state_text as _shared_ticket_state,
                                      resolve as resolve_ticket_activity)
     except ModuleNotFoundError:
@@ -48,6 +48,7 @@ try:
         sys.modules[_activity_spec.name] = _activity_module
         _activity_spec.loader.exec_module(_activity_module)
         ActivityError = _activity_module.ActivityError
+        ActivityReadBatch = _activity_module.ActivityReadBatch
         delivery_landed = _activity_module.delivery_landed
         resolve_ticket_activity = _activity_module.resolve
         _shared_ticket_state = _activity_module.parse_ticket_state_text
@@ -2033,6 +2034,38 @@ def active_ticket_records(
 ) -> list[TicketRecord]:
     """Return live reservations from the shared status/receipt resolver."""
     active_statuses = set(config.get("activeStatuses", ACTIVE_DEFAULT))
+    projected = [record for record in records if record.status in active_statuses]
+    if not projected:
+        return []
+    try:
+        with ActivityReadBatch(root):
+            return _resolve_active_ticket_records(root, config, projected, report)
+    except ActivityError as error:
+        # Inactivity is accepted only after the whole batch revalidates. A
+        # changed input invalidates every terminal result from this inspection.
+        _report_activity_error(root, projected[0], error, report)
+        return projected
+
+
+def _report_activity_error(
+    root: Path, record: TicketRecord, error: ActivityError, report: Report | None,
+) -> None:
+    if report is not None and not any(
+        finding.code == TICKET_ACTIVITY_ERROR for finding in report.findings
+    ):
+        report.add(
+            TICKET_ACTIVITY_ERROR,
+            f"Ticket activity could not be resolved safely: {error}",
+            "Reconcile or quarantine the clone-external registry from protected evidence; follow error/GOV-TICKET-ACTIVITY.md.",
+            [rel(root, record.directory / "README.md")],
+            {"ticket": record.directory.name, "fallback": "remain-active"},
+        )
+
+
+def _resolve_active_ticket_records(
+    root: Path, config: dict[str, Any], records: list[TicketRecord], report: Report | None,
+) -> list[TicketRecord]:
+    active_statuses = set(config.get("activeStatuses", ACTIVE_DEFAULT))
     active: list[TicketRecord] = []
     for record in records:
         if record.status not in active_statuses:
@@ -2044,16 +2077,7 @@ def active_ticket_records(
             # A broken optional cache must never fabricate terminal authority.
             # Keep the projection active and expose one stable, recoverable error.
             active.append(record)
-            if report is not None and not any(
-                finding.code == TICKET_ACTIVITY_ERROR for finding in report.findings
-            ):
-                report.add(
-                    TICKET_ACTIVITY_ERROR,
-                    f"Ticket activity could not be resolved safely: {error}",
-                    "Reconcile or quarantine the clone-external registry from protected evidence; follow error/GOV-TICKET-ACTIVITY.md.",
-                    [rel(root, record.directory / "README.md")],
-                    {"ticket": record.directory.name, "fallback": "remain-active"},
-                )
+            _report_activity_error(root, record, error, report)
             continue
         if resolution.active:
             active.append(record)

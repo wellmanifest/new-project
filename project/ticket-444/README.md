@@ -10,8 +10,8 @@
 Use the existing ActivityReadBatch boundary for governance activity resolution.
 Share observations within one inspection and revalidate them before accepting
 terminal receipts. Preserve active reservations on any invalidated observation.
-Source scope: scripts/governance_check.py, its focused regression tests and
-their shell entry point used by the existing native CI test discovery.
+Source scope: scripts/governance_check.py, its generated packaged copy, focused
+regression tests and their shell entry point used by native CI test discovery.
 
 ## Kryteria Odbioru (Acceptance Criteria)
 - [x] AC-01: Preserve results for stable real Git histories while reducing repeated subprocesses.

@@ -13,6 +13,7 @@
     "TODO.md",
     "project/TICKETS.md",
     "scripts/governance_check.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
     "tests/governance_activity_performance_test.py",
     "tests/governance-activity-performance.test.sh"
   ],
@@ -35,7 +36,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 3,
+      "maxImplementationFiles": 4,
       "maxAffectedComponents": 1,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
@@ -48,6 +49,7 @@
           "name": "governance-activity-resolution",
           "paths": [
             "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
             "tests/governance_activity_performance_test.py",
             "tests/governance-activity-performance.test.sh"
           ]
@@ -84,8 +86,8 @@
       },
       {
         "criterion": "AC-04",
-        "commands": ["bash project/governance-check.sh --no-cache", "protected exact-head CI and independent Validator publication"],
-        "evidence": "Local managed gate and affected tests are recorded; the complete diff must pass the explicit delivery contract and protected publication remains pending."
+        "commands": ["bash tests/wellman-package.test.sh", "bash project/governance-check.sh --no-cache", "protected exact-head CI and independent Validator publication"],
+        "evidence": "Local managed gate and affected tests are recorded. Hosted CI found the bundled copy stale; the canonical sync generator must produce identical source and packaged bytes, followed by package checks and fresh exact-head CI. Protected publication remains pending."
       }
     ]
   }

@@ -35,3 +35,10 @@ GOV-DELIVERY-001 identified the verifier as requiring the full delivery
 contract. Its architecture, original accepted base, three implementation paths,
 policy-counted existing interface, dependency budget and validation evidence are recorded in
 the owned intent before publication. This completes the same bounded objective.
+
+Publication prerequisite: hosted CI reported WELLMAN-BUNDLE-DRIFT. Rebuild the
+generated packaged verifier with packages/wellman/sync_bundled.py from the
+already frozen source bytes. The bounded intent includes this fourth derived
+asset. Reconcile its ownership, verify package parity and obtain fresh CI for
+the resulting head. This is packaging completion, with no new algorithm,
+dependency, policy or runtime deployment. Preserve earlier failed receipts.
