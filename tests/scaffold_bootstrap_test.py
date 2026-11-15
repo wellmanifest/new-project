@@ -605,6 +605,23 @@ class HistoricalRefObservationTest(unittest.TestCase):
     def test_committed_native_manifest_is_not_a_legacy_scaffold(self):
         governance = self.root / '.governance'
         governance.mkdir()
+        for profile in sorted(self.guard.WELLMAN_SCAFFOLD_PROFILES):
+            with self.subTest(profile=profile):
+                (governance / 'manifest.json').write_text(json.dumps({
+                    'schema': 'wellmanifest.manifest/v1',
+                    'standard': {'id': profile, 'version': '0.20.38'},
+                }) + '\n')
+                self.git('add', '.governance')
+                self.git('commit', '--quiet', '-m', f'Scaffold {profile}')
+                self.guard.bootstrap_scaffold_at_head(self.root, self.git('rev-parse', 'HEAD'))
+        (governance / 'manifest.json').write_text(json.dumps({
+            'schema': 'wellmanifest.manifest/v1',
+            'standard': {'id': 'profile:unknown-custom', 'version': '0.20.38'},
+        }) + '\n')
+        self.git('add', '.governance')
+        self.git('commit', '--quiet', '-m', 'Unknown scaffold profile')
+        with self.assertRaisesRegex(self.guard.ObservationError, 'exact legacy scaffold'):
+            self.guard.bootstrap_scaffold_at_head(self.root, self.git('rev-parse', 'HEAD'))
         (governance / 'manifest.json').write_text('{"schema":"new-project.governance/v2"}\n')
         self.git('add', '.governance')
         self.git('commit', '--quiet', '-m', 'Native governance')

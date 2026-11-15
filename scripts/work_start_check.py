@@ -273,6 +273,17 @@ def bootstrap_historical_refs(root, head):
     return refs
 
 
+WELLMAN_SCAFFOLD_PROFILES = frozenset({
+    "profile:baseline",
+    "profile:domain-pack",
+    "profile:runtime-service",
+    "profile:agent-executor",
+    "profile:deployment",
+    "profile:embedded-fleet",
+    "profile:full",
+})
+
+
 def bootstrap_scaffold_at_head(root, head):
     """Verify committed legacy provenance, or prove governance was absent.
 
@@ -292,7 +303,7 @@ def bootstrap_scaffold_at_head(root, head):
     if (not isinstance(original, dict) or set(original) != {"schema", "standard"}
             or original.get("schema") != "wellmanifest.manifest/v1"
             or not isinstance(standard, dict) or set(standard) != {"id", "version"}
-            or standard.get("id") != "profile:baseline"
+            or standard.get("id") not in WELLMAN_SCAFFOLD_PROFILES
             or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", str(standard.get("version", "")))):
         raise ObservationError("Bootstrap requires an exact legacy scaffold")
 

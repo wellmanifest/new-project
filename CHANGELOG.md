@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.153] - 2026-11-15
+
+- Align `bootstrap_scaffold_at_head` in `scripts/work_start_check.py` with the canonical `WELLMAN_SCAFFOLD_PROFILES` allowlist (`profile:baseline`, `profile:domain-pack`, `profile:runtime-service`, `profile:agent-executor`, `profile:deployment`, `profile:embedded-fleet`, `profile:full`), and ensure `project/new-ticket.sh` safely creates a missing non-symlink `project/` parent directory in newly allocated worktrees whose committed base lacks `project/` while retaining atomic `GOV-TICKET-LOCK-003` collision and symlink refusals. [ticket-445]
+
 ## [0.20.152] - 2026-11-15
 
 - Add fail-closed controller terminal lease settlement (`terminal_lease_release.py --settle-verified [--ticket ticket-NNN] [--apply]`) so `local-single-clone` controllers can transition `claimed`/`editing`/`validating`/`approved`/`merged`/`closed` leases to `released` without original writer session context when `.git/new-project/terminal-receipts.json` proves `releasesReservation: true`, target-branch ancestry, clean or absent checkout state, and exclusive lease CAS, recording immutable `"settledBy": "controller:verified-terminal-receipt"` receipts. [ticket-443]
