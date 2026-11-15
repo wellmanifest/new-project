@@ -1,0 +1,50 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-446",
+  "summary": "Expose safe terminal lease repository and owner refusal diagnostics",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-446/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/terminal_lease_release.py",
+    "tests/terminal_lease_release_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3f7fa120d3a9f366e67f150d493fe816623fa669",
+    "targetBranch": "main",
+    "outcome": "Expose safe and precise terminal lease identity refusal diagnostics while preserving existing acceptance and mutation guards.",
+    "nonGoals": ["No legacy identity acceptance, migration or host lease mutation", "No deployment or operator permission changes", "No private identifiers or unexpected exception details in CLI diagnostics"],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {"maxImplementationFiles": 2, "maxAffectedComponents": 2, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Separate equivalent fail-closed identity predicates and allowlist their static refusal codes in CLI stderr. Retain generic refusal for unexpected errors and test unchanged lease bytes using real Git fixtures.",
+      "components": [{"name": "terminal-controller", "paths": ["scripts/terminal_lease_release.py"]}, {"name": "controller-tests", "paths": ["tests/terminal_lease_release_test.py"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Static owner, scope or repository refusal label in existing CLI diagnostics and settlement reports"],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert through independent protected publication. No host lease or runtime apply is part of this ticket."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["python tests/terminal_lease_release_test.py"], "evidence": "Unqualified and foreign repository labels, wrong owners and wrong scope remain refused with byte-identical leases and precise static reasons."},
+      {"criterion": "AC-02", "commands": ["python tests/terminal_lease_release_test.py"], "evidence": "Unexpected private exception text remains hidden; existing release, CAS and recovery tests pass."},
+      {"criterion": "AC-03", "commands": ["bash project/governance-check.sh", "python packages/wellman/sync_bundled.py --check"], "evidence": "Governance, package parity, exact-base/head OneDev, required hosted Linux/Windows gates and independent App publication."}
+    ]
+  }
+}
