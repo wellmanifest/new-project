@@ -290,6 +290,95 @@ class PublishedDeliveryBaseTest(unittest.TestCase):
         with patch.object(governance, "active_ticket_records", return_value=[record]):
             self.assertIsNone(governance.resolve_validation_base(None, self.root, [], {}, "HEAD"))
 
+    def _commit_landed_adoption(self, ticket_name="ticket-001", from_rev="a" * 40, to_rev="b" * 40):
+        ticket_dir = self.root / "project" / ticket_name
+        ticket_dir.mkdir(parents=True, exist_ok=True)
+        (ticket_dir / "README.md").write_text("Status: IN_PROGRESS\n", encoding="utf-8")
+        adoption_lock = self.root / ".governance" / "manifest.lock.json"
+        adoption_lock.parent.mkdir(parents=True, exist_ok=True)
+        adoption_lock.write_text(f'{{"rev": "{to_rev}"}}\n', encoding="utf-8")
+        self.git("add", f"project/{ticket_name}/README.md", ".governance/manifest.lock.json")
+        self.git("commit", "-qm", f"{ticket_name}: landed standard adoption")
+        self.publish()
+        return SimpleNamespace(
+            directory=ticket_dir,
+            intent={
+                "delivery": {
+                    "acceptedBaseSha": self.accepted,
+                    "targetBranch": "main",
+                    "standardAdoption": {
+                        "sourceRepository": "wellmanifest/new-project",
+                        "fromRevision": from_rev,
+                        "toRevision": to_rev,
+                    },
+                }
+            },
+        )
+
+    def test_atomic_adoption_gate_ignores_single_and_multiple_landed_adoptions_on_clean_head(self):
+        first = self._commit_landed_adoption("ticket-001", "1" * 40, "2" * 40)
+        second = self._commit_landed_adoption("ticket-002", "2" * 40, "3" * 40)
+        for active in ([first], [first, second]):
+            with self.subTest(count=len(active)):
+                report = governance.Report(self.root)
+                exempt = governance.atomic_standard_adoption_paths(
+                    self.root, None, [], active, report,
+                )
+                self.assertEqual(set(), exempt)
+                self.assertEqual([], [finding.code for finding in report.findings])
+
+    def test_atomic_adoption_gate_still_rejects_unlanded_adoption_on_clean_head(self):
+        self.git("checkout", "-qb", "ticket/003-pending-adoption")
+        ticket_dir = self.root / "project" / "ticket-003"
+        ticket_dir.mkdir(parents=True, exist_ok=True)
+        (ticket_dir / "README.md").write_text("Status: IN_PROGRESS\n", encoding="utf-8")
+        adoption_lock = self.root / ".governance" / "manifest.lock.json"
+        adoption_lock.parent.mkdir(parents=True, exist_ok=True)
+        adoption_lock.write_text('{"rev": "pending"}\n', encoding="utf-8")
+        self.git("add", "project/ticket-003/README.md", ".governance/manifest.lock.json")
+        self.git("commit", "-qm", "ticket-003: unlanded adoption")
+        unlanded = SimpleNamespace(
+            directory=ticket_dir,
+            intent={
+                "delivery": {
+                    "acceptedBaseSha": self.accepted,
+                    "targetBranch": "main",
+                    "standardAdoption": {
+                        "sourceRepository": "wellmanifest/new-project",
+                        "fromRevision": "1" * 40,
+                        "toRevision": "2" * 40,
+                    },
+                }
+            },
+        )
+        report = governance.Report(self.root)
+        exempt = governance.atomic_standard_adoption_paths(
+            self.root, None, [], [unlanded], report,
+        )
+        self.assertEqual(set(), exempt)
+        self.assertEqual(["GOV-SYNC-001"], [finding.code for finding in report.findings])
+
+    def test_atomic_adoption_gate_still_enforces_landed_adoption_when_its_carriers_are_in_changed(self):
+        landed = self._commit_landed_adoption("ticket-001", "1" * 40, "2" * 40)
+        report = governance.Report(self.root)
+        exempt = governance.atomic_standard_adoption_paths(
+            self.root, self.accepted, ["project/ticket-001/README.md"], [landed], report,
+        )
+        self.assertEqual(set(), exempt)
+        self.assertEqual(["GOV-SYNC-001"], [finding.code for finding in report.findings])
+
+    def test_atomic_adoption_gate_rejects_missing_base_on_detached_pr_head_ahead_of_origin_main(self):
+        landed = self._commit_landed_adoption("ticket-001", "1" * 40, "2" * 40)
+        self.git("checkout", "-qb", "ticket/002-product")
+        pr_head = self.commit("src/product.py", "product\n")
+        self.git("checkout", "--detach", "-q", pr_head)
+        report = governance.Report(self.root)
+        exempt = governance.atomic_standard_adoption_paths(
+            self.root, None, [], [landed], report,
+        )
+        self.assertEqual(set(), exempt)
+        self.assertEqual(["GOV-SYNC-001"], [finding.code for finding in report.findings])
+
 
 if __name__ == "__main__":
     unittest.main()

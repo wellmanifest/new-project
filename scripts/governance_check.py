@@ -4492,6 +4492,61 @@ def standard_adoption_records(active: list[TicketRecord]) -> list[TicketRecord]:
     ]
 
 
+def _record_ticket_dir_and_prefix(root: Path, record: Any) -> tuple[Path | None, str | None]:
+    ticket_dir = getattr(record, "directory", None)
+    if not isinstance(ticket_dir, Path):
+        return None, None
+    resolved_dir = ticket_dir if ticket_dir.is_absolute() else root / ticket_dir
+    try:
+        rel_dir = resolved_dir.resolve().relative_to(root.resolve()).as_posix().rstrip("/")
+    except ValueError:
+        rel_dir = ticket_dir.as_posix().rstrip("/") if not ticket_dir.is_absolute() else None
+    return resolved_dir, (f"{rel_dir}/" if rel_dir else None)
+
+
+def _is_clean_target_head(root: Path, target_ref: str, head: str) -> bool:
+    try:
+        target_sha = git_output(root, ["rev-parse", "--verify", f"{target_ref}^{{commit}}"]).decode().strip()
+        head_sha = git_output(root, ["rev-parse", "--verify", f"{head}^{{commit}}"]).decode().strip()
+        if not target_sha or head_sha != target_sha:
+            return False
+        return not git_output(root, ["status", "--porcelain", "--untracked-files=all"]).strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+
+
+def unlanded_standard_adoption_records(
+    root: Path,
+    active: list[TicketRecord],
+    changed: list[str] | None = None,
+    *,
+    require_clean_target_head: bool = False,
+    head: str = "HEAD",
+) -> list[TicketRecord]:
+    unlanded: list[TicketRecord] = []
+    for record in standard_adoption_records(active):
+        if record.intent is None:
+            continue
+        delivery = record.intent.get("delivery")
+        if not isinstance(delivery, dict):
+            continue
+        ticket_dir, prefix = _record_ticket_dir_and_prefix(root, record)
+        if changed and prefix and any(path.startswith(prefix) for path in changed):
+            unlanded.append(record)
+            continue
+        target_branch = delivery.get("targetBranch")
+        if ticket_dir is not None and isinstance(target_branch, str) and target_branch:
+            target_ref = f"refs/remotes/origin/{target_branch}"
+            if not require_clean_target_head or _is_clean_target_head(root, target_ref, head):
+                try:
+                    if delivery_landed(root, ticket_dir, target_ref):
+                        continue
+                except Exception:
+                    pass
+        unlanded.append(record)
+    return unlanded
+
+
 def load_standard_adoption_evidence(
     root: Path,
     base: str,
@@ -4667,8 +4722,11 @@ def atomic_standard_adoption_paths(
     changed: list[str],
     active: list[TicketRecord],
     report: Report,
+    head: str = "HEAD",
 ) -> set[str]:
-    records = standard_adoption_records(active)
+    records = unlanded_standard_adoption_records(
+        root, active, changed, require_clean_target_head=(base is None), head=head,
+    )
     if not records:
         return set()
     evidence_paths = [".governance/manifest.lock.json", ".governance/package-manifest.json"]
@@ -4969,27 +5027,10 @@ def resolve_validation_base(
     if supplied_base is not None:
         return supplied_base
     active = active_records if active_records is not None else active_ticket_records(root, config, records)
-    adoption_records = standard_adoption_records(active)
     # If an adoption ticket's delivery is already landed on its target branch,
     # its prose status remains active only because terminal receipts were not recorded.
     # Exclude landed adoptions so subsequent tickets do not have their validation base poisoned.
-    unlanded_adoptions = []
-    for record in adoption_records:
-        if record.intent is None:
-            continue
-        delivery = record.intent.get("delivery")
-        if not isinstance(delivery, dict):
-            continue
-        ticket_dir = getattr(record, "directory", None)
-        target_branch = delivery.get("targetBranch")
-        if ticket_dir is not None and target_branch:
-            target_ref = f"refs/remotes/origin/{target_branch}"
-            try:
-                if delivery_landed(root, ticket_dir, target_ref):
-                    continue
-            except Exception:
-                pass
-        unlanded_adoptions.append(record)
+    unlanded_adoptions = unlanded_standard_adoption_records(root, active)
     deliveries = [record.intent["delivery"] for record in unlanded_adoptions if record.intent is not None]
     if not deliveries:
         return None
@@ -5375,7 +5416,7 @@ def run_governance_checks(
         if any(path.startswith(f"{rel(root, record.directory).rstrip('/')}/") for path in changed)
     ]
     adoption_paths = atomic_standard_adoption_paths(
-        root, base, changed, changed_active or active, report,
+        root, base, changed, changed_active or active, report, args.head,
     )
     timed_step(report, "load_work_classification", load_work_classification, root, report, args.work_classification)
     timed_step(report, "check_lock", check_lock, root, lock_path, manifest, report)

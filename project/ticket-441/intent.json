@@ -1,0 +1,93 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-441",
+  "summary": "Ignore landed standard adoptions in atomic adoption gate on clean heads",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-441/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/governance_check.py",
+    "tests/delivery-post-merge-base.test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7ff106944a7a03efb83dcb73afb8c220461d0de8",
+    "targetBranch": "main",
+    "outcome": "Prevent historical already-landed standardAdoption tickets from triggering false GOV-SYNC-001 errors in atomic_standard_adoption_paths on clean or scheduled checkouts while retaining verification when an adoption ticket's own carriers are in changed paths or when an adoption has not landed.",
+    "nonGoals": [
+      "No weakening of check_lock or unlanded atomic adoption validation",
+      "No version bump, tag, changelog, or consumer repository edits in this slice",
+      "No runtime dependency additions"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extract unlanded_standard_adoption_records(root, active, changed) and share it between resolve_validation_base and atomic_standard_adoption_paths. Exclude a standardAdoption ticket only when its own carrier prefix is absent from changed and delivery_landed confirms delivery on refs/remotes/origin/<targetBranch>; keep post-merge range checks (where project/ticket-NNN/** is in changed) and all unlanded adoptions fail-closed. Synchronize the bundled wellman copy byte-for-byte.",
+      "components": [
+        {
+          "name": "governance-checker",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py"
+          ]
+        },
+        {
+          "name": "delivery-base-regression-tests",
+          "paths": [
+            "tests/delivery-post-merge-base.test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "scripts/governance_check.py: exclude already-landed untouched standardAdoption records in atomic_standard_adoption_paths"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Reviewed revert of scripts/governance_check.py, bundled copy, and regression tests."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -B tests/delivery-post-merge-base.test.py"
+        ],
+        "evidence": "Single and multiple landed standardAdoption tickets on a clean published checkout return set() and zero GOV-SYNC-001 findings in atomic_standard_adoption_paths, while unlanded adoptions and post-merge diffs touching the adoption ticket directory remain enforced."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -B packages/wellman/sync_bundled.py --check",
+          "bash tests/wellman-package.test.sh",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Bundled wellman governance_check.py matches scripts/governance_check.py byte-for-byte and native hub checks plus CI/Validator review pass before merge."
+      }
+    ]
+  }
+}
