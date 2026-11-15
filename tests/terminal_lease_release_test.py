@@ -372,6 +372,178 @@ class TerminalOwnerRelease(unittest.TestCase):
         self.refused()
 
 
+@unittest.skipUnless(os.name == 'posix', 'POSIX local controller adapter; unsupported hosts tested separately')
+class ControllerVerifiedSettlement(unittest.TestCase):
+    setUp = TerminalOwnerRelease.setUp
+    git = TerminalOwnerRelease.git
+    write_lease = TerminalOwnerRelease.write_lease
+    remove_merged_checkout_and_ref = TerminalOwnerRelease.remove_merged_checkout_and_ref
+
+    def copy_controller_scripts(self):
+        for name in ('terminal_lease_release.py', 'change_lease_check.py', 'ticket_activity.py'):
+            (self.root / '.governance' / name).write_bytes((ROOT / 'scripts' / name).read_bytes())
+        (self.root / '.governance/change-lease.schema.json').write_bytes(
+            (ROOT / 'subprojects/change-lease/change-lease.schema.json').read_bytes())
+
+    def test_settle_verified_plan_then_apply_and_idempotent_without_owner_session(self):
+        before = self.lease.read_bytes()
+        planned = release.settle_verified_leases(self.root, apply=False)
+        self.assertEqual(planned['mode'], 'plan')
+        self.assertEqual(planned['grantsAuthority'], False)
+        self.assertEqual(len(planned['settled']), 1)
+        self.assertEqual(planned['settled'][0]['status'], 'planned')
+        self.assertEqual(planned['settled'][0]['settledBy'], release.SETTLED_BY)
+        self.assertEqual(planned['settled'][0]['terminalReceiptRef'], self.receipt['receiptRef'])
+        self.assertEqual(self.lease.read_bytes(), before)
+
+        self.copy_controller_scripts()
+        clean_env = {k: v for k, v in os.environ.items() if not k.startswith('NEW_PROJECT_WRITER_')}
+        cmd = [sys.executable, '-I', str(self.root / '.governance/terminal_lease_release.py'),
+               '--root', str(self.root), '--settle-verified']
+        cli_plan = subprocess.run(cmd, env=clean_env, capture_output=True, text=True, check=True, timeout=20)
+        self.assertEqual(json.loads(cli_plan.stdout)['settled'][0]['status'], 'planned')
+        self.assertEqual(self.lease.read_bytes(), before)
+
+        cli_apply = subprocess.run(cmd + ['--apply'], env=clean_env, capture_output=True, text=True, check=True, timeout=20)
+        report = json.loads(cli_apply.stdout)
+        self.assertEqual(len(report['settled']), 1)
+        item = report['settled'][0]
+        self.assertEqual(item['status'], 'released')
+        self.assertEqual(item['settledBy'], 'controller:verified-terminal-receipt')
+        self.assertEqual(item['terminalReceiptRef'], self.receipt['receiptRef'])
+
+        current = json.loads(self.lease.read_bytes())
+        self.assertEqual((current['phase'], current['leaseRevision'], current['fencingToken']), ('released', 3, 3))
+        self.assertEqual(canonical.validate_lease(current), [])
+
+        receipt_doc = json.loads(Path(item['receipt']).read_text())
+        self.assertEqual(receipt_doc['schema'], release.SETTLEMENT_SCHEMA)
+        self.assertEqual(receipt_doc['settledBy'], 'controller:verified-terminal-receipt')
+        self.assertEqual(receipt_doc['terminalReceiptRef'], self.receipt['receiptRef'])
+        self.assertEqual(receipt_doc['settlement']['settledBy'], 'controller:verified-terminal-receipt')
+        self.assertTrue(all(t['outcome'] == 'accepted' for t in receipt_doc['transitions']))
+
+        repeat = subprocess.run(cmd + ['--ticket', 'ticket-123', '--apply'],
+                                env=clean_env, capture_output=True, text=True, check=True, timeout=20)
+        repeat_report = json.loads(repeat.stdout)
+        self.assertEqual(repeat_report['settled'], [])
+        self.assertEqual(repeat_report['skipped'][0]['reason'], 'already_released')
+        self.assertEqual(json.loads(self.lease.read_bytes())['leaseRevision'], 3)
+
+    def test_settle_verified_supports_all_settleable_phases_and_removed_checkout(self):
+        for phase in ('claimed', 'editing', 'validating', 'approved', 'merged', 'closed'):
+            with self.subTest(phase=phase):
+                self.value.update(
+                    phase=phase,
+                    publicationFrozen=(phase in canonical.FROZEN_PHASES),
+                    headSha=self.head if phase in {'approved', 'merged', 'closed'} else self.value['headSha'],
+                    pullRequest=1 if phase in {'approved', 'merged', 'closed'} else None,
+                    validatorRunId='fixture-validator' if phase in {'approved', 'merged', 'closed'} else None,
+                    leaseRevision=1,
+                    fencingToken=1,
+                    eventSequence=1,
+                    previousReceiptRef=None,
+                )
+                self.write_lease()
+                report = release.settle_verified_leases(self.root, ticket='ticket-123', apply=True)
+                self.assertEqual(len(report['settled']), 1)
+                self.assertEqual(json.loads(self.lease.read_bytes())['phase'], 'released')
+
+        self.remove_merged_checkout_and_ref()
+        self.value.update(
+            phase='claimed',
+            publicationFrozen=False,
+            headSha=self.git('rev-parse', 'HEAD~1'),
+            pullRequest=None,
+            validatorRunId=None,
+            leaseRevision=1,
+            fencingToken=1,
+            eventSequence=1,
+            previousReceiptRef=None,
+        )
+        self.write_lease()
+        report = release.settle_verified_leases(self.root, ticket='ticket-123', apply=True)
+        self.assertEqual(report['settled'][0]['status'], 'released')
+        self.assertEqual(json.loads(self.lease.read_bytes())['phase'], 'released')
+
+    def test_settle_verified_skips_unmerged_dirty_frozen_and_ambiguous_leases(self):
+        unmerged = dict(self.value, leaseId='allocation-124', ticketId='ticket-124',
+                        branchRef='refs/heads/ticket/124-unmerged', worktreeId='ticket-124--unmerged')
+        (self.lease.parent / 'ticket-124--unmerged.json').write_text(json.dumps(unmerged))
+
+        frozen = dict(self.value, leaseId='allocation-125', ticketId='ticket-125',
+                      branchRef='refs/heads/ticket/125-frozen', worktreeId='ticket-125--frozen',
+                      phase='publication_frozen', publicationFrozen=True, headSha=self.head, pullRequest=2)
+        (self.lease.parent / 'ticket-125--frozen.json').write_text(json.dumps(frozen))
+        activity.record(self.root, dict(self.receipt, receiptRef='receipt:test/merged-125', ticket='ticket-125'))
+
+        tree_dirty = self.root / '.worktrees/ticket-126--dirty'
+        self.git('worktree', 'add', '-qb', 'ticket/126-dirty', str(tree_dirty), self.head)
+        (tree_dirty / 'unpublished.txt').write_text('dirty')
+        dirty_lease = dict(self.value, leaseId='allocation-126', ticketId='ticket-126',
+                           branchRef='refs/heads/ticket/126-dirty', worktreeId='ticket-126--dirty')
+        (self.lease.parent / 'ticket-126--dirty.json').write_text(json.dumps(dirty_lease))
+        activity.record(self.root, dict(self.receipt, receiptRef='receipt:test/merged-126', ticket='ticket-126'))
+
+        alt_branch = 'ticket/127-ambiguous'
+        tree_alt = self.root / '.worktrees/ticket-127--ambiguous'
+        base_sha = self.value['headSha']
+        self.git('worktree', 'add', '-qb', alt_branch, str(tree_alt), base_sha)
+        (tree_alt / 'alt1.txt').write_text('one')
+        self.git('add', '.', root=tree_alt)
+        self.git('commit', '-qm', 'alt1', root=tree_alt)
+        head1 = self.git('rev-parse', 'HEAD', root=tree_alt)
+        self.git('merge', '--no-ff', '-qm', 'merge alt1', alt_branch)
+        term1 = self.git('rev-parse', 'HEAD')
+        (tree_alt / 'alt2.txt').write_text('two')
+        self.git('add', '.', root=tree_alt)
+        self.git('commit', '-qm', 'alt2', root=tree_alt)
+        head2 = self.git('rev-parse', 'HEAD', root=tree_alt)
+        self.git('merge', '--no-ff', '-qm', 'merge alt2', alt_branch)
+        term2 = self.git('rev-parse', 'HEAD')
+        self.git('worktree', 'remove', str(tree_alt))
+        self.git('branch', '-d', alt_branch)
+        ambiguous_lease = dict(self.value, leaseId='allocation-127', ticketId='ticket-127',
+                               branchRef='refs/heads/ticket/127-ambiguous', worktreeId='ticket-127--ambiguous')
+        (self.lease.parent / 'ticket-127--ambiguous.json').write_text(json.dumps(ambiguous_lease))
+        activity.record(self.root, {'receiptRef': 'receipt:test/amb-1', 'ticket': 'ticket-127', 'outcome': 'merged',
+                                    'headSha': head1, 'terminalSha': term1, 'targetBranch': 'main', 'occurredAt': '2026-10-28T01:00:00Z'})
+        activity.record(self.root, {'receiptRef': 'receipt:test/amb-2', 'ticket': 'ticket-127', 'outcome': 'merged',
+                                    'headSha': head2, 'terminalSha': term2, 'targetBranch': 'main', 'occurredAt': '2026-10-28T01:05:00Z'})
+
+        report = release.settle_verified_leases(self.root, apply=True)
+        self.assertEqual([item['ticketId'] for item in report['settled']], ['ticket-123'])
+        reasons = {item['ticketId']: item['reason'] for item in report['skipped']}
+        self.assertEqual(reasons['ticket-124'], 'matching_merged_receipt_required')
+        self.assertEqual(reasons['ticket-125'], 'phase_requires_existing_controller_reconciliation')
+        self.assertEqual(reasons['ticket-126'], 'worktree_has_unpublished_work')
+        self.assertEqual(reasons['ticket-127'], 'ambiguous_terminal_receipts')
+
+        with self.assertRaises(PermissionError):
+            release.settle_verified_leases(self.root, ticket='ticket-124', apply=True)
+        with self.assertRaises(PermissionError):
+            release.settle_verified_leases(self.root, ticket='ticket-999', apply=False)
+
+    def test_settle_verified_cas_lock_and_write_ahead_recovery(self):
+        import fcntl
+        lock = self.lease.with_name(self.lease.name + '.lock')
+        with lock.open('w') as held:
+            fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            with self.assertRaises(OSError):
+                release.settle_verified_leases(self.root, ticket='ticket-123', apply=True)
+        self.assertEqual(json.loads(self.lease.read_bytes())['phase'], 'claimed')
+
+        before = self.lease.read_bytes()
+        with patch.object(release, '_replace_lease', side_effect=OSError('injected interruption')):
+            with self.assertRaises(PermissionError):
+                release.settle_verified_leases(self.root, ticket='ticket-123', apply=True)
+        self.assertEqual(self.lease.read_bytes(), before)
+
+        recovered = release.settle_verified_leases(self.root, ticket='ticket-123', apply=True)
+        self.assertEqual(recovered['settled'][0]['status'], 'released')
+        self.assertEqual(json.loads(self.lease.read_bytes())['leaseRevision'], 3)
+
+
 class PlatformBoundary(unittest.TestCase):
     def test_unsupported_controller_refuses_before_filesystem_effect(self):
         request = {'schema': release.REQUEST_SCHEMA, 'requestId': 'unsupported', 'worktreeId': 'ticket-123--example',
@@ -381,6 +553,8 @@ class PlatformBoundary(unittest.TestCase):
         with patch.object(release.os, 'name', 'unsupported'):
             with self.assertRaisesRegex(PermissionError, 'posix_controller_required'):
                 release.release_owner('unavailable', request, apply=True)
+            with self.assertRaisesRegex(PermissionError, 'posix_controller_required'):
+                release.settle_verified_leases('unavailable', apply=True)
 
 
 if __name__ == '__main__':
