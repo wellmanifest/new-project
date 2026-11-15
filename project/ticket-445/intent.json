@@ -1,0 +1,117 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-445",
+  "summary": "Support Wellman scaffold profiles in bootstrap work-start and adoption-plan ticket root creation",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-445/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "project/new-ticket.sh",
+    "scripts/work_start_check.py",
+    "tests/adoption_legacy_scaffold_test.py",
+    "tests/scaffold_bootstrap_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "aa3afd924541c2564c2eecf724c33e02348019ef",
+    "targetBranch": "main",
+    "outcome": "Accept all canonical Wellman scaffold profile IDs in work_start_check.py bootstrap_scaffold_at_head, ensure project/new-ticket.sh safely creates a missing non-symlink project/ parent directory in newly allocated worktrees whose committed base lacks project/, and release standard 0.20.153.",
+    "nonGoals": [
+      "No relaxation of native governance manifest checks or GOV-TICKET-LOCK-003 collision detection",
+      "No changes to governance_check.py or target repositories inside this Governance Hub"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Align scripts/work_start_check.py bootstrap_scaffold_at_head with WELLMAN_SCAFFOLD_PROFILES from scripts/create_adoption_lock.py, guard and create missing dirname(ticket_dir) in project/new-ticket.sh before atomic mkdir \"$ticket_dir\", add regression coverage in tests/scaffold_bootstrap_test.py and tests/adoption_legacy_scaffold_test.py, and advance 0.20.153 version projections.",
+      "components": [
+        {
+          "name": "bootstrap-allocator-and-work-start",
+          "paths": [
+            "project/new-ticket.sh",
+            "scripts/work_start_check.py"
+          ]
+        },
+        {
+          "name": "regression-suites",
+          "paths": [
+            "tests/adoption_legacy_scaffold_test.py",
+            "tests/scaffold_bootstrap_test.py"
+          ]
+        },
+        {
+          "name": "material-release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "scripts/work_start_check.py WELLMAN_SCAFFOLD_PROFILES admission in bootstrap_scaffold_at_head"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through protected review; existing adoption locks and ticket schemas remain unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/scaffold_bootstrap_test.py"
+        ],
+        "evidence": "bootstrap_scaffold_at_head accepts all canonical WELLMAN_SCAFFOLD_PROFILES and rejects unknown profiles and native governance manifests."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/adoption_legacy_scaffold_test.py"
+        ],
+        "evidence": "project/new-ticket.sh allocates a linked ticket worktree cleanly when the committed base has no project/ directory while still refusing symlinked project roots and duplicate ticket directories."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "bash tests/version-parity.test.sh",
+          "bash tests/wellman-package.test.sh",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Bundled parity, version 0.20.153 parity, wheel build, and Governance Hub gate pass."
+      }
+    ]
+  }
+}

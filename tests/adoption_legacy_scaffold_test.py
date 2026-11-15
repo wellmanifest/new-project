@@ -471,6 +471,12 @@ class BootstrapPrerequisitePlanTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_real_first_allocator_keeps_seed_and_foreign_bytes_in_primary(self):
+        self.manifest.write_text(json.dumps({
+            "schema": "wellmanifest.manifest/v1",
+            "standard": {"id": "profile:runtime-service", "version": "0.20.38"},
+        }, indent=4) + "\n")
+        self.commit_target()
+        self.save_plan()
         spec = importlib.util.spec_from_file_location("prerequisite_adopter", SCRIPT)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
@@ -495,6 +501,13 @@ class BootstrapPrerequisitePlanTest(unittest.TestCase):
         checkout = self.target / ".worktrees/ticket-001--seeded"
         self.assertTrue((checkout / "project/ticket-001/intent.json").is_file())
         self.assertFalse((checkout / "VERSION").exists())
+        second = subprocess.run(["bash", "project/new-ticket.sh", "--title", "Disjoint follow-up",
+            "--agent", "fixture", "--workstream", "governance", "--path", ".benchmarks/**",
+            "--worktree-slug", "followup"],
+            cwd=self.target, capture_output=True, text=True, timeout=60)
+        self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
+        second_checkout = self.target / ".worktrees/ticket-002--followup"
+        self.assertTrue((second_checkout / "project/ticket-002/intent.json").is_file())
 
     def loaded_adopter(self):
         spec = importlib.util.spec_from_file_location("race_checked_adopter", SCRIPT)
