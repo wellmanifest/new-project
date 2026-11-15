@@ -992,7 +992,7 @@ def placement_error(value: Any) -> str | None:
     if runtime_owner is not None and (not isinstance(runtime_owner, str) or runtime_owner not in PLACEMENT_HOMES):
         return "placement runtimeOwner is invalid"
     if value["home"] == "wellmanifest" and value["shape"] == "runtime_service":
-        return "runtime_service must not HOME wellmanifest; ADOPT packs from a product organization"
+        return "runtime_service must not HOME wellmanifest; HOME in a product organization and ADOPT wellmanifest packs"
     adopt = value.get("adopt")
     if adopt is not None and (
         not string_list(adopt) or not all(PLACEMENT_ADOPT.fullmatch(item) for item in adopt)

@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.20.151] - 2026-11-15
+
+- Ignore already-landed historical `standardAdoption` tickets in `atomic_standard_adoption_paths` on clean target heads while requiring a clean working tree/index when `--base` is omitted, preventing post-merge `GOV-SYNC-001` false positives without relaxing ticket-branch diff verification. [ticket-441]
+- Clarify the `placement_error` refusal message when `shape=runtime_service` specifies `home=wellmanifest` so operators are directed to `HOME` in a product organization and `ADOPT` `wellmanifest/<pack>` packs, matching schema and `AGENTS.md` contracts across source and bundled checkers. [ticket-442]
+
 ## [0.20.150] - 2026-11-14
 
 - Add explicit receipt-only recovery after a completed published bootstrap upgrade. Verify original clone/HEAD, first-allocation state, both published packages, installed managed bytes, unchanged target seeds and an exactly reversible manifest projection; preserve unrelated changes and grant no writer or publication authority. [ticket-437]

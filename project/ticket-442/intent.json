@@ -1,0 +1,108 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-442",
+  "summary": "Clarify runtime_service placement refusal diagnostic and release 0.20.151",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-442/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/governance_check.py",
+    "tests/governance-validator.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "70388b6e1f9a63cc991148ae032c95ebeb1ff24a",
+    "targetBranch": "main",
+    "outcome": "Direct runtime_service placement refusals to HOME in a product organization and ADOPT wellmanifest packs across source and bundled checkers, and ship standard 0.20.151.",
+    "nonGoals": [
+      "No change to placement allowlists or refusal semantics",
+      "No target repository edits in this hub"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Align placement_error diagnostic text in scripts/governance_check.py and its synced _bundled copy with the placement schema and AGENTS.md guidance, update the placement validator regression assertion, and advance canonical 0.20.151 version projections.",
+      "components": [
+        {
+          "name": "placement-diagnostic-checker",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py"
+          ]
+        },
+        {
+          "name": "regression-suite",
+          "paths": [
+            "tests/governance-validator.test.sh"
+          ]
+        },
+        {
+          "name": "material-release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "scripts/governance_check.py placement_error diagnostic text for home=wellmanifest + shape=runtime_service"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through protected review; preserve placement allowlists and previous release tags."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "Source and bundled placement_error reject runtime_service on wellmanifest with schema-consistent guidance."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "bash tests/version-parity.test.sh",
+          "bash tests/wellman-package.test.sh",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Bundled parity, version 0.20.151 parity, package build and hub governance gate pass."
+      }
+    ]
+  }
+}
