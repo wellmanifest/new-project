@@ -1,0 +1,92 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-444",
+  "summary": "Batch governance activity observations without weakening invalidation",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-444/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/governance_check.py",
+    "tests/governance_activity_performance_test.py",
+    "tests/governance-activity-performance.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7ac3106162c9e7a9761b4ae6726511eb8935f87a",
+    "targetBranch": "main",
+    "outcome": "Resolve governance activity in one revalidated read batch, reducing repeated Git observations while preserving reservations on invalidation.",
+    "nonGoals": [
+      "Changing terminal authority, ancestry policy or writer ownership",
+      "Changing required checks or the existing CI deadline",
+      "Updating adopter pins or deploying a runtime"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse the canonical ActivityReadBatch context for the active-ticket cohort. Accept inactivity only after exit revalidation; retain every active projection with the existing diagnostic when the cohort is invalidated.",
+      "components": [
+        {
+          "name": "governance-activity-resolution",
+          "paths": [
+            "scripts/governance_check.py",
+            "tests/governance_activity_performance_test.py",
+            "tests/governance-activity-performance.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "The existing governance validator path is counted as one public interface by the hub policy. Its CLI and result shape stay stable; activity inspection now revalidates one cohort before accepting inactivity."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the source change through the ordinary independently validated delivery process; adopter upgrades remain separate."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/governance-activity-performance.test.sh"],
+        "evidence": "Nine new real-Git regressions pass. Stable 40-ticket resolution preserves results with 18 subprocesses versus 280 before batching."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/governance-activity-performance.test.sh"],
+        "evidence": "Registry, target, policy and projection mutations retain all active reservations with one GOV-TICKET-ACTIVITY-001 diagnostic; unavailable inspection also remains conservative."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": ["python3 -B tests/ticket_activity_batch_test.py", "bash tests/governance-activity-performance.test.sh"],
+        "evidence": "29 affected tests pass, including invocation isolation, reactivation, sibling changes and canonical batch invalidation. No active projections require no Git inspection."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": ["bash project/governance-check.sh --no-cache", "protected exact-head CI and independent Validator publication"],
+        "evidence": "Local managed gate and affected tests are recorded; the complete diff must pass the explicit delivery contract and protected publication remains pending."
+      }
+    ]
+  }
+}
