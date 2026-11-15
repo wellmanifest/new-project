@@ -567,7 +567,7 @@ assert module.placement_error({
 assert module.placement_error({
     'home': 'wellmanifest',
     'shape': 'runtime_service',
-}) == 'runtime_service must not HOME wellmanifest; ADOPT packs from a product organization'
+}) == 'runtime_service must not HOME wellmanifest; HOME in a product organization and ADOPT wellmanifest packs'
 assert module.placement_error({'home': 'subactor'}) == 'placement must contain home and shape'
 assert module.placement_error({
     'home': 'subactor',
