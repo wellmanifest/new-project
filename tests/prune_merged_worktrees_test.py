@@ -255,3 +255,297 @@ def test_dirty_other_checkout_retains_shared_branch(tmp_path):
     assert sentinel.read_text() == "retained caller data\n"
     assert _git(repo, "rev-parse", "refs/heads/" + branch) == head
     assert _git(other, "rev-parse", "HEAD") == head
+
+
+def _canonical_merged_fixture(tmp_path, *, ticket="ticket-010", slug="runtime-caches", phase="released"):
+    import json
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q", "-b", "main")
+    for key, value in {
+        "user.name": "Disposable Fixture",
+        "user.email": "fixture@example.invalid",
+        "commit.gpgsign": "false",
+        "core.hooksPath": str(repo / ".no-hooks"),
+    }.items():
+        _git(repo, "config", key, value)
+    (repo / ".gitignore").write_text(
+        "/.worktrees/\n"
+        ".venv/\n"
+        ".pytest_cache/\n"
+        ".mypy_cache/\n"
+        ".ruff_cache/\n"
+        ".tox/\n"
+        ".planfile/\n"
+        "__pycache__/\n"
+        "*.pyc\n"
+        "*.egg-info/\n"
+        ".env\n"
+    )
+    subactor = repo / ".subactor"
+    subactor.mkdir()
+    (subactor / ".gitignore").write_text("leases/\nsessions/\nrecovery/\nreceipts/\ncache/\nsnapshots/\n")
+    (subactor / "manifest.json").write_text('{"schema":"subactor/v1"}\n')
+    _git(repo, "add", ".gitignore", ".subactor/.gitignore", ".subactor/manifest.json")
+    _git(repo, "commit", "-qm", "base")
+
+    num = ticket.removeprefix("ticket-")
+    branch = f"ticket/{num}-{slug}"
+    stem = f"{ticket}--{slug}"
+    wt = repo / ".worktrees" / stem
+    wt.parent.mkdir(parents=True, exist_ok=True)
+    _git(repo, "worktree", "add", "-b", branch, str(wt))
+    pkg = wt / "pkg"
+    pkg.mkdir()
+    (pkg / "mod.py").write_text("VALUE = 1\n")
+    _git(wt, "add", "pkg/mod.py")
+    _git(wt, "commit", "-qm", "feature")
+    _git(repo, "merge", "--no-ff", "-qm", "merge feature", branch)
+    head = _git(wt, "rev-parse", "HEAD")
+
+    leases = repo / ".subactor" / "leases"
+    leases.mkdir(parents=True, exist_ok=True)
+    lease_path = leases / f"{stem}.json"
+    if phase is not None:
+        lease_path.write_text(json.dumps({
+            "schema": "wellmanifest.change-lease/v1",
+            "leaseId": f"allocation-{stem}",
+            "ticketId": ticket,
+            "worktreeId": stem,
+            "branchRef": f"refs/heads/{branch}",
+            "phase": phase,
+            "publicationFrozen": phase in {"publication_frozen", "dispatching", "approved"},
+            "headSha": head,
+        }))
+    return repo, wt, branch, head, lease_path
+
+
+def _populate_ignored_runtime_caches(wt: Path) -> None:
+    (wt / ".venv" / "bin").mkdir(parents=True)
+    (wt / ".venv" / "pyvenv.cfg").write_text("home = /usr/bin\n")
+    (wt / ".venv" / "bin" / "python").symlink_to(sys.executable)
+    (wt / ".pytest_cache" / "v" / "cache").mkdir(parents=True)
+    (wt / ".pytest_cache" / "v" / "cache" / "nodeids").write_text("[]\n")
+    (wt / ".mypy_cache").mkdir()
+    (wt / ".ruff_cache").mkdir()
+    (wt / ".planfile").mkdir()
+    (wt / ".planfile" / "state.json").write_text("{}\n")
+    (wt / ".subactor" / "cache").mkdir(parents=True)
+    (wt / ".subactor" / "cache" / "autonomy-board.md").write_text("# Board\n")
+    (wt / ".subactor" / "sessions").mkdir(parents=True)
+    (wt / "pkg" / "__pycache__").mkdir(parents=True)
+    (wt / "pkg" / "__pycache__" / "mod.cpython-313.pyc").write_bytes(b"pyc")
+    (wt / "demo.egg-info").mkdir()
+    (wt / "demo.egg-info" / "PKG-INFO").write_text("Name: demo\n")
+    ro = wt / ".tox" / "readonly"
+    ro.mkdir(parents=True)
+    (ro / "cached.txt").write_text("cached\n")
+    ro.chmod(0o500)
+
+
+def test_canonical_released_worktree_with_ignored_runtime_caches_prunes_without_force(tmp_path, monkeypatch):
+    import json
+    from scripts import prune_merged_worktrees as module
+    repo, wt, branch, _, _ = _canonical_merged_fixture(tmp_path, phase="released")
+    _populate_ignored_runtime_caches(wt)
+    assert not is_worktree_clean(wt)
+
+    calls = []
+    original = module.git_cmd
+
+    def spy(cwd, *args):
+        calls.append(args)
+        return original(cwd, *args)
+
+    monkeypatch.setattr(module, "git_cmd", spy)
+
+    # Opt-out preserves ignored runtime caches
+    opt_out = module.prune_merged_worktrees(repo, include_ignored_runtime=False)
+    assert not opt_out["pruned"]
+    assert wt.is_dir()
+
+    # Dry-run reports would_remove without mutating caches
+    dry = module.prune_merged_worktrees(repo, dry_run=True)
+    assert len(dry["pruned"]) == 1
+    assert dry["pruned"][0]["action"] == "would_remove"
+    assert dry["pruned"][0]["cleanedIgnoredRuntime"] is True
+    assert (wt / ".venv" / "pyvenv.cfg").is_file()
+
+    # CLI execution with --include-ignored-runtime removes caches and prunes without --force
+    exit_code = module.main(["--repo", str(repo), "--include-ignored-runtime", "--json"])
+    assert exit_code == 0
+    assert not wt.exists()
+    assert not any("--force" in args or "-f" in args for args in calls if args[:2] == ("worktree", "remove"))
+    branch_check = subprocess.run(
+        ["git", "-C", str(repo), "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"],
+        check=False,
+    )
+    assert branch_check.returncode != 0
+
+
+def test_canonical_worktree_preserves_unknown_ignored_files_like_dotenv_and_snapshots(tmp_path):
+    repo, wt, branch, head, _ = _canonical_merged_fixture(tmp_path, ticket="ticket-011", slug="dotenv", phase="released")
+    _populate_ignored_runtime_caches(wt)
+    dotenv = wt / ".env"
+    dotenv.write_text("SECRET_TOKEN=keep-me\n")
+
+    report = prune_merged_worktrees(repo)
+    assert not report["pruned"]
+    assert dotenv.read_text() == "SECRET_TOKEN=keep-me\n"
+    assert _git(repo, "rev-parse", f"refs/heads/{branch}") == head
+
+    dotenv.unlink()
+    snap = wt / ".subactor" / "snapshots" / "recovery.json"
+    snap.parent.mkdir(parents=True)
+    snap.write_text('{"snapshot":true}\n')
+    report2 = prune_merged_worktrees(repo)
+    assert not report2["pruned"]
+    assert snap.is_file()
+
+    snap.unlink()
+    snap.parent.rmdir()
+    report3 = prune_merged_worktrees(repo)
+    assert len(report3["pruned"]) == 1
+    assert not wt.exists()
+
+
+def test_canonical_worktree_requires_terminal_unlocked_lease(tmp_path):
+    import json
+    repo, wt, _, _, lease_path = _canonical_merged_fixture(tmp_path, ticket="ticket-012", slug="lease-gate", phase="claimed")
+    _populate_ignored_runtime_caches(wt)
+
+    for non_terminal in ("claimed", "editing", "validating", "publication_frozen"):
+        data = json.loads(lease_path.read_text())
+        data["phase"] = non_terminal
+        data["publicationFrozen"] = non_terminal == "publication_frozen"
+        lease_path.write_text(json.dumps(data))
+        report = prune_merged_worktrees(repo)
+        assert not report["pruned"]
+        assert wt.is_dir()
+
+    # Missing lease also refuses ignored-runtime cleanup
+    saved = lease_path.read_bytes()
+    lease_path.unlink()
+    assert not prune_merged_worktrees(repo)["pruned"]
+    assert wt.is_dir()
+
+    # Terminal 'merged' lease while unlocked succeeds
+    data = json.loads(saved)
+    data["phase"] = "merged"
+    data["publicationFrozen"] = False
+    lease_path.write_text(json.dumps(data))
+    if sys.platform != "win32":
+        import fcntl
+        lock_file = lease_path.with_name(lease_path.name + ".lock")
+        with lock_file.open("w") as held:
+            fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            locked_report = prune_merged_worktrees(repo)
+            assert not locked_report["pruned"]
+            assert wt.is_dir()
+
+    final_report = prune_merged_worktrees(repo)
+    assert len(final_report["pruned"]) == 1
+    assert not wt.exists()
+
+
+def test_canonical_worktree_with_active_process_cwd_or_git_lock_is_preserved(tmp_path):
+    repo, wt, _, _, _ = _canonical_merged_fixture(tmp_path, ticket="ticket-013", slug="busy-proc", phase="released")
+    _populate_ignored_runtime_caches(wt)
+
+    if sys.platform.startswith("linux") and Path("/proc").is_dir():
+        sleeper = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"], cwd=str(wt))
+        try:
+            busy_report = prune_merged_worktrees(repo)
+            assert not busy_report["pruned"]
+            assert any("active process" in item["reason"] for item in busy_report["skipped"])
+            assert wt.is_dir()
+        finally:
+            sleeper.terminate()
+            sleeper.wait(timeout=5)
+
+    _git(repo, "worktree", "lock", str(wt))
+    locked_report = prune_merged_worktrees(repo)
+    assert not locked_report["pruned"]
+    assert any("locked" in item["reason"] for item in locked_report["skipped"])
+    assert wt.is_dir()
+
+    _git(repo, "worktree", "unlock", str(wt))
+    clean_report = prune_merged_worktrees(repo)
+    assert len(clean_report["pruned"]) == 1
+    assert not wt.exists()
+
+
+def test_prune_holds_exclusive_lease_lock_and_aborts_on_mid_flight_lease_mutation(tmp_path, monkeypatch):
+    import json
+    import scripts.prune_merged_worktrees as prune_mod
+
+    repo, wt, _, _, lease_path = _canonical_merged_fixture(
+        tmp_path, ticket="ticket-014", slug="fenced-prune", phase="released"
+    )
+    _populate_ignored_runtime_caches(wt)
+    lock_file = lease_path.with_name(lease_path.name + ".lock")
+
+    # Dry-run must remain strictly read-only and never create a .json.lock file.
+    dry = prune_merged_worktrees(repo, dry_run=True)
+    assert len(dry["pruned"]) == 1
+    assert not lock_file.exists()
+
+    # Simulate a mid-flight uncooperative lease reactivation during runtime cleanup;
+    # exact-inode/content CAS revalidation must abort BEFORE git worktree remove runs.
+    original_remove_entry = prune_mod._remove_anchored_runtime_entry
+    remove_git_calls: list[tuple[str, ...]] = []
+    original_git_cmd = prune_mod.git_cmd
+
+    def tracking_git_cmd(cwd: Path, *args: str):
+        if len(args) >= 2 and args[0] == "worktree" and args[1] == "remove":
+            remove_git_calls.append(args)
+        return original_git_cmd(cwd, *args)
+
+    mutated_once = False
+
+    def racing_remove_entry(worktree: Path, rel_entry: str) -> None:
+        nonlocal mutated_once
+        original_remove_entry(worktree, rel_entry)
+        if not mutated_once:
+            mutated_once = True
+            reactivated = json.loads(lease_path.read_text(encoding="utf-8"))
+            reactivated["phase"] = "claimed"
+            lease_path.write_text(json.dumps(reactivated), encoding="utf-8")
+
+    monkeypatch.setattr(prune_mod, "git_cmd", tracking_git_cmd)
+    monkeypatch.setattr(prune_mod, "_remove_anchored_runtime_entry", racing_remove_entry)
+
+    raced_report = prune_merged_worktrees(repo)
+    assert not raced_report["pruned"]
+    assert not remove_git_calls
+    assert wt.is_dir()
+    assert any("claimed" in item["reason"] or "changed" in item["reason"] for item in raced_report["skipped"])
+
+    # Restore terminal lease and verify exclusive flock is held DURING git worktree remove.
+    settled = json.loads(lease_path.read_text(encoding="utf-8"))
+    settled["phase"] = "released"
+    lease_path.write_text(json.dumps(settled), encoding="utf-8")
+    _populate_ignored_runtime_caches(wt)
+    monkeypatch.setattr(prune_mod, "_remove_anchored_runtime_entry", original_remove_entry)
+
+    observed_exclusive_lock = False
+    if sys.platform != "win32":
+        import fcntl
+
+        def asserting_git_cmd(cwd: Path, *args: str):
+            nonlocal observed_exclusive_lock
+            if len(args) >= 2 and args[0] == "worktree" and args[1] == "remove":
+                with lock_file.open("r") as probe:
+                    try:
+                        fcntl.flock(probe, fcntl.LOCK_SH | fcntl.LOCK_NB)
+                    except BlockingIOError:
+                        observed_exclusive_lock = True
+            return original_git_cmd(cwd, *args)
+
+        monkeypatch.setattr(prune_mod, "git_cmd", asserting_git_cmd)
+
+    ok_report = prune_merged_worktrees(repo)
+    assert len(ok_report["pruned"]) == 1
+    assert not wt.exists()
+    if sys.platform != "win32":
+        assert observed_exclusive_lock is True

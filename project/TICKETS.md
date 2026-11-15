@@ -436,6 +436,8 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-439** | [`README.md`](./ticket-439/README.md) | - | - | - | - | - |
 | **ticket-440** | [`README.md`](./ticket-440/README.md) | - | - | - | - | - |
 | **ticket-441** | [`README.md`](./ticket-441/README.md) | - | - | - | - | - |
+| **ticket-442** | [`README.md`](./ticket-442/README.md) | - | - | - | - | - |
+| **ticket-443** | [`README.md`](./ticket-443/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 
