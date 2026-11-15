@@ -4504,10 +4504,24 @@ def _record_ticket_dir_and_prefix(root: Path, record: Any) -> tuple[Path | None,
     return resolved_dir, (f"{rel_dir}/" if rel_dir else None)
 
 
+def _is_clean_target_head(root: Path, target_ref: str, head: str) -> bool:
+    try:
+        target_sha = git_output(root, ["rev-parse", "--verify", f"{target_ref}^{{commit}}"]).decode().strip()
+        head_sha = git_output(root, ["rev-parse", "--verify", f"{head}^{{commit}}"]).decode().strip()
+        if not target_sha or head_sha != target_sha:
+            return False
+        return not git_output(root, ["status", "--porcelain", "--untracked-files=all"]).strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+
+
 def unlanded_standard_adoption_records(
     root: Path,
     active: list[TicketRecord],
     changed: list[str] | None = None,
+    *,
+    require_clean_target_head: bool = False,
+    head: str = "HEAD",
 ) -> list[TicketRecord]:
     unlanded: list[TicketRecord] = []
     for record in standard_adoption_records(active):
@@ -4523,11 +4537,12 @@ def unlanded_standard_adoption_records(
         target_branch = delivery.get("targetBranch")
         if ticket_dir is not None and isinstance(target_branch, str) and target_branch:
             target_ref = f"refs/remotes/origin/{target_branch}"
-            try:
-                if delivery_landed(root, ticket_dir, target_ref):
-                    continue
-            except Exception:
-                pass
+            if not require_clean_target_head or _is_clean_target_head(root, target_ref, head):
+                try:
+                    if delivery_landed(root, ticket_dir, target_ref):
+                        continue
+                except Exception:
+                    pass
         unlanded.append(record)
     return unlanded
 
@@ -4707,8 +4722,11 @@ def atomic_standard_adoption_paths(
     changed: list[str],
     active: list[TicketRecord],
     report: Report,
+    head: str = "HEAD",
 ) -> set[str]:
-    records = unlanded_standard_adoption_records(root, active, changed)
+    records = unlanded_standard_adoption_records(
+        root, active, changed, require_clean_target_head=(base is None), head=head,
+    )
     if not records:
         return set()
     evidence_paths = [".governance/manifest.lock.json", ".governance/package-manifest.json"]
@@ -5398,7 +5416,7 @@ def run_governance_checks(
         if any(path.startswith(f"{rel(root, record.directory).rstrip('/')}/") for path in changed)
     ]
     adoption_paths = atomic_standard_adoption_paths(
-        root, base, changed, changed_active or active, report,
+        root, base, changed, changed_active or active, report, args.head,
     )
     timed_step(report, "load_work_classification", load_work_classification, root, report, args.work_classification)
     timed_step(report, "check_lock", check_lock, root, lock_path, manifest, report)

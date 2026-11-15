@@ -367,6 +367,18 @@ class PublishedDeliveryBaseTest(unittest.TestCase):
         self.assertEqual(set(), exempt)
         self.assertEqual(["GOV-SYNC-001"], [finding.code for finding in report.findings])
 
+    def test_atomic_adoption_gate_rejects_missing_base_on_detached_pr_head_ahead_of_origin_main(self):
+        landed = self._commit_landed_adoption("ticket-001", "1" * 40, "2" * 40)
+        self.git("checkout", "-qb", "ticket/002-product")
+        pr_head = self.commit("src/product.py", "product\n")
+        self.git("checkout", "--detach", "-q", pr_head)
+        report = governance.Report(self.root)
+        exempt = governance.atomic_standard_adoption_paths(
+            self.root, None, [], [landed], report,
+        )
+        self.assertEqual(set(), exempt)
+        self.assertEqual(["GOV-SYNC-001"], [finding.code for finding in report.findings])
+
 
 if __name__ == "__main__":
     unittest.main()
