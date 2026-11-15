@@ -10,6 +10,8 @@ this helper never forces deletion or globally prunes other registrations.
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
+import hashlib
 import json
 import os
 import re
@@ -18,7 +20,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Iterator
 
 CANONICAL_WORKTREE_RE = re.compile(r"^(ticket-([0-9]{3,}))--([a-z0-9]+(?:-[a-z0-9]+)*)$")
 TERMINAL_LEASE_PHASES = frozenset({"released", "merged", "closed"})
@@ -152,42 +154,12 @@ def _is_canonical_worktree(primary: Path, path: Path) -> tuple[bool, str | None]
     return True, match.group(1)
 
 
-def _check_terminal_lease(primary: Path, worktree_id: str, ticket_id: str) -> tuple[bool, str]:
-    lease_dir = Path(os.path.abspath(primary)) / ".subactor" / "leases"
-    lease_path = lease_dir / f"{worktree_id}.json"
-    if not os.path.lexists(lease_path):
-        return False, "terminal lease required"
-    if not _no_symlink_components(lease_dir):
-        return False, "unsafe lease directory"
+def _validate_terminal_lease_bytes(raw: bytes, worktree_id: str, ticket_id: str) -> tuple[bool, str]:
+    if len(raw) > 65536:
+        return False, "lease exceeds bounded size"
     try:
-        st = lease_path.lstat()
-        if not stat.S_ISREG(st.st_mode):
-            return False, "lease must be a regular file"
-        if os.name == "posix" and hasattr(os, "O_NOFOLLOW"):
-            lock_path = lease_dir / f"{worktree_id}.json.lock"
-            if os.path.lexists(lock_path):
-                import fcntl
-                lock_st = lock_path.lstat()
-                if not stat.S_ISREG(lock_st.st_mode):
-                    return False, "unsafe lease lock"
-                lock_fd = os.open(str(lock_path), os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
-                try:
-                    try:
-                        fcntl.flock(lock_fd, fcntl.LOCK_SH | fcntl.LOCK_NB)
-                    except BlockingIOError:
-                        return False, "lease lock active"
-                    fcntl.flock(lock_fd, fcntl.LOCK_UN)
-                finally:
-                    os.close(lock_fd)
-            fd = os.open(str(lease_path), os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
-            with os.fdopen(fd, "rb") as stream:
-                raw = stream.read(65537)
-        else:
-            raw = lease_path.read_bytes()
-        if len(raw) > 65536:
-            return False, "lease exceeds bounded size"
         lease = json.loads(raw.decode("utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+    except (UnicodeDecodeError, json.JSONDecodeError):
         return False, "lease unreadable"
     if not isinstance(lease, dict):
         return False, "lease invalid"
@@ -197,6 +169,249 @@ def _check_terminal_lease(primary: Path, worktree_id: str, ticket_id: str) -> tu
     if lease.get("publicationFrozen") is not False or phase not in TERMINAL_LEASE_PHASES:
         return False, f"lease phase is {phase!r}"
     return True, "ok"
+
+
+@contextmanager
+def _noop_lease_guard() -> Iterator[tuple[bool, str, Callable[[], tuple[bool, str]]]]:
+    yield True, "ok", lambda: (True, "ok")
+
+
+@contextmanager
+def _terminal_lease_guard(
+    primary: Path,
+    worktree_id: str,
+    ticket_id: str,
+    *,
+    require_lease: bool,
+    dry_run: bool,
+) -> Iterator[tuple[bool, str, Callable[[], tuple[bool, str]]]]:
+    """Hold an exclusive lease lock across destructive pruning and verify inode/content CAS."""
+    lease_dir = Path(os.path.abspath(primary)) / ".subactor" / "leases"
+    lease_name = f"{worktree_id}.json"
+    lock_name = f"{worktree_id}.json.lock"
+    lease_path = lease_dir / lease_name
+    if not os.path.lexists(lease_dir):
+        if require_lease:
+            yield False, "terminal lease required", lambda: (False, "terminal lease required")
+            return
+        yield (
+            True,
+            "ok",
+            lambda: (False, "lease changed since observation") if os.path.lexists(lease_path) else (True, "ok"),
+        )
+        return
+    if not _no_symlink_components(lease_dir):
+        yield False, "unsafe lease directory", lambda: (False, "unsafe lease directory")
+        return
+
+    if os.name == "posix" and hasattr(os, "O_NOFOLLOW"):
+        import fcntl
+
+        dir_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+        descriptors: list[int] = []
+        try:
+            descriptors.append(os.open(lease_dir.anchor, dir_flags))
+            for part in lease_dir.parts[1:]:
+                descriptors.append(os.open(part, dir_flags, dir_fd=descriptors[-1]))
+        except OSError:
+            for desc in reversed(descriptors):
+                os.close(desc)
+            yield False, "unsafe lease directory", lambda: (False, "unsafe lease directory")
+            return
+
+        try:
+            lease_fd = descriptors[-1]
+
+            def verify_dir() -> bool:
+                try:
+                    for parent_fd, child_fd, part in zip(descriptors, descriptors[1:], lease_dir.parts[1:]):
+                        named = os.stat(part, dir_fd=parent_fd, follow_symlinks=False)
+                        held = os.fstat(child_fd)
+                        if not stat.S_ISDIR(named.st_mode) or (named.st_dev, named.st_ino) != (held.st_dev, held.st_ino):
+                            return False
+                except OSError:
+                    return False
+                return True
+
+            if not verify_dir():
+                yield False, "unsafe lease directory", lambda: (False, "unsafe lease directory")
+                return
+
+            if dry_run:
+                try:
+                    lock_st = os.stat(lock_name, dir_fd=lease_fd, follow_symlinks=False)
+                except FileNotFoundError:
+                    lock_st = None
+                except OSError:
+                    yield False, "unsafe lease lock", lambda: (False, "unsafe lease lock")
+                    return
+                if lock_st is not None:
+                    if not stat.S_ISREG(lock_st.st_mode) or lock_st.st_nlink != 1:
+                        yield False, "unsafe lease lock", lambda: (False, "unsafe lease lock")
+                        return
+                    try:
+                        probe_fd = os.open(lock_name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=lease_fd)
+                    except OSError:
+                        yield False, "unsafe lease lock", lambda: (False, "unsafe lease lock")
+                        return
+                    try:
+                        try:
+                            fcntl.flock(probe_fd, fcntl.LOCK_SH | fcntl.LOCK_NB)
+                        except BlockingIOError:
+                            yield False, "lease lock active", lambda: (False, "lease lock active")
+                            return
+                        fcntl.flock(probe_fd, fcntl.LOCK_UN)
+                    finally:
+                        os.close(probe_fd)
+                try:
+                    named_st = os.stat(lease_name, dir_fd=lease_fd, follow_symlinks=False)
+                except FileNotFoundError:
+                    if require_lease:
+                        yield False, "terminal lease required", lambda: (False, "terminal lease required")
+                    else:
+                        yield True, "ok", lambda: (True, "ok")
+                    return
+                except OSError:
+                    yield False, "lease unreadable", lambda: (False, "lease unreadable")
+                    return
+                if not stat.S_ISREG(named_st.st_mode) or named_st.st_nlink != 1:
+                    yield False, "lease must be a regular file", lambda: (False, "lease must be a regular file")
+                    return
+                try:
+                    fd = os.open(lease_name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=lease_fd)
+                    with os.fdopen(fd, "rb") as stream:
+                        raw = stream.read(65537)
+                except OSError:
+                    yield False, "lease unreadable", lambda: (False, "lease unreadable")
+                    return
+                if not verify_dir():
+                    yield False, "unsafe lease directory", lambda: (False, "unsafe lease directory")
+                    return
+                ok, detail = _validate_terminal_lease_bytes(raw, worktree_id, ticket_id)
+                yield ok, detail, (lambda: (ok, detail))
+                return
+
+            try:
+                lock_fd = os.open(
+                    lock_name,
+                    os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK,
+                    0o600,
+                    dir_fd=lease_fd,
+                )
+            except OSError:
+                yield False, "unsafe lease lock", lambda: (False, "unsafe lease lock")
+                return
+
+            try:
+                lock_info = os.fstat(lock_fd)
+                if not stat.S_ISREG(lock_info.st_mode) or lock_info.st_nlink != 1:
+                    yield False, "unsafe lease lock", lambda: (False, "unsafe lease lock")
+                    return
+                try:
+                    fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                except BlockingIOError:
+                    yield False, "lease lock active", lambda: (False, "lease lock active")
+                    return
+
+                def inspect_locked() -> tuple[bool, str, tuple[Any, ...] | None]:
+                    if not verify_dir():
+                        return False, "unsafe lease directory", None
+                    try:
+                        named_lock = os.stat(lock_name, dir_fd=lease_fd, follow_symlinks=False)
+                    except OSError:
+                        return False, "unsafe lease lock", None
+                    if (
+                        not stat.S_ISREG(named_lock.st_mode)
+                        or named_lock.st_nlink != 1
+                        or (named_lock.st_dev, named_lock.st_ino) != (lock_info.st_dev, lock_info.st_ino)
+                    ):
+                        return False, "unsafe lease lock", None
+                    try:
+                        named_lease = os.stat(lease_name, dir_fd=lease_fd, follow_symlinks=False)
+                    except FileNotFoundError:
+                        if require_lease:
+                            return False, "terminal lease required", None
+                        return True, "ok", ("absent",)
+                    except OSError:
+                        return False, "lease unreadable", None
+                    if not stat.S_ISREG(named_lease.st_mode) or named_lease.st_nlink != 1:
+                        return False, "lease must be a regular file", None
+                    try:
+                        fd = os.open(lease_name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=lease_fd)
+                        with os.fdopen(fd, "rb") as stream:
+                            st = os.fstat(stream.fileno())
+                            if (
+                                not stat.S_ISREG(st.st_mode)
+                                or st.st_nlink != 1
+                                or (st.st_dev, st.st_ino) != (named_lease.st_dev, named_lease.st_ino)
+                            ):
+                                return False, "lease must be a regular file", None
+                            raw = stream.read(65537)
+                    except OSError:
+                        return False, "lease unreadable", None
+                    ok, detail = _validate_terminal_lease_bytes(raw, worktree_id, ticket_id)
+                    if not ok:
+                        return False, detail, None
+                    return True, "ok", ("present", st.st_dev, st.st_ino, hashlib.sha256(raw).hexdigest())
+
+                ok, detail, initial_cas = inspect_locked()
+                if not ok:
+                    yield False, detail, (lambda: (False, detail))
+                    return
+
+                def revalidate() -> tuple[bool, str]:
+                    cur_ok, cur_detail, cur_cas = inspect_locked()
+                    if not cur_ok:
+                        return False, cur_detail
+                    if cur_cas != initial_cas:
+                        return False, "lease changed since observation"
+                    return True, "ok"
+
+                yield True, "ok", revalidate
+            finally:
+                os.close(lock_fd)
+        finally:
+            for desc in reversed(descriptors):
+                os.close(desc)
+        return
+
+    # Non-POSIX fallback with exact inode/mtime/content CAS revalidation.
+    def inspect_non_posix() -> tuple[bool, str, tuple[Any, ...] | None]:
+        if not os.path.lexists(lease_path):
+            if require_lease:
+                return False, "terminal lease required", None
+            return True, "ok", ("absent",)
+        try:
+            st = lease_path.lstat()
+            if not stat.S_ISREG(st.st_mode):
+                return False, "lease must be a regular file", None
+            raw = lease_path.read_bytes()
+        except OSError:
+            return False, "lease unreadable", None
+        ok, detail = _validate_terminal_lease_bytes(raw, worktree_id, ticket_id)
+        if not ok:
+            return False, detail, None
+        return True, "ok", ("present", st.st_size, st.st_mtime_ns, hashlib.sha256(raw).hexdigest())
+
+    ok, detail, initial_cas = inspect_non_posix()
+    if not ok:
+        yield False, detail, (lambda: (False, detail))
+        return
+
+    def revalidate_non_posix() -> tuple[bool, str]:
+        cur_ok, cur_detail, cur_cas = inspect_non_posix()
+        if not cur_ok:
+            return False, cur_detail
+        if cur_cas != initial_cas:
+            return False, "lease changed since observation"
+        return True, "ok"
+
+    yield True, "ok", revalidate_non_posix
+
+
+def _check_terminal_lease(primary: Path, worktree_id: str, ticket_id: str) -> tuple[bool, str]:
+    with _terminal_lease_guard(primary, worktree_id, ticket_id, require_lease=True, dry_run=True) as (ok, detail, _):
+        return ok, detail
 
 
 def _link_inside(raw: str, target: Path, prefix: str) -> bool:
@@ -489,58 +704,85 @@ def prune_merged_worktrees(
             skip(f"not merged into {target_ref}", head=head)
             continue
 
-        if is_canonical and ticket_id is not None:
-            lease_file = primary / ".subactor" / "leases" / f"{path.name}.json"
-            if runtime_entries or os.path.lexists(lease_file):
-                lease_ok, lease_detail = _check_terminal_lease(primary, path.name, ticket_id)
-                if not lease_ok:
-                    skip(f"ignored runtime data retained ({lease_detail})" if runtime_entries
-                         else f"lease not terminal ({lease_detail})")
+        lease_file = primary / ".subactor" / "leases" / f"{path.name}.json"
+        require_lease = bool(runtime_entries) or os.path.lexists(lease_file)
+        guard_ctx = (
+            _terminal_lease_guard(
+                primary,
+                path.name,
+                ticket_id,
+                require_lease=require_lease,
+                dry_run=dry_run,
+            )
+            if (is_canonical and ticket_id is not None)
+            else _noop_lease_guard()
+        )
+        with guard_ctx as (lease_ok, lease_detail, revalidate_lease):
+            if not lease_ok:
+                skip(
+                    f"ignored runtime data retained ({lease_detail})"
+                    if runtime_entries
+                    else f"lease not terminal ({lease_detail})"
+                )
+                continue
+            if is_canonical and ticket_id is not None:
+                in_use_reason = _worktree_in_use(path)
+                if in_use_reason is not None:
+                    skip(in_use_reason)
                     continue
-            in_use_reason = _worktree_in_use(path)
-            if in_use_reason is not None:
-                skip(in_use_reason)
-                continue
 
-        if (_commit(repo, target_full) != target_sha
-                or not _checkout_matches(path, head, branch)
-                or (branch and _commit(repo, branch) != head)):
-            skip("checkout, branch or target changed since observation")
-            continue
-        if dry_run:
-            entry: dict[str, Any] = {"path": str(path), "branch": name, "action": "would_remove"}
-            if runtime_entries:
-                entry["cleanedIgnoredRuntime"] = True
-            pruned.append(entry)
-            continue
-
-        if runtime_entries:
-            try:
-                for rel_entry in runtime_entries:
-                    _remove_anchored_runtime_entry(path, rel_entry)
-            except (OSError, ValueError) as exc:
-                skip(f"ignored runtime cleanup failed: {exc}")
-                continue
             if (_commit(repo, target_full) != target_sha
                     or not _checkout_matches(path, head, branch)
                     or (branch and _commit(repo, branch) != head)):
                 skip("checkout, branch or target changed since observation")
                 continue
+            if dry_run:
+                entry: dict[str, Any] = {"path": str(path), "branch": name, "action": "would_remove"}
+                if runtime_entries:
+                    entry["cleanedIgnoredRuntime"] = True
+                pruned.append(entry)
+                continue
 
-        # Git also refuses removal if tracked/untracked/non-runtime ignored data
-        # appeared after inspection; never turn its refusal into a force removal.
-        removed = git_cmd(repo, "worktree", "remove", str(path))
-        if removed.returncode != 0:
-            skip(f"remove failed: {removed.stderr.strip()}")
-            continue
-        if branch:
-            deleted = _delete_exact_branch(repo, branch, head, target_full, target_sha)
-            if deleted.returncode != 0:
-                skip(f"branch cleanup declined or unconfirmed: {deleted.stderr.strip()}")
-        result_entry: dict[str, Any] = {"path": str(path), "branch": name, "action": "removed"}
-        if runtime_entries:
-            result_entry["cleanedIgnoredRuntime"] = True
-        pruned.append(result_entry)
+            rev_ok, rev_detail = revalidate_lease()
+            if not rev_ok:
+                skip(
+                    f"ignored runtime data retained ({rev_detail})"
+                    if runtime_entries
+                    else f"lease not terminal ({rev_detail})"
+                )
+                continue
+
+            if runtime_entries:
+                try:
+                    for rel_entry in runtime_entries:
+                        _remove_anchored_runtime_entry(path, rel_entry)
+                except (OSError, ValueError) as exc:
+                    skip(f"ignored runtime cleanup failed: {exc}")
+                    continue
+                if (_commit(repo, target_full) != target_sha
+                        or not _checkout_matches(path, head, branch)
+                        or (branch and _commit(repo, branch) != head)):
+                    skip("checkout, branch or target changed since observation")
+                    continue
+                rev_ok, rev_detail = revalidate_lease()
+                if not rev_ok:
+                    skip(f"ignored runtime data retained ({rev_detail})")
+                    continue
+
+            # Git also refuses removal if tracked/untracked/non-runtime ignored data
+            # appeared after inspection; never turn its refusal into a force removal.
+            removed = git_cmd(repo, "worktree", "remove", str(path))
+            if removed.returncode != 0:
+                skip(f"remove failed: {removed.stderr.strip()}")
+                continue
+            if branch:
+                deleted = _delete_exact_branch(repo, branch, head, target_full, target_sha)
+                if deleted.returncode != 0:
+                    skip(f"branch cleanup declined or unconfirmed: {deleted.stderr.strip()}")
+            result_entry: dict[str, Any] = {"path": str(path), "branch": name, "action": "removed"}
+            if runtime_entries:
+                result_entry["cleanedIgnoredRuntime"] = True
+            pruned.append(result_entry)
     return {"target": target_ref, "pruned": pruned, "skipped": skipped}
 
 

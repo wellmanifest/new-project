@@ -473,3 +473,79 @@ def test_canonical_worktree_with_active_process_cwd_or_git_lock_is_preserved(tmp
     clean_report = prune_merged_worktrees(repo)
     assert len(clean_report["pruned"]) == 1
     assert not wt.exists()
+
+
+def test_prune_holds_exclusive_lease_lock_and_aborts_on_mid_flight_lease_mutation(tmp_path, monkeypatch):
+    import json
+    import scripts.prune_merged_worktrees as prune_mod
+
+    repo, wt, _, _, lease_path = _canonical_merged_fixture(
+        tmp_path, ticket="ticket-014", slug="fenced-prune", phase="released"
+    )
+    _populate_ignored_runtime_caches(wt)
+    lock_file = lease_path.with_name(lease_path.name + ".lock")
+
+    # Dry-run must remain strictly read-only and never create a .json.lock file.
+    dry = prune_merged_worktrees(repo, dry_run=True)
+    assert len(dry["pruned"]) == 1
+    assert not lock_file.exists()
+
+    # Simulate a mid-flight uncooperative lease reactivation during runtime cleanup;
+    # exact-inode/content CAS revalidation must abort BEFORE git worktree remove runs.
+    original_remove_entry = prune_mod._remove_anchored_runtime_entry
+    remove_git_calls: list[tuple[str, ...]] = []
+    original_git_cmd = prune_mod.git_cmd
+
+    def tracking_git_cmd(cwd: Path, *args: str):
+        if len(args) >= 2 and args[0] == "worktree" and args[1] == "remove":
+            remove_git_calls.append(args)
+        return original_git_cmd(cwd, *args)
+
+    mutated_once = False
+
+    def racing_remove_entry(worktree: Path, rel_entry: str) -> None:
+        nonlocal mutated_once
+        original_remove_entry(worktree, rel_entry)
+        if not mutated_once:
+            mutated_once = True
+            reactivated = json.loads(lease_path.read_text(encoding="utf-8"))
+            reactivated["phase"] = "claimed"
+            lease_path.write_text(json.dumps(reactivated), encoding="utf-8")
+
+    monkeypatch.setattr(prune_mod, "git_cmd", tracking_git_cmd)
+    monkeypatch.setattr(prune_mod, "_remove_anchored_runtime_entry", racing_remove_entry)
+
+    raced_report = prune_merged_worktrees(repo)
+    assert not raced_report["pruned"]
+    assert not remove_git_calls
+    assert wt.is_dir()
+    assert any("claimed" in item["reason"] or "changed" in item["reason"] for item in raced_report["skipped"])
+
+    # Restore terminal lease and verify exclusive flock is held DURING git worktree remove.
+    settled = json.loads(lease_path.read_text(encoding="utf-8"))
+    settled["phase"] = "released"
+    lease_path.write_text(json.dumps(settled), encoding="utf-8")
+    _populate_ignored_runtime_caches(wt)
+    monkeypatch.setattr(prune_mod, "_remove_anchored_runtime_entry", original_remove_entry)
+
+    observed_exclusive_lock = False
+    if sys.platform != "win32":
+        import fcntl
+
+        def asserting_git_cmd(cwd: Path, *args: str):
+            nonlocal observed_exclusive_lock
+            if len(args) >= 2 and args[0] == "worktree" and args[1] == "remove":
+                with lock_file.open("r") as probe:
+                    try:
+                        fcntl.flock(probe, fcntl.LOCK_SH | fcntl.LOCK_NB)
+                    except BlockingIOError:
+                        observed_exclusive_lock = True
+            return original_git_cmd(cwd, *args)
+
+        monkeypatch.setattr(prune_mod, "git_cmd", asserting_git_cmd)
+
+    ok_report = prune_merged_worktrees(repo)
+    assert len(ok_report["pruned"]) == 1
+    assert not wt.exists()
+    if sys.platform != "win32":
+        assert observed_exclusive_lock is True
