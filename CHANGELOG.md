@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.20.152] - 2026-11-15
+
+- Add fail-closed controller terminal lease settlement (`terminal_lease_release.py --settle-verified [--ticket ticket-NNN] [--apply]`) so `local-single-clone` controllers can transition `claimed`/`editing`/`validating`/`approved`/`merged`/`closed` leases to `released` without original writer session context when `.git/new-project/terminal-receipts.json` proves `releasesReservation: true`, target-branch ancestry, clean or absent checkout state, and exclusive lease CAS, recording immutable `"settledBy": "controller:verified-terminal-receipt"` receipts. [ticket-443]
+- Allow `prune_merged_worktrees.py` (`--include-ignored-runtime`) to remove `O_NOFOLLOW`-anchored allowlisted disposable runtime caches (`.venv`, `.pytest_cache`, `.mypy_cache`, `.ruff_cache`, `.subactor/{cache,sessions,recovery,receipts}`, `.planfile`, `__pycache__`, etc.) before non-forced `git worktree remove` when a canonical `.worktrees/<ticket>--<slug>` checkout is merged, has zero tracked/untracked changes, holds a terminal unlocked lease (`released`/`merged`/`closed`), and has no open process handles, while preserving unknown ignored files such as `.env` and snapshots. [ticket-443]
+
 ## [0.20.151] - 2026-11-15
 
 - Ignore already-landed historical `standardAdoption` tickets in `atomic_standard_adoption_paths` on clean target heads while requiring a clean working tree/index when `--base` is omitted, preventing post-merge `GOV-SYNC-001` false positives without relaxing ticket-branch diff verification. [ticket-441]

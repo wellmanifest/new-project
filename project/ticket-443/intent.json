@@ -1,0 +1,121 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-443",
+  "summary": "Add verified controller lease settlement and safe ignored-runtime worktree pruning",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-443/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "error/GOV-CHANGE-LEASE.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "scripts/prune_merged_worktrees.py",
+    "scripts/terminal_lease_release.py",
+    "tests/prune_merged_worktrees_test.py",
+    "tests/terminal_lease_release_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "7ac3106162c9e7a9761b4ae6726511eb8935f87a",
+    "targetBranch": "main",
+    "outcome": "Allow local-single-clone controller terminal lease settlement from verified terminal receipts without original writer session context, safely prune merged canonical worktrees containing only allowlisted disposable runtime caches after terminal lease verification, and release standard 0.20.152.",
+    "nonGoals": [
+      "No takeover of active unmerged, dirty, or publication-frozen leases",
+      "No forced git worktree removal or deletion of unknown ignored files such as .env or snapshots",
+      "No target repository edits inside this Governance Hub"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend scripts/terminal_lease_release.py with settle_verified_leases (--settle-verified [--ticket] [--apply]) gated on verified terminal receipts, ancestry, clean/absent checkout, and O_NOFOLLOW lease_lock CAS with immutable controller settlement receipts; extend scripts/prune_merged_worktrees.py to remove only O_NOFOLLOW-anchored allowlisted runtime caches on terminal-leased canonical checkouts with no live process handles before non-forced git worktree remove; advance 0.20.152 version projections.",
+      "components": [
+        {
+          "name": "lease-settlement-and-worktree-pruning",
+          "paths": [
+            "scripts/terminal_lease_release.py",
+            "scripts/prune_merged_worktrees.py",
+            "error/GOV-CHANGE-LEASE.md"
+          ]
+        },
+        {
+          "name": "regression-suites",
+          "paths": [
+            "tests/terminal_lease_release_test.py",
+            "tests/prune_merged_worktrees_test.py"
+          ]
+        },
+        {
+          "name": "material-release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "scripts/terminal_lease_release.py --settle-verified [--ticket ticket-NNN] [--apply] and settle_verified_leases()",
+        "scripts/prune_merged_worktrees.py --include-ignored-runtime / --no-include-ignored-runtime safe runtime-cache cleanup for terminal-leased canonical worktrees"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through protected review; existing owner-handoff requests and lease schemas remain unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/terminal_lease_release_test.py"
+        ],
+        "evidence": "Controller terminal settlement plans read-only by default, releases verified terminal leases with immutable settlement receipts, and refuses unmerged, dirty, frozen, ambiguous, or CAS-raced leases."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -m pytest -q -p no:cacheprovider -p no:wellmanifest_governance tests/prune_merged_worktrees_test.py"
+        ],
+        "evidence": "Merged canonical worktrees with terminal leases and allowlisted runtime caches prune cleanly without --force while unknown ignored files, non-terminal leases, and open process checkouts are preserved."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "bash tests/version-parity.test.sh",
+          "bash tests/wellman-package.test.sh",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Bundled parity, version 0.20.152 parity, wheel build, and Governance Hub gate pass."
+      }
+    ]
+  }
+}
