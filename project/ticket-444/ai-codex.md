@@ -42,3 +42,9 @@ already frozen source bytes. The bounded intent includes this fourth derived
 asset. Reconcile its ownership, verify package parity and obtain fresh CI for
 the resulting head. This is packaging completion, with no new algorithm,
 dependency, policy or runtime deployment. Preserve earlier failed receipts.
+
+The packaged head passed package checks but hosted CI found the shell suite
+absent from its explicit workflow list. Add that existing suite to the existing
+test job and run the workflow's wiring assertion. The owned scope includes
+this fifth delivery file and the two policy-counted existing interfaces;
+workflow permissions, job names and protected checks remain the same.
