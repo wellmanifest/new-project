@@ -154,6 +154,8 @@ jobs:
         run: bash tests/governance-v147-regressions.test.sh
       - name: Test terminal receipt activity resolver
         run: bash tests/ticket-activity.test.sh
+      - name: Test coherent governance activity resolution
+        run: bash tests/governance-activity-performance.test.sh
       - name: Test receipts across a regenerated ticket index
         run: python3 tests/ticket_activity_index_test.py
       - name: Test deterministic governance validator
