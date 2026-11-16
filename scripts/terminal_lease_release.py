@@ -29,6 +29,8 @@ TICKET_ID_RE = re.compile(r'ticket-[0-9]{3,}')
 FIELDS = {'schema', 'requestId', 'worktreeId', 'ownerActor', 'ownerSession', 'ownerHandoff',
           'expectedRevision', 'expectedFencingToken', 'expectedLeaseSha256', 'terminalReceiptRef'}
 MAX_BYTES = 1024 * 1024
+IDENTITY_FAILURES = frozenset({'invalid_canonical_lease', 'current_owner_mismatch',
+                               'lease_scope_mismatch', 'repository_identity_mismatch'})
 
 
 def require(condition, message):
@@ -301,10 +303,11 @@ def _execute(root, request, fd, verify, name, apply):
     require(not canonical.validate_lease(current), 'invalid_canonical_lease')
     ticket, branch = request_identity(request)
     accepted_repositories = _accepted_repositories(root)
-    expected = {'ticketId': ticket, 'worktreeId': request['worktreeId'], 'branchRef': branch,
-        'ownerActor': request['ownerActor'], 'ownerSession': request['ownerSession']}
-    require(all(current[k] == v for k, v in expected.items())
-            and current['repositoryRef'] in accepted_repositories, 'current_owner_or_repository_mismatch')
+    expected = {'ticketId': ticket, 'worktreeId': request['worktreeId'], 'branchRef': branch}
+    require(all(current[k] == v for k, v in expected.items()), 'lease_scope_mismatch')
+    require(current['ownerActor'] == request['ownerActor']
+            and current['ownerSession'] == request['ownerSession'], 'current_owner_mismatch')
+    require(current['repositoryRef'] in accepted_repositories, 'repository_identity_mismatch')
     journal_path = root / '.subactor/receipts/terminal-owner-release' / (sha(encoded(request)) + '.json')
     if journal_path.exists() or journal_path.is_symlink():
         journal = read_path(journal_path)
@@ -394,8 +397,8 @@ def _settle_one(root, fd, verify, name, stem, file_ticket, expected_branch, acce
     current = decode(raw)
     require(not canonical.validate_lease(current), 'invalid_canonical_lease')
     require(current['ticketId'] == file_ticket and current['worktreeId'] == stem
-            and current['branchRef'] == expected_branch
-            and current['repositoryRef'] in accepted_repositories, 'current_owner_or_repository_mismatch')
+            and current['branchRef'] == expected_branch, 'lease_scope_mismatch')
+    require(current['repositoryRef'] in accepted_repositories, 'repository_identity_mismatch')
     if current['phase'] == 'released':
         return None, 'already_released'
     require(current['phase'] in SETTLEABLE_PHASES,
@@ -566,8 +569,13 @@ def main(argv=None):
         print(json.dumps(release_owner(args.root, read_path(args.request.absolute()), apply=args.apply,
             actor=os.environ.get('NEW_PROJECT_WRITER_ACTOR'), session=os.environ.get('NEW_PROJECT_WRITER_SESSION'))))
         return 0
-    except (OSError, ValueError, TypeError, KeyError, PermissionError, subprocess.SubprocessError, activity.ActivityError):
-        print('GOV-CHANGE-LEASE-002: terminal owner release refused; preserve evidence and reconcile the exact owner, CAS, receipt and controller.', file=sys.stderr)
+    except (OSError, ValueError, TypeError, KeyError, PermissionError, subprocess.SubprocessError, activity.ActivityError) as exc:
+        # These labels are static controller predicates, never exception text
+        # from a path, Git process, JSON input or private owner identifier.
+        reason = exc.args[0] if (type(exc) is PermissionError and len(exc.args) == 1
+                                and type(exc.args[0]) is str and exc.args[0] in IDENTITY_FAILURES) else None
+        detail = f' reason={reason};' if reason else ''
+        print(f'GOV-CHANGE-LEASE-002: terminal owner release refused;{detail} preserve evidence and reconcile the exact owner, CAS, receipt and controller.', file=sys.stderr)
         return 2
 
 
