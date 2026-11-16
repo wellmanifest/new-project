@@ -1,0 +1,51 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-448",
+  "summary": "Bound path matching cost in scope overlap checks",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-448/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/governance_check.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "tests/governance_activity_performance_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "69ec6abb60a8a47a66eec3b38a498d2cb4411e5e",
+    "targetBranch": "main",
+    "outcome": "Bound repeated path matching in scope-overlap checks without changing findings or authority predicates.",
+    "nonGoals": ["No ticket activity policy, reservation, lease or approval changes", "No check retirement, timeout change or runtime deployment", "No changes to the separate ticket-446 implementation"],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {"maxImplementationFiles": 3, "maxAffectedComponents": 2, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "architecture": {
+      "status": "accepted",
+      "decision": "Compute non-governance path membership once per ticket within each overlap-check invocation. Intersect path positions for pairs, preserving duplicate inputs, diagnostic ordering and counts. Retain symbolic pattern overlap checks and the existing shared-path helper.",
+      "components": [{"name": "governance-checker", "paths": ["scripts/governance_check.py", "packages/wellman/src/wellman/_bundled/governance_check.py"]}, {"name": "governance-regressions", "paths": ["tests/governance_activity_performance_test.py"]}],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the implementation through protected independent publication; no data migration or host operation is involved."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["python tests/governance_activity_performance_test.py"], "evidence": "Findings retain forbidden and governance exclusions, virtual overlaps, duplicate path ordering and exact concrete counts."},
+      {"criterion": "AC-02", "commands": ["python tests/governance_activity_performance_test.py"], "evidence": "Instrumented path matching stays bounded by tickets times files; subsequent invocations observe changed inputs. Confirm the diagnosed 304-ticket, 1760-file workload completes without changing its findings."},
+      {"criterion": "AC-03", "commands": ["python packages/wellman/sync_bundled.py --check", "bash project/governance-check.sh"], "evidence": "Bundled parity, full tests, exact-head/current-base OneDev, Linux, Windows and independent Validator publication."}
+    ]
+  }
+}
