@@ -87,7 +87,9 @@ def _original(raw, root, request, projected):
 def _identity(fd, name):
     info = os.stat(name, dir_fd=fd, follow_symlinks=False)
     release.require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1, 'regular_private_file_required')
-    return {'device': info.st_dev, 'inode': info.st_ino}
+    # A filesystem can immediately recycle an unlinked inode. Bind the inode's
+    # change timestamp too, so a recreated byte-identical slot is not replayed.
+    return {'device': info.st_dev, 'inode': info.st_ino, 'changedAtNs': info.st_ctime_ns}
 
 
 def _read_slot(fd, name):
@@ -114,7 +116,8 @@ def _execute(root, request, projected, fd, verify, name, apply):
         terminal = _original(original, root, request, projected)
         release.require(journal['terminal'] == terminal, 'journal_terminal_mismatch')
         identity = journal['identity']
-        release.require(isinstance(identity, dict) and set(identity) == {'device', 'inode'}
+        release.require(isinstance(identity, dict)
+                        and set(identity) == {'device', 'inode', 'changedAtNs'}
                         and all(type(v) is int and v >= 0 for v in identity.values()),
                         'journal_identity_mismatch')
         try:

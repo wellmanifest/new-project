@@ -199,7 +199,7 @@ class LegacyTerminalRetirement(unittest.TestCase):
         result = self.invoke(True)
         journal = json.loads(Path(result['receipt']).read_bytes())
         self.lease.write_bytes(original)
-        self.assertNotEqual(self.lease.stat().st_ino, journal['identity']['inode'])
+        self.assertEqual(base64.b64decode(journal['original']), original)
         self.refused(True)
 
     def test_new_fencing_after_interruption_is_not_overwritten(self):

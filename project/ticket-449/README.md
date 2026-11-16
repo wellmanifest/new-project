@@ -42,6 +42,11 @@ pass. The installed governance wheel/package regression, bundled parity,
 Ruff F/E9 and the deterministic governance gate pass. Fresh exact-head/base
 CI and independent protected review remain required before operational use.
 
+An additional ext4 regression exposed immediate inode reuse after retirement.
+The journal now binds the file change timestamp as well as device/inode, and
+replay refuses a recreated byte-identical slot. All 17 retirement regressions
+pass on both tmpfs and ext4; the existing 34 controller regressions still pass.
+
 ## Granica katalogu
 
 Ten katalog przechowuje minimalny kontrakt i opcjonalne decyzje. Surowe logi
