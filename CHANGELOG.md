@@ -2,7 +2,8 @@
 
 ## [0.20.154] - 2026-11-16
 
-- Accept minimal policy-free Wellman scaffolds with `standard.id == "wellmanifest/new-project"` across `scripts/create_adoption_lock.py`, `scripts/work_start_check.py`, and `scripts/governance_check.py`, and align `initial_adoption_seed_paths` (plus `_bundled/governance_check.py`) with `WELLMAN_SCAFFOLD_PROFILES` and pre-release SemVer validation while continuing to reject native, source-revision-bound, and non-minimal manifests. [ticket-447]
+- Accept minimal policy-free Wellman scaffolds with `standard.id == "wellmanifest/new-project"` across `scripts/create_adoption_lock.py`, `scripts/work_start_check.py`, and `scripts/governance_check.py`, and align `initial_adoption_seed_paths` (plus `_bundled/governance_check.py`) with `WELLMAN_SCAFFOLD_PROFILES` and strict SemVer 2.0.0 validation while continuing to reject native, source-revision-bound, and non-minimal manifests. [ticket-447]
+- Bind `check_version_parity` static `__version__` checks in `scripts/governance_check.py` (and `_bundled/governance_check.py`) to an enclosing nested sub-package manifest (`pyproject.toml` / `setup.py`) when one declares its own package version below repository root, failing closed on symlinked, malformed, or mismatched nested manifests while preserving root `VERSION` parity for repository-level packages. [ticket-447]
 
 ## [0.20.153] - 2026-11-15
 

@@ -148,6 +148,49 @@ def test_tracked_init_py_mismatch_still_detected_in_git_checkout():
         assert report.findings[0].code == "GOV-VERSION-001"
         print("  ✓ test_tracked_init_py_mismatch_still_detected_in_git_checkout")
 
+def test_nested_subpackage_manifest_parity_and_refusals():
+    with tempfile.TemporaryDirectory() as tmp:
+        t = Path(tmp)
+        subprocess.run(["git", "init", "-q"], cwd=t, check=True)
+        (t / "VERSION").write_text("0.2.0a1\n", encoding="utf-8")
+        (t / "pyproject.toml").write_text('[project]\nname = "main-pkg"\nversion = "0.2.0a1"\n', encoding="utf-8")
+        root_pkg = t / "src" / "main_pkg"
+        root_pkg.mkdir(parents=True)
+        (root_pkg / "__init__.py").write_text('__version__ = "0.2.0a1"\n', encoding="utf-8")
+
+        sub = t / "extensions" / "sub_pkg"
+        sub_src = sub / "src" / "sub_pkg"
+        sub_src.mkdir(parents=True)
+        (sub / "pyproject.toml").write_text('[project]\nname = "sub-pkg"\nversion = "0.2.0"\n', encoding="utf-8")
+        (sub_src / "__init__.py").write_text('__version__ = "0.2.0"\n', encoding="utf-8")
+
+        report = Report(t)
+        check_version_parity(t, {}, report)
+        assert report.errors == 0, f"Matching nested subpackage must pass: {report.findings}"
+
+        (sub_src / "__init__.py").write_text('__version__ = "0.1.9"\n', encoding="utf-8")
+        report = Report(t)
+        check_version_parity(t, {}, report)
+        assert report.errors == 1 and report.findings[0].code == "GOV-VERSION-001", report.findings
+        assert "extensions/sub_pkg/pyproject.toml" in report.findings[0].message
+
+        # Tool-only nested pyproject.toml without version must fall back to root VERSION.
+        (sub / "pyproject.toml").write_text('[tool.pytest.ini_options]\ntestpaths = ["tests"]\n', encoding="utf-8")
+        (sub_src / "__init__.py").write_text('__version__ = "0.2.0a1"\n', encoding="utf-8")
+        report = Report(t)
+        check_version_parity(t, {}, report)
+        assert report.errors == 0, f"Tool-only nested pyproject must fall back to VERSION: {report.findings}"
+
+        # Symlinked nested pyproject.toml must fail closed.
+        outside = Path(tmp) / "outside-pyproject.toml"
+        outside.write_text('[project]\nname = "sub-pkg"\nversion = "9.9.9"\n', encoding="utf-8")
+        (sub / "pyproject.toml").unlink()
+        (sub / "pyproject.toml").symlink_to(outside)
+        report = Report(t)
+        check_version_parity(t, {}, report)
+        assert report.errors == 1 and report.findings[0].code == "GOV-VERSION-001", report.findings
+        print("  ✓ test_nested_subpackage_manifest_parity_and_refusals")
+
 test_version_parity_pass()
 test_pyproject_version_mismatch()
 test_setup_py_version_mismatch()
@@ -157,6 +200,7 @@ test_init_py_version_mismatch()
 test_dynamic_init_py_ignored()
 test_ignored_runtime_tree_is_skipped()
 test_tracked_init_py_mismatch_still_detected_in_git_checkout()
+test_nested_subpackage_manifest_parity_and_refusals()
 print("All version-parity tests passed successfully.")
 PY
 

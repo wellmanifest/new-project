@@ -22,7 +22,8 @@
     "scripts/governance_check.py",
     "scripts/work_start_check.py",
     "tests/adoption_legacy_scaffold_test.py",
-    "tests/scaffold_bootstrap_test.py"
+    "tests/scaffold_bootstrap_test.py",
+    "tests/version-parity.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -34,7 +35,7 @@
   "delivery": {
     "acceptedBaseSha": "3f7fa120d3a9f366e67f150d493fe816623fa669",
     "targetBranch": "main",
-    "outcome": "Accept minimal policy-free Wellman scaffolds with standard.id 'wellmanifest/new-project' across create_adoption_lock.py, work_start_check.py, and governance_check.py initial_adoption_seed_paths (plus canonical profile:* IDs in initial_adoption_seed_paths), synchronize _bundled/governance_check.py, and release standard 0.20.154.",
+    "outcome": "Accept minimal policy-free Wellman scaffolds with standard.id 'wellmanifest/new-project' and strict SemVer 2.0.0 versions across create_adoption_lock.py, work_start_check.py, and governance_check.py initial_adoption_seed_paths, bind nested Python sub-package __version__ checks in check_version_parity to their enclosing sub-package manifest when present, synchronize _bundled/governance_check.py, and release standard 0.20.154.",
     "nonGoals": [
       "No acceptance of native new-project.governance/v2 manifests, sourceRevision-bound manifests, or non-minimal custom manifests as legacy scaffolds",
       "No changes to target repositories inside this Governance Hub ticket"
@@ -64,7 +65,8 @@
           "name": "regression-suites",
           "paths": [
             "tests/adoption_legacy_scaffold_test.py",
-            "tests/scaffold_bootstrap_test.py"
+            "tests/scaffold_bootstrap_test.py",
+            "tests/version-parity.test.sh"
           ]
         },
         {
@@ -80,7 +82,7 @@
       ],
       "responsibilityChanges": false,
       "interfaceChanges": [
-        "scripts/governance_check.py initial_adoption_seed_paths accepts canonical WELLMAN_SCAFFOLD_PROFILES including wellmanifest/new-project"
+        "scripts/governance_check.py initial_adoption_seed_paths accepts canonical WELLMAN_SCAFFOLD_PROFILES including wellmanifest/new-project under strict SemVer 2.0.0 validation, and check_version_parity validates nested sub-package initializers against their enclosing sub-package manifest version"
       ],
       "dataChanges": [],
       "ui": {

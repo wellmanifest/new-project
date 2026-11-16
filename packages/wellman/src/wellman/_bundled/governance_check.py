@@ -3065,6 +3065,86 @@ def _extract_cargo_version(content: str) -> str | None:
     return _section_aware_toml_version(content, ("package",))
 
 
+def _read_bounded_regular_utf8(path: Path, resolved_root: Path, max_bytes: int) -> str | None:
+    resolved_path = path.resolve()
+    resolved_path.relative_to(resolved_root)
+    open_flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    fd = os.open(path, open_flags)
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode) or st.st_size > max_bytes:
+            return None
+        chunks: list[bytes] = []
+        total = 0
+        while total <= max_bytes:
+            chunk = os.read(fd, min(65536, max_bytes + 1 - total))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            total += len(chunk)
+        if total > max_bytes:
+            return None
+        return b"".join(chunks).decode("utf-8")
+    finally:
+        os.close(fd)
+
+
+def _enclosing_subpackage_version(
+    root: Path,
+    resolved_root: Path,
+    init_file: Path,
+    max_bytes: int,
+    report: Report,
+) -> tuple[str | None, str | None, bool]:
+    anc = init_file.parent
+    while anc != root:
+        for manifest_name in ("pyproject.toml", "setup.py"):
+            candidate = anc / manifest_name
+            if candidate.is_symlink():
+                rel_c = rel(root, candidate)
+                report.add(
+                    "GOV-VERSION-001",
+                    f"Symlinked nested package manifest {rel_c} is forbidden in version parity scan.",
+                    "Replace symlinked nested package manifest with a regular repository-contained file.",
+                    [rel_c],
+                )
+                return None, None, True
+            if not os.path.lexists(candidate):
+                continue
+            rel_c = rel(root, candidate)
+            try:
+                content = _read_bounded_regular_utf8(candidate, resolved_root, max_bytes)
+            except (OSError, UnicodeDecodeError, ValueError):
+                content = None
+            if content is None:
+                report.add(
+                    "GOV-VERSION-001",
+                    f"Nested package manifest {rel_c} is unreadable, non-regular, or oversized in version parity scan.",
+                    "Ensure nested package manifests are regular UTF-8 files within size bounds.",
+                    [rel_c],
+                )
+                return None, None, True
+            if manifest_name == "pyproject.toml":
+                if tomllib is not None:
+                    try:
+                        tomllib.loads(content)
+                    except Exception:
+                        report.add(
+                            "GOV-VERSION-001",
+                            f"Nested pyproject.toml {rel_c} contains invalid TOML syntax.",
+                            "Fix TOML syntax in the nested pyproject.toml.",
+                            [rel_c],
+                        )
+                        return None, None, True
+                sub_v = _extract_pyproject_version(content)
+            else:
+                sub_v = _extract_setup_py_version(content)
+            if sub_v:
+                return sub_v, rel_c, False
+        anc = anc.parent
+    return None, None, False
+
+
 def check_version_parity(root: Path, manifest: dict[str, Any], report: Report) -> None:
     try:
         version_path = safe_repo_path(root, "VERSION")
@@ -3187,31 +3267,27 @@ def check_version_parity(root: Path, manifest: dict[str, Any], report: Report) -
             )
             continue
         try:
-            resolved_init = init_file.resolve()
-            resolved_init.relative_to(resolved_root)
-            open_flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
-            fd = os.open(init_file, open_flags)
-            try:
-                st = os.fstat(fd)
-                if not stat.S_ISREG(st.st_mode) or st.st_size > max_init_bytes:
-                    continue
-                chunks: list[bytes] = []
-                total = 0
-                while total <= max_init_bytes:
-                    chunk = os.read(fd, min(65536, max_init_bytes + 1 - total))
-                    if not chunk:
-                        break
-                    chunks.append(chunk)
-                    total += len(chunk)
-                if total > max_init_bytes:
-                    continue
-                text = b"".join(chunks).decode("utf-8")
-            finally:
-                os.close(fd)
+            text = _read_bounded_regular_utf8(init_file, resolved_root, max_init_bytes)
+            if text is None:
+                continue
             m = re.search(r'^__version__\s*=\s*["\']([^"\']+)["\']', text, re.MULTILINE)
             if m:
                 found_v = m.group(1).strip()
-                if found_v != raw_version:
+                sub_v, sub_source, failed = _enclosing_subpackage_version(
+                    root, resolved_root, init_file, max_init_bytes, report
+                )
+                if failed:
+                    continue
+                if sub_v is not None and sub_source is not None:
+                    if found_v != sub_v:
+                        rel_p = rel(root, init_file)
+                        report.add(
+                            "GOV-VERSION-001",
+                            f"Static __version__ '{found_v}' in {rel_p} does not match enclosing {sub_source} version '{sub_v}'.",
+                            f"Synchronize __version__ in {rel_p} with {sub_source} or use dynamic version discovery.",
+                            [rel_p, sub_source],
+                        )
+                elif found_v != raw_version:
                     rel_p = rel(root, init_file)
                     report.add(
                         "GOV-VERSION-001",
