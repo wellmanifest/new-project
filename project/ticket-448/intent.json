@@ -14,7 +14,8 @@
     "project/TICKETS.md",
     "scripts/governance_check.py",
     "packages/wellman/src/wellman/_bundled/governance_check.py",
-    "tests/governance_activity_performance_test.py"
+    "tests/governance_activity_performance_test.py",
+    "tests/workspace_activity_test.py"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -24,17 +25,17 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "69ec6abb60a8a47a66eec3b38a498d2cb4411e5e",
+    "acceptedBaseSha": "31c8859fb14881a8650b9107b3d668832fccb545",
     "targetBranch": "main",
     "outcome": "Bound repeated path matching in scope-overlap checks without changing findings or authority predicates.",
     "nonGoals": ["No ticket activity policy, reservation, lease or approval changes", "No check retirement, timeout change or runtime deployment", "No changes to the separate ticket-446 implementation"],
     "complexity": "S",
     "estimatedMinutes": 20,
-    "budgets": {"maxImplementationFiles": 3, "maxAffectedComponents": 2, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "budgets": {"maxImplementationFiles": 4, "maxAffectedComponents": 2, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
     "architecture": {
       "status": "accepted",
-      "decision": "Compute non-governance path membership once per ticket within each overlap-check invocation. Intersect path positions for pairs, preserving duplicate inputs, diagnostic ordering and counts. Retain symbolic pattern overlap checks and the existing shared-path helper.",
-      "components": [{"name": "governance-checker", "paths": ["scripts/governance_check.py", "packages/wellman/src/wellman/_bundled/governance_check.py"]}, {"name": "governance-regressions", "paths": ["tests/governance_activity_performance_test.py"]}],
+      "decision": "Compute non-governance path membership once per ticket within each overlap-check invocation. Intersect path positions for pairs, preserving duplicate inputs, diagnostic ordering and counts. Retain symbolic pattern overlap checks and the existing shared-path helper. Make the existing unreadable-branch-inventory fixture explicitly invalid with broken Git metadata, independent from its temporary-directory parent. The strict inventory resolver and refusal assertion remain unchanged.",
+      "components": [{"name": "governance-checker", "paths": ["scripts/governance_check.py", "packages/wellman/src/wellman/_bundled/governance_check.py"]}, {"name": "governance-regressions", "paths": ["tests/governance_activity_performance_test.py", "tests/workspace_activity_test.py"]}],
       "responsibilityChanges": false,
       "interfaceChanges": [],
       "dataChanges": [],

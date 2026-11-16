@@ -23,6 +23,10 @@ Precomputation must remain local to one invocation and must preserve input
 positions. Terminal-receipt policy and active ticket projections stay unchanged.
 This ticket owns the checker and its existing performance tests; ticket-446
 retains its separate controller change and publication.
+The user approved extending this ticket to `tests/workspace_activity_test.py`
+and increasing the implementation-file budget from 3 to 4. Its unreadable
+inventory fixture must contain invalid Git metadata so it fails independently
+of whether the runner creates temporary files inside another Git checkout.
 Diagnostic receipt: `artifact:terminal446/scope-cost-diagnostic-20261116`.
 
 ## Verification
@@ -34,6 +38,12 @@ transparent local memoization of its pure matcher. The comparison retains all
 policy inputs. Governance reports zero errors/warnings and bundled parity
 passes. Full tests, protected CI and independent publication remain pending.
 Receipt: `artifact:ticket448/scope-cost-qualification-20261116`.
+
+The updated activity and performance modules pass through the full Wellman
+runner: 23 tests and 53 subtests. The refusal fixture now has explicit broken
+Git metadata and retains its existing `ActivityError` assertion. Full tests,
+current-base protected CI and independent publication remain required for the
+updated head.
 
 ## Granica katalogu
 

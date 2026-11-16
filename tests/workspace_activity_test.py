@@ -185,6 +185,7 @@ class WorkspaceActivityTests(unittest.TestCase):
     def test_unreadable_branch_inventory_is_not_an_empty_inventory(self):
         missing = Path(self.temporary.name) / 'not-a-repository'
         missing.mkdir()
+        (missing / '.git').write_text('gitdir: missing-metadata\n')
         with self.assertRaises(ACTIVITY.ActivityError):
             ACTIVITY._unmerged_ticket_branch(missing, 'ticket-001', 'main')
 
