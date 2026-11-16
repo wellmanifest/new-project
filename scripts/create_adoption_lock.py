@@ -67,7 +67,18 @@ CANONICAL_STANDARD_RELEASES_API = (
     "https://api.github.com/repos/wellmanifest/new-project/releases/tags"
 )
 MAX_RELEASE_METADATA_BYTES = 1024 * 1024
-VERSION_PATTERN = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
+VERSION_PATTERN = re.compile(
+    r"\A(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)"
+    r"(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)"
+    r"(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?"
+    r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?\Z"
+)
+PEP440_SEED_VERSION_PATTERN = re.compile(
+    r"\A(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)"
+    r"(?:(?:a|b|rc)(?:0|[1-9][0-9]*))?"
+    r"(?:\.post(?:0|[1-9][0-9]*))?"
+    r"(?:\.dev(?:0|[1-9][0-9]*))?\Z"
+)
 
 
 _SOURCE_BLOBS: ContextVar[dict | None] = ContextVar("adoption_source_blobs", default=None)
@@ -1619,8 +1630,13 @@ def bootstrap_prerequisite_payloads(
         path = plan_path(target_root, name)
         if path.exists() or path.is_symlink() or _git_cat_file_exists(target_root, f"HEAD:{name}").returncode == 0:
             raise SystemExit("bootstrap prerequisite must be absent in checkout and committed HEAD")
-        if name == "VERSION" and VERSION_PATTERN.fullmatch(content.strip()) is None:
-            raise SystemExit("bootstrap prerequisite VERSION requires explicit SemVer")
+        if name == "VERSION":
+            stripped = content.strip()
+            if (
+                VERSION_PATTERN.fullmatch(stripped) is None
+                and PEP440_SEED_VERSION_PATTERN.fullmatch(stripped) is None
+            ):
+                raise SystemExit("bootstrap prerequisite VERSION requires explicit SemVer or canonical PEP 440 X.Y.Z version")
         seeds[name] = encoded
     return seeds
 
@@ -1892,6 +1908,7 @@ ALLOCATION_PLAN_SOURCE_HELPERS = (
 )
 
 WELLMAN_SCAFFOLD_PROFILES = frozenset({
+    "wellmanifest/new-project",
     "profile:baseline",
     "profile:domain-pack",
     "profile:runtime-service",

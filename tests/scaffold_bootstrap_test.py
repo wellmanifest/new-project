@@ -23,6 +23,8 @@ class BootstrapTest(unittest.TestCase):
     fresh = False
     untracked_scaffold = False
     legacy_carriers = False
+    scaffold_id = 'profile:baseline'
+    scaffold_version = '0.20.37'
     expected_ticket = 'ticket-001'
 
     def command(self, cwd, *args, check=True):
@@ -58,7 +60,10 @@ class BootstrapTest(unittest.TestCase):
         if not self.fresh:
             (self.target / '.governance/manifest.json').write_text(json.dumps({
                 'schema': 'wellmanifest.manifest/v1',
-                'standard': {'id': 'profile:baseline', 'version': '0.20.37'}}))
+                'standard': {
+                    'id': getattr(self, 'scaffold_id', 'profile:baseline'),
+                    'version': getattr(self, 'scaffold_version', '0.20.37'),
+                }}))
         (self.target / 'README.md').write_text('# Product\n')
         (self.target / '.gitignore').write_text('/.worktrees/\n/.subactor/receipts/\n')
         (self.target / 'foreign.txt').write_text('original\n')
@@ -553,6 +558,32 @@ class UntrackedScaffoldTest(BootstrapTest):
     untracked_scaffold = True
 
 
+class StandardIdScaffoldBootstrapTest(unittest.TestCase):
+    """Real allocator and protected seed scope for wellman adopt wellmanifest/new-project."""
+
+    fresh = False
+    untracked_scaffold = False
+    legacy_carriers = False
+    scaffold_id = 'wellmanifest/new-project'
+    scaffold_version = '0.23.0-rc.1+build.7'
+    expected_ticket = 'ticket-001'
+
+    command = BootstrapTest.command
+    setUp = BootstrapTest.setUp
+    observation = BootstrapTest.observation
+    checksum = BootstrapTest.checksum
+    seed_scope = BootstrapTest.seed_scope
+    test_first_real_allocator_preserves_foreign_bytes_and_does_not_write_source = (
+        BootstrapTest.test_first_real_allocator_preserves_foreign_bytes_and_does_not_write_source
+    )
+    test_complete_seed_scope_allocates_without_ownership_takeover = (
+        BootstrapTest.test_complete_seed_scope_allocates_without_ownership_takeover
+    )
+    test_protected_seed_scope_recomputes_base_and_immutable_package = (
+        BootstrapTest.test_protected_seed_scope_recomputes_base_and_immutable_package
+    )
+
+
 class HistoricalRefObservationTest(unittest.TestCase):
     """Exercise the actual source against real Git, including error outcomes."""
 
@@ -614,6 +645,16 @@ class HistoricalRefObservationTest(unittest.TestCase):
                 self.git('add', '.governance')
                 self.git('commit', '--quiet', '-m', f'Scaffold {profile}')
                 self.guard.bootstrap_scaffold_at_head(self.root, self.git('rev-parse', 'HEAD'))
+        for bad_version in ('01.2.3', '1.02.3', '1.2.03', '1.2.3-..', '1.2.3-01', '1.2.3+..', '1.2.3\n'):
+            with self.subTest(bad_version=bad_version):
+                (governance / 'manifest.json').write_text(json.dumps({
+                    'schema': 'wellmanifest.manifest/v1',
+                    'standard': {'id': 'wellmanifest/new-project', 'version': bad_version},
+                }) + '\n')
+                self.git('add', '.governance')
+                self.git('commit', '--quiet', '-m', f'Invalid SemVer {bad_version!r}')
+                with self.assertRaisesRegex(self.guard.ObservationError, 'exact legacy scaffold'):
+                    self.guard.bootstrap_scaffold_at_head(self.root, self.git('rev-parse', 'HEAD'))
         (governance / 'manifest.json').write_text(json.dumps({
             'schema': 'wellmanifest.manifest/v1',
             'standard': {'id': 'profile:unknown-custom', 'version': '0.20.38'},

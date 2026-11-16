@@ -438,7 +438,9 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-441** | [`README.md`](./ticket-441/README.md) | - | - | - | - | - |
 | **ticket-442** | [`README.md`](./ticket-442/README.md) | - | - | - | - | - |
 | **ticket-443** | [`README.md`](./ticket-443/README.md) | - | - | - | - | - |
+| **ticket-444** | [`README.md`](./ticket-444/README.md) | - | - |  [`ai-codex.md`](./ticket-444/ai-codex.md) | - | - |
 | **ticket-445** | [`README.md`](./ticket-445/README.md) | - | - | - | - | - |
+| **ticket-447** | [`README.md`](./ticket-447/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 

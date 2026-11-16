@@ -274,6 +274,7 @@ def bootstrap_historical_refs(root, head):
 
 
 WELLMAN_SCAFFOLD_PROFILES = frozenset({
+    "wellmanifest/new-project",
     "profile:baseline",
     "profile:domain-pack",
     "profile:runtime-service",
@@ -282,6 +283,12 @@ WELLMAN_SCAFFOLD_PROFILES = frozenset({
     "profile:embedded-fleet",
     "profile:full",
 })
+WELLMAN_SCAFFOLD_VERSION_RE = re.compile(
+    r"\A(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)"
+    r"(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)"
+    r"(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?"
+    r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?\Z"
+)
 
 
 def bootstrap_scaffold_at_head(root, head):
@@ -304,7 +311,8 @@ def bootstrap_scaffold_at_head(root, head):
             or original.get("schema") != "wellmanifest.manifest/v1"
             or not isinstance(standard, dict) or set(standard) != {"id", "version"}
             or standard.get("id") not in WELLMAN_SCAFFOLD_PROFILES
-            or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", str(standard.get("version", "")))):
+            or not isinstance(standard.get("version"), str)
+            or not WELLMAN_SCAFFOLD_VERSION_RE.fullmatch(standard["version"])):
         raise ObservationError("Bootstrap requires an exact legacy scaffold")
 
 
