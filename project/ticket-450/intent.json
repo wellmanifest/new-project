@@ -1,0 +1,81 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-450",
+  "summary": "Wire optional legacy terminal retirement regressions into required CI",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-450/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6dc363235414584758ec1750ff4f5bfb36457089",
+    "targetBranch": "main",
+    "outcome": "Run the explicit legacy retirement regression suite whenever its optional adapter is present, while the pre-adapter baseline remains valid.",
+    "nonGoals": [
+      "No change to adapter code, lease identity, ownership or publication authority",
+      "No skipped regression when the adapter exists; no required check removal"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add one explicit Linux workflow step: when the distributed adapter exists, require its regression file and execute it. Before adapter integration there is no legacy adapter to test. Preserve the existing suite-wiring assertion and all platform gates.",
+      "components": [
+        {
+          "name": "required-ci",
+          "paths": [
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Explicit mandatory test invocation when the optional legacy adapter is distributed"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through independent protected publication, retaining the mandatory suite-wiring gate."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "Execute actual workflow step with adapter absent and present"
+        ],
+        "evidence": "The baseline succeeds without the optional adapter; its presence runs 17 regressions and missing regression input fails."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Suite-wiring contract, deterministic governance, fresh exact-head/base required CI and independent App publication."
+      }
+    ]
+  }
+}
