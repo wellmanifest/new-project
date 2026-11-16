@@ -2316,6 +2316,19 @@ def add_adoption_docker_bindings(root: Path, manifest: dict[str, Any], bindings:
                 )
 
 
+WELLMAN_SCAFFOLD_PROFILES = frozenset({
+    "wellmanifest/new-project",
+    "profile:baseline",
+    "profile:domain-pack",
+    "profile:runtime-service",
+    "profile:agent-executor",
+    "profile:deployment",
+    "profile:embedded-fleet",
+    "profile:full",
+})
+WELLMAN_SCAFFOLD_VERSION_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
+
+
 def initial_adoption_seed_paths(root: Path, base: str, revision: str,
                                 manifest: dict[str, Any]) -> set[str]:
     """Closed required seeds; neither existing ownership nor writer authority."""
@@ -2336,8 +2349,9 @@ def initial_adoption_seed_paths(root: Path, base: str, revision: str,
         if (not isinstance(original, dict) or set(original) != {"schema", "standard"}
                 or original.get("schema") != "wellmanifest.manifest/v1"
                 or not isinstance(standard, dict) or set(standard) != {"id", "version"}
-                or standard.get("id") != "profile:baseline"
-                or re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", str(standard.get("version", ""))) is None):
+                or standard.get("id") not in WELLMAN_SCAFFOLD_PROFILES
+                or not isinstance(standard.get("version"), str)
+                or WELLMAN_SCAFFOLD_VERSION_RE.fullmatch(standard["version"]) is None):
             return set()
     for name in native:
         path = root / name

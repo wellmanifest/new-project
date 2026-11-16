@@ -1892,6 +1892,7 @@ ALLOCATION_PLAN_SOURCE_HELPERS = (
 )
 
 WELLMAN_SCAFFOLD_PROFILES = frozenset({
+    "wellmanifest/new-project",
     "profile:baseline",
     "profile:domain-pack",
     "profile:runtime-service",

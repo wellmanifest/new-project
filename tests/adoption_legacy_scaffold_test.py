@@ -215,9 +215,10 @@ class LegacyScaffoldMigrationTest(unittest.TestCase):
             self.assertEqual((self.target / name).read_bytes(), before[name])
 
     def test_canonical_wellman_profile_scaffolds_migrate_cleanly(self):
-        for profile in ("profile:runtime-service", "profile:domain-pack",
-                        "profile:agent-executor", "profile:deployment",
-                        "profile:embedded-fleet", "profile:full"):
+        for profile in ("wellmanifest/new-project", "profile:runtime-service",
+                        "profile:domain-pack", "profile:agent-executor",
+                        "profile:deployment", "profile:embedded-fleet",
+                        "profile:full"):
             with self.subTest(profile=profile):
                 subprocess.run(["git", "clean", "-fdq"], cwd=self.target, check=True)
                 for name in ("README.md", "VERSION", "CHANGELOG.md", "TODO.md", "project/TICKETS.md"):
@@ -227,7 +228,7 @@ class LegacyScaffoldMigrationTest(unittest.TestCase):
                 self.manifest.parent.mkdir(parents=True, exist_ok=True)
                 self.manifest.write_text(json.dumps({
                     "schema": "wellmanifest.manifest/v1",
-                    "standard": {"id": profile, "version": "0.20.38"},
+                    "standard": {"id": profile, "version": "0.23.0"},
                 }, indent=2) + "\n")
                 before = self.contents()
                 review = self.run_adopter("--check", "--migrate-wellman-scaffold")
@@ -245,8 +246,12 @@ class LegacyScaffoldMigrationTest(unittest.TestCase):
     def test_custom_and_native_manifests_cannot_use_migration(self):
         cases = [[], {**LEGACY, "coordination": {"policy": "keep"}},
                  {**LEGACY, "schema": "new-project.governance/v2"},
-                 {**LEGACY, "standard": {"id": "wellmanifest/new-project", "version": "0.20.80"}},
+                 {"schema": "new-project.governance/v2",
+                  "standard": {"id": "wellmanifest/new-project", "version": "0.20.80"}},
+                 {**LEGACY, "standard": {"id": "wellmanifest/unknown-custom", "version": "0.20.80"}},
                  {**LEGACY, "standard": {"id": "profile:unknown-custom", "version": "0.20.38"}},
+                 {**LEGACY, "standard": {"id": "wellmanifest/new-project", "version": "0.20.80",
+                                         "sourceRevision": "a" * 40}},
                  {**LEGACY, "standard": {**LEGACY["standard"], "sourceRevision": "a" * 40}},
                  {**LEGACY, "standard": {**LEGACY["standard"], "version": 37}},
                  {**LEGACY, "standard": {**LEGACY["standard"], "version": ""}}]

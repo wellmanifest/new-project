@@ -23,6 +23,8 @@ class BootstrapTest(unittest.TestCase):
     fresh = False
     untracked_scaffold = False
     legacy_carriers = False
+    scaffold_id = 'profile:baseline'
+    scaffold_version = '0.20.37'
     expected_ticket = 'ticket-001'
 
     def command(self, cwd, *args, check=True):
@@ -58,7 +60,7 @@ class BootstrapTest(unittest.TestCase):
         if not self.fresh:
             (self.target / '.governance/manifest.json').write_text(json.dumps({
                 'schema': 'wellmanifest.manifest/v1',
-                'standard': {'id': 'profile:baseline', 'version': '0.20.37'}}))
+                'standard': {'id': self.scaffold_id, 'version': self.scaffold_version}}))
         (self.target / 'README.md').write_text('# Product\n')
         (self.target / '.gitignore').write_text('/.worktrees/\n/.subactor/receipts/\n')
         (self.target / 'foreign.txt').write_text('original\n')
@@ -551,6 +553,32 @@ class UntrackedScaffoldTest(BootstrapTest):
     """The same real allocator and refusal cases with no manifest in HEAD."""
 
     untracked_scaffold = True
+
+
+class StandardIdScaffoldBootstrapTest(unittest.TestCase):
+    """Real allocator and protected seed scope for wellman adopt wellmanifest/new-project."""
+
+    fresh = False
+    untracked_scaffold = False
+    legacy_carriers = False
+    scaffold_id = 'wellmanifest/new-project'
+    scaffold_version = '0.23.0'
+    expected_ticket = 'ticket-001'
+
+    command = BootstrapTest.command
+    setUp = BootstrapTest.setUp
+    observation = BootstrapTest.observation
+    checksum = BootstrapTest.checksum
+    seed_scope = BootstrapTest.seed_scope
+    test_first_real_allocator_preserves_foreign_bytes_and_does_not_write_source = (
+        BootstrapTest.test_first_real_allocator_preserves_foreign_bytes_and_does_not_write_source
+    )
+    test_complete_seed_scope_allocates_without_ownership_takeover = (
+        BootstrapTest.test_complete_seed_scope_allocates_without_ownership_takeover
+    )
+    test_protected_seed_scope_recomputes_base_and_immutable_package = (
+        BootstrapTest.test_protected_seed_scope_recomputes_base_and_immutable_package
+    )
 
 
 class HistoricalRefObservationTest(unittest.TestCase):

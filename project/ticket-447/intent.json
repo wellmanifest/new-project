@@ -1,0 +1,121 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-447",
+  "summary": "Support wellmanifest/new-project scaffold ID across migration, work-start, and seed checks (0.20.154)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-447/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "CHANGELOG.md",
+    "VERSION",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "scripts/create_adoption_lock.py",
+    "scripts/governance_check.py",
+    "scripts/work_start_check.py",
+    "tests/adoption_legacy_scaffold_test.py",
+    "tests/scaffold_bootstrap_test.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "3f7fa120d3a9f366e67f150d493fe816623fa669",
+    "targetBranch": "main",
+    "outcome": "Accept minimal policy-free Wellman scaffolds with standard.id 'wellmanifest/new-project' across create_adoption_lock.py, work_start_check.py, and governance_check.py initial_adoption_seed_paths (plus canonical profile:* IDs in initial_adoption_seed_paths), synchronize _bundled/governance_check.py, and release standard 0.20.154.",
+    "nonGoals": [
+      "No acceptance of native new-project.governance/v2 manifests, sourceRevision-bound manifests, or non-minimal custom manifests as legacy scaffolds",
+      "No changes to target repositories inside this Governance Hub ticket"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Include 'wellmanifest/new-project' in the closed WELLMAN_SCAFFOLD_PROFILES set in scripts/create_adoption_lock.py, scripts/work_start_check.py, and scripts/governance_check.py, align initial_adoption_seed_paths with WELLMAN_SCAFFOLD_PROFILES and pre-release SemVer validation, synchronize packages/wellman/src/wellman/_bundled/governance_check.py via sync_bundled.py, add regression coverage, and advance 0.20.154 version projections.",
+      "components": [
+        {
+          "name": "scaffold-migration-and-gate",
+          "paths": [
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "scripts/create_adoption_lock.py",
+            "scripts/governance_check.py",
+            "scripts/work_start_check.py"
+          ]
+        },
+        {
+          "name": "regression-suites",
+          "paths": [
+            "tests/adoption_legacy_scaffold_test.py",
+            "tests/scaffold_bootstrap_test.py"
+          ]
+        },
+        {
+          "name": "material-release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "scripts/governance_check.py initial_adoption_seed_paths accepts canonical WELLMAN_SCAFFOLD_PROFILES including wellmanifest/new-project"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through protected review; existing native adoption locks and ticket schemas remain unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/adoption_legacy_scaffold_test.py"
+        ],
+        "evidence": "validate_wellman_scaffold migrates minimal wellmanifest/new-project and profile:* scaffolds and refuses native, custom, and unknown manifests."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/scaffold_bootstrap_test.py"
+        ],
+        "evidence": "bootstrap_scaffold_at_head and initial_adoption_seed_paths accept minimal wellmanifest/new-project and profile:* scaffolds while preserving foreign bytes and refusing invalid bases."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 packages/wellman/sync_bundled.py --check",
+          "bash tests/version-parity.test.sh",
+          "bash tests/wellman-package.test.sh",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Bundled parity, version 0.20.154 parity, wheel build, and Governance Hub gate pass."
+      }
+    ]
+  }
+}
