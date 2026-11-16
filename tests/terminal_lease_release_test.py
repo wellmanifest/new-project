@@ -1,6 +1,7 @@
 """Actual Git terminal ownership, CAS and interrupted local controller writes."""
 import hashlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -9,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -191,6 +193,68 @@ class TerminalOwnerRelease(unittest.TestCase):
             self.write_lease()
             self.request['expectedLeaseSha256'] = hashlib.sha256(self.lease.read_bytes()).hexdigest()
             self.refused()
+
+    def test_unqualified_and_foreign_repositories_remain_refused_without_mutation(self):
+        for repository, reason in ((self.root.name, 'invalid_canonical_lease'),
+                                   ('owner/another-repository', 'repository_identity_mismatch')):
+            with self.subTest(repository=repository):
+                self.value['repositoryRef'] = repository
+                self.write_lease()
+                before = self.lease.read_bytes()
+                self.request['expectedLeaseSha256'] = hashlib.sha256(before).hexdigest()
+                with self.assertRaisesRegex(PermissionError, '^' + reason + '$'):
+                    self.invoke(False)
+                report = release.settle_verified_leases(self.root, apply=False)
+                self.assertFalse(report['grantsAuthority'])
+                self.assertEqual(report['settled'], [])
+                self.assertEqual(report['skipped'][0]['reason'], reason)
+                self.assertEqual(self.lease.read_bytes(), before)
+
+    def test_owner_and_scope_refusals_are_distinct_without_mutation(self):
+        before = self.lease.read_bytes()
+        self.request['ownerActor'] = 'agent:another-owner'
+        with self.assertRaisesRegex(PermissionError, '^current_owner_mismatch$'):
+            self.invoke(False)
+        self.assertEqual(self.lease.read_bytes(), before)
+        self.value['ticketId'] = 'ticket-999'
+        self.write_lease()
+        before = self.lease.read_bytes()
+        with self.assertRaisesRegex(PermissionError, '^lease_scope_mismatch$'):
+            self.invoke(False)
+        report = release.settle_verified_leases(self.root, apply=False)
+        self.assertEqual(report['skipped'][0]['reason'], 'lease_scope_mismatch')
+        self.assertEqual(self.lease.read_bytes(), before)
+
+    def test_cli_exposes_only_static_identity_failure_labels(self):
+        request = self.root.parent / 'request.json'
+        request.write_text(json.dumps(self.request))
+        for reason in ('invalid_canonical_lease', 'repository_identity_mismatch', 'current_owner_mismatch', 'lease_scope_mismatch'):
+            with self.subTest(reason=reason):
+                before = self.lease.read_bytes()
+                stderr = io.StringIO()
+                with patch.object(release, 'release_owner', side_effect=PermissionError(reason)), redirect_stderr(stderr):
+                    code = release.main(['--root', str(self.root), '--request', str(request)])
+                self.assertEqual(code, 2)
+                self.assertIn('reason=' + reason, stderr.getvalue())
+                self.assertEqual(self.lease.read_bytes(), before)
+
+    def test_cli_withholds_unexpected_private_exception_details(self):
+        class UnexpectedPermissionError(PermissionError):
+            def __str__(self):
+                raise AssertionError('Unexpected exception must not be formatted')
+
+        request = self.root.parent / 'request.json'
+        request.write_text(json.dumps(self.request))
+        before = self.lease.read_bytes()
+        for error in (PermissionError('private-fixture-detail'), UnexpectedPermissionError('repository_identity_mismatch')):
+            stderr = io.StringIO()
+            with patch.object(release, 'release_owner', side_effect=error), redirect_stderr(stderr):
+                code = release.main(['--root', str(self.root), '--request', str(request)])
+            self.assertEqual(code, 2)
+            self.assertIn('GOV-CHANGE-LEASE-002:', stderr.getvalue())
+            self.assertNotIn('private-fixture-detail', stderr.getvalue())
+            self.assertNotIn('reason=', stderr.getvalue())
+            self.assertEqual(self.lease.read_bytes(), before)
 
     def test_dirty_or_advanced_worktree_refuses_but_dirty_primary_is_preserved(self):
         (self.tree / 'retained.txt').write_text('unpublished')
