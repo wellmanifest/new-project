@@ -60,7 +60,10 @@ class BootstrapTest(unittest.TestCase):
         if not self.fresh:
             (self.target / '.governance/manifest.json').write_text(json.dumps({
                 'schema': 'wellmanifest.manifest/v1',
-                'standard': {'id': self.scaffold_id, 'version': self.scaffold_version}}))
+                'standard': {
+                    'id': getattr(self, 'scaffold_id', 'profile:baseline'),
+                    'version': getattr(self, 'scaffold_version', '0.20.37'),
+                }}))
         (self.target / 'README.md').write_text('# Product\n')
         (self.target / '.gitignore').write_text('/.worktrees/\n/.subactor/receipts/\n')
         (self.target / 'foreign.txt').write_text('original\n')
