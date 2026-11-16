@@ -1,0 +1,109 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-449",
+  "summary": "Retire exact owner legacy leases after verified terminal delivery",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-449/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/legacy_terminal_retirement.py",
+    "tests/legacy_terminal_retirement_test.py",
+    "governance/package-manifest.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-450"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6dc363235414584758ec1750ff4f5bfb36457089",
+    "targetBranch": "main",
+    "outcome": "Offer explicit owner-bound retirement of expired legacy allocation projections after verified merged delivery, preserving exact original bytes without changing canonical identity acceptance.",
+    "nonGoals": [
+      "No widening of ordinary lease validation, release, settlement or writer authority",
+      "No identity normalization, live/frozen lease retirement, takeover or checkout/ref deletion",
+      "No host-specific task or operational receipt stored in the hub"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Ship a separate opt-in adapter reusing the canonical controller directory, lock and Git receipt checks. Validate a read-only canonical-identity view of the otherwise exact legacy record; retain original bytes in a CAS-bound write-ahead journal before unlinking only the expired finished slot. Never persist a normalized lease.",
+      "components": [
+        {
+          "name": "legacy-terminal-retirement",
+          "paths": [
+            "scripts/legacy_terminal_retirement.py"
+          ]
+        },
+        {
+          "name": "real-git-regressions",
+          "paths": [
+            "tests/legacy_terminal_retirement_test.py"
+          ]
+        },
+        {
+          "name": "managed-distribution",
+          "paths": [
+            "governance/package-manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Explicit legacy terminal owner retirement request/plan/apply CLI"
+      ],
+      "dataChanges": [
+        "Owner-private immutable journal preserves exact original legacy bytes and verified merged receipt before retirement"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through protected publication; original bytes remain preserved. Never restore an active slot automatically."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python tests/legacy_terminal_retirement_test.py",
+          "python tests/terminal_lease_release_test.py"
+        ],
+        "evidence": "Real Git merge/receipt fixtures, read-only plan, owner-only apply, exact archive bytes, unchanged canonical rejection and idempotency."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python tests/legacy_terminal_retirement_test.py"
+        ],
+        "evidence": "Negative owner/repository/phase/CAS/path/receipt cases and write-ahead interruption recovery preserve existing bytes."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh",
+          "python packages/wellman/sync_bundled.py --check"
+        ],
+        "evidence": "Managed package, fresh exact-head/base required CI and independent Validator App publication."
+      }
+    ]
+  }
+}

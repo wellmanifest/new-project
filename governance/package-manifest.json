@@ -2,6 +2,12 @@
   "schema": "new-project.package-manifest/v1",
   "files": [
     {
+      "source": "scripts/legacy_terminal_retirement.py",
+      "target": ".governance/legacy_terminal_retirement.py",
+      "strategy": "managed",
+      "executable": true
+    },
+    {
       "source": "scripts/terminal_lease_release.py",
       "target": ".governance/terminal_lease_release.py",
       "strategy": "managed",
