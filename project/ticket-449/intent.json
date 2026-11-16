@@ -20,7 +20,9 @@
     "project/ticket-*/user-*.md"
   ],
   "stacks": [],
-  "dependsOn": [],
+  "dependsOn": [
+    "ticket-450"
+  ],
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {

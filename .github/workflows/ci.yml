@@ -198,6 +198,13 @@ jobs:
         run: python3 tests/change_lease_safety_test.py
       - name: Test explicit terminal owner lease release
         run: python3 tests/terminal_lease_release_test.py
+      - name: Test distributed expired legacy terminal retirement
+        run: |
+          set -euo pipefail
+          if [[ -f scripts/legacy_terminal_retirement.py ]]; then
+            test -f tests/legacy_terminal_retirement_test.py
+            python3 tests/legacy_terminal_retirement_test.py
+          fi
       # These suites existed but no step ran them. Suites with a __main__ entry run
       # directly (hyphenated names cannot be imported by pytest); the three that only
       # define bare test functions would run nothing that way, so pytest collects them.
