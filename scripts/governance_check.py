@@ -2576,17 +2576,33 @@ def check_scope_overlaps(
     governance_patterns: list[str],
     report: Report,
 ) -> None:
+    if len(valid_active) < 2:
+        return
+    # Match each ticket against repository paths once, rather than repeating
+    # that work for every pair. Positions retain duplicate counts and the
+    # original first-20 selection before Report canonicalizes the paths.
+    candidates = [(index, path) for index, path in enumerate(files)
+                  if not matches(path, governance_patterns)]
+    matching_positions: list[set[int]] = []
+    for record in valid_active:
+        assert record.intent is not None
+        matching_positions.append({
+            index for index, path in candidates
+            if matches(path, record.intent["allowedPaths"])
+            and not matches(path, record.intent["forbiddenPaths"])
+        })
     for index, first in enumerate(valid_active):
-        for second in valid_active[index + 1:]:
-            shared_files = ticket_shared_files(first, second, files, governance_patterns)
+        for second_index in range(index + 1, len(valid_active)):
+            second = valid_active[second_index]
+            shared_positions = matching_positions[index] & matching_positions[second_index]
             overlapping_patterns = ticket_overlapping_patterns(first, second, governance_patterns)
-            if shared_files or overlapping_patterns:
+            if shared_positions or overlapping_patterns:
                 report.add(
                     "GOV-WORKSTREAM-004",
                     f"Active ticket scopes overlap: {first.directory.name} and {second.directory.name}.",
                     "Narrow one allowedPaths declaration, serialize the work, or route the shared contract through integration.",
-                    shared_files[:20],
-                    {"tickets": [first.directory.name, second.directory.name], "overlappingPatterns": overlapping_patterns, "concretePathCount": len(shared_files)},
+                    [files[position] for position in sorted(shared_positions)[:20]],
+                    {"tickets": [first.directory.name, second.directory.name], "overlappingPatterns": overlapping_patterns, "concretePathCount": len(shared_positions)},
                 )
 
 

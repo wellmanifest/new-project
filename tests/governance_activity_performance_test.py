@@ -93,5 +93,85 @@ class GovernanceActivityPerformanceTests(unittest.TestCase):
             self.assertEqual(governance.active_ticket_records(self.root / "not-a-repo", {}, records), [])
 
 
+class ScopeOverlapCostTests(unittest.TestCase):
+    def record(self, number, allowed, forbidden=()):
+        return governance.TicketRecord(
+            Path(f"project/ticket-{number:03d}"), "IN_PROGRESS", "EDIT",
+            {"allowedPaths": list(allowed), "forbiddenPaths": list(forbidden)}, None,
+        )
+
+    def overlap(self, records, files, governance_paths=()):
+        report = governance.Report(Path("unused"))
+        governance.check_scope_overlaps(records, files, list(governance_paths), report)
+        return report.findings
+
+    def test_findings_match_existing_predicates_and_preserve_path_positions(self):
+        records = [
+            self.record(1, ["src/**"], ["src/private/**"]),
+            self.record(2, ["src/*.py"], ["src/hidden.py"]),
+            self.record(3, ["future/**"]),
+            self.record(4, ["future/lib/*.py"]),
+        ]
+        files = ["src/z.py", "project/ticket-001/README.md", "src/a.py",
+                 "src/z.py", "src/private/secret.py", "src/hidden.py", "TODO.md"]
+        governance_paths = ["project/**", "TODO.md"]
+        expected = []
+        for index, first in enumerate(records):
+            for second in records[index + 1:]:
+                shared = governance.ticket_shared_files(first, second, files, governance_paths)
+                patterns = governance.ticket_overlapping_patterns(first, second, governance_paths)
+                if shared or patterns:
+                    expected.append((sorted(set(shared[:20])), {
+                        "tickets": [first.directory.name, second.directory.name],
+                        "overlappingPatterns": patterns, "concretePathCount": len(shared),
+                    }))
+        findings = self.overlap(records, files, governance_paths)
+        self.assertEqual([(f.paths, f.evidence) for f in findings], expected)
+        self.assertEqual([f.code for f in findings], ["GOV-WORKSTREAM-004"] * 2)
+        self.assertEqual(findings[0].paths, ["src/a.py", "src/z.py"])
+        self.assertEqual(findings[0].evidence["concretePathCount"], 3)
+        self.assertEqual(findings[1].evidence["concretePathCount"], 0)
+
+    def test_report_limit_preserves_input_order_and_full_count(self):
+        files = [f"src/{index}.py" for index in range(30, 0, -1)]
+        records = [self.record(1, ["src/**"]), self.record(2, ["src/**"])]
+        finding, = self.overlap(records, files)
+        self.assertEqual(finding.paths, sorted(files[:20]))
+        self.assertEqual(finding.evidence["concretePathCount"], len(files))
+
+    def test_path_matching_cost_is_bounded_by_tickets_times_files(self):
+        records = [self.record(i + 1, [f"src/part-{i}/**"]) for i in range(24)]
+        files = [f"src/part-{i}/file-{j}.py" for i in range(24) for j in range(4)]
+        actual_files = set(files)
+        original = governance.matches
+        path_calls = 0
+
+        def counted(path, patterns):
+            nonlocal path_calls
+            if path in actual_files:
+                path_calls += 1
+            return original(path, patterns)
+
+        with patch.object(governance, "matches", side_effect=counted):
+            self.assertEqual(self.overlap(records, files, ["project/**"]), [])
+        self.assertLessEqual(path_calls, len(files) * (2 * len(records) + 1))
+
+    def test_next_invocation_rechecks_paths_exclusions_and_governance(self):
+        records = [self.record(1, ["src/**"]), self.record(2, ["src/*.py"])]
+        files = ["src/a.py"]
+        self.assertEqual(self.overlap(records, files)[0].evidence["concretePathCount"], 1)
+        records[0].intent["forbiddenPaths"] = ["src/**"]
+        files.append("src/b.py")
+        finding, = self.overlap(records, files)
+        self.assertEqual(finding.paths, [])
+        self.assertEqual(finding.evidence["concretePathCount"], 0)
+        self.assertEqual(self.overlap(records, files, ["src/**"]), [])
+
+    def test_zero_or_one_ticket_needs_no_path_matching(self):
+        with patch.object(governance, "matches", side_effect=AssertionError("unexpected matching")):
+            self.assertEqual(self.overlap([], ["src/a.py"]), [])
+            self.assertEqual(self.overlap([self.record(1, ["src/**"])], ["src/a.py"]), [])
+
+
 if __name__ == "__main__":
     unittest.main()
