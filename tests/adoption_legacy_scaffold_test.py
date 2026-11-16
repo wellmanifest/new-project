@@ -215,9 +215,10 @@ class LegacyScaffoldMigrationTest(unittest.TestCase):
             self.assertEqual((self.target / name).read_bytes(), before[name])
 
     def test_canonical_wellman_profile_scaffolds_migrate_cleanly(self):
-        for profile in ("profile:runtime-service", "profile:domain-pack",
-                        "profile:agent-executor", "profile:deployment",
-                        "profile:embedded-fleet", "profile:full"):
+        for profile in ("wellmanifest/new-project", "profile:runtime-service",
+                        "profile:domain-pack", "profile:agent-executor",
+                        "profile:deployment", "profile:embedded-fleet",
+                        "profile:full"):
             with self.subTest(profile=profile):
                 subprocess.run(["git", "clean", "-fdq"], cwd=self.target, check=True)
                 for name in ("README.md", "VERSION", "CHANGELOG.md", "TODO.md", "project/TICKETS.md"):
@@ -227,7 +228,7 @@ class LegacyScaffoldMigrationTest(unittest.TestCase):
                 self.manifest.parent.mkdir(parents=True, exist_ok=True)
                 self.manifest.write_text(json.dumps({
                     "schema": "wellmanifest.manifest/v1",
-                    "standard": {"id": profile, "version": "0.20.38"},
+                    "standard": {"id": profile, "version": "0.23.0"},
                 }, indent=2) + "\n")
                 before = self.contents()
                 review = self.run_adopter("--check", "--migrate-wellman-scaffold")
@@ -245,9 +246,18 @@ class LegacyScaffoldMigrationTest(unittest.TestCase):
     def test_custom_and_native_manifests_cannot_use_migration(self):
         cases = [[], {**LEGACY, "coordination": {"policy": "keep"}},
                  {**LEGACY, "schema": "new-project.governance/v2"},
-                 {**LEGACY, "standard": {"id": "wellmanifest/new-project", "version": "0.20.80"}},
+                 {"schema": "new-project.governance/v2",
+                  "standard": {"id": "wellmanifest/new-project", "version": "0.20.80"}},
+                 {**LEGACY, "standard": {"id": "wellmanifest/unknown-custom", "version": "0.20.80"}},
                  {**LEGACY, "standard": {"id": "profile:unknown-custom", "version": "0.20.38"}},
+                 {**LEGACY, "standard": {"id": "wellmanifest/new-project", "version": "0.20.80",
+                                         "sourceRevision": "a" * 40}},
                  {**LEGACY, "standard": {**LEGACY["standard"], "sourceRevision": "a" * 40}},
+                 {**LEGACY, "standard": {**LEGACY["standard"], "version": "01.2.3"}},
+                 {**LEGACY, "standard": {**LEGACY["standard"], "version": "1.2.3-.."}},
+                 {**LEGACY, "standard": {**LEGACY["standard"], "version": "1.2.3-01"}},
+                 {**LEGACY, "standard": {**LEGACY["standard"], "version": "1.2.3+.."}},
+                 {**LEGACY, "standard": {**LEGACY["standard"], "version": "1.2.3\n"}},
                  {**LEGACY, "standard": {**LEGACY["standard"], "version": 37}},
                  {**LEGACY, "standard": {**LEGACY["standard"], "version": ""}}]
         for document in cases:
@@ -388,6 +398,8 @@ class BootstrapPrerequisitePlanTest(unittest.TestCase):
         return self.run_adopter(mode, kind, "--bootstrap-prerequisites-plan", str(self.plan_path))
 
     def test_review_is_read_only_and_install_receipt_binds_seed_bytes(self):
+        self.seeds["VERSION"] = "0.2.0a1\n"
+        self.save_plan()
         before = self.contents()
         result = self.apply_plan("--check")
         self.assertEqual(result.returncode, 1, result.stderr)
@@ -416,7 +428,11 @@ class BootstrapPrerequisitePlanTest(unittest.TestCase):
                      lambda p: p["files"][0].update(path="src/worker.py"),
                      lambda p: p["files"][0].update(sha256="0" * 64),
                      lambda p: p["files"].append(p["files"][0]),
-                     lambda p: p["files"][0].update(content="x" * 65537)]
+                     lambda p: p["files"][0].update(content="x" * 65537),
+                     lambda p: p["files"][0].update(content="01.2.0a1\n",
+                                                    sha256=hashlib.sha256(b"01.2.0a1\n").hexdigest()),
+                     lambda p: p["files"][0].update(content="0.2.0a01\n",
+                                                    sha256=hashlib.sha256(b"0.2.0a01\n").hexdigest())]
         for index, mutation in enumerate(mutations):
             with self.subTest(index=index):
                 self.save_plan(mutation)
