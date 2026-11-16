@@ -253,6 +253,11 @@ class LegacyScaffoldMigrationTest(unittest.TestCase):
                  {**LEGACY, "standard": {"id": "wellmanifest/new-project", "version": "0.20.80",
                                          "sourceRevision": "a" * 40}},
                  {**LEGACY, "standard": {**LEGACY["standard"], "sourceRevision": "a" * 40}},
+                 {**LEGACY, "standard": {**LEGACY["standard"], "version": "01.2.3"}},
+                 {**LEGACY, "standard": {**LEGACY["standard"], "version": "1.2.3-.."}},
+                 {**LEGACY, "standard": {**LEGACY["standard"], "version": "1.2.3-01"}},
+                 {**LEGACY, "standard": {**LEGACY["standard"], "version": "1.2.3+.."}},
+                 {**LEGACY, "standard": {**LEGACY["standard"], "version": "1.2.3\n"}},
                  {**LEGACY, "standard": {**LEGACY["standard"], "version": 37}},
                  {**LEGACY, "standard": {**LEGACY["standard"], "version": ""}}]
         for document in cases:

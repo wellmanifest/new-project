@@ -67,7 +67,12 @@ CANONICAL_STANDARD_RELEASES_API = (
     "https://api.github.com/repos/wellmanifest/new-project/releases/tags"
 )
 MAX_RELEASE_METADATA_BYTES = 1024 * 1024
-VERSION_PATTERN = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
+VERSION_PATTERN = re.compile(
+    r"\A(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)"
+    r"(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)"
+    r"(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?"
+    r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?\Z"
+)
 
 
 _SOURCE_BLOBS: ContextVar[dict | None] = ContextVar("adoption_source_blobs", default=None)
