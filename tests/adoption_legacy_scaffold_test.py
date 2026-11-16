@@ -398,6 +398,8 @@ class BootstrapPrerequisitePlanTest(unittest.TestCase):
         return self.run_adopter(mode, kind, "--bootstrap-prerequisites-plan", str(self.plan_path))
 
     def test_review_is_read_only_and_install_receipt_binds_seed_bytes(self):
+        self.seeds["VERSION"] = "0.2.0a1\n"
+        self.save_plan()
         before = self.contents()
         result = self.apply_plan("--check")
         self.assertEqual(result.returncode, 1, result.stderr)
@@ -426,7 +428,11 @@ class BootstrapPrerequisitePlanTest(unittest.TestCase):
                      lambda p: p["files"][0].update(path="src/worker.py"),
                      lambda p: p["files"][0].update(sha256="0" * 64),
                      lambda p: p["files"].append(p["files"][0]),
-                     lambda p: p["files"][0].update(content="x" * 65537)]
+                     lambda p: p["files"][0].update(content="x" * 65537),
+                     lambda p: p["files"][0].update(content="01.2.0a1\n",
+                                                    sha256=hashlib.sha256(b"01.2.0a1\n").hexdigest()),
+                     lambda p: p["files"][0].update(content="0.2.0a01\n",
+                                                    sha256=hashlib.sha256(b"0.2.0a01\n").hexdigest())]
         for index, mutation in enumerate(mutations):
             with self.subTest(index=index):
                 self.save_plan(mutation)
