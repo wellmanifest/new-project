@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.155] - 2026-11-17
+
+- Preserve clean canonical legacy worktrees at strictly integrated commits during first native bootstrap admission and receipt refresh. Recheck exact inventory and Git bindings; refuse dirty, hidden-index, detached, locked, unavailable, noncanonical and live-leased state without deleting or taking over any checkout. [ticket-451]
+
 ## [0.20.154] - 2026-11-16
 
 - Accept minimal policy-free Wellman scaffolds with `standard.id == "wellmanifest/new-project"` across `scripts/create_adoption_lock.py`, `scripts/work_start_check.py`, and `scripts/governance_check.py`, and align `initial_adoption_seed_paths` (plus `_bundled/governance_check.py`) with `WELLMAN_SCAFFOLD_PROFILES` and strict SemVer 2.0.0 validation while continuing to reject native, source-revision-bound, and non-minimal manifests. [ticket-447]

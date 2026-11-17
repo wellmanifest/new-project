@@ -1,0 +1,118 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-451",
+  "summary": "Preserve integrated legacy worktrees during first native adoption",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-451/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/work_start_check.py",
+    "scripts/create_adoption_lock.py",
+    "tests/scaffold_bootstrap_test.py",
+    "tests/bootstrap_upgrade_receipt_test.py",
+    "docs/STANDARD_UPGRADE.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "f3cb34e6cb6930a0b424174b64dc0be639cfec69",
+    "targetBranch": "main",
+    "outcome": "Permit first native adoption while preserving clean canonical legacy worktrees at strictly integrated commits; retain exact admission and publication boundaries.",
+    "nonGoals": [
+      "No legacy checkout/ref deletion, repair, ownership transfer or lease changes",
+      "No target-specific tickets or logs in the standard hub",
+      "No publication bypass or unpublished production adoption"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 10,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Share a read-only canonical-worktree observation between initial admission and receipt refresh; require strict ancestry, clean state, exact Git bindings and stable repeated observations. Existing historical lease and native reservation checks remain mandatory.",
+      "components": [
+        {
+          "name": "bootstrap-observation",
+          "paths": [
+            "scripts/work_start_check.py",
+            "scripts/create_adoption_lock.py"
+          ]
+        },
+        {
+          "name": "real-git-regressions",
+          "paths": [
+            "tests/scaffold_bootstrap_test.py",
+            "tests/bootstrap_upgrade_receipt_test.py"
+          ]
+        },
+        {
+          "name": "published-standard-contract",
+          "paths": [
+            "docs/STANDARD_UPGRADE.md",
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Additional preserved canonical worktrees can satisfy first-allocation observation"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through independent protected publication; no legacy state is mutated by observation."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python tests/scaffold_bootstrap_test.py BootstrapTest FreshBootstrapTest"
+        ],
+        "evidence": "Real first allocation preserves integrated canonical checkout and rejects dirty, ambiguous, detached, noncanonical and live-leased work."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python tests/bootstrap_upgrade_receipt_test.py"
+        ],
+        "evidence": "Receipt refresh uses the same preserved-worktree boundaries and refuses observation drift."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python scripts/governance_check.py --root . --manifest governance/manifest.hub.json --base origin/main --actor agent",
+          "python packages/wellman/sync_bundled.py --check"
+        ],
+        "evidence": "Native governance, package parity, exact-head required CI, independent Validator and immutable published release before adoption."
+      }
+    ]
+  }
+}

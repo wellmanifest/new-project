@@ -22,6 +22,7 @@ class RefreshTest(unittest.TestCase):
     command = fixtures.BootstrapTest.command
     observation = fixtures.BootstrapTest.observation
     checksum = fixtures.BootstrapTest.checksum
+    preserved_worktree = fixtures.BootstrapTest.preserved_worktree
 
     def setUp(self):
         with redirect_stdout(io.StringIO()):
@@ -219,6 +220,27 @@ class RefreshTest(unittest.TestCase):
         with self.assertRaises(SystemExit):
             self.adopt('--refresh-bootstrap-receipt', '--upgrade', '--allow-unpublished-for-testing')
         self.assertEqual(self.receipt.read_bytes(), self.original)
+
+    def test_preserved_integrated_worktree_refreshes_then_allocates(self):
+        path = self.preserved_worktree()
+        self.test_check_is_read_only_and_refresh_changes_only_receipt_then_allocates()
+        self.assertEqual(self.command(path, 'git', 'rev-parse', 'HEAD').stdout.strip(), self.historical)
+
+    def test_preserved_worktree_change_before_refresh_refuses(self):
+        path = self.preserved_worktree()
+        original = self.adopter.bootstrap_refresh_observation
+        count = 0
+        def observe(*args):
+            nonlocal count
+            count += 1
+            if count == 2:
+                (path / 'concurrent.txt').write_text('other writer\n')
+            return original(*args)
+        with patch.object(self.adopter, 'bootstrap_refresh_observation', side_effect=observe):
+            with self.assertRaises((SystemExit, ValueError)):
+                self.refresh()
+        self.assertEqual(self.receipt.read_bytes(), self.original)
+        self.assertEqual((path / 'concurrent.txt').read_text(), 'other writer\n')
 
 
 if __name__ == '__main__':
