@@ -673,13 +673,19 @@ class AdoptionAllocationPlanTest(AdoptionPlanFixture, unittest.TestCase):
 
     def test_upgrade_rejects_null_idle_policy_before_write(self):
         path = self.target / ".governance/manifest.json"
+        lock = self.target / ".governance/manifest.lock.json"
         target = json.loads(path.read_text())
         target["coordination"]["idleTakeover"] = None
         path.write_text(json.dumps(target, indent=2) + "\n")
         before = self.command(self.target, "git", "status", "--porcelain").stdout
-        with self.assertRaises(SystemExit):
+        manifest_before = path.read_bytes()
+        lock_before = lock.read_bytes()
+        with patch.object(self.adopter, "verify_publication_evidence"), self.assertRaisesRegex(
+                SystemExit, "invalid idle"):
             self.adopter.main(["--target-root", str(self.target),
                 "--source-revision", self.revision, "--upgrade"])
+        self.assertEqual(path.read_bytes(), manifest_before)
+        self.assertEqual(lock.read_bytes(), lock_before)
         self.assertEqual(self.command(self.target, "git", "status", "--porcelain").stdout, before)
 
 
