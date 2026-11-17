@@ -1,7 +1,7 @@
 # Ticket 452: Admit bounded packaging scope for the current bootstrap owner
 
 - **ID**: ticket-452
-- **Owner**: agent:codex / codex-bootstrap-packaging-scope-20261117t1507z
+- **Owner**: agent:codex / codex-bootstrap-packaging-refresh-20261117t1705z
 - **Status**: IN_PROGRESS
 - **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-11-17

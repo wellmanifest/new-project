@@ -31,7 +31,7 @@
   "conflictsWith": [],
   "integrationTicket": null,
   "delivery": {
-    "acceptedBaseSha": "be9fdd1ed892b3f6f0cf8dfd24d7754a63cf59fd",
+    "acceptedBaseSha": "161a43f127af55b559788d648b051693114eef30",
     "targetBranch": "main",
     "outcome": "Allow the current live owner of a first native adoption to add only the published packaging marker paths to its exact intent and reservation through an explicit CAS-bound controller.",
     "nonGoals": [
