@@ -19,6 +19,75 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class AdoptionHarmonizationTest(unittest.TestCase):
+    def test_manifest_projection_preserves_target_owned_coordination_controls(self):
+        spec = importlib.util.spec_from_file_location(
+            "adoption_projection", ROOT / "scripts/create_adoption_lock.py"
+        )
+        adopter = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(adopter)
+        standard = {
+            "coordination": {
+                "maxActiveTicketsPerWorkstream": 8,
+                "idleTakeover": {"enabled": False, "idleMinutes": 15, "leaseMinutes": 120},
+                "workstreams": {"governance": {"ownedPaths": [".governance/**"]}},
+            },
+            "standard": {"version": "0.20.156"},
+        }
+        previous = {
+            "coordination": {
+                "maxActiveTicketsPerWorkstream": 3,
+                "idleTakeover": {"enabled": True, "idleMinutes": 15, "leaseMinutes": 120},
+                "workstreams": {"governance": {"ownedPaths": [".governance/**"]}},
+            },
+            "standard": {"version": "0.20.149"},
+        }
+        target = copy.deepcopy(previous)
+        target["coordination"]["idleTakeover"] = {
+            "enabled": False, "idleMinutes": 15, "leaseMinutes": 120
+        }
+        projected = json.loads(adopter.manifest_projection(json.dumps(standard).encode()))
+        self.assertNotIn("maxActiveTicketsPerWorkstream", projected["coordination"])
+        self.assertNotIn("idleTakeover", projected["coordination"])
+        merged = adopter.merge_projection(
+            json.loads(adopter.manifest_projection(json.dumps(previous).encode())),
+            projected,
+            target,
+        )
+        self.assertEqual(merged["coordination"]["maxActiveTicketsPerWorkstream"], 3)
+        self.assertEqual(
+            merged["coordination"]["idleTakeover"],
+            {"enabled": False, "idleMinutes": 15, "leaseMinutes": 120},
+        )
+
+    def test_fresh_projection_retains_published_defaults(self):
+        manifest = json.loads((ROOT / "governance/manifest.default.json").read_text())
+        self.assertEqual(manifest["coordination"]["maxActiveTicketsPerWorkstream"], 8)
+        self.assertEqual(
+            manifest["coordination"]["idleTakeover"],
+            {"enabled": True, "idleMinutes": 15, "leaseMinutes": 120},
+        )
+
+    def test_target_owned_coordination_policy_is_closed_and_bounded(self):
+        spec = importlib.util.spec_from_file_location(
+            "adoption_validation", ROOT / "scripts/create_adoption_lock.py"
+        )
+        adopter = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(adopter)
+        base = {"coordination": {"maxActiveTicketsPerWorkstream": 3}}
+        for value in (0, True, "3"):
+            with self.subTest(value=value), self.assertRaises(SystemExit):
+                candidate = copy.deepcopy(base)
+                candidate["coordination"]["maxActiveTicketsPerWorkstream"] = value
+                adopter.validate_target_coordination_policy(candidate)
+        for policy in ({"enabled": True, "idleMinutes": 4, "leaseMinutes": 120},
+                       {"enabled": True, "idleMinutes": 15, "leaseMinutes": 15},
+                       {"enabled": "yes", "idleMinutes": 15, "leaseMinutes": 120},
+                       {"enabled": False, "idleMinutes": 15, "leaseMinutes": 120, "extra": 1}):
+            with self.subTest(policy=policy), self.assertRaises(SystemExit):
+                candidate = copy.deepcopy(base)
+                candidate["coordination"]["idleTakeover"] = policy
+                adopter.validate_target_coordination_policy(candidate)
+
     def test_default_manifest_workstreams_are_orthogonal(self):
         manifest_path = ROOT / "governance" / "manifest.default.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -113,6 +182,10 @@ class AdoptionPlanFixture:
         manifest["coordination"]["workstreams"]["governance"]["ownedPaths"] = [
             name for name in manifest["coordination"]["workstreams"]["governance"]["ownedPaths"]
             if name not in missing]
+        # The installed historical base intentionally predates the published
+        # defaults: WIP 3 and no idle policy must survive the real upgrade.
+        manifest["coordination"]["maxActiveTicketsPerWorkstream"] = 3
+        manifest["coordination"].pop("idleTakeover", None)
         p.write_text(json.dumps(manifest, indent=2) + "\n")
         cls.command(cls.source, "git", "add", ".")
         cls.command(cls.source, "git", "commit", "--quiet", "-m", "Fixture old package")
@@ -553,6 +626,38 @@ class AdoptionAllocationPlanTest(AdoptionPlanFixture, unittest.TestCase):
         self.assertEqual(after, plan["prospectiveManifest"])
         self.assertEqual(before["coordination"]["workstreams"]["infrastructure"],
                          after["coordination"]["workstreams"]["infrastructure"])
+
+    def test_upgrade_preserves_target_owned_concurrency_and_idle_policy(self):
+        path = self.target / ".governance/manifest.json"
+        target = json.loads(path.read_text())
+        target["coordination"]["maxActiveTicketsPerWorkstream"] = 3
+        target["coordination"]["idleTakeover"] = {
+            "enabled": False, "idleMinutes": 15, "leaseMinutes": 120
+        }
+        path.write_text(json.dumps(target, indent=2) + "\n")
+        self.command(self.target, "git", "add", str(path.relative_to(self.target)))
+        self.command(self.target, "git", "commit", "--quiet", "-m", "Target-owned coordination policy")
+        with patch.object(self.adopter, "verify_publication_evidence"), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.adopter.main(["--target-root", str(self.target),
+                "--source-revision", self.revision, "--upgrade"]), 0)
+        upgraded = json.loads(path.read_text())
+        self.assertEqual(upgraded["coordination"]["maxActiveTicketsPerWorkstream"], 3)
+        self.assertEqual(
+            upgraded["coordination"]["idleTakeover"],
+            {"enabled": False, "idleMinutes": 15, "leaseMinutes": 120},
+        )
+
+    def test_upgrade_preserves_target_owned_absent_idle_policy(self):
+        path = self.target / ".governance/manifest.json"
+        target = json.loads(path.read_text())
+        target["coordination"]["maxActiveTicketsPerWorkstream"] = 3
+        path.write_text(json.dumps(target, indent=2) + "\n")
+        with patch.object(self.adopter, "verify_publication_evidence"), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(self.adopter.main(["--target-root", str(self.target),
+                "--source-revision", self.revision, "--upgrade"]), 0)
+        upgraded = json.loads(path.read_text())
+        self.assertEqual(upgraded["coordination"]["maxActiveTicketsPerWorkstream"], 3)
+        self.assertNotIn("idleTakeover", upgraded["coordination"])
 
 
 if __name__ == "__main__":

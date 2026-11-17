@@ -1,0 +1,63 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-454",
+  "summary": "Preserve adopter concurrency and idle handoff policy during immutable upgrades",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-454/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/create_adoption_lock.py",
+    "tests/adoption_upgrade_harmonization_test.py",
+    "docs/STANDARD_UPGRADE.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "5d846f305a98f6cddbcaf8f95e7c0d19d7842cc8",
+    "targetBranch": "main",
+    "outcome": "Preserve target-owned concurrency and idle-handoff policy during immutable standard upgrades without changing new-install defaults or ownership gates.",
+    "nonGoals": [
+      "No default takeover algorithm change",
+      "No consumer adoption, live runtime writes or protected-policy waiver",
+      "No transfer of foreign ownership or timeout-only takeover"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Make upgrade projection target-owned and digest/CAS bound: preserve explicit existing concurrency and idle-handoff policy from the verified accepted base, while retaining published defaults for new targets.",
+      "components": [
+        {"name": "adoption-planner", "paths": ["scripts/create_adoption_lock.py", "tests/adoption_upgrade_harmonization_test.py"]},
+        {"name": "upgrade-contract", "paths": ["docs/STANDARD_UPGRADE.md"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Independently reviewed revert preserving immutable prior standard and target policy."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["python -m unittest discover -s tests -p adoption_upgrade_harmonization_test.py"], "evidence": "Real Git upgrade fixtures preserve target-owned policy and retain fresh-target defaults."},
+      {"criterion": "AC-02", "commands": ["python tests/adoption_upgrade_harmonization_test.py"], "evidence": "Old-base, policy-drift, stale-owner, foreign-owner and CAS regressions fail closed."},
+      {"criterion": "AC-03", "commands": ["bash project/governance-check.sh", "wellman run --root . --allow-primary-venv -- python -m pytest -q"], "evidence": "Canonical source governance and qualified full tests pass; protected native CI and independent review remain required."}
+    ]
+  }
+}

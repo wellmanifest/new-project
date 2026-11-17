@@ -57,6 +57,12 @@ ALLOWED_EXTENDABLE = {
 TARGET_OWNED_MANIFEST_PATHS = {
     ("$schema",),
     ("docker", "required"),
+    # These coordination controls belong to an installed target once it has
+    # been allocated.  Keep them out of the standard projection during an
+    # upgrade; a fresh target still receives the published defaults because
+    # it has no existing manifest to merge.
+    ("coordination", "maxActiveTicketsPerWorkstream"),
+    ("coordination", "idleTakeover"),
     ("coordination", "workstreams"),
     ("coordination", "integration", "requiredForPaths"),
     ("delivery", "requiredForImplementation"),
@@ -1251,6 +1257,32 @@ def merge_projection(previous: object, current: object, target: object, path: st
     return json.loads(json.dumps(current))
 
 
+def validate_target_coordination_policy(document: object) -> None:
+    """Reject malformed target-owned controls before an upgrade can write."""
+    if not isinstance(document, dict):
+        raise SystemExit("target manifest must be an object")
+    coordination = document.get("coordination")
+    if not isinstance(coordination, dict):
+        raise SystemExit("target manifest coordination must be an object")
+    limit = coordination.get("maxActiveTicketsPerWorkstream")
+    if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1:
+        raise SystemExit("target manifest has an invalid concurrency limit")
+    idle = coordination.get("idleTakeover")
+    if idle is None:
+        return
+    if (not isinstance(idle, dict)
+            or set(idle) != {"enabled", "idleMinutes", "leaseMinutes"}
+            or not isinstance(idle["enabled"], bool)
+            or not isinstance(idle["idleMinutes"], int)
+            or isinstance(idle["idleMinutes"], bool)
+            or not 5 <= idle["idleMinutes"] <= 240
+            or not isinstance(idle["leaseMinutes"], int)
+            or isinstance(idle["leaseMinutes"], bool)
+            or not 15 <= idle["leaseMinutes"] <= 480
+            or idle["leaseMinutes"] <= idle["idleMinutes"]):
+        raise SystemExit("target manifest has an invalid idle takeover policy")
+
+
 def existing_manifest_base(target_root: Path) -> bytes | None:
     """Load a trusted installed base or authenticated legacy target projection."""
     base_path = target_root / MANIFEST_BASE_TARGET
@@ -2297,6 +2329,7 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
         manifest = json.loads(manifest_content)
     except json.JSONDecodeError as error:
         raise SystemExit(f"target manifest is not valid JSON: {error}") from error
+    validate_target_coordination_policy(manifest)
     if manifest.get("standard", {}).get("version") != version:
         raise SystemExit(f"target manifest version must equal adopted standard version {version}")
 
