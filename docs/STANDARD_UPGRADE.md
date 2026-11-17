@@ -202,9 +202,14 @@ it through its own pinned adopter and controller-owned recovery instead.
 From 0.20.100, local historical `ticket/*` refs may remain during the first
 allocation when their exact commits are strict ancestors of the acknowledged
 bootstrap HEAD. Checked Git ancestry must be readable and non-shallow. Refs at
-HEAD, unintegrated history, live matching leases, unreadable lease expiry,
-additional worktrees and prior native reservations still block. The guard
-rechecks refs and allocation state before returning; it never deletes or moves
+HEAD, unintegrated history, live matching leases, unreadable lease expiry
+and prior native reservations still block. From 0.20.155, an additional worktree
+may remain when registered at `.worktrees/ticket-NNN--slug` on its matching
+`ticket/NNN-slug` branch, clean and at a strict ancestor of bootstrap HEAD.
+Detached, locked, unavailable, symlinked and noncanonical checkouts are refused,
+as are hidden index states and dirty submodules. Ignored local data is preserved.
+The guard rechecks the exact worktree inventory, Git bindings, clean state,
+refs and allocation state before returning; it never deletes or moves
 a ref, takes over ownership or grants editing/publication authority. These are
 clone-local observations; independent clones and remote ownership still need
 reconciliation through the existing external controller.
@@ -241,7 +246,7 @@ admission. The published installer's exact-byte receipt is required in either
 case; do not create a preliminary scaffold commit or edit that receipt.
 Changed installed bytes, a stale dirty digest,
 a moved HEAD, another clone, symlinked receipt/payload paths, unpublished locks,
-foreign receipt paths, existing tickets/worktrees and incompatible allocator
+foreign receipt paths, existing native tickets/reservations, ineligible worktrees and incompatible allocator
 modes are refused. Unrecorded changes overlapping the requested scope still
 block admission; unrelated changes remain preserved. All WIP, branch, lease,
 full product validation and independent protected publication gates remain.

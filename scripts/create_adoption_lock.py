@@ -2003,7 +2003,7 @@ BOOTSTRAP_RECEIPT = ".subactor/receipts/bootstrap-adoption.json"
 def bootstrap_refresh_observation(root: Path, names: set[str]) -> tuple[dict, dict]:
     """Observe the original, never-allocated clone; acquire no authority."""
     from work_start_check import (bootstrap_historical_refs, bootstrap_scaffold_at_head,
-                                 unchanged_committed_legacy_carriers, worktrees)
+                                 bootstrap_preserved_worktrees, unchanged_committed_legacy_carriers)
 
     receipt_path = plan_path(root, BOOTSTRAP_RECEIPT)
     try:
@@ -2030,7 +2030,7 @@ def bootstrap_refresh_observation(root: Path, names: set[str]) -> tuple[dict, di
     if receipt["baseSha"] != observation["head"] or receipt["commonGitDir"] != common:
         raise SystemExit("bootstrap refresh requires the original clone and HEAD")
     high_water = Path(common) / "new-project-ticket-high-water"
-    if len(worktrees(root)) != 1 or high_water.exists() or high_water.is_symlink():
+    if high_water.exists() or high_water.is_symlink():
         raise SystemExit("bootstrap refresh is first-allocation only")
     kind = receipt.get("bootstrapKind", "legacy-scaffold")
     if kind == "fresh":
@@ -2046,6 +2046,7 @@ def bootstrap_refresh_observation(root: Path, names: set[str]) -> tuple[dict, di
     else:
         raise SystemExit("unknown bootstrap kind")
     observation["historicalRefs"] = bootstrap_historical_refs(root, observation["head"])
+    observation["preservedWorktrees"] = bootstrap_preserved_worktrees(root, observation["head"])
     return receipt, observation
 
 

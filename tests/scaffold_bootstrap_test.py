@@ -144,6 +144,98 @@ class BootstrapTest(unittest.TestCase):
         self.assertEqual(self.command(self.target, 'git', 'rev-parse', ref).stdout.strip(),
                          self.historical)
 
+    def preserved_worktree(self):
+        path = self.target / '.worktrees/ticket-003--historical'
+        self.command(self.target, 'git', 'worktree', 'add', '--quiet',
+                     '-b', 'ticket/003-historical', str(path), self.historical)
+        return path
+
+    def test_integrated_worktree_survives_real_first_allocation(self):
+        path = self.preserved_worktree()
+        with (self.target / '.git/info/exclude').open('a') as stream:
+            stream.write('\n/preserved-local.txt\n')
+        local = path / 'preserved-local.txt'
+        local.write_bytes(b'Preserve ignored operator data\n')
+        before = self.command(path, 'git', 'status', '--porcelain').stdout
+        self.assertEqual(before, '')
+        self.test_first_real_allocator_preserves_foreign_bytes_and_does_not_write_source()
+        self.assertEqual(local.read_bytes(), b'Preserve ignored operator data\n')
+        self.assertEqual(self.command(path, 'git', 'rev-parse', 'HEAD').stdout.strip(), self.historical)
+        self.assertEqual(self.command(path, 'git', 'symbolic-ref', 'HEAD').stdout.strip(),
+                         'refs/heads/ticket/003-historical')
+
+    def test_integrated_worktree_dirty_and_locked_states_are_preserved(self):
+        path = self.preserved_worktree()
+        local = path / 'pending.txt'
+        local.write_text('unfinished work\n')
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(local.read_text(), 'unfinished work\n')
+        local.unlink()
+        self.command(self.target, 'git', 'worktree', 'lock', str(path))
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('locked', self.command(self.target, 'git', 'worktree', 'list', '--porcelain').stdout)
+
+    def test_preserved_worktree_with_new_unmerged_commit_refuses(self):
+        path = self.preserved_worktree()
+        (path / 'pending.txt').write_text('new owner work\n')
+        self.command(path, 'git', 'add', 'pending.txt')
+        self.command(path, 'git', 'commit', '--quiet', '-m', 'Unmerged legacy work')
+        head = self.command(path, 'git', 'rev-parse', 'HEAD').stdout
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.command(path, 'git', 'rev-parse', 'HEAD').stdout, head)
+        self.assertEqual((path / 'pending.txt').read_text(), 'new owner work\n')
+
+    def test_preserved_worktree_drift_during_admission_refuses(self):
+        path = self.preserved_worktree()
+        result = self.command(self.target, sys.executable, '-c', '''
+import json, sys
+from pathlib import Path
+from unittest.mock import patch
+sys.path.insert(0, '.governance')
+import work_start_check as checker
+root = Path.cwd()
+manifest = json.loads((root / '.governance/manifest.json').read_text())
+original = checker.worktrees
+count = 0
+def observe(*args):
+    global count
+    count += 1
+    if count == 2:
+        (Path(sys.argv[2]) / 'concurrent.txt').write_text('other writer')
+    return original(*args)
+with patch.object(checker, 'worktrees', side_effect=observe):
+    try:
+        checker.bootstrap_owned_paths(root, manifest, sys.argv[1])
+    except checker.ObservationError:
+        assert count == 2
+    else:
+        raise AssertionError('concurrent legacy worktree mutation was accepted')
+''', self.checksum(), str(path))
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual((path / 'concurrent.txt').read_text(), 'other writer')
+
+    def test_integrated_worktree_noncanonical_detached_and_live_lease_refuse(self):
+        path = self.preserved_worktree()
+        lease = self.target / '.subactor/leases/ticket-003--historical.json'
+        lease.parent.mkdir(parents=True, exist_ok=True)
+        lease.write_text(json.dumps({'branchRef': 'refs/heads/ticket/003-historical',
+                                    'expiresAt': '2099-01-01T00:00:00Z'}))
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+        lease.unlink()
+        self.command(path, 'git', 'checkout', '--quiet', '--detach')
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+        self.command(path, 'git', 'checkout', '--quiet', 'ticket/003-historical')
+        moved = self.base / 'noncanonical'
+        self.command(self.target, 'git', 'worktree', 'move', str(path), str(moved))
+        result, _ = self.observation(self.checksum())
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue(moved.is_dir())
+
     def test_ref_at_base_remains_ambiguous(self):
         self.command(self.target, 'git', 'branch', 'ticket/003-pending')
         result, _ = self.observation(self.checksum())
