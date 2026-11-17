@@ -97,6 +97,11 @@ jobs:
           python3 -m json.tool governance/decision-record.schema.json >/dev/null
       - name: Test immutable advisory propagation requests
         run: python3 -B tests/standard_propagation_request_test.py
+      - name: Test bootstrap packaging scope controller when shipped
+        run: |
+          if [[ -e scripts/bootstrap_packaging_scope.py || -e tests/bootstrap_packaging_scope_test.py ]]; then
+            python3 -B tests/bootstrap_packaging_scope_test.py
+          fi
       - name: Test protected local publication evidence composition
         run: python3 tests/protected-local-publication-schema.test.py
       - name: Validate Governance Hub pull-request scope
