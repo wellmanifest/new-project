@@ -550,6 +550,9 @@ committed root packaging markers declared by the installed immutable
 `.governance/agent-hosts.json`. It does not authorize arbitrary source paths,
 a takeover, lease renewal or publication. Use the published source helper or
 the managed `.governance/bootstrap_packaging_scope.py` after adoption.
+The controller supports only `pyproject.toml` and `package.json`, intersected
+with the installed contract. Rewriting a target contract and its local hashes
+cannot add another filename to that closed capability.
 
 Prepare an external JSON request with exactly these fields:
 
@@ -581,7 +584,7 @@ python /published/source/scripts/bootstrap_packaging_scope.py \
 
 Without `--apply` this is read-only planning. Apply the same exact request with
 `--apply` only within existing task authorization and owner identity. The
-controller holds the native lease lock, checks pins and competing reservations
+controller holds the clone allocator lock and native lease lock, checks pins and competing reservations
 again at the effect boundary, journals the before/after hashes, advances
 fencing, then appends the paths to intent. Use only the returned
 `writerEnvironment` for subsequent source edits. Source bytes, expiry, owner

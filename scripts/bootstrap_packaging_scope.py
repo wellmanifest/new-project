@@ -31,8 +31,12 @@ def sibling(name):
 
 store = sibling('terminal_lease_release')
 start = sibling('work_start_check')
+allocation = sibling('snapshot_allocation')
 FIELDS = {'schema', 'requestId', 'ticket', 'headSha', 'paths', 'leaseRevision',
           'fencingToken', 'leaseSha256', 'intentSha256', 'bootstrapReceiptSha256'}
+# Closed capability of this published controller. A target-owned contract and
+# its rewritten hashes cannot introduce another executable source path.
+SUPPORTED_MARKERS = frozenset({'pyproject.toml', 'package.json'})
 require, sha, encoded = store.require, store.sha, store.encoded
 
 
@@ -95,7 +99,7 @@ def pinned_packaging(root, primary, request):
     contract = store.decode(contract_raw).get('packaging', {})
     require(isinstance(contract, dict), 'packaging_contract_invalid')
     markers = {row.get('marker') for row in contract.values() if isinstance(row, dict)}
-    require(set(request['paths']) <= markers, 'path_is_not_published_packaging_marker')
+    require(set(request['paths']) <= markers & SUPPORTED_MARKERS, 'path_is_not_published_packaging_marker')
     if receipt['bootstrapKind'] == 'legacy-scaffold':
         start.bootstrap_scaffold_at_head(root, request['headSha'])
     else:
@@ -130,7 +134,8 @@ def transaction(root, primary, request, lease_raw, intent_raw, actor, session, s
     match = store.WORKTREE_ID_RE.fullmatch(root.name)
     require(match is not None and match[1] == request['ticket'], 'canonical_worktree_required')
     branch = 'refs/heads/ticket/' + match[2] + '-' + match[3]
-    require(lease['branchRef'] == branch and store.git(root, 'symbolic-ref', 'HEAD') == branch
+    require(lease['headSha'] == request['headSha'] and lease['branchRef'] == branch
+            and store.git(root, 'symbolic-ref', 'HEAD') == branch
             and store.git(root, 'rev-parse', 'HEAD') == request['headSha'], 'branch_or_head_changed')
     accepted = store._accepted_repositories(primary)
     require(lease['repositoryRef'] in accepted, 'repository_binding_mismatch')
@@ -167,7 +172,7 @@ def transaction(root, primary, request, lease_raw, intent_raw, actor, session, s
 def amend(root, request_path, actor, session, *, apply=False):
     root = Path(root).absolute()
     registrations = start.worktrees(root)
-    primary = Path(registrations[0]['worktree']).resolve()
+    _, primary, common = allocation.context(root)
     require(root == root.resolve() == primary / '.worktrees' / root.name
             and any(row['worktree'] == str(root) for row in registrations), 'canonical_registered_checkout_required')
     request = request_value(Path(request_path), primary)
@@ -176,7 +181,9 @@ def amend(root, request_path, actor, session, *, apply=False):
     journal_name = request['requestId'] + '.json'
     lease_name = root.name + '.json'
     intent_dir = root / 'project' / request['ticket']
-    with store.directory(primary / '.subactor/leases') as (lfd, verify_lease), store.directory(intent_dir) as (ifd, verify_intent):
+    with (allocation.allocation_lock(common) if apply else nullcontext()), \
+            store.directory(primary / '.subactor/leases') as (lfd, verify_lease), \
+            store.directory(intent_dir) as (ifd, verify_intent):
         with (store.lease_lock(lfd, lease_name, verify_lease) if apply else nullcontext(verify_lease)) as verify:
             current_lease = store.read_at(lfd, lease_name, private=True)
             current_intent = store.read_at(ifd, 'intent.json', private=True)

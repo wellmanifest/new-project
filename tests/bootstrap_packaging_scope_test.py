@@ -160,8 +160,53 @@ class PackagingScopeTest(unittest.TestCase):
         self.receipt.write_text(json.dumps(value)); self.request['bootstrapReceiptSha256'] = self.sha(self.receipt); self.save()
         self.assert_refused(apply=True)
 
+    def test_rewritten_target_pin_cannot_turn_product_source_into_packaging(self):
+        contract_path = self.root / '.governance/agent-hosts.json'
+        contract = json.loads(contract_path.read_text())
+        contract['packaging']['python']['marker'] = 'foreign.txt'
+        contract_path.write_text(json.dumps(contract))
+        lock_path = self.root / '.governance/manifest.lock.json'
+        lock = json.loads(lock_path.read_text())
+        lock['managedFiles']['.governance/agent-hosts.json'] = self.sha(contract_path)
+        lock_path.write_text(json.dumps(lock))
+        receipt = json.loads(self.receipt.read_text())
+        receipt['files']['.governance/agent-hosts.json'] = self.sha(contract_path)
+        receipt['files']['.governance/manifest.lock.json'] = self.sha(lock_path)
+        self.receipt.write_text(json.dumps(receipt))
+        self.request.update(paths=['foreign.txt'], bootstrapReceiptSha256=self.sha(self.receipt)); self.save()
+        self.assert_refused(apply=True)
+        result = self.fixture.command(self.root, sys.executable,
+            '.governance/bootstrap_packaging_scope.py', '--root', str(self.root),
+            '--request', str(self.request_path), '--actor', 'agent:fixture', '--session', 'scope-test',
+            '--apply', check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.lease.read_bytes(), self.before['lease'])
+        self.assertEqual(self.intent.read_bytes(), self.before['intent'])
+
     def test_changed_head_is_refused(self):
         self.request['headSha'] = '0' * 40; self.save(); self.assert_refused(apply=True)
+        self.request['headSha'] = self.head
+        lease = json.loads(self.before['lease']); lease['headSha'] = '0' * 40
+        self.lease.write_text(json.dumps(lease)); self.request['leaseSha256'] = self.sha(self.lease); self.save()
+        self.assert_refused(apply=True)
+
+    def test_clone_allocator_lock_serializes_scope_effect(self):
+        lock = self.primary / '.git/new-project-ticket-allocation.lock'
+        lock.mkdir()
+        try:
+            self.assert_refused(apply=True)
+            self.assertTrue(lock.is_dir())
+        finally:
+            lock.rmdir()
+        module = self.module(); original = module.transaction
+        def observed(*args, **kwargs):
+            self.assertTrue(lock.is_dir())
+            with self.assertRaises(FileExistsError):
+                lock.mkdir()
+            return original(*args, **kwargs)
+        with patch.object(module, 'transaction', side_effect=observed):
+            module.amend(self.root, self.request_path, 'agent:fixture', 'scope-test', apply=True)
+        self.assertFalse(lock.exists())
 
     def test_interrupted_fencing_resumes_once_and_rejects_later_lease_change(self):
         module = self.module()

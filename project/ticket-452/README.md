@@ -35,7 +35,9 @@ remain independently recorded stages.
 Keep the implementation ticket in publication until the protected terminal
 receipt records the actual result. No closure-only commit is required.
 
-Validation: 14 controller regression tests passed, including managed installation,
+Validation: 16 controller regression tests passed, including managed installation,
 peer contention, interrupted fencing/replay and effect-boundary source drift.
+The controller also binds the lease HEAD, shares the native allocator lock,
+and refuses a rewritten target contract that names product source as packaging.
 Native governance and bundled checker parity passed. Full source-hub checks,
 exact-head CI, independent approval and final release remain publication gates.
