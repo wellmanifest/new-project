@@ -660,6 +660,28 @@ class AdoptionAllocationPlanTest(AdoptionPlanFixture, unittest.TestCase):
         self.assertEqual(upgraded["coordination"]["maxActiveTicketsPerWorkstream"], 3)
         self.assertNotIn("idleTakeover", upgraded["coordination"])
 
+    def test_allocation_rejects_malformed_target_policy_before_plan_or_write(self):
+        path = self.target / ".governance/manifest.json"
+        target = json.loads(path.read_text())
+        target["coordination"]["maxActiveTicketsPerWorkstream"] = 0
+        path.write_text(json.dumps(target, indent=2) + "\n")
+        before = self.command(self.target, "git", "status", "--porcelain").stdout
+        with self.assertRaises(SystemExit):
+            self.export()
+        self.assertFalse(self.plan_path.exists())
+        self.assertEqual(self.command(self.target, "git", "status", "--porcelain").stdout, before)
+
+    def test_upgrade_rejects_null_idle_policy_before_write(self):
+        path = self.target / ".governance/manifest.json"
+        target = json.loads(path.read_text())
+        target["coordination"]["idleTakeover"] = None
+        path.write_text(json.dumps(target, indent=2) + "\n")
+        before = self.command(self.target, "git", "status", "--porcelain").stdout
+        with self.assertRaises(SystemExit):
+            self.adopter.main(["--target-root", str(self.target),
+                "--source-revision", self.revision, "--upgrade"])
+        self.assertEqual(self.command(self.target, "git", "status", "--porcelain").stdout, before)
+
 
 if __name__ == "__main__":
     unittest.main()

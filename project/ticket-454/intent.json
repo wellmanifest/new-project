@@ -14,7 +14,12 @@
     "project/TICKETS.md",
     "scripts/create_adoption_lock.py",
     "tests/adoption_upgrade_harmonization_test.py",
-    "docs/STANDARD_UPGRADE.md"
+    "docs/STANDARD_UPGRADE.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -45,7 +50,7 @@
       "decision": "Make upgrade projection target-owned and digest/CAS bound: preserve explicit existing concurrency and idle-handoff policy from the verified accepted base, while retaining published defaults for new targets.",
       "components": [
         {"name": "adoption-planner", "paths": ["scripts/create_adoption_lock.py", "tests/adoption_upgrade_harmonization_test.py"]},
-        {"name": "upgrade-contract", "paths": ["docs/STANDARD_UPGRADE.md"]}
+        {"name": "upgrade-contract", "paths": ["docs/STANDARD_UPGRADE.md", "VERSION", "CHANGELOG.md", "governance/manifest.default.json", "governance/manifest.hub.json", "packages/wellman/pyproject.toml"]}
       ],
       "responsibilityChanges": false,
       "interfaceChanges": [],

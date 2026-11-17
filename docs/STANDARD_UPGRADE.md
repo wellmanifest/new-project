@@ -13,7 +13,7 @@ defaults (currently WIP 8 and idle takeover 15/120 when enabled).
 
 This compatibility rule does not grant ownership or takeover authority. Exact
 writer/session/CAS, scope, lease and protected review checks remain required;
-idle timeout alone never transfers a live ticket. Malformed policy or a target
+the upgrade itself never transfers ownership. Malformed policy or a target
 that no longer extends its installed managed base is rejected by the existing
 manifest and allocation gates.
 

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.157] - 2026-11-18
+
+- Preserve target-owned concurrency and idle-handoff policy during immutable
+  upgrades while retaining published defaults for fresh installations.
+  [ticket-454]
+
 ## [0.20.156] - 2026-11-17
 
 - Add an explicit current-owner controller for missing packaging scope during first native adoption. Bind unchanged committed packaging markers to the installed published contract, preserve ownership and expiry, fence before updating intent, and recover only exact journaled transactions. Refuse contested scope, changed pins or source, stale owners and ambiguous replay. [ticket-452]
