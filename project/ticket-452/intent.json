@@ -1,0 +1,120 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-452",
+  "summary": "Admit bounded packaging scope for the current bootstrap owner",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-452/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/bootstrap_packaging_scope.py",
+    "tests/bootstrap_packaging_scope_test.py",
+    "governance/package-manifest.json",
+    "packages/wellman/sync_bundled.py",
+    "docs/STANDARD_UPGRADE.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "be9fdd1ed892b3f6f0cf8dfd24d7754a63cf59fd",
+    "targetBranch": "main",
+    "outcome": "Allow the current live owner of a first native adoption to add only the published packaging marker paths to its exact intent and reservation through an explicit CAS-bound controller.",
+    "nonGoals": [
+      "No arbitrary scope extension or new writer ownership",
+      "No packaging source edits by the controller",
+      "No lease expiry extension, publication authority or gate weakening",
+      "No mutation of peers, legacy checkouts or foreign files"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 12,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add one explicit native controller for missing initial packaging scope. Bind original intent, live owner, lease CAS, published package contract, unchanged literal packaging files and free peer scope. Journal exact before/after state and fence before applying the intent; refuse ambiguous replay.",
+      "components": [
+        {
+          "name": "bootstrap-packaging-controller",
+          "paths": [
+            "scripts/bootstrap_packaging_scope.py",
+            "tests/bootstrap_packaging_scope_test.py"
+          ]
+        },
+        {
+          "name": "published-adoption-package",
+          "paths": [
+            "governance/package-manifest.json",
+            "packages/wellman/sync_bundled.py"
+          ]
+        },
+        {
+          "name": "release-contract",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml",
+            "docs/STANDARD_UPGRADE.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Explicit current-owner bootstrap packaging scope amendment CLI"
+      ],
+      "dataChanges": [
+        "Fenced lease and matching intent scope with immutable prepared/completed receipt"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Do not roll back a fencing token. Reconcile preserved exact receipts under the current controller; revert source only through protected review."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/bootstrap_packaging_scope_test.py"
+        ],
+        "evidence": "Real Git fixture reproduces missing packaging scope and verifies bounded same-owner amendment with preserved expiry and source bytes."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests/bootstrap_packaging_scope_test.py"
+        ],
+        "evidence": "Wrong owner/CAS, frozen or expired lease, mutated files, arbitrary paths, peers and interrupted replay fail closed without foreign mutation."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python scripts/governance_check.py --root . --manifest governance/manifest.hub.json --base origin/main --actor agent"
+        ],
+        "evidence": "Native checks, exact-head CI, independent Validator and immutable final release before use by API."
+      }
+    ]
+  }
+}

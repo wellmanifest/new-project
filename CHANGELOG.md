@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [0.20.156] - 2026-11-17
+
+- Add an explicit current-owner controller for missing packaging scope during first native adoption. Bind unchanged committed packaging markers to the installed published contract, preserve ownership and expiry, fence before updating intent, and recover only exact journaled transactions. Refuse contested scope, changed pins or source, stale owners and ambiguous replay. [ticket-452]
+
 ## [0.20.155] - 2026-11-17
 
 - Preserve clean canonical legacy worktrees at strictly integrated commits during first native bootstrap admission and receipt refresh. Recheck exact inventory and Git bindings; refuse dirty, hidden-index, detached, locked, unavailable, noncanonical and live-leased state without deleting or taking over any checkout. [ticket-451]

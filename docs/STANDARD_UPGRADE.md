@@ -538,3 +538,59 @@ conditional jobs and expression-based names fail closed. This initial profile
 supports literal block mappings only; unsupported workflows need a separately
 reviewed contract extension, never a guessed green context. Keep all required
 checks and independent publication while arranging that extension.
+
+
+## Missing packaging scope during first adoption
+
+An existing package marker can need governance metadata while the first
+installer-only reservation does not yet own that file. The current live owner
+may request a bounded correction through the published
+`bootstrap_packaging_scope.py` controller. This is limited to unchanged,
+committed root packaging markers declared by the installed immutable
+`.governance/agent-hosts.json`. It does not authorize arbitrary source paths,
+a takeover, lease renewal or publication. Use the published source helper or
+the managed `.governance/bootstrap_packaging_scope.py` after adoption.
+
+Prepare an external JSON request with exactly these fields:
+
+```json
+{
+  "schema": "new-project.bootstrap-packaging-scope/v1",
+  "requestId": "unique-packaging-correction",
+  "ticket": "ticket-001",
+  "headSha": "<current 40-character Git HEAD>",
+  "paths": ["pyproject.toml"],
+  "leaseRevision": 1,
+  "fencingToken": 1,
+  "leaseSha256": "<SHA-256 of current lease bytes>",
+  "intentSha256": "<SHA-256 of current intent bytes>",
+  "bootstrapReceiptSha256": "<SHA-256 of worktree bootstrap receipt bytes>"
+}
+```
+
+The request belongs outside the registered primary checkout. Run under the
+target's admitted execution environment, replacing the example values with
+observations of the existing native ticket:
+
+```sh
+python /published/source/scripts/bootstrap_packaging_scope.py \
+  --root /primary/.worktrees/ticket-001--native-adoption \
+  --request /external/packaging-request.json \
+  --actor agent:owner --session current-owner-session
+```
+
+Without `--apply` this is read-only planning. Apply the same exact request with
+`--apply` only within existing task authorization and owner identity. The
+controller holds the native lease lock, checks pins and competing reservations
+again at the effect boundary, journals the before/after hashes, advances
+fencing, then appends the paths to intent. Use only the returned
+`writerEnvironment` for subsequent source edits. Source bytes, expiry, owner
+and publication state remain unchanged; ordinary gates still validate those
+edits and independent approval remains required.
+
+If interrupted after preparation or fencing, replay that same request. Only
+the exact prepared, fenced or fully applied state is accepted; a changed lease,
+intent, source file or expired owner requires existing controller
+reconciliation. Receipts stay under the primary's ignored
+`.subactor/receipts/bootstrap-packaging-scope/`. Neither a plan nor a receipt
+grants merge authority.
