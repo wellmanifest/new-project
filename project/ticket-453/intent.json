@@ -1,0 +1,82 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-453",
+  "summary": "Wire bootstrap packaging scope regressions into native CI",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-453/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "be9fdd1ed892b3f6f0cf8dfd24d7754a63cf59fd",
+    "targetBranch": "main",
+    "outcome": "Run the bootstrap packaging scope regression suite in native GitHub CI whenever its controller or tests are shipped, enabling the existing ticket452 publication without relaxing required checks.",
+    "nonGoals": [
+      "No controller implementation or lease mutation",
+      "No new test exclusions, credentials, check-name or permission changes",
+      "No package version or runtime behavior change"
+    ],
+    "complexity": "XS",
+    "estimatedMinutes": 10,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add one explicit forward-compatible CI entry. On the current base neither feature file exists; if either the controller or its regression file exists, execute the suite and propagate failures. This disjoint CI dependency merges before ticket452 rebases onto the updated main.",
+      "components": [
+        {
+          "name": "native-ci-test-entry",
+          "paths": [
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "One CI test invocation; the hub explicitly classifies .github/workflows/ci.yml as a public interface."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert only through protected review; retain the existing required test-suite wiring assertion."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "Parse CI YAML; run the exact new shell step with absent, present and missing-test feature fixtures"
+        ],
+        "evidence": "Workflow bytes and actual step results are captured externally; delivered controller requires its real suite."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python scripts/governance_check.py --root . --manifest governance/manifest.hub.json --base origin/main --actor agent"
+        ],
+        "evidence": "Native checks, required exact-head CI and independent Validator approval before merge."
+      }
+    ]
+  }
+}
