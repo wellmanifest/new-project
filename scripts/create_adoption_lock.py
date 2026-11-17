@@ -1267,9 +1267,9 @@ def validate_target_coordination_policy(document: object) -> None:
     limit = coordination.get("maxActiveTicketsPerWorkstream")
     if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1:
         raise SystemExit("target manifest has an invalid concurrency limit")
-    idle = coordination.get("idleTakeover")
-    if idle is None:
+    if "idleTakeover" not in coordination:
         return
+    idle = coordination["idleTakeover"]
     if (not isinstance(idle, dict)
             or set(idle) != {"enabled", "idleMinutes", "leaseMinutes"}
             or not isinstance(idle["enabled"], bool)

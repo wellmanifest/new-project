@@ -82,7 +82,8 @@ class AdoptionHarmonizationTest(unittest.TestCase):
         for policy in ({"enabled": True, "idleMinutes": 4, "leaseMinutes": 120},
                        {"enabled": True, "idleMinutes": 15, "leaseMinutes": 15},
                        {"enabled": "yes", "idleMinutes": 15, "leaseMinutes": 120},
-                       {"enabled": False, "idleMinutes": 15, "leaseMinutes": 120, "extra": 1}):
+                       {"enabled": False, "idleMinutes": 15, "leaseMinutes": 120, "extra": 1},
+                       None):
             with self.subTest(policy=policy), self.assertRaises(SystemExit):
                 candidate = copy.deepcopy(base)
                 candidate["coordination"]["idleTakeover"] = policy

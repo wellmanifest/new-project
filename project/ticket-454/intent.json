@@ -32,7 +32,7 @@
       "No consumer adoption, live runtime writes or protected-policy waiver",
       "No transfer of foreign ownership or timeout-only takeover"
     ],
-    "complexity": "M",
+    "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
       "maxImplementationFiles": 8,
