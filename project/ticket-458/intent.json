@@ -1,0 +1,101 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-458",
+  "summary": "Stop unprovable baseline levels and incomplete managed copies from failing adopters",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-458/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/standard-packs.json",
+    "governance/managed-copies.json",
+    "tests/standard-pack-check.test.sh",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2b2b470ab9c720cc5e613199ee19a60b0715b8c0",
+    "targetBranch": "main",
+    "outcome": "Adopters stop failing on standard requirements they cannot satisfy: baseline no longer demands CI-level conformance the managed workflow never runs, and every managed .governance/docs copy is inventoried for the docs checker.",
+    "nonGoals": [
+      "No new CI jobs for docs or logs conformance.",
+      "No change to S4/S5 evidence rules or the standard-pack checker.",
+      "No host hook changes (separate ticket)."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Align the baseline profile with the checkers the adopter workflow runs (worktrees and docs S2, logs only in runtime-service) and derive the managed-copies inventory from the package manifest, guarded by one regression test.",
+      "components": [
+        {
+          "name": "standard-catalog",
+          "paths": [
+            "governance/standard-packs.json",
+            "governance/managed-copies.json",
+            "tests/standard-pack-check.test.sh"
+          ]
+        },
+        {
+          "name": "coupled-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "baseline profile requirements: worktrees S3->S2, docs S3->S2, logs removed"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert to accepted base 2b2b470ab9c720cc5e613199ee19a60b0715b8c0; adopters keep their pinned release until they re-adopt."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-1",
+        "commands": [
+          "bash tests/standard-pack-check.test.sh"
+        ],
+        "evidence": "Inventory equals every .governance/docs projection with source digests; baseline demands no S3+ for packs whose checker the workflow does not run."
+      },
+      {
+        "criterion": "AC-2",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "The hub governance gate passes."
+      }
+    ]
+  }
+}

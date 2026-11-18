@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [0.20.161] - 2026-11-18
+
+- Stop adopters from failing on requirements the standard cannot satisfy. The
+  baseline profile no longer demands S3 (a required CI check) for worktrees and
+  docs, whose checkers the adopter workflow does not run (worktree placement is
+  local-hook only); both now require S2. Logs leave baseline and stay required
+  at S5 by runtime-service. A regression test ties S3+ baseline demands to the
+  checkers the managed workflow actually runs. [ticket-458]
+- Inventory every projected `.governance/docs/**` copy in `managed-copies.json`.
+  `continuity-namespaces.md` was missing, so the wellmanifest/docs checker
+  rejected it in every 0.20.156+ adopter (DOCS_LOCATION/OWNER/SECTIONS/INDEX).
+  The test now derives the expected inventory from the package manifest. [ticket-458]
+
 ## [0.20.160] - 2026-11-18
 
 - Add protected same-ticket resume for released unfinished canonical worktrees,

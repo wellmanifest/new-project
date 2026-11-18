@@ -42,21 +42,44 @@ from pathlib import Path
 
 root = Path(sys.argv[1])
 inventory = json.loads((root / "governance/managed-copies.json").read_text())
-expected_sources = {
-    ".governance/docs/BRANCH_INTENT_RECONCILIATION.md": "docs/BRANCH_INTENT_RECONCILIATION.md",
-    ".governance/docs/LOCAL_CI_PUBLICATION.md": "template/files/LOCAL_CI_PUBLICATION.template.md",
-    ".governance/docs/SNAPSHOT_MIGRATION.md": "docs/information/snapshot-migration.md",
-}
-assert set(inventory) == set(expected_sources)
-for target, source in expected_sources.items():
-    assert inventory[target] == hashlib.sha256((root / source).read_bytes()).hexdigest()
 package = json.loads((root / "governance/package-manifest.json").read_text())
+# Every projected .governance/docs copy must be inventoried, or the
+# wellmanifest/docs checker treats it as an adopter document (DOCS_LOCATION).
+expected_sources = {
+    item["target"]: item["source"]
+    for item in package["files"]
+    if item.get("target", "").startswith(".governance/docs/")
+}
+assert {
+    ".governance/docs/BRANCH_INTENT_RECONCILIATION.md",
+    ".governance/docs/LOCAL_CI_PUBLICATION.md",
+    ".governance/docs/SNAPSHOT_MIGRATION.md",
+    ".governance/docs/information/continuity-namespaces.md",
+} <= set(expected_sources)
+assert set(inventory) == set(expected_sources), sorted(set(inventory) ^ set(expected_sources))
+for target, source in expected_sources.items():
+    assert inventory[target] == hashlib.sha256((root / source).read_bytes()).hexdigest(), target
 assert any(
     item.get("source") == "governance/managed-copies.json"
     and item.get("target") == ".governance/managed-copies.json"
     and item.get("strategy") == "managed"
     for item in package["files"]
 )
+
+# The baseline profile may only demand S3+ (a required CI check) for packs whose
+# conformance command the adopter workflow actually runs. Worktree placement is
+# checked by local hooks only, and the managed workflow runs neither the docs
+# nor the logs checker, so baseline must not demand S3 for them.
+catalog = json.loads((root / "governance/standard-packs.json").read_text())
+baseline = {item["id"]: item["minimumLevel"] for item in catalog["profiles"]["baseline"]["requirements"]}
+workflow = (root / "template/files/new-project-governance.workflow.yml").read_text()
+for pack_id, marker in {
+    "wellmanifest/worktrees": "worktree_path_check.py",
+    "wellmanifest/docs": "docs/standard/check.py",
+    "wellmanifest/logs": "logs_check.py",
+}.items():
+    if marker not in workflow and pack_id in baseline:
+        assert int(baseline[pack_id][1]) <= 2, (pack_id, baseline[pack_id])
 PY
 
 # Typed execution models and confined artifact reads use the actual strict CLI.
