@@ -49,6 +49,15 @@ task -> registered clone observation
    owner, fencing and the governance gate at the effect boundary. A saved
    report is evidence, never a replayable admission token.
 
+For an unfinished `released` slot, ordinary owner handoff and checkout
+restoration deliberately remain unavailable. A protected host may use the
+independently published `resume_released` API only with independently
+authenticated original-writer release/stopped evidence, exact lease/Git/intent
+CAS, a complete managed terminal registry and a fresh bounded successor.
+See [explicit owner handoff](../docs/EXPLICIT_OWNER_HANDOFF.md). Preserve dirty
+work and reuse the same ticket; never edit lease JSON, infer release authority
+from expiry/PID absence, or allocate a competing implementation.
+
 For a branch without a registered worktree, distinct commit IDs alone are not
 a competing delta. Admission compares the complete Git tree of **every**
 commit unique to that branch with target trees strictly after the common

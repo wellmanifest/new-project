@@ -42,3 +42,66 @@ only that exact journal and successor, re-authenticates, never extends its
 lifetime and rejects later workspace, fencing, policy or authorization changes.
 The returned writer environment is for the ordinary work-start/writer checks;
 it is neither review approval nor permission to merge.
+
+## Resume a released unfinished ticket
+
+`observe(root, worktree_id, released=True)` is read-only. The separate public
+`resume_released` API accepts `new-project.released-owner-resume/v1`: all the
+ordinary request bindings plus `releaseEvidenceRef` and
+`expectedTerminalStateSha256` from the observation's `terminal` field.
+The ordinary `handoff` API and standalone CLI continue to reject this schema;
+the protected host adapter selects the explicit API, never candidate code.
+
+A released file is insufficient evidence of a stopped writer. Before each
+apply and exact replay, the trusted verifier must independently authenticate
+an explicit original-writer release/handoff or a protected controller's
+observation that its old writer has stopped. A timeout or missing PID is not
+that observation. The full request digest binds the successor session, TTL,
+all Git/index/content/intent observations and old lease CAS. In addition to
+`requestDigest` and `verificationRef`, verifier evidence must contain exactly
+these `releasedOwner` fields:
+
+```json
+{
+  "leaseId": "original-lease-id",
+  "leaseSha256": "exact-request-expectedLeaseSha256",
+  "revision": 2,
+  "fencingToken": 2,
+  "repositoryRef": "original-lease-repositoryRef",
+  "canonicalRepositoryRef": "request-repositoryRef",
+  "releaseEvidenceRef": "receipt:independently-acquired-controller-release",
+  "writerState": "explicitly-released"
+}
+```
+
+`controller-observed-stopped` is the other supported `writerState`. The
+example is data, not a credential, signed attestation, proof issuer or
+request-selected verifier. Missing, revoked or unavailable independent proof
+must cause the adapter to refuse. A saved README or local JSON receipt alone
+does not authenticate a controller. Apply before independent publication of
+the implementation is forbidden.
+
+Resume requires an unfinished `BLOCKED / HANDOFF` carrier, the allocator's
+exact `scopeHash` (canonical `allowedPaths` JSON), and the separately bound
+full current intent digest. The birth `planHash` is preserved. A complete,
+schema-valid, repository-bound managed terminal registry and policy must be
+present; any known releasing outcome for this ticket/target prevents reopening.
+Their digest and the current target HEAD are rechecked with the workspace.
+Missing, corrupt, unsafe or changed terminal state fails closed.
+
+Only this released operation can translate a historical bare repository name
+to the exact canonical origin of the same primary Git registration. The bare
+name must equal that origin's basename; the protected verifier binds both
+identities and the exact old bytes. All other lease fields remain subject to
+canonical validation. The operation never patches the old file in place:
+its separate `released-owner-resume` journal archives the original bytes and
+the canonical successor before an atomic CAS replacement. Ordinary handoff's
+repository comparison remains strict.
+
+The successor preserves ticket, branch, worktree, scope, birth plan, current
+HEAD and dirty payload. It advances revision/fencing, starts a fresh bounded
+`claimed` session and clears obsolete PR/Validator references. Exact replay
+reauthenticates and never extends expiry. Later workspace, intent, terminal,
+owner, policy, authorization or fencing changes require a new protected
+decision. Re-run work-start and writer checks before implementation, then
+activate the same ticket and obtain fresh independent validation/publication.

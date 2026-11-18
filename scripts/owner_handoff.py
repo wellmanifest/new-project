@@ -34,12 +34,15 @@ def _sibling(name):
 control = _sibling('terminal_lease_release')
 SCHEMA = 'new-project.owner-handoff/v1'
 JOURNAL_SCHEMA = 'new-project.owner-handoff-journal/v1'
+RESUME_SCHEMA = 'new-project.released-owner-resume/v1'
+RESUME_JOURNAL_SCHEMA = 'new-project.released-owner-resume-journal/v1'
 MAX_BYTES = 1024 * 1024
 MAX_FILE_BYTES = 64 * 1024 * 1024
 FIELDS = {'schema', 'requestId', 'worktreeId', 'ownerActor', 'ownerSession', 'consent',
           'expectedRevision', 'expectedFencingToken', 'expectedLeaseSha256',
           'expectedHeadSha', 'expectedDirtySha256', 'expectedIntentSha256',
           'expectedScopeHash', 'primaryCheckout', 'repositoryRef', 'targetOwnerActor', 'targetOwnerSession', 'ttlSeconds'}
+RESUME_FIELDS = FIELDS | {'releaseEvidenceRef', 'expectedTerminalStateSha256'}
 
 
 def _digest(raw):
@@ -56,8 +59,10 @@ def _require(value, message):
 
 
 def _request(request):
-    _require(isinstance(request, dict) and set(request) == FIELDS
-             and request['schema'] == SCHEMA, 'invalid handoff request')
+    _require(isinstance(request, dict), 'invalid handoff request')
+    released = request.get('schema') == RESUME_SCHEMA
+    _require(set(request) == (RESUME_FIELDS if released else FIELDS)
+             and request['schema'] in {SCHEMA, RESUME_SCHEMA}, 'invalid handoff request')
     _require(request['consent'] is True, 'explicit consent required')
     for key in ('requestId', 'worktreeId', 'ownerActor', 'ownerSession',
                 'targetOwnerActor', 'targetOwnerSession', 'repositoryRef'):
@@ -75,6 +80,13 @@ def _request(request):
     for key in ('expectedLeaseSha256', 'expectedDirtySha256', 'expectedIntentSha256', 'expectedScopeHash'):
         _require(isinstance(request[key], str) and re.fullmatch('[0-9a-f]{64}', request[key]),
                  'invalid handoff digest')
+    if released:
+        _require(isinstance(request['releaseEvidenceRef'], str)
+                 and re.fullmatch(r'receipt:[A-Za-z0-9][A-Za-z0-9._:/-]{0,510}', request['releaseEvidenceRef']),
+                 'protected release evidence reference required')
+        _require(isinstance(request['expectedTerminalStateSha256'], str)
+                 and re.fullmatch('[0-9a-f]{64}', request['expectedTerminalStateSha256']),
+                 'invalid terminal observation digest')
     _require(isinstance(request['expectedHeadSha'], str)
              and re.fullmatch('[0-9a-f]{40}', request['expectedHeadSha']), 'invalid HEAD')
     return match[1], 'refs/heads/ticket/' + match[2] + '-' + match[3]
@@ -127,12 +139,74 @@ def _file_row(root, name):
         return [name, 'file', stat.S_IMODE(info.st_mode), digest.hexdigest()]
 
 
+def _repository_matches(root, request, lease):
+    original, selected = lease['repositoryRef'], request['repositoryRef']
+    accepted = control._accepted_repositories(root)
+    if original == selected and selected in accepted:
+        return True
+    if request['schema'] != RESUME_SCHEMA or '/' in original:
+        return False
+    # Only this explicit operation can translate a historical basename. Its
+    # verifier must bind both names and the exact raw old lease, independently
+    # of the request. A local digest is not a remote repository mapping.
+    origin = _git(root, 'config', '--get', 'remote.origin.url').decode().strip()
+    canonical = control.canonical.canonical_owner_repository(origin)
+    return (canonical == selected and selected in accepted
+            and original == canonical.rsplit('/', 1)[-1])
+
+
+def _validate_original(root, request, lease):
+    projected = lease
+    if request['schema'] == RESUME_SCHEMA:
+        _require(_repository_matches(root, request, lease), 'repository mismatch')
+        # The original is always archived and CASed byte-for-byte. Validation
+        # projects only the explicitly authorized historical identity mapping;
+        # no other malformed field is repaired or accepted.
+        projected = dict(lease, repositoryRef=request['repositoryRef'])
+    _require(not control.canonical.validate_lease(projected), 'invalid canonical lease')
+
+
+def _released_state(root, tree, ticket, lease, intent):
+    # Use the allocator's actual scope algorithm; the independent full current
+    # intent digest is also bound, while the historical birth plan is retained.
+    paths = intent.get('allowedPaths')
+    _require(isinstance(paths, list) and paths and all(isinstance(p, str) and p for p in paths),
+             'invalid resume scope')
+    scope = _digest(json.dumps(paths, sort_keys=True, separators=(',', ':')).encode())
+    _require(scope == lease['scopeHash'], 'resume scope changed since allocation')
+    carrier = _read(tree / 'project' / ticket / 'README.md').decode()
+    _require(control.activity.parse_ticket_state_text(carrier) == ('BLOCKED', 'HANDOFF'),
+             'resume requires an unfinished blocked handoff')
+    policy_path = control.activity.policy_path(root)
+    policy_raw = _read(policy_path)
+    override_path = control.activity.override_path(root)
+    override_raw = _read(override_path) if override_path is not None else None
+    expected_policy = control.decode(policy_raw)
+    if override_raw is not None:
+        override = control.decode(override_raw)
+        expected_policy = dict(expected_policy, registry=dict(expected_policy['registry'],
+                                                             missingPolicy=override.get('missingPolicy')))
+    policy = control.activity.load_policy(root)
+    _require(policy == expected_policy, 'activity policy observation differs')
+    _require(_read(policy_path) == policy_raw, 'activity policy changed')
+    _require(control.activity.override_path(root) == override_path
+             and (override_path is None or _read(override_path) == override_raw), 'activity override changed')
+    registry_path = control.activity.registry_path(root, policy)
+    registry = control.decode(_read(registry_path))  # Missing/partial is never an empty registry.
+    rows = control.activity._validate_registry(registry, control.activity.repository_ref(root))
+    _require(not any(row['ticket'] == ticket and row['targetBranch'] == lease['targetBranch']
+                     and policy['terminalOutcomes'].get(row['outcome'], {}).get('releasesReservation') is True
+                     for row in rows), 'terminal delivery cannot be resumed')
+    target = _git(root, 'rev-parse', 'refs/heads/' + lease['targetBranch']).decode().strip()
+    return _digest(_encoded({'policy': policy, 'registry': registry, 'targetHead': target}))
+
+
 def _snapshot(root, request, lease, *, check_expected=True):
     ticket, branch = _request(request)
     expected = {'ticketId': ticket, 'worktreeId': request['worktreeId'], 'branchRef': branch}
     _require(all(lease[k] == v for k, v in expected.items()), 'lease scope mismatch')
-    _require(request['primaryCheckout'] == str(root) and request['repositoryRef'] == lease['repositoryRef']
-             and lease['repositoryRef'] in control._accepted_repositories(root), 'repository mismatch')
+    _require(request['primaryCheckout'] == str(root) and _repository_matches(root, request, lease),
+             'repository mismatch')
     tree = root / '.worktrees' / request['worktreeId']
     with control.directory(tree) as (_, verify_tree):
         rows = _git(root, 'worktree', 'list', '--porcelain', '-z').decode().split('\0\0')
@@ -153,6 +227,8 @@ def _snapshot(root, request, lease, *, check_expected=True):
         intent = control.decode(intent_raw)
         _require(intent.get('ticket') == ticket and intent.get('workstream') == lease['workstream'],
                  'intent identity mismatch')
+        terminal = (_released_state(root, tree, ticket, lease, intent)
+                    if request['schema'] == RESUME_SCHEMA else None)
         names = sorted(set(filter(None, _git(tree, 'ls-files', '-co', '--exclude-standard', '-z')
                                   .decode().split('\0'))))
         _require(len(names) <= 100000, 'snapshot exceeds bound')
@@ -166,6 +242,10 @@ def _snapshot(root, request, lease, *, check_expected=True):
         verify_tree()
     observation = {'head': head, 'dirty': dirty, 'intent': _digest(intent_raw),
                    'scope': lease['scopeHash'], 'branch': branch}
+    if terminal is not None:
+        observation['terminal'] = terminal
+        if check_expected:
+            _require(terminal == request['expectedTerminalStateSha256'], 'terminal observation changed')
     if check_expected:
         _require(head == request['expectedHeadSha'] and dirty == request['expectedDirtySha256']
                  and observation['intent'] == request['expectedIntentSha256']
@@ -173,7 +253,7 @@ def _snapshot(root, request, lease, *, check_expected=True):
     return observation
 
 
-def observe(root, worktree_id):
+def observe(root, worktree_id, *, released=False):
     """Read the exact snapshot for a caller's subsequent protected authorization.
 
     No grant is produced. The authority must independently authenticate consent
@@ -182,13 +262,22 @@ def observe(root, worktree_id):
     _require(isinstance(worktree_id, str) and control.WORKTREE_ID_RE.fullmatch(worktree_id), 'invalid worktree identity')
     root, _, _ = control._controller_root(Path(root).absolute())
     lease = control.decode(_read(root / '.subactor/leases' / (worktree_id + '.json')))
-    _require(not control.canonical.validate_lease(lease), 'invalid canonical lease')
     # Observation construction shares the same implementation and canonical
     # checks as apply, with expected values filled only after the full snapshot.
-    return dict(_observe_unbound(root, worktree_id, lease), primaryCheckout=str(root), repositoryRef=lease['repositoryRef'])
+    repository = lease['repositoryRef']
+    if released:
+        _require(lease['phase'] == 'released' and not lease['publicationFrozen'], 'released slot required')
+        if '/' not in repository:
+            origin = _git(root, 'config', '--get', 'remote.origin.url').decode().strip()
+            repository = control.canonical.canonical_owner_repository(origin)
+            _require(isinstance(repository, str), 'canonical origin required')
+    _validate_original(root, {'schema': RESUME_SCHEMA if released else SCHEMA,
+                              'repositoryRef': repository}, lease)
+    return dict(_observe_unbound(root, worktree_id, lease, released=released, repository=repository),
+                primaryCheckout=str(root), repositoryRef=repository)
 
 
-def _observe_unbound(root, worktree_id, lease):
+def _observe_unbound(root, worktree_id, lease, *, released=False, repository=None):
     # Placeholder expected values are used only by the read-only observer.
     # Apply always checks a complete, independently authorized request.
     request = {'schema': SCHEMA, 'requestId': 'observation', 'worktreeId': worktree_id,
@@ -200,6 +289,9 @@ def _observe_unbound(root, worktree_id, lease):
                'primaryCheckout':str(root), 'repositoryRef':lease['repositoryRef'],
                'targetOwnerActor': lease['ownerActor'], 'targetOwnerSession':'observation' if lease['ownerSession']!='observation' else 'observation-2',
                'ttlSeconds': 1}
+    if released:
+        request.update(schema=RESUME_SCHEMA, repositoryRef=repository,
+                       releaseEvidenceRef='receipt:observation', expectedTerminalStateSha256='0' * 64)
     return _snapshot(root, request, lease, check_expected=False)
 
 
@@ -242,6 +334,10 @@ def _successor(lease, request, stamp):
                      heartbeatAt=stamp.strftime('%Y-%m-%dT%H:%M:%SZ'),
                      expiresAt=(stamp + timedelta(seconds=request['ttlSeconds'])).strftime('%Y-%m-%dT%H:%M:%SZ'),
                      previousReceiptRef='receipt:owner-handoff/' + _digest(_encoded(request)))
+    if request['schema'] == RESUME_SCHEMA:
+        successor.update(phase='claimed', repositoryRef=request['repositoryRef'],
+                         pullRequest=None, validatorRunId=None,
+                         previousReceiptRef='receipt:released-owner-resume/' + _digest(_encoded(request)))
     _require(not control.canonical.validate_lease(successor), 'invalid successor lease')
     return successor
 
@@ -263,7 +359,10 @@ def _execute(root, request, fd, verify, name, policy, config, apply, authorizati
     _require(_identity(fd, name) == identity, 'lease identity changed')
     _require(request['ttlSeconds'] <= _ttl_limit(root), 'lifetime exceeds project policy')
     request_hash = _digest(_encoded(request))
-    journal_path = root / '.subactor/receipts/owner-handoff' / (request_hash + '.json')
+    released = request['schema'] == RESUME_SCHEMA
+    namespace = 'released-owner-resume' if released else 'owner-handoff'
+    journal_schema = RESUME_JOURNAL_SCHEMA if released else JOURNAL_SCHEMA
+    journal_path = root / '.subactor/receipts' / namespace / (request_hash + '.json')
     try:
         journal = control.decode(_read(journal_path))
     except FileNotFoundError:
@@ -271,7 +370,7 @@ def _execute(root, request, fd, verify, name, policy, config, apply, authorizati
     if journal is not None:
         _require(isinstance(journal, dict) and set(journal) == {'schema','request','original','successor',
                  'observation','authorization','evidence','result','stamp','leaseIdentity'}
-                 and journal.get('schema') == JOURNAL_SCHEMA and journal.get('request') == request,
+                 and journal.get('schema') == journal_schema and journal.get('request') == request,
                  'journal request mismatch')
         original = base64.b64decode(journal['original'], validate=True)
         _require(_digest(original) == request['expectedLeaseSha256'], 'journal original mismatch')
@@ -285,17 +384,29 @@ def _execute(root, request, fd, verify, name, policy, config, apply, authorizati
     else:
         original, lease = raw, control.decode(raw)
         _require(_digest(raw) == request['expectedLeaseSha256'], 'lease CAS mismatch')
-    _require(not control.canonical.validate_lease(lease), 'invalid canonical lease')
+    _validate_original(root, request, lease)
     _require(lease['ownerActor'] == request['ownerActor'] and lease['ownerSession'] == request['ownerSession']
              and lease['leaseRevision'] == request['expectedRevision']
              and lease['fencingToken'] == request['expectedFencingToken'], 'owner fencing mismatch')
-    _require(lease['phase'] in {'claimed', 'editing', 'validating'} and not lease['publicationFrozen'],
+    _require(lease['phase'] in ({'released'} if released else {'claimed', 'editing', 'validating'})
+             and not lease['publicationFrozen'],
              'frozen ownership cannot be handed off')
+    if released and apply:
+        proof = evidence.get('releasedOwner')
+        expected = {'leaseId': lease['leaseId'], 'leaseSha256': request['expectedLeaseSha256'],
+                    'revision': lease['leaseRevision'], 'fencingToken': lease['fencingToken'],
+                    'repositoryRef': lease['repositoryRef'], 'canonicalRepositoryRef': request['repositoryRef'],
+                    'releaseEvidenceRef': request['releaseEvidenceRef']}
+        _require(isinstance(proof, dict) and set(proof) == set(expected) | {'writerState'}
+                 and all(type(proof[k]) is type(value) and proof[k] == value for k, value in expected.items())
+                 and isinstance(proof['writerState'], str)
+                 and proof['writerState'] in {'explicitly-released', 'controller-observed-stopped'},
+                 'authenticated released-owner proof required')
     observation = _snapshot(root, request, lease)
     now = datetime.now(timezone.utc).replace(microsecond=0)
     if journal is None:
         successor = _successor(lease, request, now)
-        journal = {'schema':JOURNAL_SCHEMA, 'request':request, 'original':base64.b64encode(original).decode(),
+        journal = {'schema':journal_schema, 'request':request, 'original':base64.b64encode(original).decode(),
                    'successor':successor, 'observation':observation,
                    'authorization':base64.b64encode(auth_raw).decode() if auth_raw is not None else None,
                    'evidence':evidence, 'result':_result(successor), 'stamp':now.strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -328,6 +439,7 @@ def _execute(root, request, fd, verify, name, policy, config, apply, authorizati
         _require(auth_again == auth_raw and evidence_again == evidence, 'authorization changed')
         _require(request['ttlSeconds'] <= _ttl_limit(root), 'lifetime policy changed')
         _require(control.read_path(policy) == config, 'controller policy changed')
+        _require(_snapshot(root, request, lease) == observation, 'workspace changed after authorization')
         _require(_identity(fd, name) == identity, 'lease identity changed before replacement')
         _require(control.read_at(fd, name, control.canonical.MAX_LEASE_BYTES, private=True) == original,
                  'lease changed before replacement')
@@ -344,6 +456,22 @@ def handoff(root, request, *, apply=False, authorization_fd=None, verifier=None)
     must not provide it. Actor/session, FD data and request digests alone do not
     implement authentication. The standalone CLI has no such verifier.
     """
+    _require(isinstance(request, dict) and request.get('schema') == SCHEMA, 'ordinary handoff schema required')
+    return _handoff(root, request, apply=apply, authorization_fd=authorization_fd, verifier=verifier)
+
+
+def resume_released(root, request, *, apply=False, authorization_fd=None, verifier=None):
+    """Protected same-ticket resume; the verifier authenticates old-writer termination.
+
+    Neither a released lease nor a caller's assertion proves a safe handoff.
+    The trusted host must acquire fresh, independent controller/owner evidence,
+    bind releasedOwner to this exact request and authenticate every replay.
+    """
+    _require(isinstance(request, dict) and request.get('schema') == RESUME_SCHEMA, 'released resume schema required')
+    return _handoff(root, request, apply=apply, authorization_fd=authorization_fd, verifier=verifier)
+
+
+def _handoff(root, request, *, apply, authorization_fd, verifier):
     _request(request)
     if apply:
         _require(authorization_fd is not None and callable(verifier), 'protected verifier required')

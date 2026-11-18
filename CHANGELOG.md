@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [0.20.160] - 2026-11-18
+
+- Add protected same-ticket resume for released unfinished canonical worktrees,
+  preserving dirty work, scope and birth plan under authenticated old-writer
+  handoff, exact Git/intent/lease CAS and monotonic fencing. [ticket-457]
+
 ## [0.20.159] - 2026-11-18
 
 - Add explicit, consented local owner handoff with exact lease and Git CAS,
