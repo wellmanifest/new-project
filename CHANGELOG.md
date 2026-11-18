@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [0.20.159] - 2026-11-18
+
+- Add explicit, consented local owner handoff with exact lease and Git CAS,
+  atomic journaling, monotonic fencing and replay-safe refusal. [ticket-456]
+
 ## [0.20.158] - 2026-11-18
 
 - Admit explicitly reviewed, exact-base root-ignore exceptions for bootstrap
