@@ -1,0 +1,115 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-457",
+  "summary": "Resume released canonical leases through protected handoff (NP-053)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-457/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/owner_handoff.py",
+    "tests/owner_handoff_test.py",
+    "docs/EXPLICIT_OWNER_HANDOFF.md",
+    "error/GOV-WORK-START.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "620d170bc47c3e5e0a668b908e19fe952425fb22",
+    "targetBranch": "main",
+    "outcome": "Resume the same released local canonical ticket through an independently authenticated controller handoff, preserving work and advancing fencing without timeout takeover.",
+    "nonGoals": [
+      "No consumer lease mutation before published independent approval",
+      "No idle-policy change, foreign cleanup, source replay or product implementation",
+      "No approval or authority from request fields or FD JSON"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse the existing anchored owner-handoff transaction with a separate closed released-resume schema/API and journal namespace. Require actual protected old-writer release/stopped proof bound to exact canonical root/repository, same relative Git worktree, full index/content/intent and scope, legacy basename mapping only to exact canonical origin. Resume claimed with a fresh bounded session; preserve birth plan/scope and dirty files. Reauthenticate exact replay and refuse known completed delivery.",
+      "components": [
+        {
+          "name": "handoff-controller",
+          "paths": [
+            "scripts/owner_handoff.py",
+            "tests/owner_handoff_test.py"
+          ]
+        },
+        {
+          "name": "invocation-contract",
+          "paths": [
+            "docs/EXPLICIT_OWNER_HANDOFF.md",
+            "error/GOV-WORK-START.md"
+          ]
+        },
+        {
+          "name": "coupled-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Protected resume_released API and closed request schema",
+        "Explicit released-mode read-only observation"
+      ],
+      "dataChanges": [
+        {
+          "component": "handoff-controller",
+          "kind": "component-local-state",
+          "description": "Exclusive replay journal and canonical monotonic successor lease"
+        }
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert via independently reviewed ticket; keep journals and old lease snapshots for recovery, never restore a stale fence."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python tests/owner_handoff_test.py"
+        ],
+        "evidence": "Adversarial real-Git controller tests including old/new mode isolation, legacy identity, exact CAS/race/replay and proof revocation"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Qualified full suite, exact-base governance, native Linux/Windows and protected current-head review"
+      }
+    ]
+  }
+}
