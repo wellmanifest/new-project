@@ -1,0 +1,123 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-456",
+  "summary": "Add explicit owner handoff for local canonical leases (NP-052)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-456/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/owner_handoff.py",
+    "tests/owner_handoff_test.py",
+    "governance/package-manifest.json",
+    "docs/EXPLICIT_OWNER_HANDOFF.md",
+    "error/GOV-WORK-START.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "tests/adoption-reusable-plan.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "49b8fe253bae7a563764033bd851c8f3f8614cd3",
+    "targetBranch": "main",
+    "outcome": "Provide explicit authenticated local owner handoff with exact CAS/state binding, atomic recovery and replay-safe monotonic lease issuance.",
+    "nonGoals": [
+      "No expiry-only or PID-absence takeover",
+      "No idle algorithm or runtime policy change",
+      "No foreign checkout cleanup or consumer adoption"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 11,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse the registered local controller NoFollow/atomic primitives. A protected outer invoker must authenticate explicit old-owner consent; neither labels nor FD JSON authenticate. Bind its verifier evidence, complete canonical Git/content/index/intent snapshot and exact lease CAS, archive and journal before one bounded monotonic successor, and reauthenticate exact replay without renewing.",
+      "components": [
+        {
+          "name": "owner-handoff-controller",
+          "paths": [
+            "scripts/owner_handoff.py",
+            "tests/owner_handoff_test.py"
+          ]
+        },
+        {
+          "name": "governance-contract",
+          "paths": [
+            "governance/package-manifest.json",
+            "tests/adoption-reusable-plan.test.sh",
+            "docs/EXPLICIT_OWNER_HANDOFF.md",
+            "error/GOV-WORK-START.md"
+          ]
+        },
+        {
+          "name": "release-projections",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Explicit old-owner handoff request and receipt"
+      ],
+      "dataChanges": [
+        "Atomic handoff archive and journal bound to old/new lease state"
+      ],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Protected revert preserving immutable journals, archived original state and prior lease receipts."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m pytest -q tests/owner_handoff_test.py"
+        ],
+        "evidence": "Real Git/CAS/owner/context handoff and atomic archive regressions."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m pytest -q tests/owner_handoff_test.py"
+        ],
+        "evidence": "Wrong owner, stale state, symlink, frozen, expiry-without-consent and replay negatives fail closed."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh",
+          "bash tests/adoption-reusable-plan.test.sh",
+          "python -m pytest -q tests/owner_handoff_test.py"
+        ],
+        "evidence": "Managed governance, package/release projections and qualified focused tests pass; protected CI and independent review remain required."
+      }
+    ]
+  }
+}
