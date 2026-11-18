@@ -1,0 +1,93 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-460",
+  "summary": "Deduplicate worktree registry reads during overlap checks",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-460/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/worktree_overlap_check.py",
+    "tests/worktree-overlap.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "8e6b51dc91a2ac7e1e771908e0fac5e12da0b9a0",
+    "targetBranch": "main",
+    "outcome": "Reduce repeated linked-worktree registry reads while revalidating every discovered path so stale registrations cannot hide an independent clone.",
+    "nonGoals": [
+      "No change to worktree ownership, conflict policy or protected review.",
+      "No automatic worktree cleanup or registry repair."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Cache git worktree list output only by each visited checkout's verified common Git directory. Re-resolve every registry-returned path before cache lookup so stale paths are treated as independent repositories when their actual common directory differs.",
+      "components": [
+        {
+          "name": "overlap-discovery",
+          "paths": [
+            "scripts/worktree_overlap_check.py"
+          ]
+        },
+        {
+          "name": "regression-fixture",
+          "paths": [
+            "tests/worktree-overlap.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket commit to restore the prior registry discovery implementation."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/worktree-overlap.test.sh"
+        ],
+        "evidence": "The linked-worktree fixture asserts one registry read while preserving overlap, disjoint, cache and intent checks."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/worktree-overlap.test.sh"
+        ],
+        "evidence": "The stale-registration fixture replaces a registered path with an independent same-remote clone and detects its external linked checkout with two registry reads."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "python3 scripts/governance_check.py --root . --manifest governance/manifest.hub.json --stack-profiles governance/stack-profiles.json --work-classification governance/work-classification.dsl.json --base 8e6b51dc91a2ac7e1e771908e0fac5e12da0b9a0 --head HEAD --actor ci --format text"
+        ],
+        "evidence": "The strict governance scope check validates the exact v3 intent, delivery contract and current-base implementation range."
+      }
+    ]
+  }
+}
