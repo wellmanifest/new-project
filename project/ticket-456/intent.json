@@ -36,9 +36,9 @@
     "targetBranch": "main",
     "outcome": "Provide explicit authenticated local owner handoff with exact CAS/state binding, atomic recovery and replay-safe monotonic lease issuance.",
     "nonGoals": ["No expiry-only or PID-absence takeover", "No idle algorithm or runtime policy change", "No foreign checkout cleanup or consumer adoption"],
-    "complexity": "L",
-    "estimatedMinutes": 90,
-    "budgets": {"maxImplementationFiles": 10, "maxAffectedComponents": 4, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {"maxImplementationFiles": 10, "maxAffectedComponents": 3, "maxPublicInterfaceChanges": 1, "maxRuntimeDependencies": 0},
     "architecture": {
       "status": "accepted",
       "decision": "Reuse canonical local lease and no-follow archival primitives; require explicit authenticated old-owner context and exact observed state/CAS, journal the archive atomically, then issue one bounded monotonic successor lease with idempotent exact replay.",

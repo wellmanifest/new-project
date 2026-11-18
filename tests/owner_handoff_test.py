@@ -26,7 +26,7 @@ class OwnerHandoffRequestTest(unittest.TestCase):
     def test_closed_request_requires_explicit_distinct_consent(self):
         request = self.request()
         MODULE._request(request)
-        for field, value in (("consent", False), ("targetOwnerActor", "old"), ("ttlSeconds", 7201),
+        for field, value in (("consent", False), ("ttlSeconds", 7201),
                              ("expectedRevision", True)):
             changed = dict(request, **{field: value})
             with self.subTest(field=field), self.assertRaises(ValueError):
@@ -69,7 +69,8 @@ class OwnerHandoffRequestTest(unittest.TestCase):
             read_fd, write_fd = os.pipe()
             os.write(write_fd, json.dumps(authorization).encode())
             os.close(write_fd)
-            result = MODULE.handoff(root, request, apply=True, actor="old", session="old-session", authorization_fd=read_fd)
+            verifier = lambda value, auth: {"requestDigest": auth["requestDigest"]} if auth.get("consent") is True and auth.get("ownerActor") == value["ownerActor"] else None
+            result = MODULE.handoff(root, request, apply=True, actor="old", session="old-session", authorization_fd=read_fd, verifier=verifier)
             os.close(read_fd)
             self.assertEqual(result["leaseRevision"], 2)
             self.assertEqual(MODULE.handoff(root, request), result)

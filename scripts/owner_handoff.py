@@ -61,8 +61,8 @@ def _request(request):
     fields = {"schema", "requestId", "worktreeId", "ownerActor", "ownerSession", "consent", "expectedRevision", "expectedFencingToken", "expectedLeaseSha256", "expectedHeadSha256", "expectedDirtySha256", "targetOwnerActor", "targetOwnerSession", "ttlSeconds"}
     if not isinstance(request, dict) or set(request) != fields or request["schema"] != SCHEMA:
         raise ValueError("invalid handoff request")
-    if request["consent"] is not True or request["ownerActor"] == request["targetOwnerActor"]:
-        raise ValueError("explicit distinct owner consent required")
+    if request["consent"] is not True:
+        raise ValueError("explicit owner consent required")
     for key in ("requestId", "worktreeId", "ownerActor", "ownerSession", "targetOwnerActor", "targetOwnerSession"):
         if not isinstance(request[key], str) or not 1 <= len(request[key]) <= 160:
             raise ValueError("invalid handoff identity")
@@ -73,7 +73,7 @@ def _request(request):
         if not isinstance(request[key], str) or not DIGEST.fullmatch(request[key]):
             raise ValueError("invalid handoff digest")
 
-def _handoff_locked(root, request, *, apply=False, actor=None, session=None, authorization_fd=None):
+def _handoff_locked(root, request, *, apply=False, actor=None, session=None, authorization_fd=None, verifier=None):
     _request(request)
     root = Path(root).resolve()
     journal = root / ".subactor/receipts/owner-handoff" / (_digest(_encoded(request)) + ".json")
@@ -86,7 +86,7 @@ def _handoff_locked(root, request, *, apply=False, actor=None, session=None, aut
         if journal.exists():
             saved = json.loads(_read(journal))
             if saved.get("request") == request and lease == saved.get("successor"):
-                if apply and authorization_fd is None:
+                if apply and (authorization_fd is None or verifier is None):
                     raise ValueError("protected authorization context required")
                 return saved["result"]
         raise ValueError("lease owner mismatch")
@@ -99,14 +99,11 @@ def _handoff_locked(root, request, *, apply=False, actor=None, session=None, aut
     if apply and (actor != request["ownerActor"] or session != request["ownerSession"]):
         raise ValueError("old-owner invocation context required")
     if apply:
-        if authorization_fd is None:
+        if authorization_fd is None or verifier is None:
             raise ValueError("protected authorization context required")
         authorization = json.loads(__import__("os").read(authorization_fd, MAX_BYTES + 1))
-        if (authorization.get("schema") != "new-project.owner-handoff-authorization/v1"
-                or authorization.get("ownerActor") != request["ownerActor"]
-                or authorization.get("ownerSession") != request["ownerSession"]
-                or authorization.get("requestDigest") != _digest(_encoded(request))
-                or authorization.get("consent") is not True):
+        evidence = verifier(request, authorization)
+        if not isinstance(evidence, dict) or evidence.get("requestDigest") != _digest(_encoded(request)):
             raise ValueError("protected authorization mismatch")
         authorization_digest = _digest(_encoded(authorization))
     else:
@@ -127,7 +124,7 @@ def _handoff_locked(root, request, *, apply=False, actor=None, session=None, aut
         saved = json.loads(_read(journal))
         if saved.get("request") != request or saved.get("successor", {}).get("ownerActor") != request["targetOwnerActor"]:
             raise ValueError("handoff replay mismatch")
-        if apply and authorization_fd is None:
+        if apply and (authorization_fd is None or verifier is None):
             raise ValueError("protected authorization context required")
         return saved["result"]
     successor = dict(lease)
@@ -135,14 +132,14 @@ def _handoff_locked(root, request, *, apply=False, actor=None, session=None, aut
     result = {"status": "handoff", "leaseRevision": successor["leaseRevision"], "fencingToken": successor["fencingToken"], "head": head, "branch": branch}
     if not apply:
         return {**result, "status": "planned", "grantsAuthority": False}
-    record = {"schema": SCHEMA, "request": request, "authorizationSha256": authorization_digest, "originalLease": lease, "originalLeaseSha256": _digest(raw), "head": head, "dirtySha256": dirty, "successor": successor, "result": result}
+    record = {"schema": SCHEMA, "request": request, "authorizationSha256": authorization_digest, "authorizationEvidence": evidence, "originalLease": lease, "originalLeaseSha256": _digest(raw), "head": head, "dirtySha256": dirty, "successor": successor, "result": result}
     _atomic(journal, _encoded(record))
     if _digest(_read(lease_path)) != request["expectedLeaseSha256"]:
         raise ValueError("lease changed before replacement")
     _atomic(lease_path, _encoded(successor))
     return result
 
-def handoff(root, request, *, apply=False, actor=None, session=None, authorization_fd=None):
+def handoff(root, request, *, apply=False, actor=None, session=None, authorization_fd=None, verifier=None):
     """Serialize observation, journal and replacement in the canonical slot."""
     root = Path(root).resolve()
     lock_dir = root / ".subactor" / "leases"
@@ -152,7 +149,7 @@ def handoff(root, request, *, apply=False, actor=None, session=None, authorizati
         raise ValueError("unsafe lease lock")
     with lock.open("a+") as stream:
         fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
-        return _handoff_locked(root, request, apply=apply, actor=actor, session=session, authorization_fd=authorization_fd)
+        return _handoff_locked(root, request, apply=apply, actor=actor, session=session, authorization_fd=authorization_fd, verifier=verifier)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -11,3 +11,10 @@ Replaying the exact request returns the original receipt without extending its
 TTL. Any changed lease, checkout, symlink, frozen phase, or missing owner
 context is refused. The controller does not infer owner death from timeout or
 PID absence and never removes a checkout.
+
+Apply additionally requires a protected host adapter callback and a pre-opened
+authorization FD. The FD is only an input document; possession, environment
+labels, or request JSON are not authentication. The host verifier must bind the
+request digest, old principal, successor, and TTL using its independently
+trusted operator/controller record. The command-line entry point has no such
+verifier and therefore remains fail-closed for apply.
