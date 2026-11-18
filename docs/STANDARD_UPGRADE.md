@@ -2,6 +2,21 @@
 
 ## Overview
 
+### Preserving target concurrency and idle handoff policy
+
+An immutable upgrade treats an already-installed target's
+`coordination.maxActiveTicketsPerWorkstream` and `coordination.idleTakeover`
+as target-owned controls. The adopter preserves their exact accepted-base
+values, including an explicitly disabled or absent idle policy, while merging
+the rest of the published standard. A fresh target receives the release's
+defaults (currently WIP 8 and idle takeover 15/120 when enabled).
+
+This compatibility rule does not grant ownership or takeover authority. Exact
+writer/session/CAS, scope, lease and protected review checks remain required;
+the upgrade itself never transfers ownership. Malformed policy or a target
+that no longer extends its installed managed base is rejected by the existing
+manifest and allocation gates.
+
 ### Terminal owner handoff after published checkout removal (0.20.135)
 
 The local terminal-release controller accepts the explicit current owner's
