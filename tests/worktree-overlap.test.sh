@@ -59,6 +59,21 @@ git -C "$primary" remote add origin git@github.com:example/sample.git
 git -C "$primary" worktree add --quiet -b ticket/010-sample-a "$linked"
 git -C "$primary" worktree add --quiet -b ticket/011-sample-b "$linked_b"
 
+# All linked checkouts share one Git worktree registry. Count registry reads so
+# this fixture catches a regression back to one `git worktree list` per path.
+real_git="$(command -v git)"
+mkdir -p "$fixture/bin"
+cat > "$fixture/bin/git" <<EOF
+#!/usr/bin/env bash
+if [[ "\$*" == *"worktree list --porcelain"* ]]; then
+  printf '%s\n' "\$((\$(cat "$fixture/worktree-list-count" 2>/dev/null || printf '0') + 1))" > "$fixture/worktree-list-count"
+fi
+exec "$real_git" "\$@"
+EOF
+chmod 700 "$fixture/bin/git"
+printf '0\n' > "$fixture/worktree-list-count"
+export PATH="$fixture/bin:$PATH"
+
 # Same file dirtied in two worktrees — this is the merge-conflict precursor.
 printf '%s\n' left > "$linked/app.py"
 printf '%s\n' right > "$linked_b/app.py"
@@ -70,6 +85,7 @@ else
   status=$?
 fi
 test "$status" -eq 1
+test "$(cat "$fixture/worktree-list-count")" -eq 1
 python3 - "$fixture/overlap.json" "$linked" "$linked_b" <<'PY'
 import json
 import sys
@@ -776,3 +792,45 @@ woc.merge_tree_conflicts = forbid_merge_tree
 assert woc.contested_paths(first, second, ()) == ()
 PY
 printf 'single-status and disjoint merge-tree short-circuit: PASS\n'
+
+# A path can remain in repository A's registry after its directory is replaced
+# by an independent clone B. Re-resolve that path, discover B's own registered
+# checkout outside the initial workspace scan, and retain both conflict reports.
+git -C "$linked" checkout -- app.py
+git -C "$linked_b" checkout -- app.py
+moved="$fixture/moved-stale-linked"
+mv "$linked" "$moved"
+git clone --quiet "$primary" "$linked"
+git -C "$linked" remote set-url origin git@github.com:example/sample.git
+git -C "$linked" config user.email overlap-test@example.invalid
+git -C "$linked" config user.name overlap-test
+outside="$fixture/registered-outside-workspace"
+git -C "$linked" worktree add --quiet -b ticket/012-independent-owned "$outside"
+printf 'stale-linked\n' > "$linked/app.py"
+printf 'outside-registered\n' > "$outside/app.py"
+printf '0\n' > "$fixture/worktree-list-count"
+
+if python3 "$checker" --workspace-root "$workspace" --format json \
+  > "$fixture/independent-stale.json"; then
+  status=0
+else
+  status=$?
+fi
+test "$status" -eq 1
+test "$(cat "$fixture/worktree-list-count")" -eq 2
+python3 - "$fixture/independent-stale.json" "$linked" "$outside" <<'PY'
+import json
+import sys
+
+report = json.load(open(sys.argv[1], encoding="utf-8"))
+assert report["status"] == "failed"
+assert report["summary"]["checkouts"] >= 4
+finding = next(
+    item for item in report["findings"] if item["code"] == "GOV-WORKTREE-OVERLAP-001"
+)
+assert "app.py" in finding["evidence"]["overlappingPaths"]
+assert {finding["evidence"]["left"], finding["evidence"]["right"]} == {
+    sys.argv[2],
+    sys.argv[3],
+}
+PY
