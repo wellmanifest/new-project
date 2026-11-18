@@ -3,13 +3,14 @@
 - **ID**: ticket-456
 - **Owner**: agent:codex
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: VALIDATION
 - **Utworzono**: 2026-11-18
 
 SESSION_EXECUTION_AUTHORIZATION: user authorized autonomous implementation,
 delegation, testing and protected publication. NP-052 adds explicit
-authenticated handoff for a local canonical lease. Handoff requires the old
-owner's exact context, explicit consent, CAS-bound lease/intent/HEAD/branch/
+handoff for a local canonical lease. The protected outer invoker must authenticate
+the old owner; actor labels and FD JSON alone never authenticate. Handoff binds
+explicit consent and the exact lease/intent/HEAD/branch/
 worktree/dirty snapshot and a monotonic new session/fence with bounded TTL.
 Expiry, PID absence or labels alone never transfer ownership.
 
