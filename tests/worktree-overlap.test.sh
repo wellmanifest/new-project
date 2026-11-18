@@ -796,21 +796,34 @@ printf 'single-status and disjoint merge-tree short-circuit: PASS\n'
 # A path can remain in repository A's registry after its directory is replaced
 # by an independent clone B. Re-resolve that path, discover B's own registered
 # checkout outside the initial workspace scan, and retain both conflict reports.
-git -C "$linked" checkout -- app.py
-git -C "$linked_b" checkout -- app.py
+# Keep this topology in a fresh workspace: the preceding assertions create an
+# unrelated repository, whose registry must not affect this exact read count.
+stale_workspace="$fixture/stale-workspace"
+stale_primary="$stale_workspace/sample"
+stale_linked="$stale_primary/.worktrees/ticket-010--sample-a"
+stale_linked_b="$stale_primary/.worktrees/ticket-011--sample-b"
+mkdir -p "$stale_workspace/.worktrees"
+git clone --quiet "$primary" "$stale_primary"
+git -C "$stale_primary" config user.email overlap-test@example.invalid
+git -C "$stale_primary" config user.name overlap-test
+git -C "$stale_primary" remote set-url origin git@github.com:example/sample.git
+git -C "$stale_primary" worktree add --quiet -b ticket/010-sample-a "$stale_linked"
+git -C "$stale_primary" worktree add --quiet -b ticket/011-sample-b "$stale_linked_b"
+printf 'stale-left\n' > "$stale_linked/app.py"
+git -C "$stale_linked_b" checkout -- app.py
 moved="$fixture/moved-stale-linked"
-mv "$linked" "$moved"
-git clone --quiet "$primary" "$linked"
-git -C "$linked" remote set-url origin git@github.com:example/sample.git
-git -C "$linked" config user.email overlap-test@example.invalid
-git -C "$linked" config user.name overlap-test
+mv "$stale_linked" "$moved"
+git clone --quiet "$stale_primary" "$stale_linked"
+git -C "$stale_linked" remote set-url origin git@github.com:example/sample.git
+git -C "$stale_linked" config user.email overlap-test@example.invalid
+git -C "$stale_linked" config user.name overlap-test
 outside="$fixture/registered-outside-workspace"
-git -C "$linked" worktree add --quiet -b ticket/012-independent-owned "$outside"
-printf 'stale-linked\n' > "$linked/app.py"
+git -C "$stale_linked" worktree add --quiet -b ticket/012-independent-owned "$outside"
+printf 'stale-linked\n' > "$stale_linked/app.py"
 printf 'outside-registered\n' > "$outside/app.py"
 printf '0\n' > "$fixture/worktree-list-count"
 
-if python3 "$checker" --workspace-root "$workspace" --format json \
+if python3 "$checker" --workspace-root "$stale_workspace" --format json \
   > "$fixture/independent-stale.json"; then
   status=0
 else
@@ -818,7 +831,7 @@ else
 fi
 test "$status" -eq 1
 test "$(cat "$fixture/worktree-list-count")" -eq 2
-python3 - "$fixture/independent-stale.json" "$linked" "$outside" <<'PY'
+python3 - "$fixture/independent-stale.json" "$stale_linked" "$outside" <<'PY'
 import json
 import sys
 
