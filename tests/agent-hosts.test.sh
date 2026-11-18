@@ -504,6 +504,23 @@ if git -C "$tmp/adopter" commit -qm "ticket-only status" 2> "$tmp/tracking-only.
 fi
 grep -Fq 'GOV-AGENT-HOST-007' "$tmp/tracking-only.err" \
   || fail "ticket-only rejection must expose GOV-AGENT-HOST-007"
+
+# Once the ticket branch already delivers a material change relative to its
+# target, a carrier-only follow-up (such as a requested delivery contract) is
+# admitted; CI still validates the whole range.
+git -C "$tmp/adopter" update-ref refs/remotes/origin/main "$(git -C "$tmp/adopter" rev-list --max-parents=0 HEAD)"
+git -C "$tmp/adopter" commit -qm "docs: ticket follow-up after material change (ticket-001)" \
+  || fail "carrier-only follow-up on a branch with material delivery must be admitted"
+git -C "$tmp/adopter" reset -q --hard HEAD~1
+git -C "$tmp/adopter" update-ref refs/remotes/origin/main HEAD
+printf '%s\n' 'status-only evidence' >> "$tmp/adopter/project/ticket-001/README.md"
+git -C "$tmp/adopter" add project/ticket-001/README.md
+if git -C "$tmp/adopter" commit -qm "docs: ticket-only at target (ticket-001)" 2> "$tmp/tracking-at-target.err"; then
+  fail "carrier-only commit without material delivery beyond the target must be rejected"
+fi
+grep -Fq 'GOV-AGENT-HOST-007' "$tmp/tracking-at-target.err" \
+  || fail "carrier-only rejection at target must expose GOV-AGENT-HOST-007"
+git -C "$tmp/adopter" update-ref -d refs/remotes/origin/main
 git -C "$tmp/adopter" reset -q --hard HEAD
 
 # Renames are material even when Git reports R rather than A/M. Exercise each
