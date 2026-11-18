@@ -1673,7 +1673,7 @@ def bootstrap_prerequisite_payloads(
     return seeds
 
 
-def bootstrap_ignore_payload(target_root: Path, payloads: dict[str, bytes], external: Path) -> bytes:
+def bootstrap_ignore_payload(target_root: Path, payloads: dict[str, bytes], external: Path) -> tuple[bytes, bytes]:
     """Append reviewed literal leaf exceptions; never reopen an ignored directory."""
     def unique(pairs):
         result = {}
@@ -1685,9 +1685,9 @@ def bootstrap_ignore_payload(target_root: Path, payloads: dict[str, bytes], exte
 
     if target_root.resolve() in external.resolve().parents:
         raise SystemExit("bootstrap ignore plan must be external")
+    raw = _bootstrap_plan_bytes(external, label="bootstrap ignore")
     try:
-        plan = json.loads(_bootstrap_plan_bytes(external, label="bootstrap ignore"),
-                          object_pairs_hook=unique)
+        plan = json.loads(raw, object_pairs_hook=unique)
     except (ValueError, UnicodeDecodeError, RecursionError) as error:
         raise SystemExit("invalid bootstrap ignore plan JSON") from error
     if (not isinstance(plan, dict)
@@ -1736,8 +1736,8 @@ def bootstrap_ignore_payload(target_root: Path, payloads: dict[str, bytes], exte
         raise SystemExit("bootstrap ignore projection must preserve original bytes")
     if content and not content.endswith(b"\n"):
         content += b"\n"
-    return content + b"\n# Explicit first-bootstrap payload leaves\n" + b"".join(
-        ("!/" + name + "\n").encode() for name in sorted(names))
+    return (content + b"\n# Explicit first-bootstrap payload leaves\n" + b"".join(
+        ("!/" + name + "\n").encode() for name in sorted(names)), raw)
 
 
 def bootstrap_ownership_paths(
@@ -2451,8 +2451,9 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
         raise SystemExit("invalid target packaging declaration: " + "; ".join(packaging_errors))
 
     ignore_projection = None
+    ignore_plan = None
     if args.bootstrap_ignore_plan:
-        ignore_projection = bootstrap_ignore_payload(target_root, payloads, args.bootstrap_ignore_plan)
+        ignore_projection, ignore_plan = bootstrap_ignore_payload(target_root, payloads, args.bootstrap_ignore_plan)
         payloads[".gitignore"] = ignore_projection
 
     expected_lock = lock_content(
@@ -2573,7 +2574,7 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
             raise SystemExit("bootstrap ownership plan changed before writes")
     if ignore_projection is not None:
         original_payloads = {**payloads, ".gitignore": worktree_ignore_payload(target_root)}
-        if bootstrap_ignore_payload(target_root, original_payloads, args.bootstrap_ignore_plan) != ignore_projection:
+        if bootstrap_ignore_payload(target_root, original_payloads, args.bootstrap_ignore_plan) != (ignore_projection, ignore_plan):
             raise SystemExit("bootstrap ignore plan changed before writes")
     if prerequisite_seeds:
         without_seeds = {name: data for name, data in payloads.items() if name not in prerequisite_seeds}

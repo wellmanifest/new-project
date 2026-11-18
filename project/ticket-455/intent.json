@@ -36,8 +36,8 @@
       "No downstream application edits or hardware control",
       "No ordinary upgrade ignore override, arbitrary source exceptions, or writer/publication grant"
     ],
-    "complexity": "M",
-    "estimatedMinutes": 80,
+    "complexity": "S",
+    "estimatedMinutes": 30,
     "budgets": {
       "maxImplementationFiles": 8,
       "maxAffectedComponents": 3,

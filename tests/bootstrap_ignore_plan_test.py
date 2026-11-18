@@ -62,7 +62,7 @@ class BootstrapIgnorePlanTest(unittest.TestCase):
         self.plan.write_text(json.dumps(self.document))
 
     def resolve(self):
-        return self.module.bootstrap_ignore_payload(self.target, self.payloads, self.plan)
+        return self.module.bootstrap_ignore_payload(self.target, self.payloads, self.plan)[0]
 
     def test_exact_leaf_projection_preserves_unrelated_ignore_rules(self):
         projected = self.resolve()
@@ -220,6 +220,12 @@ class BootstrapIgnorePlanTest(unittest.TestCase):
         self.exercise_install_and_allocation('--migrate-wellman-scaffold')
 
     def test_prewrite_recheck_preserves_concurrent_ignore_change(self):
+        self.exercise_prewrite_race(change_plan=False)
+
+    def test_prewrite_recheck_refuses_rebound_plan_with_identical_projection(self):
+        self.exercise_prewrite_race(change_plan=True)
+
+    def exercise_prewrite_race(self, change_plan):
         # The second plan resolution is the effect fence, after read-only planning.
         module, revision = self.installed_source()
         self.document['paths'] = ['.aider.conf.yml', 'project/governance-check.bat',
@@ -233,7 +239,12 @@ class BootstrapIgnorePlanTest(unittest.TestCase):
             nonlocal calls
             calls += 1
             if calls == 2:
-                (self.target / '.gitignore').write_bytes(changed)
+                if change_plan:
+                    self.command(self.target, 'git', 'commit', '-q', '--allow-empty', '-m', 'Concurrent base')
+                    self.document['baseSha'] = self.command(self.target, 'git', 'rev-parse', 'HEAD').stdout.strip()
+                    self.save()
+                else:
+                    (self.target / '.gitignore').write_bytes(changed)
             return original(*args)
         # This fixture starts with the prerequisite already committed. Force
         # staging is fixture setup only, never a production bootstrap remedy.
@@ -242,10 +253,10 @@ class BootstrapIgnorePlanTest(unittest.TestCase):
         self.document['baseSha'] = self.command(self.target, 'git', 'rev-parse', 'HEAD').stdout.strip()
         self.save()
         with patch.object(module, 'verify_publication_evidence'), patch.object(module, 'bootstrap_ignore_payload', side_effect=race):
-            with self.assertRaisesRegex(SystemExit, 'committed root ignore'):
+            with self.assertRaisesRegex(SystemExit, 'plan changed|committed root ignore'):
                 module.main(['--target-root', str(self.target), '--source-revision', revision,
                     '--bootstrap-native-adoption', '--bootstrap-ignore-plan', str(self.plan), '--upgrade'])
-        self.assertEqual((self.target / '.gitignore').read_bytes(), changed)
+        self.assertEqual((self.target / '.gitignore').read_bytes(), self.original if change_plan else changed)
         self.assertFalse((self.target / '.governance/manifest.json').exists())
 
 

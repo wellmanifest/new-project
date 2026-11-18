@@ -18,3 +18,5 @@ Add an explicit exact-base and root-ignore digest plan to first native bootstrap
 
 ## Ryzyka i Uwagi
 Broad unignore rules could expose local data. Accept only literal leaf paths already selected by the bootstrap package, with current committed root ignore bytes and no excluded parents. Never negate a directory or wildcard.
+
+Delivery estimate correction: the initial M/80 estimate was excessive for the concrete owner slice. The 87-line adopter change and its local validation completed within about ten minutes (00:50–01:00 UTC). S/30 covers this bounded change; eight implementation paths and all interface/component/dependency limits remain unchanged. Downstream adoption, application repair and hardware selection remain separate work.
