@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [0.20.162] - 2026-11-18
+
+- Admit a carrier-only follow-up commit, such as a delivery contract the gate
+  asks for after the material change, when the ticket branch already delivers a
+  material change against `origin/<targetBranch>`. Previously
+  GOV-AGENT-HOST-007 forced a history rewrite. A branch without material
+  delivery is still rejected, and CI keeps checking the whole range with
+  GOV-MATERIAL-001. [ticket-459]
+
 ## [0.20.161] - 2026-11-18
 
 - Stop adopters from failing on requirements the standard cannot satisfy. The

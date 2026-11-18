@@ -1,0 +1,99 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-459",
+  "summary": "Admit carrier-only follow-up commits on branches with material delivery",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-459/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "template/files/pre-commit.template.sh",
+    ".githooks/pre-commit",
+    "tests/agent-hosts.test.sh",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "ac407b7efc1064559a28ea733fc8505d0e4fe409",
+    "targetBranch": "main",
+    "outcome": "A carrier-only follow-up commit on a ticket branch that already delivers a material change against its target is admitted, so a delivery contract requested by the gate no longer forces a history rewrite.",
+    "nonGoals": [
+      "No change to GOV-MATERIAL-001 range checks in CI.",
+      "Branches without material delivery stay rejected.",
+      "No change to carrier path classification."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Before rejecting a carrier-only staged change, the pre-commit hook diffs merge-base(HEAD, origin/<intent targetBranch or main>)..HEAD without rename folding and admits the commit only when that range contains a non-carrier path.",
+      "components": [
+        {
+          "name": "host-hooks",
+          "paths": [
+            "template/files/pre-commit.template.sh",
+            ".githooks/pre-commit",
+            "tests/agent-hosts.test.sh"
+          ]
+        },
+        {
+          "name": "coupled-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert to accepted base ac407b7efc1064559a28ea733fc8505d0e4fe409."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Carrier-only commits are rejected without an origin target or without material delivery beyond it, and admitted after material delivery."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "The hub governance gate and pull-request scope gate pass."
+      }
+    ]
+  }
+}
