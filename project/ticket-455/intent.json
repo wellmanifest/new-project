@@ -19,7 +19,8 @@
     "CHANGELOG.md",
     "governance/manifest.default.json",
     "governance/manifest.hub.json",
-    "packages/wellman/pyproject.toml"
+    "packages/wellman/pyproject.toml",
+    "tests/adoption-reusable-plan.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -39,7 +40,7 @@
     "complexity": "S",
     "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 8,
+      "maxImplementationFiles": 9,
       "maxAffectedComponents": 3,
       "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
@@ -52,7 +53,8 @@
           "name": "bootstrap-adopter",
           "paths": [
             "scripts/create_adoption_lock.py",
-            "tests/bootstrap_ignore_plan_test.py"
+            "tests/bootstrap_ignore_plan_test.py",
+            "tests/adoption-reusable-plan.test.sh"
           ]
         },
         {
@@ -84,7 +86,8 @@
       {
         "criterion": "AC-01",
         "commands": [
-          "python -m unittest discover -s tests -p bootstrap_ignore_plan_test.py"
+          "python -m unittest discover -s tests -p bootstrap_ignore_plan_test.py",
+          "bash tests/adoption-reusable-plan.test.sh"
         ],
         "evidence": "Real Git fixtures prove exact exceptions, refusal defaults, unchanged check-only and first canonical allocation."
       },
