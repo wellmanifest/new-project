@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [0.20.158] - 2026-11-18
+
+- Admit explicitly reviewed, exact-base root-ignore exceptions for bootstrap
+  payload file leaves before first native allocation. Preserve unrelated rules,
+  reject excluded parents and stale or unsafe plans, and retain independent
+  writer and publication checks. [ticket-455]
+
 ## [0.20.157] - 2026-11-18
 
 - Preserve target-owned concurrency and idle-handoff policy during immutable

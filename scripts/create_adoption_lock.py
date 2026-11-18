@@ -1673,6 +1673,73 @@ def bootstrap_prerequisite_payloads(
     return seeds
 
 
+def bootstrap_ignore_payload(target_root: Path, payloads: dict[str, bytes], external: Path) -> tuple[bytes, bytes]:
+    """Append reviewed literal leaf exceptions; never reopen an ignored directory."""
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise SystemExit("duplicate bootstrap ignore plan key")
+            result[key] = value
+        return result
+
+    if target_root.resolve() in external.resolve().parents:
+        raise SystemExit("bootstrap ignore plan must be external")
+    raw = _bootstrap_plan_bytes(external, label="bootstrap ignore")
+    try:
+        plan = json.loads(raw, object_pairs_hook=unique)
+    except (ValueError, UnicodeDecodeError, RecursionError) as error:
+        raise SystemExit("invalid bootstrap ignore plan JSON") from error
+    if (not isinstance(plan, dict)
+            or set(plan) != {"schema", "baseSha", "gitignoreSha256", "paths"}
+            or plan.get("schema") != "new-project.bootstrap-ignore-plan/v1"
+            or not isinstance(plan.get("baseSha"), str)
+            or re.fullmatch(r"[0-9a-f]{40}", plan["baseSha"]) is None
+            or not isinstance(plan.get("gitignoreSha256"), str)
+            or re.fullmatch(r"[0-9a-f]{64}", plan["gitignoreSha256"]) is None
+            or not isinstance(plan.get("paths"), list) or not 1 <= len(plan["paths"]) <= 64):
+        raise SystemExit("unsupported bootstrap ignore plan shape")
+    if plan_git(target_root, "rev-parse", "HEAD").decode().strip() != plan["baseSha"]:
+        raise SystemExit("bootstrap ignore plan HEAD changed")
+    original = _bootstrap_plan_bytes(target_root / ".gitignore", label="root ignore")
+    committed = _git_show_blob(target_root, plan["baseSha"], ".gitignore")
+    if (committed.returncode or committed.stdout != original
+            or hashlib.sha256(original).hexdigest() != plan["gitignoreSha256"]):
+        raise SystemExit("bootstrap ignore plan requires exact committed root ignore bytes")
+    names = plan["paths"]
+    for name in names:
+        if (not isinstance(name, str)
+                or re.fullmatch(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*", name) is None
+                or name == ".gitignore" or name not in payloads):
+            raise SystemExit("bootstrap ignore exception must name an exact bootstrap payload leaf")
+        path = plan_path(target_root, name)
+        if path.exists() and not path.is_file():
+            raise SystemExit("bootstrap ignore exception must be a regular file leaf")
+        parents = {parent.as_posix() for parent in Path(name).parents if parent != Path(".")}
+        if any(not (target_root / parent).is_dir() for parent in parents):
+            raise SystemExit("bootstrap ignore plan requires existing parent directories")
+        if ignored_payload_targets(target_root, parents):
+            raise SystemExit("bootstrap ignore plan cannot reopen an excluded parent directory")
+    ignored = ignored_payload_targets(target_root, set(payloads))
+    if len(set(names)) != len(names) or set(names) != set(ignored):
+        raise SystemExit("bootstrap ignore plan must name every currently ignored payload exactly once")
+    # Root exceptions cannot override nested ignore rules. Refuse other rule
+    # sources instead of guessing a future Git result or changing their files.
+    trace = subprocess.check_output(
+        ["git", "check-ignore", "--verbose", "-z", "--stdin"], cwd=target_root,
+        env=plan_git_environment(), input=b"".join(name.encode() + b"\0" for name in sorted(names)))
+    fields = trace.split(b"\0")[:-1]
+    if len(fields) != 4 * len(names) or any(fields[i] != b".gitignore" for i in range(0, len(fields), 4)):
+        raise SystemExit("bootstrap ignore plan supports only root .gitignore exclusions")
+    content = payloads[".gitignore"]
+    if not content.startswith(original):
+        raise SystemExit("bootstrap ignore projection must preserve original bytes")
+    if content and not content.endswith(b"\n"):
+        content += b"\n"
+    return (content + b"\n# Explicit first-bootstrap payload leaves\n" + b"".join(
+        ("!/" + name + "\n").encode() for name in sorted(names)), raw)
+
+
 def bootstrap_ownership_paths(
     target_root: Path,
     manifest: dict[str, object],
@@ -2166,6 +2233,8 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
                         help="External exact-base/digest plan declaring only existing unowned prerequisites")
     parser.add_argument("--bootstrap-prerequisites-plan", type=Path,
                         help="External exact-base/digest plan for missing required target seed files")
+    parser.add_argument("--bootstrap-ignore-plan", type=Path,
+                        help="External exact-base/root-ignore digest plan for excluded bootstrap file leaves")
     parser.add_argument(
         "--check",
         action="store_true",
@@ -2183,7 +2252,7 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
             or args.allow_unpublished_for_testing or args.allocation_plan
             or args.bootstrap_native_adoption or args.migrate_wellman_scaffold
             or args.bootstrap_reusable_plan or args.bootstrap_ownership_plan
-            or args.bootstrap_prerequisites_plan or args.upgrade_ownership_plan
+            or args.bootstrap_prerequisites_plan or args.bootstrap_ignore_plan or args.upgrade_ownership_plan
             or _upgrade_ownership is not None):
         parser.error("bootstrap receipt refresh requires --check or --upgrade alone with a published installation")
 
@@ -2194,7 +2263,8 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
 
     if args.allocation_plan and (not args.check or args.allow_unpublished_for_testing
             or args.bootstrap_native_adoption or args.migrate_wellman_scaffold
-            or args.bootstrap_reusable_plan or args.bootstrap_ownership_plan or args.bootstrap_prerequisites_plan):
+            or args.bootstrap_reusable_plan or args.bootstrap_ownership_plan or args.bootstrap_prerequisites_plan
+            or args.bootstrap_ignore_plan):
         parser.error("--allocation-plan requires --check and a published native upgrade")
 
     if args.check and args.upgrade:
@@ -2209,6 +2279,8 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
         parser.error("a prerequisite ownership plan requires explicit fresh native bootstrap or scaffold migration")
     if args.bootstrap_prerequisites_plan and not (args.bootstrap_native_adoption or args.migrate_wellman_scaffold):
         parser.error("a prerequisite seed plan requires explicit first bootstrap or scaffold migration")
+    if args.bootstrap_ignore_plan and not (args.bootstrap_native_adoption or args.migrate_wellman_scaffold):
+        parser.error("an ignore plan requires explicit first bootstrap or scaffold migration")
 
     if re.fullmatch(r"[0-9a-f]{40}", args.source_revision) is None:
         parser.error("--source-revision must be a full lowercase 40-character commit SHA")
@@ -2378,6 +2450,12 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
     if packaging_errors and (args.allocation_plan or not args.check):
         raise SystemExit("invalid target packaging declaration: " + "; ".join(packaging_errors))
 
+    ignore_projection = None
+    ignore_plan = None
+    if args.bootstrap_ignore_plan:
+        ignore_projection, ignore_plan = bootstrap_ignore_payload(target_root, payloads, args.bootstrap_ignore_plan)
+        payloads[".gitignore"] = ignore_projection
+
     expected_lock = lock_content(
         target_root,
         args.source_revision,
@@ -2387,7 +2465,7 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
         publication_status,
     )
     ignored_targets = ignored_payload_targets(target_root, set(payloads))
-    if ignored_targets:
+    if ignored_targets and ignore_projection is None:
         raise SystemExit(
             "managed adoption targets are ignored by target Git rules; "
             "make them trackable before retrying: " + ", ".join(ignored_targets)
@@ -2494,6 +2572,10 @@ def _main(argv: list[str] | None = None, *, _upgrade_ownership: dict | None = No
         if bootstrap_ownership_paths(target_root, ownership_base,
                 {str(item["target"]) for item in files}, args.bootstrap_ownership_plan) != ownership:
             raise SystemExit("bootstrap ownership plan changed before writes")
+    if ignore_projection is not None:
+        original_payloads = {**payloads, ".gitignore": worktree_ignore_payload(target_root)}
+        if bootstrap_ignore_payload(target_root, original_payloads, args.bootstrap_ignore_plan) != (ignore_projection, ignore_plan):
+            raise SystemExit("bootstrap ignore plan changed before writes")
     if prerequisite_seeds:
         without_seeds = {name: data for name, data in payloads.items() if name not in prerequisite_seeds}
         if bootstrap_prerequisite_payloads(target_root, manifest, without_seeds,

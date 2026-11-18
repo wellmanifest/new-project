@@ -348,6 +348,43 @@ takeover binding against the reviewed base and installed managed payload.
 Neither acknowledgment nor allocation grants execution, approval or merge
 authority. Publish this source and its matching release before production use.
 
+### Explicit ignored file leaves on first bootstrap (0.20.158)
+
+An existing root `.gitignore` can exclude files needed to install the first
+native allocator. Default adoption still refuses these paths. A reviewed
+external `--bootstrap-ignore-plan /absolute/plan.json` may accompany
+`--bootstrap-native-adoption` or `--migrate-wellman-scaffold`:
+
+```json
+{
+  "schema": "new-project.bootstrap-ignore-plan/v1",
+  "baseSha": "<current committed target HEAD>",
+  "gitignoreSha256": "<SHA-256 of the exact committed root .gitignore bytes>",
+  "paths": [".aider.conf.yml", "project/new-ticket.sh"]
+}
+```
+
+The four fields are closed. The external regular file is bounded to 1 MiB;
+`paths` contains 1–64 distinct literal file paths and must name every currently
+ignored bootstrap payload exactly once. Only root `.gitignore` exclusions
+qualify. Each parent must already exist as a real, non-excluded directory;
+directory exceptions, wildcards, symlinks, arbitrary source files, nested or
+global ignore rules, stale HEAD/digests and uncommitted ignore edits refuse.
+Required missing seeds qualify only when separately supplied through the
+existing `--bootstrap-prerequisites-plan`. Ordinary upgrades cannot use this
+option.
+
+Use `--check` first. The installer preserves existing ignore bytes, adds its
+normal operational-state ignores and appends only `!/<exact-file>` exceptions.
+It rechecks the plan and original ignore bytes before installer effects; the
+normal bootstrap receipt binds the resulting `.gitignore`. No target writes
+occur in check mode. This does not make installation a cross-process atomic
+transaction: preserve partial installer state after any subsequent failure.
+The plan does not grant a writer, transfer ownership or approve publication.
+First native allocation still requires the exact bootstrap dirty digest and
+the usual owner/fencing checks. Later target implementation belongs in that
+allocated worktree and requires independent protected publication.
+
 ### Explicit missing prerequisites on first bootstrap (0.20.134)
 
 An existing project can lack the target-owned files required before its first
