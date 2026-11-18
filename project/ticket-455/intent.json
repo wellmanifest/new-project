@@ -1,0 +1,107 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-455",
+  "summary": "Support bounded ignore rules during first native bootstrap",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-455/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/create_adoption_lock.py",
+    "tests/bootstrap_ignore_plan_test.py",
+    "docs/STANDARD_UPGRADE.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "51ed0c734dba46bded4bae7cae3be718c5151f99",
+    "targetBranch": "main",
+    "outcome": "Allow explicit exact-base trackability prerequisites during first native bootstrap while preserving every unrelated ignore rule and source ownership boundary.",
+    "nonGoals": [
+      "No downstream application edits or hardware control",
+      "No ordinary upgrade ignore override, arbitrary source exceptions, or writer/publication grant"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 80,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Extend the existing immutable bootstrap planner with a bounded external exact-base/root-ignore digest plan. Append only exact currently ignored bootstrap payload leaves whose parent directories are already traversable. Recheck the plan and file bytes before effects; no general Git ignore rewrite.",
+      "components": [
+        {
+          "name": "bootstrap-adopter",
+          "paths": [
+            "scripts/create_adoption_lock.py",
+            "tests/bootstrap_ignore_plan_test.py"
+          ]
+        },
+        {
+          "name": "standard-release",
+          "paths": [
+            "docs/STANDARD_UPGRADE.md",
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Optional --bootstrap-ignore-plan for first adoption only"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Independently reviewed revert of standard; preserve target receipts and partial installer evidence."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python -m unittest discover -s tests -p bootstrap_ignore_plan_test.py"
+        ],
+        "evidence": "Real Git fixtures prove exact exceptions, refusal defaults, unchanged check-only and first canonical allocation."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python -m unittest discover -s tests -p bootstrap_ignore_plan_test.py"
+        ],
+        "evidence": "Stale base/digest, unsafe plans, symlinks, parent exclusions and arbitrary source paths fail closed."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Managed governance, published package checks and independent exact-head verification."
+      }
+    ]
+  }
+}
