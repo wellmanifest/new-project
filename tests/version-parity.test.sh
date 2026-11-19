@@ -191,7 +191,42 @@ def test_nested_subpackage_manifest_parity_and_refusals():
         assert report.errors == 1 and report.findings[0].code == "GOV-VERSION-001", report.findings
         print("  ✓ test_nested_subpackage_manifest_parity_and_refusals")
 
+def test_pep440_equivalent_python_declarations_pass():
+    # 0.1.0-dev (VERSION) and 0.1.0.dev0 (normalized by build tools) are the same release.
+    with tempfile.TemporaryDirectory() as tmp:
+        t = Path(tmp)
+        (t / "VERSION").write_text("0.1.0-dev\n", encoding="utf-8")
+        (t / "pyproject.toml").write_text('[project]\nname="demo"\nversion="0.1.0.dev0"\n', encoding="utf-8")
+        (t / "setup.py").write_text('version = "0.1.0.dev0"\n', encoding="utf-8")
+        pkg = t / "src" / "demo"
+        pkg.mkdir(parents=True)
+        (pkg / "__init__.py").write_text('__version__ = "0.1.0.dev0"\n', encoding="utf-8")
+        sub = t / "plugin"
+        sub.mkdir()
+        (sub / "pyproject.toml").write_text('[project]\nname="plugin"\nversion="2.0+01.Abc"\n', encoding="utf-8")
+        (sub / "__init__.py").write_text('__version__ = "2.0.0+1-abc"\n', encoding="utf-8")
+        report = Report(t)
+        check_version_parity(t, {}, report)
+        assert report.errors == 0, f"Expected 0 errors, got: {report.findings}"
+        print("  ✓ test_pep440_equivalent_python_declarations_pass")
+
+def test_pep440_distinct_python_and_exact_semver_still_fail():
+    with tempfile.TemporaryDirectory() as tmp:
+        t = Path(tmp)
+        (t / "VERSION").write_text("0.1.0\n", encoding="utf-8")
+        (t / "pyproject.toml").write_text('[project]\nname="demo"\nversion="0.1.0.dev0"\n', encoding="utf-8")
+        (t / "package.json").write_text(json.dumps({"name": "demo", "version": "0.1"}), encoding="utf-8")
+        report = Report(t)
+        check_version_parity(t, {}, report)
+        messages = " ".join(f.message for f in report.findings)
+        assert "pyproject.toml version '0.1.0.dev0'" in messages, messages
+        assert "package.json version '0.1'" in messages, messages
+        print("  ✓ test_pep440_distinct_python_and_exact_semver_still_fail")
+
+
 test_version_parity_pass()
+test_pep440_equivalent_python_declarations_pass()
+test_pep440_distinct_python_and_exact_semver_still_fail()
 test_pyproject_version_mismatch()
 test_setup_py_version_mismatch()
 test_package_json_mismatch()

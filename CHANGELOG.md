@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [0.20.163] - 2026-11-19
+
+- Compare Python version declarations (`pyproject.toml`, `setup.py`, static
+  `__version__`) with VERSION by PEP 440 normal form, so `0.1.0-dev` equals
+  `0.1.0.dev0` and `1.0` equals `1.0.0`. The literal comparison reported
+  GOV-VERSION-001 for equivalent versions in at least six adopters
+  (validation-attestation, skills, repair-lifecycle, product-lifecycle,
+  legal-lifecycle, code-dsl). Distinct versions and semver manifests
+  (`package.json`, `Cargo.toml`) are still compared exactly. [ticket-461]
+
 ## [0.20.162] - 2026-11-18
 
 - Admit a carrier-only follow-up commit, such as a delivery contract the gate
