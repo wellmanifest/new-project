@@ -520,6 +520,15 @@ assert module.standard_adoption_error({
 }) == 'initial standard adoption cannot declare target bindings'
 assert module.standard_adoption_error({
     'sourceRepository': 'wellmanifest/new-project',
+    'fromRevision': None,
+    'toRevision': 'b' * 40,
+    'managedTargetTakeovers': [{
+        'path': 'AGENTS.md',
+        'baseDigest': '0' * 64,
+    }],
+}) is None
+assert module.standard_adoption_error({
+    'sourceRepository': 'wellmanifest/new-project',
     'fromRevision': 'a' * 40,
     'toRevision': 'b' * 40,
     'targetOwnedTransitions': [{
@@ -1600,6 +1609,51 @@ PY
 git -C "$initial_hidden_target" add project/ticket-002/intent.json
 git -C "$initial_hidden_target" commit -qm 'try to hide replaced target content'
 expect_code GOV-SCOPE-001 run_check "$initial_hidden_target" --base "$initial_base"
+
+# Issue #631: an initial scaffold adoption takes over a replaced pre-existing
+# managed target only by its exact base digest; the path then leaves the budget.
+initial_takeover="$fixture/initial-adoption-takeover"
+cp -R "$initial_adoption" "$initial_takeover"
+python3 - "$initial_takeover" "$initial_base" good <<'PY'
+import hashlib
+import json
+import subprocess
+import sys
+
+root, base, mode = sys.argv[1], sys.argv[2], sys.argv[3]
+path = f'{root}/project/ticket-002/intent.json'
+intent = json.load(open(path, encoding='utf-8'))
+before = subprocess.run(['git', '-C', root, 'show', f'{base}:AGENTS.md'], check=True, capture_output=True).stdout
+digest = hashlib.sha256(before).hexdigest() if mode == 'good' else '0' * 64
+intent['allowedPaths'] = ['.governance/manifest.json', '.governance/manifest.lock.json']
+intent['delivery']['architecture']['components'][0]['paths'] = list(intent['allowedPaths'])
+intent['delivery']['budgets']['maxImplementationFiles'] = 1
+intent['delivery']['standardAdoption']['managedTargetTakeovers'] = [{'path': 'AGENTS.md', 'baseDigest': digest}]
+open(path, 'w', encoding='utf-8').write(json.dumps(intent, indent=2) + '\n')
+PY
+git -C "$initial_takeover" add project/ticket-002/intent.json
+git -C "$initial_takeover" commit -qm 'take over the replaced agents file by base digest'
+if ! run_check "$initial_takeover" --base "$initial_base" > "$fixture/initial-takeover.out"; then
+  cat "$fixture/initial-takeover.out"
+  exit 1
+fi
+grep -q '^GOV-PASS:' "$fixture/initial-takeover.out"
+
+initial_wrong_takeover="$fixture/initial-adoption-wrong-takeover"
+cp -R "$initial_adoption" "$initial_wrong_takeover"
+python3 - "$initial_wrong_takeover" "$initial_base" wrong <<'PY'
+import json
+import sys
+
+root = sys.argv[1]
+path = f'{root}/project/ticket-002/intent.json'
+intent = json.load(open(path, encoding='utf-8'))
+intent['delivery']['standardAdoption']['managedTargetTakeovers'] = [{'path': 'AGENTS.md', 'baseDigest': '0' * 64}]
+open(path, 'w', encoding='utf-8').write(json.dumps(intent, indent=2) + '\n')
+PY
+git -C "$initial_wrong_takeover" add project/ticket-002/intent.json
+git -C "$initial_wrong_takeover" commit -qm 'declare a takeover for other base content'
+expect_code GOV-SYNC-001 run_check "$initial_wrong_takeover" --base "$initial_base"
 
 initial_existing_lock="$fixture/initial-adoption-existing-lock"
 cp -R "$initial_adoption" "$initial_existing_lock"

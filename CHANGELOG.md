@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [0.20.165] - 2026-11-20
+
+- An initial standard adoption (`fromRevision: null`) may declare
+  `managedTargetTakeovers` for pre-existing targets that the managed payload
+  replaces (issue #631). A takeover is consumed only when the base content
+  digest matches exactly and the head carries the locked managed digest. The
+  path then belongs to the verified adoption and leaves the implementation
+  budget. Undeclared replacements still count as implementation changes, and
+  unmatched or unconsumed declarations fail GOV-SYNC-001. Restorations and
+  target-owned transitions still need a base lock. This unblocks scaffold
+  migrations of repositories that already carry agent host files
+  (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.aider.conf.yml`, `.cursor`,
+  Copilot instructions). [ticket-463]
+
 ## [0.20.164] - 2026-11-19
 
 - Resolve ticket activity in one `ActivityReadBatch` without per-ticket
