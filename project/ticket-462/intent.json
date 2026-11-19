@@ -1,0 +1,114 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-462",
+  "summary": "Share registry validation and commit-graph ancestry across tickets in one activity batch",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-462/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/ticket_activity.py",
+    "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+    "tests/ticket_activity_batch_test.py",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6738f734d7f19e178996c671c26e4165e8b21d4a",
+    "targetBranch": "main",
+    "outcome": "Ticket activity resolution inside one ActivityReadBatch validates the receipt registry once and answers ancestry inside the target history from one commit-graph read, so the worktree overlap checker finishes within the wellman check budget on large adopters with unchanged results.",
+    "nonGoals": [
+      "No change to standalone (unbatched) resolution, activity policy, receipt schema or terminal-outcome rules.",
+      "No weakening of batch exit revalidation; every observed relation is still re-answered from fresh Git state.",
+      "No change to worktree pair comparison or the 480 s wellman budget."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Batch-scoped memoization only: the validated registry is cached under its exact text and repositoryRef; from the second ancestry probe on a full commit ID a topological rev-list graph answers questions whose newer commit is inside it (absent older or unreadable newer is False, as merge-base). Non-SHA operands and commits outside every graph keep merge-base. Exit revalidation re-reads each graph root once. Source and bundled projection stay byte-identical and ship in one immutable release.",
+      "components": [
+        {
+          "name": "ticket-activity-batch",
+          "paths": [
+            "scripts/ticket_activity.py",
+            "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+            "tests/ticket_activity_batch_test.py"
+          ]
+        },
+        {
+          "name": "coupled-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert to accepted base 6738f734d7f19e178996c671c26e4165e8b21d4a; the previous immutable release remains available."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket_activity_batch_test.py"
+        ],
+        "evidence": "Batched equals standalone with distinct terminals, an unintegrated head and an off-target terminal; one registry validation per batch (40 before)."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/ticket_activity_batch_test.py"
+        ],
+        "evidence": "Graph ancestry equals merge-base on every pair of a merge and criss-cross history, unknown and unreadable commits included."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash tests/ticket-activity.test.sh",
+          "python3 tests/workspace_activity_test.py"
+        ],
+        "evidence": "283 -> 28 subprocesses for 40 distinct-terminal receipts; heyasa overlap checker 216 s -> 77 s with identical passing report."
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Existing invalidation tests still fail closed; hub gate and pull-request scope gate pass."
+      }
+    ]
+  }
+}

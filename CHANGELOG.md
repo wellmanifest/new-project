@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [0.20.164] - 2026-11-19
+
+- Resolve ticket activity in one `ActivityReadBatch` without per-ticket
+  registry validation or per-receipt `merge-base` processes. The receipt
+  registry is validated once per batch, and ancestry inside the target history
+  is answered from one `rev-list --topo-order --parents` read, re-read once at
+  exit. The overlap checker on heyasa (690 tickets, 730 receipts) drops from
+  216 s to 77 s under load and no longer exceeds the 480 s `wellman check`
+  budget (GOV-WORKTREE-CHECK-002). Results and fail-closed invalidation are
+  unchanged. [ticket-462]
+
 ## [0.20.163] - 2026-11-19
 
 - Compare Python version declarations (`pyproject.toml`, `setup.py`, static

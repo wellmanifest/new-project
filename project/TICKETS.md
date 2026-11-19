@@ -456,6 +456,7 @@ ich własnych repozytoriach. Osobny `TICKETS.md` nie przejmuje
 | **ticket-459** | [`README.md`](./ticket-459/README.md) | - | - | - | - | - |
 | **ticket-460** | [`README.md`](./ticket-460/README.md) | - | - |  [`ai-codex.md`](./ticket-460/ai-codex.md) | - | - |
 | **ticket-461** | [`README.md`](./ticket-461/README.md) | - | - | - | - | - |
+| **ticket-462** | [`README.md`](./ticket-462/README.md) | - | - | - | - | - |
 <!-- AUTO:TICKET_INDEX:END -->
 
 
