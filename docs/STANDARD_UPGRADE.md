@@ -212,29 +212,6 @@ independent protected publisher are still required for subsequent delivery.
 Do not replace customized or partial native governance with a scaffold. Restore
 it through its own pinned adopter and controller-owned recovery instead.
 
-### Taking over replaced targets in an initial adoption (0.20.165)
-
-A repository migrated from a scaffold often already has files that the managed
-payload replaces, such as `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`,
-`.aider.conf.yml`, `.cursor/rules/new-project-standard.mdc` and
-`.github/copilot-instructions.md`. Installing the standard does not erase
-target ownership, so each replaced path counts against the ticket's
-implementation budget unless the approved intent takes it over explicitly:
-
-```json
-"standardAdoption": {
-  "sourceRepository": "wellmanifest/new-project",
-  "fromRevision": null,
-  "toRevision": "<published-full-commit-sha>",
-  "managedTargetTakeovers": [{"path": "AGENTS.md", "baseDigest": "<sha256 of the base content>"}]
-}
-```
-
-A takeover is consumed only when the base content has exactly that digest and
-the head file has the locked managed digest. Unmatched or unused declarations
-fail GOV-SYNC-001. Restorations and target-owned transitions are still refused
-for an initial adoption.
-
 ### First allocation after scaffold migration
 
 From 0.20.100, local historical `ticket/*` refs may remain during the first

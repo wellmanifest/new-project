@@ -19,8 +19,7 @@
     "CHANGELOG.md",
     "governance/manifest.default.json",
     "governance/manifest.hub.json",
-    "packages/wellman/pyproject.toml",
-    "docs/STANDARD_UPGRADE.md"
+    "packages/wellman/pyproject.toml"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -39,9 +38,9 @@
       "No change to upgrade (fromRevision set) takeover semantics."
     ],
     "complexity": "S",
-    "estimatedMinutes": 45,
+    "estimatedMinutes": 30,
     "budgets": {
-      "maxImplementationFiles": 9,
+      "maxImplementationFiles": 8,
       "maxAffectedComponents": 2,
       "maxPublicInterfaceChanges": 0,
       "maxRuntimeDependencies": 0
@@ -55,8 +54,7 @@
           "paths": [
             "scripts/governance_check.py",
             "packages/wellman/src/wellman/_bundled/governance_check.py",
-            "tests/governance-validator.test.sh",
-            "docs/STANDARD_UPGRADE.md"
+            "tests/governance-validator.test.sh"
           ]
         },
         {
