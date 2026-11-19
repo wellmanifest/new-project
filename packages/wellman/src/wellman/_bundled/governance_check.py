@@ -3187,7 +3187,11 @@ def _pep440_key(value: str) -> tuple[Any, ...] | None:
     if match.group("post"):
         post = int(match.group("post_n1") or match.group("post_n2") or 0)
     dev = int(match.group("dev_n") or 0) if match.group("dev") else None
-    local = re.sub(r"[-_]", ".", match.group("local").lower()) if match.group("local") else None
+    local = None
+    if match.group("local"):
+        # Local segments compare numerically when all-digit (1.0+01 == 1.0+1), else case-insensitively.
+        local = tuple(int(part) if part.isdigit() else part
+                      for part in re.split(r"[-_.]", match.group("local").lower()))
     return (int(match.group("epoch") or 0), tuple(release), pre, post, dev, local)
 
 

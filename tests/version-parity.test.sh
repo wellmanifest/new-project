@@ -201,6 +201,10 @@ def test_pep440_equivalent_python_declarations_pass():
         pkg = t / "src" / "demo"
         pkg.mkdir(parents=True)
         (pkg / "__init__.py").write_text('__version__ = "0.1.0.dev0"\n', encoding="utf-8")
+        sub = t / "plugin"
+        sub.mkdir()
+        (sub / "pyproject.toml").write_text('[project]\nname="plugin"\nversion="2.0+01.Abc"\n', encoding="utf-8")
+        (sub / "__init__.py").write_text('__version__ = "2.0.0+1-abc"\n', encoding="utf-8")
         report = Report(t)
         check_version_parity(t, {}, report)
         assert report.errors == 0, f"Expected 0 errors, got: {report.findings}"
