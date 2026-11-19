@@ -38,7 +38,7 @@
       "No change to worktree pair comparison or the 480 s wellman budget."
     ],
     "complexity": "S",
-    "estimatedMinutes": 45,
+    "estimatedMinutes": 30,
     "budgets": {
       "maxImplementationFiles": 8,
       "maxAffectedComponents": 2,
