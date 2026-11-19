@@ -1,0 +1,100 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-461",
+  "summary": "Compare Python version declarations by PEP 440 normal form",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-461/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/governance_check.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "tests/version-parity.test.sh",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "14e8d4bfbee222579a24e6c23bca7a4f07133341",
+    "targetBranch": "main",
+    "outcome": "GOV-VERSION-001 stops reporting PEP 440-equivalent Python version declarations as mismatches while still rejecting distinct versions and inexact semver manifests.",
+    "nonGoals": [
+      "No change to which files are scanned or to the authoritative VERSION rule.",
+      "No relaxed comparison for package.json or Cargo.toml."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "A dependency-free PEP 440 equality key (epoch, release without trailing zeros, normalized pre/post/dev, local) is used only for Python declarations; unparseable values keep exact comparison.",
+      "components": [
+        {
+          "name": "version-parity",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "tests/version-parity.test.sh"
+          ]
+        },
+        {
+          "name": "coupled-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "scripts/governance_check.py: python_versions_equal"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert to accepted base 14e8d4bfbee222579a24e6c23bca7a4f07133341."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/version-parity.test.sh"
+        ],
+        "evidence": "Equivalent PEP 440 forms pass; distinct versions and inexact semver still fail."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Hub gate and pull-request scope gate pass."
+      }
+    ]
+  }
+}

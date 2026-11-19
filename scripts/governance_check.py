@@ -3161,6 +3161,44 @@ def _enclosing_subpackage_version(
     return None, None, False
 
 
+_PEP440_RE = re.compile(
+    r"^\s*v?(?:(?P<epoch>[0-9]+)!)?(?P<release>[0-9]+(?:\.[0-9]+)*)"
+    r"(?P<pre>[-_.]?(?P<pre_l>a|b|c|rc|alpha|beta|pre|preview)[-_.]?(?P<pre_n>[0-9]+)?)?"
+    r"(?P<post>(?:-(?P<post_n1>[0-9]+))|(?:[-_.]?(?P<post_l>post|rev|r)[-_.]?(?P<post_n2>[0-9]+)?))?"
+    r"(?P<dev>[-_.]?(?P<dev_l>dev)[-_.]?(?P<dev_n>[0-9]+)?)?"
+    r"(?:\+(?P<local>[a-z0-9]+(?:[-_.][a-z0-9]+)*))?\s*$",
+    re.IGNORECASE,
+)
+_PEP440_PRE = {"a": "a", "alpha": "a", "b": "b", "beta": "b", "c": "rc", "rc": "rc", "pre": "rc", "preview": "rc"}
+
+
+def _pep440_key(value: str) -> tuple[Any, ...] | None:
+    """PEP 440 equality key: 0.1.0-dev == 0.1.0.dev0 and 1.0 == 1.0.0, without dependencies."""
+    match = _PEP440_RE.match(value)
+    if match is None:
+        return None
+    release = [int(part) for part in match.group("release").split(".")]
+    while len(release) > 1 and release[-1] == 0:
+        release.pop()
+    pre = None
+    if match.group("pre"):
+        pre = (_PEP440_PRE[match.group("pre_l").lower()], int(match.group("pre_n") or 0))
+    post = None
+    if match.group("post"):
+        post = int(match.group("post_n1") or match.group("post_n2") or 0)
+    dev = int(match.group("dev_n") or 0) if match.group("dev") else None
+    local = re.sub(r"[-_]", ".", match.group("local").lower()) if match.group("local") else None
+    return (int(match.group("epoch") or 0), tuple(release), pre, post, dev, local)
+
+
+def python_versions_equal(left: str, right: str) -> bool:
+    """Python declarations are equal when their PEP 440 forms are equal; others compare exactly."""
+    left_key, right_key = _pep440_key(left), _pep440_key(right)
+    if left_key is None or right_key is None:
+        return left == right
+    return left_key == right_key
+
+
 def check_version_parity(root: Path, manifest: dict[str, Any], report: Report) -> None:
     try:
         version_path = safe_repo_path(root, "VERSION")
@@ -3195,7 +3233,7 @@ def check_version_parity(root: Path, manifest: dict[str, Any], report: Report) -
         if pyproject_path.is_file():
             content = pyproject_path.read_text(encoding="utf-8")
             pyproject_version = _extract_pyproject_version(content)
-            if pyproject_version and pyproject_version != raw_version:
+            if pyproject_version and not python_versions_equal(pyproject_version, raw_version):
                 report.add(
                     "GOV-VERSION-001",
                     f"Declared pyproject.toml version '{pyproject_version}' does not match authoritative VERSION '{raw_version}'.",
@@ -3211,7 +3249,7 @@ def check_version_parity(root: Path, manifest: dict[str, Any], report: Report) -
         if setup_path.is_file():
             content = setup_path.read_text(encoding="utf-8")
             setup_version = _extract_setup_py_version(content)
-            if setup_version and setup_version != raw_version:
+            if setup_version and not python_versions_equal(setup_version, raw_version):
                 report.add(
                     "GOV-VERSION-001",
                     f"Declared setup.py version '{setup_version}' does not match authoritative VERSION '{raw_version}'.",
@@ -3295,7 +3333,7 @@ def check_version_parity(root: Path, manifest: dict[str, Any], report: Report) -
                 if failed:
                     continue
                 if sub_v is not None and sub_source is not None:
-                    if found_v != sub_v:
+                    if not python_versions_equal(found_v, sub_v):
                         rel_p = rel(root, init_file)
                         report.add(
                             "GOV-VERSION-001",
@@ -3303,7 +3341,7 @@ def check_version_parity(root: Path, manifest: dict[str, Any], report: Report) -
                             f"Synchronize __version__ in {rel_p} with {sub_source} or use dynamic version discovery.",
                             [rel_p, sub_source],
                         )
-                elif found_v != raw_version:
+                elif not python_versions_equal(found_v, raw_version):
                     rel_p = rel(root, init_file)
                     report.add(
                         "GOV-VERSION-001",
