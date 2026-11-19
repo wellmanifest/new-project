@@ -42,7 +42,7 @@
     "budgets": {
       "maxImplementationFiles": 8,
       "maxAffectedComponents": 2,
-      "maxPublicInterfaceChanges": 0,
+      "maxPublicInterfaceChanges": 1,
       "maxRuntimeDependencies": 0
     },
     "architecture": {
@@ -69,7 +69,9 @@
         }
       ],
       "responsibilityChanges": false,
-      "interfaceChanges": [],
+      "interfaceChanges": [
+        "scripts/governance_check.py: standard_adoption_error and verify_managed_base accept initial managedTargetTakeovers"
+      ],
       "dataChanges": [],
       "ui": {
         "impact": "none",
