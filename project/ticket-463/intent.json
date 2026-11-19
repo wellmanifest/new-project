@@ -1,0 +1,108 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-463",
+  "summary": "Let the first scaffold adoption take over replaced managed targets by base digest (#631)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-463/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/governance_check.py",
+    "packages/wellman/src/wellman/_bundled/governance_check.py",
+    "tests/governance-validator.test.sh",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml",
+    "docs/STANDARD_UPGRADE.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "643421776d57769a8f0158f649e354cd0d48e745",
+    "targetBranch": "main",
+    "outcome": "An initial scaffold adoption can take over pre-existing targets replaced by the managed payload by exact base digest, so migrating a repository with agent host files fits the delivery budget without weakening it.",
+    "nonGoals": [
+      "No budget increase or bypass for undeclared replacements.",
+      "No restorations or target-owned transitions in an initial adoption.",
+      "No change to upgrade (fromRevision set) takeover semantics."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 45,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Reuse the existing managedTargetTakeovers binding for fromRevision null: verify_managed_base consumes a takeover only on an exact base digest match after the head managed digest is verified; standard_adoption_error still refuses restorations and transitions without a base lock. Source and bundled checker stay byte-identical and ship in one immutable release.",
+      "components": [
+        {
+          "name": "initial-adoption-takeovers",
+          "paths": [
+            "scripts/governance_check.py",
+            "packages/wellman/src/wellman/_bundled/governance_check.py",
+            "tests/governance-validator.test.sh",
+            "docs/STANDARD_UPGRADE.md"
+          ]
+        },
+        {
+          "name": "coupled-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert to accepted base 643421776d57769a8f0158f649e354cd0d48e745; the previous immutable release remains available."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "An initial adoption that takes over the replaced AGENTS.md by base digest passes with a 1-file budget; a mismatched digest fails GOV-SYNC-001; the existing undeclared and hidden-target fixtures still fail."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/governance-validator.test.sh"
+        ],
+        "evidence": "standard_adoption_error accepts initial takeovers and still refuses initial restorations."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "The repository gate passes."
+      }
+    ]
+  }
+}

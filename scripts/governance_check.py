@@ -1114,7 +1114,10 @@ def standard_adoption_error(value: Any) -> str | None:
         return "delivery standardAdoption managed target paths cannot be both takeover and restoration"
     if set(transition_paths) & (set(takeover_paths) | set(restoration_paths)):
         return "delivery standardAdoption target-owned transitions cannot overlap managed target bindings"
-    if value["fromRevision"] is None and (takeover_paths or restoration_paths or transition_paths):
+    # An initial adoption may take over pre-existing targets it replaces with
+    # the managed payload (issue #631); each takeover is bound to the exact
+    # base digest. Restorations and target-owned transitions need a base lock.
+    if value["fromRevision"] is None and (restoration_paths or transition_paths):
         return "initial standard adoption cannot declare target bindings"
     return None
 
@@ -4813,11 +4816,15 @@ def verify_managed_base(raw_path, base_content, base_strategies, base_hashes, in
                 )
             consumed_takeovers.add(raw_path)
     elif base_content is not None:
-        if initial:
-            # Installing the standard does not erase target ownership.
-            # A replaced path remains an ordinary implementation change.
-            return False
         observed_digest = content_digest(base_content)
+        if initial:
+            # Installing the standard does not erase target ownership: a
+            # replaced path stays an ordinary implementation change unless the
+            # approved intent explicitly takes over exactly this base content.
+            if takeovers.get(raw_path) != observed_digest:
+                return False
+            consumed_takeovers.add(raw_path)
+            return True
         if takeovers.get(raw_path) != observed_digest:
             raise ValueError(
                 f"new managed target already existed at base without matching takeover digest: {raw_path}"
