@@ -283,6 +283,69 @@ class BatchTests(unittest.TestCase):
                 self.assertTrue(activity.resolve(sibling_a, sibling_a / 'project/ticket-001', {'IN_PROGRESS'}).active)
                 self.git('worktree', 'lock', str(sibling_a))
 
+    def merged_history_with_distinct_terminals(self):
+        """One merge commit per ticket, plus an unmerged head and an unmerged terminal."""
+        receipts = []
+        for index, ticket in enumerate(self.tickets):
+            branch = f'ticket/{index + 1:03}-work'
+            self.git('switch', '-qc', branch, 'main')
+            self.git('commit', '-q', '--allow-empty', '-m', f'{ticket.name} work')
+            head = self.git('rev-parse', 'HEAD')
+            self.git('switch', '-q', 'main')
+            self.git('merge', '-q', '--no-ff', '-m', f'merge {ticket.name}', branch)
+            self.git('branch', '-qD', branch)
+            receipts.append([ticket.name, head, self.git('rev-parse', 'HEAD')])
+        self.git('switch', '-qc', 'side', 'main')
+        self.git('commit', '-q', '--allow-empty', '-m', 'unmerged side work')
+        side = self.git('rev-parse', 'HEAD')
+        self.git('switch', '-q', 'main')
+        receipts[4][1] = side      # head never integrated: stays active
+        receipts[6][2] = side      # terminal not on the target: stays active
+        self.registry.write_text(json.dumps({
+            'schema': 'new-project.terminal-receipt-registry/v1',
+            'repositoryRef': activity.repository_ref(self.root),
+            'receipts': [dict(receiptRef=f'receipt:test/{name}', ticket=name, outcome='merged',
+                              headSha=head, terminalSha=terminal, targetBranch='main',
+                              occurredAt='2026-09-14T08:00:00Z') for name, head, terminal in receipts]}))
+
+    def test_distinct_terminal_receipts_share_one_graph_and_one_registry_validation(self):
+        self.merged_history_with_distinct_terminals()
+        with patch.object(activity.subprocess, 'run', wraps=subprocess.run) as calls:
+            ordinary = [self.resolve(i) for i in range(len(self.tickets))]
+            baseline = calls.call_count
+        with patch.object(activity.subprocess, 'run', wraps=subprocess.run) as calls, \
+                patch.object(activity, '_validate_registry', wraps=activity._validate_registry) as validations:
+            with activity.ActivityReadBatch(self.root):
+                batched = [self.resolve(i) for i in range(len(self.tickets))]
+            optimized = calls.call_count
+        self.assertEqual(ordinary, batched)
+        self.assertEqual([r.ticket for r in batched if r.active], ['ticket-005', 'ticket-007'])
+        self.assertEqual(validations.call_count, 1)
+        # Every receipt has its own terminal commit. Ancestry is answered from
+        # one topological graph read, and re-answered from one fresh read on
+        # exit, instead of two merge-base processes per receipt and exit check.
+        self.assertLess(optimized, len(self.tickets), (baseline, optimized))
+        self.assertLess(optimized * 6, baseline, (baseline, optimized))
+        print(f'distinct-terminal subprocesses: standalone={baseline}, batch={optimized}, tickets={len(self.tickets)}')
+
+    def test_graph_ancestry_matches_merge_base_on_every_commit_pair(self):
+        self.merged_history_with_distinct_terminals()
+        self.git('switch', '-qc', 'criss', 'main~3')
+        self.git('commit', '-q', '--allow-empty', '-m', 'criss')
+        self.git('merge', '-q', '--no-ff', '-m', 'criss-cross', 'main~1')
+        tip = self.git('rev-parse', 'HEAD')
+        self.git('switch', '-q', 'main')
+        graph = activity._run_graph(self.root, tip)
+        commits = list(graph[1])[:30] + [self.git('rev-parse', 'side'), '0' * 40]
+        for older in commits:
+            for newer in commits:
+                expected = activity._run_ancestor(self.root, older, newer)
+                answer = activity._answer_from_graphs({tip: graph}, older, newer)
+                if answer is not None:
+                    self.assertEqual(answer, expected, (older, newer))
+        self.assertFalse(activity._answer_from_graphs({'1' * 40: None}, self.head, '1' * 40))
+        self.assertIsNone(activity._answer_from_graphs({tip: graph}, self.head, 'HEAD'))
+
 
 if __name__ == '__main__':
     unittest.main()
