@@ -30,6 +30,11 @@ def _refuse(message: str, *, returncode: int = 2) -> int:
     return returncode
 
 
+def _warn(message: str) -> int:
+    print(f"{DIAGNOSTIC} (warn-only): {message}", file=sys.stderr)
+    return 0
+
+
 def _load_update_policy(path: Path) -> dict[str, object]:
     try:
         adoption = json.loads(path.read_text(encoding="utf-8"))
@@ -45,7 +50,7 @@ def _load_update_policy(path: Path) -> dict[str, object]:
     if (
         not isinstance(updates.get("enabled"), bool)
         or updates.get("trigger") != "pre-commit"
-        or updates.get("action") != "prepare-and-abort"
+        or updates.get("action") not in {"prepare-and-abort", "warn-only"}
         or updates.get("executor") not in {"goal", "koru-goal"}
     ):
         raise ValueError("standard update policy contains unsupported values")
@@ -71,25 +76,36 @@ def run(
     if not policy["enabled"]:
         return 0
 
+    warn_only = policy["action"] == "warn-only"
     goal = shutil.which(goal_executable)
     if goal is None:
-        return _refuse("Goal is unavailable, so standard freshness cannot be verified")
-    goal_arguments = [
-        "governance",
-        "adopt",
-        "--latest",
-        "--pre-commit",
-        "--target-root",
-        str(target),
-        "--ticket",
-        ticket,
-    ]
+        msg = "Goal is unavailable, so standard freshness cannot be verified"
+        return _warn(msg) if warn_only else _refuse(msg)
+    if warn_only:
+        goal_arguments = [
+            "governance",
+            "adopt",
+            "--latest",
+            "--check",
+            "--target-root",
+            str(target),
+        ]
+    else:
+        goal_arguments = [
+            "governance",
+            "adopt",
+            "--latest",
+            "--pre-commit",
+            "--target-root",
+            str(target),
+            "--ticket",
+            ticket,
+        ]
     if policy["executor"] == "koru-goal":
         koru = shutil.which(koru_executable)
         if koru is None:
-            return _refuse(
-                "Koru is the configured standard update executor but is unavailable"
-            )
+            msg = "Koru is the configured standard update executor but is unavailable"
+            return _warn(msg) if warn_only else _refuse(msg)
         command = [
             koru,
             "goal",
@@ -105,7 +121,8 @@ def run(
     try:
         completed = subprocess.run(command, text=True, capture_output=True, check=False)
     except OSError:
-        return _refuse("Goal could not execute the standard update protocol")
+        msg = "Goal could not execute the standard update protocol"
+        return _warn(msg) if warn_only else _refuse(msg)
     if completed.stdout:
         print(completed.stdout, end="" if completed.stdout.endswith("\n") else "\n")
     if completed.stderr:
@@ -115,6 +132,10 @@ def run(
             file=sys.stderr,
         )
     if completed.returncode != 0:
+        if warn_only:
+            return _warn(
+                "Goal reported standard drift; schedule a standard-adoption ticket without blocking this commit"
+            )
         return _refuse(
             "Goal refused or prepared a standard update; review its evidence before retrying",
             returncode=completed.returncode,

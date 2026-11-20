@@ -103,6 +103,7 @@ assert ".governance/error/GOV-STANDARD-UPDATE.md" in bindings
 
 schema = json.loads((root / "governance/standard-adoption.schema.json").read_text())
 updates = schema["properties"]["updates"]
+assert updates["properties"]["action"]["enum"] == ["prepare-and-abort", "warn-only"]
 assert updates["properties"]["executor"]["enum"] == ["goal", "koru-goal"]
 default = json.loads((root / "governance/standard-adoption.default.json").read_text())
 assert default["updates"] == {
@@ -199,3 +200,60 @@ status=0
 python3 "$runner" --root "$drift_repo" --ticket ticket-058 \
   --goal-executable "$tmp/no-such-goal" > "$tmp/missing.out" 2> "$tmp/missing.err" || status=$?
 [[ "$status" -eq 2 ]] || fail "missing Goal must fail closed"
+
+# Opt-in warn-only action checks drift read-only and warns without aborting commits.
+cat > "$tmp/adopter/.governance/standard-adoption.json" <<'EOF'
+{
+  "updates": {
+    "enabled": true,
+    "trigger": "pre-commit",
+    "action": "warn-only",
+    "executor": "goal"
+  }
+}
+EOF
+rm -f "$tmp/goal.args"
+GOAL_ARGS_CAPTURE="$tmp/goal.args" GOAL_EXIT_CODE=3 PATH="$tmp/fakebin:$PATH" \
+  python3 "$runner" --root "$tmp/adopter" --ticket ticket-467 \
+  > "$tmp/warn.out" 2> "$tmp/warn.err"
+grep -Fxq "governance adopt --latest --check --target-root $tmp/adopter" \
+  "$tmp/goal.args" || fail "warn-only must invoke read-only Goal --check without --pre-commit"
+grep -Fq 'GOV-STANDARD-UPDATE-001 (warn-only):' "$tmp/warn.err" \
+  || fail "warn-only drift must emit advisory diagnostic on stderr"
+
+python3 "$runner" --root "$tmp/adopter" --ticket ticket-467 \
+  --goal-executable "$tmp/no-such-goal" > "$tmp/warn-missing.out" 2> "$tmp/warn-missing.err"
+grep -Fq 'GOV-STANDARD-UPDATE-001 (warn-only):' "$tmp/warn-missing.err" \
+  || fail "warn-only with missing Goal must emit advisory warning and exit 0"
+
+cat > "$tmp/adopter/.governance/standard-adoption.json" <<'EOF'
+{
+  "updates": {
+    "enabled": true,
+    "trigger": "pre-commit",
+    "action": "warn-only",
+    "executor": "koru-goal"
+  }
+}
+EOF
+rm -f "$tmp/koru.args"
+KORU_ARGS_CAPTURE="$tmp/koru.args" KORU_EXIT_CODE=1 PATH="$tmp/fakebin:$PATH" \
+  python3 "$runner" --root "$tmp/adopter" --ticket ticket-467 \
+  > "$tmp/warn-koru.out" 2> "$tmp/warn-koru.err"
+grep -Fxq "goal --project $tmp/adopter --goal-executable $tmp/fakebin/goal -- governance adopt --latest --check --target-root $tmp/adopter" \
+  "$tmp/koru.args" || fail "warn-only with koru-goal must run read-only Goal --check under Koru"
+
+cat > "$tmp/adopter/.governance/standard-adoption.json" <<'EOF'
+{
+  "updates": {
+    "enabled": true,
+    "trigger": "pre-commit",
+    "action": "ignore",
+    "executor": "goal"
+  }
+}
+EOF
+status=0
+PATH="$tmp/fakebin:$PATH" python3 "$runner" --root "$tmp/adopter" --ticket ticket-467 \
+  > "$tmp/badaction.out" 2> "$tmp/badaction.err" || status=$?
+[[ "$status" -eq 2 ]] || fail "unsupported action must fail closed"
