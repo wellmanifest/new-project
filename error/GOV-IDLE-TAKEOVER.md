@@ -48,7 +48,18 @@ change scope/owner. Frozen, expired and released leases refuse. Use the returned
 fencing values; old tokens no longer authorize a write. This POSIX operation
 does not establish review, merge or release provenance.
 
-Both operations hold the existing per-lease lock, revalidate state after
+`idle_takeover.py --root OWNED_CHECKOUT renew-owner --request FILE --actor ID
+--session ID` (0.20.166) accepts `new-project.owner-lease-renewal/v1` with the
+same fields as a checkpoint. It is the only continuation of a timed-out lease by
+its own holder: the same actor and session, the exact lease digest, revision
+and fence (so nobody claimed it in between), the canonical branch, and an
+expiry already in the past. It works without an idle policy, which a first
+native adoption does not have on its primary checkout yet. The lease keeps its
+owner and scope, gets its original duration again (bounded to 15–480 minutes)
+and advances revision and fence. A live lease, another identity or a stale CAS
+refuses. It grants neither review nor merge authority.
+
+All continuation operations hold the existing per-lease lock, revalidate state after
 preparation, and use anchored atomic storage. Prepare/result records in
 `.subactor/receipts/lease-continuation/` bind request identity and both lease
 hashes. An interrupted final receipt can replay the same claim; it cannot

@@ -11,6 +11,13 @@
   reservations still refuse. Previously such repositories (maskservice/viewer,
   maskservice/stacknet) could install the scaffold but never allocate their
   first native ticket ("first-allocation only"). [ticket-465]
+- `idle_takeover.py renew-owner` (`new-project.owner-lease-renewal/v1`) lets the
+  same owner continue its own timed-out lease under an exact digest/revision/fence
+  CAS and its canonical branch, without an idle policy. A first native adoption
+  has no policy on its primary yet, so an expired bootstrap lease previously had
+  no continuation at all. Owner and scope stay; the original duration (15–480
+  minutes) is granted again and revision and fence advance. STANDARD_UPGRADE.md
+  now documents the scaffold route's legacy-carrier admission. [ticket-466]
 
 ## [0.20.165] - 2026-11-20
 

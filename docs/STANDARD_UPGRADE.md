@@ -82,8 +82,9 @@ IDs and writes only the new ticket metadata in its canonical worktree. Apply
 the reviewed adoption in that worktree under a real fenced writer lease.
 
 A prior allocation reservation, another registered worktree or a local ticket
-branch still refuses this acknowledgement. The baseline scaffold route still
-requires no historical tickets. Peer admission, intended scope, WIP, exact
+branch still refuses this acknowledgement. The baseline scaffold route
+(`--migrate-wellman-scaffold`) applies the same exact-carrier observation and
+high-water reservation to committed historical tickets. Peer admission, intended scope, WIP, exact
 installed bytes, current HEAD, clone binding, product checks and protected
 independent publication remain required. Installer receipts grant no writer or
 merge authority.

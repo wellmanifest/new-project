@@ -1,0 +1,94 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-466",
+  "summary": "Same owner renews its expired lease (renew-owner)",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-466/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/idle_takeover.py",
+    "tests/idle_takeover_test.py",
+    "error/GOV-IDLE-TAKEOVER.md",
+    "docs/STANDARD_UPGRADE.md",
+    "CHANGELOG.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [
+    "ticket-465"
+  ],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "6ce7abc7995f63be04a0c6bc0c3cc4928b4a3f2c",
+    "targetBranch": "main",
+    "outcome": "The same owner can renew its own timed-out lease (idle_takeover.py renew-owner) under an exact CAS and its canonical branch, without an idle policy.",
+    "nonGoals": [
+      "Change takeover or recovery for other identities",
+      "Change the scaffold bootstrap (ticket-465)"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add renew-owner to the CAS-bound local lease continuation: same owner and session, expired lease, canonical branch, original duration bounded to 15-480 minutes, advanced revision and fence.",
+      "components": [
+        {
+          "name": "owner-lease-renewal",
+          "paths": [
+            "scripts/idle_takeover.py",
+            "tests/idle_takeover_test.py",
+            "error/GOV-IDLE-TAKEOVER.md"
+          ]
+        },
+        {
+          "name": "documentation",
+          "paths": [
+            "docs/STANDARD_UPGRADE.md",
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket commit; existing checkpoint, takeover and recovery are unchanged."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/idle_takeover_test.py"
+        ],
+        "evidence": "The same owner renews its expired lease with an advanced fence; another identity, a live lease and a stale CAS refuse; existing continuation tests pass."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "The repository gate passes."
+      }
+    ]
+  }
+}
