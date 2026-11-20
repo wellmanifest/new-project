@@ -4,8 +4,9 @@
 
 Another agent's ticket blocks the next task, but its writer has stopped. The
 idle takeover policy (`new-project.idle-takeover/v1`) lets an autonomous agent
-continue that ticket after `coordination.idleTakeover.idleMinutes` without
-observed activity, and keeps a board of every ticket's state for the next agent.
+continue that ticket when the idle threshold is reached and the lease has
+expired. The board also shows an idle ticket whose owner still holds a valid
+lease, including while that owner waits for independent CI.
 
 ## Meaning
 
@@ -115,7 +116,8 @@ Anything else is `NONCANONICAL_LAYOUT` with the failing parts in
 | State | Meaning | Action |
 | --- | --- | --- |
 | `ACTIVE` | Activity within `idleMinutes` or a live process. | Assist read-only or choose other work. |
-| `IDLE_TAKEOVER_ELIGIBLE` | Idle, canonical, takeable phase (`claimed`, `editing`, `validating`, `expired`), worktree present. | `idle_takeover.py takeover`. |
+| `IDLE_LEASE_LIVE` | Idle with an unexpired lease in a takeable phase. | Keep the current owner. Use the protected owner handoff for a deliberate transfer. |
+| `IDLE_TAKEOVER_ELIGIBLE` | Idle, canonical, expired lease in a takeable phase and worktree present. | `idle_takeover.py takeover`. |
 | `IDLE_FROZEN` | Publication frozen, dispatching or approved. | Never taken over; follow the PR's validator outcome. |
 | `IDLE_INTEGRATED` | Clean worktree whose HEAD is already in the target branch. | Release the lease; nothing to continue. |
 | `IDLE_NO_WORKTREE` | Lease without a registered ticket worktree. | Reconcile; never taken over. |

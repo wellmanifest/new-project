@@ -1,0 +1,77 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-468",
+  "summary": "Preserve a live writer lease while waiting for independent CI",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-468/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/idle_takeover.py",
+    "tests/idle_takeover_test.py",
+    "error/GOV-IDLE-TAKEOVER.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "940ab363b1cfb00e871a5ce7d5f6c16585941f55",
+    "targetBranch": "main",
+    "outcome": "A valid writer lease is preserved when a quiet owner waits for independent CI.",
+    "nonGoals": [
+      "Explicit owner handoff and expired-owner reconciliation retain their existing controllers."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Check the expiry before offering idle takeover for a valid writer phase and expose the live-lease refusal on the board.",
+      "components": [
+        {
+          "name": "idle-takeover",
+          "paths": [
+            "scripts/idle_takeover.py",
+            "tests/idle_takeover_test.py",
+            "error/GOV-IDLE-TAKEOVER.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "The idle board reports IDLE_LEASE_LIVE for an idle lease before its expiry."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket commit through the protected publication process."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -B -m unittest discover -s tests -p idle_takeover_test.py -q"
+        ],
+        "evidence": "Claimed, editing and validating leases keep their owner and their bytes despite elapsed inactivity."
+      }
+    ]
+  }
+}
