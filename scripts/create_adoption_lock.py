@@ -2140,8 +2140,7 @@ def bootstrap_refresh_observation(root: Path, names: set[str]) -> tuple[dict, di
     elif kind == "legacy-scaffold":
         bootstrap_scaffold_at_head(root, observation["head"])
         plan_path(root, "project")
-        if list((root / "project").glob("ticket-*")):
-            raise SystemExit("bootstrap refresh is first-allocation only")
+        unchanged_committed_legacy_carriers(root, observation["head"])
     else:
         raise SystemExit("unknown bootstrap kind")
     observation["historicalRefs"] = bootstrap_historical_refs(root, observation["head"])

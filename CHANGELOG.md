@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [0.20.166] - 2026-11-20
+
+- The scaffold bootstrap route (`--migrate-wellman-scaffold`) admits a
+  repository whose committed history already contains `project/ticket-*`
+  carriers, using the same exact-carrier observation as the fresh route.
+  Carriers must match the receipt-bound HEAD byte for byte. The first native
+  allocation reserves its identity above their high-water IDs. Changed,
+  missing, untracked or symlinked carriers, live ticket branches and prior
+  reservations still refuse. Previously such repositories (maskservice/viewer,
+  maskservice/stacknet) could install the scaffold but never allocate their
+  first native ticket ("first-allocation only"). [ticket-465]
+
 ## [0.20.165] - 2026-11-20
 
 - An initial standard adoption (`fromRevision: null`) may declare
