@@ -1,0 +1,27 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-467",
+  "summary": "Add opt-in warn-only pre-commit standard update action to reduce adoption churn",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-467/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/standard-adoption.schema.json",
+    "scripts/precommit_standard_update.py",
+    "tests/precommit-standard-update.test.sh",
+    "docs/STANDARD_UPGRADE.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}
