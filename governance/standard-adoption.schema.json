@@ -17,7 +17,7 @@
       "properties": {
         "enabled": {"type": "boolean"},
         "trigger": {"const": "pre-commit"},
-        "action": {"const": "prepare-and-abort"},
+        "action": {"enum": ["prepare-and-abort", "warn-only"]},
         "executor": {"enum": ["goal", "koru-goal"]}
       }
     },
