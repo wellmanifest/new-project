@@ -391,10 +391,9 @@ def bootstrap_owned_paths(root, manifest, expected_digest):
         raise ObservationError("Bootstrap acknowledgement is first-allocation only")
     historical_refs = bootstrap_historical_refs(root, head)
     preserved_worktrees = bootstrap_preserved_worktrees(root, head)
-    if kind == "fresh":
-        unchanged_committed_legacy_carriers(root, head)
-    elif list((root / "project").glob("ticket-*")):
-        raise ObservationError("Scaffold bootstrap acknowledgement is first-allocation only")
+    # Both routes preserve exact committed historical carriers; the allocator
+    # reserves the new identity above their high-water IDs.
+    unchanged_committed_legacy_carriers(root, head)
     lock = read_json(root / ".governance/manifest.lock.json")
     if (lock.get("standard", {}).get("publicationStatus") != "published"
             or lock.get("standard", {}).get("sourceRevision") != receipt.get("sourceRevision")):

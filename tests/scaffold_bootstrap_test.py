@@ -644,6 +644,22 @@ class FreshLegacyBootstrapTest(FreshBootstrapTest):
         self.assertNotEqual(result.returncode, 0)
 
 
+class ScaffoldLegacyBootstrapTest(BootstrapTest):
+    """A legacy scaffold with committed historical tickets reserves above them."""
+
+    legacy_carriers = True
+    expected_ticket = 'ticket-008'
+
+    test_historical_carriers_are_preserved_without_activity_claim = (
+        FreshLegacyBootstrapTest.test_historical_carriers_are_preserved_without_activity_claim)
+    test_modified_historical_carrier_is_refused = FreshLegacyBootstrapTest.test_modified_historical_carrier_is_refused
+    test_missing_historical_carrier_is_refused = FreshLegacyBootstrapTest.test_missing_historical_carrier_is_refused
+    test_untracked_carrier_is_refused = FreshLegacyBootstrapTest.test_untracked_carrier_is_refused
+    test_symlinked_carrier_is_refused = FreshLegacyBootstrapTest.test_symlinked_carrier_is_refused
+    test_live_ticket_branch_is_refused = FreshLegacyBootstrapTest.test_live_ticket_branch_is_refused
+    test_prior_allocation_reservation_is_refused = FreshLegacyBootstrapTest.test_prior_allocation_reservation_is_refused
+
+
 class UntrackedScaffoldTest(BootstrapTest):
     """The same real allocator and refusal cases with no manifest in HEAD."""
 

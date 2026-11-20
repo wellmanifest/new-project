@@ -1,0 +1,105 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-465",
+  "summary": "Scaffold bootstrap admits unchanged committed legacy ticket carriers",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-465/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/work_start_check.py",
+    "scripts/create_adoption_lock.py",
+    "tests/scaffold_bootstrap_test.py",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d757476c2df0e8d100ad257b2242dd9bb80c12d1",
+    "targetBranch": "main",
+    "outcome": "A legacy Wellman scaffold whose history contains project/ticket-* carriers can allocate its first native ticket above their high-water IDs, under the same exact-carrier observation as the fresh route.",
+    "nonGoals": [
+      "Change the fresh bootstrap route",
+      "Retire, rewrite or claim historical tickets"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 8,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Replace the scaffold-only 'first-allocation only' refusal for committed project/ticket-* with unchanged_committed_legacy_carriers in work_start_check and in the adopter's bootstrap refresh observation.",
+      "components": [
+        {
+          "name": "scaffold-legacy-carriers",
+          "paths": [
+            "scripts/work_start_check.py",
+            "scripts/create_adoption_lock.py",
+            "tests/scaffold_bootstrap_test.py"
+          ]
+        },
+        {
+          "name": "coupled-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket commit; adopters pinned to 0.20.165 are unaffected."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/scaffold_bootstrap_test.py ScaffoldLegacyBootstrapTest"
+        ],
+        "evidence": "A legacy scaffold with ticket-007 allocates ticket-008 and preserves the carrier; changed, missing, untracked, symlinked carriers, live ticket branches and prior reservations refuse."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/scaffold_bootstrap_test.py"
+        ],
+        "evidence": "Existing scaffold, fresh and untracked bootstrap cases still pass."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "The repository gate passes."
+      }
+    ]
+  }
+}
