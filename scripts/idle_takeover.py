@@ -638,8 +638,11 @@ def locked_takeover(
     return record
 
 
+RENEWAL_MINUTES = (15, 480)
+
+
 def continue_local_lease(root: Path, request_path: Path, actor: str, session: str,
-                         *, recover: bool, now: datetime | None = None) -> dict[str, Any]:
+                         *, recover: bool, renew: bool = False, now: datetime | None = None) -> dict[str, Any]:
     """Explicit local controller effects; never infer ownership from a snapshot."""
     if not IDENTITY_RE.fullmatch(actor) or not IDENTITY_RE.fullmatch(session):
         raise ValueError("Explicit actor and session required")
@@ -662,7 +665,9 @@ def continue_local_lease(root: Path, request_path: Path, actor: str, session: st
     common_fields = {"schema", "requestId"}
     fields = common_fields | ({"workstream", "restoration"} if recover else
                              {"ticket", "reservationSha256", "leaseRevision", "fencingToken"})
-    schema = "new-project.expired-reservation-recovery/v1" if recover else "new-project.owner-lease-checkpoint/v1"
+    schema = ("new-project.expired-reservation-recovery/v1" if recover else
+              "new-project.owner-lease-renewal/v1" if renew else "new-project.owner-lease-checkpoint/v1")
+    require(not (recover and renew), "Recovery and renewal are distinct operations")
     require(isinstance(request, dict) and set(request) == fields and request["schema"] == schema,
             "Invalid lease continuation request")
     require(isinstance(request["requestId"], str) and re.fullmatch(r"[a-z0-9][a-z0-9.-]{0,95}", request["requestId"]),
@@ -774,12 +779,22 @@ def continue_local_lease(root: Path, request_path: Path, actor: str, session: st
                         require(lease["pullRequest"] is None and lease["validatorRunId"] is None,
                                 "Publication ownership requires its protected controller")
                         return state["target"], board["policy"]["leaseMinutes"]
-                    require((actor, session) == (lease["ownerActor"], lease["ownerSession"])
-                            and heartbeat <= now < expiry, "Current live owner required")
+                    if renew:
+                        # The same owner continues its own reservation after a timeout;
+                        # nobody else claimed it (exact CAS) and its branch is unchanged.
+                        require((actor, session) == (lease["ownerActor"], lease["ownerSession"])
+                                and heartbeat <= now and expiry <= now,
+                                "Renewal requires the same owner of an expired, unreplaced lease")
+                    else:
+                        require((actor, session) == (lease["ownerActor"], lease["ownerSession"])
+                                and heartbeat <= now < expiry, "Current live owner required")
                     expected = primary / ".worktrees" / worktree_id
                     require(root.resolve() == expected and not root.is_symlink()
                             and git(root, "symbolic-ref", "--quiet", "HEAD") == lease["branchRef"],
                             "Checkpoint must bind the canonical owned branch")
+                    if renew:
+                        minutes = int((expiry - issued).total_seconds() // 60)
+                        return git(root, "rev-parse", "HEAD"), min(max(minutes, RENEWAL_MINUTES[0]), RENEWAL_MINUTES[1])
                     return git(root, "rev-parse", "HEAD"), None
 
                 head, minutes = observe_before_write()
@@ -801,6 +816,12 @@ def continue_local_lease(root: Path, request_path: Path, actor: str, session: st
                                    fencingToken=receipt["fencingToken"], previousReceiptRef=receipt["receiptRef"],
                                    eventSequence=current["eventSequence"] + 1)
                 current.update(headSha=head, heartbeatAt=moment)
+                if renew:
+                    # Advance the fence so tokens issued before the timeout stop authorizing writes.
+                    current.update(issuedAt=moment,
+                                   expiresAt=(now + timedelta(minutes=minutes)).isoformat().replace("+00:00", "Z"),
+                                   leaseRevision=current["leaseRevision"] + 1, fencingToken=current["fencingToken"] + 1,
+                                   eventSequence=current["eventSequence"] + 1)
                 if recover:
                     current.update(ownerActor=actor, ownerSession=session, phase="claimed", issuedAt=moment,
                                    expiresAt=(now + timedelta(minutes=minutes)).isoformat().replace("+00:00", "Z"),
@@ -848,7 +869,7 @@ def main(argv: list[str] | None = None) -> int:
     take.add_argument("--ticket", required=True)
     take.add_argument("--actor", required=True)
     take.add_argument("--session", required=True)
-    for command in ("recover-reservation", "checkpoint-owner"):
+    for command in ("recover-reservation", "checkpoint-owner", "renew-owner"):
         operation = commands.add_parser(command, help="explicit CAS-bound local lease continuation")
         operation.add_argument("--request", type=Path, required=True)
         operation.add_argument("--actor", required=True)
@@ -865,7 +886,8 @@ def main(argv: list[str] | None = None) -> int:
             record = takeover(args.root, args.ticket, args.actor, args.session)
         else:
             record = continue_local_lease(args.root, args.request, args.actor, args.session,
-                                          recover=args.command == "recover-reservation")
+                                          recover=args.command == "recover-reservation",
+                                          renew=args.command == "renew-owner")
         sys.stdout.write(json.dumps(record, indent=2, sort_keys=True) + "\n")
         return 0
     except PermissionError as error:

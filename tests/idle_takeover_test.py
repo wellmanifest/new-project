@@ -662,5 +662,54 @@ class LocalContinuationTest(unittest.TestCase):
         self.assertEqual(datetime.fromisoformat(after["heartbeatAt"]), now)
 
 
+    def renewal_request(self, value, request_id="renew-fixture"):
+        request = {"schema": "new-project.owner-lease-renewal/v1", "requestId": request_id,
+                   "ticket": "ticket-001", "reservationSha256": hashlib.sha256(self.case.record_path.read_bytes()).hexdigest(),
+                   "leaseRevision": value["leaseRevision"], "fencingToken": value["fencingToken"]}
+        self.request_path.write_text(json.dumps(request))
+
+    def expire_claimed(self):
+        self.restore_claimed()
+        value = json.loads(self.case.record_path.read_text())
+        now = datetime.now(timezone.utc)
+        value.update(issuedAt=(now - timedelta(minutes=130)).isoformat().replace("+00:00", "Z"),
+                     heartbeatAt=(now - timedelta(minutes=125)).isoformat().replace("+00:00", "Z"),
+                     expiresAt=(now - timedelta(minutes=10)).isoformat().replace("+00:00", "Z"))
+        self.case.record_path.write_text(json.dumps(value))
+        return value
+
+    def test_same_owner_renews_its_expired_lease_and_advances_the_fence(self):
+        before = self.expire_claimed()
+        self.renewal_request(before)
+        result = runtime.continue_local_lease(self.case.checkout, self.request_path, self.actor, self.session,
+                                              recover=False, renew=True)
+        after = json.loads(self.case.record_path.read_text())
+        self.assertEqual((after["ownerActor"], after["ownerSession"]), (before["ownerActor"], before["ownerSession"]))
+        self.assertGreater(datetime.fromisoformat(after["expiresAt"].replace("Z", "+00:00")), datetime.now(timezone.utc))
+        self.assertGreater(after["fencingToken"], before["fencingToken"])
+        self.assertEqual(result["writerEnvironment"]["NEW_PROJECT_FENCING_TOKEN"], str(after["fencingToken"]))
+        self.assertEqual(runtime.continue_local_lease(self.case.checkout, self.request_path, self.actor,
+                                                    self.session, recover=False, renew=True), result)
+
+    def test_renewal_refuses_another_owner_a_live_lease_and_a_stale_cas(self):
+        before = self.expire_claimed()
+        self.renewal_request(before, "renew-foreign")
+        with self.assertRaises(PermissionError):
+            runtime.continue_local_lease(self.case.checkout, self.request_path, self.actor, "foreign",
+                                         recover=False, renew=True)
+        stale = dict(before, fencingToken=before["fencingToken"] - 1)
+        self.renewal_request(stale, "renew-stale")
+        with self.assertRaises(PermissionError):
+            runtime.continue_local_lease(self.case.checkout, self.request_path, self.actor, self.session,
+                                         recover=False, renew=True)
+        live = json.loads(self.case.record_path.read_text())
+        live["expiresAt"] = (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat().replace("+00:00", "Z")
+        self.case.record_path.write_text(json.dumps(live))
+        self.renewal_request(live, "renew-live")
+        with self.assertRaises(PermissionError):
+            runtime.continue_local_lease(self.case.checkout, self.request_path, self.actor, self.session,
+                                         recover=False, renew=True)
+
+
 if __name__ == "__main__":
     unittest.main()
