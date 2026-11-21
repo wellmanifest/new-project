@@ -170,14 +170,20 @@ def transaction(root, primary, request, lease_raw, intent_raw, actor, session, s
 
 
 def amend(root, request_path, actor, session, *, apply=False):
+    return apply_scope_transaction(root, request_path, actor, session, apply=apply,
+                                   operation='bootstrap-packaging-scope',
+                                   load_request=request_value, derive=transaction)
+
+
+def apply_scope_transaction(root, request_path, actor, session, *, apply, operation, load_request, derive):
     root = Path(root).absolute()
     registrations = start.worktrees(root)
     _, primary, common = allocation.context(root)
     require(root == root.resolve() == primary / '.worktrees' / root.name
             and any(row['worktree'] == str(root) for row in registrations), 'canonical_registered_checkout_required')
-    request = request_value(Path(request_path), primary)
+    request = load_request(Path(request_path), primary)
     request_digest = sha(encoded({'request': request, 'actor': actor, 'session': session}))
-    journal_dir = primary / '.subactor/receipts/bootstrap-packaging-scope'
+    journal_dir = primary / '.subactor/receipts' / operation
     journal_name = request['requestId'] + '.json'
     lease_name = root.name + '.json'
     intent_dir = root / 'project' / request['ticket']
@@ -200,9 +206,9 @@ def amend(root, request_path, actor, session, *, apply=False):
             else:
                 before_lease, before_intent = current_lease, current_intent
                 stamp = datetime.now(timezone.utc).isoformat(timespec='microseconds').replace('+00:00', 'Z')
-            after_lease, after_intent, transition = transaction(
+            after_lease, after_intent, transition = derive(
                 root, primary, request, before_lease, before_intent, actor, session, stamp)
-            record = {'schema': 'new-project.bootstrap-packaging-scope-receipt/v1',
+            record = {'schema': f'new-project.{operation}-receipt/v1',
                       'requestSha256': request_digest, 'stamp': stamp,
                       'beforeLease': base64.b64encode(before_lease).decode(),
                       'beforeIntent': base64.b64encode(before_intent).decode(),
@@ -218,14 +224,14 @@ def amend(root, request_path, actor, session, *, apply=False):
                     store.atomic_at(jfd, journal_name + '.prepared', encoded(record), exclusive=True)
                 # Re-observe pins, packaging bytes and competing reservations at
                 # the effect boundary; the durable preparation is not authority.
-                require(transaction(root, primary, request, before_lease, before_intent,
+                require(derive(root, primary, request, before_lease, before_intent,
                                     actor, session, stamp) == (after_lease, after_intent, transition),
                         'scope_observation_changed')
                 verify(); verify_intent(); verify_journal()
                 require(store.read_at(lfd, lease_name, private=True) == current_lease
                         and store.read_at(ifd, 'intent.json', private=True) == current_intent, 'scope_cas_changed')
                 require(store.git(root, 'rev-parse', 'HEAD') == request['headSha'], 'head_changed_before_apply')
-                # Fence the prior reservation before exposing its expanded intent.
+                # Fence the prior reservation before changing the intent.
                 if current_lease == before_lease:
                     store.atomic_at(lfd, lease_name, after_lease)
                 if current_intent == before_intent:

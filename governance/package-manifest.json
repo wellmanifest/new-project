@@ -2,6 +2,12 @@
   "schema": "new-project.package-manifest/v1",
   "files": [
     {
+      "source": "scripts/bootstrap_adoption_split.py",
+      "target": ".governance/bootstrap_adoption_split.py",
+      "strategy": "managed",
+      "executable": true
+    },
+    {
       "source": "scripts/bootstrap_packaging_scope.py",
       "target": ".governance/bootstrap_packaging_scope.py",
       "strategy": "managed",
