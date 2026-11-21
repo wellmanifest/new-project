@@ -2,7 +2,7 @@
 """Idle ticket takeover and the autonomy state board (new-project.idle-takeover/v1).
 
 A ticket whose writer shows no activity for ``coordination.idleTakeover.idleMinutes``
-may be taken over by another agent through the change-lease CAS:
+may be taken over after the lease expires through the change-lease CAS:
 ``expire`` -> ``release`` -> a fresh ``claimed`` lease with a higher fencing token.
 The policy lives only in the governance manifest; without it takeover is disabled.
 
@@ -306,6 +306,9 @@ def classify(lease, phase, invalid, layout_record, tree, dirty, pids, last, now,
         return "IDLE_INTEGRATED"
     if phase not in rules["takeover"]:
         return "IDLE_NOT_TAKEABLE"
+    expires_at = utc(lease["expiresAt"])
+    if phase != "expired" and expires_at is not None and now < expires_at:
+        return "IDLE_LEASE_LIVE"
     return "IDLE_TAKEOVER_ELIGIBLE"
 
 

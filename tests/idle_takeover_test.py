@@ -72,7 +72,7 @@ class IdleTakeoverTest(unittest.TestCase):
                  "workstream": "governance", "scopeHash": "1" * 64, "branchRef": f"refs/heads/{BRANCH}",
                  "worktreeId": WORKTREE_ID, "ownerActor": "agent:previous", "ownerSession": "session-previous",
                  "phase": "claimed", "leaseRevision": 1, "fencingToken": 1, "issuedAt": stamp(issued),
-                 "expiresAt": stamp(issued + timedelta(hours=2)), "heartbeatAt": stamp(issued),
+                 "expiresAt": stamp(self.now - timedelta(minutes=1)), "heartbeatAt": stamp(issued),
                  "headSha": None, "pullRequest": None, "validatorRunId": None, "publicationFrozen": False,
                  "planHash": "2" * 64, "previousReceiptRef": None, "eventSequence": 1}
         lease.update(changes)
@@ -108,6 +108,20 @@ class IdleTakeoverTest(unittest.TestCase):
         finally:
             process.kill()
             process.wait()
+
+    def test_idle_live_lease_refuses_takeover_without_changing_the_owner(self):
+        expiry = stamp(self.now + timedelta(minutes=30))
+        head = git(self.worktree, "rev-parse", "HEAD")
+        for phase in ("claimed", "editing", "validating"):
+            with self.subTest(phase=phase):
+                self.write_lease(phase=phase, expiresAt=expiry, headSha=head)
+                original = self.lease_path.read_bytes()
+                self.assertEqual(self.entry()["state"], "IDLE_LEASE_LIVE")
+                with self.assertRaisesRegex(PermissionError, "IDLE_LEASE_LIVE"):
+                    runtime.takeover(self.primary, "ticket-001", "agent:next", "session-next", self.now)
+                self.assertEqual(self.lease_path.read_bytes(), original)
+        trace = self.primary / ".subactor/receipts/idle-takeover/ticket-001.jsonl"
+        self.assertFalse(trace.exists())
 
     def test_idle_takeover_moves_lease_through_cas_and_writes_board(self):
         self.assertEqual(self.entry()["state"], "IDLE_TAKEOVER_ELIGIBLE")
