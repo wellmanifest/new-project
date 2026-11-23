@@ -20,7 +20,19 @@
           "headSha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
           "terminalSha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
           "targetBranch": {"type": "string", "pattern": "^[A-Za-z0-9._/-]+$"},
-          "occurredAt": {"type": "string", "format": "date-time"}
+          "occurredAt": {"type": "string", "format": "date-time"},
+          "decision": {
+            "description": "Owner/controller decision for a ticket whose pull request was closed without merge; required by owner-decision verification.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["pullRequest", "pullRequestState", "decidedBy", "decisionRef"],
+            "properties": {
+              "pullRequest": {"type": "integer", "minimum": 1},
+              "pullRequestState": {"const": "closed-unmerged"},
+              "decidedBy": {"type": "string", "pattern": "^[A-Za-z0-9._:\\[\\]-]{1,100}$"},
+              "decisionRef": {"type": "string", "pattern": "^\\S{1,500}$"}
+            }
+          }
         }
       }
     }

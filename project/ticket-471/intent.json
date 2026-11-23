@@ -1,0 +1,85 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-471",
+  "summary": "Cancelled terminal outcome with owner-decision verification",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-471/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/ticket_activity.py",
+    "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+    "governance/ticket-activity.json",
+    "governance/ticket-activity.schema.json",
+    "governance/terminal-receipt-registry.schema.json",
+    "tests/ticket-activity.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c9bb73ce5ce861e78c26619e36e5b016fda56e2d",
+    "targetBranch": "main",
+    "outcome": "Managed resolvers can verify a cancelled terminal receipt (owner-decision) for a ticket whose pull request the owner closed without merge, releasing its scope reservation without a closure commit or branch deletion; enabling the outcome in the default policy is a later, separate release.",
+    "nonGoals": [
+      "Deleting or discarding the unmerged branch (stays with BRANCH_INTENT_RECONCILIATION.md).",
+      "Fetching pull request state from a forge; the controller supplies the decision.",
+      "Listing `cancelled` in the managed default governance/ticket-activity.json: older resolvers reject unknown verification kinds, and the overlap inspector reads every checkout's policy with its own resolver (two-phase rollout).",
+      "Documenting the cancelled outcome in docs/information/work-registration.md; split into the dependent follow-up that enables the outcome in the default policy."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add terminal outcome cancelled with verification owner-decision to the managed ticket activity policy; a receipt carries a decision binding the closed-unmerged PR, actor and reference, and is verified while its head exists and no ticket branch has advanced past it (work-registration step 6, issue #661 option A).",
+      "components": [
+        {
+          "name": "ticket-activity",
+          "paths": [
+            "scripts/ticket_activity.py",
+            "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+            "governance/ticket-activity.schema.json",
+            "governance/terminal-receipt-registry.schema.json",
+            "tests/ticket-activity.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Terminal receipts accept an optional decision object; the policy verification enum gains owner-decision (opt-in, not enabled by default)."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket commit through the protected publication process; recorded cancelled receipts then stop verifying and reservations return to active."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/ticket-activity.test.sh"
+        ],
+        "evidence": "A closed-unmerged decision releases the reservation; missing decision, open PR, unknown head and decision on a merged receipt are rejected; resumed ticket work re-activates the reservation; branch is preserved."
+      }
+    ]
+  }
+}
