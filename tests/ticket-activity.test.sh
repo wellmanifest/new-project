@@ -400,5 +400,103 @@ PY
 
 echo "ticket activity: git-derived terminal resolution OK"
 
+# Owner-decision cancellation: the PR was closed without merge, the ticket head
+# never reaches main, and the reservation is released only while no ticket
+# branch has moved past the decided head.
+cancel="$fixture/cancel"
+git init --quiet --initial-branch=main "$cancel"
+git -C "$cancel" config user.email activity-test@example.invalid
+git -C "$cancel" config user.name activity-test
+mkdir -p "$cancel/governance" "$cancel/project/ticket-002"
+cp "$repo_root/governance/ticket-activity.json" "$cancel/governance/ticket-activity.json"
+printf '%s\n' '# sample' > "$cancel/README.md"
+git -C "$cancel" add .
+git -C "$cancel" commit --quiet -m base
+git -C "$cancel" switch --quiet -c ticket/002-rejected
+printf '%s\n' '- **Status**: IN_PROGRESS' > "$cancel/project/ticket-002/README.md"
+printf '%s\n' rejected > "$cancel/rejected.txt"
+git -C "$cancel" add .
+git -C "$cancel" commit --quiet -m rejected-work
+cancel_head="$(git -C "$cancel" rev-parse HEAD)"
+git -C "$cancel" switch --quiet main
+printf '%s\n' unrelated >> "$cancel/README.md"
+git -C "$cancel" commit --quiet -am unrelated
+cancel_terminal="$(git -C "$cancel" rev-parse HEAD)"
+git -C "$cancel" switch --quiet ticket/002-rejected
+write_cancel_receipt() {
+  python3 - "$1" "$2" "$cancel_head" "$cancel_terminal" "$3" <<'PY'
+import json, sys
+path, ref, head, terminal, mode = sys.argv[1:]
+value = {
+    "receiptRef": ref, "ticket": "ticket-002", "outcome": "cancelled",
+    "headSha": head, "terminalSha": terminal, "targetBranch": "main",
+    "occurredAt": "2026-11-23T12:00:00Z",
+    "decision": {"pullRequest": 7, "pullRequestState": "closed-unmerged",
+                 "decidedBy": "owner", "decisionRef": "https://example.invalid/pull/7#closed"},
+}
+if mode == "no-decision":
+    del value["decision"]
+elif mode == "still-open":
+    value["decision"]["pullRequestState"] = "open"
+elif mode == "unknown-head":
+    value["headSha"] = "1" * 40
+elif mode == "merged-with-decision":
+    value["outcome"] = "merged"
+open(path, "w", encoding="utf-8").write(json.dumps(value) + "\n")
+PY
+}
+cancel_registry="$cancel/.git/new-project/terminal-receipts.json"
+# Phase one of the rollout: the shipped default policy does not list
+# `cancelled`, so a cancelled receipt is refused until the policy enables it.
+write_cancel_receipt "$fixture/cancel-disabled.json" "receipt:test/cancel-disabled/1" valid
+status=0
+python3 "$repo_root/scripts/ticket_activity.py" --root "$cancel" record \
+  --receipt "$fixture/cancel-disabled.json" > "$fixture/cancel-disabled.out" 2> "$fixture/cancel-disabled.err" || status=$?
+test "$status" -eq 2
+test ! -e "$cancel_registry"
+python3 - "$cancel/governance/ticket-activity.json" <<'PY'
+import json, sys
+path = sys.argv[1]
+value = json.load(open(path, encoding="utf-8"))
+value["terminalOutcomes"]["cancelled"] = {"verification": "owner-decision", "releasesReservation": True}
+open(path, "w", encoding="utf-8").write(json.dumps(value, indent=2) + "\n")
+PY
+for mode in no-decision still-open unknown-head merged-with-decision; do
+  write_cancel_receipt "$fixture/cancel-$mode.json" "receipt:test/cancel-$mode/1" "$mode"
+  status=0
+  python3 "$repo_root/scripts/ticket_activity.py" --root "$cancel" record \
+    --receipt "$fixture/cancel-$mode.json" > "$fixture/cancel-$mode.out" 2> "$fixture/cancel-$mode.err" || status=$?
+  test "$status" -eq 2 || { echo "cancel receipt '$mode' must be rejected" >&2; exit 1; }
+  test ! -e "$cancel_registry"
+done
+status=0
+python3 "$repo_root/scripts/ticket_activity.py" --root "$cancel" resolve \
+  --ticket-dir "$cancel/project/ticket-002" --active-status IN_PROGRESS \
+  > "$fixture/cancel-before.json" || status=$?
+test "$status" -eq 0
+grep -q '"active": true' "$fixture/cancel-before.json"
+write_cancel_receipt "$fixture/cancel-valid.json" "receipt:test/cancel-valid/1" valid
+python3 "$repo_root/scripts/ticket_activity.py" --root "$cancel" record \
+  --receipt "$fixture/cancel-valid.json" > "$fixture/cancel-recorded.json"
+status=0
+python3 "$repo_root/scripts/ticket_activity.py" --root "$cancel" resolve \
+  --ticket-dir "$cancel/project/ticket-002" --active-status IN_PROGRESS \
+  > "$fixture/cancel-released.json" || status=$?
+test "$status" -eq 1
+grep -q '"authority": "terminal-receipt"' "$fixture/cancel-released.json"
+grep -q 'receipt:test/cancel-valid/1' "$fixture/cancel-released.json"
+# The rejected work is preserved: the ticket branch still points at it.
+test "$(git -C "$cancel" rev-parse ticket/002-rejected)" = "$cancel_head"
+# Resuming the ticket after the decision re-activates its reservation.
+printf '%s\n' resumed >> "$cancel/rejected.txt"
+git -C "$cancel" commit --quiet -am resumed
+status=0
+python3 "$repo_root/scripts/ticket_activity.py" --root "$cancel" resolve \
+  --ticket-dir "$cancel/project/ticket-002" --active-status IN_PROGRESS \
+  > "$fixture/cancel-resumed.json" || status=$?
+test "$status" -eq 0
+grep -q '"active": true' "$fixture/cancel-resumed.json"
+echo "ticket activity: owner-decision cancellation OK"
+
 # The overlap inspector batches the same resolver; exercise its isolation fence.
 python3 "$repo_root/tests/ticket_activity_batch_test.py"
