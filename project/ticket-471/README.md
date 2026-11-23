@@ -20,7 +20,9 @@ Phase one only: the default policy does not list `cancelled` yet. Resolvers that
 predate this change reject a policy naming `owner-decision`, and the overlap
 inspector reads every checkout's policy with its own resolver (observed while
 developing this ticket). A follow-up enables the outcome once every managed copy,
-including the bundled Wellman runtime, is updated.
+including the bundled Wellman runtime, is updated, and documents the outcome in
+`docs/information/work-registration.md` (split out to keep this slice within
+the S budget).
 
 ## Kryteria Odbioru (Acceptance Criteria)
 - [x] AC-01: With `cancelled: owner-decision` in the policy, a receipt with a closed-unmerged decision releases the reservation and the ticket branch is preserved; with the shipped default policy the receipt is refused.

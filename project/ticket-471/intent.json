@@ -17,8 +17,7 @@
     "governance/ticket-activity.json",
     "governance/ticket-activity.schema.json",
     "governance/terminal-receipt-registry.schema.json",
-    "tests/ticket-activity.test.sh",
-    "docs/information/work-registration.md"
+    "tests/ticket-activity.test.sh"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -34,10 +33,11 @@
     "nonGoals": [
       "Deleting or discarding the unmerged branch (stays with BRANCH_INTENT_RECONCILIATION.md).",
       "Fetching pull request state from a forge; the controller supplies the decision.",
-      "Listing `cancelled` in the managed default governance/ticket-activity.json: older resolvers reject unknown verification kinds, and the overlap inspector reads every checkout's policy with its own resolver (two-phase rollout)."
+      "Listing `cancelled` in the managed default governance/ticket-activity.json: older resolvers reject unknown verification kinds, and the overlap inspector reads every checkout's policy with its own resolver (two-phase rollout).",
+      "Documenting the cancelled outcome in docs/information/work-registration.md; split into the dependent follow-up that enables the outcome in the default policy."
     ],
     "complexity": "S",
-    "estimatedMinutes": 60,
+    "estimatedMinutes": 30,
     "budgets": {
       "maxImplementationFiles": 5,
       "maxAffectedComponents": 1,
@@ -55,8 +55,7 @@
             "packages/wellman/src/wellman/_bundled/ticket_activity.py",
             "governance/ticket-activity.schema.json",
             "governance/terminal-receipt-registry.schema.json",
-            "tests/ticket-activity.test.sh",
-            "docs/information/work-registration.md"
+            "tests/ticket-activity.test.sh"
           ]
         }
       ],
