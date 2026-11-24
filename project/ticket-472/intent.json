@@ -1,0 +1,26 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-472",
+  "summary": "Enable the cancelled outcome in the default ticket activity policy",
+  "workstream": "governance",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-472/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "governance/ticket-activity.json",
+    "docs/information/work-registration.md",
+    "tests/ticket-activity.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null
+}

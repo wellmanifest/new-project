@@ -129,6 +129,15 @@ flowchart LR
    Never create a repository closure commit. Preserve terminal request history.
    Cancellation preserves unpublished material commits without requiring a new
    PR; an existing PR identity and its observed head remain bound to the record.
+   The managed resolver implements this as outcome `cancelled` with
+   `owner-decision` verification: the controller records, through
+   `ticket_activity.py record`, a terminal receipt whose `headSha` is the closed
+   PR head, `terminalSha` the observed target tip, and whose `decision` binds
+   `pullRequest`, `pullRequestState: closed-unmerged`, `decidedBy` and a
+   `decisionRef`. The receipt releases the reservation while the head exists and
+   no ticket branch has advanced past it; resumed work re-activates it. Recording
+   a receipt is the controller's authority; the receipt itself is evidence only.
+   Resolvers older than wellman ticket-125 reject this policy and fail closed.
 
 The outbox contains only outstanding operations: `ensure-issue`,
 `ensure-planfile-ticket`, `ensure-worktree`, `ensure-pr`, `sync-terminal`.
