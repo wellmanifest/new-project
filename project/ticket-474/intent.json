@@ -1,0 +1,89 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-474",
+  "summary": "Align protected delivery guidance with human manual-owner-override",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-474/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "AGENTS.md",
+    "template/files/AGENTS.template.md",
+    "scripts/host_publication_policy.py",
+    "tests/host_publication_policy_test.py",
+    "tests/agent-hosts.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "63302fc302797ea67c7d25e688d1fc8d379f0fe2",
+    "targetBranch": "main",
+    "outcome": "Align protected delivery host guidance and policy tests with authenticated human manual-owner-override on autonomy failure.",
+    "nonGoals": [
+      "Granting AI agents review or merge authority.",
+      "Modifying template/files/LOCAL_CI_PUBLICATION.template.md or POLICY.md DSL blocks."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep the hub and template protected-delivery blocks byte-identical and add the manual-owner-override rule to host_publication_policy.py plus existing test suites.",
+      "components": [
+        {
+          "name": "protected-delivery-host-guidance",
+          "paths": [
+            "AGENTS.md",
+            "template/files/AGENTS.template.md",
+            "scripts/host_publication_policy.py",
+            "tests/host_publication_policy_test.py",
+            "tests/agent-hosts.test.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert this pull request through the protected publication process."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -B tests/host_publication_policy_test.py",
+          "python3 -B tests/host_merge_policy_check_test.py"
+        ],
+        "evidence": "Host publication policy reconciliation injects manual-owner-override cleanly and remains idempotent."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "bash tests/local-ci-publication.test.sh",
+          "bash tests/agent-hosts.test.sh"
+        ],
+        "evidence": "Hub and adopter protected-delivery guidance stay synchronized and pass deterministic host-contract checks."
+      }
+    ]
+  }
+}

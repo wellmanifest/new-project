@@ -27,6 +27,7 @@ class HostPublicationPolicyTest(unittest.TestCase):
         self.assertNotIn('old admin bypass', result)
         self.assertNotIn('Prymat Zielonych Testów', result)
         self.assertIn('independent Validator', result)
+        self.assertIn('manual-owner-override', result)
         self.assertEqual(POLICY.render(result), result)
 
     def test_crlf_preserved(self):
@@ -98,6 +99,7 @@ class HostPublicationPolicyTest(unittest.TestCase):
         self.assertNotIn('Prymat Zielonych Testów', result)
         self.assertNotIn('--admin', result)
         self.assertIn('Only the independent Validator may approve and merge.', result)
+        self.assertIn('manual-owner-override', result)
         self.assertEqual(POLICY.render(result), result)
         crlf = POLICY.render(WITHOUT_NOLIMITS.replace('\n', '\r\n'))
         self.assertNotIn('\n', crlf.replace('\r\n', ''))

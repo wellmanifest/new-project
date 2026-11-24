@@ -27,6 +27,11 @@ publication. Only the independent Validator may approve and merge.
   context only after equivalent deployed coverage and independent policy review.
 - Never self-approve, rotate reviewer accounts, use administrative bypass,
   invent success statuses or waive ticket scope/WIP controls.
+- When CI, OneDev, Validator or controllers fail or stall, an authenticated
+  human owner may steer manually and merge directly (wellmanifest/merge@95f3cd62,
+  wellmanifest/autonomy@22a04550); never auto-revert human manual merges and
+  record them distinctly as manual-owner-override (never as
+  autonomous-validator-proof).
 - On API limits, retain retry state and honor Retry-After/reset deadlines.
 - Read back the exact review and merge before releasing scope. Remove only a
   verified owned clean worktree after checking processes, lease and recoverability.

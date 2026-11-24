@@ -108,6 +108,7 @@ for path in ('AGENTS.md', 'template/files/AGENTS.template.md'):
         'obtain fresh validation for the resulting HEAD',
         'Review and publication retain the declared WIP limits.',
         'Preserve unknown or unique data',
+        'manual-owner-override',
     ):
         assert required in normalized, (path, required)
 assert sections[0] == sections[1], 'hub and adopted protected guidance diverge'
