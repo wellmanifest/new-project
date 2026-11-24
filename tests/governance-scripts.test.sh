@@ -360,6 +360,10 @@ cp "$repo_root/scripts/ticket_input.py" "$race/mine/.governance/ticket_input.py"
 cp "$repo_root/scripts/ticket_activity.py" "$race/mine/.governance/ticket_activity.py"
 cp "$repo_root/subprojects/worktrees/conformance.py" "$race/mine/.governance/worktree_path_check.py"
 printf '%s\n' '/.worktrees/' '/.subactor/leases/' > "$race/mine/.gitignore"
+(
+  cd "$race/mine"
+  bash project/readme.sh
+)
 git -C "$race/mine" -c user.email=t@e -c user.name=t add .gitignore .governance template project
 git -C "$race/mine" -c user.email=t@e -c user.name=t commit -qm 'fixture managed baseline'
 
@@ -384,13 +388,11 @@ allocation_worktree="$race/mine/.worktrees/ticket-010--must-not-reuse-a-remote-c
 test -d "$allocation_worktree/project/ticket-010"
 test ! -d "$race/mine/project/ticket-010"
 
-# The allocator indexes the ticket it has just created, so that ticket's own PR
-# carries exactly its own row (issue #516); unknown claims stay out.
-grep -q '^| \*\*ticket-010\*\* |' "$allocation_worktree/project/TICKETS.md"
-if grep -qE 'ticket-00[89]' "$allocation_worktree/project/TICKETS.md"; then
-  echo 'Allocator indexed a remote-only claim' >&2
-  exit 1
-fi
+# Linked allocation must preserve the shared index from its base. Two ticket
+# branches can then deliver their own directories without competing index edits.
+git -C "$allocation_worktree" diff --exit-code -- project/TICKETS.md
+cmp "$race/mine/project/TICKETS.md" "$allocation_worktree/project/TICKETS.md"
+
 # Naming one own ticket never indexes another untracked ticket in the checkout.
 mkdir -p "$allocation_worktree/project/ticket-011"
 printf '# Ticket 011\n' > "$allocation_worktree/project/ticket-011/README.md"
@@ -400,8 +402,8 @@ printf '# Ticket 011\n' > "$allocation_worktree/project/ticket-011/README.md"
 )
 grep -q '^| \*\*ticket-010\*\* |' "$allocation_worktree/project/TICKETS.md"
 grep -q 'skipping untracked project/ticket-011' "$allocation_worktree/own.err"
-if grep -q 'ticket-011' "$allocation_worktree/project/TICKETS.md"; then
-  echo 'Index referenced a foreign untracked ticket' >&2
+if grep -qE 'ticket-00[89]|ticket-011' "$allocation_worktree/project/TICKETS.md"; then
+  echo 'Index referenced a foreign or remote-only untracked ticket' >&2
   exit 1
 fi
 rm -rf "$allocation_worktree/project/ticket-011" "$allocation_worktree/own.out" "$allocation_worktree/own.err"
