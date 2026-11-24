@@ -446,20 +446,11 @@ open(path, "w", encoding="utf-8").write(json.dumps(value) + "\n")
 PY
 }
 cancel_registry="$cancel/.git/new-project/terminal-receipts.json"
-# Phase one of the rollout: the shipped default policy does not list
-# `cancelled`, so a cancelled receipt is refused until the policy enables it.
-write_cancel_receipt "$fixture/cancel-disabled.json" "receipt:test/cancel-disabled/1" valid
-status=0
-python3 "$repo_root/scripts/ticket_activity.py" --root "$cancel" record \
-  --receipt "$fixture/cancel-disabled.json" > "$fixture/cancel-disabled.out" 2> "$fixture/cancel-disabled.err" || status=$?
-test "$status" -eq 2
-test ! -e "$cancel_registry"
+# The shipped default policy enables `cancelled` with owner-decision verification.
 python3 - "$cancel/governance/ticket-activity.json" <<'PY'
 import json, sys
-path = sys.argv[1]
-value = json.load(open(path, encoding="utf-8"))
-value["terminalOutcomes"]["cancelled"] = {"verification": "owner-decision", "releasesReservation": True}
-open(path, "w", encoding="utf-8").write(json.dumps(value, indent=2) + "\n")
+value = json.load(open(sys.argv[1], encoding="utf-8"))
+assert value["terminalOutcomes"]["cancelled"] == {"verification": "owner-decision", "releasesReservation": True}
 PY
 for mode in no-decision still-open unknown-head merged-with-decision; do
   write_cancel_receipt "$fixture/cancel-$mode.json" "receipt:test/cancel-$mode/1" "$mode"
