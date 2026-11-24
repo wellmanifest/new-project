@@ -1,0 +1,58 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-470",
+  "summary": "Run first bootstrap split regression in CI",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-470/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "tests/adoption-fresh-bootstrap.test.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c9bb73ce5ce861e78c26619e36e5b016fda56e2d",
+    "targetBranch": "main",
+    "outcome": "Run the first-bootstrap split regression in the shared CI suite when the regression is shipped.",
+    "nonGoals": ["Changing the required check names or the bootstrap controller."],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 1,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add the split regression to the fresh-bootstrap suite already used by GitHub Actions and OneDev.",
+      "components": [
+        {"name": "fresh-bootstrap-tests", "paths": ["tests/adoption-fresh-bootstrap.test.sh"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the CI registration commit through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash -n tests/adoption-fresh-bootstrap.test.sh", "bash tests/adoption-fresh-bootstrap.test.sh"],
+        "evidence": "The suite remains valid on the base tree and runs the split tests when combined with PR 657."
+      }
+    ]
+  }
+}
