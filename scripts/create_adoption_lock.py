@@ -1673,8 +1673,27 @@ def bootstrap_prerequisite_payloads(
     return seeds
 
 
+BOOTSTRAP_SUBACTOR_LEAVES = (".subactor/.gitignore", ".subactor/manifest.json")
+
+
+def validate_bootstrap_subactor_ignore(target_root: Path, projected: bytes) -> None:
+    path = target_root / ".subactor/.gitignore"
+    contents = [projected]
+    if path.exists() or path.is_symlink():
+        contents.append(_bootstrap_plan_bytes(path, label="child ignore"))
+    # The root .gitignore is installed first. Both versions of the child
+    # ignore file must be unable to exclude a managed leaf or expose a sibling.
+    for content in contents:
+        for line in content.split(b"\n"):
+            rule = line.removesuffix(b"\r")
+            if rule and not rule.startswith(b"#") and not re.fullmatch(rb"/[A-Za-z0-9_-]+/", rule):
+                raise SystemExit(
+                    "bootstrap .subactor/.gitignore permits only comments and literal anchored directory exclusions"
+                )
+
+
 def bootstrap_ignore_payload(target_root: Path, payloads: dict[str, bytes], external: Path) -> tuple[bytes, bytes]:
-    """Append reviewed literal leaf exceptions; never reopen an ignored directory."""
+    """Append reviewed leaf exceptions, with a bounded root .subactor exception."""
     def unique(pairs):
         result = {}
         for key, value in pairs:
@@ -1702,11 +1721,14 @@ def bootstrap_ignore_payload(target_root: Path, payloads: dict[str, bytes], exte
     if plan_git(target_root, "rev-parse", "HEAD").decode().strip() != plan["baseSha"]:
         raise SystemExit("bootstrap ignore plan HEAD changed")
     original = _bootstrap_plan_bytes(target_root / ".gitignore", label="root ignore")
-    committed = _git_show_blob(target_root, plan["baseSha"], ".gitignore")
-    if (committed.returncode or committed.stdout != original
-            or hashlib.sha256(original).hexdigest() != plan["gitignoreSha256"]):
+    try:
+        committed = plan_git(target_root, "show", f"{plan['baseSha']}:.gitignore")
+    except subprocess.CalledProcessError as error:
+        raise SystemExit("bootstrap ignore plan requires exact committed root ignore bytes") from error
+    if committed != original or hashlib.sha256(original).hexdigest() != plan["gitignoreSha256"]:
         raise SystemExit("bootstrap ignore plan requires exact committed root ignore bytes")
     names = plan["paths"]
+    parents: set[str] = set()
     for name in names:
         if (not isinstance(name, str)
                 or re.fullmatch(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*", name) is None
@@ -1715,28 +1737,47 @@ def bootstrap_ignore_payload(target_root: Path, payloads: dict[str, bytes], exte
         path = plan_path(target_root, name)
         if path.exists() and not path.is_file():
             raise SystemExit("bootstrap ignore exception must be a regular file leaf")
-        parents = {parent.as_posix() for parent in Path(name).parents if parent != Path(".")}
-        if any(not (target_root / parent).is_dir() for parent in parents):
-            raise SystemExit("bootstrap ignore plan requires existing parent directories")
-        if ignored_payload_targets(target_root, parents):
-            raise SystemExit("bootstrap ignore plan cannot reopen an excluded parent directory")
+        parents.update(parent.as_posix() for parent in Path(name).parents if parent != Path("."))
+    if any(not (target_root / parent).is_dir() for parent in parents):
+        raise SystemExit("bootstrap ignore plan requires existing parent directories")
+    excluded_parents = ignored_payload_targets(target_root, parents)
+    if excluded_parents and (excluded_parents != [".subactor"] or set(names) != set(BOOTSTRAP_SUBACTOR_LEAVES)):
+        raise SystemExit("bootstrap ignore plan cannot reopen an excluded parent directory")
     ignored = ignored_payload_targets(target_root, set(payloads))
     if len(set(names)) != len(names) or set(names) != set(ignored):
         raise SystemExit("bootstrap ignore plan must name every currently ignored payload exactly once")
-    # Root exceptions cannot override nested ignore rules. Refuse other rule
-    # sources instead of guessing a future Git result or changing their files.
+    # Check the rule excluding the parent itself as well as the excluded leaves.
+    traced_paths = sorted(names)
+    if excluded_parents:
+        traced_paths.append(".subactor/")
     trace = subprocess.check_output(
         ["git", "check-ignore", "--verbose", "-z", "--stdin"], cwd=target_root,
-        env=plan_git_environment(), input=b"".join(name.encode() + b"\0" for name in sorted(names)))
+        env=plan_git_environment(), input=b"".join(name.encode() + b"\0" for name in traced_paths))
     fields = trace.split(b"\0")[:-1]
-    if len(fields) != 4 * len(names) or any(fields[i] != b".gitignore" for i in range(0, len(fields), 4)):
+    if len(fields) != 4 * len(traced_paths) or any(fields[i] != b".gitignore" for i in range(0, len(fields), 4)):
         raise SystemExit("bootstrap ignore plan supports only root .gitignore exclusions")
+    parent_rules = b""
+    if excluded_parents:
+        mode = plan_git(target_root, "ls-tree", "--format=%(objectmode)", plan["baseSha"], "--", ".gitignore")
+        if mode.strip() not in {b"100644", b"100755"}:
+            raise SystemExit("bootstrap .subactor/ exceptions require a committed regular root .gitignore")
+        line, pattern, path = fields[-3:]
+        original_rules = original.split(b"\n")
+        number = int(line)
+        if (pattern != b".subactor/" or path != b".subactor/" or not 1 <= number <= len(original_rules)
+                or original_rules[number - 1].removesuffix(b"\r") != b".subactor/"):
+            raise SystemExit("bootstrap ignore plan requires the literal .subactor/ exclusion in the root .gitignore")
+        ignore_case = plan_git(target_root, "config", "--type=bool", "--default=false", "--get", "core.ignoreCase")
+        if ignore_case.strip() != b"false":
+            raise SystemExit("bootstrap .subactor/ exceptions require case-sensitive Git ignore matching")
+        validate_bootstrap_subactor_ignore(target_root, payloads[".subactor/.gitignore"])
+        parent_rules = b"!/.subactor/\n/.subactor/*\n"
     content = payloads[".gitignore"]
     if not content.startswith(original):
         raise SystemExit("bootstrap ignore projection must preserve original bytes")
     if content and not content.endswith(b"\n"):
         content += b"\n"
-    return (content + b"\n# Explicit first-bootstrap payload leaves\n" + b"".join(
+    return (content + b"\n# Explicit first-bootstrap payload leaves\n" + parent_rules + b"".join(
         ("!/" + name + "\n").encode() for name in sorted(names)), raw)
 
 
