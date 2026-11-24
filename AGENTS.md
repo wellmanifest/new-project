@@ -228,4 +228,11 @@ Review and publication retain the declared WIP limits. Cleanup requires
 verified integration, released ownership, and an exact-path audit of dirty
 state and HEAD reachability. Preserve unknown or unique data; never force
 removal merely to clear a governance lock.
+
+When CI, OneDev, Validator or controllers fail or stall, an authenticated
+human owner may steer manually and merge directly
+(`wellmanifest/merge@95f3cd62`, `wellmanifest/autonomy@22a04550`). Never
+auto-revert human manual merges; record them distinctly as
+`manual-owner-override` (never as `autonomous-validator-proof`). This
+human-owner exception never grants an AI agent review or merge authority.
 <!-- wellmanifest:protected-delivery:end -->
