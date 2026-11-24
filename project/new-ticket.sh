@@ -1336,10 +1336,10 @@ if [[ -n "$USERS" ]]; then
   echo "warning: --users=$USERS did not create user-* files; human-owned input must come from a human or trusted intake boundary" >&2
 fi
 
-# The older adopter's index generator may require a different carrier format.
-# A plan allocates untracked metadata only; leave existing index bytes intact
-# until the separately authorized material upgrade installs its pinned tool.
-if [[ -z "$STANDARD_ADOPTION_PLAN" && -f project/readme.sh ]]; then
+# Linked worktrees leave the shared index at its base version. Regenerate
+# it after integrating ticket metadata. Flat allocation refreshes its local
+# index, and adoption plans leave indexing to the pinned updater.
+if [[ -z "$STANDARD_ADOPTION_PLAN" && -z "$WORKTREE_PATH" && -f project/readme.sh ]]; then
   T2C_TICKET_INDEX_OWN="project/$ticket_id" bash ./project/readme.sh
 fi
 
