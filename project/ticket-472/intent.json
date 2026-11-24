@@ -20,7 +20,74 @@
     "project/ticket-*/user-*.md"
   ],
   "stacks": [],
-  "dependsOn": [],
+  "dependsOn": [
+    "ticket-471"
+  ],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "0043e90705bf15a745ed37feab55d9f3a4000266",
+    "targetBranch": "main",
+    "outcome": "Enable the cancelled terminal outcome (verification: owner-decision, releasesReservation: true) in the shipped default governance/ticket-activity.json policy, document its contract in docs/information/work-registration.md, and verify default-enabled behavior in tests/ticket-activity.test.sh.",
+    "nonGoals": [
+      "Change ticket_activity.py resolver logic delivered in ticket-471",
+      "Delete or discard unmerged branches automatically",
+      "Fetch pull request state from a remote forge inside the local resolver"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add cancelled (owner-decision, releasesReservation: true) to terminalOutcomes in governance/ticket-activity.json, document the contract and backward-compatibility fail-closed note in docs/information/work-registration.md, and assert the default-enabled policy in tests/ticket-activity.test.sh.",
+      "components": [
+        {
+          "name": "ticket-activity-policy",
+          "paths": [
+            "governance/ticket-activity.json",
+            "tests/ticket-activity.test.sh"
+          ]
+        },
+        {
+          "name": "documentation",
+          "paths": [
+            "docs/information/work-registration.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Default governance/ticket-activity.json terminalOutcomes now includes cancelled with verification owner-decision"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket commit through the protected publication process; cancelled receipts then stop verifying under the default policy."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/ticket-activity.test.sh"
+        ],
+        "evidence": "All 22 ticket-activity tests pass with cancelled enabled in the shipped default governance/ticket-activity.json policy."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh --actor ci"
+        ],
+        "evidence": "Governance Hub CI scope validation passes with 0 errors and 0 warnings."
+      }
+    ]
+  }
 }
