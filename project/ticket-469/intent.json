@@ -15,6 +15,7 @@
     "scripts/bootstrap_adoption_split.py",
     "scripts/bootstrap_packaging_scope.py",
     "tests/bootstrap_adoption_split_test.py",
+    ".github/workflows/ci.yml",
     "governance/package-manifest.json",
     "VERSION",
     "CHANGELOG.md"
@@ -52,6 +53,7 @@
             "scripts/bootstrap_adoption_split.py",
             "scripts/bootstrap_packaging_scope.py",
             "tests/bootstrap_adoption_split_test.py",
+            ".github/workflows/ci.yml",
             "governance/package-manifest.json",
             "VERSION",
             "CHANGELOG.md"

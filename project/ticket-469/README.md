@@ -1,9 +1,9 @@
 # Ticket 469: Recover a mixed first bootstrap ticket
 
 - **ID**: ticket-469
-- **Owner**: agent:codex
+- **Owner**: agent:antigravity
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-11-21
 
 ## Goal and scope
@@ -15,10 +15,10 @@ Recover the scope with its current live writer and keep independent review.
 
 ## Acceptance criteria
 
-- [ ] AC-01: Rebind only the existing, live first-bootstrap reservation after
+- [x] AC-01: Rebind only the existing, live first-bootstrap reservation after
   verifying the original Git bundle, exact staged product removals and
   unchanged adopted files. Refuse stale and incomplete observations.
-- [ ] AC-02: Preserve the original commit and owner, advance the fence and
+- [x] AC-02: Preserve the original commit and owner, advance the fence and
   allow the governance commit and subsequent product ticket to use their
   normal independent review.
 
