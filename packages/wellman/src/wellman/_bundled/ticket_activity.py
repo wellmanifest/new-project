@@ -23,6 +23,14 @@ OCCURRED_AT_RE = re.compile(
     r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$"
 )
 REWRITE_VERIFICATION = "git-ancestry-or-rewritten-patch-series"
+# A ticket whose pull request the owner closed without merging (work-registration
+# step 6). The decision binds the exact PR head; new commits on any ticket branch
+# after that head re-activate the reservation. The branch itself is preserved.
+OWNER_DECISION_VERIFICATION = "owner-decision"
+RECEIPT_FIELDS = frozenset({"receiptRef", "ticket", "outcome", "headSha", "terminalSha", "targetBranch", "occurredAt"})
+DECISION_FIELDS = frozenset({"pullRequest", "pullRequestState", "decidedBy", "decisionRef"})
+DECIDED_BY_RE = re.compile(r"^[A-Za-z0-9._:\[\]-]{1,100}$")
+DECISION_REF_RE = re.compile(r"^\S{1,500}$")
 DEFAULT_TARGET_BRANCH = "main"
 # status-projection stays the conservative default: an absent registry must not
 # be guessed away. git-ancestry is opt-in, for an adopter whose hand-edited
@@ -277,7 +285,7 @@ def _validate_terminal_outcomes(value):
     outcomes = value.get("terminalOutcomes")
     if not isinstance(outcomes, dict) or not outcomes:
         raise ActivityError("managed terminal outcomes are missing")
-    supported_verification = {"git-ancestry", REWRITE_VERIFICATION}
+    supported_verification = {"git-ancestry", REWRITE_VERIFICATION, OWNER_DECISION_VERIFICATION}
     for name, rule in outcomes.items():
         if (
             not isinstance(name, str)
@@ -366,10 +374,25 @@ def projection_status(ticket_dir: Path) -> str | None:
     return next(iter(statuses), None)
 
 
+def _validate_decision(decision):
+    if not isinstance(decision, dict) or set(decision) != DECISION_FIELDS:
+        raise ActivityError("terminal receipt decision fields are invalid")
+    number = decision.get("pullRequest")
+    if not isinstance(number, int) or isinstance(number, bool) or number < 1:
+        raise ActivityError("terminal receipt decision pull request is invalid")
+    if decision.get("pullRequestState") != "closed-unmerged":
+        raise ActivityError("terminal receipt decision requires a pull request closed without merge")
+    if not isinstance(decision.get("decidedBy"), str) or DECIDED_BY_RE.fullmatch(decision["decidedBy"]) is None:
+        raise ActivityError("terminal receipt decision actor is invalid")
+    if not isinstance(decision.get("decisionRef"), str) or DECISION_REF_RE.fullmatch(decision["decisionRef"]) is None:
+        raise ActivityError("terminal receipt decision reference is invalid")
+
+
 def _validate_terminal_receipt(receipt, seen):
-    fields = {"receiptRef", "ticket", "outcome", "headSha", "terminalSha", "targetBranch", "occurredAt"}
-    if not isinstance(receipt, dict) or set(receipt) != fields:
+    if not isinstance(receipt, dict) or set(receipt) not in (RECEIPT_FIELDS, RECEIPT_FIELDS | {"decision"}):
         raise ActivityError("terminal receipt fields are invalid")
+    if "decision" in receipt:
+        _validate_decision(receipt["decision"])
     if not isinstance(receipt.get("receiptRef"), str) or RECEIPT_REF_RE.fullmatch(receipt["receiptRef"]) is None:
         raise ActivityError("terminal receipt reference is invalid")
     if receipt["receiptRef"] in seen:
@@ -666,6 +689,10 @@ def _terminal_verified(
     if rule is None or target is None:
         return False
     head_sha, terminal_sha = receipt["headSha"], receipt["terminalSha"]
+    if rule.get("verification") == OWNER_DECISION_VERIFICATION:
+        return _owner_decision_verified(root, receipt, target)
+    if "decision" in receipt:
+        return False
     if not _ancestor(root, terminal_sha, target):
         return False
     integrated = _ancestor(root, head_sha, terminal_sha)
@@ -673,6 +700,29 @@ def _terminal_verified(
         integrated = _rewritten_patch(root, head_sha, terminal_sha)
     return integrated and not _advanced_ticket_branch(
         root, receipt["ticket"], head_sha, terminal_sha
+    )
+
+
+def _commit_exists(root: Path, sha: str) -> bool:
+    return _git(root, "rev-parse", "--verify", "--quiet", f"{sha}^{{commit}}", check=False) == sha
+
+
+def _owner_decision_verified(root: Path, receipt: dict[str, Any], target: str) -> bool:
+    """Owner closed the ticket PR unmerged at headSha; no later ticket work exists.
+
+    terminalSha is the target branch tip observed with the decision and must
+    still be on the target. The decided head must exist locally, so a receipt
+    cannot name work this clone never saw. Any ticket branch (local or origin)
+    that has advanced past the decided head makes the ticket active again.
+    """
+    if "decision" not in receipt:
+        return False
+    head_sha, terminal_sha = receipt["headSha"], receipt["terminalSha"]
+    if not _commit_exists(root, head_sha) or not _ancestor(root, terminal_sha, target):
+        return False
+    return not any(
+        head != head_sha and _ancestor(root, head_sha, head)
+        for head in _ticket_branch_heads(root, receipt["ticket"])
     )
 
 
@@ -717,6 +767,11 @@ def _branch_heads_by_ticket(listed: str) -> dict[str, tuple[str, ...]]:
 
 def _unmerged_ticket_branch(root: Path, ticket: str, target: str) -> bool:
     """Keep supported outstanding ticket branches active from a strict inventory."""
+    return any(not _ancestor(root, head, target) for head in _ticket_branch_heads(root, ticket))
+
+
+def _ticket_branch_heads(root: Path, ticket: str) -> tuple[str, ...]:
+    """Heads of every local and origin branch naming the ticket."""
     batch = _READ_BATCH.get()
     if batch is not None:
         if root.resolve() != batch.root:
@@ -744,7 +799,7 @@ def _unmerged_ticket_branch(root: Path, ticket: str, target: str) -> bool:
                 ticket,
             )
         )
-    return any(not _ancestor(root, head, target) for head in heads)
+    return heads
 
 
 def _target_tree_entries(root: Path, spec: str) -> frozenset[str]:

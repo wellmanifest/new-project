@@ -29,7 +29,8 @@
           "verification": {
             "enum": [
               "git-ancestry",
-              "git-ancestry-or-rewritten-patch-series"
+              "git-ancestry-or-rewritten-patch-series",
+              "owner-decision"
             ]
           },
           "releasesReservation": {"const": true}

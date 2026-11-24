@@ -1,9 +1,9 @@
 # Ticket 470: Run first bootstrap split regression in CI
 
 - **ID**: ticket-470
-- **Owner**: agent:codex
+- **Owner**: agent:antigravity
 - **Status**: IN_PROGRESS
-- **Workflow state**: EDIT
+- **Workflow state**: PUBLICATION
 - **Utworzono**: 2026-11-21
 
 ## Goal and scope
@@ -15,7 +15,7 @@ Register the regression from that shared suite in this separate scope.
 
 ## Acceptance criteria
 
-- [ ] AC-01: The fresh-bootstrap suite still passes on its base. With the
+- [x] AC-01: The fresh-bootstrap suite still passes on its base. With the
   controller regression present, the suite runs it and propagates failure.
 
 ## Granica katalogu
