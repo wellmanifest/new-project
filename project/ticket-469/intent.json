@@ -1,0 +1,87 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-469",
+  "summary": "Recover a mixed first bootstrap ticket",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "regression"
+  },
+  "allowedPaths": [
+    "project/ticket-469/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/bootstrap_adoption_split.py",
+    "scripts/bootstrap_packaging_scope.py",
+    "tests/bootstrap_adoption_split_test.py",
+    ".github/workflows/ci.yml",
+    "governance/package-manifest.json",
+    "VERSION",
+    "CHANGELOG.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "c9bb73ce5ce861e78c26619e36e5b016fda56e2d",
+    "targetBranch": "main",
+    "outcome": "Recover a committed mixed first bootstrap through a fenced, lossless scope split.",
+    "nonGoals": [
+      "Changing ownership, expiry, protected publication, or the existing commit history.",
+      "Reclassifying a repository that already has native governance on its target branch."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 6,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Verify a complete Git bundle and exact pinned adoption files, then reuse the scope transaction to fence the old reservation before narrowing its intent.",
+      "components": [
+        {
+          "name": "first-bootstrap-split",
+          "paths": [
+            "scripts/bootstrap_adoption_split.py",
+            "scripts/bootstrap_packaging_scope.py",
+            "tests/bootstrap_adoption_split_test.py",
+            ".github/workflows/ci.yml",
+            "governance/package-manifest.json",
+            "VERSION",
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Expose a first-bootstrap split command with a read-only default, an explicit external request and fenced apply."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the implementation through the protected publication process."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -B -m unittest discover -s tests -p bootstrap_adoption_split_test.py -q",
+          "python3 -B -m unittest discover -s tests -p bootstrap_packaging_scope_test.py -q"
+        ],
+        "evidence": "The exact current owner can finish a lossless split, retry an interrupted scope update, and receives a refusal for stale ownership or incomplete preservation."
+      }
+    ]
+  }
+}
