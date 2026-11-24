@@ -21,5 +21,54 @@
   "stacks": [],
   "dependsOn": [],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "df6b033d794885dfee3a17c4812efe2d448f0c3e",
+    "targetBranch": "main",
+    "outcome": "Allocate linked tickets without changing the shared index on their delivery branches.",
+    "nonGoals": [
+      "Rewrite existing pull request branches or change lease ownership.",
+      "Change the index format or explicit generator."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Create ticket-specific files in linked worktrees and reserve shared index generation for explicit runs or flat allocation.",
+      "components": [
+        {
+          "name": "ticket-allocation",
+          "paths": ["project/new-ticket.sh", "tests/governance-scripts.test.sh"]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["Linked allocation no longer writes project/TICKETS.md."],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the allocator and regression changes through protected publication."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["bash tests/governance-scripts.test.sh"],
+        "evidence": "The previous allocator adds a row to the fixture index. The revised allocator keeps it byte-identical to the base."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/governance-scripts.test.sh"],
+        "evidence": "Explicit index generation includes the selected ticket and excludes unrelated local and remote-only entries."
+      }
+    ]
+  }
 }
