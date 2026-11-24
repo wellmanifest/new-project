@@ -1,0 +1,83 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-475",
+  "summary": "Release new-project 0.20.167",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-475/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "270858a006b50bf70c4e3166de05ddba08df94f9",
+    "targetBranch": "main",
+    "outcome": "Prepare new-project 0.20.167 so consumers can adopt the merged linked allocation fix.",
+    "nonGoals": [
+      "Change the allocator, bootstrap, or terminal release implementation.",
+      "Upgrade individual consumer repositories within this pull request."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Advance all release version declarations together and document the changes already integrated into the standard.",
+      "components": [
+        {
+          "name": "standard-release",
+          "paths": [
+            "VERSION",
+            "CHANGELOG.md",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": ["The standard and bundled package declare release 0.20.167."],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Consumers can retain the previously published 0.20.166 revision through the managed adoption process."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": ["./project/governance-check.sh --actor agent"],
+        "evidence": "Compare the release declarations and run the committed-range governance check before publication."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": ["bash tests/governance-scripts.test.sh"],
+        "evidence": "The allocator regression covers unchanged linked indexes and explicit index generation."
+      }
+    ]
+  }
+}
