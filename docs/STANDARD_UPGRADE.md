@@ -368,23 +368,107 @@ external `--bootstrap-ignore-plan /absolute/plan.json` may accompany
 The four fields are closed. The external regular file is bounded to 1 MiB;
 `paths` contains 1–64 distinct literal file paths and must name every currently
 ignored bootstrap payload exactly once. Only root `.gitignore` exclusions
-qualify. Each parent must already exist as a real, non-excluded directory;
-directory exceptions, wildcards, symlinks, arbitrary source files, nested or
-global ignore rules, stale HEAD/digests and uncommitted ignore edits refuse.
+qualify. Each parent must already exist as a real directory. Excluded parents
+are refused except for the exact legacy Subactor layout below. Wildcards,
+symlinks, arbitrary source files, nested or global ignore sources, stale base
+or digest, and uncommitted root ignore edits are refused.
 Required missing seeds qualify only when separately supplied through the
 existing `--bootstrap-prerequisites-plan`. Ordinary upgrades cannot use this
 option.
 
 Use `--check` first. The installer preserves existing ignore bytes, adds its
-normal operational-state ignores and appends only `!/<exact-file>` exceptions.
-It rechecks the plan and original ignore bytes before installer effects; the
-normal bootstrap receipt binds the resulting `.gitignore`. No target writes
-occur in check mode. This does not make installation a cross-process atomic
-transaction: preserve partial installer state after any subsequent failure.
-The plan does not grant a writer, transfer ownership or approve publication.
-First native allocation still requires the exact bootstrap dirty digest and
-the usual owner/fencing checks. Later target implementation belongs in that
-allocated worktree and requires independent protected publication.
+normal operational-state ignores and appends `!/<exact-file>` exceptions for
+leaves with trackable parents. It rechecks the plan and original ignore bytes
+before installation. The bootstrap receipt binds the resulting `.gitignore`.
+Check mode is read-only. Preserve partial installer state after any installation
+failure. First native allocation still requires the exact bootstrap dirty
+digest and the usual owner and fencing checks. Later implementation belongs
+in the allocated worktree and requires independent protected publication.
+
+#### First native allocation with a committed `.subactor/` rule
+
+Use a published adopter with support for this layout. From the registered
+primary checkout, confirm that `.subactor` exists as a real directory and Git
+attributes its exclusion to the literal `.subactor/` line in the committed
+root `.gitignore` using `git check-ignore --verbose -- .subactor/`. Review an
+external plan with your target's `git rev-parse HEAD` and
+`sha256sum .gitignore` values and these two paths.
+
+```json
+{
+  "schema": "new-project.bootstrap-ignore-plan/v1",
+  "baseSha": "<current committed target HEAD>",
+  "gitignoreSha256": "<SHA-256 of the exact committed root .gitignore bytes>",
+  "paths": [".subactor/.gitignore", ".subactor/manifest.json"]
+}
+```
+
+The installer keeps the original ignore bytes and appends the following
+rules in order after its normal operational exclusions.
+
+```gitignore
+!/.subactor/
+/.subactor/*
+!/.subactor/.gitignore
+!/.subactor/manifest.json
+```
+
+The two root leaves become trackable. Recovery files, leases, caches, receipts,
+new siblings, and nested projects' `.subactor` directories stay ignored.
+Git ignore matching must be case-sensitive because `core.ignoreCase=true`
+would also expose case variants of the two paths.
+Both the installed and any existing `.subactor/.gitignore` must contain only
+blank lines, comments, and literal anchored directory exclusions such as
+`/leases/`. Git will read the existing child rules as soon as the root
+projection is written.
+
+```bash
+python3 /path/to/pinned/new-project/scripts/create_adoption_lock.py \
+  --target-root "$PWD" --source-revision "$published_revision" \
+  --bootstrap-native-adoption --bootstrap-ignore-plan "$external_plan" --check
+
+# After owner review, apply with the same source revision and plan bytes.
+python3 /path/to/pinned/new-project/scripts/create_adoption_lock.py \
+  --target-root "$PWD" --source-revision "$published_revision" \
+  --bootstrap-native-adoption --bootstrap-ignore-plan "$external_plan" --upgrade
+```
+
+Check mode reports the planned drift and returns 1 when installation is
+pending. Before applying, review the planned changes and reconcile any
+reported missing prerequisites. After installation, check the receipt
+at `.subactor/receipts/bootstrap-adoption.json` against the original HEAD,
+the clone, and the installed file digests. Prepare Bash `scope` arguments
+for the reviewed adoption paths owned by the selected workstream. For a
+package whose receipt paths all belong to `governance`, this yields one
+`--path` argument per receipt entry.
+
+```bash
+mapfile -t bootstrap_paths < <(python3 -c '
+import json
+from pathlib import Path
+receipt = json.loads(Path(".subactor/receipts/bootstrap-adoption.json").read_bytes())
+print("\n".join(sorted(receipt["files"])))
+')
+scope=()
+for path in "${bootstrap_paths[@]}"; do scope+=(--path "$path"); done
+
+python3 .governance/work_start_check.py --root . --workstream governance \
+  "${scope[@]}" --allocation-check
+
+# Set dirty_digest to the observed primary worktree dirtyDigest after owner review.
+./project/new-ticket.sh --title "Adopt native governance" --agent codex \
+  --workstream governance "${scope[@]}" --worktree-slug native-adoption \
+  --writer-actor "$allocating_actor" --writer-session "$allocating_session" \
+  --bootstrap-adoption-digest "$dirty_digest"
+```
+
+The initial work-start report may refuse admission pending the exact digest.
+The allocator rechecks that digest and the installed receipt before reserving
+the ticket and creating its canonical worktree at the original base. To reuse
+the plan there, complete the bounded intent, acquire the controller writer
+lease, and create a real, empty `.subactor` directory if the checkout has
+none. Run the adopter again against that checkout. The adoption still requires
+independent protected publication.
 
 ### Explicit missing prerequisites on first bootstrap (0.20.134)
 

@@ -64,6 +64,21 @@ class BootstrapIgnorePlanTest(unittest.TestCase):
     def resolve(self):
         return self.module.bootstrap_ignore_payload(self.target, self.payloads, self.plan)[0]
 
+    def prepare_subactor_layout(self, rule=b'.subactor/'):
+        self.original = b'# Legacy ignores\nsecrets/\n' + rule + b'\n*.scratch\n'
+        (self.target / '.gitignore').write_bytes(self.original)
+        (self.target / 'project/TICKETS.md').write_text('# Ticket index\n')
+        self.command(self.target, 'git', 'add', '.gitignore', 'project/TICKETS.md')
+        self.command(self.target, 'git', 'commit', '-q', '-m', 'Committed legacy Subactor ignore')
+        self.head = self.command(self.target, 'git', 'rev-parse', 'HEAD').stdout.strip()
+        (self.target / '.subactor').mkdir()
+        self.names = ['.subactor/manifest.json', '.subactor/.gitignore']
+        self.payloads = {'.gitignore': self.original, '.subactor/manifest.json': b'{}\n',
+                         '.subactor/.gitignore': b'/leases/\n/cache/\n'}
+        self.document.update(baseSha=self.head, paths=self.names,
+                             gitignoreSha256=hashlib.sha256(self.original).hexdigest())
+        self.save()
+
     def test_exact_leaf_projection_preserves_unrelated_ignore_rules(self):
         projected = self.resolve()
         self.assertEqual((self.target / '.gitignore').read_bytes(), self.original)
@@ -155,6 +170,105 @@ class BootstrapIgnorePlanTest(unittest.TestCase):
             self.resolve()
         self.assertFalse((self.target / 'project').exists())
 
+    def test_subactor_requires_literal_root_rule(self):
+        self.prepare_subactor_layout(b'/.subactor/')
+        with self.assertRaisesRegex(SystemExit, 'literal .subactor/'):
+            self.resolve()
+        self.assertEqual((self.target / '.gitignore').read_bytes(), self.original)
+
+    def test_subactor_refuses_repository_exclude_source(self):
+        self.prepare_subactor_layout(b'# No root Subactor exclusion')
+        (self.target / '.git/info/exclude').write_bytes(b'.subactor/\n')
+        with self.assertRaisesRegex(SystemExit, 'only root'):
+            self.resolve()
+        self.assertEqual((self.target / '.gitignore').read_bytes(), self.original)
+
+    def test_subactor_refuses_case_insensitive_git_matching(self):
+        self.prepare_subactor_layout()
+        self.command(self.target, 'git', 'config', 'core.ignoreCase', 'true')
+        with self.assertRaisesRegex(SystemExit, 'case-sensitive'):
+            self.resolve()
+        self.assertEqual((self.target / '.gitignore').read_bytes(), self.original)
+
+    def test_subactor_requires_exact_pair_base_and_digest(self):
+        self.prepare_subactor_layout()
+        approved = dict(self.document)
+        other = '.subactor/arbitrary.json'
+        self.payloads[other] = b'{}\n'
+        for change in [{'paths': self.names[:1]}, {'paths': self.names + [other]},
+                       {'paths': [self.names[0], other]}, {'baseSha': 'a' * 40},
+                       {'gitignoreSha256': '0' * 64}]:
+            with self.subTest(change=change):
+                self.document = {**approved, **change}
+                self.save()
+                with self.assertRaises(SystemExit):
+                    self.resolve()
+                self.assertEqual((self.target / '.gitignore').read_bytes(), self.original)
+                self.assertEqual(list((self.target / '.subactor').iterdir()), [])
+
+    def test_subactor_refuses_symlinked_parent_and_leaves(self):
+        self.prepare_subactor_layout()
+        directory = self.target / '.subactor'
+        referent = self.base / 'referent'
+        referent.mkdir()
+        directory.rmdir()
+        directory.symlink_to(referent, target_is_directory=True)
+        with self.assertRaisesRegex(SystemExit, 'symlinked'):
+            self.resolve()
+        directory.unlink()
+        directory.mkdir()
+        for name in self.names:
+            with self.subTest(name=name):
+                leaf = self.target / name
+                leaf.symlink_to(referent / 'absent')
+                with self.assertRaisesRegex(SystemExit, 'symlinked'):
+                    self.resolve()
+                leaf.unlink()
+        self.assertEqual(list(referent.iterdir()), [])
+        self.assertEqual((self.target / '.gitignore').read_bytes(), self.original)
+
+    def test_subactor_refuses_committed_symlink_at_root_ignore(self):
+        self.prepare_subactor_layout()
+        root_ignore = self.target / '.gitignore'
+        root_ignore.unlink()
+        root_ignore.symlink_to('.subactor/', target_is_directory=True)
+        self.command(self.target, 'git', 'add', '.gitignore')
+        self.command(self.target, 'git', 'commit', '-q', '-m', 'Symlinked root ignore')
+        root_ignore.unlink()
+        self.original = b'.subactor/'
+        root_ignore.write_bytes(self.original)
+        self.payloads['.gitignore'] = self.original
+        self.document.update(baseSha=self.command(self.target, 'git', 'rev-parse', 'HEAD').stdout.strip(),
+                             gitignoreSha256=hashlib.sha256(self.original).hexdigest())
+        self.save()
+        with self.assertRaisesRegex(SystemExit, 'committed regular root'):
+            self.resolve()
+        self.assertEqual(root_ignore.read_bytes(), self.original)
+
+    def test_subactor_accepts_safe_existing_child_ignore(self):
+        self.prepare_subactor_layout()
+        leaf = self.target / '.subactor/.gitignore'
+        content = b'# Existing Git rules\r\n/private/\r\n'
+        leaf.write_bytes(content)
+        self.assertTrue(self.resolve().startswith(self.original))
+        self.assertEqual(leaf.read_bytes(), content)
+
+    def test_subactor_refuses_unsafe_existing_or_projected_child_ignore(self):
+        self.prepare_subactor_layout()
+        leaf = self.target / '.subactor/.gitignore'
+        for content in [b'!/private.txt\n', b'*\n', b'/manifest.json\n']:
+            with self.subTest(content=content):
+                leaf.write_bytes(content)
+                with self.assertRaisesRegex(SystemExit, 'literal anchored directory exclusions'):
+                    self.resolve()
+                self.assertEqual(leaf.read_bytes(), content)
+                leaf.unlink()
+                self.payloads['.subactor/.gitignore'] = content
+                with self.assertRaisesRegex(SystemExit, 'literal anchored directory exclusions'):
+                    self.resolve()
+                self.payloads['.subactor/.gitignore'] = b'/leases/\n'
+                self.assertEqual((self.target / '.gitignore').read_bytes(), self.original)
+
     def installed_source(self):
         source = self.base / 'standard'
         self.command(self.base, 'git', 'clone', '-q', '--shared', '--no-hardlinks', str(ROOT), str(source))
@@ -166,46 +280,129 @@ class BootstrapIgnorePlanTest(unittest.TestCase):
         self.command(source, 'git', 'commit', '-q', '--allow-empty', '-m', 'Fixture implementation')
         return load(source / 'scripts/create_adoption_lock.py'), self.command(source, 'git', 'rev-parse', 'HEAD').stdout.strip()
 
-    def exercise_install_and_allocation(self, mode):
+    def install(self, mode, *options, protected=None):
         module, revision = self.installed_source()
-        paths = ['.aider.conf.yml', 'project/governance-check.bat', 'project/governance-check.sh',
-                 'project/new-ticket.sh', 'project/readme.sh', 'project/TICKETS.md']
-        self.document['paths'] = paths
+        args = ['--target-root', str(self.target), '--source-revision', revision, mode, *options]
+        receipt_path = '.subactor/receipts/bootstrap-adoption.json'
+        before = self.command(self.target, 'git', 'status', '--porcelain').stdout
+        planned = io.StringIO()
+        with patch.object(module, 'verify_publication_evidence'), contextlib.redirect_stdout(io.StringIO()):
+            with self.assertRaisesRegex(SystemExit, 'ignored by target Git rules'):
+                module.main(args + ['--check'])
+            args += ['--bootstrap-ignore-plan', str(self.plan)]
+            with contextlib.redirect_stdout(planned):
+                self.assertEqual(module.main(args + ['--check']), 1)
+            self.assertIn('UPDATE .gitignore', planned.getvalue())
+            self.assertEqual((self.target / '.gitignore').read_bytes(), self.original)
+            self.assertFalse((self.target / receipt_path).exists())
+            self.assertFalse((self.target / '.governance/manifest.lock.json').exists())
+            self.assertEqual(self.command(self.target, 'git', 'status', '--porcelain').stdout, before)
+            for name, content in (protected or {}).items():
+                self.assertEqual((self.target / name).read_bytes(), content)
+            self.assertEqual(module.main(args + ['--upgrade']), 0)
+        self.assertEqual(module.ignored_payload_targets(self.target, set(self.document['paths'])), [])
+        root_ignore = (self.target / '.gitignore').read_bytes()
+        self.assertTrue(root_ignore.startswith(self.original))
+        receipt = json.loads((self.target / receipt_path).read_text())
+        self.assertFalse(receipt['grantsWriterAuthority'])
+        self.assertFalse(receipt['grantsPublicationAuthority'])
+        self.assertEqual(receipt['baseSha'], self.head)
+        self.assertEqual(receipt['sourceRevision'], revision)
+        self.assertEqual(receipt['commonGitDir'], str(self.target / '.git'))
+        self.assertEqual(receipt['files']['.gitignore'], hashlib.sha256(root_ignore).hexdigest())
+        return receipt
+
+    def allocate(self, receipt):
+        scope = []
+        for name in sorted(receipt['files']):
+            scope += ['--path', name]
+        inspect = [sys.executable, '.governance/work_start_check.py',
+                   '--root', '.', '--workstream', 'governance', *scope, '--allocation-check']
+        observed = self.command(self.target, *inspect, check=False)
+        digest = json.loads(observed.stdout)['worktrees'][0]['dirtyDigest']
+        self.assertNotEqual(observed.returncode, 0)
+        denied = self.command(self.target, *inspect, '--bootstrap-adoption-digest', '0' * 64, check=False)
+        self.assertNotEqual(denied.returncode, 0)
+        admitted = self.command(self.target, *inspect, '--bootstrap-adoption-digest', digest)
+        report = json.loads(admitted.stdout)
+        self.assertEqual(report['route'], 'NEW_TICKET_CANDIDATE')
+        acknowledgement = report['bootstrapOwnerAcknowledgement']
+        self.assertEqual(acknowledgement['dirtyDigest'], digest)
+        self.assertFalse(acknowledgement['grantsWriterAuthority'])
+        self.assertTrue(set(self.document['paths']).issubset(acknowledgement['paths']))
+        result = self.command(self.target, 'bash', 'project/new-ticket.sh', '--title', 'Bootstrap ignore adoption',
+            '--agent', 'fixture', '--writer-actor', 'agent:fixture', '--writer-session', 'ignore-plan-fixture',
+            '--workstream', 'governance', *scope, '--worktree-slug', 'ignore-plan', '--bootstrap-adoption-digest', digest)
+        wt = self.target / '.worktrees/ticket-001--ignore-plan'
+        intent_path = wt / 'project/ticket-001/intent.json'
+        self.assertTrue(intent_path.is_file(), result.stdout)
+        self.assertTrue(set(receipt['files']).issubset(json.loads(intent_path.read_text())['allowedPaths']))
+        self.assertEqual(self.command(wt, 'git', 'rev-parse', 'HEAD').stdout.strip(), self.head)
+        self.assertEqual((wt / '.gitignore').read_bytes(), self.original)
+        lease = json.loads((self.target / '.subactor/leases/ticket-001--ignore-plan.json').read_text())
+        self.assertEqual(lease['ticketId'], 'ticket-001')
+        self.assertEqual(lease['branchRef'], 'refs/heads/ticket/001-ignore-plan')
+        self.assertEqual(lease['worktreeId'], wt.name)
+        self.assertEqual(lease['headSha'], self.head)
+        self.assertEqual(lease['ownerActor'], 'agent:fixture')
+        self.assertEqual(lease['ownerSession'], 'ignore-plan-fixture')
+        self.assertEqual((lease['leaseRevision'], lease['fencingToken']), (1, 1))
+        self.assertFalse(lease['publicationFrozen'])
+        return wt
+
+    def exercise_install_and_allocation(self, mode):
+        self.document['paths'] = [
+            '.aider.conf.yml', 'project/governance-check.bat', 'project/governance-check.sh',
+            'project/new-ticket.sh', 'project/readme.sh', 'project/TICKETS.md',
+        ]
         self.save()
         seed = self.base / 'seeds.json'
         content = '# Ticket index\n'
         seed.write_text(json.dumps({'schema': 'new-project.bootstrap-prerequisites-plan/v1',
             'baseSha': self.head, 'files': [{'path': 'project/TICKETS.md', 'content': content,
                                            'sha256': hashlib.sha256(content.encode()).hexdigest()}]}))
-        args = ['--target-root', str(self.target), '--source-revision', revision,
-                mode, '--bootstrap-prerequisites-plan', str(seed)]
-        before = self.command(self.target, 'git', 'status', '--porcelain').stdout
-        with patch.object(module, 'verify_publication_evidence'), contextlib.redirect_stdout(io.StringIO()):
-            with self.assertRaisesRegex(SystemExit, 'ignored by target Git rules'):
-                module.main(args + ['--check'])
-            self.assertEqual(module.main(args + ['--bootstrap-ignore-plan', str(self.plan), '--check']), 1)
-            self.assertEqual(self.command(self.target, 'git', 'status', '--porcelain').stdout, before)
-            self.assertEqual(module.main(args + ['--bootstrap-ignore-plan', str(self.plan), '--upgrade']), 0)
-        self.assertEqual(module.ignored_payload_targets(self.target, set(paths)), [])
-        receipt = json.loads((self.target / '.subactor/receipts/bootstrap-adoption.json').read_text())
-        self.assertFalse(receipt['grantsWriterAuthority'])
-        self.assertEqual(receipt['files']['.gitignore'], hashlib.sha256((self.target / '.gitignore').read_bytes()).hexdigest())
-        scope = []
-        for name in sorted(receipt['files']):
-            scope += ['--path', name]
-        observed = self.command(self.target, sys.executable, '.governance/work_start_check.py',
-            '--root', '.', '--workstream', 'governance', *scope, '--allocation-check', check=False)
-        digest = json.loads(observed.stdout)['worktrees'][0]['dirtyDigest']
-        result = self.command(self.target, 'bash', 'project/new-ticket.sh', '--title', 'Bootstrap ignore adoption',
-            '--agent', 'fixture', '--writer-actor', 'agent:fixture', '--writer-session', 'ignore-plan-fixture',
-            '--workstream', 'governance', *scope, '--worktree-slug', 'ignore-plan', '--bootstrap-adoption-digest', digest)
-        wt = self.target / '.worktrees/ticket-001--ignore-plan'
-        self.assertTrue((wt / 'project/ticket-001/intent.json').is_file(), result.stdout)
-        self.assertEqual(self.command(wt, 'git', 'rev-parse', 'HEAD').stdout.strip(), self.head)
-        self.assertEqual((wt / '.gitignore').read_bytes(), self.original)
+        receipt = self.install(mode, '--bootstrap-prerequisites-plan', str(seed))
+        self.allocate(receipt)
 
     def test_first_install_check_and_canonical_allocation(self):
         self.exercise_install_and_allocation('--bootstrap-native-adoption')
+
+    def test_legacy_subactor_parent_first_install_and_canonical_allocation(self):
+        self.prepare_subactor_layout()
+        protected = {}
+        for name in [
+            '.subactor/recovery/local.json', '.subactor/leases/local.json', '.subactor/cache/local.json',
+            '.subactor/sessions/local.jsonl', '.subactor/snapshots/local.json', '.subactor/unknown-before',
+            '.subactor/MANIFEST.JSON', 'nested/.subactor/manifest.json', 'keep.scratch',
+        ]:
+            path = self.target / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            protected[name] = f'Fixture data for {name}\n'.encode()
+            path.write_bytes(protected[name])
+        leaves = set(self.names)
+        before = leaves | set(protected)
+        self.assertEqual(self.module.ignored_payload_targets(self.target, before), sorted(before))
+        receipt = self.install('--bootstrap-native-adoption', protected=protected)
+        self.assertTrue((self.target / '.gitignore').read_bytes().endswith(
+            b'!/.subactor/\n/.subactor/*\n!/.subactor/.gitignore\n!/.subactor/manifest.json\n'))
+        unknown = '.subactor/unknown-after/arbitrary.json'
+        (self.target / unknown).parent.mkdir()
+        (self.target / unknown).write_text('{}\n')
+        hidden = set(protected) | {'.subactor/receipts/bootstrap-adoption.json', unknown}
+        self.assertEqual(self.module.ignored_payload_targets(self.target, leaves | hidden), sorted(hidden))
+        status = self.command(self.target, 'git', 'status', '--porcelain', '--untracked-files=all').stdout
+        self.assertEqual({line[3:] for line in status.splitlines() if line[3:].startswith('.subactor/')}, leaves)
+        for name, content in protected.items():
+            self.assertEqual((self.target / name).read_bytes(), content)
+        lock = json.loads((self.target / '.governance/manifest.lock.json').read_text())
+        self.assertEqual(lock['standard']['sourceRevision'], receipt['sourceRevision'])
+        self.assertEqual(lock['standard']['publicationStatus'], 'published')
+        for name in leaves:
+            checksum = hashlib.sha256((self.target / name).read_bytes()).hexdigest()
+            self.assertEqual(receipt['files'][name], checksum)
+            self.assertEqual(lock['managedFiles'][name], checksum)
+        wt = self.allocate(receipt)
+        self.assertFalse((wt / '.subactor').exists())
 
     def test_legacy_migration_check_and_canonical_allocation(self):
         (self.target / '.governance').mkdir()
