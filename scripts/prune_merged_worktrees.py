@@ -482,16 +482,22 @@ def is_safe_ignored_runtime_path(worktree: Path, relpath: str) -> bool:
     top = parts[0]
     leaf = parts[-1]
     if len(parts) == 1 and (
-        top in SAFE_TOP_LEVEL_RUNTIME_NAMES
-        or top.startswith(".coverage.")
+        top.startswith(".coverage.")
         or top.endswith(".egg-info")
     ):
+        return True
+    # Git lists the contents of a runtime root individually when the root holds
+    # its own ignore file (ruff writes ``.ruff_cache/.gitignore``) or when only a
+    # subdirectory is ignored (``.planfile/sprints/``). An ignored entry below an
+    # allowlisted root is as disposable as the root itself; tracked files are
+    # never listed here, so they are never removed.
+    if top in SAFE_TOP_LEVEL_RUNTIME_NAMES:
         return True
     if leaf == "__pycache__" or leaf.endswith((".pyc", ".pyo")):
         return True
     if leaf.endswith(".egg-info") and len(parts) <= 3:
         return True
-    if len(parts) == 2 and top == ".subactor" and leaf in SAFE_SUBACTOR_RUNTIME_DIRS:
+    if len(parts) >= 2 and top == ".subactor" and parts[1] in SAFE_SUBACTOR_RUNTIME_DIRS:
         return True
     if clean == ".subactor":
         subactor_dir = worktree / ".subactor"

@@ -549,3 +549,38 @@ def test_prune_holds_exclusive_lease_lock_and_aborts_on_mid_flight_lease_mutatio
     assert not wt.exists()
     if sys.platform != "win32":
         assert observed_exclusive_lock is True
+
+
+def test_self_ignoring_runtime_cache_contents_are_disposable(tmp_path):
+    """ruff-style caches carry their own ``*`` ignore file, so Git lists their contents.
+
+    The listed entries sit below an allowlisted root and must not make the
+    released, merged checkout look dirty forever.
+    """
+    repo, wt, branch, _, _ = _canonical_merged_fixture(tmp_path, ticket="ticket-012", slug="self-ignoring")
+    cache = wt / ".hypothesis"
+    (cache / "examples" / "ab").mkdir(parents=True)
+    (cache / ".gitignore").write_text("# Automatically created by a cache tool.\n*\n")
+    (cache / "CACHEDIR.TAG").write_text("Signature: 8a477f597d28d172789f06886806bc55\n")
+    (cache / "examples" / "ab" / "entry").write_bytes(b"example")
+    listed = _git(wt, "status", "--porcelain=v1", "--untracked-files=all", "--ignored=matching")
+    assert "!! .hypothesis/.gitignore" in listed
+
+    report = prune_merged_worktrees(repo)
+    assert [entry["action"] for entry in report["pruned"]] == ["removed"]
+    assert report["pruned"][0]["cleanedIgnoredRuntime"] is True
+    assert not wt.exists()
+    assert subprocess.run(["git", "-C", str(repo), "show-ref", "--verify", "--quiet", f"refs/heads/{branch}"],
+                          check=False).returncode != 0
+
+
+def test_nested_entries_follow_their_runtime_root(tmp_path):
+    from scripts.prune_merged_worktrees import is_safe_ignored_runtime_path
+    for rel in (".ruff_cache/.gitignore", ".ruff_cache/0.17.3/", ".planfile/sprints/",
+                ".subactor/receipts/work-start/", ".subactor/cache/autonomy-board.md",
+                ".pytest_cache/v/cache/nodeids"):
+        assert is_safe_ignored_runtime_path(tmp_path, rel), rel
+    for rel in (".subactor/snapshots/recovery.json", ".subactor/leases/ticket-1--x.json",
+                ".subactor/manifest.json", ".env", "secrets/.ruff_cache/x", ".ruff_cache/../.env",
+                "pkg/.planfile/state.json"):
+        assert not is_safe_ignored_runtime_path(tmp_path, rel), rel

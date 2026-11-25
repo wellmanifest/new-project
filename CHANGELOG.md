@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [Unreleased]
+
+- Worktree pruning treats ignored entries below an allowlisted runtime root
+  as disposable. Self-ignoring caches such as `.ruff_cache` and partly ignored
+  `.planfile` or `.subactor/receipts` no longer keep merged, released
+  checkouts forever. Tracked files and unknown ignored data stay preserved.
+  [ticket-479]
+
 ## [0.20.167] - 2026-11-24
 
 - Linked ticket allocation preserves the shared `project/TICKETS.md` from
