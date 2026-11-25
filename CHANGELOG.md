@@ -13,6 +13,9 @@
   [ticket-472]
 - Document the authenticated human owner's manual merge path and its audit
   receipt. The protected agent delivery requirements still apply. [ticket-474]
+- First native allocation handles a root ignore for the entire `.subactor/`
+  directory. The reviewed plan exposes only the two approved managed files
+  while preserving operational state exclusions. [ticket-476]
 
 ## [0.20.166] - 2026-11-20
 
