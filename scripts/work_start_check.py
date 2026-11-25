@@ -357,21 +357,7 @@ def bootstrap_preserved_worktrees(root, head):
     return {"inventory": inventory, "preserved": observed}
 
 
-def bootstrap_owned_paths(root, manifest, expected_digest):
-    """A first allocator may acknowledge only exact installer-owned bytes.
-
-    This is the same explicit owner confirmation as continuation's dirty
-    digest. It suppresses no branch, ticket, WIP, lease or publication check.
-    """
-    _, current_digest, dirty = dirty_observation(root)
-    if current_digest != expected_digest:
-        raise ObservationError("Bootstrap dirty observation changed")
-    receipt_path = root / ".subactor/receipts/bootstrap-adoption.json"
-    if any(path.is_symlink() for path in (receipt_path, *receipt_path.parents)):
-        raise ObservationError("Symlinked bootstrap receipt")
-    receipt = read_json(receipt_path)
-    head = git(root, "rev-parse", "HEAD").strip()
-    common = git(root, "rev-parse", "--path-format=absolute", "--git-common-dir").strip()
+def validate_bootstrap_receipt(root, receipt, head, common):
     if (receipt.get("schema") != "new-project.bootstrap-adoption/v1"
             or receipt.get("baseSha") != head or receipt.get("commonGitDir") != common
             or receipt.get("grantsWriterAuthority") is not False
@@ -386,14 +372,9 @@ def bootstrap_owned_paths(root, manifest, expected_digest):
         bootstrap_scaffold_at_head(root, head)
     else:
         raise ObservationError("Unknown bootstrap kind")
-    high_water = Path(common) / "new-project-ticket-high-water"
-    if high_water.exists() or high_water.is_symlink():
-        raise ObservationError("Bootstrap acknowledgement is first-allocation only")
-    historical_refs = bootstrap_historical_refs(root, head)
-    preserved_worktrees = bootstrap_preserved_worktrees(root, head)
-    # Both routes preserve exact committed historical carriers; the allocator
-    # reserves the new identity above their high-water IDs.
-    unchanged_committed_legacy_carriers(root, head)
+
+
+def bootstrap_payload_files(root, manifest, receipt, head):
     lock = read_json(root / ".governance/manifest.lock.json")
     if (lock.get("standard", {}).get("publicationStatus") != "published"
             or lock.get("standard", {}).get("sourceRevision") != receipt.get("sourceRevision")):
@@ -409,17 +390,47 @@ def bootstrap_owned_paths(root, manifest, expected_digest):
         raise ObservationError("Bootstrap receipt includes paths outside adoption")
     if not set(lock["managedFiles"]).issubset(files):
         raise ObservationError("Bootstrap receipt omits managed files")
-    def verify_bootstrap_files():
-        for rel, checksum in files.items():
-            patterns([rel])
-            path = root / rel
-            if (any(p.is_symlink() for p in (path, *path.parents)) or not path.is_file()
-                    or not re.fullmatch(r"[0-9a-f]{64}", str(checksum))
-                    or hashlib.sha256(path.read_bytes()).hexdigest() != checksum
-                    or (rel in lock["managedFiles"] and lock["managedFiles"][rel] != checksum)):
-                raise ObservationError("Bootstrap payload changed or is not installed")
+    return files, lock["managedFiles"]
 
-    verify_bootstrap_files()
+
+def verify_bootstrap_files(root, files, managed):
+    for rel, checksum in files.items():
+        patterns([rel])
+        path = root / rel
+        if (any(p.is_symlink() for p in (path, *path.parents)) or not path.is_file()
+                or not re.fullmatch(r"[0-9a-f]{64}", str(checksum))
+                or hashlib.sha256(path.read_bytes()).hexdigest() != checksum
+                or (rel in managed and managed[rel] != checksum)):
+            raise ObservationError("Bootstrap payload changed or is not installed")
+
+
+def bootstrap_owned_paths(root, manifest, expected_digest):
+    """A first allocator may acknowledge only exact installer-owned bytes.
+
+    This is the same explicit owner confirmation as continuation's dirty
+    digest. It suppresses no branch, ticket, WIP, lease or publication check.
+    """
+    _, current_digest, dirty = dirty_observation(root)
+    if current_digest != expected_digest:
+        raise ObservationError("Bootstrap dirty observation changed")
+    receipt_path = root / ".subactor/receipts/bootstrap-adoption.json"
+    if any(path.is_symlink() for path in (receipt_path, *receipt_path.parents)):
+        raise ObservationError("Symlinked bootstrap receipt")
+    receipt = read_json(receipt_path)
+    head = git(root, "rev-parse", "HEAD").strip()
+    common = git(root, "rev-parse", "--path-format=absolute", "--git-common-dir").strip()
+    validate_bootstrap_receipt(root, receipt, head, common)
+    high_water = Path(common) / "new-project-ticket-high-water"
+    if high_water.exists() or high_water.is_symlink():
+        raise ObservationError("Bootstrap acknowledgement is first-allocation only")
+    historical_refs = bootstrap_historical_refs(root, head)
+    preserved_worktrees = bootstrap_preserved_worktrees(root, head)
+    # Both routes preserve exact committed historical carriers; the allocator
+    # reserves the new identity above their high-water IDs.
+    unchanged_committed_legacy_carriers(root, head)
+    files, managed = bootstrap_payload_files(root, manifest, receipt, head)
+
+    verify_bootstrap_files(root, files, managed)
     if (git(root, "rev-parse", "HEAD").strip() != head
             or bootstrap_historical_refs(root, head) != historical_refs
             or bootstrap_preserved_worktrees(root, head) != preserved_worktrees
@@ -428,7 +439,7 @@ def bootstrap_owned_paths(root, manifest, expected_digest):
     _, final_digest, final_dirty = dirty_observation(root)
     if final_digest != expected_digest or final_dirty != dirty:
         raise ObservationError("Bootstrap changed during admission")
-    verify_bootstrap_files()
+    verify_bootstrap_files(root, files, managed)
     return set(final_dirty).intersection(files)
 
 
