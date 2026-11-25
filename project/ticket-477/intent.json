@@ -1,0 +1,94 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-477",
+  "summary": "Reconcile scope of an existing first native adoption",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-477/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/bootstrap_packaging_scope.py",
+    "scripts/work_start_check.py",
+    "tests/bootstrap_packaging_scope_test.py",
+    "docs/STANDARD_UPGRADE.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "abf5f0ae81742504a7ba91fc81b0feb59b1b7042",
+    "targetBranch": "main",
+    "outcome": "Complete a first native adoption when its original local allocation omitted required installer control files.",
+    "nonGoals": [
+      "Change product files, existing ownership, or protected publication rules.",
+      "Broaden an allocation to arbitrary paths, committed material work, or another checkout."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 20,
+    "budgets": {
+      "maxImplementationFiles": 4,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 1,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use the existing local fenced scope transaction with a separate request for the first native bootstrap. Verify the exact published installer receipt in the primary checkout and admit only the closed set of bootstrap controls on the same unmaterialized lease.",
+      "components": [
+        {
+          "name": "first-native-adoption",
+          "paths": [
+            "scripts/bootstrap_packaging_scope.py",
+            "scripts/work_start_check.py",
+            "tests/bootstrap_packaging_scope_test.py",
+            "docs/STANDARD_UPGRADE.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Add a first-adoption scope request and opt-in operation to the published controller."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Retain the prior published controller. Existing ticket scope stays recorded in its controller receipt."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/bootstrap_packaging_scope_test.py"
+        ],
+        "evidence": "Test exact scope update and idempotent apply for a real first allocation with incomplete scope."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/bootstrap_packaging_scope_test.py"
+        ],
+        "evidence": "Reject unrelated paths, changed payloads, stale CAS and nonnative or materialized checkouts."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "bash project/governance-check.sh"
+        ],
+        "evidence": "Validate the bounded implementation and preserve existing packaging scope behavior."
+      }
+    ]
+  }
+}

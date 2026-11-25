@@ -271,5 +271,101 @@ class PackagingScopeTest(unittest.TestCase):
         self.assertEqual(self.intent.read_bytes(), self.before['intent'])
 
 
+class FirstAdoptionScopeTest(unittest.TestCase):
+    def setUp(self):
+        self.fixture = fixtures.FreshBootstrapTest()
+        with redirect_stdout(io.StringIO()):
+            self.fixture.setUp()
+        self.addCleanup(self.fixture.doCleanups)
+        self.primary = self.fixture.target
+        self.fixture.command(
+            self.primary, 'bash', './project/new-ticket.sh', '--title', 'Adoption fixture',
+            '--agent', 'fixture', '--writer-actor', 'agent:fixture', '--writer-session', 'adoption-test',
+            '--workstream', 'governance', '--worktree-slug', 'adoption-fixture', '--path', '.governance/**',
+            '--bootstrap-adoption-digest', self.fixture.checksum(),
+        )
+        self.root = self.primary / '.worktrees/ticket-001--adoption-fixture'
+        self.lease = self.primary / '.subactor/leases/ticket-001--adoption-fixture.json'
+        self.intent = self.root / 'project/ticket-001/intent.json'
+        self.receipt = self.primary / '.subactor/receipts/bootstrap-adoption.json'
+        receipt = json.loads(self.receipt.read_text())
+        intent = json.loads(self.intent.read_text())
+        intent['delivery'] = {'acceptedBaseSha': self.fixture.head, 'targetBranch': 'main',
+                              'standardAdoption': {'sourceRepository': 'wellmanifest/new-project',
+                                                   'fromRevision': None, 'toRevision': receipt['sourceRevision']}}
+        self.intent.write_text(json.dumps(intent, indent=2) + '\n')
+        self.request_path = self.fixture.base / 'adoption-scope-request.json'
+        self.request = {'schema': 'new-project.bootstrap-adoption-scope/v1', 'requestId': 'adoption-scope-test',
+                        'ticket': 'ticket-001', 'headSha': self.fixture.head,
+                        'paths': ['.gitattributes', '.gitignore', 'CHANGELOG.md', 'VERSION', 'project.bat', 'project.sh'],
+                        'leaseRevision': 1, 'fencingToken': 1,
+                        'leaseSha256': hashlib.sha256(self.lease.read_bytes()).hexdigest(),
+                        'intentSha256': hashlib.sha256(self.intent.read_bytes()).hexdigest(),
+                        'bootstrapReceiptSha256': hashlib.sha256(self.receipt.read_bytes()).hexdigest(),
+                        'bootstrapDirtyDigest': self.fixture.checksum()}
+        self.before_lease = self.lease.read_bytes()
+        self.before_intent = self.intent.read_bytes()
+
+    def reconcile(self, *, apply=False, actor='agent:fixture'):
+        self.request_path.write_text(json.dumps(self.request))
+        args = [sys.executable, str(ROOT / 'scripts/bootstrap_packaging_scope.py'), '--root', str(self.root),
+                '--request', str(self.request_path), '--actor', actor, '--session', 'adoption-test', '--first-adoption']
+        if apply:
+            args.append('--apply')
+        return self.fixture.command(self.root, *args, check=False)
+
+    def assert_refused(self, reason, **kwargs):
+        result = self.reconcile(apply=True, **kwargs)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(reason, result.stderr)
+        self.assertEqual(self.lease.read_bytes(), self.before_lease)
+        self.assertEqual(self.intent.read_bytes(), self.before_intent)
+
+    def test_exact_first_adoption_plans_applies_and_replays(self):
+        before = json.loads(self.before_lease)
+        plan = self.reconcile()
+        self.assertEqual(plan.returncode, 0, plan.stderr)
+        self.assertEqual(json.loads(plan.stdout)['status'], 'planned')
+        self.assertEqual(self.lease.read_bytes(), self.before_lease)
+        self.assertEqual(self.intent.read_bytes(), self.before_intent)
+        result = self.reconcile(apply=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        applied = json.loads(result.stdout)
+        new = json.loads(self.lease.read_bytes())
+        paths = json.loads(self.intent.read_bytes())['allowedPaths']
+        self.assertEqual(paths, json.loads(self.before_intent)['allowedPaths'] + self.request['paths'])
+        self.assertEqual((applied['leaseRevision'], applied['fencingToken']), (2, 2))
+        self.assertFalse(applied['grantsEditAuthority'])
+        self.assertFalse(applied['grantsMergeAuthority'])
+        self.assertEqual(new['expiresAt'], before['expiresAt'])
+        self.assertEqual(new['headSha'], before['headSha'])
+        self.assertEqual(json.loads(self.reconcile(apply=True).stdout), applied)
+        self.assertFalse((self.root / 'VERSION').exists())
+        self.assertEqual(self.fixture.checksum(), self.request['bootstrapDirtyDigest'])
+
+    def test_out_of_scope_or_stale_evidence_is_refused(self):
+        original = dict(self.request)
+        for key, value, diagnostic in (
+            ('paths', ['foreign.txt'], 'path_is_not_a_bootstrap_control'),
+            ('bootstrapDirtyDigest', '0' * 64, 'bootstrap_primary_dirty_digest_changed'),
+            ('bootstrapReceiptSha256', '0' * 64, 'bootstrap_receipt_changed'),
+            ('leaseRevision', 2, 'stale_fencing'),
+        ):
+            with self.subTest(key=key):
+                self.request = {**original, key: value}
+                self.assert_refused(diagnostic)
+        self.request = original
+        self.assert_refused('current_owner_required', actor='agent:other')
+        self.fixture.command(self.root, 'git', 'update-index', '--assume-unchanged', 'foreign.txt')
+        self.assert_refused('bootstrap_hidden_index_paths')
+        self.fixture.command(self.root, 'git', 'update-index', '--no-assume-unchanged', 'foreign.txt')
+        (self.root / 'foreign.txt').write_text('uncommitted change\n')
+        self.assert_refused('bootstrap_ticket_already_has_material_changes')
+        (self.root / 'foreign.txt').write_text('original\n')
+        (self.primary / 'VERSION').write_text('9.9.9\n')
+        self.request['bootstrapDirtyDigest'] = self.fixture.checksum()
+        self.assert_refused('Bootstrap payload changed')
+
+
 if __name__ == '__main__':
     unittest.main()

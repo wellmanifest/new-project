@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""Explicit current-owner scope correction for first native packaging adoption.
-
-Only unchanged, existing packaging markers in the installed published contract
-may be added. The controller changes the intent and fenced reservation, never
-packaging source, expiry, owner, publication state or another checkout.
-"""
+"""Reconcile a first native adoption's intent and reservation under its current owner."""
 from contextlib import nullcontext
 from datetime import datetime, timezone
 import argparse
@@ -37,6 +32,9 @@ FIELDS = {'schema', 'requestId', 'ticket', 'headSha', 'paths', 'leaseRevision',
 # Closed capability of this published controller. A target-owned contract and
 # its rewritten hashes cannot introduce another executable source path.
 SUPPORTED_MARKERS = frozenset({'pyproject.toml', 'package.json'})
+ADOPTION_CONTROLS = frozenset({'.gitattributes', '.gitignore', 'CHANGELOG.md',
+                               'VERSION', 'project.bat', 'project.sh'})
+BOOTSTRAP_RECEIPT = '.subactor/receipts/bootstrap-adoption.json'
 require, sha, encoded = store.require, store.sha, store.encoded
 
 
@@ -47,16 +45,22 @@ def raw(path):
         return value
 
 
-def request_value(path, primary):
+def request_value(path, primary, *, first_adoption=False):
     path = path.absolute()
     require(not path.is_relative_to(primary), 'request_must_be_external')
     request = store.decode(raw(path))
-    require(isinstance(request, dict) and set(request) == FIELDS
-            and request['schema'] == 'new-project.bootstrap-packaging-scope/v1', 'invalid_request')
+    fields = FIELDS | {'bootstrapDirtyDigest'} if first_adoption else FIELDS
+    schema = ('new-project.bootstrap-adoption-scope/v1' if first_adoption
+              else 'new-project.bootstrap-packaging-scope/v1')
+    require(isinstance(request, dict) and set(request) == fields and request['schema'] == schema,
+            'invalid_request')
     require(isinstance(request['requestId'], str)
             and re.fullmatch('[a-z0-9][a-z0-9.-]{0,95}', request['requestId']), 'invalid_request_id')
     require(isinstance(request['ticket'], str) and re.fullmatch('ticket-[0-9]{3,}', request['ticket']), 'invalid_ticket')
-    for key in ('leaseSha256', 'intentSha256', 'bootstrapReceiptSha256'):
+    digests = ['leaseSha256', 'intentSha256', 'bootstrapReceiptSha256']
+    if first_adoption:
+        digests.append('bootstrapDirtyDigest')
+    for key in digests:
         require(isinstance(request[key], str) and re.fullmatch('[0-9a-f]{64}', request[key]), 'invalid_digest')
     require(isinstance(request['headSha'], str) and re.fullmatch('[0-9a-f]{40}', request['headSha']), 'invalid_head')
     require(all(type(request[k]) is int and request[k] > 0 for k in ('leaseRevision', 'fencingToken')), 'invalid_cas')
@@ -64,12 +68,12 @@ def request_value(path, primary):
     require(isinstance(paths, list) and 0 < len(paths) <= 8
             and all(isinstance(p, str) and re.fullmatch('[A-Za-z0-9_.-]+', p)
                     and p not in {'.', '..'} for p in paths)
-            and len(paths) == len(set(paths)), 'literal_unique_packaging_markers_required')
+            and len(paths) == len(set(paths)), 'literal_unique_scope_paths_required')
     return request
 
 
 def pinned_packaging(root, primary, request):
-    receipt_path = root / '.subactor/receipts/bootstrap-adoption.json'
+    receipt_path = root / BOOTSTRAP_RECEIPT
     receipt_raw = raw(receipt_path)
     require(sha(receipt_raw) == request['bootstrapReceiptSha256'], 'bootstrap_receipt_changed')
     receipt = store.decode(receipt_raw)
@@ -115,7 +119,7 @@ def pinned_packaging(root, primary, request):
     return standard['sourceRevision']
 
 
-def transaction(root, primary, request, lease_raw, intent_raw, actor, session, stamp):
+def live_scope_subject(root, primary, request, lease_raw, intent_raw, actor, session):
     lease, intent = store.decode(lease_raw), store.decode(intent_raw)
     require(sha(lease_raw) == request['leaseSha256'] and sha(intent_raw) == request['intentSha256'], 'scope_cas_changed')
     require(not store.canonical.validate_lease(lease), 'invalid_canonical_lease')
@@ -143,23 +147,25 @@ def transaction(root, primary, request, lease_raw, intent_raw, actor, session, s
     require(isinstance(old_paths, list) and start.digest(old_paths) == lease['scopeHash'], 'intent_scope_unbound')
     require(not set(request['paths']) & set(old_paths)
             and not any(start.path_ignored(p, tuple(intent.get('forbiddenPaths', []))) for p in request['paths']), 'path_already_owned_or_forbidden')
-    revision = pinned_packaging(root, primary, request)
-    delivery = intent.get('delivery', {})
-    require(delivery.get('acceptedBaseSha') == request['headSha']
+    return lease, intent
+
+
+def require_adoption_intent(intent, lease, head, revision):
+    delivery = intent.get('delivery')
+    require(isinstance(delivery, dict) and delivery.get('acceptedBaseSha') == head
             and delivery.get('targetBranch') == lease['targetBranch']
             and delivery.get('standardAdoption') == {'sourceRepository': 'wellmanifest/new-project',
                     'fromRevision': None, 'toRevision': revision}, 'initial_adoption_intent_required')
-    report = start.inspect(root, 'governance', request['paths'])
-    require(not report.get('diagnostic') and all(
-        b['path'] == str(root) and b['ticket'] == request['ticket'] and b['reason'] == 'scope-reservation'
-        for b in report['blockers']), 'packaging_scope_contested')
-    intent['allowedPaths'] = [*old_paths, *request['paths']]
+
+
+def extend_scope(lease, intent, request, actor, stamp, authority):
+    intent['allowedPaths'].extend(request['paths'])
     command = {'schema': store.canonical.REQUEST_SCHEMA, 'requestId': request['requestId'] + '-scope',
                'leaseId': lease['leaseId'], 'action': 'heartbeat', 'expectedRevision': lease['leaseRevision'],
                'expectedFencingToken': lease['fencingToken'], 'expectedPhase': lease['phase'],
                'requestedBy': actor, 'idempotencyKey': request['requestId'] + ':scope',
                'targetHeadSha': request['headSha'], 'replacementReceiptRef': None,
-               'authorityRef': 'policy:explicit-bootstrap-packaging-scope', 'requestedAt': stamp}
+               'authorityRef': authority, 'requestedAt': stamp}
     receipt, errors = store.canonical.evaluate_transition(lease, command)
     require(not errors, 'scope_transition_refused')
     lease.update(scopeHash=start.digest(intent['allowedPaths']), leaseRevision=receipt['leaseRevision'],
@@ -169,10 +175,80 @@ def transaction(root, primary, request, lease_raw, intent_raw, actor, session, s
     return encoded(lease), encoded(intent), receipt
 
 
+def transaction(root, primary, request, lease_raw, intent_raw, actor, session, stamp):
+    lease, intent = live_scope_subject(root, primary, request, lease_raw, intent_raw, actor, session)
+    revision = pinned_packaging(root, primary, request)
+    require_adoption_intent(intent, lease, request['headSha'], revision)
+    report = start.inspect(root, 'governance', request['paths'])
+    require(not report.get('diagnostic') and all(
+        b['path'] == str(root) and b['ticket'] == request['ticket'] and b['reason'] == 'scope-reservation'
+        for b in report['blockers']), 'packaging_scope_contested')
+    return extend_scope(lease, intent, request, actor, stamp, 'policy:explicit-bootstrap-packaging-scope')
+
+
+def first_adoption_transaction(root, primary, request, lease_raw, intent_raw, actor, session, stamp):
+    lease, intent = live_scope_subject(root, primary, request, lease_raw, intent_raw, actor, session)
+    head = request['headSha']
+    paths = set(request['paths'])
+    require(paths <= ADOPTION_CONTROLS, 'path_is_not_a_bootstrap_control')
+    require(lease['pullRequest'] is None and lease['validatorRunId'] is None, 'publication_already_started')
+    require(store.git(primary, 'rev-parse', 'HEAD') == head
+            and store.git(primary, 'symbolic-ref', 'HEAD') == 'refs/heads/' + lease['targetBranch'],
+            'bootstrap_primary_changed')
+    registrations = start.worktrees(primary)
+    require(all(set(item) == {'worktree', 'HEAD', 'branch'} for item in registrations)
+            and {item['worktree'] for item in registrations} == {str(primary), str(root)}
+            and store.git(primary, 'for-each-ref', '--format=%(refname)', 'refs/heads/ticket/') == lease['branchRef'],
+            'bootstrap_requires_a_single_local_ticket')
+    for checkout in (primary, root):
+        flags = store.git(checkout, 'ls-files', '-v', '-z').split('\0')
+        require(all(not entry or entry.startswith('H ') for entry in flags), 'bootstrap_hidden_index_paths')
+    carrier = f"project/{request['ticket']}/"
+    metadata = {carrier + 'README.md', carrier + 'intent.json'}
+    _, _, ticket_dirty = start.dirty_observation(root)
+    require(set(ticket_dirty) <= metadata,
+            'bootstrap_ticket_already_has_material_changes')
+    _, dirty_digest, dirty = start.dirty_observation(primary)
+    require(dirty_digest == request['bootstrapDirtyDigest'], 'bootstrap_primary_dirty_digest_changed')
+    receipt_bytes = raw(primary / BOOTSTRAP_RECEIPT)
+    require(sha(receipt_bytes) == request['bootstrapReceiptSha256'], 'bootstrap_receipt_changed')
+    receipt = store.decode(receipt_bytes)
+    require(receipt.get('bootstrapKind') == 'fresh', 'fresh_bootstrap_receipt_required')
+    common = store.git(primary, 'rev-parse', '--path-format=absolute', '--git-common-dir')
+    start.validate_bootstrap_receipt(primary, receipt, head, common)
+    manifest = store.decode(raw(primary / '.governance/manifest.json'))
+    allocation_policy = store.decode(raw(primary / '.governance/ticket-allocation.json'))
+    require(allocation_policy.get('mode') == 'local-single-clone'
+            and store.git(primary, 'config', '--get', 'new-project.ticketStorage', check=False) in {'', 'files'},
+            'local_file_allocation_required')
+    files, managed = start.bootstrap_payload_files(primary, manifest, receipt, head)
+    require(paths <= set(dirty) <= files.keys(), 'bootstrap_delta_contains_unowned_paths')
+    start.verify_bootstrap_files(primary, files, managed)
+    lock = store.decode(raw(primary / '.governance/manifest.lock.json'))
+    revision = receipt.get('sourceRevision')
+    require(lock['standard'].get('sourceRepository') == 'wellmanifest/new-project'
+            and isinstance(revision, str) and re.fullmatch('[a-f0-9]{40}', revision),
+            'published_bootstrap_required')
+    require_adoption_intent(intent, lease, head, revision)
+    require(not any(start.path_ignored(path, tuple(intent['allowedPaths'])) for path in paths),
+            'path_already_covered')
+    seeds = paths - {'.gitattributes', '.gitignore'}
+    require(not seeds or not store.git(primary, 'ls-tree', head, '--', *sorted(seeds)),
+            'bootstrap_seed_already_exists_in_base')
+    return extend_scope(lease, intent, request, actor, stamp, 'policy:explicit-first-adoption-scope')
+
+
 def amend(root, request_path, actor, session, *, apply=False):
     return apply_scope_transaction(root, request_path, actor, session, apply=apply,
                                    operation='bootstrap-packaging-scope',
                                    load_request=request_value, derive=transaction)
+
+
+def amend_first_adoption(root, request_path, actor, session, *, apply=False):
+    return apply_scope_transaction(root, request_path, actor, session, apply=apply,
+                                   operation='bootstrap-adoption-scope',
+                                   load_request=lambda path, primary: request_value(path, primary, first_adoption=True),
+                                   derive=first_adoption_transaction)
 
 
 def apply_scope_transaction(root, request_path, actor, session, *, apply, operation, load_request, derive):
@@ -259,10 +335,13 @@ def main():
     parser.add_argument('--request', type=Path, required=True)
     parser.add_argument('--actor', required=True)
     parser.add_argument('--session', required=True)
+    parser.add_argument('--first-adoption', action='store_true',
+                        help='Reconcile installer control paths on an unmaterialized first native ticket.')
     parser.add_argument('--apply', action='store_true')
     args = parser.parse_args()
     try:
-        print(json.dumps(amend(args.root, args.request, args.actor, args.session, apply=args.apply), sort_keys=True))
+        reconcile = amend_first_adoption if args.first_adoption else amend
+        print(json.dumps(reconcile(args.root, args.request, args.actor, args.session, apply=args.apply), sort_keys=True))
     except (OSError, ValueError, TypeError, KeyError, PermissionError, start.ObservationError) as error:
         print('GOV-BOOTSTRAP-PACKAGING: ' + str(error), file=sys.stderr)
         return 1

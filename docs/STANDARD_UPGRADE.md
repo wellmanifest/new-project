@@ -734,3 +734,32 @@ intent, source file or expired owner requires existing controller
 reconciliation. Receipts stay under the primary's ignored
 `.subactor/receipts/bootstrap-packaging-scope/`. Neither a plan nor a receipt
 grants merge authority.
+
+## Required files omitted from the first native allocation
+
+Use the published `bootstrap_packaging_scope.py --first-adoption` when a local
+file-backed first native ticket has omitted required bootstrap paths. The
+published installer must already be present in the registered primary checkout
+and the ticket must still be at the same base with only its ticket metadata.
+Complete the ticket's `delivery.standardAdoption` intent with the published
+revision in the primary bootstrap receipt.
+
+Use the request fields above with schema `new-project.bootstrap-adoption-scope/v1`.
+Add `bootstrapDirtyDigest` from `work_start_check.dirty_observation(primary)[1]`.
+Bind `bootstrapReceiptSha256` to the receipt in the primary checkout. The
+controller accepts only `.gitattributes`, `.gitignore`, `CHANGELOG.md`, `VERSION`,
+`project.bat`, and `project.sh` when each requested path is an exact, uncovered
+change recorded by that installer. Keep the request outside the target checkout.
+
+```sh
+python /published/source/scripts/bootstrap_packaging_scope.py \
+  --first-adoption --root /primary/.worktrees/ticket-001--native-adoption \
+  --request /external/adoption-scope-request.json \
+  --actor agent:owner --session current-owner-session
+```
+
+Review the planned paths, then replay the exact request with `--apply` under
+the live allocating owner's session. Read the new fencing token before using
+the original pinned adopter in the ticket checkout. The new receipt is stored
+in `.subactor/receipts/bootstrap-adoption-scope/` and publication goes through
+the target repository's independent checks and review.
