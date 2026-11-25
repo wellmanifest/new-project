@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## [0.20.167] - 2026-11-24
+
+- Linked ticket allocation preserves the shared `project/TICKETS.md` from
+  its base. Concurrent branches can add their own tickets without colliding
+  in the generated index. Explicit regeneration and flat allocation continue
+  to use the index generator. [ticket-473]
+- First scaffold adoption supports a bounded split under the current owner.
+  The shared CI suite covers this bootstrap path. [ticket-469] [ticket-470]
+- The default ticket activity policy recognizes cancellation backed by a
+  verified owner decision and releases the ticket's reservation. [ticket-471]
+  [ticket-472]
+- Document the authenticated human owner's manual merge path and its audit
+  receipt. The protected agent delivery requirements still apply. [ticket-474]
+- First native allocation handles a root ignore for the entire `.subactor/`
+  directory. The reviewed plan exposes only the two approved managed files
+  while preserving operational state exclusions. [ticket-476]
+
 ## [0.20.166] - 2026-11-20
 
 - The scaffold bootstrap route (`--migrate-wellman-scaffold`) admits a
