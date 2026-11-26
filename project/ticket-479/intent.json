@@ -1,0 +1,95 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-479",
+  "summary": "Treat contents of allowlisted runtime caches as disposable when pruning merged worktrees",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-479/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "scripts/prune_merged_worktrees.py",
+    "tests/prune_merged_worktrees_test.py",
+    "CHANGELOG.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "4f020497d5cff967962ea35e89c3969bcbf10267",
+    "targetBranch": "main",
+    "outcome": "Merged canonical worktrees under a terminal lease prune when Git lists the contents of an allowlisted runtime root (self-ignoring .ruff_cache, partly ignored .planfile, nested .subactor runtime dirs) instead of the root itself.",
+    "nonGoals": [
+      "No change to lease phases, process checks or forced removal",
+      "No new allowlisted roots; .subactor/snapshots, leases and unknown ignored files stay preserved",
+      "No target repository edits inside this Governance Hub"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "is_safe_ignored_runtime_path accepts any ignored entry whose first component is an allowlisted top-level runtime root, or whose first two components are .subactor/<safe runtime dir>. Only the exact ignored entries Git lists are removed, so tracked files below a root are never deleted.",
+      "components": [
+        {
+          "name": "worktree-pruning",
+          "paths": [
+            "scripts/prune_merged_worktrees.py"
+          ]
+        },
+        {
+          "name": "regression-suites",
+          "paths": [
+            "tests/prune_merged_worktrees_test.py"
+          ]
+        },
+        {
+          "name": "release-notes",
+          "paths": [
+            "CHANGELOG.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through protected review; the allowlist returns to single-component roots."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 -m pytest -q -p no:cacheprovider -p no:wellmanifest_governance tests/prune_merged_worktrees_test.py"
+        ],
+        "evidence": "A released merged checkout whose cache carries its own '*' ignore file prunes without --force; nested .subactor runtime entries are disposable."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -m pytest -q -p no:cacheprovider -p no:wellmanifest_governance tests/prune_merged_worktrees_test.py",
+          "bash project/governance-check.sh"
+        ],
+        "evidence": ".subactor snapshots, leases and manifest, .env and runtime-named directories below other paths stay preserved; Governance Hub gate passes."
+      }
+    ]
+  }
+}
