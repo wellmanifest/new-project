@@ -1,0 +1,88 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-480",
+  "summary": "Release new-project 0.20.168",
+  "workstream": "governance",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-480/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "VERSION",
+    "CHANGELOG.md",
+    "governance/manifest.default.json",
+    "governance/manifest.hub.json",
+    "packages/wellman/pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "9d97feb891f5574002e0889b994e2339125e6508",
+    "targetBranch": "main",
+    "outcome": "Publish new-project 0.20.168 containing ticket-477 and ticket-479 with consistent version projections.",
+    "nonGoals": [
+      "No source behavior change beyond the released tickets",
+      "No target repository edits inside this Governance Hub"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Advance VERSION, both governance manifest projections and the wellman package version to 0.20.168 and record release notes.",
+      "components": [
+        {
+          "name": "material-release",
+          "paths": [
+            "CHANGELOG.md",
+            "VERSION",
+            "governance/manifest.default.json",
+            "governance/manifest.hub.json",
+            "packages/wellman/pyproject.toml"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert through protected review before tagging; a published tag is never moved."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash tests/version-parity.test.sh",
+          "./project/governance-check.sh --actor agent"
+        ],
+        "evidence": "Version projections agree on 0.20.168 and the committed-range gate passes."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 -m pytest -q -p no:cacheprovider -p no:wellmanifest_governance tests/prune_merged_worktrees_test.py tests/bootstrap_packaging_scope_test.py"
+        ],
+        "evidence": "The released ticket-477 and ticket-479 regressions pass on the release head."
+      }
+    ]
+  }
+}

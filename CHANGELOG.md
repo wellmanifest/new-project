@@ -1,7 +1,11 @@
 # CHANGELOG
 
-## [Unreleased]
+## [0.20.168] - 2026-11-26
 
+- An existing first native adoption can reconcile a reservation that
+  covers too few installer paths. The current owner adds verified installer
+  control paths under the same ticket. Unrelated paths and stale or changed
+  evidence are refused before editing. [ticket-477]
 - Worktree pruning treats ignored entries below an allowlisted runtime root
   as disposable. Self-ignoring caches such as `.ruff_cache` and partly ignored
   `.planfile` or `.subactor/receipts` no longer keep merged, released
