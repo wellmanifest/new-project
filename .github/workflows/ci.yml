@@ -165,6 +165,8 @@ jobs:
         run: bash tests/governance-activity-performance.test.sh
       - name: Test receipts across a regenerated ticket index
         run: python3 tests/ticket_activity_index_test.py
+      - name: Test a linked checkout with an unsupported activity policy
+        run: python3 tests/ticket_activity_linked_policy_test.py
       - name: Test deterministic governance validator
         run: bash tests/governance-validator.test.sh
       - name: Test deterministic branch lifecycle validator
