@@ -22,5 +22,76 @@
   "stacks": [],
   "dependsOn": [],
   "conflictsWith": [],
-  "integrationTicket": null
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "b7d2de9ad8d1e993262d99cd92d89dfede23a116",
+    "targetBranch": "main",
+    "outcome": "A linked worktree whose ticket-activity policy this code cannot validate keeps its ticket reserved (active status-projection, reason checkout-policy-unsupported) instead of aborting the work-start observation of every checkout; the primary checkout still fails closed.",
+    "nonGoals": [
+      "No new terminal outcome or verification kind",
+      "No change to receipt schema, registry or the primary checkout's policy validation",
+      "No change to work_start_check.py"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "resolve() catches ActivityError from load_policy only when rev-parse shows a linked worktree (absolute git-dir differs from git-common-dir) and returns an active status-projection resolution; the bundled Wellman copy stays identical.",
+      "components": [
+        {
+          "name": "ticket-activity",
+          "paths": [
+            "scripts/ticket_activity.py",
+            "packages/wellman/src/wellman/_bundled/ticket_activity.py",
+            "tests/ticket_activity_linked_policy_test.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit; a linked checkout with a newer policy again aborts every allocation with GOV-TICKET-ACTIVITY-001."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 tests/ticket_activity_linked_policy_test.py",
+          "python3 tests/work_start_test.py"
+        ],
+        "evidence": "project/ticket-481/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 tests/ticket_activity_linked_policy_test.py",
+          "bash tests/ticket-activity.test.sh",
+          "python3 tests/ticket_activity_index_test.py",
+          "python3 tests/ticket_activity_batch_test.py",
+          "python3 tests/workspace_activity_test.py"
+        ],
+        "evidence": "project/ticket-481/README.md"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "cmp scripts/ticket_activity.py packages/wellman/src/wellman/_bundled/ticket_activity.py",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-481/README.md"
+      }
+    ]
+  }
 }
