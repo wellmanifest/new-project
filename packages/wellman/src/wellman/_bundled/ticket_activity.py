@@ -940,6 +940,13 @@ def delivery_landed(root: Path, ticket_dir: Path, target: str) -> bool:
     return name in delivered_names or (number is not None and number in delivered_numbers)
 
 
+def _linked_checkout(root: Path) -> bool:
+    """True only for a verified linked worktree, whose Git dir differs from the common dir."""
+    git_dir = _git(root, "rev-parse", "--path-format=absolute", "--git-dir", check=False)
+    common = _git(root, "rev-parse", "--path-format=absolute", "--git-common-dir", check=False)
+    return bool(git_dir and common) and Path(git_dir).resolve() != Path(common).resolve()
+
+
 def resolve(root: Path, ticket_dir: Path, active_statuses: set[str], *, status_override: str | None = None) -> ActivityResolution:
     root = root.resolve()
     ticket = ticket_dir.name
@@ -951,6 +958,15 @@ def resolve(root: Path, ticket_dir: Path, active_statuses: set[str], *, status_o
         policy = load_policy(root)
     except ActivityPolicyMissing:
         return ActivityResolution(ticket, True, status, "status-projection", reason="policy-not-adopted")
+    except ActivityError:
+        if not _linked_checkout(root):
+            raise
+        # A linked checkout can carry a newer managed policy than this code
+        # (an unmerged standard adoption). Keep its ticket reserved instead of
+        # aborting the observation of every other checkout; the primary
+        # checkout's own policy still fails closed.
+        return ActivityResolution(ticket, True, status, "status-projection",
+                                  reason="checkout-policy-unsupported")
     derive = policy["registry"]["missingPolicy"] == "git-ancestry"
     default_target = _target_ref(root, DEFAULT_TARGET_BRANCH) if derive else None
     path = registry_path(root, policy)
