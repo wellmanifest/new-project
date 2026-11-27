@@ -14,7 +14,8 @@
     "project/TICKETS.md",
     "scripts/ticket_activity.py",
     "packages/wellman/src/wellman/_bundled/ticket_activity.py",
-    "tests/ticket_activity_linked_policy_test.py"
+    "tests/ticket_activity_linked_policy_test.py",
+    ".github/workflows/ci.yml"
   ],
   "forbiddenPaths": [
     "project/ticket-*/user-*.md"
@@ -49,7 +50,8 @@
           "paths": [
             "scripts/ticket_activity.py",
             "packages/wellman/src/wellman/_bundled/ticket_activity.py",
-            "tests/ticket_activity_linked_policy_test.py"
+            "tests/ticket_activity_linked_policy_test.py",
+            ".github/workflows/ci.yml"
           ]
         }
       ],
